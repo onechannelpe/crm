@@ -16,6 +16,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
 import { rejectCapacityRequest } from "~/server/capacity/application/use-cases/reject-capacity-request";
+import { asCapacityRequestId } from "~/server/shared/ids";
 
 describe("capacity approval failures", () => {
   let ctx: TestDbContext | null = null;
@@ -33,7 +34,10 @@ describe("capacity approval failures", () => {
     const result = await approveCapacityRequest(
       makeApprovalContext(),
       makeApprovalDeps(ctx),
-      { requestId: 999, note: null },
+      {
+        requestId: asCapacityRequestId("missing-capacity-request"),
+        note: null,
+      },
     );
 
     expect(result.ok).toBe(false);
@@ -79,7 +83,7 @@ describe("capacity approval failures", () => {
     });
 
     const result = await approveCapacityRequest(
-      makeApprovalContext({ role: "admin", branchId: 1 }),
+      makeApprovalContext({ role: "admin" }),
       makeApprovalDeps(ctx),
       { requestId, note: null },
     );

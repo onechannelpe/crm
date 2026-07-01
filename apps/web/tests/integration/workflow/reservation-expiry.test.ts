@@ -31,7 +31,7 @@ describe("lead reservation expiry", () => {
 
   beforeEach(async () => {
     runtime = await createTestRuntime("workflow-reservation-expiry");
-    runtime.now.set(1_000);
+    runtime.now.set(new Date(1_000));
   });
 
   afterEach(async () => {
@@ -57,7 +57,9 @@ describe("lead reservation expiry", () => {
       ),
     ).toBe(0);
 
-    runtime.now.set(runtime.now.get() + RESERVATION_WINDOW_MS + 1);
+    runtime.now.set(
+      new Date(runtime.now.get().getTime() + RESERVATION_WINDOW_MS + 1),
+    );
     expect(
       await expireLapsedReservations(
         { executor: runtime.ctx.db },
@@ -90,7 +92,9 @@ describe("lead reservation expiry", () => {
       backOffice: actorBy("backOne"),
     });
 
-    runtime.now.set(runtime.now.get() + RESERVATION_WINDOW_MS + 1);
+    runtime.now.set(
+      new Date(runtime.now.get().getTime() + RESERVATION_WINDOW_MS + 1),
+    );
 
     const result = await acceptRateCommand(
       {

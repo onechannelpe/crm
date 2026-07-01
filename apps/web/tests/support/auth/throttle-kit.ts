@@ -14,11 +14,11 @@ export function createAuthThrottleKit(scenario: AuthScenario) {
       identifier: string;
       ipAddress: string;
       failureCount: number;
-      blockedUntil: number | null;
-      windowStartedAt?: number;
-      updatedAt?: number;
+      blockedUntil: Date | null;
+      windowStartedAt?: Date;
+      updatedAt?: Date;
     }): Promise<void> {
-      const now = Date.now();
+      const now = new Date();
       const keys = buildThrottleKeys(
         params.endpoint,
         params.identifier,

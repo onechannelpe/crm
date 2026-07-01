@@ -1,5 +1,3 @@
-import type { Generated } from "kysely";
-
 import type { Currency } from "~/contracts/workflow/vocabulary";
 import type {
   BranchId,

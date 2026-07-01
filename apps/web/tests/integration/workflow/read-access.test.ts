@@ -18,7 +18,7 @@ describe("workflow read access", () => {
 
   beforeEach(async () => {
     runtime = await createTestRuntime("workflow-read-access");
-    runtime.now.set(10);
+    runtime.now.set(new Date(10));
   });
 
   afterEach(async () => {

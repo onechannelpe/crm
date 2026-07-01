@@ -1,4 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import type { PendingBranchInvite } from "~/server/invites/application/types";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { BranchId } from "~/server/shared/ids";

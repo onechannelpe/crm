@@ -28,11 +28,17 @@ describe("rate limit retry after", () => {
 
   it("returns 429 with retry after header on block", async () => {
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     let blocked: ActionError | undefined;
     try {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx.repos,
+        "198.51.100.1",
+      );
     } catch (error) {
       if (error instanceof ActionError) blocked = error;
     }
@@ -50,13 +56,14 @@ describe("rate limit retry after", () => {
   it("retry after decreases as window elapses", async () => {
     const { windowMs } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     const getRetryAfter = async () => {
       try {
         await checkActionRateLimit(
           "leads.request",
-          1,
+          userId,
           ctx.repos,
           "198.51.100.1",
         );
@@ -79,11 +86,12 @@ describe("rate limit retry after", () => {
   it("resets the counter after window expires", async () => {
     const { windowMs } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     vi.setSystemTime(Date.now() + windowMs + 1);
     await expect(
-      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
     ).resolves.toBeUndefined();
   });
 });

@@ -22,7 +22,7 @@ export function reassignRegisteredLead(input: {
   leadId: WorkflowLeadId;
   actor: WorkflowActor;
   ports: RegistrationPorts;
-}): Promise<Result<{ leadId: string }, DomainError>> {
+}): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   return runLeadTransaction(input.ports, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
@@ -52,7 +52,7 @@ export function createRegisteredLead(input: {
   commercialScope: LeadCommercialScope;
   enrichment: { legalName: string | null; address: string | null } | null;
   ports: RegistrationPorts;
-}): Promise<Result<{ leadId: string }, DomainError>> {
+}): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   return runLeadTransaction(input.ports, async (ctx) => {
     const organization =
       (await ctx.repos.party.findOrganizationByRuc(input.ruc)) ??

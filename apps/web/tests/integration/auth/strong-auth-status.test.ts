@@ -52,7 +52,7 @@ describe("strong auth status", () => {
       first_surname: "User",
       second_surname: "Test",
       role: "executive",
-      is_active: 1,
+      is_active: true,
     });
 
     const status = await getStrongAuthStatus(

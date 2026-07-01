@@ -13,6 +13,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { asWorkflowVenueId } from "~/server/shared/ids";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 import { registerLead } from "~/server/workflow/lead/commands/register-lead";
@@ -26,7 +27,7 @@ describe("lead lifecycle journey", () => {
 
   beforeEach(async () => {
     runtime = await createTestRuntime("journey-lead-lifecycle");
-    runtime.now.set(1_700_000_000_000);
+    runtime.now.set(new Date(1_700_000_000_000));
   });
 
   afterEach(async () => {
@@ -132,7 +133,7 @@ describe("lead lifecycle journey", () => {
         {
           actor: executive,
           leadId: lead.id,
-          venueId: setup.venues[0].id,
+          venueId: asWorkflowVenueId(setup.venues[0].id),
           solesAccount: {
             currency: "PEN",
             banco: "BCP",

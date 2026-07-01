@@ -1,4 +1,4 @@
-import { noopQueueDoorbell } from "~/lib/job-queue/doorbell";
+import type { Json } from "~/contracts/json";
 import { createLogger } from "~/lib/observability/logger";
 import { createRecipientPlanner } from "~/server/notifications/expansion/plan-recipients";
 import {
@@ -8,6 +8,7 @@ import {
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
 import { createRecipientRepository } from "~/server/notifications/repos/recipient-repo";
+import type { NotificationIntent } from "~/server/notifications/types";
 import { assembleNotificationPipeline } from "~/server/platform/container/notifications-runtime";
 
 import { createScriptedMessagingGateway } from "../fakes/messaging-gateway";
@@ -28,7 +29,6 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
     messaging: messages.gateway,
     clock: () => runtime.now.get(),
     publicOrigin: "https://app.example.test",
-    doorbell: noopQueueDoorbell,
     logger,
   });
 
@@ -65,11 +65,11 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
   // Moves the injected clock forward so retries scheduled with backoff become
   // claimable. Backoff is computed from this same clock (see nextAvailableAt).
   function advanceClock(ms: number) {
-    runtime.now.set(runtime.now.get() + ms);
+    runtime.now.set(new Date(runtime.now.get().getTime() + ms));
   }
 
   function planIntentRow(
-    row: { audience_json: string; channels_json: string },
+    row: { audience_json: Json; channels_json: Json },
     now = runtime.now.get(),
   ) {
     return planRecipients(
@@ -86,7 +86,8 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
     intents,
     deliveries,
     appNotifications: pipeline.appNotifications,
-    enqueue: pipeline.enqueue,
+    enqueue: (intentsToEnqueue: NotificationIntent[], now?: Date) =>
+      pipeline.enqueue(intentsToEnqueue, now),
     planRecipients,
     planIntentRow,
     queues,

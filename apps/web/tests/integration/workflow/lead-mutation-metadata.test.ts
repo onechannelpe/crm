@@ -38,14 +38,14 @@ describe("workflow lead mutation metadata", () => {
 
   it("updates lead.updatedBy when a note is added", async () => {
     // Register in the past so a later mutation must advance updatedAt to pass.
-    runtime.now.set(10);
+    runtime.now.set(new Date(10));
     const lead = await createLeadFixtureWriter(runtime)({
       kind: "qualifying",
       key: "metadata-note",
       organization: { key: "metadata-note" },
     });
 
-    runtime.now.set(1_000);
+    runtime.now.set(new Date(1_000));
     const result = await addLeadNote(
       {
         actor: actorBy("execOne"),
@@ -59,7 +59,7 @@ describe("workflow lead mutation metadata", () => {
     await expectLeadMetadata(runtime, {
       actor: actorBy("execOne"),
       leadId: lead.id,
-      updatedBy: 1,
+      updatedBy: actorBy("execOne").userId,
       minUpdatedAt: 10,
     });
   });
@@ -79,7 +79,7 @@ describe("workflow lead mutation metadata", () => {
         actor: actorFromUser({
           id: admin.id,
           role: "admin",
-          branchId: 1,
+          branchId: actorBy("execOne").branchId,
         }),
         leadId: lead.id,
         toExecutiveId: executive.id,
@@ -91,7 +91,7 @@ describe("workflow lead mutation metadata", () => {
     const newExecutive = actorFromUser({
       id: executive.id,
       role: "executive",
-      branchId: 1,
+      branchId: actorBy("execOne").branchId,
     });
     await expectLeadAssignment(runtime, {
       actor: newExecutive,
@@ -136,7 +136,7 @@ describe("workflow lead mutation metadata", () => {
     await expectLeadStatus(runtime, {
       actor: actorBy("execOne"),
       leadId: lead.id,
-      updatedBy: 2,
+      updatedBy: actorBy("backOne").userId,
       status: "DISPONIBLE",
     });
   });

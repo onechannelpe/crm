@@ -1,13 +1,20 @@
 import type { SettlementBank } from "~/contracts/workflow/vocabulary";
+import type {
+  BranchId,
+  OrganizationId,
+  UserId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
 import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/commands/register-lead";
 
+import { actorBy } from "../database/workflow-fixtures";
 import { withMerchantDefaults } from "../database/workflow-seed";
 import type { TestRuntime } from "../runtime/app";
 import { registerLeadPorts } from "./workflow-ports";
 
 export type RegisteredLeadSnapshot = {
-  id: string;
-  organizationId: string;
+  id: WorkflowLeadId;
+  organizationId: OrganizationId;
   organizationRuc: string;
   organizationLegalName: string | null;
   organizationAddress: string | null;
@@ -25,7 +32,7 @@ export type RegisteredLeadCommercialSnapshot = {
 };
 
 export type RegisterLeadResult = {
-  leadId: string;
+  leadId: WorkflowLeadId;
   snapshot: RegisteredLeadSnapshot;
   commercial: RegisteredLeadCommercialSnapshot;
   historyEventTypes: string[];
@@ -34,7 +41,7 @@ export type RegisterLeadResult = {
 export async function registerLead(input: {
   runtime: TestRuntime;
   ruc: string;
-  actor?: { userId: number; role: "executive" | "admin"; branchId: number };
+  actor?: { userId: UserId; role: "executive" | "admin"; branchId: BranchId };
   currentProvider?: string;
   currentDebitRate?: number;
   currentCreditRate?: number;
@@ -44,7 +51,7 @@ export async function registerLead(input: {
   settlementBank?: SettlementBank;
   posCount?: number;
 }): Promise<RegisterLeadResult> {
-  const actor = input.actor ?? { userId: 1, role: "executive", branchId: 1 };
+  const actor = input.actor ?? actorBy("execOne");
   const result = await workflowRegisterLead(
     {
       actor,

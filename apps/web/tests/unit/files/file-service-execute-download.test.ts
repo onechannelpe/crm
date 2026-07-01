@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import type { ExecuteDownloadDeps } from "~/server/files/service/contracts";
 import { executeDownload } from "~/server/files/service/execute-download";
+import {
+  asArtifactDownloadTokenId,
+  asBranchId,
+  asFileAssetId,
+  asUserId,
+  asWorkflowArtifactId,
+} from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 describe("executeDownload", () => {
@@ -10,11 +17,11 @@ describe("executeDownload", () => {
       repo: {
         tokens: {
           findByHash: async () => ({
-            id: 1,
-            artifactId: "artifact-10",
-            fileAssetId: 20,
-            requestedByUserId: 7,
-            expiresAt: 2_000_000_000_000,
+            id: asArtifactDownloadTokenId("1"),
+            artifactId: asWorkflowArtifactId("artifact-10"),
+            fileAssetId: asFileAssetId("20"),
+            requestedByUserId: asUserId("7"),
+            expiresAt: new Date(2_000_000_000_000),
             usedAt: null,
           }),
           markUsed: async () => false,
@@ -22,23 +29,23 @@ describe("executeDownload", () => {
         },
         artifacts: {
           findById: async () => ({
-            id: "artifact-10",
+            id: asWorkflowArtifactId("artifact-10"),
             artifactType: "records_export",
             direction: "download",
             executionMode: "sync",
             status: "ready",
-            requestedByUserId: 7,
-            scopeBranchId: 1,
+            requestedByUserId: asUserId("7"),
+            scopeBranchId: asBranchId("1"),
             scopeTeamId: null,
             policySnapshotJson: "{}",
             workflowContextJson: "{}",
             errorCode: null,
             errorMessage: null,
             expiresAt: null,
-            createdAt: 1,
-            updatedAt: 1,
+            createdAt: new Date(1),
+            updatedAt: new Date(1),
           }),
-          insert: async () => "unused",
+          insert: async () => asWorkflowArtifactId("unused"),
           updateStatus: async () => {},
           findFileAssetForArtifact: async () => null,
           insertFileBinding: async () => {},
@@ -46,7 +53,7 @@ describe("executeDownload", () => {
         },
         assets: {
           findById: async () => ({
-            id: 20,
+            id: asFileAssetId("20"),
             storageKey: "files/export.csv",
             originalFilename: "export.csv",
             safeDisplayFilename: "export.csv",
@@ -58,9 +65,9 @@ describe("executeDownload", () => {
             scanStatus: "clean",
             scanEngine: null,
             scanReference: null,
-            createdAt: 1,
+            createdAt: new Date(1),
           }),
-          insert: async () => 1,
+          insert: async () => asFileAssetId("1"),
         },
         events: {
           insert: async () => {
@@ -78,7 +85,11 @@ describe("executeDownload", () => {
       },
     };
 
-    const result = await executeDownload("token", deps, 1_700_000_000_000);
+    const result = await executeDownload(
+      "token",
+      deps,
+      new Date(1_700_000_000_000),
+    );
 
     expect(isErr(result)).toBe(true);
     expect(isErr(result) && result.error.code).toBe("token_already_used");

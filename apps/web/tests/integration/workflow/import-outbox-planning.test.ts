@@ -12,7 +12,7 @@ describe("import outbox planning", () => {
 
   beforeEach(async () => {
     runtime = await createTestRuntime("import-outbox-planning");
-    runtime.now.set(2_000);
+    runtime.now.set(new Date(2_000));
   });
 
   afterEach(async () => {
@@ -62,8 +62,8 @@ describe("import outbox planning", () => {
         created_at,
       })),
     ).toEqual([
-      { available_at: 2_000, created_at: 2_000 },
-      { available_at: 2_000, created_at: 2_000 },
+      { available_at: new Date(2_000), created_at: new Date(2_000) },
+      { available_at: new Date(2_000), created_at: new Date(2_000) },
     ]);
   });
 });

@@ -1,5 +1,6 @@
 import type { Generated } from "kysely";
 
+import type { Json } from "~/contracts/json";
 import type {
   ArtifactDownloadTokenId,
   BranchId,
@@ -42,8 +43,8 @@ export interface WorkflowArtifactsTable {
   requested_by_user_id: IdColumn<UserId>;
   scope_branch_id: NullableIdColumn<BranchId>;
   scope_team_id: NullableIdColumn<TeamId>;
-  policy_snapshot_json: unknown;
-  workflow_context_json: unknown;
+  policy_snapshot_json: Json;
+  workflow_context_json: Json;
   error_code: string | null;
   error_message: string | null;
   expires_at: Date | null;
@@ -86,7 +87,7 @@ export interface ArtifactEventsTable {
   trace_id: string | null;
   ip_hash: string | null;
   user_agent: string | null;
-  details_json: unknown;
+  details_json: Json;
   created_at: Date;
 }
 

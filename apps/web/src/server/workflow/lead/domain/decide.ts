@@ -9,9 +9,9 @@ import type {
   LeadPriority,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type {
+  FulfillmentOrderId,
   UserId,
   WorkflowArtifactId,
   WorkflowRateProposalId,
@@ -453,7 +453,7 @@ export function addVenueAccounts(
 // register-sale handoff alongside the per-unit service references.
 export function completeFulfillment(
   state: LeadState,
-  input: { actor: Actor; orderId: string; now: Date },
+  input: { actor: Actor; orderId: FulfillmentOrderId; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("complete-fulfillment", input.actor, state);
   if (!authz.ok) return authz;

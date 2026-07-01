@@ -1,7 +1,9 @@
+import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import type { InviteService } from "~/server/invites/application/types";
 import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
+import { asBranchId, asUserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
@@ -13,6 +15,8 @@ describe("team invite create benchmark", () => {
   let inviteCreate!: InviteService["createInvite"];
   let createEmails: string[] = [];
   const createCursor = { value: 0 };
+  const actorUserId = asUserId(TEST_FIXTURES.users.superUser.id);
+  const branchId = asBranchId(TEST_FIXTURES.branches.norte.id);
 
   beforeAll(async () => {
     const ctx = await db.setup();
@@ -37,9 +41,9 @@ describe("team invite create benchmark", () => {
       );
 
       const result = await inviteCreate({
-        actorUserId: 5,
+        actorUserId,
         actorRole: "superuser",
-        branchId: 2,
+        branchId,
         names: `Bench Create ${createCursor.value}`,
         firstSurname: "User",
         secondSurname: "Bench",

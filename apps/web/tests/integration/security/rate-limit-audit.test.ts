@@ -25,7 +25,7 @@ describe("rate limit audit", () => {
   });
 
   it("logs a rate_limit_exceeded audit entry on violation", async () => {
-    const userId = 1;
+    const userId = ctx.fixtures.users.execOne.id;
     const { userLimit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let index = 0; index < userLimit; index += 1) {
       await checkActionRateLimit(
@@ -40,10 +40,10 @@ describe("rate limit audit", () => {
       checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
     ).rejects.toBeDefined();
 
-    const now = Date.now();
+    const now = new Date();
     const logs = await ctx.repos.events.listRecent({
-      fromInclusive: now - 1000,
-      toInclusive: now + 1000,
+      fromInclusive: new Date(now.getTime() - 1000),
+      toInclusive: new Date(now.getTime() + 1000),
       limit: 10,
       actorUserId: userId,
     });
@@ -57,9 +57,15 @@ describe("rate limit audit", () => {
   });
 
   it("cleans up stale counters", async () => {
-    await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await checkActionRateLimit(
+      "leads.request",
+      userId,
+      ctx.repos,
+      "198.51.100.1",
+    );
     const deleted = await ctx.repos.actionRateLimits.deleteUpdatedBefore(
-      Date.now() + 1,
+      new Date(Date.now() + 1),
     );
     expect(deleted).toBeGreaterThanOrEqual(1);
   });

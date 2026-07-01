@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createObservabilityService } from "~/server/observability/service";
+import { asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 function createUnexpectedRepos() {
@@ -35,6 +36,7 @@ function createUnexpectedRepos() {
 describe("observability service snapshots", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it("rejects invalid action snapshot filters before querying repos", async () => {
@@ -47,8 +49,11 @@ describe("observability service snapshots", () => {
   });
 
   it("normalizes action snapshot filters and projects action rows", async () => {
-    const now = 1_700_000_000_000;
-    vi.spyOn(Date, "now").mockReturnValue(now);
+    const now = new Date(1_700_000_000_000);
+    const fromInclusive = new Date(now.getTime() - 120 * 60_000);
+    const toInclusive = now;
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
 
     const service = createObservabilityService({
       actionObservations: {
@@ -57,8 +62,8 @@ describe("observability service snapshots", () => {
         },
         summarizeByAction: async (filter) => {
           expect(filter).toMatchObject({
-            fromInclusive: now - 120 * 60_000,
-            toInclusive: now,
+            fromInclusive,
+            toInclusive,
             actionName: "team.invite.create",
             status: "error",
           });
@@ -75,8 +80,8 @@ describe("observability service snapshots", () => {
         },
         findRecent: async (filter) => {
           expect(filter).toMatchObject({
-            fromInclusive: now - 120 * 60_000,
-            toInclusive: now,
+            fromInclusive,
+            toInclusive,
             actionName: "team.invite.create",
             status: "error",
             limit: 25,
@@ -84,22 +89,22 @@ describe("observability service snapshots", () => {
 
           return [
             {
-              id: 7,
+              id: "7",
               trace_id: "trace",
               request_id: "request",
               route_path: "/team/invite",
               http_method: "POST",
               action_name: "team.invite.create",
-              actor_user_id: 5,
+              actor_user_id: asUserId("5"),
               actor_role: "superuser",
               status: "error",
               duration_ms: 15,
               error_code: "validation_failed",
               error_category: "validation",
               public_error: "Validation failed",
-              is_sensitive: 0,
+              is_sensitive: false,
               input_summary: null,
-              created_at: now,
+              created_at: new Date(now),
             },
           ];
         },
@@ -131,12 +136,12 @@ describe("observability service snapshots", () => {
       ],
       recent: [
         {
-          id: 7,
-          createdAt: now,
+          id: "7",
+          createdAt: now.getTime(),
           actionName: "team.invite.create",
           status: "error",
           durationMs: 15,
-          actorUserId: 5,
+          actorUserId: asUserId("5"),
           actorRole: "superuser",
           routePath: "/team/invite",
           errorCode: "validation_failed",
@@ -158,8 +163,11 @@ describe("observability service snapshots", () => {
   });
 
   it("normalizes auth funnel filters and projects event rows", async () => {
-    const now = 1_700_000_000_000;
-    vi.spyOn(Date, "now").mockReturnValue(now);
+    const now = new Date(1_700_000_000_000);
+    const fromInclusive = new Date(now.getTime() - 30 * 60_000);
+    const toInclusive = now;
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
 
     const service = createObservabilityService({
       actionObservations: createUnexpectedRepos().actionObservations,
@@ -169,8 +177,8 @@ describe("observability service snapshots", () => {
         },
         summarize: async (filter) => {
           expect(filter).toMatchObject({
-            fromInclusive: now - 30 * 60_000,
-            toInclusive: now,
+            fromInclusive,
+            toInclusive,
             eventName: "password_result",
             method: "password",
             outcome: "failed",
@@ -189,8 +197,8 @@ describe("observability service snapshots", () => {
         },
         findRecent: async (filter) => {
           expect(filter).toMatchObject({
-            fromInclusive: now - 30 * 60_000,
-            toInclusive: now,
+            fromInclusive,
+            toInclusive,
             eventName: "password_result",
             method: "password",
             outcome: "failed",
@@ -199,7 +207,7 @@ describe("observability service snapshots", () => {
 
           return [
             {
-              id: 9,
+              id: "9",
               trace_id: "trace",
               request_id: "request",
               route_path: "/_server",
@@ -209,7 +217,7 @@ describe("observability service snapshots", () => {
               method: "password",
               outcome: "failed",
               code: "invalid_credentials",
-              created_at: now,
+              created_at: new Date(now),
             },
           ];
         },
@@ -242,8 +250,8 @@ describe("observability service snapshots", () => {
       ],
       recent: [
         {
-          id: 9,
-          createdAt: now,
+          id: "9",
+          createdAt: now.getTime(),
           eventName: "password_result",
           screen: null,
           method: "password",

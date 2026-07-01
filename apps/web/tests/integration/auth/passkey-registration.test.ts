@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
+import { asWebauthnChallengeId } from "~/server/shared/ids";
 
 describe("passkey registration", () => {
   const scenario = createAuthScenario("passkey-registration");
@@ -38,7 +39,7 @@ describe("passkey registration", () => {
     const value = expectOk(result);
 
     const challenge = await scenario.ctx.repos.webauthnChallenges.findById(
-      value.challengeId,
+      asWebauthnChallengeId(value.challengeId),
     );
     expect(challenge?.type).toBe("registration");
     expect(challenge?.user_id).toBe(execOne.userId);

@@ -8,7 +8,6 @@ import type {
 import type {
   FileAssetId,
   FulfillmentOrderId,
-  GeneratedId,
   IdColumn,
   NullableIdColumn,
   UserId,

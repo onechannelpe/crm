@@ -28,7 +28,7 @@ describe("session manager persisted validation", () => {
   it("deletes session when persisted role is invalid", async () => {
     const token = generateSessionToken();
     const sessionId = hashSessionToken(token);
-    const now = Date.now();
+    const now = new Date();
 
     await runtime.ctx.db
       .insertInto("user_sessions")
@@ -46,7 +46,7 @@ describe("session manager persisted validation", () => {
         user_agent: null,
         created_at: now,
         last_activity: now,
-        expires_at: now + 60_000,
+        expires_at: new Date(now.getTime() + 60_000),
       })
       .execute();
 

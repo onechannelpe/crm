@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { createPasskeyLoginStartAuthService } from "~/server/auth/factors/passkey/service";
+import { asAuthLoginFlowId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 describe("login flow service", () => {
@@ -56,26 +57,19 @@ describe("login flow service", () => {
     }
 
     const user = scenario.identity("superuser");
-    const stored = await scenario.ctx.repos.loginFlows.findById(
-      passwordResult.value.flow.id,
-    );
+    const flowId = asAuthLoginFlowId(passwordResult.value.flow.id);
+    const stored = await scenario.ctx.repos.loginFlows.findById(flowId);
     expect(stored?.state).toBe("totp");
     expect(stored?.user_id).toBe(user.userId);
 
     const code = await scenario.currentTotpCode("superuser");
-    const totpResult = await scenario.loginTotp(
-      passwordResult.value.flow.id,
-      code,
-      {
-        ipAddress: "198.51.100.88",
-        userAgent: "vitest-agent",
-      },
-    );
+    const totpResult = await scenario.loginTotp(flowId, code, {
+      ipAddress: "198.51.100.88",
+      userAgent: "vitest-agent",
+    });
 
     expect(isErr(totpResult)).toBe(false);
-    const consumed = await scenario.ctx.repos.loginFlows.findById(
-      passwordResult.value.flow.id,
-    );
+    const consumed = await scenario.ctx.repos.loginFlows.findById(flowId);
     expect(consumed).toBeUndefined();
   });
 
@@ -97,7 +91,7 @@ describe("login flow service", () => {
     if (isErr(result)) throw new Error("expected passkey flow");
 
     const flow = await getLoginFlowState(
-      result.value.id,
+      asAuthLoginFlowId(result.value.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
     );

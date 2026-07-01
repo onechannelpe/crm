@@ -1,5 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import {
+  asBranchId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 
 export interface TestIdentity {
   userId: UserId;
@@ -10,33 +15,33 @@ export interface TestIdentity {
 
 export const ISOLATED_DB_IDENTITIES = {
   execOne: {
-    userId: 1,
+    userId: asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961001"),
     username: "exec.one",
-    branchId: 1,
+    branchId: asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     role: "executive",
   },
   backOne: {
-    userId: 2,
+    userId: asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961002"),
     username: "back.one",
-    branchId: 1,
+    branchId: asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     role: "back_office",
   },
   execTwo: {
-    userId: 3,
+    userId: asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961003"),
     username: "exec.two",
-    branchId: 2,
+    branchId: asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960002"),
     role: "executive",
   },
   backTwo: {
-    userId: 4,
+    userId: asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961004"),
     username: "back.two",
-    branchId: 2,
+    branchId: asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960002"),
     role: "back_office",
   },
   superuser: {
-    userId: 5,
+    userId: asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961005"),
     username: "super.user",
-    branchId: 2,
+    branchId: asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960002"),
     role: "superuser",
   },
 } as const satisfies Record<string, TestIdentity>;

@@ -32,14 +32,19 @@ describe("extension runtime token validation", () => {
 
   it("rejects handoff creation when assigned contact has no primary phone", async () => {
     const scenario = createExtensionScenario(ctx);
+    const { execOne } = ctx.fixtures.users;
+    const { lima } = ctx.fixtures.branches;
     const authSessionId = await scenario.session();
     const contactId = await scenario.contactWithoutPhone(1);
-    const assignmentId = await scenario.assignment({ userId: 1, contactId });
+    const assignmentId = await scenario.assignment({
+      userId: execOne.id,
+      contactId,
+    });
 
     const result = await scenario.service.createHandoffToken({
-      userId: 1,
+      userId: execOne.id,
       authSessionId,
-      branchId: 1,
+      branchId: lima.id,
       assignmentId,
       origin: "http://localhost:3000",
     });

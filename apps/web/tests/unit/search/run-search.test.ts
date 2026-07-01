@@ -9,10 +9,16 @@ import { describe, expect, it } from "vitest";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { external, type DomainError } from "~/server/shared/domain-error";
 import type { SearchResult } from "~/server/shared/engine/types";
+import {
+  asBranchId,
+  asSearchReservationId,
+  asUserId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-const USER_ID = 1;
+const USER_ID = asUserId("1");
 const EXHAUSTED_SEARCH_COMMIT_AMOUNT = 999_999;
+const PRE_EXISTING_AT = new Date(1_700_000_000_000);
 
 function makeRepos() {
   const searchCapacityGrants = makeSearchCapacityGrantsRepo();
@@ -20,7 +26,7 @@ function makeRepos() {
   const searchUsageCommits = makeSearchUsageCommitsRepo();
   return {
     users: {
-      findById: async () => ({ teamId: null, branchId: 1 }),
+      findById: async () => ({ teamId: null, branchId: asBranchId("1") }),
     },
     ...makeNullSearchPolicyRepos(),
     searchCapacityGrants,
@@ -122,18 +128,18 @@ describe("runDirectSearch", () => {
 
     repos.searchUsageCommits.rows.push({
       id: "pre-existing",
-      reservation_id: "pre-res",
+      reservation_id: asSearchReservationId("pre-res"),
       amount: EXHAUSTED_SEARCH_COMMIT_AMOUNT,
-      created_at: 1_700_000_000_000,
+      created_at: PRE_EXISTING_AT,
     });
     repos.searchUsageReservations.rows.push({
-      id: "pre-res",
+      id: asSearchReservationId("pre-res"),
       user_id: USER_ID,
       amount: 999999,
       reason: "direct_search",
       status: "committed",
-      created_at: 1_700_000_000_000,
-      updated_at: 1_700_000_000_000,
+      created_at: PRE_EXISTING_AT,
+      updated_at: PRE_EXISTING_AT,
     });
 
     let engineCalled = false;

@@ -6,7 +6,7 @@ export async function seedBulkSessions(
   ctx: TestDbContext,
   identityName: SeededIdentityName,
   count: number,
-  nowMs = Date.now(),
+  now = new Date(),
 ): Promise<void> {
   const identity = getSeededIdentity(identityName);
   await ctx.db
@@ -23,9 +23,9 @@ export async function seedBulkSessions(
         strong_auth_at: null,
         ip_address: null,
         user_agent: null,
-        created_at: nowMs,
-        last_activity: nowMs,
-        expires_at: nowMs + 60_000,
+        created_at: now,
+        last_activity: now,
+        expires_at: new Date(now.getTime() + 60_000),
       })),
     )
     .execute();

@@ -5,6 +5,12 @@ import type {
   DeliveryAttempt,
   DeliveryJob,
 } from "~/server/notifications/repos/delivery-repo";
+import {
+  asNotificationDeliveryId,
+  asNotificationIntentId,
+  asUserId,
+  type NotificationDeliveryId,
+} from "~/server/shared/ids";
 
 import {
   createScriptedMessagingGateway,
@@ -14,11 +20,11 @@ import {
 
 function emailJob(overrides: Partial<DeliveryJob> = {}): DeliveryJob {
   return {
-    id: 1,
+    id: asNotificationDeliveryId("1"),
     attempt_count: 1,
     max_attempts: 5,
-    intent_id: "intent-1",
-    user_id: 1,
+    intent_id: asNotificationIntentId("intent-1"),
+    user_id: asUserId("1"),
     channel: "email",
     recipient_address: "user@test.local",
     title: "Title",
@@ -30,7 +36,10 @@ function emailJob(overrides: Partial<DeliveryJob> = {}): DeliveryJob {
 
 function createSender() {
   const messages = createScriptedMessagingGateway();
-  const recorded: Array<{ id: number; attempt: DeliveryAttempt }> = [];
+  const recorded: Array<{
+    id: NotificationDeliveryId;
+    attempt: DeliveryAttempt;
+  }> = [];
   const sendDelivery = createDeliverySender({
     messaging: messages.gateway,
     deliveries: {
@@ -39,7 +48,7 @@ function createSender() {
       },
     },
     publicOrigin: "https://app.example.test",
-    logger: { info: vi.fn() },
+    logger: { info: vi.fn<() => void>() },
   });
   return { messages, recorded, sendDelivery };
 }
@@ -59,7 +68,7 @@ describe("createDeliverySender", () => {
     ]);
     expect(recorded).toEqual([
       {
-        id: 1,
+        id: asNotificationDeliveryId("1"),
         attempt: {
           provider: "resend",
           provider_message_id: "test-email",

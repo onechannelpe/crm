@@ -25,7 +25,7 @@ import {
   createSearchPolicyDefaultsRepo,
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
-import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
 import { createContactsRepo } from "~/server/contacts/repos-contacts";
 import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
@@ -63,7 +63,7 @@ export function createTestRepositories(db: Kysely<Database>) {
     userTotpFactors: createUserTotpFactorsRepo(db),
     userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
     organizations: createOrganizationsRepo(db),
-    searchEnrichment: createSearchEnrichmentRepo(db),
+    searchEnrichment: createCompanyRegistryRepo(db),
     contacts: createContactsRepo(db),
     contactAssignments: createContactAssignmentsRepo(db),
     searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
@@ -93,7 +93,7 @@ export function createTestRepositories(db: Kysely<Database>) {
     passwordResetTokens: createPasswordResetTokensRepo(db),
     branches: createBranchesRepo(db),
     teams: createTeamsRepo(db),
-    integrationJobs: createIntegrationJobRepo(db, () => Date.now()),
+    integrationJobs: createIntegrationJobRepo(db),
   };
 }
 

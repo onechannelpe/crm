@@ -4,14 +4,22 @@ import type { UploadArtifactDeps } from "~/server/files/service/contracts";
 import { uploadArtifactFile } from "~/server/files/service/upload-artifact";
 import type { WorkflowArtifact } from "~/server/files/types";
 import type { AppContext } from "~/server/platform/action/context";
+import {
+  asBranchId,
+  asFileAssetId,
+  asUserId,
+  asWorkflowArtifactId,
+} from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
+
+const NOW = new Date(1_700_000_000_000);
 
 function makeContext(overrides?: Partial<AppContext>): AppContext {
   return {
     actor: {
       id: "sess-1",
-      userId: 10,
-      branchId: 1,
+      userId: asUserId("10"),
+      branchId: asBranchId("1"),
       role: "back_office",
       onboardingCompleted: true,
       sessionClass: "app",
@@ -24,28 +32,28 @@ function makeContext(overrides?: Partial<AppContext>): AppContext {
     ipAddress: "127.0.0.1",
     userAgent: "vitest",
     publicOrigin: "http://localhost:3000",
-    now: () => 1_700_000_000_000,
+    now: () => NOW,
     ...overrides,
   };
 }
 
 function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
   return {
-    id: "artifact-42",
+    id: asWorkflowArtifactId("artifact-42"),
     artifactType: "integration_import",
     direction: "upload",
     executionMode: "async",
     status: "requested",
-    requestedByUserId: 10,
-    scopeBranchId: 1,
+    requestedByUserId: asUserId("10"),
+    scopeBranchId: asBranchId("1"),
     scopeTeamId: null,
     policySnapshotJson: "{}",
     workflowContextJson: "{}",
     errorCode: null,
     errorMessage: null,
     expiresAt: null,
-    createdAt: 1,
-    updatedAt: 1,
+    createdAt: new Date(1),
+    updatedAt: new Date(1),
     ...overrides,
   };
 }
@@ -65,7 +73,7 @@ describe("uploadArtifactFile", () => {
   it("marks artifact as failed on unexpected storage error", async () => {
     const updates: Array<{
       status: string;
-      now: number;
+      now: Date;
       error?: { code: string; message: string };
     }> = [];
 
@@ -76,13 +84,13 @@ describe("uploadArtifactFile", () => {
           updateStatus: async (_id, status, now, error) => {
             updates.push({ status, now, error });
           },
-          insert: async () => "unused",
+          insert: async () => asWorkflowArtifactId("unused"),
           findFileAssetForArtifact: async () => null,
           insertFileBinding: async () => {},
           list: async () => [],
         },
         assets: {
-          insert: async () => 1,
+          insert: async () => asFileAssetId("1"),
           findById: async () => null,
         },
         events: {
@@ -103,7 +111,7 @@ describe("uploadArtifactFile", () => {
     await expect(
       uploadArtifactFile(
         makeContext(),
-        "artifact-42",
+        asWorkflowArtifactId("artifact-42"),
         {
           name: "import.csv",
           sizeBytes: CSV_BYTES.length,
@@ -122,8 +130,8 @@ describe("uploadArtifactFile", () => {
   });
 
   it("uses one operation timestamp for state updates", async () => {
-    const operationNow = 1_700_000_123_456;
-    const updateTimes: number[] = [];
+    const operationNow = new Date(1_700_000_123_456);
+    const updateTimes: Date[] = [];
 
     const deps: UploadArtifactDeps = {
       repo: {
@@ -132,13 +140,13 @@ describe("uploadArtifactFile", () => {
           updateStatus: async (_id, _status, now) => {
             updateTimes.push(now);
           },
-          insert: async () => "unused",
+          insert: async () => asWorkflowArtifactId("unused"),
           findFileAssetForArtifact: async () => null,
           insertFileBinding: async () => {},
           list: async () => [],
         },
         assets: {
-          insert: async () => 9,
+          insert: async () => asFileAssetId("9"),
           findById: async () => null,
         },
         events: {
@@ -159,7 +167,7 @@ describe("uploadArtifactFile", () => {
 
     const result = await uploadArtifactFile(
       makeContext({ now: () => operationNow }),
-      "artifact-42",
+      asWorkflowArtifactId("artifact-42"),
       {
         name: "import.csv",
         sizeBytes: CSV_BYTES.length,
@@ -169,11 +177,11 @@ describe("uploadArtifactFile", () => {
     );
 
     expect(isErr(result)).toBe(false);
-    expect(updateTimes).toEqual([
-      operationNow,
-      operationNow,
-      operationNow,
-      operationNow,
+    expect(updateTimes.map((t) => t.getTime())).toEqual([
+      operationNow.getTime(),
+      operationNow.getTime(),
+      operationNow.getTime(),
+      operationNow.getTime(),
     ]);
   });
 });

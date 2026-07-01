@@ -11,6 +11,7 @@ import type {
   FulfillmentDocKind,
 } from "~/contracts/workflow/vocabulary";
 import type {
+  FulfillmentOrderId,
   UserId,
   WorkflowArtifactId,
   WorkflowLeadId,
@@ -109,12 +110,12 @@ export type LeadHistoryPayloadByEvent = {
     to: LeadStage;
   };
   lead_assigned: {
-    executiveId: string;
+    executiveId: UserId;
     reason?: string;
   };
   lead_reassigned: {
-    fromExecutiveId: string;
-    toExecutiveId: string;
+    fromExecutiveId: UserId;
+    toExecutiveId: UserId;
     reason?: string;
   };
   rep_legal_recorded: {
@@ -126,20 +127,20 @@ export type LeadHistoryPayloadByEvent = {
     email: string;
   };
   rate_proposed: {
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
     round: number;
     currency: Currency;
   };
   rate_revision_requested: {
-    revisionId: string;
+    revisionId: WorkflowRateRevisionId;
     round: number;
     justification: string;
   };
   rate_accepted: {
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
   };
   rate_proposal_corrected: {
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
     round: number;
   };
   commercial_scope_corrected: Record<string, never>;
@@ -152,43 +153,43 @@ export type LeadHistoryPayloadByEvent = {
     fromStage: LeadStage;
   };
   venue_added: {
-    venueId: string;
+    venueId: WorkflowVenueId;
     tradeName: string;
   };
   venue_updated: {
-    venueId: string;
+    venueId: WorkflowVenueId;
     tradeName: string;
   };
   venue_accounts_added: {
-    venueId: string;
+    venueId: WorkflowVenueId;
   };
   fulfillment_started: {
-    orderId: string;
+    orderId: FulfillmentOrderId;
     unitCount: number;
   };
   fulfillment_product_chosen: {
-    orderId: string;
+    orderId: FulfillmentOrderId;
     productKind: ProductKind;
   };
   fulfillment_step_advanced: {
-    orderId: string;
+    orderId: FulfillmentOrderId;
     from: FulfillmentStep;
     to: FulfillmentStep;
     action: FulfillmentAction;
   };
   fulfillment_step_rejected: {
-    orderId: string;
+    orderId: FulfillmentOrderId;
     from: FulfillmentStep;
     to: FulfillmentStep;
     reason: string;
   };
   fulfillment_document_uploaded: {
-    orderId: string;
+    orderId: FulfillmentOrderId;
     docKind: FulfillmentDocKind;
-    artifactId: string;
+    artifactId: WorkflowArtifactId;
   };
   fulfillment_completed: {
-    orderId: string;
+    orderId: FulfillmentOrderId;
   };
   note_added: {
     body: string;

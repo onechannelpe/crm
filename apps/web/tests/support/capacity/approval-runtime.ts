@@ -13,13 +13,23 @@ import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capaci
 import type { AppContext } from "~/server/platform/action/context";
 import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { CapacityRequestId, UserId } from "~/server/shared/ids";
 
-import type { TestDbContext } from "../runtime/db";
+import { TEST_FIXTURES, type TestDbContext } from "../runtime/db";
 
 const SEEDED_APPROVAL_USERS = {
-  superuserBranchTwo: { id: 5, branchId: 2 },
-  executiveBranchOne: { id: 1, branchId: 1 },
-  executiveBranchTwo: { id: 3, branchId: 2 },
+  superuserBranchTwo: {
+    id: TEST_FIXTURES.users.superUser.id,
+    branchId: TEST_FIXTURES.branches.norte.id,
+  },
+  executiveBranchOne: {
+    id: TEST_FIXTURES.users.execOne.id,
+    branchId: TEST_FIXTURES.branches.lima.id,
+  },
+  executiveBranchTwo: {
+    id: TEST_FIXTURES.users.execTwo.id,
+    branchId: TEST_FIXTURES.branches.norte.id,
+  },
 } as const;
 
 export const SUPERUSER_ID = SEEDED_APPROVAL_USERS.superuserBranchTwo.id;
@@ -30,10 +40,10 @@ export const EXECUTIVE_OTHER_BRANCH_ID =
 type ApprovalTx = CapacityRequestTx & CapacityManageTx & CapacityGrantTx;
 
 type GrantRow = {
-  userId: number;
+  userId: UserId;
   amount: number;
   reason: string;
-  actorUserId: number;
+  actorUserId: UserId;
 };
 
 export function makeApprovalContext(
@@ -59,7 +69,7 @@ export function makeApprovalContext(
     ipAddress: "127.0.0.1",
     userAgent: null,
     publicOrigin: "http://localhost:3000",
-    now: () => 1_700_000_000_000,
+    now: () => new Date(1_700_000_000_000),
   };
 }
 
@@ -102,14 +112,14 @@ function bindApprovalRepos(txDb: DatabaseExecutor): ApprovalTx {
 export async function seedRequest(
   ctx: TestDbContext,
   values: {
-    userId: number;
+    userId: UserId;
     kind: "search_extra" | "lead_refill_extra";
     status: "pending" | "approved" | "rejected" | "canceled";
     requestedAmount: number;
     reason: string;
   },
-): Promise<number> {
-  const now = Date.now();
+): Promise<CapacityRequestId> {
+  const now = new Date();
   const row = await ctx.db
     .insertInto("capacity_requests")
     .values({
@@ -131,14 +141,14 @@ export async function seedRequest(
 
 export function searchGrantsFor(
   ctx: TestDbContext,
-  userId: number,
+  userId: UserId,
 ): Promise<GrantRow[]> {
   return readGrants(ctx, "search_capacity_grants", userId);
 }
 
 export function leadGrantsFor(
   ctx: TestDbContext,
-  userId: number,
+  userId: UserId,
 ): Promise<GrantRow[]> {
   return readGrants(ctx, "lead_capacity_grants", userId);
 }
@@ -146,7 +156,7 @@ export function leadGrantsFor(
 async function readGrants(
   ctx: TestDbContext,
   table: "search_capacity_grants" | "lead_capacity_grants",
-  userId: number,
+  userId: UserId,
 ): Promise<GrantRow[]> {
   const rows = await ctx.db
     .selectFrom(table)

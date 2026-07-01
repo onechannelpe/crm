@@ -2,6 +2,9 @@ import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
+import { asUserId } from "~/server/shared/ids";
+
+const ACTOR_USER_ID = asUserId("audit-policy-actor");
 
 describe("audit policy service", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
@@ -24,7 +27,7 @@ describe("audit policy service", () => {
         action: "all_sessions_revoked",
         riskLevel: "medium",
         isActive: true,
-        actorUserId: 5,
+        actorUserId: ACTOR_USER_ID,
       }),
     ).rejects.toThrow("protected policies cannot be downgraded");
   });
@@ -39,7 +42,7 @@ describe("audit policy service", () => {
       action: "leads_requested",
       riskLevel: "medium",
       isActive: true,
-      actorUserId: 5,
+      actorUserId: ACTOR_USER_ID,
     });
 
     const snapshot = await service.getSnapshot();

@@ -1,5 +1,6 @@
 import type { Kysely } from "kysely";
 
+import type { Json } from "~/contracts/json";
 import type { Database } from "~/lib/db/types";
 import { createJobStore, type JobStore } from "~/lib/job-queue/job-store";
 import type { NotificationIntentId } from "~/server/shared/ids";
@@ -11,8 +12,8 @@ export interface IntentJob {
   attempt_count: number;
   max_attempts: number;
   event_type: string;
-  audience_json: unknown;
-  channels_json: unknown;
+  audience_json: Json;
+  channels_json: Json;
   priority: "high" | "normal" | "low";
   title: string;
   body_text: string;

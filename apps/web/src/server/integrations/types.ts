@@ -1,3 +1,4 @@
+import type { Json } from "~/contracts/json";
 import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
 import type { JobStore } from "~/lib/job-queue/job-store";
 import type { QueueJobBase } from "~/lib/job-queue/types";
@@ -18,7 +19,7 @@ export interface IntegrationJobRow extends QueueJobBase {
   rows_total: number | null;
   rows_applied: number | null;
   rows_failed: number | null;
-  results_json: unknown | null;
+  results_json: Json | null;
   available_at: Date;
   lease_owner: string | null;
   lease_until: Date | null;

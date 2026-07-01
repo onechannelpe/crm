@@ -4,6 +4,19 @@ import type {
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
+import {
+  asFulfillmentOrderId,
+  asUserId,
+  asWorkflowLeadId,
+  asWorkflowRateProposalId,
+  asWorkflowVenueId,
+  type BranchId,
+  type FulfillmentOrderId,
+  type UserId,
+  type WorkflowLeadId,
+  type WorkflowRateProposalId,
+  type WorkflowVenueId,
+} from "~/server/shared/ids";
 
 import { createDeterministicIdFactory } from "../_core/ids";
 import { ISOLATED_DB_IDENTITIES } from "../identities/catalog";
@@ -20,22 +33,22 @@ import {
 export type TestActorKey = keyof typeof ISOLATED_DB_IDENTITIES;
 
 export type TestActor = {
-  userId: number;
+  userId: UserId;
   role: Role;
-  branchId: number;
+  branchId: BranchId;
 };
 
 export type PersistedLead = {
-  id: string;
+  id: WorkflowLeadId;
   organization: SeededOrganizationRef;
-  proposalId: string | null;
-  venueIds: string[];
-  fulfillmentOrderId: string | null;
+  proposalId: WorkflowRateProposalId | null;
+  venueIds: WorkflowVenueId[];
+  fulfillmentOrderId: FulfillmentOrderId | null;
 };
 
 type CommonLeadFixture = {
   key?: string;
-  executive?: TestActorKey | number;
+  executive?: TestActorKey | UserId;
   organization?: OrganizationSeedOptions;
   commercial?: LeadCommercialOptions;
   status?: LeadStatus | null;
@@ -70,11 +83,15 @@ export function actorWithRole(key: TestActorKey, role: Role): TestActor {
 }
 
 export function actorFromUser(input: {
-  id: number;
+  id: UserId;
   role: Role;
-  branchId: number;
+  branchId: BranchId;
 }): TestActor {
   return { userId: input.id, role: input.role, branchId: input.branchId };
+}
+
+function isTestActorKey(value: unknown): value is TestActorKey {
+  return typeof value === "string" && value in ISOLATED_DB_IDENTITIES;
 }
 
 function stageFor(kind: LeadFixture["kind"]) {
@@ -102,10 +119,9 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
 
   return async function givenLead(input: LeadFixture): Promise<PersistedLead> {
     const key = input.key ?? ids.next("lead");
-    const executiveId =
-      typeof input.executive === "number"
-        ? input.executive
-        : actorBy(input.executive ?? "execOne").userId;
+    const executiveId = isTestActorKey(input.executive)
+      ? actorBy(input.executive).userId
+      : (input.executive ?? actorBy("execOne").userId);
     const organizationKey = input.organization?.key ?? `org-${key}`;
     const seeded = await seedLeadScenario(runtime, {
       organization: {
@@ -115,22 +131,22 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
         giroNegocio: input.organization?.giroNegocio,
       },
       lead: {
-        id: `lead-${key}`,
+        id: asWorkflowLeadId(`lead-${key}`),
         executiveId,
         stage: stageFor(input.kind),
         status: input.status ?? null,
         priority: input.priority ?? null,
         reservationExpiresAt:
           input.kind === "pricing" && input.proposal !== "none"
-            ? runtime.now.get() + 30 * 24 * 60 * 60 * 1000
+            ? new Date(runtime.now.get().getTime() + 30 * 24 * 60 * 60 * 1000)
             : null,
         commercial: input.commercial,
       },
     });
 
-    let proposalId: string | null = null;
+    let proposalId: WorkflowRateProposalId | null = null;
     if (input.kind === "pricing" && input.proposal !== "none") {
-      proposalId = `proposal-${key}`;
+      proposalId = asWorkflowRateProposalId(`proposal-${key}`);
       await seedRateProposal(runtime, {
         id: proposalId,
         leadId: seeded.leadId,
@@ -145,13 +161,13 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
       });
     }
 
-    const venueIds: string[] = [];
+    const venueIds: WorkflowVenueId[] = [];
     if (
       input.kind === "fulfillment" ||
       input.kind === "live" ||
       (input.kind === "setup" && input.withVenue)
     ) {
-      const venueId = `venue-${key}`;
+      const venueId = asWorkflowVenueId(`venue-${key}`);
       venueIds.push(venueId);
       await runtime.ctx.db
         .insertInto("workflow_lead_venues")
@@ -174,9 +190,9 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
         .execute();
     }
 
-    let fulfillmentOrderId: string | null = null;
+    let fulfillmentOrderId: FulfillmentOrderId | null = null;
     if (input.kind === "fulfillment" || input.kind === "live") {
-      fulfillmentOrderId = `fulfillment-${key}`;
+      fulfillmentOrderId = asFulfillmentOrderId(`fulfillment-${key}`);
       await runtime.ctx.db
         .insertInto("lead_fulfillment_orders")
         .values({
@@ -210,9 +226,9 @@ export function createUserFixtureWriter(runtime: TestRuntime) {
 
   async function create(input: {
     role: "admin" | "executive";
-    branchId?: number;
-  }): Promise<{ id: number }> {
-    const id = ++generatedUserId;
+    branchId?: BranchId;
+  }): Promise<{ id: UserId }> {
+    const id = asUserId(`generated-user-${++generatedUserId}`);
     await seedUser(runtime, {
       id,
       username: `${input.role}.${id}`,
@@ -227,9 +243,9 @@ export function createUserFixtureWriter(runtime: TestRuntime) {
   }
 
   return {
-    admin: (input: { branchId?: number } = {}) =>
+    admin: (input: { branchId?: BranchId } = {}) =>
       create({ role: "admin", ...input }),
-    executive: (input: { branchId?: number } = {}) =>
+    executive: (input: { branchId?: BranchId } = {}) =>
       create({ role: "executive", ...input }),
   };
 }

@@ -37,7 +37,7 @@ describe("seed invariants", () => {
 
       const repos = createTestRepositories(db);
       const valeria = await repos.users.findByUsername("valeria.paredes");
-      const manager = await repos.users.findById(12);
+      const manager = await repos.users.findByUsername("claudia.mendoza");
 
       expect(valeria?.onboarding_completed_at).toBeNull();
       expect(valeria && requiresStrongAuthRole(valeria.role)).toBe(true);

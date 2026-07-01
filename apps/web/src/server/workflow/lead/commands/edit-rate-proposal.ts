@@ -32,7 +32,7 @@ export async function editRateProposalCommand(
     executor: DatabaseExecutor;
     now: Date;
   },
-): Promise<Result<{ proposalId: string }, DomainError>> {
+): Promise<Result<{ proposalId: WorkflowRateProposalId }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 

@@ -2,6 +2,11 @@ import { seedEvent } from "@tests/support/audit/builders";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { asUserId } from "~/server/shared/ids";
+
+const EXEC_USER_ID = asUserId("audit-reader-exec");
+const SUPERUSER_ID = asUserId("audit-reader-superuser");
+
 describe("audit logs reader repository", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
 
@@ -14,36 +19,36 @@ describe("audit logs reader repository", () => {
 
   it("filters recent entries and high-risk actions", async () => {
     ctx = await createIsolatedTestDb("audit-logs-reader");
-    const baseTime = 1_700_000_000_000;
+    const baseTimeMs = 1_700_000_000_000;
 
     await seedEvent(ctx, {
-      actorUserId: 5,
+      actorUserId: SUPERUSER_ID,
       type: "product_updated",
       entityType: "product",
       entityId: "018f63e2-4300-7000-8000-000000000101",
       payload: { field: "price" },
-      occurredAt: baseTime,
+      occurredAt: new Date(baseTimeMs),
     });
     await seedEvent(ctx, {
-      actorUserId: 1,
+      actorUserId: EXEC_USER_ID,
       type: "leads_requested",
       entityType: "lead_assignment",
       entityId: "018f63e2-4300-7000-8000-000000000001",
       payload: { requested: 4, assigned: 4 },
-      occurredAt: baseTime + 1,
+      occurredAt: new Date(baseTimeMs + 1),
     });
     await seedEvent(ctx, {
-      actorUserId: 5,
+      actorUserId: SUPERUSER_ID,
       type: "all_sessions_revoked",
       entityType: "user_session",
       entityId: "018f63e2-4300-7000-8000-000000000005",
       payload: { reason: "security" },
-      occurredAt: baseTime + 2,
+      occurredAt: new Date(baseTimeMs + 2),
     });
 
     const highRiskDefault = await ctx.repos.events.listRecent({
-      fromInclusive: baseTime - 1000,
-      toInclusive: baseTime + 1000,
+      fromInclusive: new Date(baseTimeMs - 1000),
+      toInclusive: new Date(baseTimeMs + 1000),
       limit: 10,
       onlyHighRisk: true,
     });
@@ -55,15 +60,15 @@ describe("audit logs reader repository", () => {
     await ctx.repos.auditActionPolicies.upsert({
       action: "leads_requested",
       risk_level: "low",
-      is_active: 1,
-      is_protected: 0,
-      updated_by_user_id: 1,
-      now: baseTime + 3,
+      is_active: true,
+      is_protected: false,
+      updated_by_user_id: EXEC_USER_ID,
+      now: new Date(baseTimeMs + 3),
     });
 
     const highRiskAfterPolicy = await ctx.repos.events.listRecent({
-      fromInclusive: baseTime - 1000,
-      toInclusive: baseTime + 1000,
+      fromInclusive: new Date(baseTimeMs - 1000),
+      toInclusive: new Date(baseTimeMs + 1000),
       limit: 10,
       onlyHighRisk: true,
     });
@@ -72,8 +77,8 @@ describe("audit logs reader repository", () => {
     expect(highRiskAfterPolicy[1]?.type).toBe("product_updated");
 
     const byAction = await ctx.repos.events.listRecent({
-      fromInclusive: baseTime - 1000,
-      toInclusive: baseTime + 1000,
+      fromInclusive: new Date(baseTimeMs - 1000),
+      toInclusive: new Date(baseTimeMs + 1000),
       limit: 10,
       action: "leads_requested",
     });
@@ -81,10 +86,10 @@ describe("audit logs reader repository", () => {
     expect(byAction[0]?.entity_type).toBe("lead_assignment");
 
     const byActor = await ctx.repos.events.listRecent({
-      fromInclusive: baseTime - 1000,
-      toInclusive: baseTime + 1000,
+      fromInclusive: new Date(baseTimeMs - 1000),
+      toInclusive: new Date(baseTimeMs + 1000),
       limit: 10,
-      actorUserId: 5,
+      actorUserId: SUPERUSER_ID,
     });
     expect(byActor).toHaveLength(2);
   });

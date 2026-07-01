@@ -3,30 +3,52 @@
  * Each factory returns a stateful object that mirrors the real repo interface.
  */
 
+import {
+  asLeadReservationId,
+  asSearchReservationId,
+  type LeadReservationId,
+  type SearchReservationId,
+  type UserId,
+} from "~/server/shared/ids";
 import type { ReservationStatus } from "~/server/shared/scope";
 
 type GrantRow = {
   id: string;
-  user_id: number;
+  user_id: UserId;
   amount: number;
   reason: string;
-  actor_user_id: number;
-  created_at: number;
+  actor_user_id: UserId;
+  created_at: Date;
 };
-type ReservationRow = {
-  id: string;
-  user_id: number;
+type SearchReservationRow = {
+  id: SearchReservationId;
+  user_id: UserId;
   amount: number;
   reason: string;
   status: ReservationStatus;
-  created_at: number;
-  updated_at: number;
+  created_at: Date;
+  updated_at: Date;
 };
-type CommitRow = {
-  id: string;
-  reservation_id: string;
+type LeadReservationRow = {
+  id: LeadReservationId;
+  user_id: UserId;
   amount: number;
-  created_at: number;
+  reason: string;
+  status: ReservationStatus;
+  created_at: Date;
+  updated_at: Date;
+};
+type SearchCommitRow = {
+  id: string;
+  reservation_id: SearchReservationId;
+  amount: number;
+  created_at: Date;
+};
+type LeadCommitRow = {
+  id: string;
+  reservation_id: LeadReservationId;
+  amount: number;
+  created_at: Date;
 };
 
 export function makeSearchCapacityGrantsRepo() {
@@ -34,16 +56,16 @@ export function makeSearchCapacityGrantsRepo() {
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-      actor_user_id: number;
+      actor_user_id: UserId;
     }): Promise<void> {
-      rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
+      rows.push({ id: crypto.randomUUID(), ...values, created_at: new Date() });
       return Promise.resolve();
     },
     findByUserAndPeriod(
-      userId: number,
+      userId: UserId,
       _periodStart?: string,
       _periodEnd?: string,
     ): Promise<GrantRow[]> {
@@ -53,16 +75,16 @@ export function makeSearchCapacityGrantsRepo() {
 }
 
 export function makeSearchUsageReservationsRepo() {
-  const rows: ReservationRow[] = [];
+  const rows: SearchReservationRow[] = [];
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-    }): Promise<{ id: string }> {
-      const id = crypto.randomUUID();
-      const now = Date.now();
+    }): Promise<{ id: SearchReservationId }> {
+      const id = asSearchReservationId(crypto.randomUUID());
+      const now = new Date();
       rows.push({
         id,
         ...values,
@@ -72,37 +94,44 @@ export function makeSearchUsageReservationsRepo() {
       });
       return Promise.resolve({ id });
     },
-    findById(id: string): Promise<ReservationRow | undefined> {
+    findById(
+      id: SearchReservationId,
+    ): Promise<SearchReservationRow | undefined> {
       return Promise.resolve(rows.find((r) => r.id === id));
     },
     updateStatus(
-      id: string,
+      id: SearchReservationId,
       status: "committed" | "cancelled" | "expired",
     ): Promise<void> {
       const row = rows.find((r) => r.id === id);
       if (row) row.status = status;
       return Promise.resolve();
     },
-    findByUserAndPeriod(userId: number): Promise<ReservationRow[]> {
+    findByUserAndPeriod(userId: UserId): Promise<SearchReservationRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };
 }
 
 export function makeSearchUsageCommitsRepo() {
-  const rows: CommitRow[] = [];
+  const rows: SearchCommitRow[] = [];
   return {
     rows,
-    insert(values: { reservation_id: string; amount: number }): Promise<void> {
-      rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
+    insert(values: {
+      reservation_id: SearchReservationId;
+      amount: number;
+    }): Promise<void> {
+      rows.push({ id: crypto.randomUUID(), ...values, created_at: new Date() });
       return Promise.resolve();
     },
-    findByReservation(reservationId: string): Promise<CommitRow[]> {
+    findByReservation(
+      reservationId: SearchReservationId,
+    ): Promise<SearchCommitRow[]> {
       return Promise.resolve(
         rows.filter((r) => r.reservation_id === reservationId),
       );
     },
-    findByUserAndPeriod(): Promise<CommitRow[]> {
+    findByUserAndPeriod(): Promise<SearchCommitRow[]> {
       return Promise.resolve(rows);
     },
   };
@@ -113,31 +142,31 @@ export function makeLeadCapacityGrantsRepo() {
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-      actor_user_id: number;
+      actor_user_id: UserId;
     }): Promise<void> {
-      rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
+      rows.push({ id: crypto.randomUUID(), ...values, created_at: new Date() });
       return Promise.resolve();
     },
-    findByUserAndDate(userId: number, _date?: string): Promise<GrantRow[]> {
+    findByUserAndDate(userId: UserId, _date?: string): Promise<GrantRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };
 }
 
 export function makeLeadUsageReservationsRepo() {
-  const rows: ReservationRow[] = [];
+  const rows: LeadReservationRow[] = [];
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-    }): Promise<{ id: string }> {
-      const id = crypto.randomUUID();
-      const now = Date.now();
+    }): Promise<{ id: LeadReservationId }> {
+      const id = asLeadReservationId(crypto.randomUUID());
+      const now = new Date();
       rows.push({
         id,
         ...values,
@@ -147,11 +176,11 @@ export function makeLeadUsageReservationsRepo() {
       });
       return Promise.resolve({ id });
     },
-    findById(id: string): Promise<ReservationRow | undefined> {
+    findById(id: LeadReservationId): Promise<LeadReservationRow | undefined> {
       return Promise.resolve(rows.find((r) => r.id === id));
     },
     updateStatus(
-      id: string,
+      id: LeadReservationId,
       status: "committed" | "cancelled" | "expired",
     ): Promise<void> {
       const row = rows.find((r) => r.id === id);
@@ -159,7 +188,7 @@ export function makeLeadUsageReservationsRepo() {
       return Promise.resolve();
     },
     updateAmountAndStatus(
-      id: string,
+      id: LeadReservationId,
       amount: number,
       status: "committed" | "cancelled" | "expired",
     ): Promise<void> {
@@ -170,26 +199,31 @@ export function makeLeadUsageReservationsRepo() {
       }
       return Promise.resolve();
     },
-    findByUserAndDate(userId: number): Promise<ReservationRow[]> {
+    findByUserAndDate(userId: UserId): Promise<LeadReservationRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };
 }
 
 export function makeLeadUsageCommitsRepo() {
-  const rows: CommitRow[] = [];
+  const rows: LeadCommitRow[] = [];
   return {
     rows,
-    insert(values: { reservation_id: string; amount: number }): Promise<void> {
-      rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
+    insert(values: {
+      reservation_id: LeadReservationId;
+      amount: number;
+    }): Promise<void> {
+      rows.push({ id: crypto.randomUUID(), ...values, created_at: new Date() });
       return Promise.resolve();
     },
-    findByReservation(reservationId: string): Promise<CommitRow[]> {
+    findByReservation(
+      reservationId: LeadReservationId,
+    ): Promise<LeadCommitRow[]> {
       return Promise.resolve(
         rows.filter((r) => r.reservation_id === reservationId),
       );
     },
-    findByUserAndDate(): Promise<CommitRow[]> {
+    findByUserAndDate(): Promise<LeadCommitRow[]> {
       return Promise.resolve(rows);
     },
   };

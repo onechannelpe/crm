@@ -13,6 +13,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { asWorkflowVenueId } from "~/server/shared/ids";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
 import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
@@ -60,7 +61,7 @@ describe("update venue", () => {
         leadId: lead.id,
       }),
     );
-    const venueId = seeded.venues[0].id;
+    const venueId = asWorkflowVenueId(seeded.venues[0].id);
 
     const result = await updateVenueCommand(
       {

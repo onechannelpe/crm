@@ -1,7 +1,16 @@
 import { createExtensionService } from "~/server/extension/service";
+import {
+  asContactAssignmentId,
+  asOrganizationPersonId,
+  asPersonId,
+  type BranchId,
+  type ContactAssignmentId,
+  type OrganizationPersonId,
+  type UserId,
+} from "~/server/shared/ids";
 import { Err, type Result } from "~/server/shared/result";
 
-import type { TestDbContext } from "../runtime/db";
+import { TEST_FIXTURES, type TestDbContext } from "../runtime/db";
 import { createTestRepositories } from "../runtime/repos";
 
 export function createTransactionRunner(ctx: TestDbContext) {
@@ -37,7 +46,7 @@ export function createTransactionRunner(ctx: TestDbContext) {
 
 export function createExtensionScenario(
   ctx: TestDbContext,
-  now: () => number = () => Date.now(),
+  now: () => Date = () => new Date(),
 ) {
   const service = createExtensionService(ctx.repos, {
     uow: createTransactionRunner(ctx),
@@ -47,14 +56,18 @@ export function createExtensionScenario(
   return {
     service,
     async session(
-      input: { userId?: number; branchId?: number; sessionId?: string } = {},
+      input: {
+        userId?: UserId;
+        branchId?: BranchId;
+        sessionId?: string;
+      } = {},
     ) {
       const authSessionId = input.sessionId ?? crypto.randomUUID();
-      const nowMs = now();
+      const currentTime = now();
       await ctx.repos.sessions.create({
         id: authSessionId,
-        user_id: input.userId ?? 1,
-        branch_id: input.branchId ?? 1,
+        user_id: input.userId ?? TEST_FIXTURES.users.execOne.id,
+        branch_id: input.branchId ?? TEST_FIXTURES.branches.lima.id,
         role: "executive",
         session_class: "app",
         primary_auth_method: "password",
@@ -62,52 +75,54 @@ export function createExtensionScenario(
         strong_auth_at: null,
         ip_address: "127.0.0.1",
         user_agent: "vitest",
-        created_at: nowMs,
-        last_activity: nowMs,
-        expires_at: nowMs + 60 * 60_000,
+        created_at: currentTime,
+        last_activity: currentTime,
+        expires_at: new Date(currentTime.getTime() + 60 * 60_000),
       });
       return authSessionId;
     },
-    async assignment(input: { userId?: number; contactId?: number } = {}) {
-      const nowMs = now();
-      const result = await ctx.db
+    async assignment(
+      input: { userId?: UserId; contactId?: OrganizationPersonId } = {},
+    ): Promise<ContactAssignmentId> {
+      const currentTime = now();
+      const assignmentId = asContactAssignmentId(crypto.randomUUID());
+      await ctx.db
         .insertInto("lead_assignments")
         .values({
-          user_id: input.userId ?? 1,
-          contact_id: input.contactId ?? 1,
-          assigned_at: nowMs,
-          expires_at: nowMs + 60 * 60_000,
+          id: assignmentId,
+          user_id: input.userId ?? TEST_FIXTURES.users.execOne.id,
+          contact_id:
+            input.contactId ?? TEST_FIXTURES.organizationPeople.lima.id,
+          assigned_at: currentTime,
+          expires_at: new Date(currentTime.getTime() + 60 * 60_000),
           status: "active",
         })
         .executeTakeFirstOrThrow();
-      return Number(result.insertId);
+      return assignmentId;
     },
     async contactWithoutPhone(sequence: number) {
-      const nowMs = now();
+      const currentTime = now();
       const dni = `7999${sequence.toString().padStart(4, "0")}`;
-      const person = await ctx.db
+      const personId = asPersonId(`extension-person-${sequence}`);
+      const organizationPersonId = asOrganizationPersonId(
+        `extension-org-person-${sequence}`,
+      );
+      await ctx.db
         .insertInto("people")
         .values({
+          id: personId,
           dni,
           full_name: "Contacto sin telefono",
           email: null,
-          created_at: nowMs,
-          updated_at: nowMs,
+          created_at: currentTime,
+          updated_at: currentTime,
         })
         .onConflict((oc) => oc.column("dni").doNothing())
         .executeTakeFirstOrThrow();
-      const personId =
-        Number(person.insertId) ||
-        (
-          await ctx.db
-            .selectFrom("people")
-            .select("id")
-            .where("dni", "=", dni)
-            .executeTakeFirstOrThrow()
-        ).id;
-      const result = await ctx.db
+      await ctx.db
         .insertInto("organization_people")
         .values({
+          id: organizationPersonId,
           person_id: personId,
           organization_id: ctx.fixtures.organizations.lima.id,
           dni,
@@ -119,19 +134,19 @@ export function createExtensionScenario(
           last_contacted_at: null,
           last_contacted_by_user_id: null,
           cooldown_until: null,
-          created_at: nowMs,
-          updated_at: nowMs,
+          created_at: currentTime,
+          updated_at: currentTime,
         })
         .executeTakeFirstOrThrow();
-      return Number(result.insertId);
+      return organizationPersonId;
     },
     async claim(installationId: string) {
       const authSessionId = await this.session();
       const assignmentId = await this.assignment();
       const handoffResult = await service.createHandoffToken({
-        userId: 1,
+        userId: TEST_FIXTURES.users.execOne.id,
         authSessionId,
-        branchId: 1,
+        branchId: TEST_FIXTURES.branches.lima.id,
         assignmentId,
         origin: "http://localhost:3000",
       });

@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { Insertable } from "kysely";
 
 import type {
@@ -14,6 +13,7 @@ import type {
   UserId,
   WorkflowLeadId,
 } from "~/server/shared/ids";
+import { newWorkflowLeadId } from "~/server/shared/ids";
 import type {
   LeadCommercialScope,
   LeadDraft,
@@ -144,7 +144,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
 
   return {
     async insert(values: LeadDraft): Promise<WorkflowLeadId> {
-      const id = randomUUIDv7() as WorkflowLeadId;
+      const id = newWorkflowLeadId();
       await db
         .insertInto("workflow_leads")
         .values({ ...toNewLeadRow(values), id })

@@ -14,6 +14,15 @@ import {
 } from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import {
+  asWorkflowArtifactId,
+  asWorkflowLeadId,
+  asWorkflowRateRevisionId,
+  type UserId,
+  type WorkflowArtifactId,
+  type WorkflowLeadId,
+  type WorkflowRateRevisionId,
+} from "~/server/shared/ids";
 import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
@@ -23,11 +32,11 @@ import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-deta
 async function seedRateRevisionArtifact(
   runtime: TestRuntime,
   input: {
-    artifactId: string;
-    leadId: string;
-    requestedByUserId: number;
+    artifactId: WorkflowArtifactId;
+    leadId: WorkflowLeadId;
+    requestedByUserId: UserId;
     status?: "ready" | "requested";
-    linkedRevisionId?: string;
+    linkedRevisionId?: WorkflowRateRevisionId;
   },
 ): Promise<void> {
   const now = runtime.now.get();
@@ -40,7 +49,7 @@ async function seedRateRevisionArtifact(
       execution_mode: "async",
       status: input.status ?? "ready",
       requested_by_user_id: input.requestedByUserId,
-      scope_branch_id: 1,
+      scope_branch_id: actorBy("execOne").branchId,
       scope_team_id: null,
       policy_snapshot_json: "{}",
       workflow_context_json: JSON.stringify({
@@ -73,8 +82,9 @@ async function seedRateRevisionArtifact(
       scan_reference: null,
       created_at: now,
     })
+    .returning("id")
     .executeTakeFirstOrThrow();
-  const fileAssetId = Number(fileAsset.insertId);
+  const fileAssetId = fileAsset.id;
 
   await runtime.ctx.db
     .insertInto("artifact_file_bindings")
@@ -107,14 +117,14 @@ describe("request rate revision command", () => {
 
   beforeEach(async () => {
     runtime = await createTestRuntime("workflow-rate-revision");
-    runtime.now.set(1_000);
+    runtime.now.set(new Date(1_000));
   });
 
   afterEach(async () => {
     await runtime.dispose();
   });
 
-  async function loadDetail(leadId: string) {
+  async function loadDetail(leadId: WorkflowLeadId) {
     const actor = actorBy("execOne");
     return expectOk(
       await getLeadDetail(workflowRepos(runtime), {
@@ -133,8 +143,9 @@ describe("request rate revision command", () => {
       key: "revision-no-proposal",
       organization: { key: "revision-no-proposal" },
     });
+    const artifactId = asWorkflowArtifactId("artifact-no-proposal");
     await seedRateRevisionArtifact(runtime, {
-      artifactId: "artifact-no-proposal",
+      artifactId,
       leadId: lead.id,
       requestedByUserId: actor.userId,
     });
@@ -144,7 +155,7 @@ describe("request rate revision command", () => {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
-        artifactIds: ["artifact-no-proposal"],
+        artifactIds: [artifactId],
       },
       workflowCommandPorts(runtime),
     );
@@ -165,8 +176,9 @@ describe("request rate revision command", () => {
       leadId: lead.id,
       backOffice: actorBy("backOne"),
     });
+    const artifactId = asWorkflowArtifactId("artifact-ready-1");
     await seedRateRevisionArtifact(runtime, {
-      artifactId: "artifact-ready-1",
+      artifactId,
       leadId: lead.id,
       requestedByUserId: actor.userId,
     });
@@ -176,7 +188,7 @@ describe("request rate revision command", () => {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
-        artifactIds: ["artifact-ready-1"],
+        artifactIds: [artifactId],
       },
       workflowCommandPorts(runtime),
     );
@@ -193,7 +205,7 @@ describe("request rate revision command", () => {
       justification: "Need better rate",
     });
     expect(detail.rateRevisions[0].files.map((f) => f.artifactId)).toEqual([
-      "artifact-ready-1",
+      artifactId,
     ]);
   });
 
@@ -209,8 +221,9 @@ describe("request rate revision command", () => {
       leadId: lead.id,
       backOffice: actorBy("backOne"),
     });
+    const artifactId = asWorkflowArtifactId("artifact-dup");
     await seedRateRevisionArtifact(runtime, {
-      artifactId: "artifact-dup",
+      artifactId,
       leadId: lead.id,
       requestedByUserId: actor.userId,
     });
@@ -220,7 +233,7 @@ describe("request rate revision command", () => {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
-        artifactIds: ["artifact-dup", "artifact-dup"],
+        artifactIds: [artifactId, artifactId],
       },
       workflowCommandPorts(runtime),
     );
@@ -237,17 +250,17 @@ describe("request rate revision command", () => {
   it.each([
     {
       name: "uploaded by another user",
-      artifactId: "artifact-other-user",
+      artifactId: asWorkflowArtifactId("artifact-other-user"),
       override: () => ({ requestedByUserId: actorBy("execTwo").userId }),
     },
     {
       name: "attached to another lead",
-      artifactId: "artifact-other-lead",
-      override: () => ({ leadId: "lead-external" }),
+      artifactId: asWorkflowArtifactId("artifact-other-lead"),
+      override: () => ({ leadId: asWorkflowLeadId("lead-external") }),
     },
     {
       name: "not ready",
-      artifactId: "artifact-not-ready",
+      artifactId: asWorkflowArtifactId("artifact-not-ready"),
       override: () => ({ status: "requested" as const }),
     },
   ])(
@@ -304,10 +317,11 @@ describe("request rate revision command", () => {
     // A revision that already owns the artifact, while the proposal is still pending:
     // an edge a simple command sequence cannot reach (a real revision would decide the
     // proposal), so it is seeded directly.
+    const revisionId = asWorkflowRateRevisionId("revision-existing");
     await runtime.ctx.db
       .insertInto("workflow_rate_revisions")
       .values({
-        id: "revision-existing",
+        id: revisionId,
         lead_id: lead.id,
         proposal_id: proposalId,
         round: 1,
@@ -316,11 +330,12 @@ describe("request rate revision command", () => {
         requested_at: runtime.now.get(),
       })
       .execute();
+    const artifactId = asWorkflowArtifactId("artifact-linked");
     await seedRateRevisionArtifact(runtime, {
-      artifactId: "artifact-linked",
+      artifactId,
       leadId: lead.id,
       requestedByUserId: actor.userId,
-      linkedRevisionId: "revision-existing",
+      linkedRevisionId: revisionId,
     });
 
     const result = await requestRateRevisionCommand(
@@ -328,7 +343,7 @@ describe("request rate revision command", () => {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
-        artifactIds: ["artifact-linked"],
+        artifactIds: [artifactId],
       },
       workflowCommandPorts(runtime),
     );

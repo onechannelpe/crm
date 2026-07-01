@@ -1,5 +1,6 @@
 import type { Kysely, SelectQueryBuilder } from "kysely";
 
+import type { Json } from "~/contracts/json";
 import type { Database } from "~/lib/db/types";
 import type {
   BranchId,
@@ -219,7 +220,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       contact_id: OrganizationPersonId | null;
       call_session_id: string | null;
       type: Database["extension_runtime_events"]["type"];
-      payload_json: unknown;
+      payload_json: Json;
       created_at: Date;
       received_at: Date;
     }) {

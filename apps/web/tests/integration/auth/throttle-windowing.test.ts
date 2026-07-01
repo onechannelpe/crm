@@ -42,7 +42,7 @@ describe("auth throttle windowing", () => {
       identifier: "any-user@test.local",
       ipAddress: "198.51.100.5",
       failureCount: 100,
-      blockedUntil: now + 90_000,
+      blockedUntil: new Date(now + 90_000),
     });
 
     const status = await svc.checkLoginThrottle(
@@ -71,7 +71,7 @@ describe("auth throttle windowing", () => {
       ipAddress,
       failureCount: threshold,
       blockedUntil: null,
-      windowStartedAt: now,
+      windowStartedAt: new Date(now),
     });
 
     expect(
@@ -98,9 +98,10 @@ describe("auth throttle windowing", () => {
       identifier,
       ipAddress,
       failureCount: 99,
-      blockedUntil: now + 60_000,
-      windowStartedAt:
+      blockedUntil: new Date(now + 60_000),
+      windowStartedAt: new Date(
         now - AUTH_THROTTLE_POLICY.password_login.account.windowMs - 1,
+      ),
     });
 
     await svc.recordLoginFailure(identifier, ipAddress);
@@ -113,6 +114,6 @@ describe("auth throttle windowing", () => {
     });
     expect(row?.failure_count).toBe(1);
     expect(row?.blocked_until).toBeNull();
-    expect(row?.window_started_at).toBe(now);
+    expect(row?.window_started_at?.getTime()).toBe(now);
   });
 });

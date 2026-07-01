@@ -1,4 +1,9 @@
 import type { DomainError } from "~/server/shared/domain-error";
+import {
+  asWorkflowRateProposalId,
+  asWorkflowRateRevisionId,
+  asWorkflowVenueId,
+} from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 
@@ -62,7 +67,7 @@ export function toRateProposedEntry(
     ...toHistoryEntryBase(row),
     eventType: "rate_proposed",
     payload: {
-      proposalId: proposalId.value,
+      proposalId: asWorkflowRateProposalId(proposalId.value),
       round: round.value,
       currency: currency.value,
     },
@@ -86,7 +91,7 @@ export function toRateRevisionRequestedEntry(
     ...toHistoryEntryBase(row),
     eventType: "rate_revision_requested",
     payload: {
-      revisionId: revisionId.value,
+      revisionId: asWorkflowRateRevisionId(revisionId.value),
       round: round.value,
       justification: justification.value,
     },
@@ -104,7 +109,7 @@ export function toRateAcceptedEntry(
     ...toHistoryEntryBase(row),
     eventType: "rate_accepted",
     payload: {
-      proposalId: proposalId.value,
+      proposalId: asWorkflowRateProposalId(proposalId.value),
     },
   });
 }
@@ -123,7 +128,7 @@ export function toRateProposalCorrectedEntry(
     ...toHistoryEntryBase(row),
     eventType: "rate_proposal_corrected",
     payload: {
-      proposalId: proposalId.value,
+      proposalId: asWorkflowRateProposalId(proposalId.value),
       round: round.value,
     },
   });
@@ -152,7 +157,7 @@ export function toVenueAddedEntry(
     ...toHistoryEntryBase(row),
     eventType: "venue_added",
     payload: {
-      venueId: venueId.value,
+      venueId: asWorkflowVenueId(venueId.value),
       tradeName: tradeName.value,
     },
   });
@@ -171,7 +176,7 @@ export function toVenueUpdatedEntry(
     ...toHistoryEntryBase(row),
     eventType: "venue_updated",
     payload: {
-      venueId: venueId.value,
+      venueId: asWorkflowVenueId(venueId.value),
       tradeName: tradeName.value,
     },
   });

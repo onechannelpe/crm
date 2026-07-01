@@ -5,7 +5,7 @@ export class VerifyPage {
   constructor(private readonly page: Page) {}
 
   async expectTotpStep() {
-    await expect(this.page).toHaveURL(/\/login\/verify\?flow=\d+/);
+    await expect(this.page).toHaveURL(/\/login\/verify\?flow=[^&]+/);
     await expect(
       this.page.getByRole("heading", { name: "Verificar código" }),
     ).toBeVisible();
@@ -22,7 +22,7 @@ export class VerifyPage {
   }
 
   async gotoInvalidFlow() {
-    await this.page.goto("/login/verify?flow=999999");
+    await this.page.goto("/login/verify?flow=invalid-flow");
   }
 
   async expectExpiredFlow() {

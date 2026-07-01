@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 
+import { asBranchId, asUserId } from "~/server/shared/ids";
 import { deriveLeadStageNotifications } from "~/server/workflow/effects/reactors/notify";
 
 const baseInput = {
   eventId: "evt-1",
   leadId: "lead-1",
   ruc: "20123456789",
-  executiveId: 42,
-  branchId: 1,
-} as const;
+  executiveId: asUserId("42"),
+  branchId: asBranchId("1"),
+};
 
 describe("deriveLeadStageNotifications", () => {
   it("emits an in-app + WhatsApp intent when the lead moves to SETUP", () => {
@@ -22,7 +23,10 @@ describe("deriveLeadStageNotifications", () => {
     if (!intent) throw new Error("expected one intent");
 
     expect(intent.eventType).toBe("lead.ready_for_sale");
-    expect(intent.audience).toEqual({ kind: "user_ids", userIds: [42] });
+    expect(intent.audience).toEqual({
+      kind: "user_ids",
+      userIds: [baseInput.executiveId],
+    });
     expect(intent.channels).toEqual(["in_app", "whatsapp"]);
     expect(intent.priority).toBe("high");
     expect(intent.title).toBe("Cliente listo para afiliación");
@@ -45,7 +49,7 @@ describe("deriveLeadStageNotifications", () => {
     expect(intent.eventType).toBe("lead.ready_for_quotation");
     expect(intent.audience).toEqual({
       kind: "branch_role",
-      branchId: 1,
+      branchId: baseInput.branchId,
       role: "back_office",
     });
     expect(intent.channels).toEqual(["in_app"]);

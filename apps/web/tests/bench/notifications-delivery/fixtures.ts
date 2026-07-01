@@ -1,4 +1,5 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
+import { TEST_FIXTURES } from "@tests/support/runtime/db";
 
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import {
@@ -7,10 +8,17 @@ import {
 } from "~/server/notifications/repos/delivery-repo";
 import type { IntentJob } from "~/server/notifications/repos/intent-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
+import {
+  asBranchId,
+  asNotificationIntentId,
+  asUserId,
+  type NotificationIntentId,
+  type UserId,
+} from "~/server/shared/ids";
 
-import { BENCH_NOW } from "../_shared/constants";
+import { BENCH_NOW, benchDate } from "../_shared/constants";
 
-const USER_ID_START = 300_000;
+const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
 
 export const PLANNER_SCENARIOS = [
   {
@@ -42,13 +50,15 @@ export type PlannerScenarioName = (typeof PLANNER_SCENARIOS)[number]["name"];
 type PlannerScenario = (typeof PLANNER_SCENARIOS)[number];
 type PlannerScenarioResult<T> = Record<PlannerScenarioName, T>;
 
-function createUserIds(start: number, count: number): number[] {
-  return Array.from({ length: count }, (_, index) => start + index);
+function createUserIds(seedKey: string, count: number): UserId[] {
+  return Array.from({ length: count }, (_, index) =>
+    asUserId(`bench-notify-${seedKey}-user-${index}`),
+  );
 }
 
 async function seedUsersAndAddresses(
   ctx: TestDbContext,
-  userIds: number[],
+  userIds: UserId[],
   seedKey: string,
 ): Promise<void> {
   await ctx.db
@@ -56,7 +66,7 @@ async function seedUsersAndAddresses(
     .values(
       userIds.map((userId, index) => ({
         id: userId,
-        branch_id: 1,
+        branch_id: BRANCH_ID,
         team_id: null,
         username: `bench.notify.${seedKey}.${userId}`,
         email: `bench-${seedKey}-${index}@test.local`,
@@ -67,7 +77,7 @@ async function seedUsersAndAddresses(
         onboarding_completed_at: BENCH_NOW,
         role: "executive" as const,
         executive_category: "elite" as const,
-        is_active: 1,
+        is_active: true,
         created_at: BENCH_NOW,
       })),
     )
@@ -81,7 +91,7 @@ async function seedUsersAndAddresses(
           user_id: userId,
           channel: "email" as const,
           address: `bench-${seedKey}-${index}@test.local`,
-          is_verified: 1,
+          is_verified: true,
           verified_at: BENCH_NOW,
           created_at: BENCH_NOW,
           updated_at: BENCH_NOW,
@@ -90,7 +100,7 @@ async function seedUsersAndAddresses(
           user_id: userId,
           channel: "whatsapp" as const,
           address: `9${String(userId).padStart(8, "0")}`,
-          is_verified: 1,
+          is_verified: true,
           verified_at: BENCH_NOW,
           created_at: BENCH_NOW,
           updated_at: BENCH_NOW,
@@ -104,18 +114,18 @@ async function seedUsersAndAddresses(
     .values(
       userIds.map((userId) => ({
         user_id: userId,
-        expires_at: BENCH_NOW + 24 * 60 * 60 * 1000,
+        expires_at: benchDate(24 * 60 * 60 * 1000),
       })),
     )
     .execute();
 }
 
 function createAudiencePool(
-  userIds: number[],
+  userIds: UserId[],
   recipientsPerIntent: number,
   overlapRatio: number,
   intentCount: number,
-): number[][] {
+): UserId[][] {
   const stride = Math.max(
     1,
     Math.round(recipientsPerIntent * (1 - overlapRatio)),
@@ -137,15 +147,14 @@ async function seedPlannerScenario(
   ctx: TestDbContext,
   scenario: PlannerScenario,
   scenarioIndex: number,
-): Promise<string[]> {
+): Promise<NotificationIntentId[]> {
   const stride = Math.max(
     1,
     Math.round(scenario.recipientsPerIntent * (1 - scenario.overlapRatio)),
   );
   const totalUsers =
     scenario.recipientsPerIntent + stride * (scenario.intentCount - 1);
-  const userStart = USER_ID_START + scenarioIndex * 20_000;
-  const userIds = createUserIds(userStart, totalUsers);
+  const userIds = createUserIds(`planner-${scenarioIndex}`, totalUsers);
 
   await seedUsersAndAddresses(ctx, userIds, `planner-${scenario.name}`);
 
@@ -170,12 +179,12 @@ async function seedPlannerScenario(
   );
 
   await enqueueNotifications(ctx.db, intents, BENCH_NOW);
-  return intents.map((intent) => intent.id);
+  return intents.map((intent) => asNotificationIntentId(intent.id));
 }
 
 export async function seedPlannerFixtures(
   ctx: TestDbContext,
-): Promise<PlannerScenarioResult<string[]>> {
+): Promise<PlannerScenarioResult<NotificationIntentId[]>> {
   const [disjoint, partialOverlap, highOverlap] = PLANNER_SCENARIOS;
 
   const [disjointIds, partialOverlapIds, highOverlapIds] = await Promise.all([
@@ -197,7 +206,7 @@ export async function seedPlannerFixtures(
 export async function seedExpandFixtures(
   ctx: TestDbContext,
 ): Promise<IntentJob[]> {
-  const userIds = createUserIds(USER_ID_START + 90_000, EXPAND_RECIPIENTS);
+  const userIds = createUserIds("expand", EXPAND_RECIPIENTS);
   await seedUsersAndAddresses(ctx, userIds, "expand");
 
   const intents: NotificationIntent[] = Array.from(
@@ -214,6 +223,7 @@ export async function seedExpandFixtures(
     }),
   );
   await enqueueNotifications(ctx.db, intents, BENCH_NOW);
+  const intentIds = intents.map((intent) => asNotificationIntentId(intent.id));
 
   return ctx.db
     .selectFrom("notification_outbox")
@@ -229,11 +239,7 @@ export async function seedExpandFixtures(
       "body_text",
       "action_url",
     ])
-    .where(
-      "id",
-      "in",
-      intents.map((intent) => intent.id),
-    )
+    .where("id", "in", intentIds)
     .execute();
 }
 
@@ -243,23 +249,25 @@ export async function seedExpandFixtures(
 export async function seedDispatchFixtures(
   ctx: TestDbContext,
 ): Promise<DeliveryJob[]> {
-  const userIds = createUserIds(USER_ID_START + 110_000, 1);
+  const userIds = createUserIds("dispatch", 1);
   await seedUsersAndAddresses(ctx, userIds, "dispatch");
   const [userId] = userIds;
 
   const deliveries = createDeliveryRepository(ctx.db);
-  await deliveries.insertPlanned(
-    Array.from({ length: DISPATCH_DELIVERY_COUNT }, (_, index) => ({
-      intent_id: `bench-dispatch-${index}`,
+  const plannedDeliveries = Array.from(
+    { length: DISPATCH_DELIVERY_COUNT },
+    (_, index) => ({
+      intent_id: asNotificationIntentId(`bench-dispatch-${index}`),
       user_id: userId,
       channel: "email" as const,
       recipient_address: `bench-dispatch-${index}@test.local`,
       title: `Bench dispatch ${index}`,
       body_text: "Bench dispatch body",
       action_url: null,
-    })),
-    BENCH_NOW,
+    }),
   );
+
+  await deliveries.insertPlanned(plannedDeliveries, BENCH_NOW);
 
   return ctx.db
     .selectFrom("notification_deliveries")
@@ -275,6 +283,10 @@ export async function seedDispatchFixtures(
       "body_text",
       "action_url",
     ])
-    .where("intent_id", "like", "bench-dispatch-%")
+    .where(
+      "intent_id",
+      "in",
+      plannedDeliveries.map((delivery) => delivery.intent_id),
+    )
     .execute();
 }

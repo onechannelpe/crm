@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import type { Json } from "~/contracts/json";
 import { createLogger } from "~/lib/observability/logger";
 import { createRecipientPlanner } from "~/server/notifications/expansion/plan-recipients";
 import {
@@ -15,8 +16,8 @@ import { takeFromPool } from "../_shared/pool";
 import { PLANNER_SCENARIOS, seedPlannerFixtures } from "./fixtures";
 
 type PlannerEntry = {
-  audience_json: string;
-  channels_json: string;
+  audience_json: Json;
+  channels_json: Json;
 };
 
 type ScenarioState = {

@@ -73,7 +73,7 @@ export function createAuthScenario(
         provider: "google",
         provider_user_id: sub,
         email: `${sub}@example.test`,
-        created_at: Date.now(),
+        created_at: new Date(),
       });
     },
     async currentTotpCode(name: SeededIdentityName): Promise<string> {

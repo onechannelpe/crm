@@ -1,3 +1,4 @@
+import type { Json } from "~/contracts/json";
 import type {
   EventId,
   IdColumn,
@@ -12,8 +13,8 @@ export interface EventsTable {
   type: string;
   actor_user_id: NullableIdColumn<UserId>;
   subject_user_id: NullableIdColumn<UserId>;
-  payload_json: unknown | null;
-  changes_json: unknown | null;
+  payload_json: Json | null;
+  changes_json: Json | null;
   occurred_at: Date;
 }
 

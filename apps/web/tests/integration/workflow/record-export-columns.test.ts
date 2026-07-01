@@ -10,12 +10,14 @@ import {
 } from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { asWorkflowRateProposalId } from "~/server/shared/ids";
+
 describe("integration record export columns", () => {
   let runtime: TestRuntime;
 
   beforeEach(async () => {
     runtime = await createTestRuntime("integration-record-export-columns");
-    runtime.now.set(2_000);
+    runtime.now.set(new Date(2_000));
   });
 
   afterEach(async () => {
@@ -50,7 +52,7 @@ describe("integration record export columns", () => {
     // highest-version (latest) rates. Proposals are direct-seeded because this is a
     // projection test, not a test of how proposals are created.
     await seedRateProposal(runtime, {
-      id: "quote-old",
+      id: asWorkflowRateProposalId("quote-old"),
       leadId: withData.id,
       round: 1,
       proposedDebitRate: 1.0,
@@ -60,11 +62,11 @@ describe("integration record export columns", () => {
       paybackPricing: 10,
       proposedBy: executiveId,
       outcome: "revision_requested",
-      proposedAt: 1_000,
-      decidedAt: 1_200,
+      proposedAt: new Date(1_000),
+      decidedAt: new Date(1_200),
     });
     await seedRateProposal(runtime, {
-      id: "quote-latest",
+      id: asWorkflowRateProposalId("quote-latest"),
       leadId: withData.id,
       round: 2,
       proposedDebitRate: 1.5,
@@ -74,14 +76,14 @@ describe("integration record export columns", () => {
       paybackPricing: 11,
       proposedBy: executiveId,
       outcome: "pending",
-      proposedAt: 1_500,
+      proposedAt: new Date(1_500),
       decidedAt: null,
     });
 
     const rows = await runtime.integrations.recordExportQuery.export({
       actorUserId: executiveId,
       actorRole: "superuser",
-      actorBranchId: 1,
+      actorBranchId: actorBy("execOne").branchId,
     });
 
     const enriched = rows.find((row) => row.id === withData.id);

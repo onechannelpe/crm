@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import type { ColumnType } from "kysely";
 
 declare const idBrand: unique symbol;
@@ -60,6 +61,10 @@ function assertNonEmptyStringId<Name extends string>(
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${name} must be a non-empty string`);
   }
+  // The sole brand cast in the codebase: every branded id is born here or via
+  // the newXxxId generators below. Keeping the cast in one place lets
+  // no-unsafe-type-assertion flag every other `as XxxId` site as a leak.
+  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return value as BrandedId<Name>;
 }
 
@@ -131,6 +136,12 @@ export function asWorkflowArtifactId(value: string): WorkflowArtifactId {
   return assertNonEmptyStringId(value, "WorkflowArtifactId");
 }
 
+export function asArtifactDownloadTokenId(
+  value: string,
+): ArtifactDownloadTokenId {
+  return assertNonEmptyStringId(value, "ArtifactDownloadTokenId");
+}
+
 export function asFileAssetId(value: string): FileAssetId {
   return assertNonEmptyStringId(value, "FileAssetId");
 }
@@ -167,4 +178,15 @@ export function asAuthLoginFlowId(value: string): AuthLoginFlowId {
 
 export function asWebauthnChallengeId(value: string): WebauthnChallengeId {
   return assertNonEmptyStringId(value, "WebauthnChallengeId");
+}
+
+// Generators for repo-generated ids. Routing UUIDv7 through the validating
+// constructor means a freshly minted id passes the same non-empty check as
+// a parsed one, so there is a single mint path per kind.
+export function newWorkflowLeadId(): WorkflowLeadId {
+  return asWorkflowLeadId(randomUUIDv7());
+}
+
+export function newFulfillmentOrderId(): FulfillmentOrderId {
+  return asFulfillmentOrderId(randomUUIDv7());
 }

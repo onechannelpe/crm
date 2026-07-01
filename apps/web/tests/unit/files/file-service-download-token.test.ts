@@ -4,14 +4,22 @@ import type { DownloadTokenDeps } from "~/server/files/service/contracts";
 import { requestDownloadToken } from "~/server/files/service/request-download-token";
 import type { FileAsset, WorkflowArtifact } from "~/server/files/types";
 import type { AppContext } from "~/server/platform/action/context";
+import {
+  asBranchId,
+  asFileAssetId,
+  asUserId,
+  asWorkflowArtifactId,
+} from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
+
+const NOW = new Date(1_700_000_000_000);
 
 function makeContext(overrides?: Partial<AppContext>): AppContext {
   return {
     actor: {
       id: "sess-1",
-      userId: 10,
-      branchId: 1,
+      userId: asUserId("10"),
+      branchId: asBranchId("1"),
       role: "back_office",
       onboardingCompleted: true,
       sessionClass: "app",
@@ -24,35 +32,35 @@ function makeContext(overrides?: Partial<AppContext>): AppContext {
     ipAddress: "127.0.0.1",
     userAgent: "vitest",
     publicOrigin: "http://localhost:3000",
-    now: () => 1_700_000_000_000,
+    now: () => NOW,
     ...overrides,
   };
 }
 
 function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
   return {
-    id: "artifact-42",
+    id: asWorkflowArtifactId("artifact-42"),
     artifactType: "records_export",
     direction: "download",
     executionMode: "sync",
     status: "ready",
-    requestedByUserId: 10,
-    scopeBranchId: 1,
+    requestedByUserId: asUserId("10"),
+    scopeBranchId: asBranchId("1"),
     scopeTeamId: null,
     policySnapshotJson: "{}",
     workflowContextJson: "{}",
     errorCode: null,
     errorMessage: null,
     expiresAt: null,
-    createdAt: 1,
-    updatedAt: 1,
+    createdAt: new Date(1),
+    updatedAt: new Date(1),
     ...overrides,
   };
 }
 
 function makeFileAsset(overrides?: Partial<FileAsset>): FileAsset {
   return {
-    id: 7,
+    id: asFileAssetId("7"),
     storageKey: "files/records-export-42.csv",
     originalFilename: "leads.csv",
     safeDisplayFilename: "leads.csv",
@@ -64,7 +72,7 @@ function makeFileAsset(overrides?: Partial<FileAsset>): FileAsset {
     scanStatus: "clean",
     scanEngine: null,
     scanReference: null,
-    createdAt: 1,
+    createdAt: new Date(1),
     ...overrides,
   };
 }
@@ -84,7 +92,7 @@ function createDownloadTokenDeps(input: {
           return input.artifact;
         },
         findFileAssetForArtifact: async () => input.fileAsset ?? null,
-        insert: async () => "unused",
+        insert: async () => asWorkflowArtifactId("unused"),
         updateStatus: async () => {},
         insertFileBinding: async () => {},
         list: async () => [],
@@ -117,7 +125,7 @@ describe("requestDownloadToken", () => {
 
     const result = await requestDownloadToken(
       makeContext(),
-      "artifact-42",
+      asWorkflowArtifactId("artifact-42"),
       deps,
     );
 
@@ -140,7 +148,7 @@ describe("requestDownloadToken", () => {
 
     const result = await requestDownloadToken(
       makeContext(),
-      "artifact-42",
+      asWorkflowArtifactId("artifact-42"),
       deps,
     );
 
@@ -157,7 +165,7 @@ describe("requestDownloadToken", () => {
 
     const result = await requestDownloadToken(
       makeContext(),
-      "artifact-42",
+      asWorkflowArtifactId("artifact-42"),
       deps,
     );
 
@@ -170,14 +178,14 @@ describe("requestDownloadToken", () => {
       artifact: makeArtifact({
         status: "ready",
         scopeBranchId: null,
-        requestedByUserId: 999,
+        requestedByUserId: asUserId("999"),
       }),
       fileAsset: makeFileAsset(),
     });
 
     const result = await requestDownloadToken(
       makeContext(),
-      "artifact-42",
+      asWorkflowArtifactId("artifact-42"),
       deps,
     );
 

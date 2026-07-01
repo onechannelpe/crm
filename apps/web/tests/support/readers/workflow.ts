@@ -4,6 +4,7 @@ import { workflowRepos } from "@tests/support/integration/workflow-ports";
 import type { TestRuntime } from "@tests/support/runtime/app";
 
 import type { LeadStatus } from "~/contracts/workflow/vocabulary";
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 // Lead invariants are asserted through getLeadDetail, the same read model production
@@ -15,7 +16,7 @@ import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-deta
 async function loadLead(
   runtime: TestRuntime,
   actor: TestActor,
-  leadId: string,
+  leadId: WorkflowLeadId,
 ) {
   const detail = await getLeadDetail(workflowRepos(runtime), {
     actorUserId: actor.userId,
@@ -29,8 +30,8 @@ export async function expectLeadMetadata(
   runtime: TestRuntime,
   input: {
     actor: TestActor;
-    leadId: string;
-    updatedBy: number;
+    leadId: WorkflowLeadId;
+    updatedBy: UserId;
     minUpdatedAt?: number;
   },
 ): Promise<void> {
@@ -55,16 +56,16 @@ export async function expectLeadAssignment(
   runtime: TestRuntime,
   input: {
     actor: TestActor;
-    leadId: string;
-    executiveId: number;
-    updatedBy: number;
+    leadId: WorkflowLeadId;
+    executiveId: UserId;
+    updatedBy: UserId;
   },
 ): Promise<void> {
   const lead = await loadLead(runtime, input.actor, input.leadId);
 
   if (lead.executiveId !== input.executiveId) {
     throw new Error(
-      `expected executiveId=${input.executiveId} got ${String(lead.executiveId)}`,
+      `expected executiveId=${input.executiveId} got ${lead.executiveId}`,
     );
   }
   if (lead.updatedBy !== input.updatedBy) {
@@ -78,8 +79,8 @@ export async function expectLeadStatus(
   runtime: TestRuntime,
   input: {
     actor: TestActor;
-    leadId: string;
-    updatedBy: number;
+    leadId: WorkflowLeadId;
+    updatedBy: UserId;
     status: LeadStatus;
   },
 ): Promise<void> {

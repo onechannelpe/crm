@@ -19,7 +19,7 @@ describe("auth funnel observability", () => {
       actionObservations: scenario.ctx.repos.actionObservations,
       authFunnelEvents: scenario.ctx.repos.authFunnelEvents,
     });
-    const baseTime = 1_700_000_000_000;
+    const baseTimeMs = 1_700_000_000_000;
 
     await service.recordAuthFunnelEvent({
       traceId: "trace-view",
@@ -31,7 +31,7 @@ describe("auth funnel observability", () => {
       method: null,
       outcome: "viewed",
       code: null,
-      createdAt: baseTime,
+      createdAt: new Date(baseTimeMs),
     });
 
     await service.recordAuthFunnelEvent({
@@ -44,7 +44,7 @@ describe("auth funnel observability", () => {
       method: "password",
       outcome: "totp_required",
       code: null,
-      createdAt: baseTime + 1,
+      createdAt: new Date(baseTimeMs + 1),
     });
 
     await service.recordAuthFunnelEvent({
@@ -57,12 +57,12 @@ describe("auth funnel observability", () => {
       method: "password_totp",
       outcome: "failed",
       code: "invalid_totp",
-      createdAt: baseTime + 2,
+      createdAt: new Date(baseTimeMs + 2),
     });
 
     const recent = await service.listRecentAuthFunnel({
-      fromInclusive: baseTime - 1000,
-      toInclusive: baseTime + 1000,
+      fromInclusive: new Date(baseTimeMs - 1000),
+      toInclusive: new Date(baseTimeMs + 1000),
       limit: 10,
     });
     expect(recent).toHaveLength(3);
@@ -70,8 +70,8 @@ describe("auth funnel observability", () => {
     expect(recent[0]?.code).toBe("invalid_totp");
 
     const summary = await service.summarizeAuthFunnel({
-      fromInclusive: baseTime - 1000,
-      toInclusive: baseTime + 1000,
+      fromInclusive: new Date(baseTimeMs - 1000),
+      toInclusive: new Date(baseTimeMs + 1000),
     });
     expect(summary).toEqual(
       expect.arrayContaining([

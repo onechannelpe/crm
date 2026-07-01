@@ -1,10 +1,12 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
+import type { OrganizationPersonId, UserId } from "~/server/shared/ids";
+
 export interface LeadAssignmentSeedRow {
-  userId: number;
-  contactId: number;
-  assignedAt: number;
-  expiresAt: number;
+  userId: UserId;
+  contactId: OrganizationPersonId;
+  assignedAt: Date;
+  expiresAt: Date;
   status: "active" | "completed";
 }
 

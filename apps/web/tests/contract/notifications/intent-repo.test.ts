@@ -1,4 +1,7 @@
-import { anOutboxIntentRow } from "@tests/support/builders/notifications";
+import {
+  anOutboxIntentRow,
+  notificationIntentId,
+} from "@tests/support/builders/notifications";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -8,7 +11,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
 
-const NOW = 1_700_000_000_000;
+const NOW = new Date(1_700_000_000_000);
+const RETRY_AT = new Date(NOW.getTime() + 5_000);
+const WORKER_ID = "worker-1";
 
 describe("intent repository", () => {
   let ctx: TestDbContext;
@@ -32,7 +37,7 @@ describe("intent repository", () => {
     await seedPending("intent-1");
     const repository = createIntentRepository(ctx.db);
 
-    const leased = await repository.claimPending("worker-1", NOW, 10, 30_000);
+    const leased = await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
 
     expect(leased).toMatchObject([
       { id: "intent-1", attempt_count: 1, max_attempts: 5 },
@@ -40,12 +45,12 @@ describe("intent repository", () => {
     const row = await ctx.db
       .selectFrom("notification_outbox")
       .select(["queue_state", "lease_owner", "lease_until"])
-      .where("id", "=", "intent-1")
+      .where("id", "=", notificationIntentId("intent-1"))
       .executeTakeFirstOrThrow();
     expect(row).toEqual({
       queue_state: "processing",
       lease_owner: "worker-1",
-      lease_until: NOW + 30_000,
+      lease_until: new Date(NOW.getTime() + 30_000),
     });
   });
 
@@ -53,8 +58,8 @@ describe("intent repository", () => {
     await seedPending("intent-1");
     const repository = createIntentRepository(ctx.db);
 
-    await repository.claimPending("worker-1", NOW, 10, 30_000);
-    const second = await repository.claimPending("worker-2", NOW, 10, 30_000);
+    await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
+    const second = await repository.store.claim("worker-2", NOW, 10, 30_000);
 
     expect(second).toEqual([]);
   });
@@ -62,9 +67,13 @@ describe("intent repository", () => {
   it("records expanded state and clears the lease with one timestamp", async () => {
     await seedPending("intent-1");
     const repository = createIntentRepository(ctx.db);
-    await repository.claimPending("worker-1", NOW, 10, 30_000);
+    await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
 
-    await repository.markExpanded("intent-1", NOW);
+    await repository.store.markDone(
+      notificationIntentId("intent-1"),
+      WORKER_ID,
+      NOW,
+    );
 
     const row = await ctx.db
       .selectFrom("notification_outbox")
@@ -75,7 +84,7 @@ describe("intent repository", () => {
         "lease_until",
         "error",
       ])
-      .where("id", "=", "intent-1")
+      .where("id", "=", notificationIntentId("intent-1"))
       .executeTakeFirstOrThrow();
     expect(row).toEqual({
       queue_state: "done",
@@ -90,10 +99,20 @@ describe("intent repository", () => {
     await seedPending("intent-retry");
     await seedPending("intent-fail");
     const repository = createIntentRepository(ctx.db);
-    await repository.claimPending("worker-1", NOW, 10, 30_000);
+    await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
 
-    await repository.scheduleRetry("intent-retry", NOW + 5_000);
-    await repository.markFailed("intent-fail", "boom", NOW);
+    await repository.store.scheduleRetry(
+      notificationIntentId("intent-retry"),
+      WORKER_ID,
+      RETRY_AT,
+      null,
+    );
+    await repository.store.markFailed(
+      notificationIntentId("intent-fail"),
+      WORKER_ID,
+      NOW,
+      "boom",
+    );
 
     const rows = await ctx.db
       .selectFrom("notification_outbox")
@@ -111,7 +130,7 @@ describe("intent repository", () => {
       {
         id: "intent-retry",
         queue_state: "pending",
-        available_at: NOW + 5_000,
+        available_at: RETRY_AT,
         error: null,
         lease_owner: null,
       },
@@ -122,11 +141,15 @@ describe("intent repository", () => {
     await seedPending("intent-1");
     await seedPending("intent-2");
     const repository = createIntentRepository(ctx.db);
-    await repository.claimPending("worker-1", NOW, 1, 30_000);
+    await repository.store.claim(WORKER_ID, NOW, 1, 30_000);
 
     expect(await repository.countOutstanding()).toBe(2);
 
-    await repository.markExpanded("intent-1", NOW);
+    await repository.store.markDone(
+      notificationIntentId("intent-1"),
+      WORKER_ID,
+      NOW,
+    );
     expect(await repository.countOutstanding()).toBe(1);
   });
 });

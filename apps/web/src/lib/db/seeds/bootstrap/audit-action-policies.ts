@@ -11,7 +11,11 @@ const PROTECTED_HIGH_RISK_ACTIONS = [
   "rate_limit_exceeded",
 ] as const;
 
-export async function run<T>(db: Kysely<T>): Promise<void> {
+export async function run(db: Kysely<any>): Promise<void> {
+  // Seeds run through the migration harness, which passes an untyped Kysely.
+  // Cast here validates table names against the schema so this seed fails to
+  // compile if `audit_action_policies` is renamed without a migration update.
+  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const typed = db as unknown as Kysely<Database>;
   const seededAt = new Date(0);
 

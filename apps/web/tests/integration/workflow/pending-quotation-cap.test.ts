@@ -15,12 +15,15 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
+import type { WorkflowLeadId } from "~/server/shared/ids";
 import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
 import { registerLead } from "~/server/workflow/lead/commands/register-lead";
 
-async function fillPendingQuotations(runtime: TestRuntime): Promise<string[]> {
+async function fillPendingQuotations(
+  runtime: TestRuntime,
+): Promise<WorkflowLeadId[]> {
   const givenLead = createLeadFixtureWriter(runtime);
-  const leadIds: string[] = [];
+  const leadIds: WorkflowLeadId[] = [];
   for (let i = 0; i < MAX_PENDING_QUOTATION_DECISIONS; i++) {
     const lead = await givenLead({
       kind: "pricing",

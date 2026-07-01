@@ -1,5 +1,12 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
+import type {
+  BranchId,
+  OrganizationId,
+  OrganizationPersonId,
+  UserId,
+} from "~/server/shared/ids";
+
 import { seedLeadAssignments, type LeadAssignmentSeedRow } from "./seed";
 
 export function createContactsTestKit(ctx: TestDbContext) {
@@ -9,12 +16,12 @@ export function createContactsTestKit(ctx: TestDbContext) {
     },
 
     async lockOrganization(input: {
-      organizationId: string;
-      branchId: number;
-      userId: number;
-      now?: number;
+      organizationId: OrganizationId;
+      branchId: BranchId;
+      userId: UserId;
+      now?: Date;
     }): Promise<void> {
-      const lockedAt = input.now ?? Date.now();
+      const lockedAt = input.now ?? new Date();
       await ctx.db
         .insertInto("organization_branch_locks")
         .values({
@@ -34,9 +41,9 @@ export function createContactsTestKit(ctx: TestDbContext) {
     },
 
     async visibleOrganizationIds(
-      branchId: number,
+      branchId: BranchId,
       limit = 50,
-    ): Promise<string[]> {
+    ): Promise<OrganizationId[]> {
       const rows = await ctx.repos.organizations.findUnlockedOrLockedToBranch(
         branchId,
         limit,
@@ -44,14 +51,16 @@ export function createContactsTestKit(ctx: TestDbContext) {
       return rows.map((row) => row.id);
     },
 
-    async activeContactIdsForUser(userId: number): Promise<number[]> {
+    async activeContactIdsForUser(
+      userId: UserId,
+    ): Promise<OrganizationPersonId[]> {
       const rows = await ctx.repos.contactAssignments.findActiveByUser(userId);
       return rows.map((row) => row.contact_id);
     },
 
     async hasActiveAssignment(
-      userId: number,
-      contactId: number,
+      userId: UserId,
+      contactId: OrganizationPersonId,
     ): Promise<boolean> {
       return ctx.repos.contactAssignments.hasActiveForContact(
         userId,
@@ -59,10 +68,10 @@ export function createContactsTestKit(ctx: TestDbContext) {
       );
     },
 
-    async lockSnapshot(organizationId: string): Promise<{
-      lockedBranchId: number | null;
-      lockedByUserId: number | null;
-      lockedAt: number | null;
+    async lockSnapshot(organizationId: OrganizationId): Promise<{
+      lockedBranchId: BranchId | null;
+      lockedByUserId: UserId | null;
+      lockedAt: Date | null;
     }> {
       const lock = await ctx.db
         .selectFrom("organization_branch_locks")

@@ -1,4 +1,5 @@
 import { parseFieldChanges, type FieldChange } from "~/contracts/events";
+import type { Json } from "~/contracts/json";
 import type { EventId, UserId } from "~/server/shared/ids";
 import type {
   LeadHistoryEntry,
@@ -11,8 +12,8 @@ export type HistoryEventRow = {
   event_type: LeadHistoryEntry["eventType"];
   actor_user_id: UserId | null;
   subject_user_id: UserId | null;
-  payload_json: unknown;
-  changes_json: unknown;
+  payload_json: Json;
+  changes_json: Json;
   occurred_at: Date;
   actor_names: string | null;
   actor_first_surname: string | null;

@@ -1,3 +1,5 @@
+import type { Json } from "./json";
+
 // Stored values remain presentation-independent; labels resolve when read.
 export type FieldChangeValue = string | number | boolean | null;
 
@@ -94,7 +96,15 @@ export function parseFieldChanges(raw: unknown): FieldChange[] {
 }
 
 // Event-specific payloads remain opaque because their data is heterogeneous.
-export function serializeEventPayload(payload?: unknown): unknown | null {
+// Accepts `unknown` because callers often hold values that are JSON-shaped but
+// not statically narrowed (form data, third-party responses, etc). The return
+// type is a `Json` contract for what is stored, and the trust boundary sits
+// with the consumer: a non-JSON value would still be passed through and break
+// at the next read that does parse it.
+export function serializeEventPayload(payload?: unknown): Json | null {
   if (payload === null || payload === undefined) return null;
-  return payload;
+  // The input is `unknown` because the API accepts any opaque event payload;
+  // we declare the return type as `Json` so the storage contract is honest.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  return payload as Json;
 }

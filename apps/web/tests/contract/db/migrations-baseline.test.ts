@@ -71,7 +71,7 @@ describe("schema baseline", () => {
 
       await db
         .insertInto("branches")
-        .values({ name: "Lima", created_at: Date.now() })
+        .values({ name: "Lima", created_at: new Date() })
         .execute();
 
       await migrateToLatest(db);

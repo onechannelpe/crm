@@ -4,6 +4,7 @@ import type { OrganizationEnrichment } from "~/server/identity/organization/enri
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { parseRuc } from "~/server/shared/document";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId } from "~/server/shared/ids";
 import { Err, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
@@ -30,7 +31,7 @@ export async function registerLead(
     now: Date;
     identity: OrganizationEnrichment;
   },
-): Promise<Result<{ leadId: string }, DomainError>> {
+): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   const actor = input.actor;
   const now = ports.now;
   const repos = createWorkflowRepos(ports.executor);

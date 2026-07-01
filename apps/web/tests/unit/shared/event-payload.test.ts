@@ -35,10 +35,10 @@ describe("event payload serialization", () => {
     expect(serializeEventPayload(null)).toBeNull();
   });
 
-  it("serializes falsey but valid values", () => {
-    expect(serializeEventPayload(false)).toBe("false");
-    expect(serializeEventPayload(0)).toBe("0");
-    expect(serializeEventPayload("")).toBe('""');
+  it("passes through falsey but valid values", () => {
+    expect(serializeEventPayload(false)).toBe(false);
+    expect(serializeEventPayload(0)).toBe(0);
+    expect(serializeEventPayload("")).toBe("");
   });
 });
 

@@ -16,16 +16,7 @@ function errorMessage(error: unknown): string {
 export function createJobQueue<TJob extends QueueJobBase>(
   config: JobQueueConfig<TJob>,
 ): QueueRunner {
-  const {
-    name,
-    leaseMs,
-    store,
-    workerId,
-    claimFilter,
-    handle,
-    onSettled,
-    now,
-  } = config;
+  const { name, leaseMs, store, workerId, claimFilter, now } = config;
   const maxConcurrency = config.maxConcurrency ?? 1;
   const timeoutMs = config.timeoutMs ?? 120_000;
 
@@ -107,7 +98,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
     try {
       let settlement: Settlement;
       try {
-        settlement = await handle(job, controller.signal);
+        settlement = await config.handle(job, controller.signal);
         if (controller.signal.aborted) {
           throw new Error("Job aborted after processing");
         }
@@ -125,8 +116,8 @@ export function createJobQueue<TJob extends QueueJobBase>(
 
       const outcome = resolve(job, settlement);
       await settle(job.id, outcome);
-      if (onSettled) {
-        await onSettled(job, outcome);
+      if (config.onSettled) {
+        await config.onSettled(job, outcome);
       }
       if (outcome.kind === "done") {
         logger.info("job_completed", { jobId: job.id });

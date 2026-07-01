@@ -3,6 +3,7 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
 import type { EngineClient } from "~/server/shared/engine/client";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
@@ -12,13 +13,15 @@ import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
 describe("lead refill service benchmark", () => {
   const db = createBenchDbFixture("bench-leads-request-service");
   let engine!: EngineClient;
-  let userIds: number[] = [];
+  let branchId!: BranchId;
+  let userIds: UserId[] = [];
   const cursor = { value: 0 };
   let assignmentContext!: ReturnType<typeof createContactAssignmentsContext>;
 
   beforeAll(async () => {
     const ctx = await db.setup();
     const fixtures = await seedLeadsRequestFixtures(ctx);
+    branchId = fixtures.branchId;
     userIds = fixtures.userIds;
     engine = fixtures.engineClient;
 
@@ -44,7 +47,7 @@ describe("lead refill service benchmark", () => {
       const result = await assignContacts(
         {
           actorUserId: userId,
-          branchId: 1,
+          branchId,
         },
         {
           repos: assignmentContext.repos,

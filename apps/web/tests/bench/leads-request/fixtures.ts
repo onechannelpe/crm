@@ -1,21 +1,33 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
+import { TEST_FIXTURES } from "@tests/support/runtime/db";
 
 import type { SearchIntent } from "~/contracts/search/vocabulary";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { EngineClient } from "~/server/shared/engine/client";
+import type {
+  EngineClient,
+  RecordCandidatesRequest,
+} from "~/server/shared/engine/client";
 import type {
   RecordCandidate,
   SearchResult,
 } from "~/server/shared/engine/types";
+import {
+  asBranchId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 80;
-const USER_ID_START = 90_000;
+const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
+const ACTOR_USER_ID = asUserId(TEST_FIXTURES.users.backOne.id);
 
 interface LeadsRequestSeed {
-  userIds: number[];
+  branchId: BranchId;
+  userIds: UserId[];
   engineClient: EngineClient;
 }
 
@@ -23,19 +35,19 @@ export async function seedLeadsRequestFixtures(
   ctx: TestDbContext,
 ): Promise<LeadsRequestSeed> {
   const users = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: USER_ID_START + index,
-    branch_id: 1,
+    id: asUserId(`bench-leads-user-${index}`),
+    branch_id: BRANCH_ID,
     team_id: null,
-    username: `bench.leads${USER_ID_START + index}`,
-    email: `bench-leads-${USER_ID_START + index}@test.local`,
+    username: `bench.leads${index}`,
+    email: `bench-leads-${index}@test.local`,
     password_hash: "hash",
-    names: `Bench Leads ${USER_ID_START + index}`,
+    names: `Bench Leads ${index}`,
     first_surname: "User",
     second_surname: "Bench",
     onboarding_completed_at: BENCH_NOW,
     role: "executive" as const,
     executive_category: "elite" as const,
-    is_active: 1,
+    is_active: true,
     created_at: BENCH_NOW,
   }));
 
@@ -56,7 +68,7 @@ export async function seedLeadsRequestFixtures(
       user_id: userId,
       amount: 5,
       reason: "bench_seed",
-      actor_user_id: 2,
+      actor_user_id: ACTOR_USER_ID,
     });
   }
 
@@ -109,12 +121,10 @@ export async function seedLeadsRequestFixtures(
         },
       ]);
     },
-    async requestCandidates(input: {
-      branchId: number;
-      userId: number;
-      amount: number;
-    }): Promise<Result<RecordCandidate[], DomainError>> {
-      const index = input.userId - USER_ID_START;
+    async requestCandidates(
+      input: RecordCandidatesRequest,
+    ): Promise<Result<RecordCandidate[], DomainError>> {
+      const index = userIds.indexOf(input.userId);
       return Ok([
         {
           ruc: `2099${String(index).padStart(8, "0")}`,
@@ -127,5 +137,5 @@ export async function seedLeadsRequestFixtures(
     },
   };
 
-  return { userIds, engineClient };
+  return { branchId: BRANCH_ID, userIds, engineClient };
 }

@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { applySunatEnrichment } from "~/server/identity/enrichment/writeback";
+import { createOrganizationEnrichmentProjection } from "~/server/identity/organization/apply-enrichment";
 import type { PartyRepository } from "~/server/identity/organization/repo";
+import { asOrganizationId } from "~/server/shared/ids";
 
 function createPartyRepositoryDouble() {
   const findOrganizationByRuc = vi.fn<PartyRepository["findOrganizationByRuc"]>(
     async () => ({
-      id: "01974fd5-f261-7a7d-93f5-2f3d0f963010",
+      id: asOrganizationId("01974fd5-f261-7a7d-93f5-2f3d0f963010"),
       ruc: "20123456789",
       legalName: "Acme",
       giroNegocio: null,
@@ -37,44 +38,21 @@ function createPartyRepositoryDouble() {
   return { repo, findOrganizationByRuc, updateOrganizationFromEnrichment };
 }
 
-describe("applySunatEnrichment", () => {
+describe("createOrganizationEnrichmentProjection", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("ignores overlays for non-ruc documents", async () => {
+  it("skips writes when every value normalizes to null", async () => {
     const { repo, updateOrganizationFromEnrichment } =
       createPartyRepositoryDouble();
 
-    await applySunatEnrichment({
-      overlay: {
-        documentType: "dni",
-        documentValue: "12345678",
-        legalName: "Persona",
-        address: "Calle 1",
-        district: "Lima",
-        department: "Lima",
-      },
-      party: repo,
-    });
-
-    expect(updateOrganizationFromEnrichment).not.toHaveBeenCalled();
-  });
-
-  it("skips writes when overlay has only empty values", async () => {
-    const { repo, updateOrganizationFromEnrichment } =
-      createPartyRepositoryDouble();
-
-    await applySunatEnrichment({
-      overlay: {
-        documentType: "ruc",
-        documentValue: "20123456789",
-        legalName: "   ",
-        address: null,
-        district: "",
-        department: " ",
-      },
-      party: repo,
+    await createOrganizationEnrichmentProjection(repo)({
+      ruc: "20123456789",
+      legalName: "   ",
+      address: null,
+      district: "",
+      department: " ",
     });
 
     expect(updateOrganizationFromEnrichment).not.toHaveBeenCalled();
@@ -84,20 +62,16 @@ describe("applySunatEnrichment", () => {
     const { repo, updateOrganizationFromEnrichment } =
       createPartyRepositoryDouble();
 
-    await applySunatEnrichment({
-      overlay: {
-        documentType: "ruc",
-        documentValue: "20123456789",
-        legalName: "  Acme SAC  ",
-        address: "  Av. Lima 123  ",
-        district: "  Miraflores ",
-        department: " Lima ",
-      },
-      party: repo,
+    await createOrganizationEnrichmentProjection(repo)({
+      ruc: "20123456789",
+      legalName: "  Acme SAC  ",
+      address: "  Av. Lima 123  ",
+      district: "  Miraflores ",
+      department: " Lima ",
     });
 
     expect(updateOrganizationFromEnrichment).toHaveBeenCalledWith({
-      organizationId: "01974fd5-f261-7a7d-93f5-2f3d0f963010",
+      organizationId: asOrganizationId("01974fd5-f261-7a7d-93f5-2f3d0f963010"),
       legalName: "Acme SAC",
       address: "Av. Lima 123",
       district: "Miraflores",
@@ -105,23 +79,38 @@ describe("applySunatEnrichment", () => {
     });
   });
 
-  it("skips writes when organization does not exist", async () => {
+  it("skips writes when organization does not exist for the ruc", async () => {
     const { repo, findOrganizationByRuc, updateOrganizationFromEnrichment } =
       createPartyRepositoryDouble();
     findOrganizationByRuc.mockResolvedValueOnce(undefined);
 
-    await applySunatEnrichment({
-      overlay: {
-        documentType: "ruc",
-        documentValue: "20123456789",
-        legalName: "Acme SAC",
-        address: null,
-        district: null,
-        department: null,
-      },
-      party: repo,
+    await createOrganizationEnrichmentProjection(repo)({
+      ruc: "20123456789",
+      legalName: "Acme SAC",
+      address: null,
+      district: null,
+      department: null,
     });
 
     expect(updateOrganizationFromEnrichment).not.toHaveBeenCalled();
+  });
+
+  it("only writes fields that normalize to a non-empty value", async () => {
+    const { repo, updateOrganizationFromEnrichment } =
+      createPartyRepositoryDouble();
+
+    await createOrganizationEnrichmentProjection(repo)({
+      ruc: "20123456789",
+      legalName: "Acme SAC",
+      address: "  ",
+      district: null,
+      department: "Lima",
+    });
+
+    expect(updateOrganizationFromEnrichment).toHaveBeenCalledWith({
+      organizationId: asOrganizationId("01974fd5-f261-7a7d-93f5-2f3d0f963010"),
+      legalName: "Acme SAC",
+      department: "Lima",
+    });
   });
 });

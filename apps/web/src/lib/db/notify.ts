@@ -79,9 +79,9 @@ export function createPgListener(connectionString: string): PgListener {
     });
 
     await next.connect();
-    for (const channel of handlers.keys()) {
-      await next.query(`LISTEN "${channel}"`);
-    }
+    await Promise.all(
+      [...handlers.keys()].map((channel) => next.query(`LISTEN "${channel}"`)),
+    );
     client = next;
     reconnectDelayMs = 500;
     logger.info("listener_connected", { channels: [...handlers.keys()] });

@@ -12,7 +12,8 @@ import type { UserSessionRow } from "~/lib/auth/types";
 const execOne = getSeededIdentity("execOne");
 
 function buildSessionRow(sessionId: string, nowTs: number): UserSessionRow {
-  const expiresAt = Date.now() + 60 * 60 * 1000;
+  const nowDate = new Date(nowTs);
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
   return {
     id: sessionId,
     user_id: execOne.userId,
@@ -24,8 +25,8 @@ function buildSessionRow(sessionId: string, nowTs: number): UserSessionRow {
     strong_auth_at: null,
     ip_address: null,
     user_agent: null,
-    created_at: nowTs,
-    last_activity: nowTs,
+    created_at: nowDate,
+    last_activity: nowDate,
     expires_at: expiresAt,
   };
 }

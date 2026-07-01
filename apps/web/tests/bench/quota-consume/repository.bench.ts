@@ -1,5 +1,7 @@
+import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { asUserId, type UserId } from "~/server/shared/ids";
 import { currentMonthlyPeriod } from "~/server/shared/time";
 
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -9,8 +11,9 @@ import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
 
 describe("search capacity grant repository benchmark", () => {
   const db = createBenchDbFixture("bench-quota-consume-repository");
-  let userIds: number[] = [];
+  let userIds: UserId[] = [];
   const cursor = { value: 0 };
+  const actorUserId = asUserId(TEST_FIXTURES.users.backOne.id);
 
   beforeAll(async () => {
     const ctx = await db.setup();
@@ -19,7 +22,7 @@ describe("search capacity grant repository benchmark", () => {
     for (const userId of userIds) {
       await ctx.repos.searchCapacityGrants.insert({
         user_id: userId,
-        actor_user_id: 2,
+        actor_user_id: actorUserId,
         amount: 2,
         reason: "bench_seed",
       });

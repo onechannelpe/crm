@@ -21,17 +21,17 @@ vi.mock("~/lib/auth/access/session", () => ({
 }));
 
 vi.mock("~/server/platform/action/context", () => ({
-  createAppContext: vi.fn<
-    (actor: AuthSession, now: () => number) => AppContext
-  >((actor, now) => ({
-    actor,
-    requestId: "req",
-    traceId: "trace",
-    ipAddress: "127.0.0.1",
-    userAgent: null,
-    publicOrigin: "http://localhost",
-    now,
-  })),
+  createAppContext: vi.fn<(actor: AuthSession, now: () => Date) => AppContext>(
+    (actor, now) => ({
+      actor,
+      requestId: "req",
+      traceId: "trace",
+      ipAddress: "127.0.0.1",
+      userAgent: null,
+      publicOrigin: "http://localhost",
+      now,
+    }),
+  ),
 }));
 
 // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
@@ -40,7 +40,7 @@ const actor = { userId: 7, role: "executive" } as unknown as AuthSession;
 function ports() {
   const report = vi.fn<(error: unknown) => void>();
   const record = vi.fn<(row: unknown) => void>();
-  return { now: (): number => 1_000, report, record };
+  return { now: (): Date => new Date(1_000), report, record };
 }
 
 const okExecute = () =>

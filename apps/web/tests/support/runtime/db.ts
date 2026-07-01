@@ -13,6 +13,13 @@ import {
 import { createDb } from "~/lib/db/client";
 import { migrateToLatest } from "~/lib/db/migrate";
 import type { Database } from "~/lib/db/types";
+import {
+  asBranchId,
+  asOrganizationId,
+  asOrganizationPersonId,
+  asPersonId,
+  asUserId,
+} from "~/server/shared/ids";
 
 import {
   createTestRepositories,
@@ -41,23 +48,31 @@ const BASE_URL =
 // creation across processes.
 const TEMPLATE_LOCK_KEY = 0x6372_6d74; // "crmt"
 
-const TEST_ORG_ID_LIMA = "01974fd5-f261-7a7d-93f5-2f3d0f963001";
-const TEST_ORG_ID_NORTE = "01974fd5-f261-7a7d-93f5-2f3d0f963002";
+const TEST_ORG_ID_LIMA = asOrganizationId(
+  "01974fd5-f261-7a7d-93f5-2f3d0f963001",
+);
+const TEST_ORG_ID_NORTE = asOrganizationId(
+  "01974fd5-f261-7a7d-93f5-2f3d0f963002",
+);
 
-const BRANCH_LIMA_ID = "01974fd5-f261-7a7d-93f5-2f3d0f960001";
-const BRANCH_NORTE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f960002";
+const BRANCH_LIMA_ID = asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960001");
+const BRANCH_NORTE_ID = asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960002");
 
-const USER_EXEC_ONE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961001";
-const USER_BACK_ONE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961002";
-const USER_EXEC_TWO_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961003";
-const USER_BACK_TWO_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961004";
-const USER_SUPER_ID = "01974fd5-f261-7a7d-93f5-2f3d0f961005";
+const USER_EXEC_ONE_ID = asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961001");
+const USER_BACK_ONE_ID = asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961002");
+const USER_EXEC_TWO_ID = asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961003");
+const USER_BACK_TWO_ID = asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961004");
+const USER_SUPER_ID = asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961005");
 
-const PERSON_LIMA_ID = "01974fd5-f261-7a7d-93f5-2f3d0f962001";
-const PERSON_NORTE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f962002";
+const PERSON_LIMA_ID = asPersonId("01974fd5-f261-7a7d-93f5-2f3d0f962001");
+const PERSON_NORTE_ID = asPersonId("01974fd5-f261-7a7d-93f5-2f3d0f962002");
 
-const ORG_PERSON_LIMA_ID = "01974fd5-f261-7a7d-93f5-2f3d0f964001";
-const ORG_PERSON_NORTE_ID = "01974fd5-f261-7a7d-93f5-2f3d0f964002";
+const ORG_PERSON_LIMA_ID = asOrganizationPersonId(
+  "01974fd5-f261-7a7d-93f5-2f3d0f964001",
+);
+const ORG_PERSON_NORTE_ID = asOrganizationPersonId(
+  "01974fd5-f261-7a7d-93f5-2f3d0f964002",
+);
 
 export const TEST_FIXTURES = {
   branches: {

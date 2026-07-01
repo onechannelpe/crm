@@ -2,7 +2,7 @@ import { createLogger } from "~/lib/observability/logger";
 import { getServerRuntime } from "~/server/platform/container";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import { JOB_TABLES } from "./registry";
+import { jobTables } from "./registry";
 
 const logger = createLogger("stale-scanner");
 
@@ -16,7 +16,7 @@ async function resetStalledJobs(
 ) {
   const now = new Date();
   await Promise.all(
-    JOB_TABLES.map(async (table) => {
+    jobTables().map(async (table) => {
       try {
         const result = await executor
           .updateTable(table)

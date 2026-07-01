@@ -1,5 +1,6 @@
 import type { ColumnType, Generated } from "kysely";
 
+import type { Json } from "~/contracts/json";
 import type {
   GeneratedId,
   IdColumn,
@@ -20,7 +21,7 @@ export interface WorkflowIntegrationJobsTable {
   rows_total: number | null;
   rows_applied: number | null;
   rows_failed: number | null;
-  results_json: unknown | null;
+  results_json: Json | null;
   lease_owner: string | null;
   lease_until: Date | null;
   attempt_count: ColumnType<number, number | undefined, number>;

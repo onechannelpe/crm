@@ -3,14 +3,22 @@ import { describe, expect, it } from "vitest";
 import type { RequestArtifactDeps } from "~/server/files/service/contracts";
 import { requestArtifact } from "~/server/files/service/request-artifact";
 import type { AppContext } from "~/server/platform/action/context";
+import {
+  asBranchId,
+  asFileAssetId,
+  asUserId,
+  asWorkflowArtifactId,
+} from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
+
+const NOW = new Date(1_700_000_000_000);
 
 function makeContext(overrides?: Partial<AppContext>): AppContext {
   return {
     actor: {
       id: "sess-1",
-      userId: 10,
-      branchId: 1,
+      userId: asUserId("10"),
+      branchId: asBranchId("1"),
       role: "back_office",
       onboardingCompleted: true,
       sessionClass: "app",
@@ -23,7 +31,7 @@ function makeContext(overrides?: Partial<AppContext>): AppContext {
     ipAddress: "127.0.0.1",
     userAgent: "vitest",
     publicOrigin: "http://localhost:3000",
-    now: () => 1_700_000_000_000,
+    now: () => NOW,
     ...overrides,
   };
 }
@@ -33,7 +41,7 @@ describe("requestArtifact", () => {
     const deps: RequestArtifactDeps = {
       repo: {
         artifacts: {
-          insert: async () => "artifact-42",
+          insert: async () => asWorkflowArtifactId("artifact-42"),
           updateStatus: async () => {},
           findById: async (id) => ({
             id,
@@ -41,23 +49,23 @@ describe("requestArtifact", () => {
             direction: "download",
             executionMode: "sync",
             status: "ready",
-            requestedByUserId: 10,
-            scopeBranchId: 1,
+            requestedByUserId: asUserId("10"),
+            scopeBranchId: asBranchId("1"),
             scopeTeamId: null,
             policySnapshotJson: "{}",
             workflowContextJson: "{}",
             errorCode: null,
             errorMessage: null,
             expiresAt: null,
-            createdAt: 1,
-            updatedAt: 1,
+            createdAt: new Date(1),
+            updatedAt: new Date(1),
           }),
           findFileAssetForArtifact: async () => null,
           insertFileBinding: async () => {},
           list: async () => [],
         },
         assets: {
-          insert: async () => 9,
+          insert: async () => asFileAssetId("9"),
           findById: async () => null,
         },
         events: {

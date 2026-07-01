@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import { checkArtifactPolicy } from "~/server/files/policy";
 import type { ArtifactType } from "~/server/files/types";
+import { asBranchId, asUserId } from "~/server/shared/ids";
 
 function runRoleMatrix(input: {
   action: "artifact.request" | "artifact.audit.read";
@@ -80,18 +81,18 @@ describe("checkArtifactPolicy role matrix", () => {
           artifactType: "integration_import",
           direction: "upload",
           status: "requested",
-          requestedByUserId: 10,
+          requestedByUserId: asUserId("10"),
         }),
-        actor: makeActor({ role: "back_office", userId: 10 }),
+        actor: makeActor({ role: "back_office", userId: asUserId("10") }),
       },
       {
         artifact: makeArtifact({
           artifactType: "sale_proof",
           direction: "upload",
           status: "requested",
-          requestedByUserId: 10,
+          requestedByUserId: asUserId("10"),
         }),
-        actor: makeActor({ role: "executive", userId: 10 }),
+        actor: makeActor({ role: "executive", userId: asUserId("10") }),
       },
     ];
 
@@ -142,8 +143,8 @@ describe("checkArtifactPolicy role matrix", () => {
   describe("artifact.read", () => {
     it("allows back_office in matching scope", () => {
       const result = checkArtifactPolicy(
-        makeActor({ role: "back_office", branchId: 1 }),
-        makeArtifact({ scopeBranchId: 1 }),
+        makeActor({ role: "back_office", branchId: asBranchId("1") }),
+        makeArtifact({ scopeBranchId: asBranchId("1") }),
         "artifact.read",
       );
       expect(result.ok).toBe(true);
@@ -151,8 +152,11 @@ describe("checkArtifactPolicy role matrix", () => {
 
     it("allows executive special-case read for sale_proof they own", () => {
       const result = checkArtifactPolicy(
-        makeActor({ role: "executive", userId: 10 }),
-        makeArtifact({ artifactType: "sale_proof", requestedByUserId: 10 }),
+        makeActor({ role: "executive", userId: asUserId("10") }),
+        makeArtifact({
+          artifactType: "sale_proof",
+          requestedByUserId: asUserId("10"),
+        }),
         "artifact.read",
       );
       expect(result.ok).toBe(true);
@@ -160,8 +164,12 @@ describe("checkArtifactPolicy role matrix", () => {
 
     it("denies branch mismatch for non-elevated actor", () => {
       const result = checkArtifactPolicy(
-        makeActor({ role: "back_office", branchId: 1, userId: 11 }),
-        makeArtifact({ scopeBranchId: 99 }),
+        makeActor({
+          role: "back_office",
+          branchId: asBranchId("1"),
+          userId: asUserId("11"),
+        }),
+        makeArtifact({ scopeBranchId: asBranchId("99") }),
         "artifact.read",
       );
       expect(result.ok).toBe(false);

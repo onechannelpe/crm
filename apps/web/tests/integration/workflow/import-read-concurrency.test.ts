@@ -1,4 +1,7 @@
-import { createLeadFixtureWriter } from "@tests/support/database/workflow-fixtures";
+import {
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
 import { createWorkflowImporter } from "@tests/support/integration/workflow-import";
 import { createNotificationReader } from "@tests/support/readers/notifications";
 import {
@@ -12,7 +15,7 @@ describe("integration import workflow concurrency", () => {
 
   beforeEach(async () => {
     runtime = await createTestRuntime("integration-import-concurrency");
-    runtime.now.set(2_000);
+    runtime.now.set(new Date(2_000));
   });
 
   afterEach(async () => {
@@ -41,12 +44,13 @@ describe("integration import workflow concurrency", () => {
       priority: "P1",
     });
     const recordExportQuery = runtime.integrations.recordExportQuery;
+    const superuser = actorBy("superuser");
     const concurrentExportReads = (async () => {
       for (let i = 0; i < 40; i++) {
         await recordExportQuery.export({
-          actorUserId: 5,
+          actorUserId: superuser.userId,
           actorRole: "superuser",
-          actorBranchId: 1,
+          actorBranchId: superuser.branchId,
         });
       }
     })();

@@ -1,5 +1,6 @@
 import type { Generated } from "kysely";
 
+import type { Json } from "~/contracts/json";
 import type {
   SettlementBank,
   LeadStage,
@@ -41,7 +42,7 @@ export interface WorkflowLeadsTable {
 
 export interface WorkflowIdempotencyKeysTable {
   key: string;
-  result_json: unknown;
+  result_json: Json;
   created_at: Date;
 }
 

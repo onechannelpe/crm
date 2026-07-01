@@ -18,58 +18,67 @@ describe("lead assignment repository", () => {
   });
 
   it("returns only active and non-expired assignments", async () => {
-    const now = Date.now();
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 60_000);
+    const expiredAt = new Date(now.getTime() - 1);
+    const { execOne } = ctx.fixtures.users;
+    const { lima, norte } = ctx.fixtures.organizationPeople;
     const contacts = createContactsTestKit(ctx);
     await contacts.seedAssignments([
       {
-        userId: 1,
-        contactId: 1,
+        userId: execOne.id,
+        contactId: lima.id,
         assignedAt: now,
-        expiresAt: now + 60_000,
+        expiresAt,
         status: "active",
       },
       {
-        userId: 1,
-        contactId: 2,
+        userId: execOne.id,
+        contactId: norte.id,
         assignedAt: now,
-        expiresAt: now - 1,
+        expiresAt: expiredAt,
         status: "active",
       },
       {
-        userId: 1,
-        contactId: 2,
+        userId: execOne.id,
+        contactId: norte.id,
         assignedAt: now,
-        expiresAt: now + 60_000,
+        expiresAt,
         status: "completed",
       },
     ]);
 
-    const activeContactIds = await contacts.activeContactIdsForUser(1);
-    expect(activeContactIds).toEqual([1]);
+    const activeContactIds = await contacts.activeContactIdsForUser(execOne.id);
+    expect(activeContactIds).toEqual([lima.id]);
   });
 
   it("hasActiveForContact respects expiry and ownership", async () => {
-    const now = Date.now();
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 60_000);
+    const { execOne, execTwo } = ctx.fixtures.users;
+    const { lima, norte } = ctx.fixtures.organizationPeople;
     const contacts = createContactsTestKit(ctx);
     await contacts.seedAssignments([
       {
-        userId: 1,
-        contactId: 1,
+        userId: execOne.id,
+        contactId: lima.id,
         assignedAt: now,
-        expiresAt: now + 60_000,
+        expiresAt,
         status: "active",
       },
       {
-        userId: 3,
-        contactId: 2,
+        userId: execTwo.id,
+        contactId: norte.id,
         assignedAt: now,
-        expiresAt: now + 60_000,
+        expiresAt,
         status: "active",
       },
     ]);
 
-    expect(await contacts.hasActiveAssignment(1, 1)).toBe(true);
-    expect(await contacts.hasActiveAssignment(1, 2)).toBe(false);
-    expect(await contacts.hasActiveAssignment(3, 2)).toBe(true);
+    expect(await contacts.hasActiveAssignment(execOne.id, lima.id)).toBe(true);
+    expect(await contacts.hasActiveAssignment(execOne.id, norte.id)).toBe(
+      false,
+    );
+    expect(await contacts.hasActiveAssignment(execTwo.id, norte.id)).toBe(true);
   });
 });

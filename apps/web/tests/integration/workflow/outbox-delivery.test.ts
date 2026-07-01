@@ -1,4 +1,7 @@
-import { createLeadFixtureWriter } from "@tests/support/database/workflow-fixtures";
+import {
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
 import { createTestNotificationRuntime } from "@tests/support/integration/notification-runtime";
 import { createWorkflowImporter } from "@tests/support/integration/workflow-import";
 import { createNotificationReader } from "@tests/support/readers/notifications";
@@ -8,12 +11,14 @@ import {
 } from "@tests/support/runtime/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { asNotificationIntentId } from "~/server/shared/ids";
+
 describe("outbox delivery", () => {
   let runtime: TestRuntime;
 
   beforeEach(async () => {
     runtime = await createTestRuntime("outbox-delivery");
-    runtime.now.set(2_000);
+    runtime.now.set(new Date(2_000));
   });
 
   afterEach(async () => {
@@ -24,9 +29,12 @@ describe("outbox delivery", () => {
     await runtime.ctx.db
       .insertInto("notification_outbox")
       .values({
-        id: "test-malformed-channels",
+        id: asNotificationIntentId("test-malformed-channels"),
         event_type: "test.malformed",
-        audience_json: JSON.stringify({ kind: "user_ids", userIds: [1] }),
+        audience_json: {
+          kind: "user_ids",
+          userIds: [actorBy("execOne").userId],
+        },
         channels_json: JSON.stringify(["in_app", "sms"]),
         title: "should fail",
         body_text: "unsupported channel",
@@ -35,11 +43,11 @@ describe("outbox delivery", () => {
         queue_state: "pending",
         attempt_count: 0,
         max_attempts: 5,
-        available_at: 0,
+        available_at: new Date(0),
         lease_owner: null,
         lease_until: null,
         error: null,
-        created_at: 0,
+        created_at: new Date(0),
         expanded_at: null,
       })
       .execute();
@@ -49,7 +57,7 @@ describe("outbox delivery", () => {
     const failed = await runtime.ctx.db
       .selectFrom("notification_outbox")
       .select(["queue_state", "error", "expanded_at"])
-      .where("id", "=", "test-malformed-channels")
+      .where("id", "=", asNotificationIntentId("test-malformed-channels"))
       .executeTakeFirstOrThrow();
 
     expect(failed.queue_state).toBe("failed");
@@ -94,12 +102,12 @@ describe("outbox delivery", () => {
     const notifications = await reader.appNotifications();
     expect(notifications).toEqual([
       {
-        user_id: 2,
+        user_id: actorBy("backOne").userId,
         event_type: "lead.ready_for_quotation",
         source_event_id: expect.stringContaining(":ready_pricing"),
       },
       {
-        user_id: 4,
+        user_id: actorBy("backTwo").userId,
         event_type: "lead.ready_for_quotation",
         source_event_id: expect.stringContaining(":ready_pricing"),
       },

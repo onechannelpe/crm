@@ -67,8 +67,8 @@ function companyResult(ruc: string, overlay: CompanyOverlay): SearchResult {
 export interface TestRuntime {
   ctx: TestDbContext;
   now: {
-    get(): number;
-    set(value: number): void;
+    get(): Date;
+    set(value: Date): void;
   };
   auth: {
     sessionService: ReturnType<typeof createSessionService>;
@@ -84,11 +84,11 @@ export interface TestRuntime {
 export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   const ctx = await createIsolatedTestDb(prefix);
 
-  let currentNow = Date.now();
+  let currentNow = new Date();
 
   const now = {
     get: () => currentNow,
-    set: (value: number) => {
+    set: (value: Date) => {
       currentNow = value;
     },
   };

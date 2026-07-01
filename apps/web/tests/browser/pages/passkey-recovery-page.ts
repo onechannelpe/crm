@@ -4,7 +4,7 @@ import { expect } from "@playwright/test";
 export class PasskeyRecoveryPage {
   constructor(private readonly page: Page) {}
 
-  async goto(flowId: number) {
+  async goto(flowId: string) {
     await this.page.goto(`/login/passkey?flow=${flowId}`);
   }
 
@@ -20,7 +20,7 @@ export class PasskeyRecoveryPage {
     });
     await expect(retryButton).toBeVisible();
     await retryButton.click();
-    await expect(this.page).toHaveURL(/\/login\/passkey\?flow=\d+/);
+    await expect(this.page).toHaveURL(/\/login\/passkey\?flow=[^&]+/);
     await expect(this.page.getByRole("alert")).toContainText(
       "La verificación con clave de acceso se canceló. Intenta de nuevo.",
     );

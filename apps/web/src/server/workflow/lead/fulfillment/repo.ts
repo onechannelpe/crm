@@ -9,6 +9,7 @@ import type {
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import {
+  newFulfillmentOrderId,
   type FileAssetId,
   type FulfillmentOrderId,
   type UserId,
@@ -99,7 +100,7 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
       currentStep: FulfillmentStep;
       now: Date;
     }): Promise<FulfillmentOrderId> {
-      const id = randomUUIDv7() as FulfillmentOrderId;
+      const id = newFulfillmentOrderId();
       await db
         .insertInto("lead_fulfillment_orders")
         .values({

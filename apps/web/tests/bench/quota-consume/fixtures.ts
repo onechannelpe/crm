@@ -1,16 +1,19 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
+import { TEST_FIXTURES } from "@tests/support/runtime/db";
+
+import { asBranchId, asUserId, type UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 80;
-const USER_ID_START = 30_000;
+const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
 
-export async function seedQuotaUsers(ctx: TestDbContext): Promise<number[]> {
+export async function seedQuotaUsers(ctx: TestDbContext): Promise<UserId[]> {
   const users = Array.from({ length: USER_POOL_SIZE }, (_, index) => {
-    const id = USER_ID_START + index;
+    const id = asUserId(`bench-quota-user-${index}`);
     return {
       id,
-      branch_id: 1,
+      branch_id: BRANCH_ID,
       team_id: null,
       username: `bench.quota${id}`,
       email: `bench-quota-${id}@test.local`,
@@ -21,7 +24,7 @@ export async function seedQuotaUsers(ctx: TestDbContext): Promise<number[]> {
       onboarding_completed_at: BENCH_NOW,
       role: "executive" as const,
       executive_category: "elite" as const,
-      is_active: 1,
+      is_active: true,
       created_at: BENCH_NOW,
     };
   });

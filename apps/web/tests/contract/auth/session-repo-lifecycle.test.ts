@@ -15,8 +15,11 @@ describe("session repository lifecycle", () => {
   });
 
   it("creates, reads, updates, extends, and deletes session", async () => {
-    const now = Date.now();
-    const sessionId = `s-${now}`;
+    const now = new Date();
+    const activityAt = new Date(now.getTime() + 5_000);
+    const expiresAt = new Date(now.getTime() + 60_000);
+    const extendedExpiresAt = new Date(now.getTime() + 120_000);
+    const sessionId = `s-${now.getTime()}`;
     const identity = scenario.identity(user);
 
     await scenario.ctx.repos.sessions.create({
@@ -32,18 +35,21 @@ describe("session repository lifecycle", () => {
       user_agent: "vitest",
       created_at: now,
       last_activity: now,
-      expires_at: now + 60_000,
+      expires_at: expiresAt,
     });
 
     const loaded = await scenario.ctx.repos.sessions.findById(sessionId);
     expect(loaded?.id).toBe(sessionId);
 
-    await scenario.ctx.repos.sessions.updateActivity(sessionId, now + 5000);
-    await scenario.ctx.repos.sessions.extendExpiry(sessionId, now + 120_000);
+    await scenario.ctx.repos.sessions.updateActivity(sessionId, activityAt);
+    await scenario.ctx.repos.sessions.extendExpiry(
+      sessionId,
+      extendedExpiresAt,
+    );
 
     const updated = await scenario.ctx.repos.sessions.findById(sessionId);
-    expect(updated?.last_activity).toBe(now + 5000);
-    expect(updated?.expires_at).toBe(now + 120_000);
+    expect(updated?.last_activity).toEqual(activityAt);
+    expect(updated?.expires_at).toEqual(extendedExpiresAt);
 
     await scenario.ctx.repos.sessions.delete(sessionId);
     const missing = await scenario.ctx.repos.sessions.findById(sessionId);
@@ -51,7 +57,9 @@ describe("session repository lifecycle", () => {
   });
 
   it("deletes expired sessions and counts active sessions", async () => {
-    const now = Date.now();
+    const now = new Date();
+    const activeExpiresAt = new Date(now.getTime() + 60_000);
+    const expiredAt = new Date(now.getTime() - 1);
     const identity = scenario.identity(user);
     await scenario.ctx.repos.sessions.create({
       id: "active-1",
@@ -66,7 +74,7 @@ describe("session repository lifecycle", () => {
       user_agent: null,
       created_at: now,
       last_activity: now,
-      expires_at: now + 60_000,
+      expires_at: activeExpiresAt,
     });
     await scenario.ctx.repos.sessions.create({
       id: "expired-1",
@@ -81,7 +89,7 @@ describe("session repository lifecycle", () => {
       user_agent: null,
       created_at: now,
       last_activity: now,
-      expires_at: now - 1,
+      expires_at: expiredAt,
     });
 
     const countBefore = await scenario.ctx.repos.sessions.countActive();

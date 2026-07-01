@@ -14,6 +14,7 @@ import {
   createPasskeyLoginFinishAuthService,
   createPasskeyLoginStartAuthService,
 } from "~/server/auth/factors/passkey/service";
+import { asAuthLoginFlowId } from "~/server/shared/ids";
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
@@ -45,7 +46,9 @@ describe("passkey authentication", () => {
     const value = expectOk(result);
 
     expect(value.mode).toBe("identified");
-    const flow = await scenario.ctx.repos.loginFlows.findById(value.id);
+    const flow = await scenario.ctx.repos.loginFlows.findById(
+      asAuthLoginFlowId(value.id),
+    );
     const challenge = flow?.challenge_id
       ? await scenario.ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
@@ -64,7 +67,9 @@ describe("passkey authentication", () => {
     const value = expectOk(result);
 
     expect(value.mode).toBe("discoverable");
-    const flow = await scenario.ctx.repos.loginFlows.findById(value.id);
+    const flow = await scenario.ctx.repos.loginFlows.findById(
+      asAuthLoginFlowId(value.id),
+    );
     const challenge = flow?.challenge_id
       ? await scenario.ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
@@ -134,7 +139,7 @@ describe("passkey authentication", () => {
       scenario.ctx.repos,
       { webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos) },
     ).finishLogin({
-      flowId: 0,
+      flowId: asAuthLoginFlowId("missing-flow"),
       response: buildAssertionResponse("passkey-1"),
       ipAddress,
       userAgent: "vitest-agent",

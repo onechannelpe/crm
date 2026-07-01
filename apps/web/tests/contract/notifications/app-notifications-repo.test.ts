@@ -2,6 +2,8 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { asUserId } from "~/server/shared/ids";
+
 describe("app notifications repo", () => {
   let ctx: TestDbContext;
 
@@ -14,10 +16,11 @@ describe("app notifications repo", () => {
   });
 
   it("deduplicates notifications by user and source event id", async () => {
-    const now = Date.now();
+    const now = new Date();
+    const userId = asUserId("app-notifications-user");
     await ctx.repos.appNotifications.createMany([
       {
-        user_id: 1,
+        user_id: userId,
         source_event_id: "quota:1:today",
         event_type: "quota.assigned",
         priority: "normal",
@@ -29,7 +32,7 @@ describe("app notifications repo", () => {
         read_at: null,
       },
       {
-        user_id: 1,
+        user_id: userId,
         source_event_id: "quota:1:today",
         event_type: "quota.assigned",
         priority: "normal",
@@ -42,7 +45,7 @@ describe("app notifications repo", () => {
       },
     ]);
 
-    const list = await ctx.repos.appNotifications.listByUser(1, 10);
+    const list = await ctx.repos.appNotifications.listByUser(userId, 10);
     expect(list.length).toBe(1);
   });
 });

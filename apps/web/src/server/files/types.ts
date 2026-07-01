@@ -1,3 +1,4 @@
+import type { Json } from "~/contracts/json";
 import type {
   BranchId,
   FileAssetId,
@@ -58,8 +59,8 @@ export interface WorkflowArtifact {
   requestedByUserId: UserId;
   scopeBranchId: BranchId | null;
   scopeTeamId: TeamId | null;
-  policySnapshotJson: unknown;
-  workflowContextJson: unknown;
+  policySnapshotJson: Json;
+  workflowContextJson: Json;
   errorCode: string | null;
   errorMessage: string | null;
   expiresAt: Date | null;

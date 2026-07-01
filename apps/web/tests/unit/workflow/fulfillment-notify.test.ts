@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import type { FulfillmentStep } from "~/contracts/workflow/vocabulary";
 import {
+  asBranchId,
+  asFulfillmentOrderId,
+  asUserId,
+  asWorkflowLeadId,
+} from "~/server/shared/ids";
+import {
   deriveFulfillmentNotification,
   formatPaymentReadyBody,
 } from "~/server/workflow/effects/reactors/fulfillment-notify";
@@ -10,25 +16,25 @@ const baseInput = {
   eventId: "evt-1",
   leadId: "lead-1",
   ruc: "20123456789",
-  executiveId: 42,
-  branchId: 1,
+  executiveId: asUserId("42"),
+  branchId: asBranchId("1"),
   paymentUnits: [] as { label: string; paymentUrl: string | null }[],
-} as const;
+};
 
 function stepAdvanced(to: FulfillmentStep) {
   return {
     eventType: "fulfillment_step_advanced" as const,
-    leadId: "lead-1",
-    actorUserId: 1,
+    leadId: asWorkflowLeadId("lead-1"),
+    actorUserId: asUserId("1"),
     subjectUserId: null,
     payload: {
-      orderId: "order-1",
+      orderId: asFulfillmentOrderId("order-1"),
       from: "AWAITING_PAYMENT_LINK" as const,
       to,
       action: "upload_payment_proof" as const,
     },
     changes: [] as never[],
-    occurredAt: 0,
+    occurredAt: new Date(0),
   };
 }
 
@@ -81,7 +87,10 @@ describe("deriveFulfillmentNotification: AWAITING_PAYMENT step", () => {
     if (!intent) throw new Error("expected one intent");
 
     expect(intent.eventType).toBe("lead.fulfillment_handoff");
-    expect(intent.audience).toEqual({ kind: "user_ids", userIds: [42] });
+    expect(intent.audience).toEqual({
+      kind: "user_ids",
+      userIds: [baseInput.executiveId],
+    });
     expect(intent.channels).toEqual(["in_app", "whatsapp"]);
     expect(intent.priority).toBe("high");
     expect(intent.title).toBe("Link de pago listo");

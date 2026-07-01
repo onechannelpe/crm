@@ -36,6 +36,23 @@ const RECORD_COLUMNS = [
   "requested_at",
 ] as const;
 
+// A request resets only the queue-control columns to `pending`; the existing
+// result and source are left in place so the UI keeps showing the last known
+// value (marked stale) while the re-scrape runs.
+function resetPatch(values: EnrichmentRequest) {
+  return {
+    queue_state: "pending" as const,
+    available_at: values.requestedAt,
+    attempt_count: 0,
+    max_attempts: values.maxAttempts,
+    lease_owner: null,
+    lease_until: null,
+    last_error: null,
+    requested_at: values.requestedAt,
+    requested_by_user_id: values.requestedByUserId,
+  };
+}
+
 export function createCompanyRegistryRepo(
   db: DatabaseExecutor,
 ): CompanyRegistryPort {
@@ -49,23 +66,6 @@ export function createCompanyRegistryRepo(
     RECORD_COLUMNS,
     { error: "last_error" },
   );
-
-  // A request resets only the queue-control columns to `pending`; the existing
-  // result and source are left in place so the UI keeps showing the last known
-  // value (marked stale) while the re-scrape runs.
-  function resetPatch(values: EnrichmentRequest) {
-    return {
-      queue_state: "pending" as const,
-      available_at: values.requestedAt,
-      attempt_count: 0,
-      max_attempts: values.maxAttempts,
-      lease_owner: null,
-      lease_until: null,
-      last_error: null,
-      requested_at: values.requestedAt,
-      requested_by_user_id: values.requestedByUserId,
-    };
-  }
 
   return {
     store,

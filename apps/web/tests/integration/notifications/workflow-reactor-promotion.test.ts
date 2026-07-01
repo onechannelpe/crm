@@ -9,8 +9,10 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
+import { parseNotificationChannels } from "~/server/notifications/intent/payload";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { openSession } from "~/server/notifications/whatsapp-session";
+import { asEventId } from "~/server/shared/ids";
 import { reactToFulfillmentChanges } from "~/server/workflow/effects/reactors/fulfillment-notify";
 import { reactToStageChanges } from "~/server/workflow/effects/reactors/notify";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
@@ -18,7 +20,8 @@ import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition
 import { createTestNotificationRuntime } from "../../support/integration/notification-runtime";
 import { createNotificationReader } from "../../support/readers/notifications";
 
-const NOW = 1_700_000_000_000;
+const NOW_MS = 1_700_000_000_000;
+const NOW = new Date(NOW_MS);
 
 describe("workflow notification pipeline", () => {
   let runtime: TestRuntime;
@@ -41,7 +44,7 @@ describe("workflow notification pipeline", () => {
       user_id: actorBy("execOne").userId,
       channel: "whatsapp",
       address: "51911000001",
-      is_verified: 1,
+      is_verified: true,
       verified_at: NOW,
       created_at: NOW,
       updated_at: NOW,
@@ -50,7 +53,7 @@ describe("workflow notification pipeline", () => {
 
     const committed: CommittedLeadEvent[] = [
       {
-        id: "event-ready-for-sale",
+        id: asEventId("event-ready-for-sale"),
         event: {
           leadId: lead.id,
           eventType: "workflow_stage_changed",
@@ -72,7 +75,10 @@ describe("workflow notification pipeline", () => {
       event_type: "lead.ready_for_sale",
       queue_state: "pending",
     });
-    expect(JSON.parse(entry.channels_json)).toEqual(["in_app", "whatsapp"]);
+    expect(parseNotificationChannels(entry.channels_json)).toEqual([
+      "in_app",
+      "whatsapp",
+    ]);
 
     const notifications = createTestNotificationRuntime(runtime);
     const planned = await notifications.planIntentRow(entry, NOW);
@@ -119,7 +125,7 @@ describe("workflow notification pipeline", () => {
         serial_number: null,
         payment_url: "https://pay.example.com/abc",
         payment_proof_artifact_id: null,
-        payment_validated: 0,
+        payment_validated: false,
         service_a_ref: null,
         created_at: NOW,
       })
@@ -129,7 +135,7 @@ describe("workflow notification pipeline", () => {
       runtime.ctx.db,
       [
         {
-          id: "event-payment-ready",
+          id: asEventId("event-payment-ready"),
           event: {
             leadId: lead.id,
             eventType: "fulfillment_step_advanced",
@@ -154,14 +160,21 @@ describe("workflow notification pipeline", () => {
       throw new Error("expected fulfillment notification outbox entry");
     expect(entry.event_type).toBe("lead.fulfillment_handoff");
     expect(entry.body_text).toContain("https://pay.example.com/abc");
-    expect(JSON.parse(entry.channels_json)).toEqual(["in_app", "whatsapp"]);
+    expect(parseNotificationChannels(entry.channels_json)).toEqual([
+      "in_app",
+      "whatsapp",
+    ]);
   });
 
   it("plans an in-app-only intent without inventing external deliveries", async () => {
     const intent: NotificationIntent = {
       id: "in-app-only",
       eventType: "lead.ready_for_quotation",
-      audience: { kind: "branch_role", branchId: 1, role: "back_office" },
+      audience: {
+        kind: "branch_role",
+        branchId: actorBy("backOne").branchId,
+        role: "back_office",
+      },
       channels: ["in_app"],
       priority: "normal",
       title: "Cliente listo para tarifa",

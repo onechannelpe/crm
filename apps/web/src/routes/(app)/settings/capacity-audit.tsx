@@ -64,7 +64,7 @@ function formatTime(value: number): string {
 }
 
 function formatActor(actorUserId: string | null): string {
-  return actorUserId === null ? "System" : String(actorUserId);
+  return actorUserId === null ? "System" : actorUserId;
 }
 
 function formatDetail(event: CapacityAuditEvent): string {

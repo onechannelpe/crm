@@ -2,6 +2,11 @@ import { createAuditTestKit } from "@tests/support/audit/kit";
 import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { asUserId } from "~/server/shared/ids";
+
+const EXEC_USER_ID = asUserId("audit-contract-exec");
+const SUPERUSER_ID = asUserId("audit-contract-superuser");
+
 describe("action observability repository", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
 
@@ -15,14 +20,16 @@ describe("action observability repository", () => {
   it("stores action observations and summarizes outcomes", async () => {
     ctx = await createIsolatedTestDb("observability-repo");
     const audit = createAuditTestKit(ctx);
-    const baseTime = 1_700_000_000_000;
+    const baseTimeMs = 1_700_000_000_000;
+    const baseTime = new Date(baseTimeMs);
+    const nextTime = new Date(baseTimeMs + 1);
 
     await audit.recordAction({
       traceId: "trace-a",
       requestId: "req-a",
       routePath: "/records",
       actionName: "leads.request",
-      actorUserId: 1,
+      actorUserId: EXEC_USER_ID,
       actorRole: "executive",
       status: "ok",
       durationMs: 120,
@@ -35,26 +42,26 @@ describe("action observability repository", () => {
       requestId: "req-b",
       routePath: "/records",
       actionName: "leads.request",
-      actorUserId: 1,
+      actorUserId: EXEC_USER_ID,
       actorRole: "executive",
       status: "error",
       durationMs: 95,
       errorMessage: "Forbidden",
       input: { contactId: 2 },
-      createdAt: baseTime + 1,
+      createdAt: nextTime,
     });
 
     const recent = await audit.observability.listRecent({
-      fromInclusive: baseTime - 1000,
-      toInclusive: baseTime + 1000,
+      fromInclusive: new Date(baseTimeMs - 1000),
+      toInclusive: new Date(baseTimeMs + 1000),
       limit: 10,
     });
     expect(recent).toHaveLength(2);
     expect(recent[0]?.status).toBe("error");
 
     const summary = await audit.observability.summarizeByAction({
-      fromInclusive: baseTime - 1000,
-      toInclusive: baseTime + 1000,
+      fromInclusive: new Date(baseTimeMs - 1000),
+      toInclusive: new Date(baseTimeMs + 1000),
     });
     expect(summary).toHaveLength(1);
     expect(summary[0]?.action_name).toBe("leads.request");
@@ -65,21 +72,22 @@ describe("action observability repository", () => {
   it("uses fixed validation error code and can delete old records", async () => {
     ctx = await createIsolatedTestDb("observability-retention");
     const audit = createAuditTestKit(ctx);
-    const baseTime = 1_700_000_000_000;
+    const baseTimeMs = 1_700_000_000_000;
+    const baseTime = new Date(baseTimeMs);
 
     await audit.recordAction({
       traceId: "trace-old",
       requestId: "req-old",
       routePath: "/team/invite",
       actionName: "team.invite.create",
-      actorUserId: 5,
+      actorUserId: SUPERUSER_ID,
       actorRole: "superuser",
       status: "error",
       durationMs: 10,
       errorCode: "validation",
       errorMessage: "email must be valid",
       input: { role: "executive" },
-      createdAt: baseTime - 1_000,
+      createdAt: new Date(baseTimeMs - 1_000),
     });
 
     await audit.recordAction({
@@ -87,19 +95,19 @@ describe("action observability repository", () => {
       requestId: "req-new",
       routePath: "/team/invite",
       actionName: "team.invite.create",
-      actorUserId: 5,
+      actorUserId: SUPERUSER_ID,
       actorRole: "superuser",
       status: "error",
       durationMs: 11,
       errorCode: "validation",
       errorMessage: "fullName is invalid",
       input: { role: "executive" },
-      createdAt: baseTime + 1_000,
+      createdAt: new Date(baseTimeMs + 1_000),
     });
 
     const beforeCleanup = await audit.observability.listRecent({
-      fromInclusive: baseTime - 10_000,
-      toInclusive: baseTime + 10_000,
+      fromInclusive: new Date(baseTimeMs - 10_000),
+      toInclusive: new Date(baseTimeMs + 10_000),
       limit: 10,
     });
     expect(beforeCleanup).toHaveLength(2);
@@ -111,8 +119,8 @@ describe("action observability repository", () => {
     expect(deleted).toBe(1);
 
     const afterCleanup = await audit.observability.listRecent({
-      fromInclusive: baseTime - 10_000,
-      toInclusive: baseTime + 10_000,
+      fromInclusive: new Date(baseTimeMs - 10_000),
+      toInclusive: new Date(baseTimeMs + 10_000),
       limit: 10,
     });
     expect(afterCleanup).toHaveLength(1);
@@ -122,14 +130,15 @@ describe("action observability repository", () => {
   it("applies status and action filters consistently to summary", async () => {
     ctx = await createIsolatedTestDb("observability-summary-filters");
     const audit = createAuditTestKit(ctx);
-    const baseTime = 1_700_000_000_000;
+    const baseTimeMs = 1_700_000_000_000;
+    const baseTime = new Date(baseTimeMs);
 
     await audit.recordAction({
       traceId: "trace-1",
       requestId: "req-1",
       routePath: "/team/invite",
       actionName: "team.invite.create",
-      actorUserId: 5,
+      actorUserId: SUPERUSER_ID,
       actorRole: "superuser",
       status: "error",
       durationMs: 10,
@@ -142,29 +151,29 @@ describe("action observability repository", () => {
       requestId: "req-2",
       routePath: "/team/invite",
       actionName: "team.invite.create",
-      actorUserId: 5,
+      actorUserId: SUPERUSER_ID,
       actorRole: "superuser",
       status: "ok",
       durationMs: 11,
-      createdAt: baseTime + 1,
+      createdAt: new Date(baseTimeMs + 1),
     });
     await audit.recordAction({
       traceId: "trace-3",
       requestId: "req-3",
       routePath: "/records",
       actionName: "leads.request",
-      actorUserId: 1,
+      actorUserId: EXEC_USER_ID,
       actorRole: "executive",
       status: "error",
       durationMs: 12,
       errorCode: "forbidden",
       errorMessage: "forbidden",
-      createdAt: baseTime + 2,
+      createdAt: new Date(baseTimeMs + 2),
     });
 
     const filteredSummary = await audit.observability.summarizeByAction({
-      fromInclusive: baseTime - 1000,
-      toInclusive: baseTime + 1000,
+      fromInclusive: new Date(baseTimeMs - 1000),
+      toInclusive: new Date(baseTimeMs + 1000),
       actionName: "team.invite.create",
       status: "error",
     });

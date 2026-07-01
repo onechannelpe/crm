@@ -2,11 +2,13 @@
 import { phone } from "@tests/support/_core/phone";
 import { describe, expect, it, vi } from "vitest";
 
+import { asUserId } from "~/server/shared/ids";
 import { bootstrapUserNotifications } from "~/server/users/service-user-notification-bootstrap";
 
-const NOW = 1_710_000_000_000;
+const NOW_MS = 1_710_000_000_000;
+const NOW = new Date(NOW_MS);
 const INPUT = {
-  userId: 5,
+  userId: asUserId("5"),
   email: "test@example.com",
   phone: phone(),
   now: NOW,
@@ -34,7 +36,7 @@ describe("bootstrapUserNotifications", () => {
       user_id: INPUT.userId,
       channel: "email",
       address: INPUT.email,
-      is_verified: 1,
+      is_verified: true,
       verified_at: NOW,
       created_at: NOW,
       updated_at: NOW,
@@ -64,7 +66,7 @@ describe("bootstrapUserNotifications", () => {
     const upsertAddress = vi.fn().mockResolvedValue(undefined);
     const claimWhatsAppAddress = vi.fn().mockResolvedValue({
       kind: "already_claimed",
-      ownerUserId: 99,
+      ownerUserId: asUserId("99"),
     });
     const upsertPreference = vi.fn().mockResolvedValue(undefined);
 
@@ -82,7 +84,7 @@ describe("bootstrapUserNotifications", () => {
       ok: false,
       error: {
         code: "address_already_claimed",
-        ownerUserId: 99,
+        ownerUserId: asUserId("99"),
       },
     });
     expect(upsertAddress).toHaveBeenCalledTimes(1);

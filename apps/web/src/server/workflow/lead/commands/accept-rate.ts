@@ -22,7 +22,7 @@ export async function acceptRateCommand(
     executor: DatabaseExecutor;
     now: Date;
   },
-): Promise<Result<{ leadId: string }, DomainError>> {
+): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 

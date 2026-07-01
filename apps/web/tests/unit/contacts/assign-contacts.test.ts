@@ -13,10 +13,18 @@ import type {
 } from "~/server/contact-assignments/application/contact-assignment-writer";
 import { external, type DomainError } from "~/server/shared/domain-error";
 import { type RecordCandidate } from "~/server/shared/engine/record-contract";
+import {
+  asBranchId,
+  asOrganizationId,
+  asOrganizationPersonId,
+  asUserId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-const USER_ID = 1;
-const BRANCH_ID = 1;
+const USER_ID = asUserId("1");
+const BRANCH_ID: BranchId = asBranchId("1");
 const EXHAUSTED_ACTIVE_ASSIGNMENTS = 9_999;
 
 function makeCandidate(n: number): RecordCandidate {
@@ -45,18 +53,34 @@ function makeRepos(activeAssignments = 0) {
     },
     organizations: {
       findOrCreate: async (_ruc: string, _name: string) => ({
-        id: "01974fd5-f261-7a7d-93f5-2f3d0f963001",
+        id: asOrganizationId("01974fd5-f261-7a7d-93f5-2f3d0f963001"),
+        ruc: _ruc,
+        legal_name: null,
+        giro_negocio: null,
+        address: null,
+        district: null,
+        department: null,
+        email: null,
+        phone: null,
+        province: null,
+        created_at: new Date(),
       }),
     },
     contacts: {
       findOrCreate: async (
-        _orgId: string,
-        _dni: string,
-        _name: string,
-        _phone: string,
-      ): Promise<{ id: number; cooldown_until: number | null }> => ({
-        id: nextContactId++,
-        cooldown_until: null,
+        orgId: ReturnType<typeof asOrganizationId>,
+        dni: string,
+        name: string,
+        _phone: string | null,
+      ) => ({
+        id: asOrganizationPersonId(`contact-${nextContactId++}`),
+        dni,
+        organization_id: orgId,
+        name,
+        phone_primary: _phone,
+        email: null,
+        last_contacted_at: null,
+        cooldown_until: null as Date | null,
       }),
     },
   };
@@ -100,13 +124,25 @@ describe("assignContacts", () => {
     const repos = makeRepos(0);
 
     let contactCallCount = 0;
-    repos.contacts.findOrCreate = async (): Promise<{
-      id: number;
-      cooldown_until: number | null;
-    }> => {
+    repos.contacts.findOrCreate = async (
+      orgId: ReturnType<typeof asOrganizationId>,
+      dni: string,
+      name: string,
+      phone: string | null,
+    ) => {
       contactCallCount++;
-      const cooldown_until = contactCallCount === 1 ? null : 1_700_000_099_999;
-      return { id: contactCallCount, cooldown_until };
+      const cooldown_until =
+        contactCallCount === 1 ? null : new Date(1_700_000_099_999);
+      return {
+        id: asOrganizationPersonId(`contact-${contactCallCount}`),
+        dni,
+        organization_id: orgId,
+        name,
+        phone_primary: phone,
+        email: null,
+        last_contacted_at: null,
+        cooldown_until,
+      };
     };
 
     const candidates: RecordCandidate[] = [
@@ -116,8 +152,8 @@ describe("assignContacts", () => {
     ];
     const engine = {
       requestCandidates: async (_input: {
-        branchId: number;
-        userId: number;
+        branchId: BranchId;
+        userId: UserId;
         amount: number;
       }): Promise<Result<RecordCandidate[], DomainError>> => Ok(candidates),
     };
@@ -149,8 +185,8 @@ describe("assignContacts", () => {
     const candidates: RecordCandidate[] = [makeCandidate(1)];
     const engine = {
       requestCandidates: async (_input: {
-        branchId: number;
-        userId: number;
+        branchId: BranchId;
+        userId: UserId;
         amount: number;
       }): Promise<Result<RecordCandidate[], DomainError>> => Ok(candidates),
     };
@@ -173,8 +209,8 @@ describe("assignContacts", () => {
     const repos = makeRepos(0);
     const engine = {
       requestCandidates: async (_input: {
-        branchId: number;
-        userId: number;
+        branchId: BranchId;
+        userId: UserId;
         amount: number;
       }): Promise<Result<RecordCandidate[], DomainError>> =>
         Err(

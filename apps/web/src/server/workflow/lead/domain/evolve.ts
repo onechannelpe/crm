@@ -15,7 +15,7 @@ function applyEvent(state: LeadState, event: LeadHistoryEventDraft): LeadState {
     case "workflow_stage_changed":
       return { ...state, stage: event.payload.to };
     case "lead_reassigned":
-      return { ...state, executiveId: event.payload.toExecutiveId as UserId };
+      return { ...state, executiveId: event.payload.toExecutiveId };
     case "lead_status_updated":
       return { ...state, status: event.payload.toStatus };
     case "lead_priority_updated":

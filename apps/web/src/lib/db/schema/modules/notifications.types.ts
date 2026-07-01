@@ -1,5 +1,6 @@
 import type { Generated } from "kysely";
 
+import type { Json } from "~/contracts/json";
 import type {
   AppNotificationId,
   EventId,
@@ -7,7 +8,6 @@ import type {
   IdColumn,
   NotificationDeliveryId,
   NotificationIntentId,
-  NullableIdColumn,
   UserId,
 } from "~/server/shared/ids";
 
@@ -75,7 +75,7 @@ export interface AppNotificationsTable {
   title: string;
   body_text: string;
   action_url: string | null;
-  metadata_json: unknown | null;
+  metadata_json: Json | null;
   created_at: Date;
   read_at: Date | null;
 }
@@ -87,8 +87,8 @@ export interface AppNotificationsTable {
 export interface NotificationOutboxTable {
   id: IdColumn<NotificationIntentId>;
   event_type: string;
-  audience_json: unknown;
-  channels_json: unknown;
+  audience_json: Json;
+  channels_json: Json;
   title: string;
   body_text: string;
   action_url: string | null;

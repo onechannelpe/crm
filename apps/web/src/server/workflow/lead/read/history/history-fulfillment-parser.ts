@@ -5,6 +5,10 @@ import {
   PRODUCT_KINDS,
 } from "~/contracts/workflow/vocabulary";
 import type { DomainError } from "~/server/shared/domain-error";
+import {
+  asFulfillmentOrderId,
+  asWorkflowArtifactId,
+} from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import { parseVocabularyValue } from "~/server/workflow/lead/domain/parse";
@@ -28,7 +32,10 @@ export function toFulfillmentStartedEntry(
   return Ok({
     ...toHistoryEntryBase(row),
     eventType: "fulfillment_started",
-    payload: { orderId: orderId.value, unitCount: unitCount.value },
+    payload: {
+      orderId: asFulfillmentOrderId(orderId.value),
+      unitCount: unitCount.value,
+    },
   });
 }
 
@@ -50,7 +57,10 @@ export function toFulfillmentProductChosenEntry(
   return Ok({
     ...toHistoryEntryBase(row),
     eventType: "fulfillment_product_chosen",
-    payload: { orderId: orderId.value, productKind: productKind.value },
+    payload: {
+      orderId: asFulfillmentOrderId(orderId.value),
+      productKind: productKind.value,
+    },
   });
 }
 
@@ -90,7 +100,7 @@ export function toFulfillmentStepAdvancedEntry(
     ...toHistoryEntryBase(row),
     eventType: "fulfillment_step_advanced",
     payload: {
-      orderId: orderId.value,
+      orderId: asFulfillmentOrderId(orderId.value),
       from: from.value,
       to: to.value,
       action: action.value,
@@ -128,7 +138,7 @@ export function toFulfillmentStepRejectedEntry(
     ...toHistoryEntryBase(row),
     eventType: "fulfillment_step_rejected",
     payload: {
-      orderId: orderId.value,
+      orderId: asFulfillmentOrderId(orderId.value),
       from: from.value,
       to: to.value,
       reason: reason.value,
@@ -157,9 +167,9 @@ export function toFulfillmentDocumentUploadedEntry(
     ...toHistoryEntryBase(row),
     eventType: "fulfillment_document_uploaded",
     payload: {
-      orderId: orderId.value,
+      orderId: asFulfillmentOrderId(orderId.value),
       docKind: docKind.value,
-      artifactId: artifactId.value,
+      artifactId: asWorkflowArtifactId(artifactId.value),
     },
   });
 }
@@ -175,6 +185,6 @@ export function toFulfillmentCompletedEntry(
   return Ok({
     ...toHistoryEntryBase(row),
     eventType: "fulfillment_completed",
-    payload: { orderId: orderId.value },
+    payload: { orderId: asFulfillmentOrderId(orderId.value) },
   });
 }

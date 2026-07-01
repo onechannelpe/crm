@@ -1,3 +1,4 @@
+import type { Json } from "~/contracts/json";
 import type {
   BranchId,
   ContactAssignmentId,
@@ -51,7 +52,7 @@ export interface ExtensionRuntimeEventsTable {
     | "call.metric"
     | "recording.completed"
     | "recording.chunk";
-  payload_json: unknown;
+  payload_json: Json;
   created_at: Date;
   received_at: Date;
 }
