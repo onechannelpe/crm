@@ -2,7 +2,7 @@ import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
+} from "~/server/capacity/infrastructure/usage-repo";
 import {
   buildLeadCapacitySnapshot,
   type LeadCapacitySnapshot,

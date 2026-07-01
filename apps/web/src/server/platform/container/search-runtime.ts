@@ -1,13 +1,13 @@
-import {
-  createSearchCapacityGrantsRepo,
-  createSearchUsageCommitsRepo,
-  createSearchUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
 import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import {
   createSearchPolicyDefaultsRepo,
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
+import {
+  createSearchCapacityGrantsRepo,
+  createSearchUsageCommitsRepo,
+  createSearchUsageReservationsRepo,
+} from "~/server/capacity/infrastructure/usage-repo";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createEventsRepo } from "~/server/shared/repos-events";
 

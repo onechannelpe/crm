@@ -1,11 +1,3 @@
-import {
-  createLeadCapacityGrantsRepo,
-  createLeadUsageCommitsRepo,
-  createLeadUsageReservationsRepo,
-  createSearchCapacityGrantsRepo,
-  createSearchUsageCommitsRepo,
-  createSearchUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
 import { getAuditEvents } from "~/server/capacity/application/queries/get-audit-events";
 import { getExecutiveDetail } from "~/server/capacity/application/queries/get-executive-detail";
 import { getPolicyDefaults } from "~/server/capacity/application/queries/get-policy-defaults";
@@ -29,6 +21,14 @@ import {
   createSearchPolicyDefaultsRepo,
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
+import {
+  createLeadCapacityGrantsRepo,
+  createLeadUsageCommitsRepo,
+  createLeadUsageReservationsRepo,
+  createSearchCapacityGrantsRepo,
+  createSearchUsageCommitsRepo,
+  createSearchUsageReservationsRepo,
+} from "~/server/capacity/infrastructure/usage-repo";
 import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createExecutorUow } from "~/server/shared/application/uow";

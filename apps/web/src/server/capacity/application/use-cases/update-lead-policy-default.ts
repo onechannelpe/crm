@@ -2,7 +2,7 @@ import type { AppContext } from "~/server/platform/action/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageScope } from "../../domain/access-policy";
+import { canManageScope } from "../authorize-capacity-actor";
 import { validateLeadPolicyValues } from "../../domain/limits";
 import type { ScopeRef } from "../../domain/types";
 import { setLeadScopeDefault } from "../lead-policy";

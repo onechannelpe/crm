@@ -1,6 +1,5 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
-import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
+import { grantUsageCapacity } from "~/server/capacity/application/usage/ledger";
 import type { AppContext } from "~/server/platform/action/context";
 import {
   fail,
@@ -10,7 +9,7 @@ import {
 import type { CapacityRequestId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "../../domain/access-policy";
+import { canManageExecutive } from "../authorize-capacity-actor";
 import { normalizeDecisionNote } from "../../domain/request-policy";
 import type { CapacityApprovalDeps } from "./shared";
 
@@ -53,25 +52,27 @@ export async function approveCapacityRequest(
     }
 
     if (request.kind === "search_extra") {
-      const granted = await grantSearchCapacity(
+      const granted = await grantUsageCapacity(
         {
+          kind: "search",
           actorUserId: ctx.actor.userId,
           targetUserId: request.user_id,
           amount: request.requested_amount,
           reason: note ?? request.reason,
         },
-        tx,
+        { grants: tx.searchCapacityGrants },
       );
       if (isErr(granted)) return granted;
     } else {
-      const granted = await grantLeadCapacity(
+      const granted = await grantUsageCapacity(
         {
+          kind: "lead",
           actorUserId: ctx.actor.userId,
           targetUserId: request.user_id,
           amount: request.requested_amount,
           reason: note ?? request.reason,
         },
-        tx,
+        { grants: tx.leadCapacityGrants },
       );
       if (isErr(granted)) return granted;
     }

@@ -7,7 +7,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "../../domain/access-policy";
+import { canManageExecutive } from "../authorize-capacity-actor";
 import type { CapacityUser } from "../actor-scope";
 
 interface ManagedExecutivesDeps {

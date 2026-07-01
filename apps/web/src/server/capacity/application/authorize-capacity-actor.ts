@@ -7,11 +7,8 @@ import {
 import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-import type {
-  CapacityTeam,
-  ManageableCapacityUser,
-} from "../application/actor-scope";
-import type { ScopeRef } from "./types";
+import type { CapacityTeam, ManageableCapacityUser } from "./actor-scope";
+import type { ScopeRef } from "../domain/types";
 
 interface ScopeRepos<
   T extends ManageableCapacityUser = ManageableCapacityUser,

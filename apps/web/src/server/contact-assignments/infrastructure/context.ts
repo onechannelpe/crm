@@ -2,7 +2,7 @@ import {
   createLeadCapacityGrantsRepo,
   createLeadUsageCommitsRepo,
   createLeadUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
+} from "~/server/capacity/infrastructure/usage-repo";
 import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import {
   createLeadPolicyDefaultsRepo,

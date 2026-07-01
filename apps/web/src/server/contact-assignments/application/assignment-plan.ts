@@ -2,7 +2,7 @@ import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
+} from "~/server/capacity/infrastructure/usage-repo";
 import type { ActorScope } from "~/server/capacity/application/actor-scope";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import type {

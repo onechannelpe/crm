@@ -2,7 +2,7 @@ import type { RateLimitDeps } from "~/lib/security/action-rate-limit";
 import type {
   LeadCapacityGrantsRepo,
   SearchCapacityGrantsRepo,
-} from "~/server/capacity-usage/repos";
+} from "~/server/capacity/infrastructure/usage-repo";
 import type { CapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import type { CapacityTeamsRepo } from "~/server/capacity/infrastructure/capacity-teams-repo";
 import type { CapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";

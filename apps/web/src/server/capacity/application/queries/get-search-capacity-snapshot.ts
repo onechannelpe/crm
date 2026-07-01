@@ -2,7 +2,7 @@ import type {
   SearchCapacityGrantsRepo,
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
+} from "~/server/capacity/infrastructure/usage-repo";
 import {
   buildSearchCapacitySnapshot,
   type SearchCapacitySnapshot,

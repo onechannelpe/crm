@@ -1,9 +1,9 @@
-import { executeWithLeadUsageReservation } from "~/server/capacity-usage/lead-usage";
+import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
 import type {
   LeadCapacityGrantsRepo,
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
+} from "~/server/capacity/infrastructure/usage-repo";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { isErr, Ok, type Result } from "~/server/shared/result";
@@ -54,15 +54,19 @@ export async function assignContacts(
 
   if (plan.value.requested === 0) return Ok({ requested: 0, assigned: 0 });
 
-  const assignedResult = await executeWithLeadUsageReservation(
+  const assignedResult = await executeWithUsageReservation(
     {
+      kind: "lead",
       actorUserId: command.actorUserId,
       requested: plan.value.requested,
       remainingCapacity: plan.value.remainingCapacity,
       reserveReason: "lead_refill",
       failureReason: "workflow_cancelled",
     },
-    repos,
+    {
+      reservations: repos.leadUsageReservations,
+      commits: repos.leadUsageCommits,
+    },
     async () => {
       const candidatesResult = await requestAssignableCandidates({
         command,

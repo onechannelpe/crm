@@ -1,21 +1,17 @@
 import type { SearchDirectResult } from "~/contracts/search/results";
 import type { SearchIntent } from "~/contracts/search/vocabulary";
-import type {
-  SearchCapacityGrantsRepo,
-  SearchUsageCommitsRepo,
-  SearchUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
-import {
-  cancelSearchUsage,
-  commitSearchUsage,
-  reserveSearchUsage,
-} from "~/server/capacity-usage/search-usage";
 import type { ActorScope } from "~/server/capacity/application/actor-scope";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
+import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
 import type {
   SearchPolicyDefaultsRepo,
   SearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
+import type {
+  SearchCapacityGrantsRepo,
+  SearchUsageCommitsRepo,
+  SearchUsageReservationsRepo,
+} from "~/server/capacity/infrastructure/usage-repo";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type { UserId } from "~/server/shared/ids";
@@ -50,38 +46,27 @@ export async function runDirectSearch(
   );
   if (isErr(snapshotResult)) return snapshotResult;
 
-  const reservationResult = await reserveSearchUsage(
+  return executeWithUsageReservation(
     {
+      kind: "search",
       actorUserId: command.actorUserId,
-      amount: 1,
+      requested: 1,
       remainingCapacity: snapshotResult.value.remaining,
-      reason: "direct_search",
+      reserveReason: "direct_search",
+      failureReason: "external_failure",
     },
-    repos,
+    {
+      reservations: repos.searchUsageReservations,
+      commits: repos.searchUsageCommits,
+    },
+    async () => {
+      const searchResult = await engine.search(
+        command.intent,
+        command.query,
+        command.limit,
+      );
+      if (isErr(searchResult)) return searchResult;
+      return Ok({ value: { rows: searchResult.value }, consumed: 1 });
+    },
   );
-  if (isErr(reservationResult)) return reservationResult;
-
-  const reservationId = reservationResult.value;
-
-  const searchResult = await engine.search(
-    command.intent,
-    command.query,
-    command.limit,
-  );
-
-  if (isErr(searchResult)) {
-    await cancelSearchUsage(
-      { reservationId, reason: "external_failure" },
-      repos,
-    );
-    return searchResult;
-  }
-
-  const commitResult = await commitSearchUsage(
-    { reservationId, amount: 1 },
-    repos,
-  );
-  if (isErr(commitResult)) return commitResult;
-
-  return Ok({ rows: searchResult.value });
 }
