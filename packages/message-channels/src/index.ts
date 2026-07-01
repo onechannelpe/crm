@@ -1,8 +1,5 @@
 export { createResendProvider } from "./channels/email/resend-client";
-export {
-  createKapsoProvider,
-  sendWithKapsoWhatsAppText,
-} from "./channels/whatsapp/kapso-proxy";
+export { createKapsoProvider } from "./channels/whatsapp/kapso-proxy";
 export { createWhatsAppCloudProvider } from "./channels/whatsapp/meta-cloud";
 export { createMessageChannels } from "./service";
 export {

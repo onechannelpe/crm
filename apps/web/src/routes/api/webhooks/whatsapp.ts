@@ -1,8 +1,8 @@
-import { sendWithKapsoWhatsAppText } from "@crm/message-channels";
 import type { APIEvent } from "@solidjs/start/server";
 
 import { notificationsConfig } from "~/lib/env";
 import { createLogger } from "~/lib/observability/logger";
+import { toE164Peru } from "~/lib/phone/pe-mobile";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import {
   handleWhatsAppInboundMessage,
@@ -41,7 +41,9 @@ export function GET(event: APIEvent): Response {
 }
 
 function createInboundPorts(): WhatsAppInboundPorts {
-  const db = getServerRuntime().infra.db;
+  const runtime = getServerRuntime();
+  const db = runtime.infra.db;
+  const { messaging } = runtime.notifications;
   const addresses = createUserChannelAddressRepo(db);
 
   return {
@@ -68,19 +70,16 @@ function createInboundPorts(): WhatsAppInboundPorts {
     },
     replies: {
       async sendVerificationReply(address) {
-        const { kapso } = notificationsConfig();
-        if (!kapso) {
-          logger.warn("verify_reply_skipped_no_kapso_config");
-          return;
-        }
-
-        await sendWithKapsoWhatsAppText({
-          apiKey: kapso.apiKey,
-          phoneNumberId: kapso.whatsappPhoneNumberId,
-          metaGraphVersion: kapso.metaGraphVersion,
-          to: address,
+        const result = await messaging.sendWhatsAppText({
+          to: toE164Peru(address),
           body: VERIFY_REPLY_BODY,
         });
+        if (!result.ok) {
+          logger.warn("verify_reply_failed", {
+            code: result.error.code,
+            message: result.error.message,
+          });
+        }
       },
     },
     logger,

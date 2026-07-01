@@ -82,7 +82,7 @@ export function createMessagingGateway(deps: {
 
     sendWhatsAppText(input) {
       return deps.channels.sendWhatsAppText({
-        to: `51${input.to}`,
+        to: input.to,
         body: input.body,
       });
     },

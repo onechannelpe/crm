@@ -6,7 +6,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/lib/auth/access/rbac";
-import { canManageExecutive } from "~/server/capacity/domain/access-policy";
+import { canManageExecutive } from "~/server/capacity/application/authorize-capacity-actor";
 import {
   asBranchId,
   asTeamId,

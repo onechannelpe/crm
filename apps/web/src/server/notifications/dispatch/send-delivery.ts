@@ -1,4 +1,5 @@
 import type { Logger } from "~/lib/observability/logger-shared";
+import { toE164Peru } from "~/lib/phone/pe-mobile";
 
 import type { MessagingGateway } from "../channels/messaging-gateway";
 import type { DeliveryJob, DeliveryRepository } from "../repos/delivery-repo";
@@ -32,7 +33,7 @@ export function createDeliverySender(deps: {
             },
           })
         : await deps.messaging.sendWhatsAppText({
-            to: job.recipient_address,
+            to: toE164Peru(job.recipient_address),
             body: formatWhatsAppNotificationBody(job, deps.publicOrigin),
           });
 

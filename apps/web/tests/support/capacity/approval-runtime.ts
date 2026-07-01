@@ -1,7 +1,7 @@
 import {
   createLeadCapacityGrantsRepo,
   createSearchCapacityGrantsRepo,
-} from "~/server/capacity-usage/repos";
+} from "~/server/capacity/infrastructure/usage-repo";
 import type {
   CapacityGrantTx,
   CapacityManageTx,

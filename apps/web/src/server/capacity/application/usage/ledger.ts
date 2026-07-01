@@ -12,10 +12,10 @@ import type {
   UsageReservationId,
 } from "../../domain/usage-types";
 
-const EXHAUSTED_CODE: Record<CapacityKind, string> = {
+const EXHAUSTED_CODE = {
   lead: "lead_exhausted",
   search: "search_exhausted",
-};
+} as const satisfies Record<CapacityKind, string>;
 
 function brandReservationId<K extends CapacityKind>(
   kind: K,

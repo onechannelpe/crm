@@ -24,3 +24,7 @@ export function parsePhone(value: string | null | undefined): Phone | null {
   if (!isValidPhone(normalized)) return null;
   return normalized;
 }
+
+export function toE164Peru(value: string): string {
+  return `51${normalizePhoneInput(value)}`;
+}
