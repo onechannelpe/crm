@@ -2,8 +2,9 @@ import { createAuthScenario } from "@tests/support/auth/scenario";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createObservabilityService } from "~/server/observability/service";
+import { isErr } from "~/server/shared/result";
 
-describe("auth funnel observability", () => {
+describe("auth funnel observability snapshot", () => {
   const scenario = createAuthScenario("auth-funnel-observability");
 
   beforeEach(async () => {
@@ -14,7 +15,7 @@ describe("auth funnel observability", () => {
     await scenario.teardown();
   });
 
-  it("stores and summarizes auth funnel events separately from action observations", async () => {
+  it("stores funnel events and projects them in summary and recent", async () => {
     const service = createObservabilityService({
       actionObservations: scenario.ctx.repos.actionObservations,
       authFunnelEvents: scenario.ctx.repos.authFunnelEvents,
@@ -60,38 +61,48 @@ describe("auth funnel observability", () => {
       createdAt: new Date(baseTimeMs + 2),
     });
 
-    const recent = await service.listRecentAuthFunnel({
-      fromInclusive: new Date(baseTimeMs - 1000),
-      toInclusive: new Date(baseTimeMs + 1000),
-      limit: 10,
+    const snapshotResult = await service.getAuthFunnelSnapshot({
+      windowMinutes: 60,
     });
-    expect(recent).toHaveLength(3);
-    expect(recent[0]?.event_name).toBe("totp_result");
-    expect(recent[0]?.code).toBe("invalid_totp");
 
-    const summary = await service.summarizeAuthFunnel({
-      fromInclusive: new Date(baseTimeMs - 1000),
-      toInclusive: new Date(baseTimeMs + 1000),
+    expect(isErr(snapshotResult)).toBe(false);
+    if (isErr(snapshotResult)) return;
+    const snapshot = snapshotResult.value;
+
+    expect(snapshot.recent).toHaveLength(3);
+    expect(snapshot.recent[0]).toMatchObject({
+      eventName: "totp_result",
+      code: "invalid_totp",
     });
-    expect(summary).toEqual(
+    expect(snapshot.recent[1]).toMatchObject({
+      eventName: "password_result",
+    });
+    expect(snapshot.recent[2]).toMatchObject({
+      eventName: "screen_viewed",
+    });
+
+    expect(snapshot.summary).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          event_name: "screen_viewed",
+          eventName: "screen_viewed",
           screen: "login",
           outcome: "viewed",
           source: "client",
+          count: 1,
         }),
         expect.objectContaining({
-          event_name: "password_result",
+          eventName: "password_result",
           method: "password",
           outcome: "totp_required",
           source: "server",
+          count: 1,
         }),
         expect.objectContaining({
-          event_name: "totp_result",
+          eventName: "totp_result",
           method: "password_totp",
           outcome: "failed",
           source: "server",
+          count: 1,
         }),
       ]),
     );

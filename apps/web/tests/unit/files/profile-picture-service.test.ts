@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { BlobStore } from "~/server/shared/blob-store";
 import { asUserId } from "~/server/shared/ids";
-import type { ProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
 import {
   createProfilePictureService,
   type AvatarUsersRepository,
@@ -10,16 +10,16 @@ import {
 type FindAvatarMetaById = AvatarUsersRepository["findAvatarMetaById"];
 type UpdateAvatar = AvatarUsersRepository["updateAvatar"];
 type ClearAvatar = AvatarUsersRepository["clearAvatar"];
-type PutBlob = ProfilePictureBlobStore["put"];
-type GetBlob = ProfilePictureBlobStore["get"];
-type DeleteBlob = ProfilePictureBlobStore["delete"];
+type PutBlob = BlobStore["putBytes"];
+type GetBlob = BlobStore["getBytes"];
+type DeleteBlob = BlobStore["delete"];
 
 function setup() {
   const findAvatarMetaById = vi.fn<FindAvatarMetaById>();
   const updateAvatar = vi.fn<UpdateAvatar>();
   const clearAvatar = vi.fn<ClearAvatar>();
-  const put = vi.fn<PutBlob>();
-  const get = vi.fn<GetBlob>();
+  const putBytes = vi.fn<PutBlob>();
+  const getBytes = vi.fn<GetBlob>();
   const remove = vi.fn<DeleteBlob>();
 
   const users: AvatarUsersRepository = {
@@ -27,7 +27,14 @@ function setup() {
     updateAvatar,
     clearAvatar,
   };
-  const blobStore: ProfilePictureBlobStore = { put, get, delete: remove };
+  const blobStore: BlobStore = {
+    putBytes,
+    getBytes,
+    delete: remove,
+    // Service never calls this; keep it explicit so the test stays aligned
+    // with the real interface as it evolves.
+    putFromWebStream: vi.fn<BlobStore["putFromWebStream"]>(),
+  };
   const service = createProfilePictureService({ users }, blobStore);
 
   return {
@@ -35,8 +42,8 @@ function setup() {
     findAvatarMetaById,
     updateAvatar,
     clearAvatar,
-    put,
-    get,
+    putBytes,
+    getBytes,
     remove,
   };
 }
@@ -62,12 +69,13 @@ function makeAvatar(
 
 describe("profile picture service", () => {
   it("keeps upload successful when old file cleanup fails", async () => {
-    const { service, findAvatarMetaById, updateAvatar, put, remove } = setup();
+    const { service, findAvatarMetaById, updateAvatar, putBytes, remove } =
+      setup();
 
     findAvatarMetaById.mockResolvedValue(makeAvatar({ avatar_version: 2 }));
     updateAvatar.mockResolvedValue(undefined);
-    put.mockResolvedValue(undefined);
-    remove.mockImplementation(async (key) => {
+    putBytes.mockResolvedValue({ sha256: "x", sizeBytes: 3 });
+    remove.mockImplementation(async (key: string) => {
       if (key === "10/old.png") throw new Error("delete failed");
     });
 
@@ -101,10 +109,11 @@ describe("profile picture service", () => {
   });
 
   it("rolls back new blob when db write fails during upload", async () => {
-    const { service, findAvatarMetaById, updateAvatar, put, remove } = setup();
+    const { service, findAvatarMetaById, updateAvatar, putBytes, remove } =
+      setup();
 
     findAvatarMetaById.mockResolvedValue(makeAvatar());
-    put.mockResolvedValue(undefined);
+    putBytes.mockResolvedValue({ sha256: "x", sizeBytes: 1 });
     updateAvatar.mockRejectedValue(new Error("db error"));
     remove.mockResolvedValue(undefined);
 
@@ -120,7 +129,7 @@ describe("profile picture service", () => {
 
     // The exact key written to storage must be the one rolled back,
     // not the old key, not some arbitrary key.
-    const newKey = put.mock.calls[0]?.[0];
+    const newKey = putBytes.mock.calls[0]?.[0];
     expect(newKey).toBeDefined();
     expect(remove).toHaveBeenCalledExactlyOnceWith(newKey);
   });
@@ -202,7 +211,7 @@ describe("profile picture service", () => {
   });
 
   it("returns storage_unavailable when avatar bytes cannot be read", async () => {
-    const { service, findAvatarMetaById, get } = setup();
+    const { service, findAvatarMetaById, getBytes } = setup();
     findAvatarMetaById.mockResolvedValue(
       makeAvatar({
         id: asUserId("2"),
@@ -210,7 +219,7 @@ describe("profile picture service", () => {
         avatar_version: 6,
       }),
     );
-    get.mockRejectedValue(new Error("blob read failed"));
+    getBytes.mockRejectedValue(new Error("blob read failed"));
     const result = await service.get(asUserId("2"));
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");

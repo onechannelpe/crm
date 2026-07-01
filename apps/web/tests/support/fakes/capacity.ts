@@ -107,7 +107,23 @@ export function makeSearchUsageReservationsRepo() {
       if (row) row.status = status;
       return Promise.resolve();
     },
-    findByUserAndPeriod(userId: UserId): Promise<SearchReservationRow[]> {
+    updateAmountAndStatus(
+      id: SearchReservationId,
+      amount: number,
+      status: "committed" | "cancelled" | "expired",
+    ): Promise<void> {
+      const row = rows.find((r) => r.id === id);
+      if (row) {
+        row.amount = amount;
+        row.status = status;
+      }
+      return Promise.resolve();
+    },
+    findByUserAndPeriod(
+      userId: UserId,
+      _periodStart?: string,
+      _periodEnd?: string,
+    ): Promise<SearchReservationRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };

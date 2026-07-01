@@ -3,11 +3,12 @@ import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { asUserId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 const EXEC_USER_ID = asUserId("audit-contract-exec");
 const SUPERUSER_ID = asUserId("audit-contract-superuser");
 
-describe("action observability repository", () => {
+describe("action observations snapshot", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
 
   afterEach(async () => {
@@ -17,8 +18,8 @@ describe("action observability repository", () => {
     }
   });
 
-  it("stores action observations and summarizes outcomes", async () => {
-    ctx = await createIsolatedTestDb("observability-repo");
+  it("projects ok and error rows into summary and recent", async () => {
+    ctx = await createIsolatedTestDb("observability-snapshot");
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const baseTime = new Date(baseTimeMs);
@@ -36,7 +37,6 @@ describe("action observability repository", () => {
       input: { contactId: 1 },
       createdAt: baseTime,
     });
-
     await audit.recordAction({
       traceId: "trace-b",
       requestId: "req-b",
@@ -46,34 +46,96 @@ describe("action observability repository", () => {
       actorRole: "executive",
       status: "error",
       durationMs: 95,
+      errorCode: "forbidden",
       errorMessage: "Forbidden",
       input: { contactId: 2 },
       createdAt: nextTime,
     });
 
-    const recent = await audit.observability.listRecent({
-      fromInclusive: new Date(baseTimeMs - 1000),
-      toInclusive: new Date(baseTimeMs + 1000),
-      limit: 10,
+    const snapshotResult = await audit.observability.getActionSnapshot({
+      windowMinutes: 60,
     });
-    expect(recent).toHaveLength(2);
-    expect(recent[0]?.status).toBe("error");
 
-    const summary = await audit.observability.summarizeByAction({
-      fromInclusive: new Date(baseTimeMs - 1000),
-      toInclusive: new Date(baseTimeMs + 1000),
+    expect(isErr(snapshotResult)).toBe(false);
+    if (isErr(snapshotResult)) return;
+    const snapshot = snapshotResult.value;
+
+    expect(snapshot.summary).toHaveLength(1);
+    const summaryRow = snapshot.summary[0];
+    expect(summaryRow).toMatchObject({
+      actionName: "leads.request",
+      count: 2,
+      errorCount: 1,
     });
-    expect(summary).toHaveLength(1);
-    expect(summary[0]?.action_name).toBe("leads.request");
-    expect(summary[0]?.count ?? 0).toBe(2);
-    expect(summary[0]?.error_count ?? 0).toBe(1);
+    expect(summaryRow?.avgDurationMs).toBeGreaterThan(0);
+
+    // recent rows are ordered by created_at desc, so the error row is first.
+    expect(snapshot.recent).toHaveLength(2);
+    expect(snapshot.recent[0]?.status).toBe("error");
+    expect(snapshot.recent[1]?.status).toBe("ok");
   });
 
-  it("uses fixed validation error code and can delete old records", async () => {
-    ctx = await createIsolatedTestDb("observability-retention");
+  it("normalizes wire error codes into the public error column", async () => {
+    ctx = await createIsolatedTestDb("observability-error-normalization");
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const baseTime = new Date(baseTimeMs);
+
+    await audit.recordAction({
+      traceId: "trace-validation",
+      requestId: "req-validation",
+      routePath: "/team/invite",
+      actionName: "team.invite.create",
+      actorUserId: SUPERUSER_ID,
+      actorRole: "superuser",
+      status: "error",
+      durationMs: 10,
+      errorCode: "validation",
+      errorMessage: "email must be valid",
+      input: { role: "executive" },
+      createdAt: baseTime,
+    });
+    await audit.recordAction({
+      traceId: "trace-unauth",
+      requestId: "req-unauth",
+      routePath: "/team/invite",
+      actionName: "team.invite.create",
+      actorUserId: SUPERUSER_ID,
+      actorRole: "superuser",
+      status: "error",
+      durationMs: 11,
+      errorCode: "unauthenticated",
+      errorMessage: "no session",
+      input: { role: "executive" },
+      createdAt: new Date(baseTimeMs + 1),
+    });
+
+    const snapshotResult = await audit.observability.getActionSnapshot({
+      windowMinutes: 60,
+      actionName: "team.invite.create",
+      status: "error",
+    });
+
+    expect(isErr(snapshotResult)).toBe(false);
+    if (isErr(snapshotResult)) return;
+
+    const codes = snapshotResult.value.recent
+      .map((row) => row.errorCode)
+      .filter((code): code is string => code !== null)
+      .toSorted((a, b) => a.localeCompare(b));
+    expect(codes).toEqual(["authentication_required", "validation_failed"]);
+    expect(snapshotResult.value.summary[0]).toMatchObject({
+      actionName: "team.invite.create",
+      count: 2,
+      errorCount: 2,
+    });
+  });
+
+  it("deletes old observations via the retention sweep", async () => {
+    ctx = await createIsolatedTestDb("observability-retention");
+    const audit = createAuditTestKit(ctx);
+    const baseTimeMs = 1_700_000_000_000;
+    const cutoff = new Date(baseTimeMs);
 
     await audit.recordAction({
       traceId: "trace-old",
@@ -97,37 +159,34 @@ describe("action observability repository", () => {
       actionName: "team.invite.create",
       actorUserId: SUPERUSER_ID,
       actorRole: "superuser",
-      status: "error",
+      status: "ok",
       durationMs: 11,
-      errorCode: "validation",
-      errorMessage: "fullName is invalid",
       input: { role: "executive" },
       createdAt: new Date(baseTimeMs + 1_000),
     });
 
-    const beforeCleanup = await audit.observability.listRecent({
-      fromInclusive: new Date(baseTimeMs - 10_000),
-      toInclusive: new Date(baseTimeMs + 10_000),
-      limit: 10,
+    // Anchor the snapshot window to the new row so both rows are visible.
+    const beforeSweep = await audit.observability.getActionSnapshot({
+      windowMinutes: 60,
     });
-    expect(beforeCleanup).toHaveLength(2);
-    expect(beforeCleanup[0]?.error_code).toBe("validation_failed");
-    expect(beforeCleanup[1]?.error_code).toBe("validation_failed");
+    expect(isErr(beforeSweep)).toBe(false);
+    if (isErr(beforeSweep)) throw new Error("Expected snapshot success");
+    expect(beforeSweep.value.recent).toHaveLength(2);
 
     const deleted =
-      await ctx.repos.actionObservations.deleteCreatedBefore(baseTime);
+      await ctx.repos.actionObservations.deleteCreatedBefore(cutoff);
     expect(deleted).toBe(1);
 
-    const afterCleanup = await audit.observability.listRecent({
-      fromInclusive: new Date(baseTimeMs - 10_000),
-      toInclusive: new Date(baseTimeMs + 10_000),
-      limit: 10,
+    const afterSweep = await audit.observability.getActionSnapshot({
+      windowMinutes: 60,
     });
-    expect(afterCleanup).toHaveLength(1);
-    expect(afterCleanup[0]?.trace_id).toBe("trace-new");
+    expect(isErr(afterSweep)).toBe(false);
+    if (isErr(afterSweep)) return;
+    expect(afterSweep.value.recent).toHaveLength(1);
+    expect(afterSweep.value.recent[0]?.actionName).toBe("team.invite.create");
   });
 
-  it("applies status and action filters consistently to summary", async () => {
+  it("filters summary consistently by status and action name", async () => {
     ctx = await createIsolatedTestDb("observability-summary-filters");
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
@@ -171,16 +230,25 @@ describe("action observability repository", () => {
       createdAt: new Date(baseTimeMs + 2),
     });
 
-    const filteredSummary = await audit.observability.summarizeByAction({
-      fromInclusive: new Date(baseTimeMs - 1000),
-      toInclusive: new Date(baseTimeMs + 1000),
+    const filteredResult = await audit.observability.getActionSnapshot({
+      windowMinutes: 60,
       actionName: "team.invite.create",
       status: "error",
     });
 
-    expect(filteredSummary).toHaveLength(1);
-    expect(filteredSummary[0]?.action_name).toBe("team.invite.create");
-    expect(filteredSummary[0]?.count ?? 0).toBe(1);
-    expect(filteredSummary[0]?.error_count ?? 0).toBe(1);
+    expect(isErr(filteredResult)).toBe(false);
+    if (isErr(filteredResult)) return;
+    const filtered = filteredResult.value;
+
+    expect(filtered.summary).toHaveLength(1);
+    expect(filtered.summary[0]).toMatchObject({
+      actionName: "team.invite.create",
+      count: 1,
+      errorCount: 1,
+    });
+    expect(filtered.recent.every((row) => row.status === "error")).toBe(true);
+    expect(
+      filtered.recent.every((row) => row.actionName === "team.invite.create"),
+    ).toBe(true);
   });
 });
