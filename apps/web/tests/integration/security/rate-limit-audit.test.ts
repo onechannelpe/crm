@@ -68,9 +68,11 @@ describe("rate limit audit", () => {
     expect(entry).toBeDefined();
     expect(entry?.entity_type).toBe("user");
     expect(entry?.entity_id).toBe(String(userId));
-    expect(entry?.payload_json).toContain('"actionName":"leads.request"');
-    expect(entry?.payload_json).toContain('"scope":"user"');
-    expect(entry?.payload_json).toContain('"retryAfterMs"');
+    expect(entry?.payload_json).toMatchObject({
+      actionName: "leads.request",
+      scope: "user",
+    });
+    expect(entry?.payload_json).toHaveProperty("retryAfterMs");
   });
 
   it("cleans up stale counters", async () => {

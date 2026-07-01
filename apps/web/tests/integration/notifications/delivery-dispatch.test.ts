@@ -149,7 +149,13 @@ describe("notification delivery dispatch", () => {
       attempt_count: 1,
       error_code: "rate_limited",
     });
-    expect(afterRetry?.available_at).toEqual(new Date(NOW_MS + 5_000));
+    // `nextAvailableAt` applies equal jitter over [base/2, base) to avoid a
+    // retry stampede (see lib/job-queue/backoff.ts), so the first-attempt
+    // delay lands in [2_500, 5_000)ms rather than exactly 5_000ms.
+    expect(afterRetry?.available_at?.getTime()).toBeGreaterThanOrEqual(
+      NOW_MS + 2_500,
+    );
+    expect(afterRetry?.available_at?.getTime()).toBeLessThan(NOW_MS + 5_000);
 
     notifications.advanceClock(5_001);
     await notifications.runOnce();

@@ -186,7 +186,14 @@ export function createJobStore<
           ...mirror("processing", { error: null }),
         }))
         .whereRef(`${table}.id`, "=", "claimed.id")
-        .returning(selectColumns.slice())
+        // `claimed` also exposes `id`, so the bare column is ambiguous in
+        // Postgres's `UPDATE ... FROM` RETURNING; qualify it against the
+        // table being updated.
+        .returning(
+          selectColumns.map((column) =>
+            column === "id" ? `${table}.id` : column,
+          ),
+        )
         .execute();
 
       // oxlint-disable-next-line no-unsafe-type-assertion

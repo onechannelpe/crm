@@ -13,13 +13,20 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
     },
 
     findRecentByUser(userId: UserId, limit: number) {
-      return db
-        .selectFrom("auth_events")
-        .selectAll()
-        .where("user_id", "=", userId)
-        .orderBy("created_at", "desc")
-        .limit(limit)
-        .execute();
+      return (
+        db
+          .selectFrom("auth_events")
+          .selectAll()
+          .where("user_id", "=", userId)
+          // `id` (uuidv7, time-sortable) breaks ties deterministically when
+          // several events share one `created_at` — e.g. a burst of retries
+          // that land in the same millisecond — which `created_at` alone
+          // cannot order.
+          .orderBy("created_at", "desc")
+          .orderBy("id", "desc")
+          .limit(limit)
+          .execute()
+      );
     },
 
     findRecentLoginRetriesByUser(userId: UserId, limit: number) {
@@ -30,6 +37,7 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .where("stage", "in", ["login", "challenge", "verify", "recovery"])
         .where("outcome", "in", ["failure", "throttled"])
         .orderBy("created_at", "desc")
+        .orderBy("id", "desc")
         .limit(limit)
         .execute();
     },
@@ -72,6 +80,7 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .selectAll()
         .where("identifier_hash", "=", identifierHash)
         .orderBy("created_at", "desc")
+        .orderBy("id", "desc")
         .executeTakeFirst();
     },
 

@@ -1,5 +1,14 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { createObservabilityService } from "~/server/observability/service";
 import { isErr } from "~/server/shared/result";
@@ -19,12 +28,22 @@ describe("auth funnel observability snapshot", () => {
     await scenario.reset();
   });
 
+  // `getAuthFunnelSnapshot` windows off the real clock (see
+  // `parseAuthFunnelSnapshotFilter`), matching the unit coverage in
+  // `tests/unit/observability/service-snapshots.test.ts` — freeze it here too
+  // so fixed `createdAt` seeds land inside the query window.
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("stores funnel events and projects them in summary and recent", async () => {
     const service = createObservabilityService({
       actionObservations: scenario.ctx.repos.actionObservations,
       authFunnelEvents: scenario.ctx.repos.authFunnelEvents,
     });
     const baseTimeMs = 1_700_000_000_000;
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(baseTimeMs + 2));
 
     await service.recordAuthFunnelEvent({
       traceId: "trace-view",

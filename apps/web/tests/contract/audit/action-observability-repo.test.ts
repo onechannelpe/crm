@@ -3,14 +3,23 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   resetTestDb,
+  TEST_FIXTURES,
 } from "@tests/support/runtime/db";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
-import { asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
-const EXEC_USER_ID = asUserId("audit-contract-exec");
-const SUPERUSER_ID = asUserId("audit-contract-superuser");
+const EXEC_USER_ID = TEST_FIXTURES.users.execOne.id;
+const SUPERUSER_ID = TEST_FIXTURES.users.superUser.id;
 
 describe("action observations snapshot", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>>;
@@ -27,11 +36,21 @@ describe("action observations snapshot", () => {
     await resetTestDb(ctx);
   });
 
+  // `getActionSnapshot` windows off the real clock (see
+  // `parseActionSnapshotFilter`), matching the unit coverage in
+  // `tests/unit/observability/service-snapshots.test.ts` — freeze it here too
+  // so fixed `createdAt` seeds land inside the query window.
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("projects ok and error rows into summary and recent", async () => {
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const baseTime = new Date(baseTimeMs);
     const nextTime = new Date(baseTimeMs + 1);
+    vi.useFakeTimers();
+    vi.setSystemTime(nextTime);
 
     await audit.recordAction({
       traceId: "trace-a",
@@ -87,6 +106,8 @@ describe("action observations snapshot", () => {
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const baseTime = new Date(baseTimeMs);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(baseTimeMs + 1));
 
     await audit.recordAction({
       traceId: "trace-validation",
@@ -142,6 +163,8 @@ describe("action observations snapshot", () => {
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const cutoff = new Date(baseTimeMs);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(baseTimeMs + 1_000));
 
     await audit.recordAction({
       traceId: "trace-old",
@@ -196,6 +219,8 @@ describe("action observations snapshot", () => {
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const baseTime = new Date(baseTimeMs);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(baseTimeMs + 2));
 
     await audit.recordAction({
       traceId: "trace-1",

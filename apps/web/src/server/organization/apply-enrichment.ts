@@ -24,12 +24,26 @@ export function createOrganizationEnrichmentProjection(
   organizations: OrganizationRepository,
 ) {
   return function apply(projection: RegistryProjection): Promise<void> {
+    const legalName = present(projection.legalName);
+    const address = present(projection.address);
+    const district = present(projection.district);
+    const department = present(projection.department);
+
+    if (
+      legalName === undefined &&
+      address === undefined &&
+      district === undefined &&
+      department === undefined
+    ) {
+      return Promise.resolve();
+    }
+
     return organizations.applyEnrichment({
       ruc: projection.ruc,
-      legalName: present(projection.legalName),
-      address: present(projection.address),
-      district: present(projection.district),
-      department: present(projection.department),
+      legalName,
+      address,
+      district,
+      department,
     });
   };
 }

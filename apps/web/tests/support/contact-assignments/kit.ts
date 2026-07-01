@@ -1,10 +1,9 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
-import {
-  asContactAssignmentId,
-  type ContactAssignmentId,
-  type OrganizationPersonId,
-  type UserId,
+import type {
+  ContactAssignmentId,
+  OrganizationPersonId,
+  UserId,
 } from "~/server/shared/ids";
 
 export type { ContactAssignmentId };
@@ -24,8 +23,10 @@ export function createContactAssignmentsTestKit(ctx: TestDbContext) {
       await ctx.db
         .insertInto("contact_assignments")
         .values(
-          rows.map((row, index) => ({
-            id: asContactAssignmentId(`seed-${row.userId}-${index}`),
+          // `id` defaults to `uuidv7()` in production (nothing constructs it
+          // manually), so the seed leaves it unset rather than fabricating a
+          // placeholder that doesn't match the column's real uuid type.
+          rows.map((row) => ({
             user_id: row.userId,
             contact_id: row.contactId,
             assigned_at: row.assignedAt,

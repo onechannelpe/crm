@@ -16,7 +16,7 @@ const NOW = new Date(1_700_000_000_000);
 const RETRY_AT = new Date(NOW.getTime() + 5_000);
 const WORKER_ID = "worker";
 const INTENT_ID = asNotificationIntentId("intent-1");
-const USER_ID = asUserId("delivery-repo-user");
+const USER_ID = asUserId("01974fd5-f261-7a7d-93f5-2f3d0f969001");
 
 function planned(
   overrides: Partial<PlannedDeliveryRow> = {},

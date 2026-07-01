@@ -11,6 +11,7 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   resetTestDb,
+  TEST_FIXTURES,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -39,7 +40,7 @@ describe("capacity approval failures", () => {
       makeApprovalContext(),
       makeApprovalDeps(ctx),
       {
-        requestId: asCapacityRequestId("missing-capacity-request"),
+        requestId: asCapacityRequestId("01974fd5-f261-7a7d-93f5-2f3d0f96f001"),
         note: null,
       },
     );
@@ -76,6 +77,10 @@ describe("capacity approval failures", () => {
   });
 
   it("returns forbidden and writes nothing when the actor cannot manage the target", async () => {
+    // The target (`EXECUTIVE_OTHER_BRANCH_ID`) is seeded in Norte; the actor
+    // must be scoped to a different branch (Lima) for `canManageExecutiveRecord`
+    // to reject an `admin` on branch mismatch — an unscoped actor defaults to
+    // Norte too, which would make the request manageable and defeat the test.
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_OTHER_BRANCH_ID,
       kind: "search_extra",
@@ -85,7 +90,10 @@ describe("capacity approval failures", () => {
     });
 
     const result = await approveCapacityRequest(
-      makeApprovalContext({ role: "admin" }),
+      makeApprovalContext({
+        role: "admin",
+        branchId: TEST_FIXTURES.branches.lima.id,
+      }),
       makeApprovalDeps(ctx),
       { requestId, note: null },
     );

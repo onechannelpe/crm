@@ -1,8 +1,6 @@
 import { createExtensionService } from "~/server/extension/service";
 import {
   asContactAssignmentId,
-  asOrganizationPersonId,
-  asPersonId,
   type BranchId,
   type ContactAssignmentId,
   type OrganizationPersonId,
@@ -103,14 +101,11 @@ export function createExtensionScenario(
     async contactWithoutPhone(sequence: number) {
       const currentTime = now();
       const dni = `7999${sequence.toString().padStart(4, "0")}`;
-      const personId = asPersonId(`extension-person-${sequence}`);
-      const organizationPersonId = asOrganizationPersonId(
-        `extension-org-person-${sequence}`,
-      );
-      await ctx.db
+      // `id` defaults to `uuidv7()` on both tables (nothing constructs it
+      // manually in production), so the seed leaves it unset.
+      const person = await ctx.db
         .insertInto("people")
         .values({
-          id: personId,
           dni,
           names: "Contacto sin telefono",
           first_surname: null,
@@ -120,20 +115,21 @@ export function createExtensionScenario(
           updated_at: currentTime,
         })
         .onConflict((oc) => oc.column("dni").doNothing())
+        .returning("id")
         .executeTakeFirstOrThrow();
-      await ctx.db
+      const organizationPerson = await ctx.db
         .insertInto("organization_people")
         .values({
-          id: organizationPersonId,
-          person_id: personId,
+          person_id: person.id,
           organization_id: ctx.fixtures.organizations.lima.id,
           phone: null,
           email: null,
           created_at: currentTime,
           updated_at: currentTime,
         })
+        .returning("id")
         .executeTakeFirstOrThrow();
-      return organizationPersonId;
+      return organizationPerson.id;
     },
     async claim(installationId: string) {
       const authSessionId = await this.session();

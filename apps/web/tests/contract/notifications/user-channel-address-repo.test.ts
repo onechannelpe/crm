@@ -4,12 +4,11 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   resetTestDb,
+  TEST_FIXTURES,
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { asUserId } from "~/server/shared/ids";
-
-const USER_ID = asUserId("user-channel-address-user");
+const USER_ID = TEST_FIXTURES.users.execOne.id;
 const INITIAL_AT = new Date(1_000);
 const CLAIM_AT = new Date(2_000);
 

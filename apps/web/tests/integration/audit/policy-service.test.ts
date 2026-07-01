@@ -2,13 +2,13 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   resetTestDb,
+  TEST_FIXTURES,
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
-import { asUserId } from "~/server/shared/ids";
 
-const ACTOR_USER_ID = asUserId("audit-policy-actor");
+const ACTOR_USER_ID = TEST_FIXTURES.users.superUser.id;
 
 describe("audit policy service", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>>;

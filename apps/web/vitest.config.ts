@@ -24,7 +24,7 @@ export default defineConfig({
   test: {
     reporters: process.env.GITHUB_ACTIONS
       ? ["dot", "github-actions"]
-      : ["github-actions"],
+      : ["default", "github-actions"],
     projects: [
       {
         extends: true,

@@ -66,7 +66,7 @@ describe("outbox delivery", () => {
 
     expect(failed.queue_state).toBe("failed");
     expect(failed.error).toContain("Invalid notification channels payload");
-    expect(failed.expanded_at).toBe(runtime.now.get());
+    expect(failed.expanded_at).toEqual(runtime.now.get());
   });
 
   it("drains pending outbox events and persists notifications", async () => {

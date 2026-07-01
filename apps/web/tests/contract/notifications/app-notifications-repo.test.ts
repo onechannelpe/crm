@@ -6,8 +6,6 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { asUserId } from "~/server/shared/ids";
-
 describe("app notifications repo", () => {
   let ctx: TestDbContext;
 
@@ -25,7 +23,7 @@ describe("app notifications repo", () => {
 
   it("deduplicates notifications by user and source event id", async () => {
     const now = new Date();
-    const userId = asUserId("app-notifications-user");
+    const userId = ctx.fixtures.users.execOne.id;
     await ctx.repos.appNotifications.createMany([
       {
         user_id: userId,

@@ -3,13 +3,12 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   resetTestDb,
+  TEST_FIXTURES,
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { asUserId } from "~/server/shared/ids";
-
-const EXEC_USER_ID = asUserId("audit-reader-exec");
-const SUPERUSER_ID = asUserId("audit-reader-superuser");
+const EXEC_USER_ID = TEST_FIXTURES.users.execOne.id;
+const SUPERUSER_ID = TEST_FIXTURES.users.superUser.id;
 
 describe("audit logs reader repository", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>>;

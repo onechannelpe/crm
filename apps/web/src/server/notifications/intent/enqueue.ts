@@ -27,8 +27,8 @@ export async function enqueueNotifications(
       validated.map((intent) => ({
         id: intent.id,
         event_type: intent.eventType,
-        audience_json: intent.audience,
-        channels_json: intent.channels,
+        audience_json: JSON.stringify(intent.audience),
+        channels_json: JSON.stringify(intent.channels),
         title: intent.title,
         body_text: intent.bodyText,
         action_url: intent.actionUrl,

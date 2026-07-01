@@ -54,7 +54,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("notification_deliveries")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
-    .addColumn("intent_id", "uuid", (col) => col.notNull())
+    .addColumn("intent_id", "text", (col) => col.notNull())
     .addColumn("user_id", "uuid", (col) => col.notNull())
     .addColumn("channel", "text", (col) => col.notNull())
     .addColumn("recipient_address", "text", (col) => col.notNull())
@@ -110,7 +110,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("source_event_id", "uuid", (col) => col.notNull())
+    .addColumn("source_event_id", "text", (col) => col.notNull())
     .addColumn("event_type", "text", (col) => col.notNull())
     .addColumn("priority", "text", (col) => col.notNull())
     .addColumn("title", "text", (col) => col.notNull())
@@ -136,7 +136,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("notification_outbox")
-    .addColumn("id", "uuid", (col) => col.primaryKey())
+    // `id` is a caller-supplied deterministic idempotency key
+    // (`${eventId}:${stage}`, see reactors/notify.ts and
+    // reactors/fulfillment-notify.ts), not a generated row id — hence `text`,
+    // not `uuid`. `notification_deliveries.intent_id` and
+    // `app_notifications.source_event_id` both carry this same value
+    // downstream and must stay `text` too.
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("event_type", "text", (col) => col.notNull())
     .addColumn("audience_json", "jsonb", (col) => col.notNull())
     .addColumn("channels_json", "jsonb", (col) => col.notNull())

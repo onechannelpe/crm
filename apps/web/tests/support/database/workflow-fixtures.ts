@@ -1,3 +1,5 @@
+import { randomUUIDv7 } from "bun";
+
 import type {
   FulfillmentStep,
   LeadPriority,
@@ -228,11 +230,12 @@ export function createUserFixtureWriter(runtime: TestRuntime) {
     role: "admin" | "executive";
     branchId?: BranchId;
   }): Promise<{ id: UserId }> {
-    const id = asUserId(`generated-user-${++generatedUserId}`);
+    const label = ++generatedUserId;
+    const id = asUserId(randomUUIDv7());
     await seedUser(runtime, {
       id,
-      username: `${input.role}.${id}`,
-      email: `${input.role}.${id}@test.local`,
+      username: `${input.role}.${label}`,
+      email: `${input.role}.${label}@test.local`,
       names: input.role === "admin" ? "Admin" : "Executive",
       firstSurname: "Test",
       secondSurname: "User",

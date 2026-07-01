@@ -143,7 +143,7 @@ describe("passkey authentication", () => {
       scenario.ctx.repos,
       { webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos) },
     ).finishLogin({
-      flowId: asAuthLoginFlowId("missing-flow"),
+      flowId: asAuthLoginFlowId("01974fd5-f261-7a7d-93f5-2f3d0f96f101"),
       response: buildAssertionResponse("passkey-1"),
       ipAddress,
       userAgent: "vitest-agent",

@@ -21,8 +21,10 @@ type DeliveryRow = Insertable<NotificationDeliveriesTable>;
 const DEFAULT_NOW = new Date(1_700_000_000_000);
 const DEFAULT_USER_ID = asUserId("notification-builder-user");
 
-// Outbox intent row with sane defaults. Audience and channels stay as JSON
-// values because the repository boundary owns storage encoding.
+// Outbox intent row with sane defaults. `audience_json`/`channels_json` are
+// stringified here, matching `enqueueNotifications` — `pg` auto-serializes
+// plain objects for jsonb params but not arrays, so an un-stringified array
+// comes out as a Postgres array literal and fails jsonb validation.
 export function anOutboxIntentRow(
   overrides: {
     id: string;
@@ -40,8 +42,8 @@ export function anOutboxIntentRow(
 
   return {
     event_type: "test.event",
-    audience_json: audience,
-    channels_json: channels,
+    audience_json: JSON.stringify(audience),
+    channels_json: JSON.stringify(channels),
     title: "Test",
     body_text: "Body",
     action_url: null,

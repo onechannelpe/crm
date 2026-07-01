@@ -2,17 +2,17 @@ import {
   cleanupTestDb,
   createIsolatedTestDb,
   resetTestDb,
+  TEST_FIXTURES,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createRecipientRepository } from "~/server/notifications/repos/recipient-repo";
 import { openSession } from "~/server/notifications/whatsapp-session";
-import { asUserId } from "~/server/shared/ids";
 
 const NOW = new Date(1_700_000_000_000);
-const USER_ONE = asUserId("recipient-repo-user-one");
-const USER_TWO = asUserId("recipient-repo-user-two");
+const USER_ONE = TEST_FIXTURES.users.execOne.id;
+const USER_TWO = TEST_FIXTURES.users.backOne.id;
 
 describe("recipient repository", () => {
   let ctx: TestDbContext;
