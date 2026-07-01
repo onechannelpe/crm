@@ -1,4 +1,4 @@
-import { createContactsTestKit } from "@tests/support/contacts/kit";
+import { createContactAssignmentsTestKit } from "@tests/support/contact-assignments/kit";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -23,7 +23,7 @@ describe("lead assignment repository", () => {
     const expiredAt = new Date(now.getTime() - 1);
     const { execOne } = ctx.fixtures.users;
     const { lima, norte } = ctx.fixtures.organizationPeople;
-    const contacts = createContactsTestKit(ctx);
+    const contacts = createContactAssignmentsTestKit(ctx);
     await contacts.seedAssignments([
       {
         userId: execOne.id,
@@ -57,7 +57,7 @@ describe("lead assignment repository", () => {
     const expiresAt = new Date(now.getTime() + 60_000);
     const { execOne, execTwo } = ctx.fixtures.users;
     const { lima, norte } = ctx.fixtures.organizationPeople;
-    const contacts = createContactsTestKit(ctx);
+    const contacts = createContactAssignmentsTestKit(ctx);
     await contacts.seedAssignments([
       {
         userId: execOne.id,

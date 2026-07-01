@@ -68,7 +68,7 @@ describe("register lead", () => {
       currentCreditRate: 3.4,
       gpv: 80000,
       ticket: 150,
-      giroNegocio: "Gastronomía",
+      lineOfBusiness: "Gastronomía",
       posCount: 4,
     });
 
@@ -81,6 +81,6 @@ describe("register lead", () => {
       settlementBank: expect.any(String),
       posCount: 4,
     });
-    expect(result.snapshot.organizationGiroNegocio).toBe("Gastronomía");
+    expect(result.snapshot.organizationLineOfBusiness).toBe("Gastronomía");
   });
 });

@@ -11,20 +11,31 @@ import type {
   AssignContactsTransactionRepos,
   AssignContactsUow,
 } from "~/server/contact-assignments/application/contact-assignment-writer";
+import type { CadenceSnapshot } from "~/server/contact-assignments/infrastructure/cadence-repo";
+import type {
+  Membership,
+  OrganizationProfile,
+} from "~/server/organization/organization-repo";
 import { external, type DomainError } from "~/server/shared/domain-error";
 import { type RecordCandidate } from "~/server/shared/engine/record-contract";
 import {
   asBranchId,
   asOrganizationId,
   asOrganizationPersonId,
+  asPersonId,
   asUserId,
   type BranchId,
+  type OrganizationId,
+  type OrganizationPersonId,
   type UserId,
 } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 const USER_ID = asUserId("1");
 const BRANCH_ID: BranchId = asBranchId("1");
+const ORG_ID: OrganizationId = asOrganizationId(
+  "01974fd5-f261-7a7d-93f5-2f3d0f963001",
+);
 const EXHAUSTED_ACTIVE_ASSIGNMENTS = 9_999;
 
 function makeCandidate(n: number): RecordCandidate {
@@ -34,6 +45,21 @@ function makeCandidate(n: number): RecordCandidate {
     dni: `7000000${n}`,
     person_name: `Person ${n}`,
     phone_primary: `+5199900000${n}`,
+  };
+}
+
+function makeOrganizationProfile(ruc: string): OrganizationProfile {
+  return {
+    id: ORG_ID,
+    ruc,
+    legalName: null,
+    lineOfBusiness: null,
+    address: null,
+    district: null,
+    province: null,
+    department: null,
+    phone: null,
+    email: null,
   };
 }
 
@@ -51,37 +77,43 @@ function makeRepos(activeAssignments = 0) {
       countActiveByUser: async () => activeAssignments,
       createMany: async () => undefined,
     },
-    organizations: {
-      findOrCreate: async (_ruc: string, _name: string) => ({
-        id: asOrganizationId("01974fd5-f261-7a7d-93f5-2f3d0f963001"),
-        ruc: _ruc,
-        legal_name: null,
-        giro_negocio: null,
-        address: null,
-        district: null,
-        department: null,
-        email: null,
-        phone: null,
-        province: null,
-        created_at: new Date(),
-      }),
+    organization: {
+      upsertOrganization: async (
+        input: AssignContactsTransactionRepos["organization"]["upsertOrganization"] extends (
+          arg: infer Arg,
+        ) => unknown
+          ? Arg
+          : never,
+      ) => makeOrganizationProfile(input.ruc),
+      upsertMembership: async (
+        input: AssignContactsTransactionRepos["organization"]["upsertMembership"] extends (
+          arg: infer Arg,
+        ) => unknown
+          ? Arg
+          : never,
+      ): Promise<Membership> => {
+        const id = asOrganizationPersonId(`contact-${nextContactId++}`);
+        return {
+          id,
+          organizationId: input.organizationId,
+          person: {
+            id: asPersonId(`person-${input.person.dni}`),
+            dni: input.person.dni,
+            names: input.person.names,
+            firstSurname: input.person.firstSurname,
+            secondSurname: input.person.secondSurname,
+            email: input.person.email,
+            displayName: input.person.names,
+          },
+          phone: input.phone,
+          email: input.email,
+        };
+      },
     },
-    contacts: {
-      findOrCreate: async (
-        orgId: ReturnType<typeof asOrganizationId>,
-        dni: string,
-        name: string,
-        _phone: string | null,
-      ) => ({
-        id: asOrganizationPersonId(`contact-${nextContactId++}`),
-        dni,
-        organization_id: orgId,
-        name,
-        phone_primary: _phone,
-        email: null,
-        last_contacted_at: null,
-        cooldown_until: null as Date | null,
-      }),
+    cadence: {
+      findMany: async (
+        _ids: OrganizationPersonId[],
+      ): Promise<Map<OrganizationPersonId, CadenceSnapshot>> => new Map(),
     },
   };
 }
@@ -123,26 +155,31 @@ describe("assignContacts", () => {
   it("commits assigned amount and cancels unused when partial assignment occurs", async () => {
     const repos = makeRepos(0);
 
-    let contactCallCount = 0;
-    repos.contacts.findOrCreate = async (
-      orgId: ReturnType<typeof asOrganizationId>,
-      dni: string,
-      name: string,
-      phone: string | null,
-    ) => {
-      contactCallCount++;
-      const cooldown_until =
-        contactCallCount === 1 ? null : new Date(1_700_000_099_999);
-      return {
-        id: asOrganizationPersonId(`contact-${contactCallCount}`),
-        dni,
-        organization_id: orgId,
-        name,
-        phone_primary: phone,
-        email: null,
-        last_contacted_at: null,
-        cooldown_until,
-      };
+    // The third membership returns a contact_cadence entry whose cooldown is in
+    // the future, so the writer filters it out and the count of assigned is
+    // strictly less than the count of requested.
+    let cadenceCallCount = 0;
+    const cooldownMembership = asOrganizationPersonId("contact-3");
+    repos.cadence.findMany = async (ids: OrganizationPersonId[]) => {
+      cadenceCallCount++;
+      const map = new Map<OrganizationPersonId, CadenceSnapshot>();
+      if (cadenceCallCount >= 2) {
+        map.set(cooldownMembership, {
+          organizationPersonId: cooldownMembership,
+          lastContactedAt: null,
+          cooldownUntil: new Date(1_700_000_099_999),
+        });
+      }
+      for (const id of ids) {
+        if (!map.has(id)) {
+          map.set(id, {
+            organizationPersonId: id,
+            lastContactedAt: null,
+            cooldownUntil: null,
+          });
+        }
+      }
+      return map;
     };
 
     const candidates: RecordCandidate[] = [

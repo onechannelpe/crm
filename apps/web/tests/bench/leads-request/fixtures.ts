@@ -55,10 +55,10 @@ export async function seedLeadsRequestFixtures(
   const userIds = users.map((user) => user.id);
 
   for (let index = 0; index < USER_POOL_SIZE; index += 1) {
-    await ctx.repos.organizations.findOrCreate(
-      `2099${String(index).padStart(8, "0")}`,
-      `Bench Org ${index}`,
-    );
+    await ctx.repos.organization.upsertOrganization({
+      ruc: `2099${String(index).padStart(8, "0")}`,
+      legalName: `Bench Org ${index}`,
+    });
   }
 
   // Seed lead capacity grants so each user can complete one refill.

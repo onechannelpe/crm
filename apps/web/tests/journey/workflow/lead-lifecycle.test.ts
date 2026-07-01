@@ -42,7 +42,7 @@ describe("lead lifecycle journey", () => {
         {
           actor: executive,
           ruc: "20987654321",
-          giroNegocio: "Retail",
+          lineOfBusiness: "Retail",
           ...withMerchantDefaults(undefined),
         },
         registerLeadPorts(runtime),

@@ -242,9 +242,10 @@ export async function persistWorkflowCommercialData(
 
   const legalRep = await db
     .selectFrom("organization_people")
-    .select("id")
-    .where("organization_id", "=", convertedOrgId)
-    .where("dni", "=", "42715983")
+    .innerJoin("people", "people.id", "organization_people.person_id")
+    .select("organization_people.id as id")
+    .where("organization_people.organization_id", "=", convertedOrgId)
+    .where("people.dni", "=", "42715983")
     .executeTakeFirstOrThrow();
 
   const existingLegalRepRole = await db

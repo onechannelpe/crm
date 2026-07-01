@@ -87,7 +87,7 @@ export function createExtensionScenario(
       const currentTime = now();
       const assignmentId = asContactAssignmentId(crypto.randomUUID());
       await ctx.db
-        .insertInto("lead_assignments")
+        .insertInto("contact_assignments")
         .values({
           id: assignmentId,
           user_id: input.userId ?? TEST_FIXTURES.users.execOne.id,
@@ -112,7 +112,9 @@ export function createExtensionScenario(
         .values({
           id: personId,
           dni,
-          full_name: "Contacto sin telefono",
+          names: "Contacto sin telefono",
+          first_surname: null,
+          second_surname: null,
           email: null,
           created_at: currentTime,
           updated_at: currentTime,
@@ -125,15 +127,8 @@ export function createExtensionScenario(
           id: organizationPersonId,
           person_id: personId,
           organization_id: ctx.fixtures.organizations.lima.id,
-          dni,
-          nombres: "Contacto",
-          apellido_paterno: "Sin",
-          apellido_materno: "Telefono",
-          telefono: null,
+          phone: null,
           email: null,
-          last_contacted_at: null,
-          last_contacted_by_user_id: null,
-          cooldown_until: null,
           created_at: currentTime,
           updated_at: currentTime,
         })

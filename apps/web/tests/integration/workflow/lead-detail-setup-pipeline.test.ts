@@ -39,7 +39,7 @@ describe("lead detail setup pipeline", () => {
       organization: {
         key: "detail-profile",
         legalName: "Acme SAC",
-        giroNegocio: "Retail",
+        lineOfBusiness: "Retail",
       },
       commercial: {
         currentProvider: "Izipay",
@@ -69,7 +69,7 @@ describe("lead detail setup pipeline", () => {
       currentCreditRate: 3.4,
       gpv: 80_000,
       ticket: 150,
-      giroNegocio: "Retail",
+      lineOfBusiness: "Retail",
       settlementBank: "BCP",
       posCount: 4,
       linkScope: "none",

@@ -1,41 +1,21 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createOrganizationEnrichmentProjection } from "~/server/identity/organization/apply-enrichment";
-import type { PartyRepository } from "~/server/identity/organization/repo";
-import { asOrganizationId } from "~/server/shared/ids";
+import { createOrganizationEnrichmentProjection } from "~/server/organization/apply-enrichment";
+import type { OrganizationRepository } from "~/server/organization/organization-repo";
 
-function createPartyRepositoryDouble() {
-  const findOrganizationByRuc = vi.fn<PartyRepository["findOrganizationByRuc"]>(
-    async () => ({
-      id: asOrganizationId("01974fd5-f261-7a7d-93f5-2f3d0f963010"),
-      ruc: "20123456789",
-      legalName: "Acme",
-      giroNegocio: null,
-      address: null,
-      district: null,
-      province: null,
-      department: null,
-      phone: null,
-      email: null,
-    }),
-  );
-  const updateOrganizationFromEnrichment = vi.fn<
-    PartyRepository["updateOrganizationFromEnrichment"]
-  >(async () => {});
+type ApplyEnrichment = OrganizationRepository["applyEnrichment"];
 
+function createOrganizationRepositoryDouble() {
+  const applyEnrichment = vi.fn<ApplyEnrichment>(async () => {});
+
+  // Only applyEnrichment is exercised by the projection. Cast to satisfy the
+  // full OrganizationRepository shape for typecheck; the other methods are never
+  // called by the projection under test.
   const repo = {
-    findOrganizationByRuc,
-    updateOrganizationFromEnrichment,
-    findOrganizationById: async () => undefined,
-    createOrganization: async () => {
-      throw new Error("not used in test");
-    },
-    updateOrganizationCommercial: async () => {},
-    upsertPrimaryLegalRepresentative: async () => {},
-    findPrimaryLegalRepresentative: async () => undefined,
-  } satisfies PartyRepository;
+    applyEnrichment,
+  } as unknown as OrganizationRepository;
 
-  return { repo, findOrganizationByRuc, updateOrganizationFromEnrichment };
+  return { repo, applyEnrichment };
 }
 
 describe("createOrganizationEnrichmentProjection", () => {
@@ -44,8 +24,7 @@ describe("createOrganizationEnrichmentProjection", () => {
   });
 
   it("skips writes when every value normalizes to null", async () => {
-    const { repo, updateOrganizationFromEnrichment } =
-      createPartyRepositoryDouble();
+    const { repo, applyEnrichment } = createOrganizationRepositoryDouble();
 
     await createOrganizationEnrichmentProjection(repo)({
       ruc: "20123456789",
@@ -55,12 +34,11 @@ describe("createOrganizationEnrichmentProjection", () => {
       department: " ",
     });
 
-    expect(updateOrganizationFromEnrichment).not.toHaveBeenCalled();
+    expect(applyEnrichment).not.toHaveBeenCalled();
   });
 
-  it("writes normalized values through party repository", async () => {
-    const { repo, updateOrganizationFromEnrichment } =
-      createPartyRepositoryDouble();
+  it("writes normalized values through the organization repository", async () => {
+    const { repo, applyEnrichment } = createOrganizationRepositoryDouble();
 
     await createOrganizationEnrichmentProjection(repo)({
       ruc: "20123456789",
@@ -70,8 +48,8 @@ describe("createOrganizationEnrichmentProjection", () => {
       department: " Lima ",
     });
 
-    expect(updateOrganizationFromEnrichment).toHaveBeenCalledWith({
-      organizationId: asOrganizationId("01974fd5-f261-7a7d-93f5-2f3d0f963010"),
+    expect(applyEnrichment).toHaveBeenCalledWith({
+      ruc: "20123456789",
       legalName: "Acme SAC",
       address: "Av. Lima 123",
       district: "Miraflores",
@@ -79,25 +57,8 @@ describe("createOrganizationEnrichmentProjection", () => {
     });
   });
 
-  it("skips writes when organization does not exist for the ruc", async () => {
-    const { repo, findOrganizationByRuc, updateOrganizationFromEnrichment } =
-      createPartyRepositoryDouble();
-    findOrganizationByRuc.mockResolvedValueOnce(undefined);
-
-    await createOrganizationEnrichmentProjection(repo)({
-      ruc: "20123456789",
-      legalName: "Acme SAC",
-      address: null,
-      district: null,
-      department: null,
-    });
-
-    expect(updateOrganizationFromEnrichment).not.toHaveBeenCalled();
-  });
-
   it("only writes fields that normalize to a non-empty value", async () => {
-    const { repo, updateOrganizationFromEnrichment } =
-      createPartyRepositoryDouble();
+    const { repo, applyEnrichment } = createOrganizationRepositoryDouble();
 
     await createOrganizationEnrichmentProjection(repo)({
       ruc: "20123456789",
@@ -107,8 +68,8 @@ describe("createOrganizationEnrichmentProjection", () => {
       department: "Lima",
     });
 
-    expect(updateOrganizationFromEnrichment).toHaveBeenCalledWith({
-      organizationId: asOrganizationId("01974fd5-f261-7a7d-93f5-2f3d0f963010"),
+    expect(applyEnrichment).toHaveBeenCalledWith({
+      ruc: "20123456789",
       legalName: "Acme SAC",
       department: "Lima",
     });

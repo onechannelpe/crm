@@ -128,7 +128,7 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
         key: organizationKey,
         ruc: input.organization?.ruc,
         legalName: input.organization?.legalName,
-        giroNegocio: input.organization?.giroNegocio,
+        lineOfBusiness: input.organization?.lineOfBusiness,
       },
       lead: {
         id: asWorkflowLeadId(`lead-${key}`),

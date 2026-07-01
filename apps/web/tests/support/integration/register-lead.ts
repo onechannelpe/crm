@@ -18,7 +18,7 @@ export type RegisteredLeadSnapshot = {
   organizationRuc: string;
   organizationLegalName: string | null;
   organizationAddress: string | null;
-  organizationGiroNegocio: string | null;
+  organizationLineOfBusiness: string | null;
 };
 
 export type RegisteredLeadCommercialSnapshot = {
@@ -47,7 +47,7 @@ export async function registerLead(input: {
   currentCreditRate?: number;
   gpv?: number;
   ticket?: number;
-  giroNegocio?: string | null;
+  lineOfBusiness?: string | null;
   settlementBank?: SettlementBank;
   posCount?: number;
 }): Promise<RegisterLeadResult> {
@@ -57,7 +57,7 @@ export async function registerLead(input: {
       actor,
       ruc: input.ruc,
       ...withMerchantDefaults(input),
-      giroNegocio: input.giroNegocio ?? "Retail",
+      lineOfBusiness: input.lineOfBusiness ?? "Retail",
     },
     registerLeadPorts(input.runtime),
   );
@@ -69,8 +69,8 @@ export async function registerLead(input: {
   const row = await input.runtime.ctx.db
     .selectFrom("workflow_leads as lead")
     .innerJoin("organizations as org", "org.id", "lead.organization_id")
-    .select([
-      "lead.id",
+    .select((eb) => [
+      eb.ref("lead.id").as("id"),
       "lead.organization_id",
       "lead.current_provider",
       "lead.current_debit_rate",
@@ -82,7 +82,7 @@ export async function registerLead(input: {
       "org.ruc",
       "org.legal_name",
       "org.address",
-      "org.giro_negocio",
+      "org.line_of_business",
     ])
     .where("lead.id", "=", result.value.leadId)
     .executeTakeFirstOrThrow();
@@ -103,7 +103,7 @@ export async function registerLead(input: {
       organizationRuc: row.ruc,
       organizationLegalName: row.legal_name,
       organizationAddress: row.address,
-      organizationGiroNegocio: row.giro_negocio,
+      organizationLineOfBusiness: row.line_of_business,
     },
     commercial: {
       currentProvider: row.current_provider,

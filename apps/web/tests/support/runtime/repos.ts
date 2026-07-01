@@ -26,14 +26,14 @@ import {
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
-import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
-import { createContactsRepo } from "~/server/contacts/repos-contacts";
-import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
+import { createContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createIntegrationJobRepo } from "~/server/integrations/infrastructure/integration-job-repo";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
+import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
@@ -62,10 +62,10 @@ export function createTestRepositories(db: Kysely<Database>) {
     actionRateLimits: createActionRateLimitsRepo(db),
     userTotpFactors: createUserTotpFactorsRepo(db),
     userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
-    organizations: createOrganizationsRepo(db),
+    organization: createOrganizationRepo(db),
     searchEnrichment: createCompanyRegistryRepo(db),
-    contacts: createContactsRepo(db),
     contactAssignments: createContactAssignmentsRepo(db),
+    cadence: createContactCadenceRepo(db),
     searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
     searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
     leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),

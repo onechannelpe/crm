@@ -25,7 +25,7 @@ export type OrganizationSeedOptions = {
   key?: string;
   ruc?: string;
   legalName?: string | null;
-  giroNegocio?: string | null;
+  lineOfBusiness?: string | null;
 };
 
 export type LeadCommercialOptions = Partial<LeadCommercialScope>;
@@ -94,7 +94,7 @@ export async function seedOrganization(
       id,
       ruc,
       legal_name: legalName,
-      giro_negocio: input.giroNegocio ?? null,
+      line_of_business: input.lineOfBusiness ?? null,
       created_at: createdAt,
     })
     .execute();
