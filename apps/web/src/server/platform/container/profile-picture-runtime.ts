@@ -1,5 +1,7 @@
+import { join } from "node:path";
+
 import type { UploadsConfig } from "~/lib/env";
-import { createProfilePictureBlobStore } from "~/server/users/profile-picture-blob-store";
+import { createBlobStore } from "~/server/shared/blob-store";
 import { createProfilePictureService } from "~/server/users/profile-picture-service";
 import { createUsersRepo } from "~/server/users/repos-users";
 
@@ -12,7 +14,7 @@ export function createProfilePictureRuntime(
   return {
     profilePictureService: createProfilePictureService(
       { users: createUsersRepo(infra.db) },
-      createProfilePictureBlobStore(config.storageRoot),
+      createBlobStore(join(config.storageRoot, "profile-pictures")),
     ),
   };
 }

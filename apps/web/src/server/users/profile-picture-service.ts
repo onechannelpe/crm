@@ -1,9 +1,8 @@
 import { createLogger } from "~/lib/observability/logger";
+import type { BlobStore } from "~/server/shared/blob-store";
 import type { UserId } from "~/server/shared/ids";
 import type { Result } from "~/server/shared/result";
 import { Err, Ok } from "~/server/shared/result";
-
-import type { ProfilePictureBlobStore } from "./profile-picture-blob-store";
 
 const MAX_PROFILE_PICTURE_BYTES = 10 * 1024 * 1024;
 const MIME_TO_EXTENSION: Record<string, string> = {
@@ -90,7 +89,7 @@ function validateFile(file: File): Result<void, AvatarDomainError> {
 
 export function createProfilePictureService(
   repos: { users: AvatarUsersRepository },
-  blobStore: ProfilePictureBlobStore,
+  blobStore: BlobStore,
 ): ProfilePictureService {
   return {
     async upload(userId: UserId, file: File) {
@@ -121,7 +120,7 @@ export function createProfilePictureService(
       const updatedAt = new Date();
 
       try {
-        await blobStore.put(storageKey, content);
+        await blobStore.putBytes(storageKey, content);
       } catch {
         return Err({ code: "storage_unavailable" });
       }
@@ -215,7 +214,7 @@ export function createProfilePictureService(
 
       let bytes: Uint8Array;
       try {
-        bytes = await blobStore.get(avatar.avatar_storage_key);
+        bytes = await blobStore.getBytes(avatar.avatar_storage_key);
       } catch {
         return Err({ code: "storage_unavailable" });
       }
