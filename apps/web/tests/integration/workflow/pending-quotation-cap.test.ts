@@ -12,7 +12,7 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import type { WorkflowLeadId } from "~/server/shared/ids";
@@ -38,12 +38,16 @@ async function fillPendingQuotations(
 describe("pending quotation registration cap", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-pending-cap");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
+  });
+
+  beforeEach(async () => {
+    await runtime.reset();
   });
 
   it("blocks a new registration once the executive holds the max pending quotation decisions", async () => {

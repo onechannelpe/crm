@@ -3,24 +3,29 @@ import { createInviteTestKit } from "@tests/support/invite/api";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   TEST_FIXTURES,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { createTestRepositories } from "@tests/support/runtime/repos";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("user invite lifecycle", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx: TestDbContext;
 
-  afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-      ctx = null;
-    }
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("user-invites-flow");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("creates and accepts an invite for a new user", async () => {
-    ctx = await createIsolatedTestDb("user-invites");
     const kit = createInviteTestKit(ctx, {
       now: () => new Date(1_700_000_000_000),
     });
@@ -52,7 +57,6 @@ describe("user invite lifecycle", () => {
   });
 
   it("can revoke a pending invite", async () => {
-    ctx = await createIsolatedTestDb("user-invites-revoke");
     const kit = createInviteTestKit(ctx, {
       now: () => new Date(1_700_000_000_000),
     });
@@ -84,7 +88,6 @@ describe("user invite lifecycle", () => {
   });
 
   it("recovers the invite when a concurrent insert wins the email race", async () => {
-    ctx = await createIsolatedTestDb("user-invites-race");
     let raceTriggered = false;
     const kit = createInviteTestKit(ctx, {
       now: () => new Date(1_700_000_000_000),

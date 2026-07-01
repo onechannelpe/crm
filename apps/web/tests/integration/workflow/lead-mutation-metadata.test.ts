@@ -19,7 +19,7 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { reassignLeadCommand } from "~/server/workflow/lead/commands/reassign-lead";
 import { addLeadNote } from "~/server/workflow/lead/interaction/write";
@@ -28,12 +28,16 @@ import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-deta
 describe("workflow lead mutation metadata", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-lead-mutation-metadata");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
+  });
+
+  beforeEach(async () => {
+    await runtime.reset();
   });
 
   it("updates lead.updatedBy when a note is added", async () => {

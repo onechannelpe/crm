@@ -1,6 +1,10 @@
 import { seedEvent } from "@tests/support/audit/builders";
-import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
-import { afterEach, describe, expect, it } from "vitest";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  resetTestDb,
+} from "@tests/support/runtime/db";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { asUserId } from "~/server/shared/ids";
 
@@ -8,17 +12,21 @@ const EXEC_USER_ID = asUserId("audit-reader-exec");
 const SUPERUSER_ID = asUserId("audit-reader-superuser");
 
 describe("audit logs reader repository", () => {
-  let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
+  let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>>;
 
-  afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-      ctx = null;
-    }
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("audit-logs-reader");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("filters recent entries and high-risk actions", async () => {
-    ctx = await createIsolatedTestDb("audit-logs-reader");
     const baseTimeMs = 1_700_000_000_000;
 
     await seedEvent(ctx, {

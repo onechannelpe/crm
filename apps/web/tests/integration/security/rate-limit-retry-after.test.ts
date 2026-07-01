@@ -1,10 +1,20 @@
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { createSecurityTestKit } from "@tests/support/security/kit";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import {
   ACTION_RATE_LIMIT_POLICY,
@@ -15,15 +25,22 @@ import { ActionError } from "~/lib/wire-error";
 describe("rate limit retry after", () => {
   let ctx: TestDbContext;
 
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("rate-limit-retry-after");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
   beforeEach(async () => {
+    await resetTestDb(ctx);
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(1_700_000_000_000);
-    ctx = await createIsolatedTestDb("rate-limit-retry-after");
   });
 
   afterEach(async () => {
     vi.useRealTimers();
-    await cleanupTestDb(ctx);
   });
 
   it("returns 429 with retry after header on block", async () => {

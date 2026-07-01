@@ -12,7 +12,7 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { expireLapsedReservations } from "~/server/workflow/lead/commands/expire-reservation";
@@ -29,13 +29,17 @@ const RESERVATION_WINDOW_MS =
 describe("lead reservation expiry", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-reservation-expiry");
-    runtime.now.set(new Date(1_000));
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
+  });
+
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(new Date(1_000));
   });
 
   it("retires a lead to EXPIRED once its hold lapses and the sweep runs", async () => {

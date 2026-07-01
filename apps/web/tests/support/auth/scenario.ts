@@ -10,6 +10,7 @@ import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { vi } from "vitest";
@@ -35,17 +36,25 @@ export function createAuthScenario(
   let ctx: TestDbContext;
 
   return {
+    // Call once, in `beforeAll`: creates the file-scoped isolated database.
     async setup() {
       ctx = await createIsolatedTestDb(dbName);
+    },
+    // Call in `beforeEach`: restores the database to its seeded baseline and
+    // re-arms the frozen clock (fake timers don't survive `resetTestDb`
+    // since nothing here ties them to the DB — re-arming per test just keeps
+    // prior per-test behavior).
+    async reset() {
+      await resetTestDb(ctx);
+      vi.useRealTimers();
       if (options?.freezeAtMs != null) {
         vi.useFakeTimers({ toFake: ["Date"] });
         vi.setSystemTime(options.freezeAtMs);
       }
     },
+    // Call once, in `afterAll`: drops the file-scoped database.
     async teardown() {
-      if (options?.freezeAtMs != null) {
-        vi.useRealTimers();
-      }
+      vi.useRealTimers();
       await cleanupTestDb(ctx);
     },
     get ctx() {

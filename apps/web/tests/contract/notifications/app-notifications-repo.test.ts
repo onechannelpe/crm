@@ -1,18 +1,26 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
-import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  resetTestDb,
+} from "@tests/support/runtime/db";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { asUserId } from "~/server/shared/ids";
 
 describe("app notifications repo", () => {
   let ctx: TestDbContext;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await createIsolatedTestDb("app-notifications");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("deduplicates notifications by user and source event id", async () => {

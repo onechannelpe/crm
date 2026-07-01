@@ -3,19 +3,24 @@ import { createExtensionScenario } from "@tests/support/extension/api";
 import {
   createExtensionFixture,
   disposeExtensionFixture,
+  resetExtensionFixture,
 } from "@tests/support/extension/fixture";
 import type { TestDbContext } from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("extension runtime event idempotency", () => {
   let ctx: TestDbContext;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await createExtensionFixture("extension-runtime-event-idempotency");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await disposeExtensionFixture(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetExtensionFixture(ctx);
   });
 
   it("accepts duplicate event delivery without creating a second runtime event", async () => {

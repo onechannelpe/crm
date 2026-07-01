@@ -1,6 +1,10 @@
 import { createAuditTestKit } from "@tests/support/audit/kit";
-import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
-import { afterEach, describe, expect, it } from "vitest";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  resetTestDb,
+} from "@tests/support/runtime/db";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { asUserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
@@ -9,17 +13,21 @@ const EXEC_USER_ID = asUserId("audit-contract-exec");
 const SUPERUSER_ID = asUserId("audit-contract-superuser");
 
 describe("action observations snapshot", () => {
-  let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
+  let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>>;
 
-  afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-      ctx = null;
-    }
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("observability-snapshot");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("projects ok and error rows into summary and recent", async () => {
-    ctx = await createIsolatedTestDb("observability-snapshot");
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const baseTime = new Date(baseTimeMs);
@@ -76,7 +84,6 @@ describe("action observations snapshot", () => {
   });
 
   it("normalizes wire error codes into the public error column", async () => {
-    ctx = await createIsolatedTestDb("observability-error-normalization");
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const baseTime = new Date(baseTimeMs);
@@ -132,7 +139,6 @@ describe("action observations snapshot", () => {
   });
 
   it("deletes old observations via the retention sweep", async () => {
-    ctx = await createIsolatedTestDb("observability-retention");
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const cutoff = new Date(baseTimeMs);
@@ -187,7 +193,6 @@ describe("action observations snapshot", () => {
   });
 
   it("filters summary consistently by status and action name", async () => {
-    ctx = await createIsolatedTestDb("observability-summary-filters");
     const audit = createAuditTestKit(ctx);
     const baseTimeMs = 1_700_000_000_000;
     const baseTime = new Date(baseTimeMs);

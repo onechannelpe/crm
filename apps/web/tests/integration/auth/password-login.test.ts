@@ -1,5 +1,5 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { isErr } from "~/server/shared/result";
 
@@ -22,13 +22,17 @@ describe("password login service", () => {
     userAgent: "vitest-agent",
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
-    await scenario.setPassword(identity, rightPassword);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
+    await scenario.setPassword(identity, rightPassword);
   });
 
   it("blocks further attempts after repeated failures", async () => {

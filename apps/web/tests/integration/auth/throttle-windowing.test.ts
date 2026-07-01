@@ -1,6 +1,6 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createAuthThrottleKit } from "@tests/support/auth/throttle-kit";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { AUTH_THROTTLE_POLICY } from "~/lib/auth/password/throttle-policy";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
@@ -10,12 +10,16 @@ describe("auth throttle windowing", () => {
     freezeAtMs: 1_700_000_000_000,
   });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("allows login when no scope is blocked", async () => {

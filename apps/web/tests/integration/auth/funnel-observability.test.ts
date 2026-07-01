@@ -1,5 +1,5 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createObservabilityService } from "~/server/observability/service";
 import { isErr } from "~/server/shared/result";
@@ -7,12 +7,16 @@ import { isErr } from "~/server/shared/result";
 describe("auth funnel observability snapshot", () => {
   const scenario = createAuthScenario("auth-funnel-observability");
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("stores funnel events and projects them in summary and recent", async () => {

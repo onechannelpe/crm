@@ -10,27 +10,31 @@ import {
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
 import { rejectCapacityRequest } from "~/server/capacity/application/use-cases/reject-capacity-request";
 import { asCapacityRequestId } from "~/server/shared/ids";
 
 describe("capacity approval failures", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx: TestDbContext;
 
-  afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-      ctx = null;
-    }
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("capacity-approval-errors");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("returns request_not_found when the request does not exist", async () => {
-    ctx = await createIsolatedTestDb("capacity-not-found");
-
     const result = await approveCapacityRequest(
       makeApprovalContext(),
       makeApprovalDeps(ctx),
@@ -48,7 +52,6 @@ describe("capacity approval failures", () => {
   });
 
   it("returns request_not_pending and writes nothing when already approved", async () => {
-    ctx = await createIsolatedTestDb("capacity-not-pending");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_ID,
       kind: "search_extra",
@@ -73,7 +76,6 @@ describe("capacity approval failures", () => {
   });
 
   it("returns forbidden and writes nothing when the actor cannot manage the target", async () => {
-    ctx = await createIsolatedTestDb("capacity-forbidden");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_OTHER_BRANCH_ID,
       kind: "search_extra",
@@ -98,7 +100,6 @@ describe("capacity approval failures", () => {
   });
 
   it("rolls back the approval write when the grant insert fails", async () => {
-    ctx = await createIsolatedTestDb("capacity-rollback");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_ID,
       kind: "search_extra",
@@ -122,7 +123,6 @@ describe("capacity approval failures", () => {
   });
 
   it("fails fast and writes nothing when the rejection note is empty", async () => {
-    ctx = await createIsolatedTestDb("capacity-empty-note");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_ID,
       kind: "search_extra",

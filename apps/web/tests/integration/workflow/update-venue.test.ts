@@ -11,7 +11,7 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { asWorkflowVenueId } from "~/server/shared/ids";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
@@ -21,12 +21,16 @@ import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
 describe("update venue", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-update-venue");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
+  });
+
+  beforeEach(async () => {
+    await runtime.reset();
   });
 
   it("updates venue fields during setup", async () => {

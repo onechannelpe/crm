@@ -1,7 +1,11 @@
 import { phone } from "@tests/support/_core/phone";
 import type { TestDbContext } from "@tests/support/runtime/db";
-import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  resetTestDb,
+} from "@tests/support/runtime/db";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { asUserId } from "~/server/shared/ids";
 
@@ -12,12 +16,16 @@ const CLAIM_AT = new Date(2_000);
 describe("user channel address repo", () => {
   let ctx: TestDbContext;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await createIsolatedTestDb("user-channel-address");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("does not reset verification when claiming the same whatsapp address", async () => {

@@ -10,25 +10,30 @@ import {
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
 import { rejectCapacityRequest } from "~/server/capacity/application/use-cases/reject-capacity-request";
 
 describe("capacity approval commands", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx: TestDbContext;
 
-  afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-      ctx = null;
-    }
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("capacity-approval-commands");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("approves a pending search request and grants search capacity", async () => {
-    ctx = await createIsolatedTestDb("capacity-approve-search");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_ID,
       kind: "search_extra",
@@ -61,7 +66,6 @@ describe("capacity approval commands", () => {
   });
 
   it("approves a lead refill request and uses the normalized note as grant reason", async () => {
-    ctx = await createIsolatedTestDb("capacity-approve-lead");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_ID,
       kind: "lead_refill_extra",
@@ -93,7 +97,6 @@ describe("capacity approval commands", () => {
   });
 
   it("rejects a pending request with a trimmed decision note", async () => {
-    ctx = await createIsolatedTestDb("capacity-reject");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_ID,
       kind: "search_extra",

@@ -9,20 +9,24 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { asNotificationIntentId } from "~/server/shared/ids";
 
 describe("outbox delivery", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("outbox-delivery");
-    runtime.now.set(new Date(2_000));
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
+  });
+
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(new Date(2_000));
   });
 
   it("marks rows with malformed channels as failed", async () => {

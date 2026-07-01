@@ -1,94 +1,71 @@
-import { mkdir, rm } from "node:fs/promises";
-import { join } from "node:path";
-
+import {
+  cleanupFreshDb,
+  createFreshDb,
+  type FreshDbContext,
+} from "@tests/support/runtime/db";
 import { sql } from "kysely";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { createDb } from "~/lib/db/client";
 import { migrateToLatest } from "~/lib/db/migrate";
 
-const ARTIFACT_DIR = join(process.cwd(), ".vitest-db");
-
-const createdDbPaths: string[] = [];
-
-async function createMigrationTestDb(prefix: string) {
-  await mkdir(ARTIFACT_DIR, { recursive: true });
-  const dbPath = join(
-    ARTIFACT_DIR,
-    `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}.db`,
-  );
-  createdDbPaths.push(dbPath);
-  return createDb(dbPath);
-}
-
 describe("schema baseline", () => {
+  let ctx: FreshDbContext | null = null;
+
   afterEach(async () => {
-    const paths = createdDbPaths.splice(0, createdDbPaths.length);
-    await Promise.all(paths.map((dbPath) => rm(dbPath, { force: true })));
+    await cleanupFreshDb(ctx);
+    ctx = null;
   });
 
   it("creates expected schema objects on a fresh database", async () => {
-    const db = await createMigrationTestDb("schema-baseline-fresh");
-    try {
-      await migrateToLatest(db);
+    ctx = await createFreshDb("schema-baseline-fresh");
+    await migrateToLatest(ctx.db);
 
-      const tables = await sql<{ name: string }>`
-        SELECT name
-        FROM sqlite_master
-        WHERE type = 'table'
-      `.execute(db);
-      const tableNames = new Set(tables.rows.map((row) => row.name));
-      expect(tableNames.has("users")).toBe(true);
-      expect(tableNames.has("events")).toBe(true);
-      expect(tableNames.has("audit_action_policies")).toBe(true);
-      expect(tableNames.has("user_invites")).toBe(true);
-      expect(tableNames.has("action_observations")).toBe(true);
-      expect(tableNames.has("notification_outbox")).toBe(true);
-      expect(tableNames.has("login_flows")).toBe(true);
+    const tables = await sql<{ tablename: string }>`
+      SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+    `.execute(ctx.db);
+    const tableNames = new Set(tables.rows.map((row) => row.tablename));
+    expect(tableNames.has("users")).toBe(true);
+    expect(tableNames.has("events")).toBe(true);
+    expect(tableNames.has("audit_action_policies")).toBe(true);
+    expect(tableNames.has("user_invites")).toBe(true);
+    expect(tableNames.has("action_observations")).toBe(true);
+    expect(tableNames.has("notification_outbox")).toBe(true);
+    expect(tableNames.has("login_flows")).toBe(true);
 
-      const indexes = await sql<{ name: string }>`
-        SELECT name
-        FROM sqlite_master
-        WHERE type = 'index'
-      `.execute(db);
-      const indexNames = new Set(indexes.rows.map((row) => row.name));
-      expect(indexNames.has("idx_app_notifications_source_event")).toBe(true);
-      expect(indexNames.has("idx_events_occurred")).toBe(true);
-      expect(indexNames.has("idx_events_type_occurred")).toBe(true);
-      expect(indexNames.has("idx_events_actor_occurred")).toBe(true);
-      expect(indexNames.has("idx_events_entity_occurred")).toBe(true);
-      expect(indexNames.has("idx_audit_policy_risk_active")).toBe(true);
-      expect(indexNames.has("idx_notification_outbox_queue_state")).toBe(true);
-    } finally {
-      await db.destroy();
-    }
+    const indexes = await sql<{ indexname: string }>`
+      SELECT indexname FROM pg_indexes WHERE schemaname = 'public'
+    `.execute(ctx.db);
+    const indexNames = new Set(indexes.rows.map((row) => row.indexname));
+    expect(indexNames.has("idx_app_notifications_source_event")).toBe(true);
+    expect(indexNames.has("idx_events_occurred")).toBe(true);
+    expect(indexNames.has("idx_events_type_occurred")).toBe(true);
+    expect(indexNames.has("idx_events_actor_occurred")).toBe(true);
+    expect(indexNames.has("idx_events_entity_occurred")).toBe(true);
+    expect(indexNames.has("idx_audit_policy_risk_active")).toBe(true);
+    expect(indexNames.has("idx_notification_outbox_claim")).toBe(true);
   });
 
   it("is idempotent and maintains integrity hash", async () => {
-    const db = await createMigrationTestDb("schema-baseline-rerun");
-    try {
-      await migrateToLatest(db);
+    ctx = await createFreshDb("schema-baseline-rerun");
+    await migrateToLatest(ctx.db);
 
-      await db
-        .insertInto("branches")
-        .values({ name: "Lima", created_at: new Date() })
-        .execute();
+    await ctx.db
+      .insertInto("branches")
+      .values({ name: "Lima", created_at: new Date() })
+      .execute();
 
-      await migrateToLatest(db);
+    await migrateToLatest(ctx.db);
 
-      const branches = await db
-        .selectFrom("branches")
-        .select((eb) => eb.fn.count<number>("id").as("count"))
-        .executeTakeFirstOrThrow();
-      expect(branches.count).toBe(1);
+    const branches = await ctx.db
+      .selectFrom("branches")
+      .select((eb) => eb.fn.count<number>("id").as("count"))
+      .executeTakeFirstOrThrow();
+    expect(Number(branches.count)).toBe(1);
 
-      const integrity = await sql<{ migrations_hash: string }>`
-        SELECT migrations_hash FROM schema_integrity
-      `.execute(db);
-      expect(integrity.rows.length).toBe(1);
-      expect(integrity.rows[0].migrations_hash).toBeDefined();
-    } finally {
-      await db.destroy();
-    }
+    const integrity = await sql<{ migrations_hash: string }>`
+      SELECT migrations_hash FROM schema_integrity
+    `.execute(ctx.db);
+    expect(integrity.rows.length).toBe(1);
+    expect(integrity.rows[0].migrations_hash).toBeDefined();
   });
 });

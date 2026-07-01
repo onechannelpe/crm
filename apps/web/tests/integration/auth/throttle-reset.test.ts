@@ -1,17 +1,21 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("auth throttle reset", () => {
   const scenario = createAuthScenario("auth-throttle-reset", {
     freezeAtMs: 1_700_000_000_000,
   });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("cleans expired and stale throttle counters", async () => {

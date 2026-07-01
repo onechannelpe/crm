@@ -3,7 +3,15 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "vitest";
 
 import { sessionCache } from "~/lib/auth/session/session-cache";
 import {
@@ -15,14 +23,21 @@ describe("session manager persisted validation", () => {
   let runtime: TestRuntime;
   const execOne = getSeededIdentity("execOne");
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("session-manager-persisted");
+  });
+
+  afterAll(async () => {
+    await runtime.dispose();
+  });
+
+  beforeEach(async () => {
+    await runtime.reset();
     sessionCache.clear();
   });
 
   afterEach(async () => {
     sessionCache.clear();
-    await runtime.dispose();
   });
 
   it("deletes session when persisted role is invalid", async () => {

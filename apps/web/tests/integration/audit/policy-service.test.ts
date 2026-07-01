@@ -1,5 +1,9 @@
-import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
-import { afterEach, describe, expect, it } from "vitest";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  resetTestDb,
+} from "@tests/support/runtime/db";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
 import { asUserId } from "~/server/shared/ids";
@@ -7,17 +11,21 @@ import { asUserId } from "~/server/shared/ids";
 const ACTOR_USER_ID = asUserId("audit-policy-actor");
 
 describe("audit policy service", () => {
-  let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>> | null = null;
+  let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>>;
 
-  afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-      ctx = null;
-    }
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("audit-policy-service");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("blocks downgrading protected policies", async () => {
-    ctx = await createIsolatedTestDb("audit-policy-protected");
     const service = createAuditPolicyService({
       auditActionPolicies: ctx.repos.auditActionPolicies,
     });
@@ -33,7 +41,6 @@ describe("audit policy service", () => {
   });
 
   it("updates non-protected policies", async () => {
-    ctx = await createIsolatedTestDb("audit-policy-upsert");
     const service = createAuditPolicyService({
       auditActionPolicies: ctx.repos.auditActionPolicies,
     });

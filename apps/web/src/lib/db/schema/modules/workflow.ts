@@ -2,6 +2,26 @@ import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
+    .createTable("workflow_collection_mode_kinds")
+    .addColumn("value", "text", (col) => col.primaryKey())
+    .execute();
+
+  await db.schema
+    .createTable("workflow_currency_kinds")
+    .addColumn("value", "text", (col) => col.primaryKey())
+    .execute();
+
+  await db.schema
+    .createTable("workflow_account_type_kinds")
+    .addColumn("value", "text", (col) => col.primaryKey())
+    .execute();
+
+  await db.schema
+    .createTable("workflow_settlement_banks")
+    .addColumn("value", "text", (col) => col.primaryKey())
+    .execute();
+
+  await db.schema
     .createTable("workflow_leads")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("organization_id", "uuid", (col) =>
@@ -86,11 +106,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("key", "text", (col) => col.primaryKey())
     .addColumn("result_json", "jsonb", (col) => col.notNull())
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createTable("workflow_collection_mode_kinds")
-    .addColumn("value", "text", (col) => col.primaryKey())
     .execute();
 
   await db.schema

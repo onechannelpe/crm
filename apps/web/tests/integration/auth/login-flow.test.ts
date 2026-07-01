@@ -1,6 +1,6 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { createPasskeyLoginStartAuthService } from "~/server/auth/factors/passkey/service";
@@ -10,14 +10,18 @@ import { isErr } from "~/server/shared/result";
 describe("login flow service", () => {
   const scenario = createAuthScenario("login-flow");
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
-    await scenario.setPassword("execOne", "Secret123!");
-    await scenario.setPassword("superuser", "SuperSecret123!");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
+    await scenario.setPassword("execOne", "Secret123!");
+    await scenario.setPassword("superuser", "SuperSecret123!");
   });
 
   it("completes a standard password login without creating a flow", async () => {

@@ -32,21 +32,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("workflow_currency_kinds")
-    .addColumn("value", "text", (col) => col.primaryKey())
-    .execute();
-
-  await db.schema
-    .createTable("workflow_account_type_kinds")
-    .addColumn("value", "text", (col) => col.primaryKey())
-    .execute();
-
-  await db.schema
-    .createTable("workflow_settlement_banks")
-    .addColumn("value", "text", (col) => col.primaryKey())
-    .execute();
-
-  await db.schema
     .createTable("workflow_lead_venue_accounts")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("venue_id", "text", (col) =>

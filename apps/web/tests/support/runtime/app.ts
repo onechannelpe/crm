@@ -6,7 +6,12 @@ import type { EngineClient } from "~/server/shared/engine/client";
 import type { SearchResult } from "~/server/shared/engine/types";
 import { createEventsRepo } from "~/server/shared/repos-events";
 
-import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  resetTestDb,
+  type TestDbContext,
+} from "./db";
 
 interface TestLogger {
   info(message: string, meta?: unknown): void;
@@ -34,6 +39,9 @@ function createFakeEngine() {
     client,
     company(ruc: string, overlay: CompanyOverlay) {
       companies.set(ruc, overlay);
+    },
+    clear() {
+      companies.clear();
     },
   };
 }
@@ -78,6 +86,10 @@ export interface TestRuntime {
     client: EngineClient;
     company(ruc: string, overlay: CompanyOverlay): void;
   };
+  // Restores the shared database to its seeded baseline and resets the clock
+  // to a fresh `new Date()`. Call this in `beforeEach` — the runtime itself
+  // is built once per file in `beforeAll`.
+  reset(): Promise<void>;
   dispose(): Promise<void>;
 }
 
@@ -122,6 +134,12 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     engine: {
       client: engine.client,
       company: (ruc, overlay) => engine.company(ruc, overlay),
+    },
+
+    async reset() {
+      await resetTestDb(ctx);
+      currentNow = new Date();
+      engine.clear();
     },
 
     async dispose() {

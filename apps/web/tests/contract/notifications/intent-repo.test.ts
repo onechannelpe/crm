@@ -5,9 +5,10 @@ import {
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
 
@@ -18,12 +19,16 @@ const WORKER_ID = "worker-1";
 describe("intent repository", () => {
   let ctx: TestDbContext;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await createIsolatedTestDb("intent-repo");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   async function seedPending(id: string) {

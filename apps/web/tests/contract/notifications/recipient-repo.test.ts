@@ -1,9 +1,10 @@
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createRecipientRepository } from "~/server/notifications/repos/recipient-repo";
 import { openSession } from "~/server/notifications/whatsapp-session";
@@ -16,12 +17,16 @@ const USER_TWO = asUserId("recipient-repo-user-two");
 describe("recipient repository", () => {
   let ctx: TestDbContext;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await createIsolatedTestDb("recipient-repo");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("resolves an explicit user-id audience", async () => {

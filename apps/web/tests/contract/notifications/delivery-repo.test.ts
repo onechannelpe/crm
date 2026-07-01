@@ -1,9 +1,10 @@
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
   createDeliveryRepository,
@@ -35,12 +36,16 @@ function planned(
 describe("delivery repository", () => {
   let ctx: TestDbContext;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await createIsolatedTestDb("delivery-repo");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("inserts planned deliveries idempotently per (intent, user, channel)", async () => {

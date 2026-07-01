@@ -6,7 +6,7 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import { parseNotificationChannels } from "~/server/notifications/intent/payload";
@@ -26,13 +26,17 @@ const NOW = new Date(NOW_MS);
 describe("workflow notification pipeline", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-notification-pipeline");
-    runtime.now.set(NOW);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
+  });
+
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(NOW);
   });
 
   it("persists the actual stage reactor intent and plans WhatsApp delivery", async () => {

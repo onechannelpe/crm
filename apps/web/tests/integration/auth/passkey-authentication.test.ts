@@ -7,7 +7,7 @@ import {
   createTestPasskeyProvider,
   createWebauthnProviderWithAuth,
 } from "@tests/support/passkey/api";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import {
@@ -24,12 +24,16 @@ describe("passkey authentication", () => {
   const execOne = getSeededIdentity("execOne");
   const backOne = getSeededIdentity("backOne");
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("begin identified login creates authentication challenge", async () => {

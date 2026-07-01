@@ -11,7 +11,7 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { asWorkflowVenueId } from "~/server/shared/ids";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
@@ -25,13 +25,17 @@ import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
 describe("lead lifecycle journey", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("journey-lead-lifecycle");
-    runtime.now.set(new Date(1_700_000_000_000));
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
+  });
+
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(new Date(1_700_000_000_000));
   });
 
   it("moves a registered lead through pricing and setup into fulfillment", async () => {

@@ -1,60 +1,45 @@
-import { mkdir, rm } from "node:fs/promises";
-import { join } from "node:path";
-
+import {
+  cleanupFreshDb,
+  createFreshDb,
+  type FreshDbContext,
+} from "@tests/support/runtime/db";
 import { createTestRepositories } from "@tests/support/runtime/repos";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
-import { createDb } from "~/lib/db/client";
 import { migrateToLatest } from "~/lib/db/migrate";
 import { seedIfEmpty } from "~/lib/db/seed";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 
 describe("seed invariants", () => {
-  const artifactDir = join(process.cwd(), ".vitest-db");
-  let dbPath = "";
-
-  beforeEach(async () => {
-    await mkdir(artifactDir, { recursive: true });
-    dbPath = join(
-      artifactDir,
-      `seed-invariants-${Date.now()}-${Math.random().toString(16).slice(2)}.db`,
-    );
-  });
+  let ctx: FreshDbContext | null = null;
 
   afterEach(async () => {
-    await rm(dbPath, { force: true });
+    await cleanupFreshDb(ctx);
+    ctx = null;
   });
 
   it("keeps invited privileged users without verified strong factors", async () => {
-    const db = createDb(dbPath);
-    const previousDbPath = process.env.WEB_DB_PATH;
+    ctx = await createFreshDb("seed-invariants");
+    await migrateToLatest(ctx.db);
+    await seedIfEmpty(ctx.db);
 
-    try {
-      await migrateToLatest(db);
-      process.env.WEB_DB_PATH = dbPath;
-      await seedIfEmpty(db);
+    const repos = createTestRepositories(ctx.db);
+    const valeria = await repos.users.findByUsername("valeria.paredes");
+    const manager = await repos.users.findByUsername("claudia.mendoza");
 
-      const repos = createTestRepositories(db);
-      const valeria = await repos.users.findByUsername("valeria.paredes");
-      const manager = await repos.users.findByUsername("claudia.mendoza");
+    expect(valeria?.onboarding_completed_at).toBeNull();
+    expect(valeria && requiresStrongAuthRole(valeria.role)).toBe(true);
 
-      expect(valeria?.onboarding_completed_at).toBeNull();
-      expect(valeria && requiresStrongAuthRole(valeria.role)).toBe(true);
+    if (valeria == null) throw new Error("valeria not found in seed");
+    const valeriaStatus = await getStrongAuthStatus(valeria.id, repos);
+    expect(valeriaStatus.hasVerifiedStrongAuth).toBe(false);
+    expect(valeriaStatus.hasTotp).toBe(false);
+    expect(valeriaStatus.hasPasskey).toBe(false);
 
-      if (valeria == null) throw new Error("valeria not found in seed");
-      const valeriaStatus = await getStrongAuthStatus(valeria.id, repos);
-      expect(valeriaStatus.hasVerifiedStrongAuth).toBe(false);
-      expect(valeriaStatus.hasTotp).toBe(false);
-      expect(valeriaStatus.hasPasskey).toBe(false);
-
-      if (manager == null) throw new Error("manager not found in seed");
-      const managerStatus = await getStrongAuthStatus(manager.id, repos);
-      expect(managerStatus.hasVerifiedStrongAuth).toBe(true);
-      expect(managerStatus.hasTotp).toBe(true);
-    } finally {
-      process.env.WEB_DB_PATH = previousDbPath;
-      await db.destroy();
-    }
+    if (manager == null) throw new Error("manager not found in seed");
+    const managerStatus = await getStrongAuthStatus(manager.id, repos);
+    expect(managerStatus.hasVerifiedStrongAuth).toBe(true);
+    expect(managerStatus.hasTotp).toBe(true);
   });
 });

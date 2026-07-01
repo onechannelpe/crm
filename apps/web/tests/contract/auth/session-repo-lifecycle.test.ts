@@ -1,17 +1,21 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { seedBulkSessions } from "@tests/support/auth/sessions";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("session repository lifecycle", () => {
   const scenario = createAuthScenario("session-repo");
   const user = "execOne" as const;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("creates, reads, updates, extends, and deletes session", async () => {

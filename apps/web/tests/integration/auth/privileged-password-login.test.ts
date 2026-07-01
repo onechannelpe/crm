@@ -1,6 +1,6 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
@@ -16,13 +16,17 @@ describe("privileged password login", () => {
     userAgent: "vitest-agent",
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
-    await scenario.setPassword(identity, rightPassword);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
+    await scenario.setPassword(identity, rightPassword);
   });
 
   it("rejects privileged login without strong auth after onboarding", async () => {

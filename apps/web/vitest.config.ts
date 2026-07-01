@@ -15,10 +15,6 @@ function databaseProject(namespace: string) {
     fileParallelism: true,
     env: {
       TEST_DB_NAMESPACE: namespace,
-      WEB_DB_URL: `file:${path.resolve(
-        __dirname,
-        `.vitest-db/${namespace}/__global-test-runtime.db`,
-      )}`,
     },
   };
 }

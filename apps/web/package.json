@@ -17,7 +17,6 @@
     "test:contract": "bun --bun --env-file=../../.env.test vitest run --project contract",
     "test:integration": "bun --bun --env-file=../../.env.test vitest run --project integration",
     "test:journey": "bun --bun --env-file=../../.env.test vitest run --project journey",
-    "test:prepare": "bun run migrate:test && bun run seed:test",
     "test:server": "bun --env-file=../../.env.test --bun vite --config vite.config.ts",
     "test:integration:browser": "playwright test",
     "test:integration:browser:headed": "playwright test --headed",
