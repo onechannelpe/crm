@@ -5,6 +5,10 @@ import type {
 import { parseFieldChanges } from "~/contracts/events";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { asUserId, type UserId } from "~/server/shared/ids";
+import {
+  parsePositiveIntegerAtMost,
+  trimOrUndefined,
+} from "~/server/shared/query-window";
 import type { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -19,60 +23,20 @@ interface AuditReaderDeps {
   events: ReturnType<typeof createEventsRepo>;
 }
 
-function trimOrUndefined(value: string | undefined): string | undefined {
-  const trimmed = value?.trim();
-  if (!trimmed) return undefined;
-  return trimmed;
-}
-
 function parseWindowMinutes(value: number): Result<number, DomainError> {
-  if (!Number.isInteger(value) || value < 1) {
-    return Err(
-      invalid({
-        code: "invalid_window_minutes",
-        details: { field: "window_minutes", rule: "positive_integer" },
-      }),
-    );
-  }
-  if (value > AUDIT_READER_MAX_WINDOW_MINUTES) {
-    return Err(
-      invalid({
-        code: "invalid_window_minutes",
-        details: {
-          field: "window_minutes",
-          rule: "max",
-          max: AUDIT_READER_MAX_WINDOW_MINUTES,
-          actual: value,
-        },
-      }),
-    );
-  }
-  return Ok(value);
+  return parsePositiveIntegerAtMost(value, {
+    code: "invalid_window_minutes",
+    field: "window_minutes",
+    max: AUDIT_READER_MAX_WINDOW_MINUTES,
+  });
 }
 
 function parseLimit(value: number): Result<number, DomainError> {
-  if (!Number.isInteger(value) || value < 1) {
-    return Err(
-      invalid({
-        code: "invalid_limit",
-        details: { field: "limit", rule: "positive_integer" },
-      }),
-    );
-  }
-  if (value > AUDIT_READER_MAX_LIMIT) {
-    return Err(
-      invalid({
-        code: "invalid_limit",
-        details: {
-          field: "limit",
-          rule: "max",
-          max: AUDIT_READER_MAX_LIMIT,
-          actual: value,
-        },
-      }),
-    );
-  }
-  return Ok(value);
+  return parsePositiveIntegerAtMost(value, {
+    code: "invalid_limit",
+    field: "limit",
+    max: AUDIT_READER_MAX_LIMIT,
+  });
 }
 
 function parseActorUserId(value: string): Result<UserId, DomainError> {

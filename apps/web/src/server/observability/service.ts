@@ -22,6 +22,10 @@ import {
 import type { WireKind } from "~/lib/wire-error";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
+import {
+  parsePositiveIntegerAtMost,
+  trimOrUndefined,
+} from "~/server/shared/query-window";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { createActionObservationsRepo } from "./repos-action-observations";
@@ -187,46 +191,6 @@ interface AuthFunnelSnapshotFilter {
   eventName?: AuthFunnelEventName;
   method?: AuthFunnelMethod;
   outcome?: AuthFunnelOutcome;
-}
-
-function trimOrUndefined(value: string | undefined): string | undefined {
-  const trimmed = value?.trim();
-  if (!trimmed) return undefined;
-  return trimmed;
-}
-
-function parsePositiveIntegerAtMost(
-  value: number,
-  options: {
-    code: string;
-    field: string;
-    max: number;
-  },
-): Result<number, DomainError> {
-  if (!Number.isInteger(value) || value < 1) {
-    return Err(
-      invalid({
-        code: options.code,
-        details: { field: options.field, rule: "positive_integer" },
-      }),
-    );
-  }
-
-  if (value > options.max) {
-    return Err(
-      invalid({
-        code: options.code,
-        details: {
-          field: options.field,
-          rule: "max",
-          max: options.max,
-          actual: value,
-        },
-      }),
-    );
-  }
-
-  return Ok(value);
 }
 
 function parseObservationStatus(
@@ -486,48 +450,6 @@ export function createObservabilityService(repos: ObservabilityRepos) {
           code: row.code,
         })),
       });
-    },
-
-    async listRecent(params: {
-      fromInclusive: Date;
-      toInclusive: Date;
-      actionName?: string;
-      status?: "ok" | "error";
-      actorUserId?: UserId;
-      limit: number;
-    }) {
-      return repos.actionObservations.findRecent(params);
-    },
-
-    async summarizeByAction(params: {
-      fromInclusive: Date;
-      toInclusive: Date;
-      actionName?: string;
-      status?: "ok" | "error";
-      actorUserId?: UserId;
-    }) {
-      return repos.actionObservations.summarizeByAction(params);
-    },
-
-    async listRecentAuthFunnel(params: {
-      fromInclusive: Date;
-      toInclusive: Date;
-      eventName?: AuthFunnelEventName;
-      method?: AuthFunnelMethod;
-      outcome?: AuthFunnelOutcome;
-      limit: number;
-    }) {
-      return repos.authFunnelEvents.findRecent(params);
-    },
-
-    async summarizeAuthFunnel(params: {
-      fromInclusive: Date;
-      toInclusive: Date;
-      eventName?: AuthFunnelEventName;
-      method?: AuthFunnelMethod;
-      outcome?: AuthFunnelOutcome;
-    }) {
-      return repos.authFunnelEvents.summarize(params);
     },
   };
 }
