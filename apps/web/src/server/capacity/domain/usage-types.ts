@@ -45,7 +45,7 @@ export interface UsageCommitsRepo<K extends CapacityKind> {
   }): Promise<void>;
 }
 
-export interface UsageGrantsRepo<K extends CapacityKind> {
+export interface UsageGrantsRepo {
   insert(values: {
     user_id: UserId;
     amount: number;
@@ -57,7 +57,7 @@ export interface UsageGrantsRepo<K extends CapacityKind> {
 export interface UsageLedgerRepos<K extends CapacityKind> {
   reservations: UsageReservationsRepo<K>;
   commits: UsageCommitsRepo<K>;
-  grants: UsageGrantsRepo<K>;
+  grants: UsageGrantsRepo;
 }
 
 export interface GrantUsageCapacityCommand<K extends CapacityKind> {

@@ -11,6 +11,7 @@ function createOrganizationRepositoryDouble() {
   // Only applyEnrichment is exercised by the projection. Cast to satisfy the
   // full OrganizationRepository shape for typecheck; the other methods are never
   // called by the projection under test.
+  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const repo = {
     applyEnrichment,
   } as unknown as OrganizationRepository;

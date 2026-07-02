@@ -1,8 +1,4 @@
 import { fail, type DomainError } from "~/server/shared/domain-error";
-import {
-  asLeadReservationId,
-  asSearchReservationId,
-} from "~/server/shared/ids";
 import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -20,21 +16,13 @@ const EXHAUSTED_CODE = {
   search: "search_exhausted",
 } as const satisfies Record<CapacityKind, string>;
 
-function brandReservationId<K extends CapacityKind>(
-  kind: K,
-  id: string,
-): UsageReservationId<K> {
-  return (
-    kind === "lead" ? asLeadReservationId(id) : asSearchReservationId(id)
-  ) as UsageReservationId<K>;
-}
-
 interface ReserveUsageCommand<K extends CapacityKind> {
   kind: K;
   actorUserId: UserId;
   amount: number;
   remainingCapacity: number;
   reason: ReserveReason<K>;
+  brand: (id: string) => UsageReservationId<K>;
 }
 
 async function reserveUsage<K extends CapacityKind>(
@@ -49,7 +37,7 @@ async function reserveUsage<K extends CapacityKind>(
     amount: command.amount,
     reason: command.reason,
   });
-  return Ok(brandReservationId(command.kind, row.id));
+  return Ok(command.brand(row.id));
 }
 
 async function commitUsage<K extends CapacityKind>(
@@ -89,6 +77,7 @@ export interface ExecuteWithUsageReservationCommand<K extends CapacityKind> {
   remainingCapacity: number;
   reserveReason: ReserveReason<K>;
   failureReason: CancelReason;
+  brand: (id: string) => UsageReservationId<K>;
 }
 
 // Single public entry point for "reserve capacity, do side-effecting work,
@@ -111,6 +100,7 @@ export async function executeWithUsageReservation<K extends CapacityKind, T>(
       amount: command.requested,
       remainingCapacity: command.remainingCapacity,
       reason: command.reserveReason,
+      brand: command.brand,
     },
     repos,
   );

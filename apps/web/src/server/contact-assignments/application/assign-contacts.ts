@@ -6,6 +6,7 @@ import type {
 } from "~/server/capacity/infrastructure/usage-repo";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
+import { asLeadReservationId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -62,6 +63,7 @@ export async function assignContacts(
       remainingCapacity: plan.value.remainingCapacity,
       reserveReason: "lead_refill",
       failureReason: "workflow_cancelled",
+      brand: asLeadReservationId,
     },
     {
       reservations: repos.leadUsageReservations,

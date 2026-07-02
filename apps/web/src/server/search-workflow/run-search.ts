@@ -14,7 +14,7 @@ import type {
 } from "~/server/capacity/infrastructure/usage-repo";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import type { UserId } from "~/server/shared/ids";
+import { asSearchReservationId, type UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 export interface RunDirectSearchCommand {
@@ -54,6 +54,7 @@ export async function runDirectSearch(
       remainingCapacity: snapshotResult.value.remaining,
       reserveReason: "direct_search",
       failureReason: "external_failure",
+      brand: asSearchReservationId,
     },
     {
       reservations: repos.searchUsageReservations,

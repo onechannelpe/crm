@@ -2,7 +2,11 @@ import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
-import { asUserId, type UserId } from "~/server/shared/ids";
+import {
+  asSearchReservationId,
+  asUserId,
+  type UserId,
+} from "~/server/shared/ids";
 import { Ok } from "~/server/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -52,6 +56,7 @@ describe("search capacity consume service benchmark", () => {
           remainingCapacity: 2,
           reserveReason: "direct_search",
           failureReason: "external_failure",
+          brand: asSearchReservationId,
         },
         {
           reservations: ctx.repos.searchUsageReservations,
