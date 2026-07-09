@@ -31,6 +31,12 @@ function buildSessionRow(sessionId: string, nowTs: number): UserSessionRow {
   };
 }
 
+function withPersistedRole(row: UserSessionRow, role: string): UserSessionRow {
+  const persistedRow = { ...row };
+  Object.defineProperty(persistedRow, "role", { value: role });
+  return persistedRow;
+}
+
 describe("session manager validation", () => {
   beforeEach(() => {
     sessionCache.clear();
@@ -88,5 +94,22 @@ describe("session manager validation", () => {
 
     expect(result?.onboardingCompleted).toBe(false);
     expect(spies.usersFindById).toHaveBeenCalledOnce();
+  });
+
+  it("deletes session when persisted role is invalid", async () => {
+    const nowTs = 1_700_000_000_000;
+    const store = new Map<string, UserSessionRow>();
+    const token = generateSessionToken();
+    const sessionId = hashSessionToken(token);
+    const row = buildSessionRow(sessionId, nowTs);
+    store.set(sessionId, withPersistedRole(row, "invalid_role"));
+
+    const { service, spies } = createSessionServiceHarness(nowTs, store);
+    const result = await service.resolve(token);
+
+    expect(result).toBeNull();
+    expect(spies.sessionsDelete).toHaveBeenCalledWith(sessionId);
+    expect(spies.usersFindById).not.toHaveBeenCalled();
+    expect(store.has(sessionId)).toBe(false);
   });
 });
