@@ -5,6 +5,7 @@ import type { InviteService } from "~/server/invites/application/types";
 import { bindInviteRepos } from "~/server/invites/infrastructure/invite-service-factory";
 import { createExecutorUow } from "~/server/shared/application/uow";
 
+import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
@@ -24,6 +25,7 @@ describe("team invite accept command benchmark", () => {
     const ctx = await db.setup();
     const inviteService = createInviteService(bindInviteRepos(ctx.db), {
       uow: createExecutorUow(ctx.db, bindInviteRepos),
+      now: () => BENCH_NOW,
       hashPassword: async () => "bench-password-hash",
     });
     inviteAccept = (input) => inviteService.acceptInvite(input);

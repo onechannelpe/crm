@@ -40,15 +40,17 @@ export function projectIntentForPlanning(job: {
   audience_json: unknown;
   channels_json: unknown;
 }): Result<RecipientPlannerInput, string> {
-  const category = resolveCategory(job.event_type);
-  if (category === null) {
-    return Err(`Unknown event type: ${job.event_type}`);
-  }
-
   try {
+    const audience = parseNotificationAudience(job.audience_json);
+    const channels = parseNotificationChannels(job.channels_json);
+    const category = resolveCategory(job.event_type);
+    if (category === null) {
+      return Err(`Unknown event type: ${job.event_type}`);
+    }
+
     return Ok({
-      audience: parseNotificationAudience(job.audience_json),
-      channels: parseNotificationChannels(job.channels_json),
+      audience,
+      channels,
       category,
     });
   } catch (error) {

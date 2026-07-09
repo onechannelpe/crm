@@ -1,8 +1,11 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
-import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
+import { bindInviteRepos } from "~/server/invites/infrastructure/invite-service-factory";
+import { createExecutorUow } from "~/server/shared/application/uow";
 
+import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
 import { takeFromPool } from "../_shared/pool";
@@ -20,7 +23,10 @@ describe("team invite accept benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const inviteService = createInviteServiceForExecutor(ctx.db);
+    const inviteService = createInviteService(bindInviteRepos(ctx.db), {
+      uow: createExecutorUow(ctx.db, bindInviteRepos),
+      now: () => BENCH_NOW,
+    });
     inviteAccept = (input) => inviteService.acceptInvite(input);
 
     const fixtures = await seedTeamInviteFixtures(ctx);

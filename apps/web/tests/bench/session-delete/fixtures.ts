@@ -8,6 +8,7 @@ import { BENCH_NOW, benchDate } from "../_shared/constants";
 
 export const USER_POOL_SIZE = 60;
 const SESSIONS_PER_USER = 800;
+const SESSION_INSERT_CHUNK_SIZE = 4_000;
 const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
 
 export interface SessionDeleteFixtures {
@@ -37,9 +38,8 @@ export async function seedSessionDeleteFixtures(
 
   await ctx.db.insertInto("users").values(users).execute();
   const userIds = users.map((user) => user.id);
-
-  for (const userId of userIds) {
-    const sessions = Array.from({ length: SESSIONS_PER_USER }, (_, index) => ({
+  const sessions = userIds.flatMap((userId) =>
+    Array.from({ length: SESSIONS_PER_USER }, (_, index) => ({
       id: `${sessionIdPrefix}-${userId}-${index}`,
       user_id: userId,
       branch_id: BRANCH_ID,
@@ -53,9 +53,18 @@ export async function seedSessionDeleteFixtures(
       created_at: BENCH_NOW,
       last_activity: BENCH_NOW,
       expires_at: benchDate(60_000),
-    }));
+    })),
+  );
 
-    await ctx.db.insertInto("user_sessions").values(sessions).execute();
+  for (
+    let offset = 0;
+    offset < sessions.length;
+    offset += SESSION_INSERT_CHUNK_SIZE
+  ) {
+    await ctx.db
+      .insertInto("user_sessions")
+      .values(sessions.slice(offset, offset + SESSION_INSERT_CHUNK_SIZE))
+      .execute();
   }
 
   return { userIds };
