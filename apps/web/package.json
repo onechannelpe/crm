@@ -47,6 +47,7 @@
     "@solid-primitives/resize-observer": "^2.1.5",
     "@solidjs/router": "^0.16.1",
     "@solidjs/start": "2.0.0-alpha.3",
+    "@tabler/icons-solidjs": "^3.44.0",
     "arctic": "^3.7.0",
     "clsx": "^2.1.1",
     "crossws": "^0.4.5",
