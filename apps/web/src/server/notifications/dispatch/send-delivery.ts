@@ -5,9 +5,9 @@ import type { MessagingGateway } from "../channels/messaging-gateway";
 import type { DeliveryJob, DeliveryRepository } from "../repos/delivery-repo";
 import { formatWhatsAppNotificationBody } from "./format-message";
 
-// The classified result of one send attempt. `retry` is a transient provider
-// failure; `failed` is terminal (bad address, unsupported template). Mapping to
-// the queue's retry/fail decision is the dispatch queue's job.
+// retry: transient provider failure. failed: terminal (bad address,
+// unsupported template). Mapping retry vs failed to the queue's decision is
+// the dispatch queue's job.
 export type DeliveryOutcome =
   | { kind: "sent" }
   | { kind: "retry"; reason: string }

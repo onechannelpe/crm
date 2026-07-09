@@ -4,36 +4,31 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { JOB_TABLE_LIFECYCLE, type JobTableName } from "./registry";
 
-// The four queue-lifecycle states every job table shares. This column is owned
-// solely by the job-store. Any user-facing `status` a feature surfaces is a
-// separate domain column the store maintains in lockstep via LifecycleColumns,
-// never something a caller hand-syncs.
+// Owned solely by the job-store; user-facing status columns are a separate
+// domain column the store keeps in lockstep via LifecycleColumns, never
+// something a caller hand-syncs.
 export type QueueState = "pending" | "processing" | "done" | "failed";
 
 export type { JobTableName };
 
-// Extra domain columns a handler wants written in the same statement as a queue
-// transition (rows_applied, results_json, ...). Kept loose on purpose: this is
-// the one boundary where the generic store cannot know a specific table's domain
-// shape. The canonical lifecycle columns (queue_state, lease, attempts) and the
-// mapped mirror columns below are NOT passed here -- the store owns them.
+// Extra domain columns a handler wants written in the same statement as a
+// queue transition (rows_applied, results_json, ...). The canonical lifecycle
+// columns (queue_state, lease, attempts) and the mapped mirror columns are
+// NOT passed here; the store owns them.
 export type DomainPatch = Record<
   string,
   string | number | boolean | Date | null
 >;
 
-// Restricts a claim to rows whose `column` is one of `values`. Used when a single
-// table holds several job kinds and a queue should only claim its own (e.g. the
-// integration table carries both imports and exports).
+// Used when a single table holds several job kinds and a queue should only
+// claim its own (e.g. the integration table carries both imports and exports).
 export interface ClaimFilter {
   column: string;
   values: readonly (string | number)[];
 }
 
-// Maps the canonical lifecycle onto a table's domain mirror columns so the store
-// keeps them in lockstep with `queue_state` without each queue re-coding the sync
-// in its settle path. All optional: a table with no user-facing status (the
-// outbox) configures none of these.
+// All optional: a table with no user-facing status (the outbox) configures
+// none of these.
 export interface LifecycleColumns {
   // Stamped with the settle clock on done and fail (e.g. `completed_at`,
   // `sent_at`, `processed_at`, `expanded_at`).
@@ -41,8 +36,8 @@ export interface LifecycleColumns {
   // Carries the failure/retry reason; cleared on done (e.g. `error_message`,
   // `last_error`).
   error?: string;
-  // A user-facing status column that mirrors `queue_state` 1:1. The store writes
-  // the matching value on every transition so the UI can keep polling it.
+  // Mirrors `queue_state` 1:1. The store writes the matching value on every
+  // transition so the UI can keep polling it.
   status?: {
     column: string;
     pending: string;
@@ -52,11 +47,10 @@ export interface LifecycleColumns {
   };
 }
 
-// Mirror-column writes for a single lifecycle transition, merged into a
-// settle SET clause. Exported (rather than kept private to `createJobStore`)
-// so `resetStaleLeases` computes the exact same patch when it recovers a
-// crashed lease -- the mirror invariant has exactly one implementation,
-// shared by both the normal settle path and stale recovery.
+// Exported (rather than kept private to `createJobStore`) so `resetStaleLeases`
+// computes the exact same patch when it recovers a crashed lease. The mirror
+// invariant has exactly one implementation, shared by both the normal settle
+// path and stale recovery.
 export function mirrorPatch(
   lifecycle: LifecycleColumns,
   state: QueueState,
@@ -111,24 +105,19 @@ export interface JobStore<TId extends string | number, TRow> {
   ): Promise<boolean>;
 }
 
-/**
- * The single owner of the claim/lease/retry/settle state machine, generic over
- * any job table. A queue supplies its table, the projection its handler needs
- * (`selectColumns`), and an optional `lifecycle` map naming the table's domain
- * mirror columns. The engine drives this store directly, so a queue never writes
- * its own claim or settle SQL.
- *
- * Claim is a single `FOR UPDATE SKIP LOCKED` statement: a CTE locks and selects
- * the due pending rows, and the outer UPDATE transitions them to `processing`
- * and returns them. Concurrent workers skip each other's locked rows, so no two
- * workers can claim the same job and no recheck pass is needed. Expired leases
- * are returned to `pending` by the stale-scanner, so the claim predicate does
- * not inspect `lease_until`.
- *
- * Settle methods are lease-guarded: they only act while the row is still
- * `processing` under the caller's `lease_owner`. A worker whose lease was reaped
- * and reclaimed by another worker cannot settle a job it no longer owns.
- */
+// claim() is a single FOR UPDATE SKIP LOCKED statement: a CTE locks the due
+// pending rows and the outer UPDATE transitions them to `processing` in one
+// round trip. Concurrent workers skip each other's locks, so no two can claim
+// the same job and no recheck pass is needed. Expired leases are returned to
+// `pending` by the stale-scanner, so the claim predicate does not inspect
+// `lease_until`.
+//
+// settle() is lease-guarded: it only acts while the row is still `processing`
+// under the caller's `lease_owner`, so a worker whose lease was reaped and
+// reclaimed cannot settle a job it no longer owns.
+//
+// Mirror columns stay in lockstep with `queue_state` via the lifecycle map so
+// resetStaleLeases reuses the same mapping.
 export function createJobStore<
   TRow,
   TId extends string | number = string | number,
@@ -137,10 +126,9 @@ export function createJobStore<
   table: JobTableName,
   selectColumns: readonly string[],
 ): JobStore<TId, TRow> {
-  // Kysely resolves columns from a static table type, but `table` is chosen per
-  // queue at runtime, so this builder is untyped. Every JobTableName carries the
-  // canonical control columns by schema; this handle is the single place that
-  // assumption is asserted, and the public API stays fully typed.
+  // `table` is per-queue at runtime, so the Kysely handle here is untyped;
+  // the public API stays typed because every JobTableName carries the
+  // canonical columns by schema.
   // oxlint-disable-next-line no-unsafe-type-assertion
   const db = executor as unknown as Kysely<any>;
   const lifecycle = JOB_TABLE_LIFECYCLE[table];
@@ -196,9 +184,8 @@ export function createJobStore<
           ...mirror("processing", { error: null }),
         }))
         .whereRef(`${table}.id`, "=", "claimed.id")
-        // `claimed` also exposes `id`, so the bare column is ambiguous in
-        // Postgres's `UPDATE ... FROM` RETURNING; qualify it against the
-        // table being updated.
+        // Postgres UPDATE...FROM RETURNING sees both `claimed.id` and the
+        // target table's `id`; qualify to disambiguate.
         .returning(
           selectColumns.map((column) =>
             column === "id" ? `${table}.id` : column,
@@ -254,16 +241,11 @@ export function createJobStore<
   };
 }
 
-/**
- * Recovers `table`'s rows stuck in `processing` past their lease deadline,
- * returning them to `pending` in one statement. This is the crash-recovery
- * counterpart to `claim`/`settle`: a worker that died mid-lease leaves no
- * caller to run `scheduleRetry`, so the stale-scanner calls this instead.
- * It goes through the same `mirrorPatch` mapping settle uses, so a table's
- * status mirror (if it has one) can never disagree with `queue_state` for
- * longer than it takes the scanner to run -- unlike a hand-rolled reset that
- * only knows about the canonical lifecycle columns.
- */
+// Crash-recovery counterpart to claim/settle: returns rows stuck in
+// `processing` past their lease deadline to `pending` in one statement. Goes
+// through the same `mirrorPatch` mapping settle uses, so a table's status
+// mirror can never disagree with `queue_state` for longer than the scanner
+// takes to run.
 export async function resetStaleLeases(
   executor: DatabaseExecutor,
   table: JobTableName,

@@ -6,11 +6,10 @@ import type { DeliverySender } from "./send-delivery";
 
 const LEASE_MS = 30_000;
 
-// Stage 2 queue: one job per external send. Concurrency is the real
-// sends-in-flight bound here, so it is tuned for provider rate limits rather
-// than DB throughput. Transient failures retry with backoff up to max_attempts;
-// terminal failures dead-letter as `failed`. The store stamps `sent_at` on
-// success; the provider attempt is recorded by the sender.
+// Concurrency here is real sends-in-flight, so it's tuned for provider rate
+// limits (not DB throughput). Transient failures retry up to max_attempts;
+// terminal failures dead-letter as failed. The store stamps sent_at on
+// success; the sender records the provider attempt.
 export function createDeliveryDispatchQueue(
   workerId: string,
   deps: {

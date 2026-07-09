@@ -16,11 +16,10 @@ export interface ClientSearchViewsTable {
   updated_at: Date;
 }
 
-// One row per document: the cached registry fact and its enrichment work-state
-// fused. `queue_state` is the only lifecycle column; the UI lifecycle and
-// freshness derive from (queue_state, source, expires_at). jsonb columns
-// auto-parse on read and are written as stringified JSON (top-level arrays must
-// be stringified, so the write side is a string).
+// jsonb columns auto-parse on read and are written as stringified JSON
+// (top-level arrays must be stringified, so the write side is a string).
+// `queue_state` is the only lifecycle column; the UI lifecycle and freshness
+// derive from (queue_state, source, expires_at).
 export interface CompanyRegistryRecordTable {
   id: GeneratedId<CompanyRegistryRecordId>;
   document_type: "dni" | "ruc";

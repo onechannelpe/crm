@@ -6,15 +6,16 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 const logger = createLogger("pg-notify");
 
-// Fire a NOTIFY on `executor`. When `executor` is a transaction, Postgres holds
-// the notification until commit, so the consumer never wakes for work that has
-// not landed. Outside a transaction it delivers immediately. Either way the
-// wake is best-effort: a missed NOTIFY is caught by the poll floor.
+// Inside a transaction, Postgres holds the notification until commit, so the
+// consumer never wakes for work that has not landed. Outside a transaction it
+// delivers immediately. Either way the wake is best-effort: a missed NOTIFY
+// is caught by the poll floor.
 //
 // `payload` defaults to empty for queue doorbells, where persistence is
-// authoritative and the wake only says "look now". The realtime bridge passes a
-// serialized event instead, riding the NOTIFY directly (events are well under
-// Postgres's 8000-byte payload ceiling), so subscribers need no fetch-back.
+// authoritative and the wake only says "look now". The realtime bridge
+// passes a serialized event instead, riding the NOTIFY directly (events are
+// under Postgres's 8000-byte payload ceiling), so subscribers need no
+// fetch-back.
 export function notify(
   executor: DatabaseExecutor,
   channel: string,
@@ -30,8 +31,7 @@ export function notify(
     });
 }
 
-// Handlers receive the NOTIFY payload. Queue wakers ignore it (channel-only
-// doorbell); the realtime bridge parses it into an event.
+// Queue wakers ignore the payload; the realtime bridge parses it.
 export type PgListenerHandler = (payload: string) => void;
 
 export interface PgListener {
@@ -40,13 +40,10 @@ export interface PgListener {
   stop(): Promise<void>;
 }
 
-/**
- * A single dedicated, non-pooled `pg.Client` running `LISTEN` for every
- * registered channel and dispatching each notification to its handler. It is
- * deliberately off the pool: a listening connection is long-lived and must not
- * be recycled mid-LISTEN. On connection loss it reconnects with backoff and
- * re-issues every LISTEN so no wake is permanently lost.
- */
+// A single dedicated, non-pooled `pg.Client` runs LISTEN for every registered
+// channel. Listening connections are long-lived and must not be recycled
+// mid-LISTEN. On connection loss it reconnects with backoff and re-issues every
+// LISTEN so no wake is permanently lost.
 export function createPgListener(connectionString: string): PgListener {
   const handlers = new Map<string, PgListenerHandler[]>();
   let client: Client | null = null;
