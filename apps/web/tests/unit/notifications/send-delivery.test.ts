@@ -74,7 +74,6 @@ describe("createDeliverySender", () => {
           provider_message_id: "test-email",
           error_code: null,
           error_message: null,
-          latency_ms: null,
         },
       },
     ]);

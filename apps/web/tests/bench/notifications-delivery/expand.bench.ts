@@ -6,7 +6,6 @@ import { createRecipientPlanner } from "~/server/notifications/expansion/plan-re
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import type { IntentJob } from "~/server/notifications/repos/intent-repo";
-import { createRecipientRepository } from "~/server/notifications/repos/recipient-repo";
 
 import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -28,10 +27,7 @@ describe("notifications expansion benchmark", () => {
 
     const logger = createLogger("bench-notification-expand");
     expand = createIntentExpander({
-      planRecipients: createRecipientPlanner({
-        repository: createRecipientRepository(ctx.db),
-        logger,
-      }),
+      planRecipients: createRecipientPlanner(ctx.db, logger),
       appNotifications: createAppNotificationRepo(ctx.db),
       deliveries: createDeliveryRepository(ctx.db),
       logger,

@@ -166,7 +166,7 @@ async function seedPlannerScenario(
   const intents: NotificationIntent[] = audiences.map(
     (audienceUserIds, index) => ({
       id: `bench-planner-${scenario.name}-${index}`,
-      eventType: "bench.notification.delivery",
+      eventType: "lead.ready_for_quotation",
       audience: { kind: "user_ids", userIds: audienceUserIds },
       channels: ["email", "whatsapp"],
       priority: "normal",
@@ -211,7 +211,7 @@ export async function seedExpandFixtures(
     { length: EXPAND_INTENT_COUNT },
     (_, index) => ({
       id: `bench-expand-${index}`,
-      eventType: "bench.notification.delivery",
+      eventType: "lead.ready_for_quotation",
       audience: { kind: "user_ids", userIds },
       channels: ["in_app", "email", "whatsapp"],
       priority: "normal",

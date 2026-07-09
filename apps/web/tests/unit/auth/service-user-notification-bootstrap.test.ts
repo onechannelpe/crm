@@ -15,18 +15,14 @@ const INPUT = {
 } as const;
 
 describe("bootstrapUserNotifications", () => {
-  it("returns success and writes channel + preferences when claim succeeds", async () => {
+  it("returns success and writes the channel addresses when the claim succeeds", async () => {
     const upsertAddress = vi.fn().mockResolvedValue(undefined);
     const claimWhatsAppAddress = vi.fn().mockResolvedValue({ kind: "claimed" });
-    const upsertPreference = vi.fn().mockResolvedValue(undefined);
 
     const result = await bootstrapUserNotifications(INPUT, {
       userChannelAddresses: {
         upsert: upsertAddress,
         claimWhatsAppAddress,
-      },
-      notificationPreferences: {
-        upsert: upsertPreference,
       },
     });
 
@@ -47,36 +43,19 @@ describe("bootstrapUserNotifications", () => {
       address: INPUT.phone,
       now: NOW,
     });
-    expect(upsertPreference).toHaveBeenCalledTimes(4);
-    expect(upsertPreference.mock.calls.map(([arg]) => arg.channel)).toEqual([
-      "email",
-      "whatsapp",
-      "email",
-      "whatsapp",
-    ]);
-    expect(upsertPreference.mock.calls.map(([arg]) => arg.event_type)).toEqual([
-      "security.privileged_login",
-      "security.privileged_login",
-      "broadcast.general",
-      "broadcast.general",
-    ]);
   });
 
-  it("returns address_already_claimed and does not write preferences when claim is denied", async () => {
+  it("returns address_already_claimed when the whatsapp claim is denied", async () => {
     const upsertAddress = vi.fn().mockResolvedValue(undefined);
     const claimWhatsAppAddress = vi.fn().mockResolvedValue({
       kind: "already_claimed",
       ownerUserId: asUserId("99"),
     });
-    const upsertPreference = vi.fn().mockResolvedValue(undefined);
 
     const result = await bootstrapUserNotifications(INPUT, {
       userChannelAddresses: {
         upsert: upsertAddress,
         claimWhatsAppAddress,
-      },
-      notificationPreferences: {
-        upsert: upsertPreference,
       },
     });
 
@@ -89,15 +68,13 @@ describe("bootstrapUserNotifications", () => {
     });
     expect(upsertAddress).toHaveBeenCalledTimes(1);
     expect(claimWhatsAppAddress).toHaveBeenCalledTimes(1);
-    expect(upsertPreference).not.toHaveBeenCalled();
   });
 
-  it("propagates unexpected claim failure and stops before preferences", async () => {
+  it("propagates an unexpected claim failure", async () => {
     const upsertAddress = vi.fn().mockResolvedValue(undefined);
     const claimWhatsAppAddress = vi
       .fn()
       .mockRejectedValue(new Error("db unavailable"));
-    const upsertPreference = vi.fn().mockResolvedValue(undefined);
 
     await expect(
       bootstrapUserNotifications(INPUT, {
@@ -105,14 +82,10 @@ describe("bootstrapUserNotifications", () => {
           upsert: upsertAddress,
           claimWhatsAppAddress,
         },
-        notificationPreferences: {
-          upsert: upsertPreference,
-        },
       }),
     ).rejects.toThrow("db unavailable");
 
     expect(upsertAddress).toHaveBeenCalledTimes(1);
     expect(claimWhatsAppAddress).toHaveBeenCalledTimes(1);
-    expect(upsertPreference).not.toHaveBeenCalled();
   });
 });

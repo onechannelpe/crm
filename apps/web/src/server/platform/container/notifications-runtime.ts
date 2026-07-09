@@ -28,7 +28,10 @@ import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
-import { createRecipientRepository } from "~/server/notifications/repos/recipient-repo";
+import {
+  createNotificationOptOutRepo,
+  type NotificationOptOutRepo,
+} from "~/server/notifications/repos/opt-out-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
 
 import type { ServerInfra } from "./infra";
@@ -47,6 +50,7 @@ export interface NotificationPipelineDeps {
 export interface NotificationPipeline {
   messaging: MessagingGateway;
   appNotifications: ReturnType<typeof createAppNotificationRepo>;
+  preferences: NotificationOptOutRepo;
   createQueues(workerId: string): {
     expansion: QueueRunner;
     dispatch: QueueRunner;
@@ -60,12 +64,10 @@ export function assembleNotificationPipeline(
   const intents = createIntentRepository(deps.db);
   const deliveries = createDeliveryRepository(deps.db);
   const appNotifications = createAppNotificationRepo(deps.db);
+  const preferences = createNotificationOptOutRepo(deps.db);
 
   const expand = createIntentExpander({
-    planRecipients: createRecipientPlanner({
-      repository: createRecipientRepository(deps.db),
-      logger: deps.logger,
-    }),
+    planRecipients: createRecipientPlanner(deps.db, deps.logger),
     appNotifications,
     deliveries,
     logger: deps.logger,
@@ -80,6 +82,7 @@ export function assembleNotificationPipeline(
   return {
     messaging: deps.messaging,
     appNotifications,
+    preferences,
     createQueues(workerId) {
       return {
         expansion: createIntentExpansionQueue(workerId, {

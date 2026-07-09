@@ -20,7 +20,6 @@ export interface IntentJob {
 
 export interface IntentRepository {
   store: JobStore<NotificationIntentId, IntentJob>;
-  countOutstanding(): Promise<number>;
 }
 
 export function createIntentRepository(db: Kysely<Database>): IntentRepository {
@@ -44,16 +43,5 @@ export function createIntentRepository(db: Kysely<Database>): IntentRepository {
     ],
   );
 
-  return {
-    store,
-
-    async countOutstanding() {
-      const row = await db
-        .selectFrom("notification_intents")
-        .select((eb) => eb.fn.count<number>("id").as("count"))
-        .where("queue_state", "in", ["pending", "processing"])
-        .executeTakeFirstOrThrow();
-      return row.count;
-    },
-  };
+  return { store };
 }

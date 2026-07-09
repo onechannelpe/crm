@@ -103,6 +103,7 @@ export interface JobStore<TId extends string | number, TRow> {
     reason: string,
     patch?: DomainPatch,
   ): Promise<boolean>;
+  countOutstanding(): Promise<number>;
 }
 
 // claim() is a single FOR UPDATE SKIP LOCKED statement: a CTE locks the due
@@ -237,6 +238,15 @@ export function createJobStore<
         ...mirror("failed", { finishedAt: now, error: reason }),
         ...patch,
       });
+    },
+
+    async countOutstanding() {
+      const row = await db
+        .selectFrom(table)
+        .select((eb) => eb.fn.count<number>("id").as("count"))
+        .where("queue_state", "in", ["pending", "processing"])
+        .executeTakeFirstOrThrow();
+      return row.count;
     },
   };
 }

@@ -42,15 +42,22 @@ function createPorts(
   const open = vi
     .fn<WhatsAppInboundPorts["sessions"]["open"]>()
     .mockResolvedValue(undefined);
+  const muteWhatsApp = vi
+    .fn<WhatsAppInboundPorts["preferences"]["muteWhatsApp"]>()
+    .mockResolvedValue(undefined);
   const sendVerificationReply = vi
     .fn<WhatsAppInboundPorts["replies"]["sendVerificationReply"]>()
+    .mockResolvedValue(undefined);
+  const sendOptOutReply = vi
+    .fn<WhatsAppInboundPorts["replies"]["sendOptOutReply"]>()
     .mockResolvedValue(undefined);
   const info = vi.fn<WhatsAppInboundPorts["logger"]["info"]>();
   const error = vi.fn<WhatsAppInboundPorts["logger"]["error"]>();
   const ports: WhatsAppInboundPorts = {
     addresses: { findClaim, markVerified },
     sessions: { open },
-    replies: { sendVerificationReply },
+    preferences: { muteWhatsApp },
+    replies: { sendVerificationReply, sendOptOutReply },
     logger: { info, error },
   };
   return {
@@ -58,7 +65,9 @@ function createPorts(
     findClaim,
     markVerified,
     open,
+    muteWhatsApp,
     sendVerificationReply,
+    sendOptOutReply,
     info,
     error,
   };
@@ -159,6 +168,44 @@ describe("handleWhatsAppInboundMessage", () => {
     expect(runtime.markVerified).toHaveBeenCalledOnce();
     expect(runtime.open).toHaveBeenCalledOnce();
     expect(runtime.error).toHaveBeenCalledWith("verify_reply_failed", {
+      to: "+51911000007",
+      error: "provider down",
+    });
+  });
+
+  const stopMessage = parseKapsoInboundMessage(
+    kapsoInbound({ phoneNumber: "+51911000007", body: "baja" }),
+  );
+  if (!stopMessage) throw new Error("expected valid Kapso message fixture");
+
+  it("mutes whatsapp and replies on STOP, even for an unverified sender", async () => {
+    const runtime = createPorts({
+      userId: asUserId("7"),
+      address: "911000007",
+      verified: false,
+    });
+
+    await handleWhatsAppInboundMessage(stopMessage, NOW, runtime.ports);
+
+    expect(runtime.muteWhatsApp).toHaveBeenCalledWith(asUserId("7"), NOW);
+    expect(runtime.sendOptOutReply).toHaveBeenCalledWith("+51911000007");
+    // STOP short-circuits before any verification or session work.
+    expect(runtime.markVerified).not.toHaveBeenCalled();
+    expect(runtime.open).not.toHaveBeenCalled();
+  });
+
+  it("still records the opt-out when the reply fails", async () => {
+    const runtime = createPorts({
+      userId: asUserId("7"),
+      address: "911000007",
+      verified: true,
+    });
+    runtime.sendOptOutReply.mockRejectedValue(new Error("provider down"));
+
+    await handleWhatsAppInboundMessage(stopMessage, NOW, runtime.ports);
+
+    expect(runtime.muteWhatsApp).toHaveBeenCalledOnce();
+    expect(runtime.error).toHaveBeenCalledWith("opt_out_reply_failed", {
       to: "+51911000007",
       error: "provider down",
     });

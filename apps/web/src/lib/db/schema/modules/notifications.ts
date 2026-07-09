@@ -31,24 +31,33 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
+  // Opt-outs are stored as deviations from the default: a row means "this user
+  // silenced this category on this channel". Absence means on. Default-on needs
+  // no per-user seeding, and a new category is on for everyone without a
+  // backfill. Enforced in planRecipients.
   await db.schema
-    .createTable("notification_preferences")
+    .createTable("notification_opt_outs")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("event_type", "text", (col) => col.notNull())
+    .addColumn("category", "text", (col) => col.notNull())
     .addColumn("channel", "text", (col) => col.notNull())
-    .addColumn("is_enabled", "boolean", (col) => col.notNull().defaultTo(true))
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_prefs_user_event_channel")
-    .on("notification_preferences")
-    .columns(["user_id", "event_type", "channel"])
+    .createIndex("idx_notification_opt_outs_user_category_channel")
+    .on("notification_opt_outs")
+    .columns(["user_id", "category", "channel"])
     .unique()
+    .execute();
+
+  // Planner lookup: opt-outs for one category across a set of recipients.
+  await db.schema
+    .createIndex("idx_notification_opt_outs_category_user")
+    .on("notification_opt_outs")
+    .columns(["category", "user_id"])
     .execute();
 
   await db.schema
@@ -73,7 +82,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("provider_message_id", "text")
     .addColumn("error_code", "text")
     .addColumn("error_message", "text")
-    .addColumn("latency_ms", "integer")
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .addColumn("sent_at", "timestamptz")
     .execute();

@@ -148,13 +148,13 @@ describe("intent repository", () => {
     const repository = createIntentRepository(ctx.db);
     await repository.store.claim(WORKER_ID, NOW, 1, 30_000);
 
-    expect(await repository.countOutstanding()).toBe(2);
+    expect(await repository.store.countOutstanding()).toBe(2);
 
     await repository.store.markDone(
       notificationIntentId("intent-1"),
       WORKER_ID,
       NOW,
     );
-    expect(await repository.countOutstanding()).toBe(1);
+    expect(await repository.store.countOutstanding()).toBe(1);
   });
 });

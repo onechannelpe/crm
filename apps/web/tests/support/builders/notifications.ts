@@ -90,7 +90,6 @@ export function aDeliveryRow(
     provider_message_id: null,
     error_code: null,
     error_message: null,
-    latency_ms: null,
     created_at: now,
     sent_at: null,
     ...rest,

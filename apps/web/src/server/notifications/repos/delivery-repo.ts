@@ -39,7 +39,6 @@ export interface DeliveryAttempt {
   provider_message_id: string | null;
   error_code: string | null;
   error_message: string | null;
-  latency_ms: number | null;
 }
 
 const DEFAULT_MAX_ATTEMPTS = 5;
@@ -51,7 +50,6 @@ export interface DeliveryRepository {
     id: NotificationDeliveryId,
     attempt: DeliveryAttempt,
   ): Promise<void>;
-  countOutstanding(): Promise<number>;
 }
 
 export function createDeliveryRepository(
@@ -101,7 +99,6 @@ export function createDeliveryRepository(
             provider_message_id: null,
             error_code: null,
             error_message: null,
-            latency_ms: null,
             created_at: now,
             sent_at: null,
           })),
@@ -123,19 +120,9 @@ export function createDeliveryRepository(
           provider_message_id: attempt.provider_message_id,
           error_code: attempt.error_code,
           error_message: attempt.error_message,
-          latency_ms: attempt.latency_ms,
         })
         .where("id", "=", id)
         .execute();
-    },
-
-    async countOutstanding() {
-      const row = await db
-        .selectFrom("notification_deliveries")
-        .select((eb) => eb.fn.count<number>("id").as("count"))
-        .where("queue_state", "in", ["pending", "processing"])
-        .executeTakeFirstOrThrow();
-      return row.count;
     },
   };
 }

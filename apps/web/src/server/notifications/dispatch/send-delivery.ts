@@ -43,7 +43,6 @@ export function createDeliverySender(deps: {
         provider_message_id: receipt.value.providerMessageId ?? null,
         error_code: null,
         error_message: null,
-        latency_ms: null,
       });
       deps.logger.info("external_delivered", {
         id: job.intent_id,
@@ -60,7 +59,6 @@ export function createDeliverySender(deps: {
       provider_message_id: null,
       error_code: receipt.error.code,
       error_message: receipt.error.message,
-      latency_ms: null,
     });
     deps.logger.info("external_failed", {
       id: job.intent_id,

@@ -15,6 +15,20 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
       .orderBy("created_at", "asc")
       .execute();
 
+  // Only verified channels are deliverable (email at onboarding, whatsapp via
+  // /verificar).
+  const listVerifiedChannels = async (
+    userId: UserId,
+  ): Promise<ChannelType[]> => {
+    const rows = await db
+      .selectFrom("user_channel_addresses")
+      .select("channel")
+      .where("user_id", "=", userId)
+      .where("is_verified", "=", true)
+      .execute();
+    return rows.map((row) => row.channel);
+  };
+
   const findByUserAndChannel = (userId: UserId, channel: ChannelType) =>
     db
       .selectFrom("user_channel_addresses")
@@ -140,6 +154,7 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
 
   return {
     listByUser,
+    listVerifiedChannels,
     findByUserAndChannel,
     findByChannelAndAddress,
     upsert,

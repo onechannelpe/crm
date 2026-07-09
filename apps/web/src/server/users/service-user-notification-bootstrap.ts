@@ -21,16 +21,6 @@ export type NotificationBootstrapPorts = {
       { kind: "claimed" } | { kind: "already_claimed"; ownerUserId: UserId }
     >;
   };
-  notificationPreferences: {
-    upsert(values: {
-      user_id: UserId;
-      event_type: "security.privileged_login" | "broadcast.general";
-      channel: "email" | "whatsapp";
-      is_enabled: boolean;
-      created_at: Date;
-      updated_at: Date;
-    }): Promise<unknown>;
-  };
 };
 
 async function registerChannelAddresses(params: {
@@ -69,47 +59,6 @@ async function registerChannelAddresses(params: {
   return Ok(undefined);
 }
 
-function enableDefaultNotificationPreferences(
-  userId: UserId,
-  now: Date,
-  repos: Pick<NotificationBootstrapPorts, "notificationPreferences">,
-) {
-  return Promise.all([
-    repos.notificationPreferences.upsert({
-      user_id: userId,
-      event_type: "security.privileged_login",
-      channel: "email",
-      is_enabled: true,
-      created_at: now,
-      updated_at: now,
-    }),
-    repos.notificationPreferences.upsert({
-      user_id: userId,
-      event_type: "security.privileged_login",
-      channel: "whatsapp",
-      is_enabled: true,
-      created_at: now,
-      updated_at: now,
-    }),
-    repos.notificationPreferences.upsert({
-      user_id: userId,
-      event_type: "broadcast.general",
-      channel: "email",
-      is_enabled: true,
-      created_at: now,
-      updated_at: now,
-    }),
-    repos.notificationPreferences.upsert({
-      user_id: userId,
-      event_type: "broadcast.general",
-      channel: "whatsapp",
-      is_enabled: true,
-      created_at: now,
-      updated_at: now,
-    }),
-  ]);
-}
-
 export async function bootstrapUserNotifications(
   params: {
     userId: UserId;
@@ -131,6 +80,5 @@ export async function bootstrapUserNotifications(
   if (isErr(channelsResult)) {
     return channelsResult;
   }
-  await enableDefaultNotificationPreferences(params.userId, params.now, repos);
   return Ok(undefined);
 }

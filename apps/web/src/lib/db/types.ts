@@ -70,7 +70,7 @@ export interface Database {
   search_policy_defaults: capacity.SearchPolicyDefaultsTable;
   search_policy_overrides: capacity.SearchPolicyOverridesTable;
   user_channel_addresses: notifications.UserChannelAddressesTable;
-  notification_preferences: notifications.NotificationPreferencesTable;
+  notification_opt_outs: notifications.NotificationOptOutsTable;
   notification_deliveries: notifications.NotificationDeliveriesTable;
   app_notifications: notifications.AppNotificationsTable;
   notification_intents: notifications.NotificationIntentsTable;

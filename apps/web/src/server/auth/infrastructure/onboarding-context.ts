@@ -2,7 +2,6 @@ import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createExecutorUow } from "~/server/shared/application/uow";
@@ -23,7 +22,6 @@ export type AuthOnboardingRepos = {
   authEvents: ReturnType<typeof createAuthEventsRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
   userChannelAddresses: ReturnType<typeof createUserChannelAddressRepo>;
-  notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
 export function createAuthOnboardingContext(executor: DatabaseExecutor) {
@@ -38,7 +36,6 @@ export function createAuthOnboardingContext(executor: DatabaseExecutor) {
     authEvents: createAuthEventsRepo(executor),
     userTotpFactors: createUserTotpFactorsRepo(executor),
     userChannelAddresses: createUserChannelAddressRepo(executor),
-    notificationPreferences: createNotificationPreferenceRepo(executor),
   };
 
   return {
@@ -56,7 +53,6 @@ export function createAuthOnboardingContext(executor: DatabaseExecutor) {
         authEvents: createAuthEventsRepo(txDb),
         userTotpFactors: createUserTotpFactorsRepo(txDb),
         userChannelAddresses: createUserChannelAddressRepo(txDb),
-        notificationPreferences: createNotificationPreferenceRepo(txDb),
       }),
     ),
   };

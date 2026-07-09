@@ -12,7 +12,7 @@ function intentJob(overrides: Partial<IntentJob> = {}): IntentJob {
     id: asNotificationIntentId("intent-1"),
     attempt_count: 1,
     max_attempts: 5,
-    event_type: "lead.ready",
+    event_type: "lead.ready_for_sale",
     audience_json: {
       kind: "user_ids",
       userIds: ["1", "2"],
@@ -58,7 +58,7 @@ describe("createIntentExpander", () => {
       expect.objectContaining({
         user_id: asUserId("1"),
         source_event_id: asNotificationIntentId("intent-1"),
-        event_type: "lead.ready",
+        event_type: "lead.ready_for_sale",
         title: "Title",
         action_url: "/records/1",
         created_at: NOW,

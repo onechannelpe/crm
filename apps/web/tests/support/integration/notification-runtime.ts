@@ -1,15 +1,13 @@
-import type { Json } from "~/contracts/json";
 import { createLogger } from "~/lib/observability/logger";
-import { createRecipientPlanner } from "~/server/notifications/expansion/plan-recipients";
 import {
-  parseNotificationAudience,
-  parseNotificationChannels,
-} from "~/server/notifications/intent/payload";
+  createRecipientPlanner,
+  projectIntentForPlanning,
+} from "~/server/notifications/expansion/plan-recipients";
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
-import { createRecipientRepository } from "~/server/notifications/repos/recipient-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { assembleNotificationPipeline } from "~/server/platform/container/notifications-runtime";
+import { isErr } from "~/server/shared/result";
 
 import { createScriptedMessagingGateway } from "../fakes/messaging-gateway";
 import type { TestRuntime } from "../runtime/app";
@@ -35,10 +33,7 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
   const queues = pipeline.createQueues("test-notifications");
   const intents = createIntentRepository(runtime.ctx.db);
   const deliveries = createDeliveryRepository(runtime.ctx.db);
-  const planRecipients = createRecipientPlanner({
-    repository: createRecipientRepository(runtime.ctx.db),
-    logger,
-  });
+  const planRecipients = createRecipientPlanner(runtime.ctx.db, logger);
 
   // One expansion pass followed by one dispatch pass. Expansion runs first so a
   // freshly expanded intent's delivery rows are visible to dispatch in the same
@@ -53,8 +48,8 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
     for (let pass = 0; pass < MAX_DRAIN_PASSES; pass++) {
       await runOnce();
       if (
-        (await intents.countOutstanding()) === 0 &&
-        (await deliveries.countOutstanding()) === 0
+        (await intents.store.countOutstanding()) === 0 &&
+        (await deliveries.store.countOutstanding()) === 0
       ) {
         return;
       }
@@ -69,16 +64,14 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
   }
 
   function planIntentRow(
-    row: { audience_json: Json; channels_json: Json },
+    row: { event_type: string; audience_json: unknown; channels_json: unknown },
     now = runtime.now.get(),
   ) {
-    return planRecipients(
-      {
-        audience: parseNotificationAudience(row.audience_json),
-        channels: parseNotificationChannels(row.channels_json),
-      },
-      now,
-    );
+    const input = projectIntentForPlanning(row);
+    if (isErr(input)) {
+      throw new Error(input.error);
+    }
+    return planRecipients(input.value, now);
   }
 
   return {

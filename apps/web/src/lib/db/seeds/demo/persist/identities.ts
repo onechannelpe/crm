@@ -510,44 +510,17 @@ export async function persistDemoIdentities(
     .onConflict((oc) => oc.doNothing())
     .execute();
 
+  // This user silenced broadcasts on WhatsApp; every other category/channel
+  // stays on with no row.
   await db
-    .insertInto("notification_preferences")
+    .insertInto("notification_opt_outs")
     .values([
-      {
-        id: seedUuid(1),
-        user_id: seedUuid(1),
-        event_type: "security.privileged_login",
-        channel: "email",
-        is_enabled: true,
-        created_at: new Date(nowMs - oneDay * 8),
-        updated_at: new Date(nowMs - oneDay),
-      },
-      {
-        id: seedUuid(2),
-        user_id: seedUuid(1),
-        event_type: "security.privileged_login",
-        channel: "whatsapp",
-        is_enabled: true,
-        created_at: new Date(nowMs - oneDay * 8),
-        updated_at: new Date(nowMs - oneDay),
-      },
-      {
-        id: seedUuid(3),
-        user_id: seedUuid(12),
-        event_type: "broadcast.general",
-        channel: "email",
-        is_enabled: true,
-        created_at: new Date(nowMs - oneDay * 6),
-        updated_at: new Date(nowMs - oneDay),
-      },
       {
         id: seedUuid(4),
         user_id: seedUuid(12),
-        event_type: "broadcast.general",
+        category: "broadcasts",
         channel: "whatsapp",
-        is_enabled: false,
         created_at: new Date(nowMs - oneDay * 6),
-        updated_at: new Date(nowMs - oneDay),
       },
     ])
     .onConflict((oc) => oc.doNothing())

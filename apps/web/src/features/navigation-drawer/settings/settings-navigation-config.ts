@@ -1,3 +1,4 @@
+import Bell from "~/components/icons/bell";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import LogOut from "~/components/icons/log-out";
 import Package from "~/components/icons/package";
@@ -26,6 +27,13 @@ export function createSettingsNavigationSections(
           label: "Perfil",
           href: "/settings/profile",
           icon: UserIcon,
+          section: "account",
+        },
+        {
+          id: "notifications",
+          label: "Notificaciones",
+          href: "/settings/notifications",
+          icon: Bell,
           section: "account",
         },
         {

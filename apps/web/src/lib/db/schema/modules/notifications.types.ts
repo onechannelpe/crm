@@ -28,14 +28,12 @@ export interface WhatsAppSessionsTable {
   expires_at: Date;
 }
 
-export interface NotificationPreferencesTable {
+export interface NotificationOptOutsTable {
   id: Generated<string>;
   user_id: IdColumn<UserId>;
-  event_type: string;
+  category: string;
   channel: "email" | "whatsapp";
-  is_enabled: boolean;
   created_at: Date;
-  updated_at: Date;
 }
 
 // The unit of work for the dispatch stage. Leased, retried, idempotent on
@@ -60,7 +58,6 @@ export interface NotificationDeliveriesTable {
   provider_message_id: string | null;
   error_code: string | null;
   error_message: string | null;
-  latency_ms: number | null;
   created_at: Date;
   sent_at: Date | null;
 }

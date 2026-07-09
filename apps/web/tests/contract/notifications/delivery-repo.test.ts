@@ -96,7 +96,6 @@ describe("delivery repository", () => {
       provider_message_id: "wamid.test",
       error_code: null,
       error_message: null,
-      latency_ms: null,
     });
     await repository.store.markDone(job.id, WORKER_ID, NOW);
 
@@ -133,7 +132,6 @@ describe("delivery repository", () => {
       provider_message_id: null,
       error_code: "rate_limited",
       error_message: "try later",
-      latency_ms: null,
     });
     await repository.store.scheduleRetry(first.id, WORKER_ID, RETRY_AT, null);
 
@@ -168,7 +166,6 @@ describe("delivery repository", () => {
       provider_message_id: null,
       error_code: "bad_request",
       error_message: "rejected",
-      latency_ms: null,
     });
 
     await repository.store.markFailed(job.id, WORKER_ID, NOW, "rejected");
@@ -196,11 +193,11 @@ describe("delivery repository", () => {
       NOW,
     );
 
-    expect(await repository.countOutstanding()).toBe(2);
+    expect(await repository.store.countOutstanding()).toBe(2);
 
     const [job] = await repository.store.claim(WORKER_ID, NOW, 1, 30_000);
     if (!job) throw new Error("expected job");
     await repository.store.markDone(job.id, WORKER_ID, NOW);
-    expect(await repository.countOutstanding()).toBe(1);
+    expect(await repository.store.countOutstanding()).toBe(1);
   });
 });

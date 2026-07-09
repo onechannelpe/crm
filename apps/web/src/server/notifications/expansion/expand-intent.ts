@@ -1,13 +1,13 @@
 import type { Logger } from "~/lib/observability/logger-shared";
+import { isErr } from "~/server/shared/result";
 
-import {
-  parseNotificationAudience,
-  parseNotificationChannels,
-} from "../intent/payload";
 import type { AppNotificationRepo } from "../repos/app-notification";
 import type { DeliveryRepository } from "../repos/delivery-repo";
 import type { IntentJob } from "../repos/intent-repo";
-import type { RecipientPlanner } from "./plan-recipients";
+import {
+  projectIntentForPlanning,
+  type RecipientPlanner,
+} from "./plan-recipients";
 
 // Transient failures (e.g. DB error) throw and are retried by the queue;
 // classification is the queue's job. This function only resolves
@@ -26,18 +26,12 @@ export function createIntentExpander(deps: {
     job: IntentJob,
     now: Date,
   ): Promise<ExpansionOutcome> {
-    // Parse failures are terminal: retrying a malformed payload only repeats the
-    // same rejection. Resolve them here before any write.
-    let audience;
-    let channels;
-    try {
-      audience = parseNotificationAudience(job.audience_json);
-      channels = parseNotificationChannels(job.channels_json);
-    } catch (error) {
-      return { kind: "invalid", reason: String(error) };
+    const planningInput = projectIntentForPlanning(job);
+    if (isErr(planningInput)) {
+      return { kind: "invalid", reason: planningInput.error };
     }
 
-    const plan = await deps.planRecipients({ audience, channels }, now);
+    const plan = await deps.planRecipients(planningInput.value, now);
 
     // In-app delivery is a local idempotent insert with no provider or rate
     // limit: not queued as a dispatch job.

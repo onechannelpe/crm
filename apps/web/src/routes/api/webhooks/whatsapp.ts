@@ -3,6 +3,7 @@ import type { APIEvent } from "@solidjs/start/server";
 import { notificationsConfig } from "~/lib/env";
 import { createLogger } from "~/lib/observability/logger";
 import { toE164Peru } from "~/lib/phone/pe-mobile";
+import { categoriesControllableOn } from "~/server/notifications/categories";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import {
   handleWhatsAppInboundMessage,
@@ -17,6 +18,10 @@ const INBOUND_MESSAGE_EVENT = "whatsapp.message.received";
 const VERIFY_REPLY_BODY = [
   "Listo, este número queda verificado para recibir notificaciones de la plataforma.",
   "Te avisaremos por WhatsApp cuando un cliente acepte una tarifa o quede listo para afiliación.",
+].join("\n");
+const OPT_OUT_REPLY_BODY = [
+  "Listo, no recibirás más notificaciones por WhatsApp.",
+  "Puedes volver a activarlas cuando quieras desde Configuración > Notificaciones.",
 ].join("\n");
 
 export function GET(event: APIEvent): Response {
@@ -43,8 +48,21 @@ export function GET(event: APIEvent): Response {
 function createInboundPorts(): WhatsAppInboundPorts {
   const runtime = getServerRuntime();
   const db = runtime.infra.db;
-  const { messaging } = runtime.notifications;
+  const { messaging, preferences } = runtime.notifications;
   const addresses = createUserChannelAddressRepo(db);
+
+  const sendReply = async (address: string, body: string, event: string) => {
+    const result = await messaging.sendWhatsAppText({
+      to: toE164Peru(address),
+      body,
+    });
+    if (!result.ok) {
+      logger.warn(event, {
+        code: result.error.code,
+        message: result.error.message,
+      });
+    }
+  };
 
   return {
     addresses: {
@@ -68,19 +86,21 @@ function createInboundPorts(): WhatsAppInboundPorts {
         await openSession(db, userId, now);
       },
     },
-    replies: {
-      async sendVerificationReply(address) {
-        const result = await messaging.sendWhatsAppText({
-          to: toE164Peru(address),
-          body: VERIFY_REPLY_BODY,
+    preferences: {
+      async muteWhatsApp(userId, now) {
+        await preferences.muteChannel({
+          userId,
+          channel: "whatsapp",
+          categories: categoriesControllableOn("whatsapp"),
+          now,
         });
-        if (!result.ok) {
-          logger.warn("verify_reply_failed", {
-            code: result.error.code,
-            message: result.error.message,
-          });
-        }
       },
+    },
+    replies: {
+      sendVerificationReply: (address) =>
+        sendReply(address, VERIFY_REPLY_BODY, "verify_reply_failed"),
+      sendOptOutReply: (address) =>
+        sendReply(address, OPT_OUT_REPLY_BODY, "opt_out_reply_failed"),
     },
     logger,
   };

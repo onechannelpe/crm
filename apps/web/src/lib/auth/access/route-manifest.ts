@@ -24,6 +24,7 @@ export type AppPath =
   | "/audit/log"
   | "/schedule"
   | "/settings/profile"
+  | "/settings/notifications"
   | "/me/capacity";
 
 export interface RouteConfig {
@@ -60,6 +61,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/audit/log": { permission: "audit:read" },
   "/schedule": {},
   "/settings/profile": {},
+  "/settings/notifications": {},
   "/me/capacity": { permission: "capacity:read:self" },
 };
 

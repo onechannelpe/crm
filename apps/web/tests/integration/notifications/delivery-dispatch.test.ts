@@ -60,7 +60,7 @@ describe("notification delivery dispatch", () => {
   function intent(overrides: Partial<NotificationIntent>): NotificationIntent {
     return {
       id: "intent-1",
-      eventType: "lead.ready",
+      eventType: "lead.ready_for_sale",
       audience: {
         kind: "user_ids",
         userIds: [runtime.ctx.fixtures.users.execOne.id],

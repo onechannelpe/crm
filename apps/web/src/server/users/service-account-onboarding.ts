@@ -2,7 +2,6 @@ import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import type { Phone } from "~/lib/phone/pe-mobile";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import type { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import type { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
@@ -17,7 +16,6 @@ type OnboardingRepos = {
   passkeys: ReturnType<typeof createPasskeysRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
   userChannelAddresses: ReturnType<typeof createUserChannelAddressRepo>;
-  notificationPreferences: ReturnType<typeof createNotificationPreferenceRepo>;
 };
 
 export interface CompleteOnboardingInput {

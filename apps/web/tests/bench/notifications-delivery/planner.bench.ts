@@ -2,12 +2,11 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import type { Json } from "~/contracts/json";
 import { createLogger } from "~/lib/observability/logger";
-import { createRecipientPlanner } from "~/server/notifications/expansion/plan-recipients";
 import {
-  parseNotificationAudience,
-  parseNotificationChannels,
-} from "~/server/notifications/intent/payload";
-import { createRecipientRepository } from "~/server/notifications/repos/recipient-repo";
+  createRecipientPlanner,
+  projectIntentForPlanning,
+} from "~/server/notifications/expansion/plan-recipients";
+import { isErr } from "~/server/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -16,6 +15,7 @@ import { takeFromPool } from "../_shared/pool";
 import { PLANNER_SCENARIOS, seedPlannerFixtures } from "./fixtures";
 
 type PlannerEntry = {
+  event_type: string;
   audience_json: Json;
   channels_json: Json;
 };
@@ -40,16 +40,16 @@ describe("notifications delivery planner benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    planRecipients = createRecipientPlanner({
-      repository: createRecipientRepository(ctx.db),
-      logger: createLogger("bench-notification-planner"),
-    });
+    planRecipients = createRecipientPlanner(
+      ctx.db,
+      createLogger("bench-notification-planner"),
+    );
     const intentIdsByScenario = await seedPlannerFixtures(ctx);
 
     for (const scenario of PLANNER_SCENARIOS) {
       const entries = await ctx.db
         .selectFrom("notification_intents")
-        .select(["audience_json", "channels_json"])
+        .select(["event_type", "audience_json", "channels_json"])
         .where("id", "in", intentIdsByScenario[scenario.name])
         .execute();
 
@@ -78,13 +78,11 @@ describe("notifications delivery planner benchmark", () => {
         if (!planRecipients) {
           throw new Error("planner benchmark used before setup");
         }
-        await planRecipients(
-          {
-            audience: parseNotificationAudience(entry.audience_json),
-            channels: parseNotificationChannels(entry.channels_json),
-          },
-          BENCH_NOW,
-        );
+        const input = projectIntentForPlanning(entry);
+        if (isErr(input)) {
+          throw new Error(input.error);
+        }
+        await planRecipients(input.value, BENCH_NOW);
       },
       {
         ...fixedIterations(scenario.intentCount),
