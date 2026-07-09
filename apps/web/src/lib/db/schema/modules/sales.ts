@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -33,7 +33,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_lead_venue_accounts")
-    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("id", "text", (col) =>
+      col.primaryKey().defaultTo(sql`uuidv7()::text`),
+    )
     .addColumn("venue_id", "text", (col) =>
       col.notNull().references("workflow_lead_venues.id").onDelete("cascade"),
     )

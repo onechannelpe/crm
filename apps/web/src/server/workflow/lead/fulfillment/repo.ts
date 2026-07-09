@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable } from "kysely";
 
 import type {
@@ -8,14 +7,13 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import {
-  newFulfillmentOrderId,
-  type FileAssetId,
-  type FulfillmentOrderId,
-  type UserId,
-  type WorkflowArtifactId,
-  type WorkflowLeadId,
-  type WorkflowVenueId,
+import type {
+  FileAssetId,
+  FulfillmentOrderId,
+  UserId,
+  WorkflowArtifactId,
+  WorkflowLeadId,
+  WorkflowVenueId,
 } from "~/server/shared/ids";
 
 import type { UnitField } from "./steps";
@@ -100,11 +98,9 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
       currentStep: FulfillmentStep;
       now: Date;
     }): Promise<FulfillmentOrderId> {
-      const id = newFulfillmentOrderId();
-      await db
+      const row = await db
         .insertInto("lead_fulfillment_orders")
         .values({
-          id,
           lead_id: input.leadId,
           product_kind: null,
           current_step: input.currentStep,
@@ -113,8 +109,9 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
           created_at: input.now,
           updated_at: input.now,
         })
+        .returning("id")
         .executeTakeFirstOrThrow();
-      return id;
+      return row.id;
     },
 
     async createUnits(
@@ -128,7 +125,6 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
       if (units.length === 0) return;
       const rows: Insertable<Database["lead_fulfillment_units"]>[] = units.map(
         (unit) => ({
-          id: randomUUIDv7(),
           order_id: unit.orderId,
           venue_id: unit.venueId,
           label: unit.label,

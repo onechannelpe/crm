@@ -128,8 +128,7 @@ describe("workflow lead mutation metadata", () => {
     });
     const importer = createWorkflowImporter({
       runtime,
-      nextJobKey: (key) => key ?? "metadata-import",
-    }).importer;
+    });
     const result = await importer.run({
       actor: "backOne",
       rows: [{ type: "status", lead, status: "DISPONIBLE" }],

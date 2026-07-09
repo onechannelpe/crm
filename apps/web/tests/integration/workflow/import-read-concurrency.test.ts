@@ -30,8 +30,7 @@ describe("integration import workflow concurrency", () => {
     const givenLead = createLeadFixtureWriter(runtime);
     const importer = createWorkflowImporter({
       runtime,
-      nextJobKey: (key) => key ?? "concurrency",
-    }).importer;
+    });
     const leadOne = await givenLead({
       kind: "qualifying",
       key: "import-concurrency-one",

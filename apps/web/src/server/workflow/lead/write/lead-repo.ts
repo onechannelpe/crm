@@ -13,7 +13,6 @@ import type {
   UserId,
   WorkflowLeadId,
 } from "~/server/shared/ids";
-import { newWorkflowLeadId } from "~/server/shared/ids";
 import type {
   LeadCommercialScope,
   LeadDraft,
@@ -144,13 +143,13 @@ export function createLeadRepo(db: DatabaseExecutor) {
 
   return {
     async insert(values: LeadDraft): Promise<WorkflowLeadId> {
-      const id = newWorkflowLeadId();
-      await db
+      const row = await db
         .insertInto("workflow_leads")
-        .values({ ...toNewLeadRow(values), id })
+        .values(toNewLeadRow(values))
+        .returning("id")
         .executeTakeFirstOrThrow();
 
-      return id;
+      return row.id;
     },
 
     async findById(id: WorkflowLeadId) {

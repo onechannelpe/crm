@@ -13,7 +13,7 @@ import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-c
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createSessionService } from "~/server/auth/session/session.service";
-import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
+import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createEventsRepo } from "~/server/shared/repos-events";
@@ -40,7 +40,7 @@ export function createAuthRuntime(
     now: infra.now,
   });
   const onboarding = createAuthOnboardingContext(infra.db);
-  const inviteService = createInviteServiceContext(infra.db).inviteService;
+  const inviteService = createInviteServiceForExecutor(infra.db);
 
   return {
     authThrottleService,

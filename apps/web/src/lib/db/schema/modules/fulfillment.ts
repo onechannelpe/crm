@@ -3,7 +3,7 @@ import { sql, type Kysely } from "kysely";
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("lead_fulfillment_orders")
-    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("lead_id", "text", (col) =>
       col
         .notNull()
@@ -30,8 +30,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_fulfillment_units")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("order_id", "text", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("order_id", "uuid", (col) =>
       col
         .notNull()
         .references("lead_fulfillment_orders.id")
@@ -43,7 +43,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("label", "text", (col) => col.notNull())
     .addColumn("serial_number", "text")
     .addColumn("payment_url", "text")
-    .addColumn("payment_proof_artifact_id", "text")
+    .addColumn("payment_proof_artifact_id", "uuid")
     .addColumn("payment_validated", "boolean", (col) =>
       col.notNull().defaultTo(false),
     )
@@ -60,14 +60,14 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("lead_fulfillment_documents")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
-    .addColumn("order_id", "text", (col) =>
+    .addColumn("order_id", "uuid", (col) =>
       col
         .notNull()
         .references("lead_fulfillment_orders.id")
         .onDelete("cascade"),
     )
     .addColumn("doc_kind", "text", (col) => col.notNull())
-    .addColumn("artifact_id", "text", (col) =>
+    .addColumn("artifact_id", "uuid", (col) =>
       col.notNull().references("workflow_artifacts.id"),
     )
     .addColumn("file_asset_id", "uuid", (col) =>

@@ -1,10 +1,10 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_integration_import_rows")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("integration_job_id", "text", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("integration_job_id", "uuid", (col) =>
       col
         .notNull()
         .references("workflow_integration_jobs.id")

@@ -2,7 +2,7 @@ import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import type { InviteService } from "~/server/invites/application/types";
-import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
+import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import { asBranchId, asUserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -20,7 +20,7 @@ describe("team invite create benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const { inviteService } = createInviteServiceContext(ctx.db);
+    const inviteService = createInviteServiceForExecutor(ctx.db);
     inviteCreate = (input) => inviteService.createInvite(input);
 
     const fixtures = await seedTeamInviteFixtures(ctx);

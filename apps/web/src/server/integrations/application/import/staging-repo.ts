@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { Transaction } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -22,7 +21,6 @@ export async function stageImportRows(
       .insertInto("workflow_integration_import_rows")
       .values(
         validRows.map((row) => ({
-          id: randomUUIDv7(),
           integration_job_id: jobId,
           row_number: row.row,
           type: row.type,
@@ -45,7 +43,6 @@ export async function stageImportRows(
       .insertInto("workflow_integration_import_rows")
       .values(
         invalidRows.map((row) => ({
-          id: randomUUIDv7(),
           integration_job_id: jobId,
           row_number: row.row,
           type: row.type,

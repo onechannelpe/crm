@@ -16,7 +16,7 @@ import type {
 } from "~/server/shared/ids";
 
 export interface WorkflowArtifactsTable {
-  id: IdColumn<WorkflowArtifactId>;
+  id: GeneratedId<WorkflowArtifactId>;
   artifact_type:
     | "records_export"
     | "integration_import"

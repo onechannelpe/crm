@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { ColumnType } from "kysely";
 
 declare const idBrand: unique symbol;
@@ -178,15 +177,4 @@ export function asAuthLoginFlowId(value: string): AuthLoginFlowId {
 
 export function asWebauthnChallengeId(value: string): WebauthnChallengeId {
   return assertNonEmptyStringId(value, "WebauthnChallengeId");
-}
-
-// Generators for repo-generated ids. Routing UUIDv7 through the validating
-// constructor means a freshly minted id passes the same non-empty check as
-// a parsed one, so there is a single mint path per kind.
-export function newWorkflowLeadId(): WorkflowLeadId {
-  return asWorkflowLeadId(randomUUIDv7());
-}
-
-export function newFulfillmentOrderId(): FulfillmentOrderId {
-  return asFulfillmentOrderId(randomUUIDv7());
 }

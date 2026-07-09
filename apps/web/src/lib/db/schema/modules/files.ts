@@ -3,7 +3,7 @@ import { sql, type Kysely } from "kysely";
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_artifacts")
-    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("artifact_type", "text", (col) => col.notNull())
     .addColumn("direction", "text", (col) => col.notNull())
     .addColumn("execution_mode", "text", (col) => col.notNull())
@@ -58,7 +58,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("artifact_file_bindings")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
-    .addColumn("artifact_id", "text", (col) =>
+    .addColumn("artifact_id", "uuid", (col) =>
       col.notNull().references("workflow_artifacts.id").onDelete("cascade"),
     )
     .addColumn("file_asset_id", "uuid", (col) =>
@@ -81,7 +81,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
-    .addColumn("artifact_id", "text", (col) =>
+    .addColumn("artifact_id", "uuid", (col) =>
       col
         .notNull()
         .unique()
@@ -106,7 +106,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("artifact_events")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
-    .addColumn("artifact_id", "text", (col) =>
+    .addColumn("artifact_id", "uuid", (col) =>
       col.notNull().references("workflow_artifacts.id").onDelete("cascade"),
     )
     .addColumn("event_type", "text", (col) => col.notNull())
@@ -129,7 +129,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("artifact_download_tokens")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
-    .addColumn("artifact_id", "text", (col) =>
+    .addColumn("artifact_id", "uuid", (col) =>
       col.notNull().references("workflow_artifacts.id").onDelete("cascade"),
     )
     .addColumn("file_asset_id", "uuid", (col) =>

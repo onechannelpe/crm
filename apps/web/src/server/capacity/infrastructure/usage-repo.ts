@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -22,7 +21,7 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
     }): Promise<void> {
       return db
         .insertInto("search_capacity_grants")
-        .values({ id: randomUUIDv7(), ...values, created_at: new Date() })
+        .values({ ...values, created_at: new Date() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
@@ -46,12 +45,10 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
 export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
   return {
     insert(values: { user_id: UserId; amount: number; reason: string }) {
-      const id = randomUUIDv7();
       const now = new Date();
       return db
         .insertInto("search_usage_reservations")
         .values({
-          id,
           ...values,
           status: "pending",
           created_at: now,
@@ -122,7 +119,7 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
     }): Promise<void> {
       return db
         .insertInto("search_usage_commits")
-        .values({ id: randomUUIDv7(), ...values, created_at: new Date() })
+        .values({ ...values, created_at: new Date() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
@@ -162,7 +159,7 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
     }): Promise<void> {
       return db
         .insertInto("lead_capacity_grants")
-        .values({ id: randomUUIDv7(), ...values, created_at: new Date() })
+        .values({ ...values, created_at: new Date() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
@@ -182,12 +179,10 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
 export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
   return {
     insert(values: { user_id: UserId; amount: number; reason: string }) {
-      const id = randomUUIDv7();
       const now = new Date();
       return db
         .insertInto("lead_usage_reservations")
         .values({
-          id,
           ...values,
           status: "pending",
           created_at: now,
@@ -250,7 +245,7 @@ export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
     }): Promise<void> {
       return db
         .insertInto("lead_usage_commits")
-        .values({ id: randomUUIDv7(), ...values, created_at: new Date() })
+        .values({ ...values, created_at: new Date() })
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },

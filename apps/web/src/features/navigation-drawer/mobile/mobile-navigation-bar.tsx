@@ -29,7 +29,7 @@ export function MobileNavigationBar() {
     memorizeNavigationState,
   } = useNavigationDrawerState();
   const isSettingsPage = useIsSettingsPage();
-  const { openSettingsMenu } = useOpenSettingsMenu();
+  const openSettingsMenu = useOpenSettingsMenu();
 
   const activeItemName = createMemo(() => {
     if (isSettingsPage()) return "settings";

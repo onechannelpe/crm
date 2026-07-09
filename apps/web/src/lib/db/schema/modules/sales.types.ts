@@ -6,7 +6,6 @@ import type {
   CollectionMode,
 } from "~/contracts/workflow/vocabulary";
 import type {
-  GeneratedId,
   IdColumn,
   UserId,
   WorkflowLeadId,
@@ -14,7 +13,7 @@ import type {
 } from "~/server/shared/ids";
 
 export interface WorkflowLeadVenuesTable {
-  id: GeneratedId<WorkflowVenueId>;
+  id: IdColumn<WorkflowVenueId>;
   lead_id: IdColumn<WorkflowLeadId>;
   trade_name: string;
   pos_quantity: number;

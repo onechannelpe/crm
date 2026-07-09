@@ -79,7 +79,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // Search capacity ledger
   await db.schema
     .createTable("search_capacity_grants")
-    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("amount", "integer", (col) => col.notNull())
     .addColumn("reason", "text", (col) => col.notNull())
@@ -97,7 +97,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("search_usage_reservations")
-    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("amount", "integer", (col) => col.notNull())
     .addColumn("status", "text", (col) => col.notNull())
@@ -114,7 +114,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("search_usage_commits")
-    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("reservation_id", "uuid", (col) =>
       col.notNull().references("search_usage_reservations.id"),
     )
@@ -125,7 +125,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // Lead capacity ledger
   await db.schema
     .createTable("lead_capacity_grants")
-    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("amount", "integer", (col) => col.notNull())
     .addColumn("reason", "text", (col) => col.notNull())
@@ -143,7 +143,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_usage_reservations")
-    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("amount", "integer", (col) => col.notNull())
     .addColumn("status", "text", (col) => col.notNull())
@@ -160,7 +160,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("lead_usage_commits")
-    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("reservation_id", "uuid", (col) =>
       col.notNull().references("lead_usage_reservations.id"),
     )

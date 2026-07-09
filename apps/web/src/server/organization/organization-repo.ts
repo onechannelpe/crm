@@ -1,9 +1,6 @@
-import { randomUUIDv7 } from "bun";
-
 import { personDisplayName } from "~/lib/users/display-name";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import {
-  asOrganizationId,
   asOrganizationPersonId,
   type OrganizationId,
   type OrganizationPersonId,
@@ -248,11 +245,9 @@ export function createOrganizationRepo(
     },
 
     async upsertOrganization(input) {
-      const id = asOrganizationId(randomUUIDv7());
       await db
         .insertInto("organizations")
         .values({
-          id,
           ruc: input.ruc,
           legal_name: input.legalName ?? null,
           line_of_business: input.lineOfBusiness ?? null,

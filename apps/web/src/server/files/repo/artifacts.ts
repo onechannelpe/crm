@@ -1,12 +1,10 @@
-import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import {
-  asWorkflowArtifactId,
-  type BranchId,
-  type FileAssetId,
-  type WorkflowArtifactId,
+import type {
+  BranchId,
+  FileAssetId,
+  WorkflowArtifactId,
 } from "~/server/shared/ids";
 
 import type { ArtifactStatus, ArtifactType, BindingRole } from "../types";
@@ -18,11 +16,9 @@ type DB = Kysely<Database>;
 export function createArtifactsRepo(db: DB) {
   return {
     async insert(input: InsertArtifactInput) {
-      const id = asWorkflowArtifactId(randomUUIDv7());
-      await db
+      const row = await db
         .insertInto("workflow_artifacts")
         .values({
-          id,
           artifact_type: input.artifactType,
           direction: input.direction,
           execution_mode: input.executionMode,
@@ -38,8 +34,9 @@ export function createArtifactsRepo(db: DB) {
           created_at: input.now,
           updated_at: input.now,
         })
+        .returning("id")
         .executeTakeFirstOrThrow();
-      return id;
+      return row.id;
     },
 
     async updateStatus(

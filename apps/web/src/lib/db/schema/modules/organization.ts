@@ -28,7 +28,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("organizations")
-    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("ruc", "text", (col) => col.notNull().unique())
     .addColumn("legal_name", "text")
     .addColumn("line_of_business", "text")

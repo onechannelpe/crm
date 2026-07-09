@@ -3,23 +3,13 @@ import type {
   InviteService,
   TeamInviteReadRepos,
 } from "~/server/invites/application/types";
-import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
+import {
+  bindInviteRepos,
+  createInviteServiceForExecutor,
+} from "~/server/invites/infrastructure/invite-service-factory";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { UserId } from "~/server/shared/ids";
-import { createEventsRepo } from "~/server/shared/repos-events";
-import { createTeamsRepo } from "~/server/users/repos-teams";
-import { createUserInvitesRepo } from "~/server/users/repos-user-invites";
-import { createUsersRepo } from "~/server/users/repos-users";
-
-function createTeamInviteRepos(executor: DatabaseExecutor) {
-  return {
-    teams: createTeamsRepo(executor),
-    userInvites: createUserInvitesRepo(executor),
-    users: createUsersRepo(executor),
-    events: createEventsRepo(executor),
-  };
-}
 
 interface TeamInviteContext {
   repos: TeamInviteReadRepos;
@@ -30,8 +20,8 @@ interface TeamInviteContext {
 export function createTeamInviteContext(
   executor: DatabaseExecutor,
 ): TeamInviteContext {
-  const repos = createTeamInviteRepos(executor);
-  const { inviteService } = createInviteServiceContext(executor);
+  const repos = bindInviteRepos(executor);
+  const inviteService = createInviteServiceForExecutor(executor);
 
   return {
     repos: {

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
-import { bindInviteRepos } from "~/server/invites/infrastructure/invite-service-context";
+import { bindInviteRepos } from "~/server/invites/infrastructure/invite-service-factory";
 import { createExecutorUow } from "~/server/shared/application/uow";
 
 import { createBenchDbFixture } from "../_shared/fixture";

@@ -8,6 +8,7 @@ import type {
 import type {
   FileAssetId,
   FulfillmentOrderId,
+  GeneratedId,
   IdColumn,
   NullableIdColumn,
   UserId,
@@ -20,7 +21,7 @@ import type {
 // (last venue funded). product_kind is null until back office picks it on the
 // CHOOSE_PRODUCT step; current_step then follows the per-kind sequence.
 export interface LeadFulfillmentOrdersTable {
-  id: IdColumn<FulfillmentOrderId>;
+  id: GeneratedId<FulfillmentOrderId>;
   lead_id: IdColumn<WorkflowLeadId>;
   product_kind: ProductKind | null;
   current_step: FulfillmentStep;
@@ -36,7 +37,7 @@ export interface LeadFulfillmentOrdersTable {
 // filled across the late steps; a step is complete only when every unit on the
 // order carries the value that step requires.
 export interface LeadFulfillmentUnitsTable {
-  id: string;
+  id: Generated<string>;
   order_id: IdColumn<FulfillmentOrderId>;
   venue_id: NullableIdColumn<WorkflowVenueId>;
   label: string;

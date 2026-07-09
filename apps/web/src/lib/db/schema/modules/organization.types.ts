@@ -20,7 +20,7 @@ export interface PeopleTable {
 }
 
 export interface OrganizationsTable {
-  id: IdColumn<OrganizationId>;
+  id: GeneratedId<OrganizationId>;
   ruc: string;
   legal_name: string | null;
   line_of_business: string | null;

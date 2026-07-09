@@ -23,15 +23,10 @@ export function bindInviteRepos(db: DatabaseExecutor): InviteRepos {
   };
 }
 
-export function createInviteServiceContext(executor: DatabaseExecutor) {
+export function createInviteServiceForExecutor(executor: DatabaseExecutor) {
   const repos = bindInviteRepos(executor);
 
-  const inviteService = createInviteService(repos, {
+  return createInviteService(repos, {
     uow: createExecutorUow(executor, bindInviteRepos),
   });
-
-  return {
-    repos,
-    inviteService,
-  };
 }

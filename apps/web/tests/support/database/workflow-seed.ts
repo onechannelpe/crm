@@ -247,13 +247,11 @@ export async function seedRateProposal(
 
 export async function seedImportJob(
   runtime: TestRuntime,
-  input: { id: IntegrationJobId },
-) {
+): Promise<{ id: IntegrationJobId }> {
   const now = runtime.now.get();
-  await runtime.ctx.db
+  const row = await runtime.ctx.db
     .insertInto("workflow_integration_jobs")
     .values({
-      id: input.id,
       type: "import_status",
       status: "PROCESSING",
       queue_state: "processing",
@@ -272,5 +270,7 @@ export async function seedImportJob(
       created_at: now,
       completed_at: null,
     })
-    .execute();
+    .returning("id")
+    .executeTakeFirstOrThrow();
+  return { id: row.id };
 }

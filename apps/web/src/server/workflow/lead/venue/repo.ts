@@ -183,7 +183,6 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
     ): Promise<void> {
       const accountRows: NewLeadVenueAccountRow[] = [
         {
-          id: randomUUIDv7(),
           venue_id: venueId,
           currency: "PEN",
           bank: accounts.solesAccount.banco,
@@ -196,7 +195,6 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
 
       if (accounts.dollarAccount) {
         accountRows.push({
-          id: randomUUIDv7(),
           venue_id: venueId,
           currency: "USD",
           bank: accounts.dollarAccount.banco,

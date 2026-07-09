@@ -122,7 +122,6 @@ describe("workflow notification pipeline", () => {
     await runtime.ctx.db
       .insertInto("lead_fulfillment_units")
       .values({
-        id: "unit-payment-ready",
         order_id: orderId,
         venue_id: lead.venueIds[0],
         label: "POS #1",

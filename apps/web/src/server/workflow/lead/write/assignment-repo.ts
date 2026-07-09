@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -40,20 +39,19 @@ function toLeadAssignment(row: AssignmentRow): LeadAssignment {
 export function createAssignmentRepo(db: DatabaseExecutor) {
   return {
     async insert(values: LeadAssignmentDraft): Promise<string> {
-      const id = randomUUIDv7();
-      await db
+      const row = await db
         .insertInto("workflow_lead_assignments")
         .values({
-          id,
           lead_id: values.leadId,
           executive_id: values.executiveId,
           assigned_by: values.assignedBy,
           is_active: values.isActive,
           assigned_at: values.assignedAt,
         } satisfies NewAssignmentRow)
+        .returning("id")
         .executeTakeFirstOrThrow();
 
-      return id;
+      return row.id;
     },
 
     deactivateActiveForLead(leadId: WorkflowLeadId) {

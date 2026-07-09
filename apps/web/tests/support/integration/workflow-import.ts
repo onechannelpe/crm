@@ -1,10 +1,9 @@
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
-import {
-  asIntegrationJobId,
-  type IntegrationJobId,
-  type UserId,
-  type WorkflowLeadId,
+import type {
+  IntegrationJobId,
+  UserId,
+  WorkflowLeadId,
 } from "~/server/shared/ids";
 
 import type { TestActorKey } from "../database/workflow-fixtures";
@@ -20,25 +19,10 @@ type ImportLeadRef = {
 export function createWorkflowImporter(input: {
   runtime: TestRuntime;
   resolveActorUserId?: (actor: TestActorKey) => UserId;
-  nextJobKey(key?: string): string;
 }) {
   const { runtime } = input;
 
-  const job = {
-    async importRun(key: string): Promise<{ id: IntegrationJobId }> {
-      const id = asIntegrationJobId(`job-${key}`);
-      await seedImportJob(runtime, { id });
-      return { id };
-    },
-  };
-
-  const jobFactory = {
-    async importRun(key?: string): Promise<{ id: IntegrationJobId }> {
-      return job.importRun(input.nextJobKey(key));
-    },
-  };
-
-  const importer = {
+  return {
     async run(payload: {
       actor: TestActorKey;
       rows: Array<
@@ -53,9 +37,8 @@ export function createWorkflowImporter(input: {
             priority: "P1" | "P2" | "SIN RESULTADO";
           }
       >;
-      jobKey?: string;
     }) {
-      const seededJob = await jobFactory.importRun(payload.jobKey);
+      const seededJob = await seedImportJob(runtime);
       const actorUserId = input.resolveActorUserId
         ? input.resolveActorUserId(payload.actor)
         : actorBy(payload.actor).userId;
@@ -109,10 +92,5 @@ export function createWorkflowImporter(input: {
         },
       );
     },
-  };
-
-  return {
-    job: jobFactory,
-    importer,
   };
 }

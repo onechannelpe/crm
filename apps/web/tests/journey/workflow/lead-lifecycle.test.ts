@@ -58,8 +58,7 @@ describe("lead lifecycle journey", () => {
     };
     const importer = createWorkflowImporter({
       runtime,
-      nextJobKey: () => "lifecycle-review",
-    }).importer;
+    });
 
     await importer.run({
       actor: "backOne",

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
 import type { InviteService } from "~/server/invites/application/types";
-import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
+import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { fixedIterations } from "../_shared/options";
@@ -20,7 +20,7 @@ describe("team invite accept benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const { inviteService } = createInviteServiceContext(ctx.db);
+    const inviteService = createInviteServiceForExecutor(ctx.db);
     inviteAccept = (input) => inviteService.acceptInvite(input);
 
     const fixtures = await seedTeamInviteFixtures(ctx);

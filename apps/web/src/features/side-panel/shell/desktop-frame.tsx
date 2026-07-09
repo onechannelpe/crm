@@ -23,7 +23,7 @@ export function DesktopSidePanelFrame(props: DesktopSidePanelFrameProps) {
   const { isOpen, panelWidth, setPanelWidth, closePanel } = useSidePanel();
   const [isResizing, setIsResizing] = createSignal(false);
 
-  const { onPointerDown } = useResizablePanel({
+  const onPointerDown = useResizablePanel({
     side: "left",
     constraints: SIDE_PANEL_WIDTH_CONSTRAINTS,
     getCurrentWidth: panelWidth,

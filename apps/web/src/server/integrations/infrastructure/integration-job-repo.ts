@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from "bun";
-
 import { notify } from "~/lib/db/notify";
 import { createJobStore } from "~/lib/job-queue/job-store";
 import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
@@ -9,7 +7,7 @@ import type {
   NewIntegrationJob,
 } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { asIntegrationJobId, type IntegrationJobId } from "~/server/shared/ids";
+import type { IntegrationJobId } from "~/server/shared/ids";
 
 const JOB_COLUMNS = [
   "id",
@@ -47,21 +45,20 @@ export function createIntegrationJobRepo(
   return {
     store,
     async insert(values: NewIntegrationJob): Promise<IntegrationJobRow["id"]> {
-      const id = asIntegrationJobId(randomUUIDv7());
-      await db
+      const row = await db
         .insertInto("workflow_integration_jobs")
         .values({
           ...values,
-          id,
           queue_state: "pending",
           available_at: values.created_at,
         })
+        .returning("id")
         .executeTakeFirstOrThrow();
 
       // Wake the records-import queue on the same executor the job was written
       // on, so a wrapping transaction buffers the NOTIFY until commit.
       notify(db, JOB_TABLE_CHANNELS.workflow_integration_jobs);
-      return id;
+      return row.id;
     },
 
     findById(id: IntegrationJobId) {

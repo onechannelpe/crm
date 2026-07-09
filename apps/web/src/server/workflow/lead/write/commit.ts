@@ -1,5 +1,3 @@
-import { randomUUIDv7 } from "bun";
-
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
@@ -35,7 +33,6 @@ async function replaceActiveAssignment(
   await tx
     .insertInto("workflow_lead_assignments")
     .values({
-      id: randomUUIDv7(),
       lead_id: input.leadId,
       executive_id: input.toExecutiveId,
       assigned_by: input.assignedBy,

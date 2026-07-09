@@ -7,7 +7,6 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import {
-  asFulfillmentOrderId,
   asUserId,
   asWorkflowLeadId,
   asWorkflowRateProposalId,
@@ -194,11 +193,9 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
 
     let fulfillmentOrderId: FulfillmentOrderId | null = null;
     if (input.kind === "fulfillment" || input.kind === "live") {
-      fulfillmentOrderId = asFulfillmentOrderId(`fulfillment-${key}`);
-      await runtime.ctx.db
+      const order = await runtime.ctx.db
         .insertInto("lead_fulfillment_orders")
         .values({
-          id: fulfillmentOrderId,
           lead_id: seeded.leadId,
           product_kind: null,
           current_step:
@@ -210,7 +207,9 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
           created_at: runtime.now.get(),
           updated_at: runtime.now.get(),
         })
-        .execute();
+        .returning("id")
+        .executeTakeFirstOrThrow();
+      fulfillmentOrderId = order.id;
     }
 
     return {

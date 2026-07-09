@@ -80,7 +80,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
         .references("workflow_rate_revisions.id")
         .onDelete("cascade"),
     )
-    .addColumn("artifact_id", "text", (col) =>
+    .addColumn("artifact_id", "uuid", (col) =>
       col
         .notNull()
         .unique()

@@ -12,6 +12,7 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
+import { randomUUIDv7 } from "bun";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -147,7 +148,7 @@ describe("request rate revision command", () => {
       key: "revision-no-proposal",
       organization: { key: "revision-no-proposal" },
     });
-    const artifactId = asWorkflowArtifactId("artifact-no-proposal");
+    const artifactId = asWorkflowArtifactId(randomUUIDv7());
     await seedRateRevisionArtifact(runtime, {
       artifactId,
       leadId: lead.id,
@@ -180,7 +181,7 @@ describe("request rate revision command", () => {
       leadId: lead.id,
       backOffice: actorBy("backOne"),
     });
-    const artifactId = asWorkflowArtifactId("artifact-ready-1");
+    const artifactId = asWorkflowArtifactId(randomUUIDv7());
     await seedRateRevisionArtifact(runtime, {
       artifactId,
       leadId: lead.id,
@@ -225,7 +226,7 @@ describe("request rate revision command", () => {
       leadId: lead.id,
       backOffice: actorBy("backOne"),
     });
-    const artifactId = asWorkflowArtifactId("artifact-dup");
+    const artifactId = asWorkflowArtifactId(randomUUIDv7());
     await seedRateRevisionArtifact(runtime, {
       artifactId,
       leadId: lead.id,
@@ -254,17 +255,17 @@ describe("request rate revision command", () => {
   it.each([
     {
       name: "uploaded by another user",
-      artifactId: asWorkflowArtifactId("artifact-other-user"),
+      artifactId: asWorkflowArtifactId(randomUUIDv7()),
       override: () => ({ requestedByUserId: actorBy("execTwo").userId }),
     },
     {
       name: "attached to another lead",
-      artifactId: asWorkflowArtifactId("artifact-other-lead"),
+      artifactId: asWorkflowArtifactId(randomUUIDv7()),
       override: () => ({ leadId: asWorkflowLeadId("lead-external") }),
     },
     {
       name: "not ready",
-      artifactId: asWorkflowArtifactId("artifact-not-ready"),
+      artifactId: asWorkflowArtifactId(randomUUIDv7()),
       override: () => ({ status: "requested" as const }),
     },
   ])(
@@ -334,7 +335,7 @@ describe("request rate revision command", () => {
         requested_at: runtime.now.get(),
       })
       .execute();
-    const artifactId = asWorkflowArtifactId("artifact-linked");
+    const artifactId = asWorkflowArtifactId(randomUUIDv7());
     await seedRateRevisionArtifact(runtime, {
       artifactId,
       leadId: lead.id,

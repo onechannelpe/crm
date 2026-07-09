@@ -27,8 +27,7 @@ describe("import outbox planning", () => {
     const givenLead = createLeadFixtureWriter(runtime);
     const importer = createWorkflowImporter({
       runtime,
-      nextJobKey: (key) => key ?? "planning",
-    }).importer;
+    });
     const leadOne = await givenLead({
       kind: "qualifying",
       key: "planning-one",

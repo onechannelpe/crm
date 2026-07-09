@@ -73,8 +73,7 @@ describe("outbox delivery", () => {
     const givenLead = createLeadFixtureWriter(runtime);
     const importer = createWorkflowImporter({
       runtime,
-      nextJobKey: (key) => key ?? "delivery",
-    }).importer;
+    });
     const leadOne = await givenLead({
       kind: "qualifying",
       key: "delivery-one",

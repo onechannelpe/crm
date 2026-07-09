@@ -23,7 +23,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_leads")
-    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("id", "text", (col) =>
+      col.primaryKey().defaultTo(sql`uuidv7()::text`),
+    )
     .addColumn("organization_id", "uuid", (col) =>
       col.notNull().references("organizations.id"),
     )
@@ -128,7 +130,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_lead_assignments")
-    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("id", "text", (col) =>
+      col.primaryKey().defaultTo(sql`uuidv7()::text`),
+    )
     .addColumn("lead_id", "text", (col) =>
       col.notNull().references("workflow_leads.id"),
     )
@@ -193,7 +197,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("workflow_integration_jobs")
-    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("type", "text", (col) => col.notNull())
     .addColumn("status", "text", (col) => col.notNull())
     .addColumn("queue_state", "text", (col) =>

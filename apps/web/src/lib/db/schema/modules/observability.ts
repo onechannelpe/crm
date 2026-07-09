@@ -6,7 +6,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // heterogeneous per-type event data.
   await db.schema
     .createTable("events")
-    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("id", "uuid", (col) => col.primaryKey())
     .addColumn("entity_type", "text", (col) => col.notNull())
     .addColumn("entity_id", "text", (col) => col.notNull())
     .addColumn("type", "text", (col) => col.notNull())

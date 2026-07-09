@@ -13,7 +13,7 @@ import type {
 } from "~/server/shared/ids";
 
 export interface SearchCapacityGrantsTable {
-  id: string;
+  id: Generated<string>;
   user_id: IdColumn<UserId>;
   amount: number;
   reason: string;
@@ -22,7 +22,7 @@ export interface SearchCapacityGrantsTable {
 }
 
 export interface SearchUsageReservationsTable {
-  id: IdColumn<SearchReservationId>;
+  id: GeneratedId<SearchReservationId>;
   user_id: IdColumn<UserId>;
   amount: number;
   status: "pending" | "committed" | "cancelled" | "expired";
@@ -32,14 +32,14 @@ export interface SearchUsageReservationsTable {
 }
 
 export interface SearchUsageCommitsTable {
-  id: string;
+  id: Generated<string>;
   reservation_id: IdColumn<SearchReservationId>;
   amount: number;
   created_at: Date;
 }
 
 export interface LeadCapacityGrantsTable {
-  id: string;
+  id: Generated<string>;
   user_id: IdColumn<UserId>;
   amount: number;
   reason: string;
@@ -48,7 +48,7 @@ export interface LeadCapacityGrantsTable {
 }
 
 export interface LeadUsageReservationsTable {
-  id: IdColumn<LeadReservationId>;
+  id: GeneratedId<LeadReservationId>;
   user_id: IdColumn<UserId>;
   amount: number;
   status: "pending" | "committed" | "cancelled" | "expired";
@@ -58,7 +58,7 @@ export interface LeadUsageReservationsTable {
 }
 
 export interface LeadUsageCommitsTable {
-  id: string;
+  id: Generated<string>;
   reservation_id: IdColumn<LeadReservationId>;
   amount: number;
   created_at: Date;

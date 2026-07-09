@@ -56,7 +56,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     getContainer: () => drawerPanelRef,
   });
 
-  const { onPointerDown } = useResizablePanel({
+  const onPointerDown = useResizablePanel({
     side: "right",
     constraints: NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
     getCurrentWidth: width,
