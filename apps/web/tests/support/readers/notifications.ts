@@ -2,9 +2,9 @@ import type { TestRuntime } from "../runtime/app";
 
 export function createNotificationReader(runtime: TestRuntime) {
   return {
-    outbox() {
+    intents() {
       return runtime.ctx.db
-        .selectFrom("notification_outbox")
+        .selectFrom("notification_intents")
         .selectAll()
         .orderBy("created_at", "asc")
         .execute();

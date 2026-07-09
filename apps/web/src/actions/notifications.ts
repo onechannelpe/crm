@@ -97,8 +97,6 @@ export async function sendBroadcastNotification(
         now,
       );
 
-      notifications.dispatchPendingJobs();
-
       return Ok(undefined);
     },
   });

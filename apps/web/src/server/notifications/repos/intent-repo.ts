@@ -31,7 +31,7 @@ export function createIntentRepository(db: Kysely<Database>): IntentRepository {
   // reason on a terminal failure.
   const store = createJobStore<IntentJob, NotificationIntentId>(
     db,
-    "notification_outbox",
+    "notification_intents",
     [
       "id",
       "attempt_count",
@@ -44,7 +44,6 @@ export function createIntentRepository(db: Kysely<Database>): IntentRepository {
       "body_text",
       "action_url",
     ],
-    { finishedAt: "expanded_at", error: "error" },
   );
 
   return {
@@ -52,7 +51,7 @@ export function createIntentRepository(db: Kysely<Database>): IntentRepository {
 
     async countOutstanding() {
       const row = await db
-        .selectFrom("notification_outbox")
+        .selectFrom("notification_intents")
         .select((eb) => eb.fn.count<number>("id").as("count"))
         .where("queue_state", "in", ["pending", "processing"])
         .executeTakeFirstOrThrow();

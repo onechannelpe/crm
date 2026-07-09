@@ -84,7 +84,7 @@ export interface AppNotificationsTable {
 // action (Stage 0). The expansion stage leases it, fans it out into in-app rows
 // and external delivery rows, then marks it expanded. audience_json/channels_json
 // are jsonb validated at the expansion boundary, so they read back as `unknown`.
-export interface NotificationOutboxTable {
+export interface NotificationIntentsTable {
   id: IdColumn<NotificationIntentId>;
   event_type: string;
   audience_json: Json;

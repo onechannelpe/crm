@@ -5,7 +5,7 @@ import { isErr, Ok, type Result } from "~/server/shared/result";
 import { validateSearchLimit } from "../../domain/limits";
 import type { ScopeRef } from "../../domain/types";
 import { canManageScope } from "../authorize-capacity-actor";
-import { setSearchScopeDefault } from "../search-policy";
+import { setSearchScopeDefault } from "../resolve-search-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
 export async function updateSearchPolicyDefault(

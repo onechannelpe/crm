@@ -6,6 +6,8 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { config } from "~/lib/config";
 import { APP_LOCALE } from "~/lib/locale";
 import { getServerRuntime } from "~/server/platform/container";
+import { external, type DomainError } from "~/server/shared/domain-error";
+import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function buildInviteUrl(token: string): string {
   const path = `/login/invite/${encodeURIComponent(token)}`;
@@ -24,7 +26,7 @@ export async function sendInviteEmail(params: {
   role: Role;
   inviteUrl: string;
   expiresAt: Date;
-}): Promise<void> {
+}): Promise<Result<void, DomainError>> {
   const sent = await getServerRuntime().notifications.messaging.sendInviteEmail(
     {
       to: params.email,
@@ -42,6 +44,7 @@ export async function sendInviteEmail(params: {
     },
   );
   if (!sent.ok) {
-    throw new Error(sent.error.message);
+    return Err(external(sent.error.message, { code: sent.error.code }));
   }
+  return Ok(undefined);
 }

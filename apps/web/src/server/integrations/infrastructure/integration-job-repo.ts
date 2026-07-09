@@ -35,23 +35,13 @@ export function createIntegrationJobRepo(
   db: DatabaseExecutor,
 ): IntegrationJobsPort {
   // `status` (PENDING|PROCESSING|COMPLETED|FAILED) is the field the import UI
-  // polls; it mirrors queue_state 1:1, so the store keeps the two in lockstep
-  // through this lifecycle map and stamps completed_at/error_message on settle.
+  // polls; it mirrors queue_state 1:1 via this table's JOB_TABLE_LIFECYCLE
+  // entry, which the store keeps in lockstep and stamps completed_at/
+  // error_message on settle.
   const store = createJobStore<IntegrationJobRow, IntegrationJobRow["id"]>(
     db,
     "workflow_integration_jobs",
     JOB_COLUMNS,
-    {
-      finishedAt: "completed_at",
-      error: "error_message",
-      status: {
-        column: "status",
-        pending: "PENDING",
-        processing: "PROCESSING",
-        done: "COMPLETED",
-        failed: "FAILED",
-      },
-    },
   );
 
   return {

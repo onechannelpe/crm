@@ -8,7 +8,7 @@ import {
   validateSearchLimit,
 } from "../../domain/limits";
 import { canManageExecutive } from "../authorize-capacity-actor";
-import { setSearchUserOverride } from "../search-policy";
+import { setSearchUserOverride } from "../resolve-search-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
 export async function updateSearchPolicyOverride(

@@ -48,7 +48,7 @@ describe("notifications delivery planner benchmark", () => {
 
     for (const scenario of PLANNER_SCENARIOS) {
       const entries = await ctx.db
-        .selectFrom("notification_outbox")
+        .selectFrom("notification_intents")
         .select(["audience_json", "channels_json"])
         .where("id", "in", intentIdsByScenario[scenario.name])
         .execute();

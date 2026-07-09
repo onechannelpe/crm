@@ -54,7 +54,6 @@ export interface NotificationPipeline {
     expansion: QueueRunner;
     dispatch: QueueRunner;
   };
-  dispatchPendingJobs(): void;
   enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
 }
 
@@ -99,9 +98,6 @@ export function assembleNotificationPipeline(
           clock: deps.clock,
         }),
       };
-    },
-    dispatchPendingJobs() {
-      notify(deps.db, JOB_TABLE_CHANNELS.notification_outbox);
     },
     enqueue(intentsToEnqueue, now = deps.clock()) {
       return enqueueNotifications(deps.db, intentsToEnqueue, now);

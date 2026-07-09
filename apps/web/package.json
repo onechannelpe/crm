@@ -37,7 +37,6 @@
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource/aleo": "^5.2.7",
     "@fontsource/host-grotesk": "^5.2.8",
-    "@libsql/client": "^0.17.2",
     "@node-rs/argon2": "^2.0.2",
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",

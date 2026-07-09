@@ -239,7 +239,7 @@ describe("notification delivery dispatch", () => {
     // Simulate the stale-scanner returning a lost-lease intent to pending, then
     // re-expanding. Idempotent writes must not duplicate rows.
     await runtime.ctx.db
-      .updateTable("notification_outbox")
+      .updateTable("notification_intents")
       .set({
         queue_state: "pending",
         lease_owner: null,

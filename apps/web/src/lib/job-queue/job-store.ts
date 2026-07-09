@@ -2,7 +2,7 @@ import type { Kysely } from "kysely";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import type { JobTableName } from "./registry";
+import { JOB_TABLE_LIFECYCLE, type JobTableName } from "./registry";
 
 // The four queue-lifecycle states every job table shares. This column is owned
 // solely by the job-store. Any user-facing `status` a feature surfaces is a
@@ -50,6 +50,29 @@ export interface LifecycleColumns {
     done: string;
     failed: string;
   };
+}
+
+// Mirror-column writes for a single lifecycle transition, merged into a
+// settle SET clause. Exported (rather than kept private to `createJobStore`)
+// so `resetStaleLeases` computes the exact same patch when it recovers a
+// crashed lease -- the mirror invariant has exactly one implementation,
+// shared by both the normal settle path and stale recovery.
+export function mirrorPatch(
+  lifecycle: LifecycleColumns,
+  state: QueueState,
+  opts: { finishedAt?: Date; error?: string | null } = {},
+): DomainPatch {
+  const patch: DomainPatch = {};
+  if (lifecycle.finishedAt && opts.finishedAt !== undefined) {
+    patch[lifecycle.finishedAt] = opts.finishedAt;
+  }
+  if (lifecycle.error && opts.error !== undefined) {
+    patch[lifecycle.error] = opts.error;
+  }
+  if (lifecycle.status) {
+    patch[lifecycle.status.column] = lifecycle.status[state];
+  }
+  return patch;
 }
 
 export interface JobStore<TId extends string | number, TRow> {
@@ -113,7 +136,6 @@ export function createJobStore<
   executor: DatabaseExecutor,
   table: JobTableName,
   selectColumns: readonly string[],
-  lifecycle: LifecycleColumns = {},
 ): JobStore<TId, TRow> {
   // Kysely resolves columns from a static table type, but `table` is chosen per
   // queue at runtime, so this builder is untyped. Every JobTableName carries the
@@ -121,24 +143,12 @@ export function createJobStore<
   // assumption is asserted, and the public API stays fully typed.
   // oxlint-disable-next-line no-unsafe-type-assertion
   const db = executor as unknown as Kysely<any>;
+  const lifecycle = JOB_TABLE_LIFECYCLE[table];
 
-  // Mirror-column writes for a single lifecycle transition, merged into the SET.
-  function mirror(
+  const mirror = (
     state: QueueState,
     opts: { finishedAt?: Date; error?: string | null },
-  ): DomainPatch {
-    const patch: DomainPatch = {};
-    if (lifecycle.finishedAt && opts.finishedAt !== undefined) {
-      patch[lifecycle.finishedAt] = opts.finishedAt;
-    }
-    if (lifecycle.error && opts.error !== undefined) {
-      patch[lifecycle.error] = opts.error;
-    }
-    if (lifecycle.status) {
-      patch[lifecycle.status.column] = lifecycle.status[state];
-    }
-    return patch;
-  }
+  ): DomainPatch => mirrorPatch(lifecycle, state, opts);
 
   async function settle(
     id: TId,
@@ -242,4 +252,35 @@ export function createJobStore<
       });
     },
   };
+}
+
+/**
+ * Recovers `table`'s rows stuck in `processing` past their lease deadline,
+ * returning them to `pending` in one statement. This is the crash-recovery
+ * counterpart to `claim`/`settle`: a worker that died mid-lease leaves no
+ * caller to run `scheduleRetry`, so the stale-scanner calls this instead.
+ * It goes through the same `mirrorPatch` mapping settle uses, so a table's
+ * status mirror (if it has one) can never disagree with `queue_state` for
+ * longer than it takes the scanner to run -- unlike a hand-rolled reset that
+ * only knows about the canonical lifecycle columns.
+ */
+export async function resetStaleLeases(
+  executor: DatabaseExecutor,
+  table: JobTableName,
+  now: Date,
+): Promise<number> {
+  // oxlint-disable-next-line no-unsafe-type-assertion
+  const db = executor as unknown as Kysely<any>;
+  const result = await db
+    .updateTable(table)
+    .set({
+      queue_state: "pending",
+      lease_owner: null,
+      lease_until: null,
+      ...mirrorPatch(JOB_TABLE_LIFECYCLE[table], "pending"),
+    })
+    .where("queue_state", "=", "processing")
+    .where("lease_until", "<", now)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows ?? 0);
 }

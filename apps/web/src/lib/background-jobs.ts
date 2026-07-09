@@ -70,7 +70,7 @@ export function startBackgroundJobs() {
   const queueByChannel: Record<string, QueueRunner> = {
     [JOB_TABLE_CHANNELS.workflow_integration_jobs]: recordsImportQueue,
     [JOB_TABLE_CHANNELS.company_registry_record]: enrichmentQueue,
-    [JOB_TABLE_CHANNELS.notification_outbox]: notificationQueues.expansion,
+    [JOB_TABLE_CHANNELS.notification_intents]: notificationQueues.expansion,
     [JOB_TABLE_CHANNELS.notification_deliveries]: notificationQueues.dispatch,
   };
 

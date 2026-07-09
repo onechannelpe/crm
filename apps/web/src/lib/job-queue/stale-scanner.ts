@@ -2,14 +2,18 @@ import { createLogger } from "~/lib/observability/logger";
 import { getServerRuntime } from "~/server/platform/container";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+import { resetStaleLeases } from "./job-store";
 import { jobTables } from "./registry";
 
 const logger = createLogger("stale-scanner");
 
 // Every job table shares the canonical queue_state lifecycle, so reclaiming a
 // crashed worker's lease is one uniform reset: a row stuck in `processing` past
-// its lease deadline goes back to `pending`. No per-table status vocabulary.
-// The table list comes from the single queue registry.
+// its lease deadline goes back to `pending`. The reset itself is delegated to
+// `resetStaleLeases`, which also corrects a table's status mirror (if it has
+// one) through the same mapping `settle` uses -- this scanner only owns the
+// per-table loop and logging. The table list comes from the single queue
+// registry.
 
 async function resetStalledJobs(
   executor: DatabaseExecutor = getServerRuntime().infra.db,
@@ -18,22 +22,9 @@ async function resetStalledJobs(
   await Promise.all(
     jobTables().map(async (table) => {
       try {
-        const result = await executor
-          .updateTable(table)
-          .set({
-            queue_state: "pending",
-            lease_owner: null,
-            lease_until: null,
-          })
-          .where("queue_state", "=", "processing")
-          .where("lease_until", "<", now)
-          .executeTakeFirst();
-
-        if (Number(result.numUpdatedRows ?? 0) > 0) {
-          logger.info("stalled_jobs_reset", {
-            table,
-            count: Number(result.numUpdatedRows),
-          });
+        const count = await resetStaleLeases(executor, table, now);
+        if (count > 0) {
+          logger.info("stalled_jobs_reset", { table, count });
         }
       } catch (error: unknown) {
         logger.error("stale_scan_failed", {

@@ -76,7 +76,6 @@ export function createDeliveryRepository(
       "body_text",
       "action_url",
     ],
-    { finishedAt: "sent_at" },
   );
 
   return {

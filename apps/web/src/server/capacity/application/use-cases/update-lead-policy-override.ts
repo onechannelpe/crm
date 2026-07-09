@@ -8,7 +8,7 @@ import {
   validateOverrideExpiry,
 } from "../../domain/limits";
 import { canManageExecutive } from "../authorize-capacity-actor";
-import { setLeadUserOverride } from "../lead-policy";
+import { setLeadUserOverride } from "../resolve-lead-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
 export async function updateLeadPolicyOverride(

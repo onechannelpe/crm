@@ -31,7 +31,7 @@ describe("outbox delivery", () => {
 
   it("marks rows with malformed channels as failed", async () => {
     await runtime.ctx.db
-      .insertInto("notification_outbox")
+      .insertInto("notification_intents")
       .values({
         id: asNotificationIntentId("test-malformed-channels"),
         event_type: "test.malformed",
@@ -59,7 +59,7 @@ describe("outbox delivery", () => {
     await createTestNotificationRuntime(runtime).drain();
 
     const failed = await runtime.ctx.db
-      .selectFrom("notification_outbox")
+      .selectFrom("notification_intents")
       .select(["queue_state", "error", "expanded_at"])
       .where("id", "=", asNotificationIntentId("test-malformed-channels"))
       .executeTakeFirstOrThrow();
@@ -117,9 +117,9 @@ describe("outbox delivery", () => {
       },
     ]);
 
-    const outbox = await reader.outbox();
+    const intents = await reader.intents();
     expect(
-      outbox.filter(({ queue_state }) => queue_state === "done"),
+      intents.filter(({ queue_state }) => queue_state === "done"),
     ).toHaveLength(2);
   });
 });

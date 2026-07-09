@@ -25,7 +25,6 @@ export function createAuthRuntime(
   notifications: {
     messaging: MessagingGateway;
     enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
-    dispatchPendingJobs(): void;
   },
 ) {
   const sessionService = createSessionService({
@@ -48,7 +47,6 @@ export function createAuthRuntime(
     sessionService,
     login: createAuthLoginContext(infra.db, {
       enqueue: (intents, now) => notifications.enqueue(intents, now),
-      dispatchPendingJobs: () => notifications.dispatchPendingJobs(),
     }),
     onboarding,
     inviteAcceptance: {

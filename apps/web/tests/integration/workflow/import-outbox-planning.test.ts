@@ -56,12 +56,12 @@ describe("import outbox planning", () => {
     expect(applied.applied).toBe(2);
     expect(applied.failed).toBe(0);
 
-    const outbox = await createNotificationReader(runtime).outbox();
+    const intents = await createNotificationReader(runtime).intents();
     expect(
-      outbox.filter(({ queue_state }) => queue_state === "pending"),
+      intents.filter(({ queue_state }) => queue_state === "pending"),
     ).toHaveLength(2);
     expect(
-      outbox.map(({ available_at, created_at }) => ({
+      intents.map(({ available_at, created_at }) => ({
         available_at,
         created_at,
       })),

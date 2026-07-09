@@ -135,7 +135,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("notification_outbox")
+    .createTable("notification_intents")
     // `id` is a caller-supplied deterministic idempotency key
     // (`${eventId}:${stage}`, see reactors/notify.ts and
     // reactors/fulfillment-notify.ts), not a generated row id — hence `text`,
@@ -164,15 +164,15 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_outbox_claim")
-    .on("notification_outbox")
+    .createIndex("idx_notification_intents_claim")
+    .on("notification_intents")
     .column("available_at")
     .where(sql.ref("queue_state"), "=", "pending")
     .execute();
 
   await db.schema
-    .createIndex("idx_notification_outbox_stale")
-    .on("notification_outbox")
+    .createIndex("idx_notification_intents_stale")
+    .on("notification_intents")
     .column("lease_until")
     .where(sql.ref("queue_state"), "=", "processing")
     .execute();

@@ -2,7 +2,7 @@ import type { Insertable } from "kysely";
 
 import type {
   NotificationDeliveriesTable,
-  NotificationOutboxTable,
+  NotificationIntentsTable,
 } from "~/lib/db/types";
 import type {
   NotificationAudience,
@@ -15,24 +15,24 @@ import {
   type UserId,
 } from "~/server/shared/ids";
 
-type OutboxRow = Insertable<NotificationOutboxTable>;
+type IntentRow = Insertable<NotificationIntentsTable>;
 type DeliveryRow = Insertable<NotificationDeliveriesTable>;
 
 const DEFAULT_NOW = new Date(1_700_000_000_000);
 const DEFAULT_USER_ID = asUserId("notification-builder-user");
 
-// Outbox intent row with sane defaults. `audience_json`/`channels_json` are
+// Intent row with sane defaults. `audience_json`/`channels_json` are
 // stringified here, matching `enqueueNotifications` — `pg` auto-serializes
 // plain objects for jsonb params but not arrays, so an un-stringified array
 // comes out as a Postgres array literal and fails jsonb validation.
-export function anOutboxIntentRow(
+export function anIntentRow(
   overrides: {
     id: string;
     audience?: NotificationAudience;
     channels?: NotificationChannel[];
     now?: Date;
-  } & Partial<OutboxRow>,
-): OutboxRow {
+  } & Partial<IntentRow>,
+): IntentRow {
   const {
     audience = { kind: "user_ids", userIds: [DEFAULT_USER_ID] },
     channels = ["in_app"],

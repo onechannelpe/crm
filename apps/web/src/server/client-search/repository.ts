@@ -64,7 +64,6 @@ export function createCompanyRegistryRepo(
     db,
     "company_registry_record",
     RECORD_COLUMNS,
-    { error: "last_error" },
   );
 
   return {

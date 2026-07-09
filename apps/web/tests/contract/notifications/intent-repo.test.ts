@@ -1,5 +1,5 @@
 import {
-  anOutboxIntentRow,
+  anIntentRow,
   notificationIntentId,
 } from "@tests/support/builders/notifications";
 import {
@@ -33,8 +33,8 @@ describe("intent repository", () => {
 
   async function seedPending(id: string) {
     await ctx.db
-      .insertInto("notification_outbox")
-      .values(anOutboxIntentRow({ id, now: NOW }))
+      .insertInto("notification_intents")
+      .values(anIntentRow({ id, now: NOW }))
       .execute();
   }
 
@@ -48,7 +48,7 @@ describe("intent repository", () => {
       { id: "intent-1", attempt_count: 1, max_attempts: 5 },
     ]);
     const row = await ctx.db
-      .selectFrom("notification_outbox")
+      .selectFrom("notification_intents")
       .select(["queue_state", "lease_owner", "lease_until"])
       .where("id", "=", notificationIntentId("intent-1"))
       .executeTakeFirstOrThrow();
@@ -81,7 +81,7 @@ describe("intent repository", () => {
     );
 
     const row = await ctx.db
-      .selectFrom("notification_outbox")
+      .selectFrom("notification_intents")
       .select([
         "queue_state",
         "expanded_at",
@@ -120,7 +120,7 @@ describe("intent repository", () => {
     );
 
     const rows = await ctx.db
-      .selectFrom("notification_outbox")
+      .selectFrom("notification_intents")
       .select(["id", "queue_state", "available_at", "error", "lease_owner"])
       .orderBy("id", "asc")
       .execute();

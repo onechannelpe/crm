@@ -20,7 +20,6 @@ export function createAuthLoginContext(
   executor: DatabaseExecutor,
   notifications: {
     enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
-    dispatchPendingJobs(): void;
   },
 ) {
   return {

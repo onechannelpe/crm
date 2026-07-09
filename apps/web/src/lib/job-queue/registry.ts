@@ -1,3 +1,5 @@
+import type { LifecycleColumns } from "./job-store";
+
 // Single source of truth for the queue-bearing tables. Each job table maps to
 // the LISTEN/NOTIFY channel its producers ring on enqueue and its consumer
 // listens on. The notify channel, `JobTableName`, and the table list (derived
@@ -6,12 +8,34 @@
 export const JOB_TABLE_CHANNELS = {
   workflow_integration_jobs: "job:records-import",
   company_registry_record: "job:enrichment",
-  notification_outbox: "job:notifications-intents",
+  notification_intents: "job:notifications-intents",
   notification_deliveries: "job:notifications-deliveries",
 } as const;
 
 export type JobTableName = keyof typeof JOB_TABLE_CHANNELS;
 export type JobChannel = (typeof JOB_TABLE_CHANNELS)[JobTableName];
+
+// The one place a table's domain mirror columns are declared. `createJobStore`
+// reads its table's entry here instead of taking `lifecycle` as a per-call
+// argument, and the stale-scanner reads the same entry to correct the mirror
+// when it resets a crashed lease -- so a table's status column can never
+// disagree with `queue_state` for longer than it takes the scanner to run.
+export const JOB_TABLE_LIFECYCLE: Record<JobTableName, LifecycleColumns> = {
+  workflow_integration_jobs: {
+    finishedAt: "completed_at",
+    error: "error_message",
+    status: {
+      column: "status",
+      pending: "PENDING",
+      processing: "PROCESSING",
+      done: "COMPLETED",
+      failed: "FAILED",
+    },
+  },
+  company_registry_record: { error: "last_error" },
+  notification_intents: { finishedAt: "expanded_at", error: "error" },
+  notification_deliveries: { finishedAt: "sent_at" },
+};
 
 // Every job table shares the canonical queue_state lifecycle, so a crashed
 // worker's lease is reclaimed with one uniform reset. The list is derived

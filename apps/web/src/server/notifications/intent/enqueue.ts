@@ -22,7 +22,7 @@ export async function enqueueNotifications(
     validateNotificationIntent(intent),
   );
   await db
-    .insertInto("notification_outbox")
+    .insertInto("notification_intents")
     .values(
       validated.map((intent) => ({
         id: intent.id,
@@ -49,5 +49,5 @@ export async function enqueueNotifications(
 
   // Wake the expansion stage on the same executor the intents were written on, so
   // a wrapping business transaction buffers the NOTIFY until commit.
-  notify(db, JOB_TABLE_CHANNELS.notification_outbox);
+  notify(db, JOB_TABLE_CHANNELS.notification_intents);
 }

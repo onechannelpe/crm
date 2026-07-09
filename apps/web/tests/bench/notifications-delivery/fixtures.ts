@@ -226,7 +226,7 @@ export async function seedExpandFixtures(
   const intentIds = intents.map((intent) => asNotificationIntentId(intent.id));
 
   return ctx.db
-    .selectFrom("notification_outbox")
+    .selectFrom("notification_intents")
     .select([
       "id",
       "attempt_count",

@@ -5,7 +5,7 @@ import { isErr, Ok, type Result } from "~/server/shared/result";
 import { validateLeadPolicyValues } from "../../domain/limits";
 import type { ScopeRef } from "../../domain/types";
 import { canManageScope } from "../authorize-capacity-actor";
-import { setLeadScopeDefault } from "../lead-policy";
+import { setLeadScopeDefault } from "../resolve-lead-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
 export async function updateLeadPolicyDefault(

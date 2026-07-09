@@ -102,7 +102,7 @@ export async function createTeamInvite(
     return result;
   }
 
-  await sendInviteEmail({
+  const emailResult = await sendInviteEmail({
     email: input.email,
     fullName: shortName({
       names: input.names,
@@ -113,6 +113,9 @@ export async function createTeamInvite(
     inviteUrl: buildInviteUrl(result.value.token),
     expiresAt: result.value.expiresAt,
   });
+  if (isErr(emailResult)) {
+    return emailResult;
+  }
 
   const deliveryResult = await deps.inviteService.markInviteDelivered(
     result.value.inviteId,
@@ -145,13 +148,16 @@ export async function resendTeamInvite(
     return Err(fail("invite_target_missing"));
   }
 
-  await sendInviteEmail({
+  const emailResult = await sendInviteEmail({
     email: user.email,
     fullName: shortName(user),
     role: user.role,
     inviteUrl: buildInviteUrl(result.value.token),
     expiresAt: result.value.expiresAt,
   });
+  if (isErr(emailResult)) {
+    return emailResult;
+  }
 
   const deliveryResult = await deps.inviteService.markInviteDelivered(
     result.value.inviteId,

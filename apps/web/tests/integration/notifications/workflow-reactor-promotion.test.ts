@@ -73,7 +73,7 @@ describe("workflow notification pipeline", () => {
     await reactToStageChanges(runtime.ctx.db, committed, NOW);
 
     const reader = createNotificationReader(runtime);
-    const [entry] = await reader.outbox();
+    const [entry] = await reader.intents();
     if (!entry) throw new Error("expected stage notification outbox entry");
     expect(entry).toMatchObject({
       event_type: "lead.ready_for_sale",
@@ -159,7 +159,7 @@ describe("workflow notification pipeline", () => {
       NOW,
     );
 
-    const [entry] = await createNotificationReader(runtime).outbox();
+    const [entry] = await createNotificationReader(runtime).intents();
     if (!entry)
       throw new Error("expected fulfillment notification outbox entry");
     expect(entry.event_type).toBe("lead.fulfillment_handoff");
@@ -187,7 +187,7 @@ describe("workflow notification pipeline", () => {
     };
     await enqueueNotifications(runtime.ctx.db, [intent], NOW);
 
-    const [entry] = await createNotificationReader(runtime).outbox();
+    const [entry] = await createNotificationReader(runtime).intents();
     if (!entry) throw new Error("expected in-app notification outbox entry");
     const notifications = createTestNotificationRuntime(runtime);
     const planned = await notifications.planIntentRow(entry, NOW);
