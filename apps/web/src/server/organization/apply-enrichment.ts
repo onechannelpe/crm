@@ -1,5 +1,10 @@
 import type { OrganizationRepository } from "./organization-repo";
 
+type OrganizationEnrichmentWriter = Pick<
+  OrganizationRepository,
+  "applyEnrichment"
+>;
+
 // The registry fields projected onto the organization. SUNAT is authoritative,
 // so a non-null value always wins; null/blank fields are dropped so a partial
 // (engine-fallback) result never overwrites known columns.
@@ -21,7 +26,7 @@ function present(value: string | null): string | undefined {
 // enrichment worker after a scrape (or engine fallback) -- a single idempotent
 // UPDATE by RUC, not a queue. A missing organization is a no-op.
 export function createOrganizationEnrichmentProjection(
-  organizations: OrganizationRepository,
+  organizations: OrganizationEnrichmentWriter,
 ) {
   return function apply(projection: RegistryProjection): Promise<void> {
     const legalName = present(projection.legalName);

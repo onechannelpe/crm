@@ -1,3 +1,4 @@
+import { makeAuthSession } from "@tests/support/unit/factories";
 import { describe, expect, it, vi } from "vitest";
 
 import { authenticate, authorizePermission } from "~/lib/auth/access/session";
@@ -34,8 +35,7 @@ vi.mock("~/server/platform/action/context", () => ({
   ),
 }));
 
-// oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
-const actor = { userId: 7, role: "executive" } as unknown as AuthSession;
+const actor = makeAuthSession();
 
 function ports() {
   const report = vi.fn<(error: unknown) => void>();

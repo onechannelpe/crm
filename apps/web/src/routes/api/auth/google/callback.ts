@@ -1,5 +1,3 @@
-import type { APIEvent } from "@solidjs/start/server";
-
 import {
   appendClearedGoogleOAuthCookies,
   readGoogleOAuthCookies,
@@ -10,6 +8,8 @@ import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getServerRuntime } from "~/server/platform/container";
 import { isErr } from "~/server/shared/result";
+
+import type { ApiRequestEvent } from "../../request-event";
 
 function badRequest(): Response {
   return new Response("Bad request", { status: 400 });
@@ -23,7 +23,7 @@ function redirectToLogin(url: URL, error: string): Response {
   return new Response(null, { status: 302, headers: clearHeaders });
 }
 
-export async function GET(event: APIEvent): Promise<Response> {
+export async function GET(event: ApiRequestEvent): Promise<Response> {
   const url = new URL(event.request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");

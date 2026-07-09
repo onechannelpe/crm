@@ -1,4 +1,3 @@
-import { createApiEvent } from "@tests/support/unit/api-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -44,44 +43,42 @@ describe("extension api routes", () => {
   });
 
   it("returns 400 for malformed JSON in the handoff token route", async () => {
-    const response = await postHandoffToken(
-      createApiEvent(
-        invalidJsonRequest("http://localhost/api/extension/handoff-token"),
+    const response = await postHandoffToken({
+      request: invalidJsonRequest(
+        "http://localhost/api/extension/handoff-token",
       ),
-    );
+    });
 
     expect(response.status).toBe(400);
     expect(mocks.createHandoffToken).not.toHaveBeenCalled();
   });
 
   it("returns 400 for malformed JSON in the claim route", async () => {
-    const response = await postClaim(
-      createApiEvent(
-        invalidJsonRequest("http://localhost/api/extension/session/claim"),
+    const response = await postClaim({
+      request: invalidJsonRequest(
+        "http://localhost/api/extension/session/claim",
       ),
-    );
+    });
 
     expect(response.status).toBe(400);
     expect(mocks.claimInstallationSession).not.toHaveBeenCalled();
   });
 
   it("returns 400 for malformed JSON in the refresh route", async () => {
-    const response = await postRefresh(
-      createApiEvent(
-        invalidJsonRequest("http://localhost/api/extension/session/refresh"),
+    const response = await postRefresh({
+      request: invalidJsonRequest(
+        "http://localhost/api/extension/session/refresh",
       ),
-    );
+    });
 
     expect(response.status).toBe(400);
     expect(mocks.refreshInstallationSession).not.toHaveBeenCalled();
   });
 
   it("returns 400 for malformed JSON in the events route", async () => {
-    const response = await postEvents(
-      createApiEvent(
-        invalidJsonRequest("http://localhost/api/extension/events"),
-      ),
-    );
+    const response = await postEvents({
+      request: invalidJsonRequest("http://localhost/api/extension/events"),
+    });
 
     expect(response.status).toBe(400);
     expect(mocks.ingestRuntimeEvent).not.toHaveBeenCalled();

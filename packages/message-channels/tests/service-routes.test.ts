@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createMessageChannels } from "../src/service";
-import type { DeliveryProvider, NotificationRoutes } from "../src/types";
+import type { DeliveryProvider } from "../src/types";
 
 const emailProvider: DeliveryProvider<"email"> = {
   id: "resend",
@@ -69,17 +69,23 @@ describe("createMessageChannels", () => {
     ).toThrow("Duplicate notification provider: resend");
   });
 
-  it("rejects a route to a provider registered for another channel", () => {
-    const routes = {
-      whatsapp: "resend",
-    } as unknown as NotificationRoutes;
+  it("rejects a provider registered for the wrong channel", () => {
+    const wrongChannelProvider: DeliveryProvider<"whatsapp"> = {
+      id: "resend",
+      channel: "whatsapp",
+      async send() {
+        return { providerMessageId: "wrong-channel" };
+      },
+    };
 
     expect(() =>
       createMessageChannels({
-        routes,
-        providers: [emailProvider],
+        routes: { email: "resend" },
+        providers: [wrongChannelProvider],
       }),
-    ).toThrow("Notification route whatsapp:resend cannot use a email provider");
+    ).toThrow(
+      "Notification provider resend registered for whatsapp, expected email",
+    );
   });
 
   it("rejects a route to an unregistered provider", () => {

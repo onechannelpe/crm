@@ -5,29 +5,15 @@ import type { OrganizationRepository } from "~/server/organization/organization-
 
 type ApplyEnrichment = OrganizationRepository["applyEnrichment"];
 
-function createOrganizationRepositoryDouble() {
-  const applyEnrichment = vi.fn<ApplyEnrichment>(async () => {});
-
-  // Only applyEnrichment is exercised by the projection. Cast to satisfy the
-  // full OrganizationRepository shape for typecheck; the other methods are never
-  // called by the projection under test.
-  // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
-  const repo = {
-    applyEnrichment,
-  } as unknown as OrganizationRepository;
-
-  return { repo, applyEnrichment };
-}
-
 describe("createOrganizationEnrichmentProjection", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   it("skips writes when every value normalizes to null", async () => {
-    const { repo, applyEnrichment } = createOrganizationRepositoryDouble();
+    const applyEnrichment = vi.fn<ApplyEnrichment>(async () => {});
 
-    await createOrganizationEnrichmentProjection(repo)({
+    await createOrganizationEnrichmentProjection({ applyEnrichment })({
       ruc: "20123456789",
       legalName: "   ",
       address: null,
@@ -39,9 +25,9 @@ describe("createOrganizationEnrichmentProjection", () => {
   });
 
   it("writes normalized values through the organization repository", async () => {
-    const { repo, applyEnrichment } = createOrganizationRepositoryDouble();
+    const applyEnrichment = vi.fn<ApplyEnrichment>(async () => {});
 
-    await createOrganizationEnrichmentProjection(repo)({
+    await createOrganizationEnrichmentProjection({ applyEnrichment })({
       ruc: "20123456789",
       legalName: "  Acme SAC  ",
       address: "  Av. Lima 123  ",
@@ -59,9 +45,9 @@ describe("createOrganizationEnrichmentProjection", () => {
   });
 
   it("only writes fields that normalize to a non-empty value", async () => {
-    const { repo, applyEnrichment } = createOrganizationRepositoryDouble();
+    const applyEnrichment = vi.fn<ApplyEnrichment>(async () => {});
 
-    await createOrganizationEnrichmentProjection(repo)({
+    await createOrganizationEnrichmentProjection({ applyEnrichment })({
       ruc: "20123456789",
       legalName: "Acme SAC",
       address: "  ",
