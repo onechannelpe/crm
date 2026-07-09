@@ -9,9 +9,9 @@ import type {
   LeadState,
 } from "~/server/workflow/lead/domain/state";
 
-// Consumer-defined ports for the read side. Each query depends on the narrow
-// shape it needs; the concrete write repos satisfy these structurally when the
-// repo bag is passed in. This keeps read modules from importing write modules.
+// Each query depends on the narrow shape it needs; the concrete write repos
+// satisfy these structurally when the repo bag is passed in. Keeps read
+// modules from importing write modules.
 
 export type LeadReader = {
   findById(id: string): Promise<LeadState | undefined>;

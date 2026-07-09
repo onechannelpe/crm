@@ -1,5 +1,5 @@
-// Vitest's BenchmarkRunner currently doesn't execute beforeAll/afterAll for bench suites.
-// Keep this runner until upstream lands the bench API redesign:
+// BenchmarkRunner skips beforeAll/afterAll for bench suites, so this runner
+// invokes suite hooks around the normal bench execution:
 // - https://github.com/vitest-dev/vitest/issues/5075
 // - https://github.com/vitest-dev/vitest/discussions/7850
 import { BenchmarkRunner, TestRunner } from "vitest";

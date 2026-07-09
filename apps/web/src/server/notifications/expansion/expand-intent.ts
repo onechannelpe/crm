@@ -9,9 +9,9 @@ import type { DeliveryRepository } from "../repos/delivery-repo";
 import type { IntentJob } from "../repos/intent-repo";
 import type { RecipientPlanner } from "./plan-recipients";
 
-// An intent either expands (write in-app rows + delivery rows) or is terminally
-// invalid (malformed payload). Transient failures, e.g. a DB error, throw and
-// are retried by the queue; classification of those is the queue's job.
+// Transient failures (e.g. DB error) throw and are retried by the queue;
+// classification is the queue's job. This function only resolves
+// expand vs terminally invalid.
 export type ExpansionOutcome =
   | { kind: "expanded"; deliveriesPlanned: number }
   | { kind: "invalid"; reason: string };
@@ -39,8 +39,8 @@ export function createIntentExpander(deps: {
 
     const plan = await deps.planRecipients({ audience, channels }, now);
 
-    // In-app delivery is a local, idempotent insert with no provider or rate
-    // limit, so it is written here rather than queued as a dispatch job.
+    // In-app delivery is a local idempotent insert with no provider or rate
+    // limit: not queued as a dispatch job.
     await deps.appNotifications.createMany(
       plan.inAppRecipients.map((userId) => ({
         user_id: userId,

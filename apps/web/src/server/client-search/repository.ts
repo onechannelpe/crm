@@ -36,9 +36,8 @@ const RECORD_COLUMNS = [
   "requested_at",
 ] as const;
 
-// A request resets only the queue-control columns to `pending`; the existing
-// result and source are left in place so the UI keeps showing the last known
-// value (marked stale) while the re-scrape runs.
+// Queue-control columns only: result and source stay so the UI keeps showing
+// the last known value (marked stale) while the re-scrape runs.
 function resetPatch(values: EnrichmentRequest) {
   return {
     queue_state: "pending" as const,
@@ -56,10 +55,9 @@ function resetPatch(values: EnrichmentRequest) {
 export function createCompanyRegistryRepo(
   db: DatabaseExecutor,
 ): CompanyRegistryPort {
-  // The store owns queue_state, the lease, and the `last_error` mirror. There is
-  // no status mirror: the UI lifecycle derives from (queue_state, source,
-  // expires_at). The result columns and source/fetched_at/expires_at are written
-  // by the worker through the settle patch.
+  // queue_state, lease, and last_error are owned by the store. The UI lifecycle
+  // derives from (queue_state, source, expires_at); the worker writes the
+  // result columns and source/fetched_at/expires_at through the settle patch.
   const store = createJobStore<RegistryRow, string>(
     db,
     "company_registry_record",

@@ -1,11 +1,8 @@
-// Isomorphic environment reads for code that genuinely runs in both places:
-// the logger and diagnostics, which execute on the server, in CLI scripts, and
-// in the browser. Server and CLI processes read process.env; the client reads
-// Vite's import.meta.env, where only VITE_-prefixed vars are exposed. Server
-// values win when both are present.
-//
-// This fallback exists only for that dual-runtime case. Server-only code reads
-// process.env directly; client-only code uses import.meta.env.DEV / .PROD.
+// For code that runs in both server and client contexts (logger, diagnostics):
+// the server reads process.env, the client reads import.meta.env (VITE_-prefixed
+// only), and server values win when both are present. Server-only code should
+// read process.env directly; client-only code should use import.meta.env.DEV /
+// .PROD.
 
 function readImportMetaEnv(): Record<string, unknown> | undefined {
   const metaEnv = (import.meta as { env?: Record<string, unknown> }).env;

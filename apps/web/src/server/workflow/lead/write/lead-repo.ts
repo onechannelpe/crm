@@ -214,11 +214,9 @@ export function createLeadRepo(db: DatabaseExecutor) {
       return rows.map((row) => toLead(row as LeadWithOrganizationRow));
     },
 
-    // Quotations awaiting the executive's decision: in PRICING, reservation
-    // still active, with a pending proposal. accept-rate / request-rate-revision
-    // / close-lead each move the proposal off "pending" or the lead off PRICING,
-    // so resolving any one of them frees a slot. At most one proposal per lead
-    // is ever pending, so the join yields one row per such lead.
+    // One row per PRICING lead with a pending proposal (at most one proposal
+    // per lead is ever pending). accept-rate, request-rate-revision, and
+    // close-lead each move the proposal off "pending" or the lead off PRICING.
     async countPendingQuotationDecisions(
       executiveId: UserId,
       now: Date,

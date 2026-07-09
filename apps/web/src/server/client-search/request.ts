@@ -10,9 +10,9 @@ export interface EnrichmentCommand {
   ): Promise<string>;
 }
 
-// Enqueues a registry verification. The wake lives in the repository's upsert, on
-// the same executor the row is written on, so the enrichment queue is notified
-// transactionally without a separate doorbell.
+// The wake lives in the repository's upsert, on the same executor the row is
+// written on, so the enrichment queue is notified transactionally without a
+// separate doorbell.
 export function createEnrichmentCommand(
   repo: CompanyRegistryPort,
 ): EnrichmentCommand {

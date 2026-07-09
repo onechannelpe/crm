@@ -24,7 +24,7 @@ async function settleImageDecode(image: HTMLImageElement) {
   try {
     await image.decode();
   } catch {
-    // Ignore decode failures after successful load.
+    // decode() is a best-effort prewarm; the image is already on the page.
   }
 }
 

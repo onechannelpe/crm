@@ -1,15 +1,11 @@
 import { generateKeyPairSync } from "node:crypto";
 
 import {
-  cleanupTestDb,
   createIsolatedTestDb,
-  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { vi } from "vitest";
 
-// Call once, in `beforeAll`: creates the file-scoped isolated database and
-// stubs the handoff keypair env vars for the whole file's run.
 export async function createExtensionFixture(
   prefix: string,
 ): Promise<TestDbContext> {
@@ -28,16 +24,4 @@ export async function createExtensionFixture(
   );
   vi.stubEnv("EXTENSION_EXPECTED_ORIGIN", "http://localhost:3000");
   return createIsolatedTestDb(prefix);
-}
-
-// Call in `beforeEach`: restores the database to its seeded baseline.
-export async function resetExtensionFixture(ctx: TestDbContext): Promise<void> {
-  await resetTestDb(ctx);
-}
-
-// Call once, in `afterAll`: drops the file-scoped database.
-export async function disposeExtensionFixture(
-  ctx: TestDbContext,
-): Promise<void> {
-  await cleanupTestDb(ctx);
 }

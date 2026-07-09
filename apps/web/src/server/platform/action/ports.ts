@@ -4,7 +4,8 @@ import { getServerRuntime } from "~/server/platform/container";
 
 import type { TelemetryRow } from "./telemetry";
 
-// Injection isolates side effects and gives tests a deterministic clock.
+// Hand every clock, reporter, and recorder through a constructor argument so
+// tests can pass fakes.
 export type RuntimePorts = {
   now: () => Date;
   report: (error: unknown) => void;

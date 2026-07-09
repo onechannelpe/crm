@@ -14,15 +14,15 @@ import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/l
 const WORKER_ID = `bg-${process.pid}`;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
-// A ~1s poll floor backstops the LISTEN/NOTIFY doorbell: even if a wake is lost
-// (listener reconnecting, NOTIFY dropped), every queue still drains within a
-// second. NOTIFY makes the common path immediate; the floor makes it reliable.
+// The poll floor backstops the LISTEN/NOTIFY doorbell: even if a wake is
+// lost (listener reconnecting, NOTIFY dropped), every queue still drains
+// within POLL_FLOOR_MS. NOTIFY makes the common path immediate; the floor
+// makes it reliable.
 const POLL_FLOOR_MS = 1_000;
 
-// Coalesces a queue's wakeups (NOTIFY bursts plus the poll floor) into at most
-// one in-flight `runOnce` with at most one queued behind it. A storm of
-// notifications for the same queue collapses into a single fetch, matching
-// River's FetchCooldown.
+// Coalesces a queue's wakeups (NOTIFY bursts plus the poll floor) into at
+// most one in-flight `runOnce` with at most one queued behind it, so a
+// burst of notifications for the same queue collapses into a single fetch.
 function makeWaker(run: () => Promise<void>): () => void {
   let running = false;
   let pending = false;
@@ -66,7 +66,6 @@ export function startBackgroundJobs() {
   const notificationQueues =
     getServerRuntime().notifications.createQueues(WORKER_ID);
 
-  // Each job table's NOTIFY channel maps to the queue that drains it.
   const queueByChannel: Record<string, QueueRunner> = {
     [JOB_TABLE_CHANNELS.workflow_integration_jobs]: recordsImportQueue,
     [JOB_TABLE_CHANNELS.company_registry_record]: enrichmentQueue,
@@ -101,10 +100,8 @@ export function startBackgroundJobs() {
 
   startStaleScanner(30_000);
 
-  // Poll floor: a light, reliable backstop for any missed NOTIFY.
   setInterval(wakeAll, POLL_FLOOR_MS);
 
-  // Doorbell: wake the matching queue the instant its table receives a NOTIFY.
   const listener = createPgListener(dbUrl);
   for (const channel of Object.keys(queueByChannel)) {
     const wake = wakers.get(channel);

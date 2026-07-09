@@ -5,9 +5,8 @@ type OrganizationEnrichmentWriter = Pick<
   "applyEnrichment"
 >;
 
-// The registry fields projected onto the organization. SUNAT is authoritative,
-// so a non-null value always wins; null/blank fields are dropped so a partial
-// (engine-fallback) result never overwrites known columns.
+// SUNAT is authoritative: a non-null value always wins. Null/blank fields are
+// dropped so a partial (engine-fallback) result never overwrites known columns.
 export type RegistryProjection = {
   ruc: string;
   legalName: string | null;
@@ -22,9 +21,9 @@ function present(value: string | null): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-// Projects the latest registry data onto the organization. Called inline by the
-// enrichment worker after a scrape (or engine fallback) -- a single idempotent
-// UPDATE by RUC, not a queue. A missing organization is a no-op.
+// Single idempotent UPDATE by RUC, not a queue. Called inline by the
+// enrichment worker after a scrape (or engine fallback). A missing
+// organization is a no-op.
 export function createOrganizationEnrichmentProjection(
   organizations: OrganizationEnrichmentWriter,
 ) {

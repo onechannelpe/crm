@@ -29,9 +29,8 @@ describe("auth funnel observability snapshot", () => {
   });
 
   // `getAuthFunnelSnapshot` windows off the real clock (see
-  // `parseAuthFunnelSnapshotFilter`), matching the unit coverage in
-  // `tests/unit/observability/service-snapshots.test.ts` — freeze it here too
-  // so fixed `createdAt` seeds land inside the query window.
+  // `parseAuthFunnelSnapshotFilter`). Freeze time here so fixed `createdAt`
+  // seeds land inside the query window.
   afterEach(() => {
     vi.useRealTimers();
   });

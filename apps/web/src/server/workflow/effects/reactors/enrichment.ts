@@ -3,9 +3,8 @@ import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
-// Reactor: a freshly registered lead schedules a SUNAT verification of its RUC.
-// The registry request is written in the same transaction as the registration;
-// the queue worker drains it (NOTIFY wakes it, the poll floor backstops).
+// On lead registration, writes the SUNAT request in the same transaction;
+// the enrichment queue drains it (NOTIFY wakes it, the poll floor backstops).
 export async function reactToRegistration(
   tx: DatabaseExecutor,
   committed: CommittedLeadEvent[],

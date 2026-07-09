@@ -23,11 +23,9 @@ export function createJobQueue<TJob extends QueueJobBase>(
   let runningCount = 0;
   const logger = createLogger(`queue:${name}`);
 
-  // Translate a handler's classification into an engine-resolved outcome: a
-  // retry draws its backoff `available_at` from the injected clock, and a retry
-  // with no attempts left is demoted to a fail. `attempt_count` was already
-  // incremented at claim time, so the row's value reflects the attempt that just
-  // ran.
+  // A retry with no attempts left is demoted to a fail. `attempt_count` was
+  // already incremented at claim time, so the row's value reflects the
+  // attempt that just ran.
   function resolve(job: TJob, settlement: Settlement): SettleOutcome {
     if (settlement.kind !== "retry") {
       return settlement;
@@ -47,9 +45,9 @@ export function createJobQueue<TJob extends QueueJobBase>(
     };
   }
 
-  // Persist the resolved outcome through the store. The store owns queue_state,
-  // the lease, and the table's mirror columns (finished-at, error, status); the
-  // handler's `patch` adds any extra domain columns.
+  // The store owns queue_state, the lease, and the table's mirror columns
+  // (finished-at, error, status); the handler's `patch` adds any extra domain
+  // columns.
   function settle(jobId: TJob["id"], outcome: SettleOutcome): Promise<boolean> {
     if (outcome.kind === "done") {
       return store.markDone(jobId, workerId, now(), outcome.patch);
@@ -152,17 +150,15 @@ export function createJobQueue<TJob extends QueueJobBase>(
         return;
       }
 
-      // Reserve slots at claim time, not inside the per-job callback. Several
-      // runOnce calls can overlap (doorbell wake, poll floor, the self-reschedule
-      // below); incrementing only once a callback ran would let them all read a
-      // stale count and claim past maxConcurrency. Each job releases its own slot
-      // in its finally.
+      // Reserve at claim time, not after the callback: overlapping runOnce
+      // calls (doorbell, poll, self-reschedule) would all read a stale count
+      // otherwise. Each job releases its own slot in its finally.
       runningCount += jobs.length;
 
       await Promise.all(jobs.map((job) => process(job)));
 
-      // A full claim means more work may be waiting; drain again without waiting
-      // for the next wake.
+      // A full claim means more work may be waiting; drain again without
+      // waiting for the next wake.
       if (jobs.length >= availableSlots) {
         setTimeout(() => {
           void runOnce();

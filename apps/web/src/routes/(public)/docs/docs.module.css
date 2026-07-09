@@ -23,7 +23,6 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* Docs index list */
 .docList {
   display: flex;
   flex-direction: column;
@@ -65,7 +64,6 @@
   line-height: 1.5;
 }
 
-/* Individual doc article */
 .article {
   max-width: 660px;
   margin: 0 auto;

@@ -7,7 +7,7 @@ export interface WebhookVerifierInput {
 
 export type WebhookVerifier = (input: WebhookVerifierInput) => boolean;
 
-// Bounds body buffering before signature verification.
+// Caps the buffered body so signature verification sees no partial payload.
 export const WEBHOOK_BODY_LIMIT_BYTES = 256 * 1024;
 
 export type WebhookPolicy = {

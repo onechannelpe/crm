@@ -50,7 +50,7 @@ export function buildRecordImportProgressEvent(input: {
 export function publishRecordImportProgress(
   event: RecordImportProgressEvent,
 ): void {
-  // Progress is ephemeral and not part of any business transaction, so it fires
-  // on the pooled db handle (not a request txn) and delivers immediately.
+  // Progress is ephemeral and not part of any business transaction: fires on
+  // the pooled db handle and delivers immediately.
   notify(db, RECORDS_IMPORT_PROGRESS_CHANNEL, JSON.stringify(event));
 }

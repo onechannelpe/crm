@@ -1,5 +1,6 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
+import { randomUUIDv7 } from "bun";
 
 import { asBranchId, asUserId, type UserId } from "~/server/shared/ids";
 
@@ -18,7 +19,7 @@ export async function seedSessionDeleteFixtures(
   sessionIdPrefix: string,
 ): Promise<SessionDeleteFixtures> {
   const users = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: asUserId(`bench-session-user-${index}`),
+    id: asUserId(randomUUIDv7()),
     branch_id: BRANCH_ID,
     team_id: null,
     username: `bench.ses${index}`,

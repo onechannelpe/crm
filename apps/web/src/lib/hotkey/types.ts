@@ -70,7 +70,6 @@ export type FunctionKey =
   | "F11"
   | "F12";
 
-/** All matchable non-modifier keys. */
 export type Key =
   | LetterKey
   | NumberKey
@@ -78,20 +77,15 @@ export type Key =
   | NavigationKey
   | FunctionKey;
 
-/**
- * Platform-adaptive modifier.
- * "Mod" = Ctrl on Windows/Linux, Cmd (Meta) on macOS.
- * Prefer "Mod" over "Ctrl"/"Meta" for cross-platform shortcuts.
- */
+// Platform-adaptive modifier: "Mod" = Ctrl on Windows/Linux, Cmd (Meta) on macOS.
+// Prefer "Mod" over "Ctrl"/"Meta" for cross-platform shortcuts.
 export type Modifier = "Mod" | "Control" | "Ctrl" | "Shift" | "Alt" | "Meta";
 
-/** A hotkey combo string. Examples: "Mod+K", "Escape", "Shift+ArrowDown". */
 export type HotkeyCombo =
   | Key
   | `${Modifier}+${Key}`
   | `${Modifier}+${Modifier}+${Key}`;
 
-/** Internal parsed representation used for matching. */
 export interface ParsedCombo {
   key: string;
   ctrl: boolean;

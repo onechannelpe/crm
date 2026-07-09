@@ -24,7 +24,7 @@ export type AssignContactsTransactionRepos = {
 
 export type AssignContactsUow = AppUow<AssignContactsTransactionRepos>;
 
-// One organization per RUC: upsert each distinct RUC once.
+// Upsert by RUC; returns the resulting organization id.
 async function upsertOrganizationsByRuc(
   candidates: RecordCandidate[],
   organizations: AssignContactsTransactionRepos["organization"],
@@ -46,8 +46,7 @@ async function upsertOrganizationsByRuc(
   return new Map(entries);
 }
 
-// One membership per (organization, DNI): upsert each distinct person once and
-// return the resulting membership ids.
+// Upsert by (organization, DNI); returns the resulting membership ids.
 async function upsertMembershipsForCandidates(
   candidates: RecordCandidate[],
   organizationIdsByRuc: Map<string, OrganizationId>,

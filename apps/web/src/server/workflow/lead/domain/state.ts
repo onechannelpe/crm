@@ -45,10 +45,9 @@ export type LeadState = {
   version: number;
 };
 
-// deletedAt is a lifecycle column set only by the delete command; a freshly
-// created lead is never deleted, so it is not part of the creation draft.
-// The draft also carries the born-complete commercial scope, which the INSERT
-// writes onto the lead row alongside the lifecycle columns.
+// deletedAt is set only by the delete command, so a freshly created lead
+// never carries it. The draft also carries the commercial scope, which the
+// INSERT writes alongside the lifecycle columns.
 export type LeadDraft = Omit<LeadState, "id" | "version" | "deletedAt"> &
   LeadCommercialScope;
 

@@ -3,8 +3,9 @@ import { generateInviteToken } from "~/lib/auth/invite/tokens";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
 import type { BranchId, TeamId } from "~/server/shared/ids";
 
-// Pending invite users do not authenticate until acceptance flips is_active to 1
-// and sets a real password hash. This placeholder avoids expensive hashing on create.
+// Placeholder password hash for pending invites: avoids Argon2id cost on
+// create. Acceptance replaces the hash and flips is_active to 1, gating
+// authentication.
 const PENDING_INVITE_PASSWORD_PLACEHOLDER = `pending:${generateInviteToken()}`;
 
 export function normalizeInviteEmail(email: string): string {

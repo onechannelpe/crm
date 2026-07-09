@@ -14,8 +14,8 @@ export type DigitalPolicySnapshot = {
 
 export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
   switch (lead.stage) {
-    // Awaiting availability qualification, which happens via the export/import
-    // round-trip, not an in-app action. So there is no agent next step here.
+    // QUALIFYING advances via the export/import round-trip, not an in-app
+    // action: no agent next step.
     case "QUALIFYING":
       return "NO_ACTION";
     case "DISQUALIFIED":

@@ -11,9 +11,9 @@ import {
   overlayToPatch,
 } from "~/server/client-search/process";
 
-// When SUNAT is unreachable the engine fallback supplies the legal name and
-// address only; the rest of the registry fields stay null. The degraded record
-// expires quickly so the next refresh re-attempts the authoritative scrape.
+// SUNAT-unreachable fallback: supplies legal name + address only. The
+// degraded record expires quickly so the next refresh re-attempts the
+// authoritative scrape.
 type EngineFallback = (
   ruc: string,
 ) => Promise<{ legalName: string | null; address: string | null } | null>;
@@ -80,14 +80,14 @@ export function createEnrichmentQueue(
       const result = await processEnrichmentJob(job, scraper, signal, now());
 
       if (result.ok) {
-        // The result columns ride the engine's settle; the org projection is an
-        // inline idempotent local write (a projection failure rethrows, so the
-        // job retries and re-projects).
+        // Result columns ride the engine's settle. The org projection is an
+        // inline idempotent local write: a projection failure rethrows, so the
+        // job retries and re-projects.
         await project(result.overlay);
         return { kind: "done", patch: overlayToPatch(result.overlay) };
       }
 
-      // Authoritative negative: SUNAT has no record. Settle done, no result.
+      // SUNAT has no record: settle done with no result.
       if (result.error.kind === "not_found") {
         return { kind: "done" };
       }
@@ -97,8 +97,8 @@ export function createEnrichmentQueue(
         return { kind: "retry", reason: `enrichment:${result.error.kind}` };
       }
 
-      // Could not reach the authority. Fall back to the engine so the record is
-      // not left empty; a miss (or a DNI) is a terminal failure.
+      // Engine fallback so the record is not left empty; a miss (or a DNI) is
+      // a terminal failure.
       const fallback = await fallbackOverlay(job);
       if (fallback) {
         await project(fallback);

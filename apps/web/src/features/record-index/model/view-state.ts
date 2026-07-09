@@ -9,8 +9,6 @@ export type RecordIndexFilterPanel =
   | { kind: "field-value"; fieldId: string }
   | { kind: "any-field-search" };
 
-// View state owns only view-bar chrome. Adapter controls own filter, sort,
-// view, and search values.
 export type RecordIndexViewState = {
   openMenu: Accessor<RecordIndexMenu>;
   setOpenMenu: Setter<RecordIndexMenu>;

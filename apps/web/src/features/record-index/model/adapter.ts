@@ -14,8 +14,8 @@ import type {
   RecordIndexViews,
 } from "./catalog";
 
-// Adapters own selection signals. Record-index surfaces only this read/write
-// handle so queries and controls share one value.
+// Record-index surfaces only this read/write handle so queries and controls
+// share one value.
 export type RecordIndexControl<TValue> = {
   value: Accessor<TValue>;
   set: (value: TValue) => void;
@@ -72,8 +72,7 @@ export type RecordIndexAdapter<T extends { id: string }> = {
   createAction?: RecordIndexCreateAction;
   pagination?: RecordIndexPagination;
   actions?: ReadonlyArray<RecordIndexToolbarAction>;
-  // Optional selectors expose their catalog and live value together. Selection
-  // values cross the non-generic view-bar boundary as strings.
+  // Selection values cross the non-generic view-bar boundary as strings.
   filter?: {
     catalog: RecordIndexFilterCatalog;
     value: RecordIndexControl<string | undefined>;

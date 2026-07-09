@@ -38,10 +38,9 @@ export interface NotificationPreferencesTable {
   updated_at: Date;
 }
 
-// A delivery is one external send to one recipient on one channel: the unit of
-// work for the dispatch stage. It is leased, retried, and idempotent on
-// (intent_id, user_id, channel). Message content (title/body/action_url) is
-// snapshotted at expansion so dispatch never reads the intent table.
+// The unit of work for the dispatch stage. Leased, retried, idempotent on
+// (intent_id, user_id, channel). Title/body/action_url are snapshotted at
+// expansion so dispatch never reads the intent table.
 export interface NotificationDeliveriesTable {
   id: GeneratedId<NotificationDeliveryId>;
   intent_id: IdColumn<NotificationIntentId>;
@@ -80,10 +79,10 @@ export interface AppNotificationsTable {
   read_at: Date | null;
 }
 
-// An intent is a request to notify, written transactionally with the business
-// action (Stage 0). The expansion stage leases it, fans it out into in-app rows
-// and external delivery rows, then marks it expanded. audience_json/channels_json
-// are jsonb validated at the expansion boundary, so they read back as `unknown`.
+// Written transactionally with the business action (Stage 0); the expansion
+// stage leases it, fans it out into in-app rows and external delivery rows,
+// then marks it expanded. audience_json/channels_json are jsonb validated
+// at the expansion boundary, so they read back as `unknown`.
 export interface NotificationIntentsTable {
   id: IdColumn<NotificationIntentId>;
   event_type: string;

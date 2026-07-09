@@ -20,8 +20,8 @@ const ARTIFACT_TYPES = [
 ] as const;
 export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
 
-// Fulfillment documents that the executive owns (uploads/reads on their own
-// leads without the broad file:artifact:* grant), mirroring sale_proof.
+// Fulfillment documents the executive uploads/reads on their own leads without
+// the broad file:artifact:* grant that back office carries.
 export const EXECUTIVE_OWNED_ARTIFACT_TYPES = [
   "sale_proof",
   "rate_revision_file",

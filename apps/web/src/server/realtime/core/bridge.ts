@@ -13,10 +13,8 @@ interface PgTopicBridgeConfig<TEvent> {
   serializeEvent?: (event: TEvent) => string;
 }
 
-// Bridges a Postgres LISTEN/NOTIFY channel to an in-process topic hub. Events
-// ride the NOTIFY payload directly (they are a few hundred bytes, far under the
-// 8000-byte ceiling), so there is no fetch-back: parse the payload and fan it
-// out to subscribers of the derived topic.
+// Events ride the NOTIFY payload directly. Parse the
+// payload and fan it out to subscribers of the derived topic.
 export function createPgTopicBridge<TEvent>(
   config: PgTopicBridgeConfig<TEvent>,
 ) {

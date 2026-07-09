@@ -38,7 +38,6 @@ const DOC_KIND_LABELS: Record<FulfillmentDocKind, string> = {
   payment_proof: "Comprobante de pago",
 };
 
-// The verb on the action button for the current step.
 const ACTION_LABELS: Record<FulfillmentAction, string> = {
   choose_product: "Definir producto",
   upload_transactions_report: "Subir reporte de transacciones",

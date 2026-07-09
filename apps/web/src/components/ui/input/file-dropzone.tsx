@@ -12,16 +12,10 @@ export interface FileDropzoneProps extends Omit<
   multiple?: boolean;
   disabled?: boolean;
   onFiles: (files: File[]) => void;
-  /**
-   * The visible content of the dropzone. Receives `true` while a file drag is
-   * active over the zone so the consumer can style the active state. The host
-   * button routes its click to the hidden file input, so the children do not
-   * need to be a `<label>`.
-   */
+  // The host button routes its click to the hidden file input, so consumers
+  // pass visible content here instead of wrapping children in a `<label>`.
   children: (state: { dragging: boolean }) => JSX.Element;
-  /**
-   * Defaults to `"button"` so the dropzone never submits an enclosing form.
-   */
+  // Defaults to "button" so the dropzone never submits an enclosing form.
   type?: "button" | "submit" | "reset";
 }
 

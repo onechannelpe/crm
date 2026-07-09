@@ -14,7 +14,6 @@
   flex-direction: column;
   justify-content: center;
   padding: 8px var(--spacing-6) var(--spacing-6);
-  /* width: calc(100% - var(--spacing-12)); */
 }
 
 .sectionHeader {
@@ -61,7 +60,6 @@
 
 .listRowClickable {
   cursor: pointer;
-  /* Button reset while preserving listRow spacing/background */
   appearance: none;
   border: none;
   color: inherit;
@@ -153,7 +151,6 @@
 
 .tileBodyClickable {
   cursor: pointer;
-  /* Button reset while preserving tileBody spacing/background */
   appearance: none;
   border: none;
   color: inherit;
@@ -172,8 +169,6 @@
   min-height: 36px;
   padding: var(--spacing-2);
 }
-
-/* Timeline */
 
 .timelineMainContainer {
   align-items: flex-start;

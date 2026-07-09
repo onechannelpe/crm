@@ -166,7 +166,7 @@ export async function uploadArtifactFile(
     try {
       await failArtifact(code, message);
     } catch {
-      // best effort: keep original error as the returned failure.
+      // Attachment failure must not hide the original upload error.
     }
 
     throw err;

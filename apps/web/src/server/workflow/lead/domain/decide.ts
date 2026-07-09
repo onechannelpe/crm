@@ -305,9 +305,8 @@ export function acceptRate(
   return finish(state, events, input.actor, input.now, null);
 }
 
-// The executive closes the quotation as lost with a recorded reason. Available
-// throughout PRICING (a client can decline before or after a rate arrives), and
-// is the third outcome alongside accept-rate and request-rate-revision.
+// Available throughout PRICING (a client can decline before or after a rate
+// arrives). Third outcome alongside accept-rate and request-rate-revision.
 export function closeLead(
   state: LeadState,
   input: {
@@ -432,8 +431,8 @@ export function addVenueAccounts(
   const completesLastVenue =
     input.totalVenues > 0 && input.fundedVenues + 1 === input.totalVenues;
 
-  // Affiliation data complete: hand off to fulfillment (hardware delivery + sale
-  // registration). LIVE now means the sale is registered, not the form is filled.
+  // Hand off to fulfillment once affiliation is complete. LIVE later means
+  // the sale is registered, not that the form is filled.
   if (completesLastVenue) {
     events.push(
       createHistoryEvent({
@@ -449,8 +448,8 @@ export function addVenueAccounts(
   return finish(state, events, input.actor, input.now);
 }
 
-// Closes fulfillment once every unit's sale is registered. Emitted by the
-// register-sale handoff alongside the per-unit service references.
+// Emitted by the register-sale handoff alongside the per-unit service
+// references.
 export function completeFulfillment(
   state: LeadState,
   input: { actor: Actor; orderId: FulfillmentOrderId; now: Date },

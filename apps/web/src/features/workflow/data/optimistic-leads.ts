@@ -41,7 +41,7 @@ export function createOptimisticLeadRow(input: {
   };
 }
 
-/** Reactive read for source() and other tracking contexts. */
+// Reactive read for source() and other tracking contexts.
 export function getOptimisticLeadRows(key: string): OptimisticLeadRow[] {
   return state[key] ?? [];
 }

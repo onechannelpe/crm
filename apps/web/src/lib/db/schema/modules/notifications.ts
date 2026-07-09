@@ -138,10 +138,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("notification_intents")
     // `id` is a caller-supplied deterministic idempotency key
     // (`${eventId}:${stage}`, see reactors/notify.ts and
-    // reactors/fulfillment-notify.ts), not a generated row id — hence `text`,
-    // not `uuid`. `notification_deliveries.intent_id` and
-    // `app_notifications.source_event_id` both carry this same value
-    // downstream and must stay `text` too.
+    // reactors/fulfillment-notify.ts), not a generated row id; `text` lets
+    // re-expansion collide on the same row.
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("event_type", "text", (col) => col.notNull())
     .addColumn("audience_json", "jsonb", (col) => col.notNull())

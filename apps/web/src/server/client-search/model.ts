@@ -6,9 +6,9 @@ type Lifecycle = "idle" | "queued" | "running" | "succeeded" | "failed";
 
 type Freshness = "fresh" | "stale" | "none";
 
-// The parsed registry result. `source` records which provider supplied it:
-// 'sunat' is authoritative; 'engine' is the degraded fallback written only when
-// SUNAT was unreachable (legal name + address only).
+// `source` records which provider supplied the result: 'sunat' is
+// authoritative; 'engine' is the degraded fallback written only when SUNAT
+// was unreachable (legal name + address only).
 export interface Overlay {
   documentType: DocumentKind;
   documentValue: string;

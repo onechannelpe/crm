@@ -1,5 +1,6 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
+import { randomUUIDv7 } from "bun";
 
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { asBranchId, asUserId } from "~/server/shared/ids";
@@ -34,7 +35,7 @@ export async function seedTeamInviteFixtures(
   const pendingInviteTokenHashes: string[] = [];
 
   const acceptUsers = Array.from({ length: ACCEPT_POOL_SIZE }, (_, index) => ({
-    id: asUserId(`bench-accept-user-${index}`),
+    id: asUserId(randomUUIDv7()),
     branch_id: BRANCH_ID,
     team_id: null,
     username: `bench.accept${index}`,
@@ -50,7 +51,7 @@ export async function seedTeamInviteFixtures(
     created_at: BENCH_NOW,
   }));
   const queryUsers = Array.from({ length: QUERY_POOL_SIZE }, (_, index) => ({
-    id: asUserId(`bench-query-user-${index}`),
+    id: asUserId(randomUUIDv7()),
     branch_id: BRANCH_ID,
     team_id: null,
     username: `bench.query${index}`,

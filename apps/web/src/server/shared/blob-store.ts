@@ -4,10 +4,8 @@ import { createWriteStream } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-// One local-disk blob store, shared by every domain that needs to persist
-// bytes under a key (workflow file artifacts, profile pictures, ...).
-// Domain-specific naming/subdirectories are the caller's concern — pass a
-// fully-resolved rootDir in.
+// Local-disk blob store shared by every caller that needs bytes under a key.
+// Subdirectory layout is the caller's; pass a fully-resolved rootDir.
 export interface BlobStore {
   putBytes(
     key: string,

@@ -39,8 +39,8 @@ function isFulfillmentEvent(
   );
 }
 
-// The pending step a committed event leaves the order on. fulfillment_started
-// opens the order on CHOOSE_PRODUCT; step-advanced reports its target step.
+// fulfillment_started opens the order on CHOOSE_PRODUCT; step-advanced reports
+// its target step. Other event types have no current step.
 function targetStep(event: FulfillmentEvent): FulfillmentStep | null {
   if (event.eventType === "fulfillment_started") return "CHOOSE_PRODUCT";
   if (event.eventType === "fulfillment_step_advanced") return event.payload.to;
@@ -146,7 +146,7 @@ export function deriveFulfillmentNotification(input: {
         id: `${input.eventId}:fulfillment_completed`,
         eventType: "lead.fulfillment_completed",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
-        // Terminal funnel moment for this lead, promoted beyond the in-app bell.
+        // Promotion beyond the in-app bell: terminal funnel moment for the lead.
         channels: ["in_app", "whatsapp"],
         priority: "high",
         title: "Venta registrada",
@@ -219,8 +219,7 @@ export function deriveFulfillmentNotification(input: {
   ];
 }
 
-// Reactor: turns committed fulfillment events into outbox rows aimed at the next
-// actor. Runs in the write transaction, same as reactToStageChanges.
+// Runs in the write transaction, same as reactToStageChanges.
 export async function reactToFulfillmentChanges(
   tx: DatabaseExecutor,
   committed: CommittedLeadEvent[],
@@ -244,9 +243,8 @@ export async function reactToFulfillmentChanges(
     .execute();
   const leadsById = new Map(leadRows.map((lead) => [lead.leadId, lead]));
 
-  // For the AWAITING_PAYMENT step we inline each unit's payment URL in the
-  // notification body, so the executive can forward it to the client without
-  // opening the app. Load units only for the orders that need them.
+  // Inline each unit's payment URL in the notification body so the executive
+  // can forward it without opening the app. Load units only for these orders.
   const paymentOrderIds = [
     ...new Set(
       events

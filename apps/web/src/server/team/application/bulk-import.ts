@@ -72,9 +72,8 @@ export async function applyBulkImport(
         inviteUrl: buildInviteUrl(token),
         expiresAt,
       });
-      // applyImport's per-row loop collects a thrown error into rowErrors and
-      // continues with the rest of the batch; a Result check here would have
-      // no way to signal that back to the loop, so the failure is re-thrown.
+      // Re-throw failures: applyImport's per-row loop catches into rowErrors,
+      // so a Result check here could not signal the loop.
       if (isErr(emailResult)) {
         const { error } = emailResult;
         const message =

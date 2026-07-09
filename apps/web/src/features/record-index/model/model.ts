@@ -10,8 +10,6 @@ import type {
 } from "./adapter";
 import type { RecordIndexFilterPanel, RecordIndexMenu } from "./view-state";
 
-// RecordIndexModel is the non-generic view-bar contract. Optional slices exist
-// only when the adapter provides them.
 export type RecordIndexModel = {
   counts: {
     pickerMeta: Accessor<string>;
@@ -44,7 +42,6 @@ export type RecordIndexModel = {
   search?: RecordIndexSearchControl;
 };
 
-// The table surface keeps typed adapter data while sharing the view-bar model.
 export type RecordIndexScreenModel<T extends { id: string }> = {
   adapter: RecordIndexAdapter<T>;
   context: RecordIndexModel;

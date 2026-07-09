@@ -20,11 +20,8 @@ interface CachedSession {
   cachedUntil: number;
 }
 
-/**
- * In-memory cache for session data.
- * Reduces database queries by caching valid sessions with 5-minute TTL.
- * Cache invalidation happens on logout or session updates.
- */
+// cacheTTL bounds staleness after a logout or session update that has not
+// triggered an explicit delete.
 class SessionCache {
   private cache = new Map<string, CachedSession>();
   private readonly cacheTTL = 5 * 60 * 1000;

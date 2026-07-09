@@ -27,56 +27,63 @@ interface RequestMeta {
   ipAddress: string;
   userAgent: string;
 }
+
 type TotpFlowId = Parameters<typeof submitTotpForLoginFlow>[0]["flowId"];
 
 export function createAuthScenario(
   dbName: string,
   options?: { freezeAtMs?: number },
 ) {
-  let ctx: TestDbContext;
+  let ctx!: TestDbContext;
 
   return {
-    // Call once, in `beforeAll`: creates the file-scoped isolated database.
     async setup() {
       ctx = await createIsolatedTestDb(dbName);
     },
-    // Call in `beforeEach`: restores the database to its seeded baseline and
-    // re-arms the frozen clock (fake timers don't survive `resetTestDb`
-    // since nothing here ties them to the DB — re-arming per test just keeps
-    // prior per-test behavior).
+
     async reset() {
       await resetTestDb(ctx);
+
       vi.useRealTimers();
+
       if (options?.freezeAtMs != null) {
         vi.useFakeTimers({ toFake: ["Date"] });
         vi.setSystemTime(options.freezeAtMs);
       }
     },
-    // Call once, in `afterAll`: drops the file-scoped database.
+
     async teardown() {
       vi.useRealTimers();
       await cleanupTestDb(ctx);
     },
+
     get ctx() {
       return ctx;
     },
+
     identity(name: SeededIdentityName) {
       return getSeededIdentity(name);
     },
+
     async setPassword(name: SeededIdentityName, password: string) {
       await setIdentityPassword(ctx, getSeededIdentity(name), password);
     },
+
     async setOnboarding(name: SeededIdentityName, completed: boolean) {
       await setIdentityOnboarding(ctx, getSeededIdentity(name), completed);
     },
+
     async enableTotp(name: SeededIdentityName) {
       await enableIdentityTotp(ctx, getSeededIdentity(name));
     },
+
     async enablePasskey(name: SeededIdentityName, passkeyId?: string) {
       await enableIdentityPasskey(ctx, getSeededIdentity(name), passkeyId);
     },
+
     async linkGoogleAccount(name: SeededIdentityName, sub: string) {
       const identity = getSeededIdentity(name);
+
       await ctx.repos.oauthAccounts.create({
         user_id: identity.userId,
         provider: "google",
@@ -85,18 +92,22 @@ export function createAuthScenario(
         created_at: new Date(),
       });
     },
+
     async currentTotpCode(name: SeededIdentityName): Promise<string> {
       const identity = getSeededIdentity(name);
       const factor = await ctx.repos.userTotpFactors.findByUserId(
         identity.userId,
       );
+
       if (factor == null) {
         throw new Error("totp factor not found");
       }
-      return generateCurrentTotpCode(
-        await decryptTotpSecret(factor.secret_encrypted),
-      );
+
+      const secret = await decryptTotpSecret(factor.secret_encrypted);
+
+      return generateCurrentTotpCode(secret);
     },
+
     async loginPassword(
       name: SeededIdentityName,
       password: string,
@@ -105,6 +116,7 @@ export function createAuthScenario(
     ) {
       const identity = getSeededIdentity(name);
       const repos = reposOverride ?? ctx.repos;
+
       return submitPasswordLogin(
         {
           identifier: identity.username,
@@ -117,6 +129,7 @@ export function createAuthScenario(
         createTestPasskeyProvider(repos),
       );
     },
+
     async loginByIdentifier(
       identifier: string,
       password: string,
@@ -124,6 +137,7 @@ export function createAuthScenario(
       reposOverride?: TestDbContext["repos"],
     ) {
       const repos = reposOverride ?? ctx.repos;
+
       return submitPasswordLogin(
         {
           identifier,
@@ -136,6 +150,7 @@ export function createAuthScenario(
         createTestPasskeyProvider(repos),
       );
     },
+
     async loginTotp(flowId: TotpFlowId, totpCode: string, meta: RequestMeta) {
       return submitTotpForLoginFlow(
         {

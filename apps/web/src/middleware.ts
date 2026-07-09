@@ -13,7 +13,6 @@ export default createMiddleware({
     const url = new URL(event.request.url);
     event.locals = event.locals ?? {};
 
-    // Generate nonce for CSP (Defense-in-depth against XSS)
     const nonce = crypto.randomUUID().replace(/-/g, "");
     event.locals.nonce = nonce;
 

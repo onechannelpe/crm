@@ -87,8 +87,8 @@ export interface TestRuntime {
     company(ruc: string, overlay: CompanyOverlay): void;
   };
   // Restores the shared database to its seeded baseline and resets the clock
-  // to a fresh `new Date()`. Call this in `beforeEach` — the runtime itself
-  // is built once per file in `beforeAll`.
+  // to a fresh `new Date()`. Call this in `beforeEach`; the runtime itself is
+  // built once per file in `beforeAll`.
   reset(): Promise<void>;
   dispose(): Promise<void>;
 }

@@ -57,9 +57,9 @@ export async function registerLead(
     return activeExecutive;
   }
 
-  // Lazy release: if the RUC is still held by a lapsed lead the sweep has not
-  // retired yet, expire it now so this registration sees the RUC as available
-  // instead of waiting for the next sweep tick.
+  // Lazy release: if the RUC is still held by a lapsed lead the sweep has
+  // not retired yet, expire it now so registration sees the RUC as available
+  // without waiting for the next sweep tick.
   const heldLead = await repos.leads.findActiveByRuc(ruc.value);
 
   if (heldLead && isReservationLapsed(heldLead, now)) {
@@ -95,9 +95,8 @@ export async function registerLead(
     });
   }
 
-  // Cap concurrent quotations awaiting the executive's decision. Applies only to
-  // the create path; a reassign resolves an existing lead rather than adding a
-  // new client.
+  // Create path only: a reassign resolves an existing lead rather than adding
+  // a new client.
   const pendingDecisions = await repos.leads.countPendingQuotationDecisions(
     actor.userId,
     now,

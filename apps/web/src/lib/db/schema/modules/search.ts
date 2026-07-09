@@ -30,19 +30,17 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
-  // One row per document = the cached registry fact + its enrichment work-state.
-  // The scrape queue claims it (queue_state/lease/attempts), fills the result
-  // columns, and stamps source/fetched_at/expires_at. Freshness and the UI
-  // lifecycle are derived from (queue_state, source, expires_at) -- there is no
-  // separate status mirror. `source` is null until the first authoritative or
-  // fallback fill; 'sunat' is authoritative, 'engine' is the degraded fallback
-  // written only when SUNAT was unreachable.
+  // The scrape queue claims a row (queue_state/lease/attempts), fills the
+  // result columns, and stamps source/fetched_at/expires_at. Freshness and the
+  // UI lifecycle are derived from (queue_state, source, expires_at): there is
+  // no separate status mirror. `source` is null until the first authoritative
+  // or fallback fill; 'sunat' is authoritative, 'engine' is the degraded
+  // fallback written only when SUNAT was unreachable.
   await db.schema
     .createTable("company_registry_record")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("document_type", "text", (col) => col.notNull())
     .addColumn("document_value", "text", (col) => col.notNull())
-    // Result (the registry fact).
     .addColumn("full_name", "text")
     .addColumn("legal_name", "text")
     .addColumn("address", "text")
@@ -52,11 +50,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("contributor_condition", "text")
     .addColumn("economic_activities_json", "jsonb")
     .addColumn("payload_json", "jsonb")
-    // Provenance + freshness.
     .addColumn("source", "text")
     .addColumn("fetched_at", "timestamptz")
     .addColumn("expires_at", "timestamptz")
-    // Queue control (owned by the job-store).
     .addColumn("queue_state", "text", (col) =>
       col.notNull().defaultTo("pending"),
     )
@@ -66,14 +62,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
     .addColumn("available_at", "timestamptz", (col) => col.notNull())
     .addColumn("last_error", "text")
-    // Audit. Nullable: a system-initiated reaction has no requesting user.
+    // Nullable: a system-initiated reaction has no requesting user.
     .addColumn("requested_by_user_id", "uuid", (col) =>
       col.references("users.id"),
     )
     .addColumn("requested_at", "timestamptz", (col) => col.notNull())
     .execute();
 
-  // One record per document.
   await db.schema
     .createIndex("idx_company_registry_record_document")
     .on("company_registry_record")

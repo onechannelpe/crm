@@ -52,7 +52,7 @@ export function deriveLeadStageNotifications(input: {
         id: `${input.eventId}:ready_setup`,
         eventType: "lead.ready_for_sale",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
-        // High-value client work, promoted beyond the in-app bell.
+        // Promotion beyond the in-app bell: high-value client work.
         channels: ["in_app", "whatsapp"],
         priority: "high",
         title: "Cliente listo para afiliación",
@@ -65,9 +65,8 @@ export function deriveLeadStageNotifications(input: {
   return [];
 }
 
-// Reactor: turn committed stage changes into notification-outbox rows. Reads the
-// fresh lead row inside the same transaction, so the snapshot it sees already
-// reflects the transition that produced the event.
+// Reads the fresh lead row inside the same transaction, so the snapshot it
+// sees already reflects the transition that produced the event.
 export async function reactToStageChanges(
   tx: DatabaseExecutor,
   committed: CommittedLeadEvent[],

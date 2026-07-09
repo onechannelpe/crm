@@ -6,12 +6,11 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import { FULFILLMENT_STEPS } from "~/contracts/workflow/vocabulary";
 
-// The actor whose turn it is on a given step. Drives the "whose turn" hint and
-// the notification audience.
+// Drives the "whose turn" hint and the notification audience.
 export type PendingOwner = "executive" | "back_office";
 
-// Unit column a per-unit step fills. The step completes only when every unit on
-// the order carries a non-null value here.
+// The step completes only when every unit on the order carries a non-null
+// value for this column.
 export type UnitField =
   | "serial_number"
   | "payment_url"
@@ -44,9 +43,8 @@ const STEP_DEFINITIONS: Record<FulfillmentStep, StepDefinition> = {
   AWAITING_TRANSACTIONS_REPORT: {
     kind: "document",
     action: "upload_transactions_report",
-    // A dedicated person produces the report offline and hands it to the
-    // executive, who uploads it here. Back office reviews it at AWAITING_ADDENDUM
-    // and can reject it back if it is wrong.
+    // A dedicated person produces the report offline; the executive uploads
+    // it. Back office rejects it at AWAITING_ADDENDUM if it's wrong.
     owner: "executive",
     docKind: "transactions_report",
   },
@@ -141,8 +139,8 @@ export function pendingOwnerForStep(
   return STEP_DEFINITIONS[step].owner;
 }
 
-// The step that an action is valid against. A command rejects when the order's
-// current step does not match the action being attempted.
+// Multi-step actions return null here; the caller rejects when the order's
+// current step does not match the action's step.
 export function stepForAction(
   action: FulfillmentAction,
 ): FulfillmentStep | null {
@@ -162,8 +160,8 @@ export function docKindForAction(
   return def.kind === "document" ? def.docKind : null;
 }
 
-// digital_only carries no hardware unit, so the per-unit registration step still
-// runs but over a single bookkeeping unit created at product selection.
+// digital_only carries no hardware unit, so the per-unit step still runs but
+// over a single bookkeeping unit created at product selection.
 export function nextStep(
   productKind: ProductKind,
   current: FulfillmentStep,
@@ -182,18 +180,17 @@ export function isTerminalStep(step: FulfillmentStep): boolean {
   return step === "COMPLETED";
 }
 
-// Steps the back-office work queue surfaces. Back office owns every handoff that
-// is not the executive's turn.
+// Back office owns every handoff that is not the executive's turn.
 export function backOfficeQueueSteps(): FulfillmentStep[] {
   return FULFILLMENT_STEPS.filter(
     (step) => STEP_DEFINITIONS[step].owner === "back_office",
   );
 }
 
-// Steps a reviewer can bounce back when the submitted artifact is wrong. The
-// reject sends the order to `to` (re-notifying that step's owner) and clears
-// `clearField` on every unit so the prior actor re-supplies it. Only review
-// steps are rejectable; data-entry steps are corrected by re-entry in place.
+// Rejectable steps: the reject sends the order to `to` (re-notifying that
+// step's owner) and clears `clearField` on every unit so the prior actor
+// re-supplies it. Data-entry steps are corrected by re-entry in place, not
+// reject.
 export type RejectRule = { to: FulfillmentStep; clearField: UnitField | null };
 
 const REJECT_RULES: Partial<Record<FulfillmentStep, RejectRule>> = {
@@ -202,8 +199,7 @@ const REJECT_RULES: Partial<Record<FulfillmentStep, RejectRule>> = {
     clearField: "payment_proof_artifact_id",
   },
   AWAITING_PDF_COMPILE: { to: "AWAITING_SIGNATURE", clearField: null },
-  // Back office reviews the executive's transactions report while generating the
-  // addendum; a wrong report bounces back for re-upload.
+  // A wrong transactions report bounces back for re-upload.
   AWAITING_ADDENDUM: { to: "AWAITING_TRANSACTIONS_REPORT", clearField: null },
 };
 
@@ -218,8 +214,7 @@ export type FulfillmentStepProgress = {
   status: FulfillmentStepStatus;
 };
 
-// The product's step sequence tagged done/current/pending for the panel
-// checklist. Before a product is chosen the order sits on CHOOSE_PRODUCT alone.
+// Before a product is chosen the order sits on CHOOSE_PRODUCT alone.
 export function fulfillmentProgress(
   productKind: ProductKind | null,
   currentStep: FulfillmentStep,

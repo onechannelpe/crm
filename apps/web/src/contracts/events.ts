@@ -95,16 +95,12 @@ export function parseFieldChanges(raw: unknown): FieldChange[] {
   return [];
 }
 
-// Event-specific payloads remain opaque because their data is heterogeneous.
-// Accepts `unknown` because callers often hold values that are JSON-shaped but
-// not statically narrowed (form data, third-party responses, etc). The return
-// type is a `Json` contract for what is stored, and the trust boundary sits
-// with the consumer: a non-JSON value would still be passed through and break
-// at the next read that does parse it.
+// The trust boundary sits with the consumer: a non-JSON value would still be
+// passed through and break at the next read that does parse it. Accepts
+// `unknown` because callers often hold values that are JSON-shaped but not
+// statically narrowed (form data, third-party responses, etc).
 export function serializeEventPayload(payload?: unknown): Json | null {
   if (payload === null || payload === undefined) return null;
-  // The input is `unknown` because the API accepts any opaque event payload;
-  // we declare the return type as `Json` so the storage contract is honest.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return payload as Json;
 }

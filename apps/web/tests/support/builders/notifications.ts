@@ -22,9 +22,9 @@ const DEFAULT_NOW = new Date(1_700_000_000_000);
 const DEFAULT_USER_ID = asUserId("notification-builder-user");
 
 // Intent row with sane defaults. `audience_json`/`channels_json` are
-// stringified here, matching `enqueueNotifications` — `pg` auto-serializes
-// plain objects for jsonb params but not arrays, so an un-stringified array
-// comes out as a Postgres array literal and fails jsonb validation.
+// stringified here, matching `enqueueNotifications`. `pg` auto-serializes plain
+// objects for jsonb params but not arrays, so an un-stringified array comes out
+// as a Postgres array literal and fails jsonb validation.
 export function anIntentRow(
   overrides: {
     id: string;

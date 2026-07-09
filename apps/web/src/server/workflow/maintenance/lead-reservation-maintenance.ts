@@ -25,7 +25,8 @@ async function runReservationSweepTick(deps: LeadReservationMaintenanceDeps) {
   }
 }
 
-// Registration also releases lazily, so cadence only bounds stale visibility.
+// Cadence bounds stale visibility only; the registration path releases
+// reservations on its own, not via this sweep.
 export function startLeadReservationMaintenance(
   deps: LeadReservationMaintenanceDeps,
 ) {

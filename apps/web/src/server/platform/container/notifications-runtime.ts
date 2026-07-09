@@ -33,12 +33,9 @@ import type { NotificationIntent } from "~/server/notifications/types";
 
 import type { ServerInfra } from "./infra";
 
-// Pipeline wiring expressed purely in terms of injected dependencies. This is
-// the single owner of how the expansion/dispatch stages are assembled; the
-// config-facing factory below and the test harness both build through it, so
-// the two cannot drift. Keeping `clock` and `messaging` as inputs (rather than
-// reaching for `Date.now`/env here) is what makes the pipeline testable with a
-// controlled clock and a fake gateway.
+// Wires expansion and dispatch through injected clock and messaging ports.
+// Config adapter and test harness both build through this, so the two cannot
+// drift.
 export interface NotificationPipelineDeps {
   db: Kysely<Database>;
   messaging: MessagingGateway;
@@ -105,8 +102,8 @@ export function assembleNotificationPipeline(
   };
 }
 
-// Config adapter: builds the provider-backed messaging gateway from env config
-// and hands real-clock dependencies to the shared pipeline assembly.
+// Builds the provider-backed messaging gateway from env config and hands
+// real-clock dependencies to assembleNotificationPipeline.
 export function createNotificationsRuntime(
   infra: ServerInfra,
   config: NotificationsConfig,

@@ -34,8 +34,9 @@ type LeadResult = Result<{ leadId: string }, DomainError>;
 
 type Loaded = { state: LeadState; details: FulfillmentOrderDetails };
 
-// Loads the lead + its fulfillment order, then checks the order is at the step
-// the action is meant for and the actor owns that step.
+// Reads the order's persisted step rather than the action's, because
+// record_serials maps to two steps (refurbished AWAITING_SERIALS and new-POS
+// AWAITING_SERIAL_ENTRY).
 async function loadForAction(
   ctx: LeadTransaction,
   input: {
@@ -50,9 +51,6 @@ async function loadForAction(
   const details = await ctx.repos.fulfillment.findByLeadId(input.leadId);
   if (!details) return Err(fail("fulfillment_not_started"));
 
-  // The order's persisted step is the source of truth. Resolving a step from the
-  // action instead is ambiguous: record_serials maps to two steps (refurbished
-  // AWAITING_SERIALS and new-POS AWAITING_SERIAL_ENTRY).
   const currentStep = details.order.currentStep;
   if (stepDefinition(currentStep).action !== input.action) {
     return Err(fail("invalid_fulfillment_step"));
@@ -81,9 +79,8 @@ function unitHasField(unit: FulfillmentUnit, field: UnitField): boolean {
   }
 }
 
-// Moves the order to the next step in its product sequence, emitting the
-// timeline event. Reaching COMPLETED flips the lead to LIVE via the lead
-// transition so the stage change commits atomically with the step change.
+// Reaching COMPLETED flips the lead to LIVE in the same transaction so the
+// stage change commits atomically with the step change.
 async function advance(
   ctx: LeadTransaction,
   loaded: Loaded,
@@ -258,8 +255,8 @@ function buildUnits(
   return units;
 }
 
-// transactions_report | addendum_unsigned | addendum_signed_photo |
-// addendum_signed_pdf: one artifact-backed handoff that advances the order.
+// One artifact-backed handoff (transactions_report, addendum_*, signed PDF)
+// that advances the order.
 export async function attachFulfillmentDocumentCommand(
   input: {
     leadId: WorkflowLeadId;
@@ -318,7 +315,7 @@ export async function attachFulfillmentDocumentCommand(
   });
 }
 
-// Per-unit data entry. The step advances once every unit carries the value.
+// The step advances once every unit carries the value.
 async function recordUnitValueCommand(
   input: {
     leadId: WorkflowLeadId;
@@ -372,8 +369,8 @@ export async function recordUnitSerialCommand(
   },
   ports: Ports,
 ): Promise<LeadResult> {
-  // Both refurbished (AWAITING_SERIALS) and new POS (AWAITING_SERIAL_ENTRY)
-  // record serials; loadForAction resolves the step from the order.
+  // record_serials maps to AWAITING_SERIALS (refurbished) and
+  // AWAITING_SERIAL_ENTRY (new POS); loadForAction picks the right one.
   const action: FulfillmentAction = "record_serials";
   return recordUnitValueCommand(
     { ...input, action },
@@ -474,9 +471,8 @@ export async function registerUnitSaleCommand(
   );
 }
 
-// Reviewer bounces a review step back to its prior actor with a reason. Clears
-// the rejected field so the prior actor re-supplies it; the reactor notifies
-// that actor. Only steps in REJECT_RULES are rejectable.
+// Only steps in REJECT_RULES are rejectable. The reactor notifies the prior
+// actor after the rejected field is cleared.
 export async function rejectFulfillmentStepCommand(
   input: { leadId: WorkflowLeadId; reason: string; actor: WorkflowActor },
   ports: Ports,
@@ -496,7 +492,6 @@ export async function rejectFulfillmentStepCommand(
     const rule = rejectRuleForStep(from);
     if (rule === null) return Err(fail("invalid_fulfillment_step"));
 
-    // The reviewer who rejects is the owner of the current step.
     const authz = authorizeFulfillmentStep(from, input.actor, state);
     if (!authz.ok) return authz;
 

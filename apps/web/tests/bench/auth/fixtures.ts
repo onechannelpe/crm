@@ -1,5 +1,6 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
+import { randomUUIDv7 } from "bun";
 
 import { hashPassword } from "~/lib/auth/password/password";
 import { asBranchId, asUserId, type UserId } from "~/server/shared/ids";
@@ -22,15 +23,15 @@ export async function seedAuthLoginFixtures(
   const passwordHash = await hashPassword(LOGIN_PASSWORD);
 
   const users = Array.from({ length: LOGIN_POOL_SIZE }, (_, index) => {
-    const id = asUserId(`bench-auth-user-${index}`);
+    const id = asUserId(randomUUIDv7());
     return {
       id,
       branch_id: BRANCH_ID,
       team_id: null,
-      username: `bench.auth${id}`,
-      email: `bench-auth-${id}@test.local`,
+      username: `bench.auth${index}`,
+      email: `bench-auth-${index}@test.local`,
       password_hash: passwordHash,
-      names: `Bench Auth ${id}`,
+      names: `Bench Auth ${index}`,
       first_surname: "User",
       second_surname: "Bench",
       onboarding_completed_at: BENCH_NOW,

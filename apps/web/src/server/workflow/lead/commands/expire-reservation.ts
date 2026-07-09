@@ -8,9 +8,9 @@ import { isReservationLapsed } from "../../lead/domain/reservation";
 import { createLeadRepo } from "../write/lead-repo";
 import { runLeadTransaction } from "../write/transition";
 
-// Releases a single lead whose RUC hold has lapsed. Idempotent: a lead that is
-// no longer in PRICING or whose hold is not actually lapsed is left untouched,
-// so the sweep and the registration guard can both call this safely.
+// Idempotent: a lead no longer in PRICING, or whose hold is not actually
+// lapsed, is left untouched. Safe for the sweep and the registration guard
+// to both call.
 export async function expireLeadReservation(
   executor: DatabaseExecutor,
   leadId: WorkflowLeadId,
@@ -33,7 +33,7 @@ export async function expireLeadReservation(
   });
 }
 
-// Retires every lead whose hold has lapsed since the last tick.
+// Each expiry is isolated: one stale row must not roll back the whole sweep.
 export async function expireLapsedReservations(
   deps: { executor: DatabaseExecutor },
   now: Date,
@@ -44,7 +44,6 @@ export async function expireLapsedReservations(
 
   let expiredCount = 0;
   for (const leadId of lapsed) {
-    // Each expiry is isolated: one stale row must not roll back the whole sweep.
     // eslint-disable-next-line no-await-in-loop
     const result = await expireLeadReservation(deps.executor, leadId, now);
     if (result.ok) expiredCount += 1;

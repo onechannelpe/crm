@@ -161,8 +161,7 @@ export function createActionRunner(ports: RuntimePorts) {
   return { runAction, runActionResult };
 }
 
-// The default runner wires production ports. Tests use createActionRunner with
-// fake ports while request-scoped reads remain stubbed at their module boundary.
+// Production ports; tests build their own runner with fakes.
 const runner = createActionRunner(defaultPorts);
 export const runAction = runner.runAction;
 export const runActionResult = runner.runActionResult;

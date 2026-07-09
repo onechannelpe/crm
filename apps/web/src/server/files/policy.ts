@@ -11,8 +11,8 @@ import {
 
 const EXECUTIVE_OWNED = new Set<ArtifactType>(EXECUTIVE_OWNED_ARTIFACT_TYPES);
 
-// Executives may request/upload/read these artifact kinds on their own leads
-// without the broad file:artifact:* grant the back office carries.
+// Executives may request/upload/read these kinds on their own leads without
+// the broad file:artifact:* grant that back office carries.
 function isExecutiveOwned(
   actor: PolicyActor,
   artifactType: ArtifactType,

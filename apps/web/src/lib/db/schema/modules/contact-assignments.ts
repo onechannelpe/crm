@@ -1,9 +1,7 @@
 import { sql, type Kysely } from "kysely";
 
-// The prospecting/contact-assignment context: who is assigned to contact whom,
-// when they were last contacted (cadence), which branch owns an organization,
-// and the log of interactions. All reference the organization directory by id;
-// none write organization/person identity columns.
+// All tables here reference the organization directory by id; none write
+// organization/person identity columns.
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("contact_assignments")

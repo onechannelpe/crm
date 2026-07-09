@@ -181,8 +181,6 @@ export function ResultTable(props: ResultTableProps) {
   );
 }
 
-// helpers
-
 function nameToHue(name: string): number {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {

@@ -79,7 +79,7 @@ describe("capacity approval failures", () => {
   it("returns forbidden and writes nothing when the actor cannot manage the target", async () => {
     // The target (`EXECUTIVE_OTHER_BRANCH_ID`) is seeded in Norte; the actor
     // must be scoped to a different branch (Lima) for `canManageExecutiveRecord`
-    // to reject an `admin` on branch mismatch — an unscoped actor defaults to
+    // to reject an `admin` on branch mismatch. An unscoped actor defaults to
     // Norte too, which would make the request manageable and defeat the test.
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_OTHER_BRANCH_ID,

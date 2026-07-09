@@ -80,12 +80,8 @@ export interface ExecuteWithUsageReservationCommand<K extends CapacityKind> {
   brand: (id: string) => UsageReservationId<K>;
 }
 
-// Single public entry point for "reserve capacity, do side-effecting work,
-// then settle" across both lead and search usage. The raw reserve/commit/
-// cancel steps above are private on purpose: nothing can reserve without
-// also being forced through this try/catch-and-cancel-on-throw path, which
-// is what a hand-rolled inline choreography (see the old
-// server/search-workflow/run-search.ts) would otherwise skip.
+// Raw reserve/commit/cancel are private: every reservation must flow through
+// this path so a thrown work block triggers a cancel.
 export async function executeWithUsageReservation<K extends CapacityKind, T>(
   command: ExecuteWithUsageReservationCommand<K>,
   repos: Pick<UsageLedgerRepos<K>, "reservations" | "commits">,

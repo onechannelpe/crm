@@ -1,11 +1,11 @@
 import { expectOk } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
+import { createExtensionFixture } from "@tests/support/extension/fixture";
 import {
-  createExtensionFixture,
-  disposeExtensionFixture,
-  resetExtensionFixture,
-} from "@tests/support/extension/fixture";
-import type { TestDbContext } from "@tests/support/runtime/db";
+  cleanupTestDb,
+  resetTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { asEventId } from "~/server/shared/ids";
@@ -18,11 +18,11 @@ describe("extension runtime projection ordering", () => {
   });
 
   afterAll(async () => {
-    await disposeExtensionFixture(ctx);
+    await cleanupTestDb(ctx);
   });
 
   beforeEach(async () => {
-    await resetExtensionFixture(ctx);
+    await resetTestDb(ctx);
   });
 
   it("keeps the newest presence projection regardless of write order", async () => {

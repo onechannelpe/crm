@@ -29,10 +29,10 @@ import {
 
 // Postgres test isolation: build one seeded template database, then
 // `CREATE DATABASE <clone> TEMPLATE <template>` once per test FILE (not per
-// test — see graphile-worker's own test harness for this exact pattern).
+// test, matching graphile-worker's own test harness pattern).
 // Individual tests within a file share that one clone and are isolated from
 // each other by `resetTestDb`, which truncates everything dynamic and
-// reseeds fixtures — cheap (no DDL) and safe under Vitest's default
+// reseeds fixtures. No DDL, safe under Vitest's default
 // sequential-within-file execution. Cloning requires the template to have no
 // live connections, so the template pool is destroyed after seeding and
 // tests never connect to it directly.
@@ -503,9 +503,8 @@ export interface FreshDbContext {
   db: Kysely<Database>;
 }
 
-// An empty, unmigrated database — not cloned from the fixture template. For
-// tests that exercise migration/seeding itself (schema baseline, seed
-// invariants), not app behavior against seeded fixtures.
+// Empty, unmigrated databases are not cloned from the fixture template. Use
+// these for migration/seeding tests, not app behavior against seeded fixtures.
 export async function createFreshDb(prefix: string): Promise<FreshDbContext> {
   const dbName = `crm_test_fresh_${prefix}_${Date.now()}_${Math.random()
     .toString(16)

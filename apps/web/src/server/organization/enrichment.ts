@@ -1,10 +1,9 @@
 import type { Ruc } from "~/server/shared/document";
 import type { EngineClient } from "~/server/shared/engine/client";
 
-// The organization-enrichment capability: resolve an organization's
-// authoritative legal name and address from the external registry by RUC.
-// Owned here so lead registration and the lead bootstrap preview depend on one
-// port and one implementation instead of redeclaring the shape per consumer.
+// Resolves an organization's authoritative legal name and address from the
+// external registry by RUC. Owned here so lead registration and the bootstrap
+// preview share one port and one implementation.
 export type OrganizationEnrichment = {
   enrichByRuc(ruc: string): Promise<{
     legalName: string | null;
@@ -12,8 +11,7 @@ export type OrganizationEnrichment = {
   } | null>;
 };
 
-// The scheduling side of enrichment: enqueue a RUC verification for the
-// enrichment worker to process later.
+// Enqueues a RUC verification for the enrichment worker to process later.
 export type OrganizationEnrichmentQueue = {
   enqueueRucVerification(ruc: Ruc, requestedByUserId: string): Promise<void>;
 };

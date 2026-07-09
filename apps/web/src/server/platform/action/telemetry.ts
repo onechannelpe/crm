@@ -3,12 +3,8 @@ import type { RecordActionObservationInput } from "~/server/observability/servic
 
 import type { AppContext } from "./context";
 
-/**
- * The subset of an action's input that is safe to persist for observability.
- * Restricted to scalar identifiers (lead ids, venue ids, counts, flags) so a
- * raw request payload, which may carry PII or bank data, cannot be assigned
- * here and reach the telemetry store.
- */
+// Scalar identifiers only (lead ids, venue ids, counts, flags). Raw request
+// payloads (which may carry PII or bank data) cannot be assigned here.
 export type AuditFields = Record<string, string | number | boolean | null>;
 
 export type TelemetryRow = RecordActionObservationInput;

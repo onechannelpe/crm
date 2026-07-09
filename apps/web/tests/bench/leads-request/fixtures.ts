@@ -1,5 +1,6 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
+import { randomUUIDv7 } from "bun";
 
 import type { SearchIntent } from "~/contracts/search/vocabulary";
 import type { DomainError } from "~/server/shared/domain-error";
@@ -35,7 +36,7 @@ export async function seedLeadsRequestFixtures(
   ctx: TestDbContext,
 ): Promise<LeadsRequestSeed> {
   const users = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: asUserId(`bench-leads-user-${index}`),
+    id: asUserId(randomUUIDv7()),
     branch_id: BRANCH_ID,
     team_id: null,
     username: `bench.leads${index}`,
@@ -61,8 +62,7 @@ export async function seedLeadsRequestFixtures(
     });
   }
 
-  // Seed lead capacity grants so each user can complete one refill.
-  // bufferTarget defaults to system default; grant 5 units per user to cover it.
+  // Capacity grants keep the benchmark on assignment work, not quota rejection.
   for (const userId of userIds) {
     await ctx.repos.leadCapacityGrants.insert({
       user_id: userId,

@@ -7,10 +7,10 @@ import {
   type PersonId,
 } from "~/server/shared/ids";
 
-// The organization directory is the single system of record for companies,
-// natural persons, their membership in a company, and the temporal roles that
-// membership carries. Other contexts (prospecting, workflow, extension) read
-// through this repo and reference rows by id; none write these tables directly.
+// Single system of record for companies, natural persons, their membership,
+// and the temporal roles membership carries. Other contexts (prospecting,
+// workflow, extension) read through this repo and reference rows by id; none
+// write these tables directly.
 
 export const LEGAL_REPRESENTATIVE_ROLE = "LEGAL_REPRESENTATIVE";
 
@@ -27,8 +27,8 @@ export type OrganizationProfile = {
   email: string | null;
 };
 
-// A natural person's identity. Surnames are nullable: a prospected person may be
-// known only by a single unstructured `names` string.
+// Surnames are nullable: a prospected person may be known only by a single
+// unstructured `names` string.
 export type PersonIdentity = {
   dni: string;
   names: string;
@@ -42,9 +42,8 @@ export type PersonView = PersonIdentity & {
   displayName: string;
 };
 
-// A person's membership in an organization: the embedded person identity plus
-// the org-scoped contact channel. Contact cadence is a separate concern owned by
-// the contact-assignments context (contact_cadence), not this row.
+// Embedded person identity plus the org-scoped contact channel. Contact
+// cadence is owned by contact-assignments (contact_cadence), not this row.
 export type Membership = {
   id: OrganizationPersonId;
   organizationId: OrganizationId;
@@ -68,8 +67,6 @@ export type OrganizationRepository = {
     organizationId: OrganizationId;
     lineOfBusiness: string | null;
   }): Promise<void>;
-  // Projects authoritative registry data onto the organization by RUC. Only the
-  // provided fields are written; a missing organization is a no-op.
   applyEnrichment(input: {
     ruc: string;
     legalName?: string;
@@ -195,8 +192,8 @@ export function createOrganizationRepo(
         created_at: now,
         updated_at: now,
       })
-      // Preserve the richer stored identity: keep existing surnames/email when
-      // an incoming (e.g. prospected) record supplies only a display name.
+      // Keep stored surnames/email when an incoming record supplies only a
+      // display name (e.g. a prospected candidate).
       .onConflict((oc) =>
         oc.column("dni").doUpdateSet((eb) => ({
           names: eb.ref("excluded.names"),
@@ -356,8 +353,8 @@ export function createOrganizationRepo(
           .execute()
       ).map((row) => asOrganizationPersonId(row.id));
 
-      // Only one primary holder of a role per organization: close the current
-      // one before opening the new interval.
+      // Close the current primary before opening the new interval: one primary
+      // holder per (organization, role).
       if (memberIds.length > 0) {
         await db
           .updateTable("organization_person_roles")

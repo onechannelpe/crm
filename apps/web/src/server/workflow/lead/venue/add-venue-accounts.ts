@@ -80,8 +80,8 @@ export async function addVenueAccountsCommand(
       return committed;
     }
 
-    // Affiliation just completed: open the fulfillment order so the back office
-    // can pick the product kind. Units are created later, at product selection.
+    // Open the fulfillment order at FULFILLMENT so back office can pick the
+    // product kind. Units are created later, at product selection.
     if (transition.value.next.stage === "FULFILLMENT") {
       const orderId = await ctx.repos.fulfillment.createOrder({
         leadId: state.id,

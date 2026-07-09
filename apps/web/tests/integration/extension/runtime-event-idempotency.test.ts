@@ -1,11 +1,11 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
+import { createExtensionFixture } from "@tests/support/extension/fixture";
 import {
-  createExtensionFixture,
-  disposeExtensionFixture,
-  resetExtensionFixture,
-} from "@tests/support/extension/fixture";
-import type { TestDbContext } from "@tests/support/runtime/db";
+  cleanupTestDb,
+  resetTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("extension runtime event idempotency", () => {
@@ -16,11 +16,11 @@ describe("extension runtime event idempotency", () => {
   });
 
   afterAll(async () => {
-    await disposeExtensionFixture(ctx);
+    await cleanupTestDb(ctx);
   });
 
   beforeEach(async () => {
-    await resetExtensionFixture(ctx);
+    await resetTestDb(ctx);
   });
 
   it("accepts duplicate event delivery without creating a second runtime event", async () => {

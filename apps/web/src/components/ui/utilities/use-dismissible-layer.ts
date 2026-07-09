@@ -24,7 +24,7 @@ export function useDismissibleLayer(options: UseDismissibleLayerOptions) {
     }
   };
 
-  // Dismiss on Escape even when focus is inside the layer (e.g. a search input).
+  // Escape must dismiss even when focus is inside the layer (e.g. a search input).
   useHotkey("Escape", () => options.onDismiss(), {
     enabled: options.enabled,
     allowInInputs: true,

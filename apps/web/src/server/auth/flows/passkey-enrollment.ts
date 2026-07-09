@@ -34,7 +34,8 @@ export function beginPasskeyEnrollment(
   });
 }
 
-// Onboarding issues its session after all steps complete; enrollment must not double-issue.
+// Onboarding issues its session after all steps complete; enrollment must
+// not double-issue.
 export async function enrollPasskey(
   repos: AuthOnboardingRepos,
   input: {

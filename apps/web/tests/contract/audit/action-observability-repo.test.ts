@@ -37,9 +37,8 @@ describe("action observations snapshot", () => {
   });
 
   // `getActionSnapshot` windows off the real clock (see
-  // `parseActionSnapshotFilter`), matching the unit coverage in
-  // `tests/unit/observability/service-snapshots.test.ts` — freeze it here too
-  // so fixed `createdAt` seeds land inside the query window.
+  // `parseActionSnapshotFilter`). Freeze time here so fixed `createdAt` seeds
+  // land inside the query window.
   afterEach(() => {
     vi.useRealTimers();
   });

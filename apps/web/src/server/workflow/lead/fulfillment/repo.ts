@@ -238,8 +238,7 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    // Clears one field on every unit of the order, used when a review step is
-    // rejected so the prior actor re-supplies the value.
+    // Used by the reject step: prior actor re-supplies the value.
     async clearUnitField(
       orderId: FulfillmentOrderId,
       field: UnitField,
@@ -280,8 +279,6 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    // Resolves the uploaded file behind an artifact so a fulfillment document can
-    // reference the concrete asset. Uses the latest source upload binding.
     async findUploadedAsset(
       artifactId: WorkflowArtifactId,
     ): Promise<{ fileAssetId: FileAssetId } | null> {

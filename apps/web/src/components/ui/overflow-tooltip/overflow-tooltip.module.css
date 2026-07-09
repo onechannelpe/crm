@@ -12,10 +12,6 @@
   white-space: nowrap;
 }
 
-/* 
-  Tooltip bubble hidden by default, 
-  shown on hover/focus-within
-*/
 .tooltip {
   background: var(--foreground);
   border-radius: var(--radius-sm);

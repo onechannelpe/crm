@@ -1,11 +1,11 @@
 import { expectErr } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
+import { createExtensionFixture } from "@tests/support/extension/fixture";
 import {
-  createExtensionFixture,
-  disposeExtensionFixture,
-  resetExtensionFixture,
-} from "@tests/support/extension/fixture";
-import type { TestDbContext } from "@tests/support/runtime/db";
+  cleanupTestDb,
+  resetTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("extension runtime token validation", () => {
@@ -16,11 +16,11 @@ describe("extension runtime token validation", () => {
   });
 
   afterAll(async () => {
-    await disposeExtensionFixture(ctx);
+    await cleanupTestDb(ctx);
   });
 
   beforeEach(async () => {
-    await resetExtensionFixture(ctx);
+    await resetTestDb(ctx);
   });
 
   it("classifies malformed handoff tokens as handoff_invalid", async () => {

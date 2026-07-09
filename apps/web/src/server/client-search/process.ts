@@ -75,7 +75,6 @@ export async function processEnrichmentJob(
   return { ok: true, overlay };
 }
 
-// The result columns the queue engine writes as it settles the record `done`.
 // jsonb columns take stringified JSON (top-level arrays must be stringified).
 export function overlayToPatch(overlay: Overlay): DomainPatch {
   return {

@@ -11,7 +11,6 @@ import type {
 export type DeliveryChannel = "email" | "whatsapp";
 export type DeliveryProviderId = "resend" | "whatsapp_cloud" | "kapso";
 
-// One concrete external send, written by the expansion stage.
 export interface PlannedDeliveryRow {
   intent_id: NotificationIntentId;
   user_id: UserId;
@@ -22,7 +21,6 @@ export interface PlannedDeliveryRow {
   action_url: string | null;
 }
 
-// The shape the dispatch stage needs to perform a send.
 export interface DeliveryJob {
   id: NotificationDeliveryId;
   attempt_count: number;
@@ -59,8 +57,8 @@ export interface DeliveryRepository {
 export function createDeliveryRepository(
   db: Kysely<Database>,
 ): DeliveryRepository {
-  // `sent_at` is the finished-at stamp; the provider error is recorded
-  // separately via recordAttempt, so the queue lifecycle needs no error column.
+  // sent_at is the finished-at stamp; recordAttempt writes the provider
+  // error separately, so the queue lifecycle needs no error column.
   const store = createJobStore<DeliveryJob, NotificationDeliveryId>(
     db,
     "notification_deliveries",
@@ -114,9 +112,9 @@ export function createDeliveryRepository(
         .execute();
     },
 
-    // The send outcome (provider id, message id, error) is the dispatch stage's
-    // to record; the queue lifecycle is the store's. Splitting the writes keeps
-    // each owner's columns clear.
+    // Send outcome (provider id, message id, error) belongs to the dispatch
+    // stage; queue lifecycle belongs to the store. Splitting keeps each
+    // owner's columns clear.
     async recordAttempt(id, attempt) {
       await db
         .updateTable("notification_deliveries")

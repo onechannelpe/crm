@@ -167,9 +167,8 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         .innerJoin("users as executive", "executive.id", "lead.executive_id");
       let q = applyLeadVisibility(base, filters)
         .innerJoin("organizations as org", "org.id", "lead.organization_id")
-        // Join only the latest rate proposal per lead: a derived table of
-        // MAX(round) keeps one row even when earlier rounds exist. The proposal
-        // is what back office offered, so its rates are the lead's Culqi rates.
+        // Latest rate proposal per lead (MAX(round) keeps one row even when
+        // earlier rounds exist). Back office's offer is the lead's Culqi rates.
         .leftJoin(
           (eb) =>
             eb

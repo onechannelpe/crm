@@ -1,5 +1,6 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
+import { randomUUIDv7 } from "bun";
 
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import {
@@ -50,10 +51,8 @@ export type PlannerScenarioName = (typeof PLANNER_SCENARIOS)[number]["name"];
 type PlannerScenario = (typeof PLANNER_SCENARIOS)[number];
 type PlannerScenarioResult<T> = Record<PlannerScenarioName, T>;
 
-function createUserIds(seedKey: string, count: number): UserId[] {
-  return Array.from({ length: count }, (_, index) =>
-    asUserId(`bench-notify-${seedKey}-user-${index}`),
-  );
+function createUserIds(count: number): UserId[] {
+  return Array.from({ length: count }, () => asUserId(randomUUIDv7()));
 }
 
 async function seedUsersAndAddresses(
@@ -68,7 +67,7 @@ async function seedUsersAndAddresses(
         id: userId,
         branch_id: BRANCH_ID,
         team_id: null,
-        username: `bench.notify.${seedKey}.${userId}`,
+        username: `bench.notify.${seedKey}.${index}`,
         email: `bench-${seedKey}-${index}@test.local`,
         password_hash: "bench-hash",
         names: `Bench Notify ${seedKey} ${index}`,
@@ -99,7 +98,7 @@ async function seedUsersAndAddresses(
         {
           user_id: userId,
           channel: "whatsapp" as const,
-          address: `9${String(userId).padStart(8, "0")}`,
+          address: `9${userId}`,
           is_verified: true,
           verified_at: BENCH_NOW,
           created_at: BENCH_NOW,
@@ -146,7 +145,6 @@ function createAudiencePool(
 async function seedPlannerScenario(
   ctx: TestDbContext,
   scenario: PlannerScenario,
-  scenarioIndex: number,
 ): Promise<NotificationIntentId[]> {
   const stride = Math.max(
     1,
@@ -154,7 +152,7 @@ async function seedPlannerScenario(
   );
   const totalUsers =
     scenario.recipientsPerIntent + stride * (scenario.intentCount - 1);
-  const userIds = createUserIds(`planner-${scenarioIndex}`, totalUsers);
+  const userIds = createUserIds(totalUsers);
 
   await seedUsersAndAddresses(ctx, userIds, `planner-${scenario.name}`);
 
@@ -188,9 +186,9 @@ export async function seedPlannerFixtures(
   const [disjoint, partialOverlap, highOverlap] = PLANNER_SCENARIOS;
 
   const [disjointIds, partialOverlapIds, highOverlapIds] = await Promise.all([
-    seedPlannerScenario(ctx, disjoint, 0),
-    seedPlannerScenario(ctx, partialOverlap, 1),
-    seedPlannerScenario(ctx, highOverlap, 2),
+    seedPlannerScenario(ctx, disjoint),
+    seedPlannerScenario(ctx, partialOverlap),
+    seedPlannerScenario(ctx, highOverlap),
   ]);
 
   return {
@@ -206,7 +204,7 @@ export async function seedPlannerFixtures(
 export async function seedExpandFixtures(
   ctx: TestDbContext,
 ): Promise<IntentJob[]> {
-  const userIds = createUserIds("expand", EXPAND_RECIPIENTS);
+  const userIds = createUserIds(EXPAND_RECIPIENTS);
   await seedUsersAndAddresses(ctx, userIds, "expand");
 
   const intents: NotificationIntent[] = Array.from(
@@ -249,7 +247,7 @@ export async function seedExpandFixtures(
 export async function seedDispatchFixtures(
   ctx: TestDbContext,
 ): Promise<DeliveryJob[]> {
-  const userIds = createUserIds("dispatch", 1);
+  const userIds = createUserIds(1);
   await seedUsersAndAddresses(ctx, userIds, "dispatch");
   const [userId] = userIds;
 

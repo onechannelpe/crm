@@ -355,7 +355,7 @@ export async function persistDemoIdentities(
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Back Office Assignments
+  // Back office assignments
   await db
     .insertInto("back_office_assignments")
     .values([

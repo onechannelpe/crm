@@ -3,7 +3,8 @@ import { ActionError } from "~/lib/wire-error";
 import { faultToWire } from "./fault-boundary";
 import { defaultPorts } from "./ports";
 
-// Public auth endpoints create the actor, so they share only the fault boundary.
+// Public auth endpoints create the actor, so the runner only enforces the
+// fault boundary, not authn.
 export async function runPublicAction<T>(
   execute: () => Promise<T>,
 ): Promise<T> {

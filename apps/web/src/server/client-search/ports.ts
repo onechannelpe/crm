@@ -14,10 +14,9 @@ export type EnrichmentRequest = {
   maxAttempts: number;
 };
 
-// The slice of the registry result the org projection needs. The enrichment
-// worker hands this to the identity side after a scrape (or engine fallback) so
-// the organization row reflects the latest registry data -- an inline,
-// idempotent local write, not a second queue.
+// The enrichment worker hands this to the identity side after a scrape (or
+// engine fallback) so the organization row reflects the latest registry data:
+// an inline, idempotent local write, not a second queue.
 export type OrganizationProjection = {
   ruc: string;
   legalName: string | null;
@@ -27,11 +26,11 @@ export type OrganizationProjection = {
 };
 
 export interface CompanyRegistryPort {
-  // The job-store over company_registry_record. The worker drives it through the
-  // queue engine; the result columns are written as the engine settles the row.
+  // The worker drives the store through the queue engine; result columns are
+  // written as the engine settles the row.
   store: JobStore<string, RegistryRow>;
-  // Insert or reset the record for a document to `pending` and wake the queue on
-  // the same executor (so a wrapping transaction buffers the NOTIFY to commit).
+  // Insert or reset the record to `pending` and wake the queue on the same
+  // executor so a wrapping transaction buffers the NOTIFY to commit.
   upsertRequest(values: EnrichmentRequest): Promise<string>;
   upsertRequests(values: EnrichmentRequest[]): Promise<void>;
   getRecord(

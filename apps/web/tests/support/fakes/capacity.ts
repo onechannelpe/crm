@@ -1,8 +1,3 @@
-/**
- * In-memory repo fakes for capacity-usage integration tests.
- * Each factory returns a stateful object that mirrors the real repo interface.
- */
-
 import {
   asLeadReservationId,
   asSearchReservationId,
@@ -245,7 +240,7 @@ export function makeLeadUsageCommitsRepo() {
   };
 }
 
-/** Minimal policy repos that return no overrides (system defaults apply). */
+// Policy repos with no overrides, so capacity tests use system defaults.
 export function makeNullSearchPolicyRepos() {
   return {
     searchPolicyDefaults: {

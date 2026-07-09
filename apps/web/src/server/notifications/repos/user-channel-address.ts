@@ -115,10 +115,9 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
     return { kind: "claimed" };
   };
 
-  // Confirms ownership of an address the user already claimed. Only flips
-  // the row when the (user_id, channel) match the existing claim and the
-  // supplied address matches what's stored, so a stale command from a
-  // different number can't accidentally verify a fresh one.
+  // Only flips the row when (user_id, channel) and the supplied address match
+  // the existing claim, so a stale command from a different number can't
+  // accidentally verify a fresh one.
   const markWhatsAppVerified = async (values: {
     userId: UserId;
     address: string;

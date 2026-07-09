@@ -1,17 +1,14 @@
 import { sql, type Kysely } from "kysely";
 
-// The organization/person directory: the system of record for companies (by
-// RUC), natural persons (by DNI), a person's membership in an organization, and
-// the temporal roles that membership carries. One writer owns these tables (the
-// organization repo); other contexts reference them by id.
+// One writer (the organization repo) owns these tables; other contexts
+// reference rows by id and never write organization/person identity columns.
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("people")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("dni", "text", (col) => col.notNull().unique())
-    // Name columns match the `users` convention (names/first_surname/
-    // second_surname). Surnames are nullable here because a prospected person
-    // may be known only by a single unstructured display string.
+    // Surnames nullable: a prospected person may be known only by a single
+    // unstructured `names` string.
     .addColumn("names", "text", (col) => col.notNull())
     .addColumn("first_surname", "text")
     .addColumn("second_surname", "text")
@@ -47,10 +44,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .column("ruc")
     .execute();
 
-  // Membership = a person's presence at an organization. Identity (name, dni,
-  // personal email) lives on `people`; this table carries only the membership
-  // and its org-scoped contact channel. Contact cadence is a separate concern
-  // owned by contact-assignments (see contact_cadence).
+  // Identity (name, dni, personal email) lives on `people`; this row
+  // carries only the membership and its org-scoped contact channel. Contact
+  // cadence is a separate concern owned by contact-assignments.
   await db.schema
     .createTable("organization_people")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))

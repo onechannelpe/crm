@@ -9,10 +9,9 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { CreateTeamInviteCommand } from "../application/contracts";
 
-// The boundary has proven each field is present and well typed; this owns the
-// invite's cross-field and format rules, so single and future bulk creation
-// paths enforce them identically. Email is validated for shape only; the
-// invites domain lower-cases and dedupes it.
+// Cross-field and format rules: applied identically by single and bulk
+// creation paths. Email is shape-only here; the invites domain lower-cases
+// and dedupes.
 export type TeamInviteShape = {
   names: string;
   firstSurname: string;
@@ -65,7 +64,7 @@ export function validateTeamInviteInput(
   });
 }
 
-// Category applies only to executives; for every other role it is dropped so a
+// Category applies only to executives; for other roles it is dropped so a
 // stray value cannot smuggle a category onto a non-executive invite.
 function resolveExecutiveCategory(
   role: Role,

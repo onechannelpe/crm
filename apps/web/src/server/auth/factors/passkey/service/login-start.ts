@@ -132,10 +132,9 @@ export function createPasskeyLoginStartService(
         input.ipAddress,
       );
       if (!throttle.allowed) {
-        // Resolve the user even on the blocked path so lockout events stay
-        // attributable in per-user security analytics
-        // (findRecentLoginRetriesByUser); the identifier hash alone cannot be
-        // grouped by account.
+        // Resolve the user on the blocked path: lockout events stay
+        // attributable in findRecentLoginRetriesByUser. The identifier hash
+        // alone cannot be grouped by account.
         const blockedUser = await repos.users.findByUsername(identifier);
         await recordAuthEvent(repos, {
           userId: blockedUser?.id ?? null,

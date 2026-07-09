@@ -30,8 +30,8 @@ type LeadArtifactRef = {
   artifactId: WorkflowArtifactId;
 };
 
-// File uploads must arrive as a single top-level FormData argument so the
-// framework uses multipart transport instead of serializing File through JSON.
+// Top-level FormData argument so SolidStart keeps multipart transport; a
+// parsed File would be JSON-serialized and corrupted.
 function parseLeadUpload(formData: unknown): Result<LeadUpload, DomainError> {
   if (!(formData instanceof FormData)) {
     return Err(invalid({ code: "invalid_input" }));

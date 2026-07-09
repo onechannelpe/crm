@@ -1,5 +1,6 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
+import { randomUUIDv7 } from "bun";
 
 import { asBranchId, asUserId, type UserId } from "~/server/shared/ids";
 
@@ -10,15 +11,15 @@ const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
 
 export async function seedQuotaUsers(ctx: TestDbContext): Promise<UserId[]> {
   const users = Array.from({ length: USER_POOL_SIZE }, (_, index) => {
-    const id = asUserId(`bench-quota-user-${index}`);
+    const id = asUserId(randomUUIDv7());
     return {
       id,
       branch_id: BRANCH_ID,
       team_id: null,
-      username: `bench.quota${id}`,
-      email: `bench-quota-${id}@test.local`,
+      username: `bench.quota${index}`,
+      email: `bench-quota-${index}@test.local`,
       password_hash: "hash",
-      names: `Bench Quota ${id}`,
+      names: `Bench Quota ${index}`,
       first_surname: "User",
       second_surname: "Bench",
       onboarding_completed_at: BENCH_NOW,

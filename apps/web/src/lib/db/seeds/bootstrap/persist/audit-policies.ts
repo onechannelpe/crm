@@ -6,7 +6,6 @@ export async function persistAuditActionPolicies(
   db: Kysely<Database>,
   now: Date,
 ): Promise<void> {
-  // Audit policies
   await db
     .insertInto("audit_action_policies")
     .values([

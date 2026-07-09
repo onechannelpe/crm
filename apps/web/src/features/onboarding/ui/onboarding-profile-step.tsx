@@ -51,7 +51,6 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
         </div>
       </div>
 
-      {/* Phone is the only new field the user provides in this step */}
       <div class={styles.phoneField}>
         <label class={styles.phoneLabel}>
           <span class={styles.phoneLabelText}>WhatsApp corporativo</span>

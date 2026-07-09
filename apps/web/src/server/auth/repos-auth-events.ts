@@ -19,8 +19,8 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
           .selectAll()
           .where("user_id", "=", userId)
           // `id` (uuidv7, time-sortable) breaks ties deterministically when
-          // several events share one `created_at` — e.g. a burst of retries
-          // that land in the same millisecond — which `created_at` alone
+          // several events share one `created_at` (e.g. a burst of retries
+          // that land in the same millisecond), which `created_at` alone
           // cannot order.
           .orderBy("created_at", "desc")
           .orderBy("id", "desc")

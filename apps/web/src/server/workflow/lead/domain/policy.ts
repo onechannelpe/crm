@@ -113,9 +113,8 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
   return caps;
 }
 
-// Authorizes a fulfillment handoff by the step's pending owner. Back office runs
-// the order; the executive performs client-facing steps (including the
-// transactions-report upload) only on their own lead.
+// Back office runs the order; the executive performs client-facing steps
+// (including the transactions-report upload) only on their own lead.
 export function authorizeFulfillmentStep(
   step: FulfillmentStep,
   actor: { userId: UserId; role: Role },
@@ -231,8 +230,8 @@ export function resolveAvailableActions(
   ) {
     actions.push("request-rate-revision");
   }
-  // Close is the third outcome and stays available throughout PRICING, even
-  // before a proposal arrives, since a client can decline at any point.
+  // Available throughout PRICING: a client can decline before or after a rate
+  // arrives, so close stays open at every step.
   if (caps.has("close-lead") && ownsLead && inPricing) {
     actions.push("close-lead");
   }

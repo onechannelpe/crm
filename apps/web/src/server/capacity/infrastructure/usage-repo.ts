@@ -78,10 +78,9 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    // Search reservations always commit with consumed === requested, so this
-    // behaves like updateStatus in practice — kept so the reservations repo
-    // shape is uniform with lead's and both can satisfy the shared
-    // UsageReservationsRepo<K> interface used by executeWithUsageReservation.
+    // Search always commits with consumed === requested, so this collapses to
+    // a status update. Kept on the interface so both repos satisfy
+    // UsageReservationsRepo<K> with the same shape.
     updateAmountAndStatus(
       id: SearchReservationId,
       amount: number,

@@ -77,8 +77,8 @@ export function createRecordsImportQueue(
     claimFilter: { column: "type", values: [...RECORD_IMPORT_TYPES] },
     handle: async (job, signal: AbortSignal) => {
       const result = await runner.process(job, signal);
-      // status/completed_at are owned by the store's lifecycle map; only the row
-      // counts and results payload ride the domain patch.
+      // status/completed_at ride the store's lifecycle map; only row counts and
+      // results payload need to be in the domain patch.
       return {
         kind: "done",
         patch: {
@@ -89,7 +89,6 @@ export function createRecordsImportQueue(
         },
       };
     },
-    // Stream the persisted outcome to the browser after each settle.
     onSettled: async (job, outcome) => {
       if (outcome.kind === "done") {
         await publishImportProgress(job.id, "COMPLETED", null);

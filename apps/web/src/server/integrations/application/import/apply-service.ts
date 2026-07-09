@@ -96,8 +96,8 @@ export async function applyImportRows(
 
     await stageImportRows(trx, input.jobId, sortedRows, input.invalidRows, now);
 
-    // Rows apply in file order inside one transaction so later rows see earlier
-    // mutations and the outbox plan matches the committed import sequence.
+    // File order matters: later rows must see earlier mutations so the outbox
+    // plan matches the committed import sequence.
     /* eslint-disable no-await-in-loop */
     for (const row of sortedRows) {
       const mutationResult = await applyLeadMutation({

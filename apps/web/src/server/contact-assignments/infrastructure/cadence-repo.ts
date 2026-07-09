@@ -3,9 +3,9 @@ import type { Kysely } from "kysely";
 import type { Database } from "~/lib/db/types";
 import type { OrganizationPersonId, UserId } from "~/server/shared/ids";
 
-// Contact cadence: when a membership was last contacted and until when it is in
-// cooldown. Owned by the contact-assignments context, kept off the organization
-// identity row. Read by assignment gating (canContactNow); written by touch.
+// Last-contacted timestamp + cooldown window per membership. Owned by
+// contact-assignments (not the organization identity row). Read by
+// canContactNow; written by touch.
 export type CadenceSnapshot = {
   organizationPersonId: OrganizationPersonId;
   lastContactedAt: Date | null;

@@ -7,17 +7,16 @@ import { validateNotificationIntent } from "./payload";
 
 const DEFAULT_MAX_ATTEMPTS = 5;
 
-// Stage 0: write intent rows transactionally with the business action. The
-// fan-out to recipients happens later in the expansion stage, so this stays
-// O(1) per intent regardless of audience size.
+// O(1) per intent: writes one row in the business transaction; fan-out to
+// recipients is the expansion stage's job.
 export async function enqueueNotifications(
   db: DatabaseExecutor,
   intents: readonly unknown[],
   now: Date,
 ): Promise<void> {
   if (intents.length === 0) return;
-  // `intents` is typed as `unknown` so the validation step is visible at this
-  // boundary. Typed callers can pass a `NotificationIntent[]` directly.
+  // `intents` is `unknown` so the validation step is visible at this boundary.
+  // Typed callers can pass a `NotificationIntent[]` directly.
   const validated: NotificationIntent[] = intents.map((intent) =>
     validateNotificationIntent(intent),
   );
@@ -47,7 +46,7 @@ export async function enqueueNotifications(
     .onConflict((oc) => oc.column("id").doNothing())
     .execute();
 
-  // Wake the expansion stage on the same executor the intents were written on, so
-  // a wrapping business transaction buffers the NOTIFY until commit.
+  // Wake the expansion stage on the same executor so a wrapping business
+  // transaction buffers the NOTIFY until commit.
   notify(db, JOB_TABLE_CHANNELS.notification_intents);
 }

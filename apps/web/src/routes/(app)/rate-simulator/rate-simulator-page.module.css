@@ -16,8 +16,6 @@
 }
 
 .card {
-  /* border: var(--panel-border); */
-  /* border-radius: var(--panel-radius); */
   background: var(--panel-bg);
   padding: 12px;
   display: flex;

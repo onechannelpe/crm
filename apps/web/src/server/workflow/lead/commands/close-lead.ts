@@ -8,9 +8,9 @@ import type { WorkflowActor } from "~/server/workflow/actor";
 import { closeLead } from "../../lead/domain/decide";
 import { runLeadTransaction } from "../write/transition";
 
-// Closes a quotation as lost. A pending proposal is left untouched: the lead
-// moves to CLOSED_LOST (terminal) and every consumer of a pending proposal is
-// gated on PRICING, so the inert proposal is never surfaced again.
+// A pending proposal is left untouched: the lead moves to CLOSED_LOST
+// (terminal) and every consumer of a pending proposal is gated on PRICING, so
+// the inert proposal is never surfaced again.
 export async function closeLeadCommand(
   input: Omit<CloseLeadInput, "leadId"> & {
     actor: WorkflowActor;

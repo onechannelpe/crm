@@ -60,8 +60,8 @@ function resolveLifecycle(
   }
 }
 
-// A result exists only once a provider has filled the record; until then the
-// queue may be pending/processing with all result columns null.
+// No result exists until a provider fills the record: queue may be pending or
+// processing with all result columns null.
 function toOverlay(record: RegistryRow | null | undefined): Overlay | null {
   if (
     !record ||
@@ -92,8 +92,8 @@ function toOverlay(record: RegistryRow | null | undefined): Overlay | null {
   };
 }
 
-// `economic_activities_json` is a jsonb column, so it arrives already parsed.
-// Narrow defensively at this boundary rather than trusting the stored shape.
+// jsonb auto-parses on read; narrow defensively at this boundary rather than
+// trusting the stored shape.
 function normalizeEconomicActivities(value: unknown): SunatEconomicActivity[] {
   if (!Array.isArray(value)) return [];
 

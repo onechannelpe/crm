@@ -1,7 +1,6 @@
 import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
-  // Search capacity policy
   await db.schema
     .createTable("search_policy_defaults")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -38,7 +37,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .column("user_id")
     .execute();
 
-  // Lead capacity policy
   await db.schema
     .createTable("lead_policy_defaults")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -76,7 +74,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .column("user_id")
     .execute();
 
-  // Search capacity ledger
   await db.schema
     .createTable("search_capacity_grants")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -122,7 +119,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
-  // Lead capacity ledger
   await db.schema
     .createTable("lead_capacity_grants")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -168,7 +164,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
-  // Capacity requests (user-initiated requests for additional capacity)
   await db.schema
     .createTable("capacity_requests")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))

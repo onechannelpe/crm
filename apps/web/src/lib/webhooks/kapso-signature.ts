@@ -11,8 +11,8 @@ const logger = createLogger("whatsapp-webhook");
 // body and sends the digest as a hex string in `X-Webhook-Signature`. The
 // secret is the same `secret_key` returned when the webhook was created.
 //
-// Signature verification must run over the exact bytes received (before JSON
-// parsing), so this takes the raw body rather than parsed JSON.
+// Verification must run over the exact bytes received (before JSON parsing),
+// so this takes the raw body rather than parsed JSON.
 export function verifyKapsoSignature({
   request,
   rawBody,

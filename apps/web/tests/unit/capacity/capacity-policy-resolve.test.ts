@@ -43,7 +43,6 @@ describe("resolveSearchPolicy", () => {
       branchDefault: null,
     });
     expect(policy.source).toBe("system");
-    // Verify fallback to config.searchAccess.defaultMonthlyLimit
     expect(policy.monthlyLimit).toBe(250);
   });
 

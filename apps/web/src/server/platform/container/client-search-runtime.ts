@@ -19,7 +19,6 @@ export function createClientSearchRuntime(
   const enrichmentCommand = createEnrichmentCommand(registry);
   const enrichmentQuery = createEnrichmentQuery(registry);
 
-  // SUNAT-unreachable fallback + the inline projection onto the organization.
   const engineFallback = createOrganizationEnrichment(engine);
   const projectOrganization = createOrganizationEnrichmentProjection(
     createOrganizationRepo(infra.db),

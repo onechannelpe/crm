@@ -22,11 +22,6 @@ function getArgon2Module(): Promise<Argon2Module> {
   return argon2ModulePromise;
 }
 
-/**
- * Hashes password using Argon2id algorithm.
- * @param password - Plain text password
- * @returns Argon2id hash string
- */
 export async function hashPassword(password: string): Promise<string> {
   const argon2 = await getArgon2Module();
   return argon2.hash(password, {
@@ -37,12 +32,6 @@ export async function hashPassword(password: string): Promise<string> {
   });
 }
 
-/**
- * Verifies password against Argon2id hash.
- * @param passwordHash - Argon2id hash from database
- * @param password - Plain text password to verify
- * @returns true if password matches hash
- */
 export async function verifyPassword(
   passwordHash: string,
   password: string,
@@ -51,6 +40,7 @@ export async function verifyPassword(
     const argon2 = await getArgon2Module();
     return await argon2.verify(passwordHash, password);
   } catch {
+    // any error (malformed hash, etc.) is a verification failure
     return false;
   }
 }

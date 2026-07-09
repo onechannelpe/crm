@@ -262,9 +262,8 @@ export function createLeadArtifactsService(deps: LeadArtifactDeps) {
       });
     },
 
-    // Uploads one fulfillment document and returns its artifact id. The
-    // fulfillment command then binds it to the order and advances the step, so
-    // this only handles file ingestion + artifact-level authorization.
+    // File ingestion + artifact-level authorization only. The fulfillment
+    // command binds the artifact to the order and advances the step.
     async uploadFulfillmentArtifact(input: {
       ctx: AppContext;
       leadId: WorkflowLeadId;
