@@ -42,6 +42,11 @@ const EMPTY_STATE: Record<Channel, { title: string; text: string }> = {
   },
 };
 
+const isChannelAvailable = (
+  data: NotificationPreferencesView,
+  channel: Channel,
+) => data.channels.find((c) => c.channel === channel)?.available ?? false;
+
 export default function NotificationsSettingsPage() {
   const preferences = createAsync(() => notificationPreferencesQuery());
   const { enqueueErrorSnackBar } = useSnackBar();
@@ -59,15 +64,6 @@ export default function NotificationsSettingsPage() {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   };
-
-  // Availability is the same for a channel across all categories, so any row
-  // works as the probe.
-  const isChannelAvailable = (
-    data: NotificationPreferencesView,
-    channel: Channel,
-  ) =>
-    data.categories[0]?.channels.find((c) => c.channel === channel)
-      ?.available ?? false;
 
   const rowsFor = (
     data: NotificationPreferencesView,

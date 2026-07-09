@@ -20,6 +20,11 @@ export interface NotificationChannelPreference {
   enabled: boolean;
 }
 
+export interface NotificationChannelAvailability {
+  channel: (typeof EXTERNAL_CHANNELS)[number];
+  available: boolean;
+}
+
 export interface NotificationCategoryPreference {
   category: (typeof NOTIFICATION_CATEGORIES)[number];
   label: string;
@@ -28,6 +33,7 @@ export interface NotificationCategoryPreference {
 }
 
 export interface NotificationPreferencesView {
+  channels: NotificationChannelAvailability[];
   categories: NotificationCategoryPreference[];
 }
 
@@ -51,6 +57,10 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
         optOuts.map((row) => `${row.category}:${row.channel}`),
       );
       const available = new Set(verifiedChannels);
+      const channels = EXTERNAL_CHANNELS.map((channel) => ({
+        channel,
+        available: available.has(channel),
+      }));
 
       const categories = NOTIFICATION_CATEGORIES.map((category) => ({
         category,
@@ -70,7 +80,7 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
         }),
       }));
 
-      return Ok({ categories });
+      return Ok({ channels, categories });
     },
   });
 }
