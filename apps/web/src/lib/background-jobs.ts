@@ -1,5 +1,5 @@
 import { dbUrl } from "~/lib/db/db";
-import { createPgListener } from "~/lib/db/notify";
+import { createPgListener, type PgListenerHandler } from "~/lib/db/notify";
 import { uploadsConfig } from "~/lib/env";
 import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
 import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
@@ -74,11 +74,11 @@ export function startBackgroundJobs() {
   };
 
   const wakers = new Map<string, () => void>();
+  const channels: Record<string, PgListenerHandler[]> = {};
   for (const [channel, queue] of Object.entries(queueByChannel)) {
-    wakers.set(
-      channel,
-      makeWaker(() => queue.runOnce()),
-    );
+    const wake = makeWaker(() => queue.runOnce());
+    wakers.set(channel, wake);
+    channels[channel] = [wake];
   }
 
   const wakeAll = () => {
@@ -102,18 +102,8 @@ export function startBackgroundJobs() {
 
   setInterval(wakeAll, POLL_FLOOR_MS);
 
-  const listener = createPgListener(dbUrl);
-  for (const channel of Object.keys(queueByChannel)) {
-    const wake = wakers.get(channel);
-    if (wake) {
-      listener.on(channel, wake);
-    }
-  }
-  void listener.start().catch((error: unknown) => {
-    logger.error("listener_start_failed", {
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-  });
+  const listener = createPgListener(dbUrl, channels);
+  void listener.start();
 
   wakeAll();
 }

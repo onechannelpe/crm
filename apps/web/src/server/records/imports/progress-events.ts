@@ -7,8 +7,10 @@ import { notify } from "~/lib/db/notify";
 import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
 import type {
   IntegrationJobRow,
+  IntegrationJobsPort,
   IntegrationJobStatus,
 } from "~/server/integrations/types";
+import { asIntegrationJobId } from "~/server/shared/ids";
 
 function toRecordImportType(type: IntegrationJobRow["type"]): RecordImportType {
   if (type === "import_status" || type === "import_prioridad") {
@@ -16,6 +18,18 @@ function toRecordImportType(type: IntegrationJobRow["type"]): RecordImportType {
   }
 
   throw new Error(`Unsupported record import type: ${type}`);
+}
+
+export async function findRecordImportJob(
+  jobs: Pick<IntegrationJobsPort, "findById">,
+  jobId: string,
+): Promise<IntegrationJobRow | null> {
+  const job = await jobs.findById(asIntegrationJobId(jobId));
+  if (job?.type !== "import_status" && job?.type !== "import_prioridad") {
+    return null;
+  }
+
+  return job;
 }
 
 export function buildRecordImportProgressEvent(input: {

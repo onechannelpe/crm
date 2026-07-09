@@ -9,12 +9,14 @@ import { hasPermission } from "~/lib/auth/access/rbac";
 import { parseRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
 import { getServerRuntime } from "~/server/platform/container";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
-import { buildRecordImportProgressEvent } from "~/server/records/imports/progress-events";
+import {
+  buildRecordImportProgressEvent,
+  findRecordImportJob,
+} from "~/server/records/imports/progress-events";
 import {
   ensureRecordImportsRealtimeBridge,
   getRecordImportsTopicHub,
 } from "~/server/records/imports/realtime";
-import { asIntegrationJobId } from "~/server/shared/ids";
 
 import { readPeerSession, resolvePeerSession } from "./core/ws-auth";
 import type { WsPeer } from "./core/ws-types";
@@ -61,7 +63,6 @@ export default defineWebSocketHandler({
     const jobId = parseRecordImportTopic(parsed.topic);
     if (jobId === null) return;
 
-    const integrationJobId = asIntegrationJobId(jobId);
     const topic = recordImportTopic(jobId);
 
     if (parsed.type === "unsubscribe") {
@@ -72,11 +73,8 @@ export default defineWebSocketHandler({
     try {
       await ensureRecordImportsRealtimeBridge();
       const integration = getServerRuntime().integrations.integration;
-      const job = await integration.jobs.findById(integrationJobId);
-
-      if (job?.type !== "import_status" && job?.type !== "import_prioridad") {
-        return;
-      }
+      const job = await findRecordImportJob(integration.jobs, jobId);
+      if (!job) return;
 
       const canAccess = await canAccessRecordImportJob(
         {

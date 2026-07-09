@@ -36,6 +36,10 @@ export class TopicHub {
     }
   }
 
+  topics(): string[] {
+    return [...this.peersByTopic.keys()];
+  }
+
   removePeer(peer: RealtimePeer): void {
     const topics = this.topicsByPeer.get(peer);
     if (!topics) {

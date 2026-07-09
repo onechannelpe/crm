@@ -1,5 +1,5 @@
 import { dbUrl } from "~/lib/db/db";
-import { createPgListener } from "~/lib/db/notify";
+import { createPgListener, type PgListenerHandler } from "~/lib/db/notify";
 import { createLogger } from "~/lib/observability/logger";
 
 import type { TopicHub } from "./topic-hub";
@@ -11,45 +11,46 @@ interface PgTopicBridgeConfig<TEvent> {
   parseEvent: (rawPayload: string) => TEvent | null;
   topicForEvent: (event: TEvent) => string;
   serializeEvent?: (event: TEvent) => string;
+  // Runs after every (re)connect. Use it to re-sync subscribers from
+  // durable state: a peer that stayed subscribed through a connection gap
+  // would otherwise stall on whatever it last received.
+  reconcile?: (hub: TopicHub) => Promise<void>;
 }
 
-// Events ride the NOTIFY payload directly. Parse the
-// payload and fan it out to subscribers of the derived topic.
 export function createPgTopicBridge<TEvent>(
   config: PgTopicBridgeConfig<TEvent>,
 ) {
   const logger = createLogger(`realtime-bridge:${config.name}`);
-  const listener = createPgListener(dbUrl);
+
+  const handleNotification: PgListenerHandler = (payload) => {
+    const event = config.parseEvent(payload);
+    if (!event) {
+      return;
+    }
+
+    const topic = config.topicForEvent(event);
+    const out = config.serializeEvent
+      ? config.serializeEvent(event)
+      : JSON.stringify(event);
+    config.hub.broadcast(topic, out);
+  };
+
+  const reconcile = config.reconcile;
+  const listener = createPgListener(
+    dbUrl,
+    { [config.channel]: [handleNotification] },
+    { onConnected: reconcile && (() => reconcile(config.hub)) },
+  );
   let started = false;
 
   async function start(): Promise<void> {
     if (started) {
       return;
     }
+    started = true;
 
-    listener.on(config.channel, (payload) => {
-      const event = config.parseEvent(payload);
-      if (!event) {
-        return;
-      }
-
-      const topic = config.topicForEvent(event);
-      const out = config.serializeEvent
-        ? config.serializeEvent(event)
-        : JSON.stringify(event);
-      config.hub.broadcast(topic, out);
-    });
-
-    try {
-      await listener.start();
-      started = true;
-      logger.info("bridge_started", { channel: config.channel });
-    } catch (error: unknown) {
-      logger.error("bridge_failed", {
-        channel: config.channel,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
+    await listener.start();
+    logger.info("bridge_started", { channel: config.channel });
   }
 
   return { start };

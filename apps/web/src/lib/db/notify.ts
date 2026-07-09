@@ -14,8 +14,10 @@ const logger = createLogger("pg-notify");
 // `payload` defaults to empty for queue doorbells, where persistence is
 // authoritative and the wake only says "look now". The realtime bridge
 // passes a serialized event instead, riding the NOTIFY directly (events are
-// under Postgres's 8000-byte payload ceiling), so subscribers need no
-// fetch-back.
+// under Postgres's 8000-byte payload ceiling). That still isn't a durable
+// transport: a listener that reconnects can miss events sent during the
+// gap, so bridges pass `onConnected` to re-sync from durable state after
+// every (re)connect instead of trusting the stream alone.
 export function notify(
   executor: DatabaseExecutor,
   channel: string,
@@ -35,27 +37,45 @@ export function notify(
 export type PgListenerHandler = (payload: string) => void;
 
 export interface PgListener {
-  on(channel: string, handler: PgListenerHandler): void;
   start(): Promise<void>;
   stop(): Promise<void>;
 }
 
-// A single dedicated, non-pooled `pg.Client` runs LISTEN for every registered
-// channel. Listening connections are long-lived and must not be recycled
-// mid-LISTEN. On connection loss it reconnects with backoff and re-issues every
-// LISTEN so no wake is permanently lost.
-export function createPgListener(connectionString: string): PgListener {
-  const handlers = new Map<string, PgListenerHandler[]>();
+export interface PgListenerOptions {
+  // Runs after every successful connect, including the first.
+  onConnected?: () => void | Promise<void>;
+}
+
+const RECONNECT_BASE_DELAY_MS = 500;
+const RECONNECT_MAX_DELAY_MS = 10_000;
+
+// Full jitter: spreads reconnect attempts so a shared Postgres restart
+// doesn't bring every listening process back on the same tick.
+function withJitter(delayMs: number): number {
+  return delayMs * (0.5 + Math.random());
+}
+
+// A single dedicated, non-pooled `pg.Client` runs LISTEN for every channel in
+// `channels`. The channel set is fixed at creation, so there is no window
+// where a channel is registered after the client has already connected and
+// silently misses its LISTEN until the next reconnect. On connection loss it
+// reconnects with backoff and re-issues every LISTEN so no wake is
+// permanently lost.
+export function createPgListener(
+  connectionString: string,
+  channels: Record<string, PgListenerHandler[]>,
+  options: PgListenerOptions = {},
+): PgListener {
   let client: Client | null = null;
   let stopped = false;
-  let reconnectDelayMs = 500;
+  let reconnectDelayMs = RECONNECT_BASE_DELAY_MS;
 
   async function connect(): Promise<void> {
     if (stopped) return;
 
     const next = new Client({ connectionString });
     next.on("notification", (message) => {
-      const channelHandlers = handlers.get(message.channel);
+      const channelHandlers = channels[message.channel];
       if (!channelHandlers) return;
       for (const handler of channelHandlers) {
         try {
@@ -76,12 +96,23 @@ export function createPgListener(connectionString: string): PgListener {
     });
 
     await next.connect();
-    await Promise.all(
-      [...handlers.keys()].map((channel) => next.query(`LISTEN "${channel}"`)),
-    );
+    // A pg.Client is a single connection, not a pool: issuing LISTEN queries
+    // concurrently overlaps calls on the same client, which pg deprecates.
+    for (const channel of Object.keys(channels)) {
+      // eslint-disable-next-line no-await-in-loop
+      await next.query(`LISTEN "${channel}"`);
+    }
     client = next;
-    reconnectDelayMs = 500;
-    logger.info("listener_connected", { channels: [...handlers.keys()] });
+    reconnectDelayMs = RECONNECT_BASE_DELAY_MS;
+    logger.info("listener_connected", { channels: Object.keys(channels) });
+
+    try {
+      await options.onConnected?.();
+    } catch (error: unknown) {
+      logger.error("listener_onconnected_failed", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   }
 
   async function reconnect(): Promise<void> {
@@ -96,20 +127,18 @@ export function createPgListener(connectionString: string): PgListener {
       }
     }
     const delay = reconnectDelayMs;
-    reconnectDelayMs = Math.min(reconnectDelayMs * 2, 10_000);
-    await new Promise((resolve) => setTimeout(resolve, delay));
+    reconnectDelayMs = Math.min(reconnectDelayMs * 2, RECONNECT_MAX_DELAY_MS);
+    await new Promise((resolve) => setTimeout(resolve, withJitter(delay)));
     await connect().catch(() => void reconnect());
   }
 
   return {
-    on(channel, handler) {
-      const existing = handlers.get(channel) ?? [];
-      existing.push(handler);
-      handlers.set(channel, existing);
-    },
     async start() {
       stopped = false;
-      await connect();
+      // Route the first attempt through the same retry path a live drop
+      // uses: a blip at boot must retry, not disable NOTIFY delivery for
+      // the rest of the process's life.
+      await connect().catch(() => void reconnect());
     },
     async stop() {
       stopped = true;
