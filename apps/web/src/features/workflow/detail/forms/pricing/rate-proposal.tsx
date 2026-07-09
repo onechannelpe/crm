@@ -337,7 +337,11 @@ export function RateProposalSection(props: RateProposalSectionProps) {
           </Show>
         </FieldTable>
 
-        <Show when={!showRevisionForm()}>
+        <Show
+          when={
+            !showRevisionForm() && (props.canAccept || props.canRequestRevision)
+          }
+        >
           <RecordDetailSectionActions stack>
             <Show when={props.canAccept}>
               <Button

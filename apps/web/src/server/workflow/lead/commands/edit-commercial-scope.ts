@@ -58,9 +58,12 @@ export async function editCommercialScopeCommand(
       state.organizationId,
     );
 
+    // Normalize an absent line of business to "" (not null) so a per-field edit
+    // that leaves it untouched sends "" and diffs clean; diffFields treats
+    // null !== "" and would otherwise log a spurious change on every save.
     const prev: CommercialSnapshot = {
       ...commercial,
-      lineOfBusiness: org?.lineOfBusiness ?? null,
+      lineOfBusiness: org?.lineOfBusiness ?? "",
     };
 
     const next: CommercialSnapshot = {

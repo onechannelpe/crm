@@ -20,9 +20,12 @@ import {
 } from "~/actions/workflow/commands/rate";
 import {
   requestAddLeadToFavorites,
+  requestEditCommercialScope,
   requestLeadCreation,
   requestLeadDeletion,
   requestLeadReassignment,
+  requestLeadReview,
+  requestQuotationRestart,
   requestRecordRepLegal,
   requestRemoveLeadFromFavorites,
   requestSaveDigitalPolicy,
@@ -40,6 +43,7 @@ import type {
   CloseLeadInput,
   CreateLeadInput,
   CreateVenueInput,
+  EditCommercialScopeInput,
   EditRateProposalInput,
   ProposeRateInput,
   ReassignLeadInput,
@@ -49,6 +53,8 @@ import type {
   RegisterUnitSaleInput,
   RejectFulfillmentStepInput,
   RequestRateRevisionInput,
+  RestartQuotationInput,
+  ReviewLeadInput,
   SaveDigitalPolicyInput,
   UpdateVenueInput,
 } from "~/contracts/workflow/inputs";
@@ -116,6 +122,21 @@ export const addVenueAccountsMutation = action(
 export const reassignLeadMutation = action(
   (input: ReassignLeadInput) => requestLeadReassignment(input),
   "workflow.reassignLead",
+);
+
+export const reviewLeadMutation = action(
+  (input: ReviewLeadInput) => requestLeadReview(input),
+  "workflow.reviewLead",
+);
+
+export const restartQuotationMutation = action(
+  (input: RestartQuotationInput) => requestQuotationRestart(input),
+  "workflow.restartQuotation",
+);
+
+export const editCommercialScopeMutation = action(
+  (input: EditCommercialScopeInput) => requestEditCommercialScope(input),
+  "workflow.editCommercialScope",
 );
 
 export const addLeadToFavoritesMutation = action(

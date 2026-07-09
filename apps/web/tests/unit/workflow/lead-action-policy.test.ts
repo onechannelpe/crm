@@ -15,7 +15,9 @@ import {
 } from "~/server/shared/ids";
 import {
   closeLead,
+  qualifyLead,
   requestRateRevision,
+  restartQuotation,
 } from "~/server/workflow/lead/domain/decide";
 import {
   authorizeFulfillmentStep,
@@ -259,6 +261,128 @@ describe("lead action policy", () => {
     // Back office reviews the report while generating the addendum and can
     // reject it back to the executive for re-upload.
     expect(rejectRuleForStep("AWAITING_ADDENDUM")?.to).toBe(reportStep);
+  });
+
+  it("qualifies a lead into pricing and records status, priority, and stage", () => {
+    const result = qualifyLead(makeLeadState({ stage: "QUALIFYING" }), {
+      actor: { userId: asUserId("2"), role: "back_office" },
+      status: "DISPONIBLE",
+      priority: "P1",
+      reason: "Disponible para cotizar",
+      now: new Date(200),
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.next.stage).toBe("PRICING");
+    expect(result.value.next.status).toBe("DISPONIBLE");
+    expect(result.value.next.priority).toBe("P1");
+    expect(result.value.events.map((e) => e.eventType)).toEqual([
+      "lead_status_updated",
+      "lead_priority_updated",
+      "lead_reviewed",
+      "workflow_stage_changed",
+    ]);
+  });
+
+  it("routes a carterizado qualification to DISQUALIFIED", () => {
+    const result = qualifyLead(makeLeadState({ stage: "QUALIFYING" }), {
+      actor: { userId: asUserId("2"), role: "back_office" },
+      status: "CARTERIZADO",
+      priority: "P2",
+      reason: "Ya carterizado por otro canal",
+      now: new Date(200),
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.next.stage).toBe("DISQUALIFIED");
+  });
+
+  it("only qualifies while the lead is still QUALIFYING", () => {
+    expect(
+      expectErr(
+        qualifyLead(makeLeadState({ stage: "PRICING" }), {
+          actor: { userId: asUserId("2"), role: "back_office" },
+          status: "DISPONIBLE",
+          priority: "P1",
+          reason: "Ya no aplica",
+          now: new Date(200),
+        }),
+      ).code,
+    ).toBe("invalid_stage");
+  });
+
+  it("restarts an expired quotation back into pricing for owner and back office", () => {
+    const owner = restartQuotation(makeLeadState({ stage: "EXPIRED" }), {
+      actor: { userId: asUserId("1"), role: "executive" },
+      now: new Date(200),
+    });
+    expect(owner.ok).toBe(true);
+    if (!owner.ok) return;
+    expect(owner.value.next.stage).toBe("PRICING");
+
+    // Back office does not own the lead but carries lead:view:all.
+    expect(
+      restartQuotation(makeLeadState({ stage: "EXPIRED" }), {
+        actor: { userId: asUserId("2"), role: "back_office" },
+        now: new Date(200),
+      }).ok,
+    ).toBe(true);
+
+    // Restart is only valid from EXPIRED.
+    expect(
+      expectErr(
+        restartQuotation(makeLeadState({ stage: "PRICING" }), {
+          actor: { userId: asUserId("1"), role: "executive" },
+          now: new Date(200),
+        }),
+      ).code,
+    ).toBe("invalid_stage");
+  });
+
+  it("surfaces stage-gated actions: review, edit-commercial-scope, restart-quotation", () => {
+    const meta = {
+      hasActivePendingProposal: false,
+      rateRevisionCount: 0,
+      fulfillmentStep: null,
+    };
+
+    // Back office qualifies while the lead is QUALIFYING.
+    expect(
+      resolveAvailableActions(
+        { userId: asUserId("2"), role: "back_office" },
+        makeLeadState({ stage: "QUALIFYING" }),
+        meta,
+      ),
+    ).toContain("review");
+
+    // The owning executive can correct their commercial input while pricing.
+    expect(
+      resolveAvailableActions(
+        { userId: asUserId("1"), role: "executive" },
+        makeLeadState({ stage: "PRICING" }),
+        meta,
+      ),
+    ).toContain("edit-commercial-scope");
+
+    // A different executive holds the capability but does not own the lead.
+    expect(
+      resolveAvailableActions(
+        { userId: asUserId("9"), role: "executive" },
+        makeLeadState({ stage: "PRICING" }),
+        meta,
+      ),
+    ).not.toContain("edit-commercial-scope");
+
+    // Restart is offered once the reservation lapsed and the lead is EXPIRED.
+    expect(
+      resolveAvailableActions(
+        { userId: asUserId("1"), role: "executive" },
+        makeLeadState({ stage: "EXPIRED" }),
+        meta,
+      ),
+    ).toContain("restart-quotation");
   });
 
   it("surfaces pricing actions from proposal state", () => {

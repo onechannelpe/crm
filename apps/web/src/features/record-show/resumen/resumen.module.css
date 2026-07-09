@@ -144,6 +144,36 @@
   margin: 0;
 }
 
+.receipt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin: var(--spacing-1) 0 0;
+}
+
+.receiptRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  font-size: var(--font-size-sm);
+}
+
+.receiptRow dt {
+  color: var(--foreground-tertiary);
+}
+
+.receiptRow dd {
+  color: var(--foreground-secondary);
+  margin: 0;
+  text-align: right;
+}
+
+.receiptNote {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+  margin: var(--spacing-1) 0 0;
+}
+
 .checklist {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);

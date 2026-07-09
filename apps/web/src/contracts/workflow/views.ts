@@ -17,10 +17,13 @@ import type {
 
 export type LeadAvailableAction =
   | "add-note"
+  | "review"
+  | "edit-commercial-scope"
   | "propose-rate"
   | "edit-rate-proposal"
   | "accept-rate"
   | "request-rate-revision"
+  | "restart-quotation"
   | "close-lead"
   | "update-venue"
   | "reassign-lead"
@@ -198,6 +201,12 @@ export type LeadDetailFulfillmentView = {
   documents: LeadDetailFulfillmentDocView[];
 };
 
+export type LeadDetailDisqualificationView = {
+  reason: string;
+  byName: string;
+  at: number;
+};
+
 export type LeadDetailView = {
   lead: LeadDetailLeadView;
   profile: LeadDetailProfileView;
@@ -209,6 +218,7 @@ export type LeadDetailView = {
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
   blockingFields: LeadBlockingField[];
+  disqualification: LeadDetailDisqualificationView | null;
   sourceStatus: LeadDetailSourceStatusView;
 };
 

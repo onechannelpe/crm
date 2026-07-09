@@ -4,6 +4,8 @@ import {
   SETTLEMENT_BANKS,
   COLLECTION_MODES,
   PRODUCT_SCOPES,
+  LEAD_STATUSES,
+  LEAD_PRIORITIES,
 } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
@@ -18,6 +20,8 @@ import { recordRepLegalCommand } from "~/server/workflow/lead/commands/record-re
 import { registerLead } from "~/server/workflow/lead/commands/register-lead";
 import { removeFromFavoritesCommand } from "~/server/workflow/lead/commands/remove-from-favorites";
 import { requestSunatRefresh } from "~/server/workflow/lead/commands/request-sunat-refresh";
+import { restartQuotationCommand } from "~/server/workflow/lead/commands/restart-quotation";
+import { reviewLeadCommand } from "~/server/workflow/lead/commands/review-lead";
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
 
 import { workflowActor } from "./actor";
@@ -132,6 +136,44 @@ export async function requestRecordRepLegal(input: unknown) {
     execute: ({ actor }, payload) =>
       recordRepLegalCommand(
         { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
+  });
+}
+
+export async function requestLeadReview(input: unknown) {
+  return runAction({
+    name: "workflow.review_lead",
+    access: { kind: "auth" },
+
+    parse: () =>
+      parseObject(input, validationFail, (r) => ({
+        leadId: asWorkflowLeadId(r.str("leadId")),
+        status: r.enum("status", LEAD_STATUSES),
+        priority: r.enum("priority", LEAD_PRIORITIES),
+        reason: r.str("reason"),
+      })),
+
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, payload) =>
+      reviewLeadCommand(
+        { actor: workflowActor(actor), ...payload },
+        getServerRuntime().workflow.ports(),
+      ),
+  });
+}
+
+export async function requestQuotationRestart(input: unknown) {
+  return runAction({
+    name: "workflow.restart_quotation",
+    access: { kind: "auth" },
+    parse: () => parseLeadRef(input),
+    audit: ({ leadId }) => ({ leadId }),
+
+    execute: ({ actor }, { leadId }) =>
+      restartQuotationCommand(
+        { actor: workflowActor(actor), leadId },
         getServerRuntime().workflow.ports(),
       ),
   });

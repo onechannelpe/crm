@@ -29,6 +29,7 @@ export type LeadCapability =
   | "propose-rate"
   | "accept-rate"
   | "request-rate-revision"
+  | "restart-quotation"
   | "close-lead"
   | "review"
   | "register"
@@ -86,6 +87,7 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("add-venue-accounts");
     caps.add("accept-rate");
     caps.add("request-rate-revision");
+    caps.add("restart-quotation");
     caps.add("close-lead");
     caps.add("request-sunat-refresh");
   }
@@ -96,6 +98,7 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("update-venue");
     caps.add("add-venue-accounts");
     caps.add("accept-rate");
+    caps.add("restart-quotation");
     caps.add("request-sunat-refresh");
   }
   if (
@@ -103,6 +106,7 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
     hasPermission(role, "quotation:revise")
   ) {
     caps.add("propose-rate");
+    caps.add("restart-quotation");
   }
   if (hasPermission(role, "lead:review")) caps.add("review");
   if (hasPermission(role, "lead:register")) caps.add("register");
@@ -205,6 +209,21 @@ export function resolveAvailableActions(
   if (caps.has("add-note")) {
     actions.push("add-note");
   }
+  if (caps.has("review") && state.stage === "QUALIFYING") {
+    actions.push("review");
+  }
+  // The owning executive can correct the commercial data they entered at
+  // registration (e.g. a mistyped current rate) while the lead is still being
+  // qualified or priced, where that reference still informs a live decision.
+  // Owner enforcement also lives in authorizeLeadAction (edit-commercial-scope is
+  // in OWNER_REQUIRED); this keeps the UI gate in lockstep with the server.
+  if (
+    caps.has("edit-commercial-scope") &&
+    ownsLead &&
+    (state.stage === "QUALIFYING" || state.stage === "PRICING")
+  ) {
+    actions.push("edit-commercial-scope");
+  }
   const canProposeRate =
     caps.has("propose-rate") && actor.role === "back_office";
   if (canProposeRate && inPricing && !meta.hasActivePendingProposal) {
@@ -237,6 +256,13 @@ export function resolveAvailableActions(
   }
   if (caps.has("update-venue") && ownsLead && state.stage === "SETUP") {
     actions.push("update-venue");
+  }
+  if (
+    caps.has("restart-quotation") &&
+    state.stage === "EXPIRED" &&
+    (ownsLead || canViewAllLeads(actor.role))
+  ) {
+    actions.push("restart-quotation");
   }
   if (
     state.stage === "FULFILLMENT" &&

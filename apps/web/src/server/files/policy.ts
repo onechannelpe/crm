@@ -5,19 +5,33 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 import {
   EXECUTIVE_OWNED_ARTIFACT_TYPES,
+  EXECUTIVE_READABLE_ARTIFACT_TYPES,
   type ArtifactType,
   type WorkflowArtifact,
 } from "./types";
 
 const EXECUTIVE_OWNED = new Set<ArtifactType>(EXECUTIVE_OWNED_ARTIFACT_TYPES);
+const EXECUTIVE_READABLE = new Set<ArtifactType>(
+  EXECUTIVE_READABLE_ARTIFACT_TYPES,
+);
 
-// Executives may request/upload/read these kinds on their own leads without
+// Executives may request/upload these artifact kinds on their own leads without
 // the broad file:artifact:* grant that back office carries.
 function isExecutiveOwned(
   actor: PolicyActor,
   artifactType: ArtifactType,
 ): boolean {
   return actor.role === "executive" && EXECUTIVE_OWNED.has(artifactType);
+}
+
+// Reads cover a wider set than uploads: the executive must download the unsigned
+// adenda that back office generated so they can send it to the client for
+// signature, even though they never upload that document themselves.
+function isExecutiveReadable(
+  actor: PolicyActor,
+  artifactType: ArtifactType,
+): boolean {
+  return actor.role === "executive" && EXECUTIVE_READABLE.has(artifactType);
 }
 
 export type PolicyAction =
@@ -110,7 +124,7 @@ function canRead(
   artifact: WorkflowArtifact,
 ): Result<void, DomainError> {
   if (
-    !isExecutiveOwned(actor, artifact.artifactType) &&
+    !isExecutiveReadable(actor, artifact.artifactType) &&
     !hasPermission(actor.role, "file:artifact:read")
   ) {
     return deny("artifact_read_forbidden");

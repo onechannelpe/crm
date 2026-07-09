@@ -1,5 +1,6 @@
 import type {
   LeadAvailableAction,
+  LeadDetailDisqualificationView,
   LeadDetailFulfillmentView,
   LeadDetailLeadView,
   LeadDetailRateProposalView,
@@ -41,6 +42,39 @@ import type {
   LeadDetailSourceStatusView,
 } from "./lead-detail-types";
 import { presentTimeline } from "./timeline";
+import { formatTimelineActorName } from "./timeline-actor-name";
+
+type LeadReviewedEntry = Extract<
+  LeadHistoryEntry,
+  { eventType: "lead_reviewed" }
+>;
+
+// The disqualification reason is not a stored column: it lives in the
+// lead_reviewed event that moved the lead to DISQUALIFIED. Read it back from the
+// latest such event so the terminal screen can explain "why" without new schema.
+function resolveDisqualification(
+  history: LeadHistoryEntry[],
+  stage: LeadState["stage"],
+  revealFullNames: boolean,
+): LeadDetailDisqualificationView | null {
+  if (stage !== "DISQUALIFIED") return null;
+
+  const reviewed = history
+    .toReversed()
+    .find(
+      (entry): entry is LeadReviewedEntry =>
+        entry.eventType === "lead_reviewed" &&
+        entry.payload.toStage === "DISQUALIFIED",
+    );
+
+  if (!reviewed) return null;
+
+  return {
+    reason: reviewed.payload.reason,
+    byName: formatTimelineActorName(reviewed.actor, revealFullNames),
+    at: reviewed.occurredAt,
+  };
+}
 
 export type RateRevisionWithFiles = {
   revision: RateRevision;
@@ -299,6 +333,11 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       venuesWithAccountsCount: source.venues.filter((v) => v.solesAccount)
         .length,
     }),
+    disqualification: resolveDisqualification(
+      source.history,
+      source.lead.stage,
+      source.canRevealFullTimeline,
+    ),
     sourceStatus: toLeadSourceStatus(source.sourceStatus),
   };
 }

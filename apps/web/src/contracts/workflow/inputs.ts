@@ -51,6 +51,17 @@ export type ReassignLeadInput = {
   newExecutiveId: string;
 };
 
+export type ReviewLeadInput = {
+  leadId: string;
+  status: LeadStatus;
+  priority: LeadPriority;
+  reason: string;
+};
+
+export type RestartQuotationInput = {
+  leadId: string;
+};
+
 export type AddLeadNoteInput = {
   leadId: string;
   body: string;

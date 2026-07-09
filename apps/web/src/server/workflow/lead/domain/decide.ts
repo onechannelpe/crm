@@ -277,6 +277,77 @@ export function reviewLead(
   return finish(state, events, input.actor, input.now);
 }
 
+// In-app qualification: back office sets status and priority together in one
+// step. reviewLead handles the incremental import path (one row at a time); this
+// is the atomic form for the interactive "Calificar disponibilidad" panel. Both
+// share resolveReviewTransition so the DISQUALIFIED/PRICING rule stays in one place.
+export function qualifyLead(
+  state: LeadState,
+  input: {
+    actor: Actor;
+    status: LeadStatus;
+    priority: LeadPriority;
+    reason: string;
+    now: Date;
+  },
+): TransitionResult {
+  const authz = authorizeLeadAction("review", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
+
+  const toStage = resolveReviewTransition({
+    status: input.status,
+    priority: input.priority,
+  });
+
+  const events: LeadHistoryEventDraft[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_status_updated",
+      actorUserId: input.actor.userId,
+      payload: {
+        fromStatus: state.status,
+        toStatus: input.status,
+        reason: input.reason,
+      },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_priority_updated",
+      actorUserId: input.actor.userId,
+      payload: {
+        fromPrioridad: state.priority,
+        toPrioridad: input.priority,
+        reason: input.reason,
+      },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_reviewed",
+      actorUserId: input.actor.userId,
+      payload: {
+        status: input.status,
+        priority: input.priority,
+        reason: input.reason,
+        fromStage: state.stage,
+        toStage,
+      },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: toStage },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now);
+}
+
 export function acceptRate(
   state: LeadState,
   input: { actor: Actor; proposalId: WorkflowRateProposalId; now: Date },
@@ -365,6 +436,32 @@ export function expireReservation(
     now: input.now,
   });
   return Ok({ next: { ...next, reservationExpiresAt: null }, events });
+}
+
+// Reopens pricing for a lead whose rate reservation lapsed. The stale proposal
+// is left as-is: expireReservation already cleared the reservation, so it no
+// longer counts as an active pending proposal. Back office therefore lands on
+// propose-rate (seeded by the last numbers) instead of the executive being asked
+// to decide on an offer that already expired.
+export function restartQuotation(
+  state: LeadState,
+  input: { actor: Actor; now: Date },
+): TransitionResult {
+  const authz = authorizeLeadAction("restart-quotation", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "EXPIRED") return Err(fail("invalid_stage"));
+
+  const events: LeadHistoryEventDraft[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: "PRICING" },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now);
 }
 
 export function recordRepLegal(

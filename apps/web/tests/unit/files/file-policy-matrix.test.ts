@@ -57,6 +57,17 @@ describe("checkArtifactPolicy role matrix", () => {
       expect(saleProof.ok).toBe(true);
       expect(revisionFile.ok).toBe(true);
     });
+
+    it("does not let the executive request an unsigned adenda (readable, not owned)", () => {
+      const result = checkArtifactPolicy(
+        makeActor({ role: "executive" }),
+        null,
+        "artifact.request",
+        "addendum_unsigned",
+      );
+
+      expect(result.ok).toBe(false);
+    });
   });
 
   describe("artifact.audit.read", () => {
@@ -160,6 +171,67 @@ describe("checkArtifactPolicy role matrix", () => {
         "artifact.read",
       );
       expect(result.ok).toBe(true);
+    });
+
+    // Regression: the executive must download the unsigned adenda that back
+    // office generated (AWAITING_SIGNATURE step) to send it to the client. They
+    // are not the uploader, so the same-branch scope check is what allows it.
+    it("allows executive to read the unsigned adenda back office generated on their branch", () => {
+      const result = checkArtifactPolicy(
+        makeActor({
+          role: "executive",
+          userId: asUserId("44"),
+          branchId: asBranchId("4"),
+        }),
+        makeArtifact({
+          artifactType: "addendum_unsigned",
+          direction: "upload",
+          requestedByUserId: asUserId("30"),
+          scopeBranchId: asBranchId("4"),
+        }),
+        "artifact.read",
+      );
+      expect(result.ok).toBe(true);
+    });
+
+    it("denies executive reading an unsigned adenda scoped to another branch", () => {
+      const result = checkArtifactPolicy(
+        makeActor({
+          role: "executive",
+          userId: asUserId("44"),
+          branchId: asBranchId("4"),
+        }),
+        makeArtifact({
+          artifactType: "addendum_unsigned",
+          direction: "upload",
+          requestedByUserId: asUserId("30"),
+          scopeBranchId: asBranchId("7"),
+        }),
+        "artifact.read",
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error("Expected failure");
+      expect(result.error.code).toBe("artifact_scope_mismatch");
+    });
+
+    it("still denies executive reading a back-office-only document (transactions report)", () => {
+      const result = checkArtifactPolicy(
+        makeActor({
+          role: "executive",
+          userId: asUserId("44"),
+          branchId: asBranchId("4"),
+        }),
+        makeArtifact({
+          artifactType: "transactions_report",
+          direction: "upload",
+          requestedByUserId: asUserId("30"),
+          scopeBranchId: asBranchId("4"),
+        }),
+        "artifact.read",
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error("Expected failure");
+      expect(result.error.code).toBe("artifact_read_forbidden");
     });
 
     it("denies branch mismatch for non-elevated actor", () => {

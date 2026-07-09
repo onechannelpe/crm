@@ -20,13 +20,21 @@ const ARTIFACT_TYPES = [
 ] as const;
 export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
 
-// Fulfillment documents the executive uploads/reads on their own leads without
-// the broad file:artifact:* grant that back office carries.
+// Fulfillment documents the executive owns: requests and uploads on their own
+// leads without the broad file:artifact:* grant that back office carries.
 export const EXECUTIVE_OWNED_ARTIFACT_TYPES = [
   "sale_proof",
   "rate_revision_file",
   "addendum_signed_photo",
   "payment_proof",
+] as const;
+
+// Documents the executive may read (but does not upload) on their own leads: the
+// unsigned adenda back office generates for the executive to send to the client
+// for signature (AWAITING_SIGNATURE step). Owned types are readable too.
+export const EXECUTIVE_READABLE_ARTIFACT_TYPES = [
+  ...EXECUTIVE_OWNED_ARTIFACT_TYPES,
+  "addendum_unsigned",
 ] as const;
 
 const EXECUTION_MODES = ["sync", "async"] as const;
