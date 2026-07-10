@@ -165,7 +165,7 @@ describe("request rate revision command", () => {
 
     const detail = await loadDetail(lead.id);
     const proposal = detail.rateProposals.find(
-      (proposal) => proposal.id === proposalId,
+      (candidate) => candidate.id === proposalId,
     );
 
     expect(proposal?.outcome).toBe("revision_requested");
