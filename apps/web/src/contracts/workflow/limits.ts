@@ -1,4 +1,4 @@
-// Cap on files per rate-revision request. Three covers the typical artifacts
+// Cap on files per rate-revision request. Three covers the typical documents
 // the back office asks for (addendum, signed photo, PDF) without inviting
 // unbounded uploads.
 export const MAX_RATE_REVISION_FILES = 3;

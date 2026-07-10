@@ -23,7 +23,7 @@ import styles from "./files.module.css";
 
 type AttachmentRowProps = {
   file: LeadSaleProofFileView;
-  onDownload: (artifactId: string) => Promise<void> | void;
+  onDownload: (fileId: string) => Promise<void> | void;
   onPreview?: (file: LeadSaleProofFileView) => Promise<void> | void;
 };
 

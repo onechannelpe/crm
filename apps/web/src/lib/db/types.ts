@@ -101,11 +101,8 @@ export interface Database {
   lead_sourcing_policies: workflow.LeadSourcingPoliciesTable;
   workflow_integration_jobs: integrations.WorkflowIntegrationJobsTable;
   workflow_integration_import_rows: integrations.WorkflowIntegrationImportRowsTable;
-  workflow_artifacts: files.WorkflowArtifactsTable;
   file_assets: files.FileAssetsTable;
-  artifact_file_bindings: files.ArtifactFileBindingsTable;
-  artifact_events: files.ArtifactEventsTable;
-  artifact_download_tokens: files.ArtifactDownloadTokensTable;
+  file_download_tokens: files.FileDownloadTokensTable;
   workflow_sale_proof_files: files.WorkflowSaleProofFilesTable;
   lead_fulfillment_orders: fulfillment.LeadFulfillmentOrdersTable;
   lead_fulfillment_units: fulfillment.LeadFulfillmentUnitsTable;

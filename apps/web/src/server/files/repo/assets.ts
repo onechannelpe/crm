@@ -15,6 +15,7 @@ export function createAssetsRepo(db: DB) {
         .insertInto("file_assets")
         .values({
           storage_key: input.storageKey,
+          purpose: input.purpose,
           original_filename: input.originalFilename,
           safe_display_filename: input.safeDisplayFilename,
           detected_mime: input.detectedMime,
@@ -25,6 +26,7 @@ export function createAssetsRepo(db: DB) {
           scan_status: input.scanStatus,
           scan_engine: null,
           scan_reference: null,
+          created_by_user_id: input.createdByUserId,
           created_at: input.now,
         })
         .returning("id")

@@ -10,7 +10,7 @@ import styles from "./files.module.css";
 
 export type PreviewFile = {
   previewId: string;
-  artifactId: string;
+  fileId: string;
   filename: string;
   detectedMime: string;
 };

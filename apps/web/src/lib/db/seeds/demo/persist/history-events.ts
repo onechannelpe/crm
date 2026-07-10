@@ -26,7 +26,7 @@ export type WorkflowLeadIds = {
   idRejected: string;
 };
 
-export type WorkflowArtifactIds = {
+export type WorkflowCommercialIds = {
   qidQuoted: string;
   qidForSale: string;
   qidConverted: string;
@@ -38,7 +38,7 @@ export async function persistWorkflowHistoryEvents(
   now: number,
   day: number,
   leadIds: WorkflowLeadIds,
-  artifacts: WorkflowArtifactIds,
+  commercialIds: WorkflowCommercialIds,
 ): Promise<void> {
   const {
     idPending,
@@ -49,7 +49,7 @@ export async function persistWorkflowHistoryEvents(
     idConverted,
     idRejected,
   } = leadIds;
-  const { qidQuoted, qidForSale, qidConverted, vidConverted } = artifacts;
+  const { qidQuoted, qidForSale, qidConverted, vidConverted } = commercialIds;
   await db
     .deleteFrom("events")
     .where("entity_type", "=", "lead")

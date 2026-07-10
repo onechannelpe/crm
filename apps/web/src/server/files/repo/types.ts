@@ -1,37 +1,16 @@
 import type {
-  BranchId,
   FileAssetId,
-  TeamId,
   UserId,
-  WorkflowArtifactId,
   WorkflowLeadId,
+  WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
 } from "~/server/shared/ids";
 
-import type {
-  ArtifactDirection,
-  ArtifactExecutionMode,
-  ArtifactStatus,
-  ArtifactType,
-  ScanStatus,
-} from "../types";
-
-export interface InsertArtifactInput {
-  artifactType: ArtifactType;
-  direction: ArtifactDirection;
-  executionMode: ArtifactExecutionMode;
-  status: ArtifactStatus;
-  requestedByUserId: UserId;
-  scopeBranchId: BranchId | null;
-  scopeTeamId: TeamId | null;
-  policySnapshotJson: string;
-  workflowContextJson: string;
-  expiresAt: Date | null;
-  now: Date;
-}
+import type { FilePurpose, ScanStatus } from "../types";
 
 export interface InsertFileAssetInput {
   storageKey: string;
+  purpose: FilePurpose;
   originalFilename: string;
   safeDisplayFilename: string;
   detectedMime: string;
@@ -40,24 +19,11 @@ export interface InsertFileAssetInput {
   sha256Hex: string;
   signatureKind: string | null;
   scanStatus: ScanStatus;
-  now: Date;
-}
-
-export interface InsertEventInput {
-  artifactId: WorkflowArtifactId;
-  eventType: string;
-  actorUserId: UserId | null;
-  actorRole: string | null;
-  requestId: string | null;
-  traceId: string | null;
-  ipHash: string | null;
-  userAgent: string | null;
-  details: Record<string, unknown>;
+  createdByUserId: UserId;
   now: Date;
 }
 
 export interface InsertDownloadTokenInput {
-  artifactId: WorkflowArtifactId;
   fileAssetId: FileAssetId;
   tokenHash: string;
   requestedByUserId: UserId;
@@ -68,25 +34,21 @@ export interface InsertDownloadTokenInput {
 export interface SaleProofFileRecord {
   id: string;
   leadId: WorkflowLeadId;
-  artifactId: WorkflowArtifactId;
   fileAssetId: FileAssetId;
   uploadedByUserId: UserId;
   createdAt: Date;
-  artifactStatus: ArtifactStatus;
   safeDisplayFilename: string;
   detectedMime: string;
   sizeBytes: number;
 }
 
 export interface RateRevisionFileRecord {
-  id: WorkflowRateRevisionId;
+  id: WorkflowRateRevisionFileId;
   leadId: WorkflowLeadId;
-  revisionId: WorkflowRateRevisionId;
-  artifactId: WorkflowArtifactId;
+  revisionId: WorkflowRateRevisionId | null;
   fileAssetId: FileAssetId;
   uploadedByUserId: UserId;
   createdAt: Date;
-  artifactStatus: ArtifactStatus;
   safeDisplayFilename: string;
   detectedMime: string;
   sizeBytes: number;

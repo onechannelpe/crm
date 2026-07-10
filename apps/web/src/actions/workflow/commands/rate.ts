@@ -5,9 +5,9 @@ import { CLOSE_REASONS, CURRENCIES } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import {
-  asWorkflowArtifactId,
   asWorkflowLeadId,
   asWorkflowRateProposalId,
+  asWorkflowRateRevisionFileId,
 } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
@@ -123,13 +123,13 @@ export async function requestRateRevision(input: unknown) {
       parseObject(input, validationFail, (r) => ({
         leadId: asWorkflowLeadId(r.str("leadId")),
         justification: r.str("justification"),
-        artifactIds: r
-          .strList("artifactIds", {
+        fileIds: r
+          .strList("fileIds", {
             min: 1,
             max: MAX_RATE_REVISION_FILES,
             unique: true,
           })
-          .map(asWorkflowArtifactId),
+          .map(asWorkflowRateRevisionFileId),
       })),
 
     audit: ({ leadId }) => ({ leadId }),
@@ -140,7 +140,7 @@ export async function requestRateRevision(input: unknown) {
           actor: workflowActor(actor),
           leadId: payload.leadId,
           justification: payload.justification,
-          artifactIds: payload.artifactIds,
+          fileIds: payload.fileIds,
         },
         getServerRuntime().workflow.ports(),
       ),

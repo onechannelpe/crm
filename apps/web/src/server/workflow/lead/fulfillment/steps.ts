@@ -15,7 +15,7 @@ export type PendingOwner = "executive" | "back_office";
 export type UnitField =
   | "serial_number"
   | "payment_url"
-  | "payment_proof_artifact_id"
+  | "payment_proof_file_asset_id"
   | "service_a_ref";
 
 type StepDefinition =
@@ -89,7 +89,7 @@ const STEP_DEFINITIONS: Record<FulfillmentStep, StepDefinition> = {
     kind: "per_unit",
     action: "upload_payment_proof",
     owner: "executive",
-    unitField: "payment_proof_artifact_id",
+    unitField: "payment_proof_file_asset_id",
   },
   AWAITING_PAYMENT_VALIDATION: {
     kind: "confirm",
@@ -197,7 +197,7 @@ export type RejectRule = { to: FulfillmentStep; clearField: UnitField | null };
 const REJECT_RULES: Partial<Record<FulfillmentStep, RejectRule>> = {
   AWAITING_PAYMENT_VALIDATION: {
     to: "AWAITING_PAYMENT",
-    clearField: "payment_proof_artifact_id",
+    clearField: "payment_proof_file_asset_id",
   },
   AWAITING_PDF_COMPILE: { to: "AWAITING_SIGNATURE", clearField: null },
   // A wrong transactions report bounces back for re-upload.

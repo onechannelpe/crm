@@ -145,7 +145,7 @@ export type LeadDetailRateRevisionView = {
 
 export type LeadDetailFulfillmentDocView = {
   docKind: FulfillmentDocKind;
-  artifactId: string;
+  fileId: string;
   filename: string;
   detectedMime: string;
   sizeBytes: number;
@@ -159,7 +159,7 @@ export type LeadDetailFulfillmentUnitView = {
   venueId: string | null;
   serial: string | null;
   paymentUrl: string | null;
-  paymentProofArtifactId: string | null;
+  paymentProofFileId: string | null;
   serviceRef: string | null;
   paymentValidated: boolean;
 };
@@ -268,7 +268,7 @@ type LeadDetailSourceStatusView = {
 };
 
 type LeadDetailRateRevisionFileView = {
-  artifactId: string;
+  fileId: string;
   filename: string;
   detectedMime: string;
   sizeBytes: number;

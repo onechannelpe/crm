@@ -26,11 +26,6 @@ export async function executeDownload(
     return Err(fail("token_expired"));
   }
 
-  const artifact = await repo.artifacts.findById(tokenRow.artifactId);
-  if (!artifact) {
-    return Err(fail("artifact_not_found"));
-  }
-
   const fileAsset = await repo.assets.findById(tokenRow.fileAssetId);
   if (!fileAsset) {
     return Err(fail("file_asset_not_found"));
@@ -48,20 +43,7 @@ export async function executeDownload(
     return Err(fail("token_already_used"));
   }
 
-  await repo.events.insert({
-    artifactId: artifact.id,
-    eventType: "artifact.downloaded",
-    actorUserId: tokenRow.requestedByUserId,
-    actorRole: null,
-    requestId: null,
-    traceId: null,
-    ipHash: null,
-    userAgent: null,
-    details: { fileAssetId: fileAsset.id, tokenHash },
-    now,
-  });
-
   const body = new ArrayBuffer(bytes.byteLength);
   new Uint8Array(body).set(bytes);
-  return Ok({ artifact, fileAsset, body });
+  return Ok({ fileAsset, body });
 }

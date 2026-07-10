@@ -4,8 +4,8 @@ import { fail, type DomainError } from "~/server/shared/domain-error";
 import type {
   FileAssetId,
   UserId,
-  WorkflowArtifactId,
   WorkflowLeadId,
+  WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
 } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -60,8 +60,8 @@ function reportSectionDegradation(section: string, error: DomainError): void {
 export type RateRevisionFilesQuery = {
   listByRevisionId(revisionId: WorkflowRateRevisionId): Promise<
     Array<{
-      artifactId: WorkflowArtifactId;
-      revisionId: WorkflowRateRevisionId;
+      id: WorkflowRateRevisionFileId;
+      revisionId: WorkflowRateRevisionId | null;
       fileAssetId: FileAssetId;
       uploadedByUserId: UserId;
       createdAt: Date;

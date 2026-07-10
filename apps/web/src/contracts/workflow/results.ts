@@ -4,7 +4,7 @@ export type LeadCommandResult = {
 
 export type LeadSaleProofFileView = {
   id: string;
-  artifactId: string;
+  fileId: string;
   filename: string;
   detectedMime: string;
   sizeBytes: number;
@@ -14,7 +14,7 @@ export type LeadSaleProofFileView = {
 };
 
 export type LeadRateRevisionFileView = {
-  artifactId: string;
+  fileId: string;
   filename: string;
   detectedMime: string;
   sizeBytes: number;

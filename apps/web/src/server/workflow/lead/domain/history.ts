@@ -11,9 +11,9 @@ import type {
   FulfillmentDocKind,
 } from "~/contracts/workflow/vocabulary";
 import type {
+  FileAssetId,
   FulfillmentOrderId,
   UserId,
-  WorkflowArtifactId,
   WorkflowLeadId,
   WorkflowRateProposalId,
   WorkflowRateRevisionId,
@@ -186,7 +186,7 @@ export type LeadHistoryPayloadByEvent = {
   fulfillment_document_uploaded: {
     orderId: FulfillmentOrderId;
     docKind: FulfillmentDocKind;
-    artifactId: WorkflowArtifactId;
+    fileAssetId: FileAssetId;
   };
   fulfillment_completed: {
     orderId: FulfillmentOrderId;

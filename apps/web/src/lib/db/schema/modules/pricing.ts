@@ -75,20 +75,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("workflow_leads.id").onDelete("cascade"),
     )
     .addColumn("revision_id", "text", (col) =>
-      col
-        .notNull()
-        .references("workflow_rate_revisions.id")
-        .onDelete("cascade"),
-    )
-    .addColumn("artifact_id", "uuid", (col) =>
-      col
-        .notNull()
-        .unique()
-        .references("workflow_artifacts.id")
-        .onDelete("cascade"),
+      col.references("workflow_rate_revisions.id").onDelete("cascade"),
     )
     .addColumn("file_asset_id", "uuid", (col) =>
-      col.notNull().references("file_assets.id"),
+      col.notNull().unique().references("file_assets.id").onDelete("cascade"),
     )
     .addColumn("uploaded_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),
@@ -100,5 +90,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_rate_revision_files_revision")
     .on("workflow_rate_revision_files")
     .columns(["revision_id", "created_at"])
+    .execute();
+
+  await db.schema
+    .createIndex("idx_rate_revision_files_staged")
+    .on("workflow_rate_revision_files")
+    .columns(["lead_id", "uploaded_by_user_id", "created_at"])
+    .where(sql.ref("revision_id"), "is", null)
     .execute();
 }

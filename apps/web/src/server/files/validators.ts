@@ -1,4 +1,4 @@
-import type { ArtifactType } from "./types";
+import type { FilePurpose } from "./types";
 
 const MAX_SIZE_BYTES_DEFAULT = 20 * 1024 * 1024;
 const MAX_FILENAME_LENGTH = 120;
@@ -6,7 +6,7 @@ const SAFE_FILENAME_RE = /^[a-zA-Z0-9 \-_.]+$/;
 const DOUBLE_EXT_RE = /\.[a-zA-Z0-9]+\.[a-zA-Z0-9]+$/;
 const PATH_SEGMENT_RE = /[/\\]/;
 
-const ALLOWED_EXTENSIONS: Readonly<Record<ArtifactType, readonly string[]>> = {
+const ALLOWED_EXTENSIONS: Readonly<Record<FilePurpose, readonly string[]>> = {
   records_export: ["csv"],
   integration_import: ["csv", "xlsx"],
   sale_proof: ["pdf", "png", "jpg", "jpeg"],
@@ -18,7 +18,7 @@ const ALLOWED_EXTENSIONS: Readonly<Record<ArtifactType, readonly string[]>> = {
   payment_proof: ["pdf", "png", "jpg", "jpeg"],
 };
 
-const MAX_SIZE_OVERRIDES: Partial<Record<ArtifactType, number>> = {};
+const MAX_SIZE_OVERRIDES: Partial<Record<FilePurpose, number>> = {};
 
 const MIME_BY_EXTENSION: Record<string, string> = {
   csv: "text/csv; charset=utf-8",
@@ -67,7 +67,7 @@ export interface UploadStreamInspector {
 }
 
 export function validateUploadMetadata(
-  artifactType: ArtifactType,
+  purpose: FilePurpose,
   originalFilename: string,
 ): UploadStaticValidationResult | ValidationFailure {
   const sanitized = sanitizeFilename(originalFilename);
@@ -80,7 +80,7 @@ export function validateUploadMetadata(
     return { ok: false, reason: "missing_extension" };
   }
 
-  const allowed = ALLOWED_EXTENSIONS[artifactType];
+  const allowed = ALLOWED_EXTENSIONS[purpose];
   if (!allowed.includes(ext)) {
     return { ok: false, reason: "extension_not_allowed" };
   }
@@ -97,10 +97,10 @@ export function validateUploadMetadata(
 }
 
 export function createUploadStreamInspector(
-  artifactType: ArtifactType,
+  purpose: FilePurpose,
   extension: string,
 ): UploadStreamInspector {
-  const maxBytes = maxUploadBytesForArtifactType(artifactType);
+  const maxBytes = maxUploadBytesForFilePurpose(purpose);
   const magicPrefix = new Uint8Array(XLSX_MAGIC.length);
   let prefixLen = 0;
   let sizeBytes = 0;
@@ -156,18 +156,15 @@ export function buildUploadMetadata(
 }
 
 export function validateUploadFile(
-  artifactType: ArtifactType,
+  purpose: FilePurpose,
   originalFilename: string,
   bytes: Uint8Array,
 ): ValidationResult | ValidationFailure {
-  const staticValidation = validateUploadMetadata(
-    artifactType,
-    originalFilename,
-  );
+  const staticValidation = validateUploadMetadata(purpose, originalFilename);
   if (!staticValidation.ok) return staticValidation;
 
   const inspector = createUploadStreamInspector(
-    artifactType,
+    purpose,
     staticValidation.extension,
   );
   const streamError = inspector.pushChunk(bytes);
@@ -191,10 +188,8 @@ export function validateUploadFile(
   };
 }
 
-export function maxUploadBytesForArtifactType(
-  artifactType: ArtifactType,
-): number {
-  return MAX_SIZE_OVERRIDES[artifactType] ?? MAX_SIZE_BYTES_DEFAULT;
+export function maxUploadBytesForFilePurpose(purpose: FilePurpose): number {
+  return MAX_SIZE_OVERRIDES[purpose] ?? MAX_SIZE_BYTES_DEFAULT;
 }
 
 function sanitizeFilename(filename: string): string | null {

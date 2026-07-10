@@ -144,7 +144,7 @@ export type AddVenueAccountsInput = {
 export type RequestRateRevisionInput = {
   leadId: string;
   justification: string;
-  artifactIds: string[];
+  fileIds: string[];
 };
 
 export type ChooseFulfillmentProductInput = {
@@ -154,7 +154,7 @@ export type ChooseFulfillmentProductInput = {
 
 export type AttachFulfillmentDocumentInput = {
   leadId: string;
-  artifactId: string;
+  fileId: string;
 };
 
 export type RecordUnitSerialInput = {
@@ -172,7 +172,7 @@ export type RegisterUnitPaymentLinkInput = {
 export type UploadUnitPaymentProofInput = {
   leadId: string;
   unitId: string;
-  artifactId: string;
+  fileId: string;
 };
 
 export type RegisterUnitSaleInput = {

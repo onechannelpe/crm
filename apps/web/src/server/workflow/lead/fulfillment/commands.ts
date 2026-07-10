@@ -5,8 +5,8 @@ import type {
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type {
+  FileAssetId,
   FulfillmentOrderId,
-  WorkflowArtifactId,
   WorkflowLeadId,
   WorkflowVenueId,
 } from "~/server/shared/ids";
@@ -68,8 +68,8 @@ function unitHasField(unit: FulfillmentUnit, field: UnitField): boolean {
       return unit.serial !== null;
     case "payment_url":
       return unit.paymentUrl !== null;
-    case "payment_proof_artifact_id":
-      return unit.paymentProofArtifactId !== null;
+    case "payment_proof_file_asset_id":
+      return unit.paymentProofFileAssetId !== null;
     case "service_a_ref":
       return unit.serviceRef !== null;
     default: {
@@ -255,12 +255,12 @@ function buildUnits(
   return units;
 }
 
-// One artifact-backed handoff (transactions_report, addendum_*, signed PDF)
+// One uploaded document handoff (transactions_report, addendum_*, signed PDF)
 // that advances the order.
 export async function attachFulfillmentDocumentCommand(
   input: {
     leadId: WorkflowLeadId;
-    artifactId: WorkflowArtifactId;
+    fileAssetId: FileAssetId;
     action: FulfillmentAction;
     actor: WorkflowActor;
   },
@@ -280,16 +280,10 @@ export async function attachFulfillmentDocumentCommand(
     const def = stepDefinition(loaded.value.details.order.currentStep);
     if (def.kind !== "document") return Err(fail("invalid_fulfillment_step"));
 
-    const asset = await ctx.repos.fulfillment.findUploadedAsset(
-      input.artifactId,
-    );
-    if (!asset) return Err(fail("artifact_not_uploaded"));
-
     await ctx.repos.fulfillment.addDocument({
       orderId: loaded.value.details.order.id,
       docKind: def.docKind,
-      artifactId: input.artifactId,
-      fileAssetId: asset.fileAssetId,
+      fileAssetId: input.fileAssetId,
       uploadedByUserId: input.actor.userId,
       now: ctx.now,
     });
@@ -306,7 +300,7 @@ export async function attachFulfillmentDocumentCommand(
           payload: {
             orderId: loaded.value.details.order.id,
             docKind: def.docKind,
-            artifactId: input.artifactId,
+            fileAssetId: input.fileAssetId,
           },
           occurredAt: ctx.now,
         }),
@@ -415,7 +409,7 @@ export async function uploadUnitPaymentProofCommand(
   input: {
     leadId: WorkflowLeadId;
     unitId: string;
-    artifactId: WorkflowArtifactId;
+    fileAssetId: FileAssetId;
     actor: WorkflowActor;
   },
   ports: Ports,
@@ -424,26 +418,21 @@ export async function uploadUnitPaymentProofCommand(
     { ...input, action: "upload_payment_proof" },
     ports,
     async (unit, ctx) => {
-      const asset = await ctx.repos.fulfillment.findUploadedAsset(
-        input.artifactId,
-      );
-      if (!asset) return Err(fail("artifact_not_uploaded"));
       await ctx.repos.fulfillment.setUnitField(
         unit.id,
-        "payment_proof_artifact_id",
-        input.artifactId,
+        "payment_proof_file_asset_id",
+        input.fileAssetId,
       );
       await ctx.repos.fulfillment.addDocument({
         orderId: unit.orderId,
         docKind: "payment_proof",
-        artifactId: input.artifactId,
-        fileAssetId: asset.fileAssetId,
+        fileAssetId: input.fileAssetId,
         uploadedByUserId: input.actor.userId,
         now: ctx.now,
       });
       return Ok(undefined);
     },
-    "payment_proof_artifact_id",
+    "payment_proof_file_asset_id",
   );
 }
 

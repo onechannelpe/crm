@@ -85,13 +85,13 @@ export function FilesCard(props: FilesCardProps) {
     }
   }
 
-  async function handleDownload(artifactId: string) {
+  async function handleDownload(fileId: string) {
     setFileActionErrorMessage(null);
 
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
-        artifactId,
+        fileId,
       });
 
       window.location.href = `/api/files/download/${token.token}`;
@@ -110,18 +110,18 @@ export function FilesCard(props: FilesCardProps) {
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
-        artifactId: file.artifactId,
+        fileId: file.fileId,
       });
 
       setPreviewState({
         file: {
           previewId: `sale-proof-${file.id}`,
-          artifactId: file.artifactId,
+          fileId: file.fileId,
           filename: file.filename,
           detectedMime: file.detectedMime,
         },
         previewUrl: `/api/files/download/${token.token}?inline=1`,
-        onDownload: () => handleDownload(file.artifactId),
+        onDownload: () => handleDownload(file.fileId),
       });
     } catch (caught) {
       setFileActionErrorMessage(
@@ -132,12 +132,12 @@ export function FilesCard(props: FilesCardProps) {
     }
   }
 
-  async function handleRevisionDownload(leadId: string, artifactId: string) {
+  async function handleRevisionDownload(leadId: string, fileId: string) {
     setFileActionErrorMessage(null);
 
     const result = await requestRateRevisionFileDownloadToken({
       leadId,
-      artifactId,
+      fileId,
     });
 
     if (result.ok) {
@@ -148,7 +148,7 @@ export function FilesCard(props: FilesCardProps) {
   }
 
   async function handleRevisionPreview(file: {
-    artifactId: string;
+    fileId: string;
     filename: string;
     detectedMime: string;
   }) {
@@ -156,32 +156,32 @@ export function FilesCard(props: FilesCardProps) {
 
     const result = await requestRateRevisionFileDownloadToken({
       leadId: props.leadId,
-      artifactId: file.artifactId,
+      fileId: file.fileId,
     });
 
     if (result.ok) {
       setPreviewState({
         file: {
-          previewId: `rate-revision-${file.artifactId}`,
-          artifactId: file.artifactId,
+          previewId: `rate-revision-${file.fileId}`,
+          fileId: file.fileId,
           filename: file.filename,
           detectedMime: file.detectedMime,
         },
         previewUrl: `/api/files/download/${result.value.token}?inline=1`,
-        onDownload: () => handleRevisionDownload(props.leadId, file.artifactId),
+        onDownload: () => handleRevisionDownload(props.leadId, file.fileId),
       });
     } else {
       setFileActionErrorMessage(actionErrorMessage(result.error));
     }
   }
 
-  async function handleFulfillmentDownload(artifactId: string) {
+  async function handleFulfillmentDownload(fileId: string) {
     setFileActionErrorMessage(null);
 
     try {
       const token = await requestFulfillmentDownloadToken({
         leadId: props.leadId,
-        artifactId,
+        fileId,
       });
 
       window.location.href = `/api/files/download/${token.token}`;
@@ -195,7 +195,7 @@ export function FilesCard(props: FilesCardProps) {
   }
 
   async function handleFulfillmentPreview(document: {
-    artifactId: string;
+    fileId: string;
     filename: string;
     detectedMime: string;
   }) {
@@ -204,18 +204,18 @@ export function FilesCard(props: FilesCardProps) {
     try {
       const token = await requestFulfillmentDownloadToken({
         leadId: props.leadId,
-        artifactId: document.artifactId,
+        fileId: document.fileId,
       });
 
       setPreviewState({
         file: {
-          previewId: `fulfillment-${document.artifactId}`,
-          artifactId: document.artifactId,
+          previewId: `fulfillment-${document.fileId}`,
+          fileId: document.fileId,
           filename: document.filename,
           detectedMime: document.detectedMime,
         },
         previewUrl: `/api/files/download/${token.token}?inline=1`,
-        onDownload: () => handleFulfillmentDownload(document.artifactId),
+        onDownload: () => handleFulfillmentDownload(document.fileId),
       });
     } catch (caught) {
       setFileActionErrorMessage(
@@ -241,7 +241,7 @@ export function FilesCard(props: FilesCardProps) {
                     <ActivityListRow
                       onClick={() =>
                         void handleRevisionPreview({
-                          artifactId: file.artifactId,
+                          fileId: file.fileId,
                           filename: file.filename,
                           detectedMime: file.detectedMime,
                         })
@@ -270,7 +270,7 @@ export function FilesCard(props: FilesCardProps) {
                 <ActivityListRow
                   onClick={() =>
                     void handleFulfillmentPreview({
-                      artifactId: document.artifactId,
+                      fileId: document.fileId,
                       filename: document.filename,
                       detectedMime: document.detectedMime,
                     })

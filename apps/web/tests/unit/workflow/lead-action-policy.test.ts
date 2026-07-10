@@ -9,8 +9,8 @@ import { hydrateRuc } from "~/server/shared/document";
 import {
   asOrganizationId,
   asUserId,
-  asWorkflowArtifactId,
   asWorkflowLeadId,
+  asWorkflowRateRevisionFileId,
   asWorkflowRateRevisionId,
 } from "~/server/shared/ids";
 import {
@@ -118,7 +118,7 @@ describe("lead action policy", () => {
           revisionId: asWorkflowRateRevisionId("revision-1"),
           round: MAX_RATE_REVISION_ROUNDS + 1,
           justification: "Need better rate",
-          artifactIds: [asWorkflowArtifactId("artifact-1")],
+          fileIds: [asWorkflowRateRevisionFileId("file-1")],
           reservationExpiresAt: new Date(200),
           now: new Date(100),
         }),
@@ -132,7 +132,7 @@ describe("lead action policy", () => {
           revisionId: asWorkflowRateRevisionId("revision-1"),
           round: 1,
           justification: "Need better rate",
-          artifactIds: [],
+          fileIds: [],
           reservationExpiresAt: new Date(200),
           now: new Date(100),
         }),
@@ -146,9 +146,9 @@ describe("lead action policy", () => {
           revisionId: asWorkflowRateRevisionId("revision-1"),
           round: 1,
           justification: "Need better rate",
-          artifactIds: Array.from(
+          fileIds: Array.from(
             { length: MAX_RATE_REVISION_FILES + 1 },
-            (_, index) => asWorkflowArtifactId(`artifact-${index}`),
+            (_, index) => asWorkflowRateRevisionFileId(`file-${index}`),
           ),
           reservationExpiresAt: new Date(200),
           now: new Date(100),
@@ -163,9 +163,9 @@ describe("lead action policy", () => {
           revisionId: asWorkflowRateRevisionId("revision-1"),
           round: 1,
           justification: "Need better rate",
-          artifactIds: [
-            asWorkflowArtifactId("artifact-1"),
-            asWorkflowArtifactId("artifact-1"),
+          fileIds: [
+            asWorkflowRateRevisionFileId("file-1"),
+            asWorkflowRateRevisionFileId("file-1"),
           ],
           reservationExpiresAt: new Date(200),
           now: new Date(100),

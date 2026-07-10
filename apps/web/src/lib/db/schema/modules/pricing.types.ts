@@ -4,11 +4,12 @@ import type {
   FileAssetId,
   GeneratedId,
   IdColumn,
+  NullableIdColumn,
   UserId,
-  WorkflowArtifactId,
   WorkflowLeadId,
   WorkflowRateProposalId,
   WorkflowRateRevisionId,
+  WorkflowRateRevisionFileId,
 } from "~/server/shared/ids";
 
 // Each proposal round is stored separately; reads derive the current rate from
@@ -48,10 +49,9 @@ export interface WorkflowRateRevisionsTable {
 }
 
 export interface WorkflowRateRevisionFilesTable {
-  id: GeneratedId<WorkflowRateRevisionId>;
+  id: GeneratedId<WorkflowRateRevisionFileId>;
   lead_id: IdColumn<WorkflowLeadId>;
-  revision_id: IdColumn<WorkflowRateRevisionId>;
-  artifact_id: IdColumn<WorkflowArtifactId>;
+  revision_id: NullableIdColumn<WorkflowRateRevisionId>;
   file_asset_id: IdColumn<FileAssetId>;
   uploaded_by_user_id: IdColumn<UserId>;
   created_at: Date;

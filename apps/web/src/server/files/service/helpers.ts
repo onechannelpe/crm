@@ -1,61 +1,16 @@
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
-import type { AppContext } from "~/server/platform/action/context";
-import type { WorkflowArtifactId } from "~/server/shared/ids";
+import type { FileAssetId } from "~/server/shared/ids";
 
-import type { PolicyActor } from "../policy";
-import type { ArtifactType } from "../types";
-import type { ArtifactEventRepo } from "./contracts";
+import type { FilePurpose } from "../types";
 
-export function actorFromCtx(ctx: AppContext): PolicyActor {
-  return {
-    userId: ctx.actor.userId,
-    role: ctx.actor.role,
-    branchId: ctx.actor.branchId,
-  };
+export function buildStorageKey(input: {
+  purpose: FilePurpose;
+  fileAssetId?: FileAssetId;
+  now: Date;
+  extension: string;
+}): string {
+  const uniqueSuffix = randomUUID().replaceAll("-", "").slice(0, 20);
+  const owner = input.fileAssetId ?? uniqueSuffix;
+  return `${input.purpose}/${input.now.getTime()}-${owner}.${input.extension}`;
 }
-
-export function buildPolicySnapshot(actor: PolicyActor): string {
-  return JSON.stringify({
-    userId: actor.userId,
-    role: actor.role,
-    branchId: actor.branchId,
-  });
-}
-
-function hashIp(ip: string): string {
-  return createHash("sha256").update(ip).digest("hex");
-}
-
-export async function emitEvent(
-  repo: ArtifactEventRepo,
-  artifactId: WorkflowArtifactId,
-  eventType: string,
-  ctx: AppContext,
-  details: Record<string, unknown> = {},
-): Promise<void> {
-  await repo.events.insert({
-    artifactId,
-    eventType,
-    actorUserId: ctx.actor.userId,
-    actorRole: ctx.actor.role,
-    requestId: ctx.requestId,
-    traceId: ctx.traceId,
-    ipHash: hashIp(ctx.ipAddress),
-    userAgent: ctx.userAgent ?? null,
-    details,
-    now: ctx.now(),
-  });
-}
-
-export function buildStorageKey(
-  artifactType: ArtifactType,
-  artifactId: WorkflowArtifactId,
-  now: Date,
-  extension: string,
-): string {
-  const uniqueSuffix = randomUUID().replaceAll("-", "").slice(0, 12);
-  return `${artifactType}-${artifactId}-${now.getTime()}-${uniqueSuffix}.${extension}`;
-}
-
-export const DOWNLOAD_READY_STATUSES = new Set(["ready", "completed"]);

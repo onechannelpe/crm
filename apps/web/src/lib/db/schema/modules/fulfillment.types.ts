@@ -12,14 +12,13 @@ import type {
   IdColumn,
   NullableIdColumn,
   UserId,
-  WorkflowArtifactId,
   WorkflowLeadId,
   WorkflowVenueId,
 } from "~/server/shared/ids";
 
 // One fulfillment order per lead. Created when the lead enters FULFILLMENT
-// (last venue funded). product_kind is null until back office picks it on the
-// CHOOSE_PRODUCT step; current_step then follows the per-kind sequence.
+// (last venue funded). product_kind is null until the owning executive picks it
+// on the CHOOSE_PRODUCT step; current_step then follows the per-kind sequence.
 export interface LeadFulfillmentOrdersTable {
   id: GeneratedId<FulfillmentOrderId>;
   lead_id: IdColumn<WorkflowLeadId>;
@@ -43,19 +42,18 @@ export interface LeadFulfillmentUnitsTable {
   label: string;
   serial_number: string | null;
   payment_url: string | null;
-  payment_proof_artifact_id: NullableIdColumn<WorkflowArtifactId>;
+  payment_proof_file_asset_id: NullableIdColumn<FileAssetId>;
   payment_validated: boolean;
   service_a_ref: string | null;
   created_at: Date;
 }
 
-// Binds an uploaded artifact to the order for a given document handoff, mirroring
-// workflow_sale_proof_files. doc_kind disambiguates the fulfillment document.
+// Binds an uploaded file to the order for a given document handoff.
+// doc_kind disambiguates the fulfillment document.
 export interface LeadFulfillmentDocumentsTable {
   id: Generated<string>;
   order_id: IdColumn<FulfillmentOrderId>;
   doc_kind: FulfillmentDocKind;
-  artifact_id: IdColumn<WorkflowArtifactId>;
   file_asset_id: IdColumn<FileAssetId>;
   uploaded_by_user_id: IdColumn<UserId>;
   created_at: Date;

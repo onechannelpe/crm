@@ -28,11 +28,11 @@ describe("workflow notification pipeline", () => {
 
   beforeAll(async () => {
     runtime = await createTestRuntime("workflow-notification-pipeline");
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await runtime.dispose();
-  });
+  }, 30_000);
 
   beforeEach(async () => {
     await runtime.reset();
@@ -127,7 +127,7 @@ describe("workflow notification pipeline", () => {
         label: "POS #1",
         serial_number: null,
         payment_url: "https://pay.example.com/abc",
-        payment_proof_artifact_id: null,
+        payment_proof_file_asset_id: null,
         payment_validated: false,
         service_a_ref: null,
         created_at: NOW,

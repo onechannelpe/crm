@@ -46,7 +46,7 @@ export type LeadDetailRepLegalView = {
 };
 
 export type LeadDetailRateRevisionFileView = {
-  artifactId: string;
+  fileId: string;
   filename: string;
   detectedMime: string;
   sizeBytes: number;

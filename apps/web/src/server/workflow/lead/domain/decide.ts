@@ -13,9 +13,9 @@ import { fail, type DomainError } from "~/server/shared/domain-error";
 import type {
   FulfillmentOrderId,
   UserId,
-  WorkflowArtifactId,
   WorkflowRateProposalId,
   WorkflowRateRevisionId,
+  WorkflowRateRevisionFileId,
   WorkflowVenueId,
 } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -582,7 +582,7 @@ export function requestRateRevision(
     revisionId: WorkflowRateRevisionId;
     round: number;
     justification: string;
-    artifactIds: WorkflowArtifactId[];
+    fileIds: WorkflowRateRevisionFileId[];
     reservationExpiresAt: Date;
     now: Date;
   },
@@ -598,13 +598,13 @@ export function requestRateRevision(
   if (input.round > MAX_RATE_REVISION_ROUNDS) {
     return Err(fail("max_rate_revision_rounds_reached"));
   }
-  if (input.artifactIds.length < 1) {
+  if (input.fileIds.length < 1) {
     return Err(fail("rate_revision_files_required"));
   }
-  if (input.artifactIds.length > MAX_RATE_REVISION_FILES) {
+  if (input.fileIds.length > MAX_RATE_REVISION_FILES) {
     return Err(fail("max_rate_revision_files_exceeded"));
   }
-  if (new Set(input.artifactIds).size !== input.artifactIds.length) {
+  if (new Set(input.fileIds).size !== input.fileIds.length) {
     return Err(fail("duplicate_rate_revision_file"));
   }
 

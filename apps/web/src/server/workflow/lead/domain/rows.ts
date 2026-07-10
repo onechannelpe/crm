@@ -3,10 +3,10 @@ import type { SunatEconomicActivity } from "~/server/client-search/enrichment/su
 import type {
   FileAssetId,
   UserId,
-  WorkflowArtifactId,
   WorkflowLeadId,
   WorkflowRateProposalId,
   WorkflowRateRevisionId,
+  WorkflowRateRevisionFileId,
 } from "~/server/shared/ids";
 
 export type RateProposalOutcome = "pending" | "accepted" | "revision_requested";
@@ -47,15 +47,15 @@ export type RateRevision = {
 };
 
 export type RateRevisionFile = {
+  id: WorkflowRateRevisionFileId;
   revisionId: WorkflowRateRevisionId;
-  artifactId: WorkflowArtifactId;
   fileAssetId: FileAssetId;
   uploadedByUserId: UserId;
   createdAt: Date;
 };
 
 export type SubmitReadyRevisionFile = {
-  artifactId: WorkflowArtifactId;
+  fileId: WorkflowRateRevisionFileId;
   fileAssetId: FileAssetId;
 };
 

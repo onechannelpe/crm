@@ -6,14 +6,6 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró el ejecutivo.",
   },
-  artifact_not_found: {
-    kind: "not_found",
-    message: "No se encontró el documento.",
-  },
-  artifact_file_not_found: {
-    kind: "not_found",
-    message: "No se encontró el archivo del documento.",
-  },
   reservation_not_found: {
     kind: "not_found",
     message: "No se encontró la reserva.",
@@ -48,6 +40,10 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró el equipo de entrega.",
   },
+  fulfillment_document_not_found: {
+    kind: "not_found",
+    message: "No se encontró el documento de entrega.",
+  },
   invalid_fulfillment_step: {
     kind: "validation",
     message: "Esta acción no corresponde al paso actual de la entrega.",
@@ -63,10 +59,6 @@ export const ERROR_CATALOG = {
   reject_reason_required: {
     kind: "validation",
     message: "Indica el motivo de la devolución.",
-  },
-  artifact_not_uploaded: {
-    kind: "validation",
-    message: "El documento aún no se ha cargado.",
   },
   lead_not_in_fulfillment: {
     kind: "validation",
@@ -176,11 +168,6 @@ export const ERROR_CATALOG = {
     message:
       "Los comprobantes de venta solo se permiten cuando el lead está activo.",
   },
-  download_artifact_requires_generated_payload: {
-    kind: "conflict",
-    message:
-      "El archivo de descarga debe generarlo el servicio correspondiente.",
-  },
   concurrency_conflict: {
     kind: "conflict",
     message: "El lead fue modificado por otra persona. Vuelve a intentarlo.",
@@ -188,10 +175,6 @@ export const ERROR_CATALOG = {
   assignment_inactive: {
     kind: "conflict",
     message: "El contacto asignado no está disponible.",
-  },
-  artifact_not_downloadable: {
-    kind: "conflict",
-    message: "El archivo del documento aún no está listo.",
   },
   accounts_already_added: {
     kind: "conflict",

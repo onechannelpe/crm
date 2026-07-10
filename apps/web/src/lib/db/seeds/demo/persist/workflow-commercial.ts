@@ -4,18 +4,18 @@ import type { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
 import { BO1, EXEC_DANIELA, type OrganizationSeedKey } from "../scenario";
-import type { WorkflowArtifactIds, WorkflowLeadIds } from "./history-events";
+import type { WorkflowCommercialIds, WorkflowLeadIds } from "./history-events";
 
 export async function persistWorkflowCommercialData(
   db: Kysely<Database>,
   now: number,
   day: number,
   leadIds: WorkflowLeadIds,
-  artifacts: WorkflowArtifactIds,
+  commercialIds: WorkflowCommercialIds,
   getOrganizationId: (key: OrganizationSeedKey) => OrganizationId,
 ): Promise<void> {
   const { idQuoted, idForSale, idConverted } = leadIds;
-  const { qidQuoted, qidForSale, qidConverted, vidConverted } = artifacts;
+  const { qidQuoted, qidForSale, qidConverted, vidConverted } = commercialIds;
   await db
     .insertInto("workflow_rate_proposals")
     .values([

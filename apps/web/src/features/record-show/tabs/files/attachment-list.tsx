@@ -14,7 +14,7 @@ type AttachmentListProps = {
   canUpload: boolean;
   isDraggingFile: boolean;
   onUploadFiles: (files: File[]) => Promise<void> | void;
-  onDownload: (artifactId: string) => Promise<void> | void;
+  onDownload: (fileId: string) => Promise<void> | void;
   onPreview?: (file: LeadSaleProofFileView) => Promise<void> | void;
 };
 

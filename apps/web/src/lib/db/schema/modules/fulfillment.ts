@@ -43,7 +43,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("label", "text", (col) => col.notNull())
     .addColumn("serial_number", "text")
     .addColumn("payment_url", "text")
-    .addColumn("payment_proof_artifact_id", "uuid")
+    .addColumn("payment_proof_file_asset_id", "uuid", (col) =>
+      col.references("file_assets.id"),
+    )
     .addColumn("payment_validated", "boolean", (col) =>
       col.notNull().defaultTo(false),
     )
@@ -67,11 +69,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
         .onDelete("cascade"),
     )
     .addColumn("doc_kind", "text", (col) => col.notNull())
-    .addColumn("artifact_id", "uuid", (col) =>
-      col.notNull().references("workflow_artifacts.id"),
-    )
     .addColumn("file_asset_id", "uuid", (col) =>
-      col.notNull().references("file_assets.id"),
+      col.notNull().unique().references("file_assets.id").onDelete("cascade"),
     )
     .addColumn("uploaded_by_user_id", "uuid", (col) =>
       col.notNull().references("users.id"),

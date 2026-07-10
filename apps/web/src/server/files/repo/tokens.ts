@@ -10,9 +10,8 @@ export function createTokensRepo(db: DB) {
   return {
     async insert(input: InsertDownloadTokenInput) {
       await db
-        .insertInto("artifact_download_tokens")
+        .insertInto("file_download_tokens")
         .values({
-          artifact_id: input.artifactId,
           file_asset_id: input.fileAssetId,
           token_hash: input.tokenHash,
           requested_by_user_id: input.requestedByUserId,
@@ -25,10 +24,9 @@ export function createTokensRepo(db: DB) {
 
     async findByHash(tokenHash: string) {
       const row = await db
-        .selectFrom("artifact_download_tokens")
+        .selectFrom("file_download_tokens")
         .select([
           "id",
-          "artifact_id",
           "file_asset_id",
           "requested_by_user_id",
           "expires_at",
@@ -41,7 +39,6 @@ export function createTokensRepo(db: DB) {
 
       return {
         id: row.id,
-        artifactId: row.artifact_id,
         fileAssetId: row.file_asset_id,
         requestedByUserId: row.requested_by_user_id,
         expiresAt: row.expires_at,
@@ -51,7 +48,7 @@ export function createTokensRepo(db: DB) {
 
     async markUsed(tokenHash: string, usedAt: Date) {
       const result = await db
-        .updateTable("artifact_download_tokens")
+        .updateTable("file_download_tokens")
         .set({ used_at: usedAt })
         .where("token_hash", "=", tokenHash)
         .where("used_at", "is", null)

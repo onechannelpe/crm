@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { createWriteStream } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname, relative, resolve, sep } from "node:path";
 
 // Local-disk blob store shared by every caller that needs bytes under a key.
 // Subdirectory layout is the caller's; pass a fully-resolved rootDir.
@@ -24,10 +24,25 @@ function hashBytes(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+function resolveContainedPath(rootDir: string, key: string): string {
+  if (key.trim().length === 0 || key.includes("\\")) {
+    throw new Error("invalid_blob_key");
+  }
+
+  const root = resolve(rootDir);
+  const target = resolve(root, key);
+  const rel = relative(root, target);
+  if (rel === "" || rel.startsWith("..") || rel.includes(`..${sep}`)) {
+    throw new Error("invalid_blob_key");
+  }
+
+  return target;
+}
+
 export function createBlobStore(rootDir: string): BlobStore {
   return {
     async putFromWebStream({ key, stream, onChunk }) {
-      const finalPath = join(rootDir, key);
+      const finalPath = resolveContainedPath(rootDir, key);
       await mkdir(dirname(finalPath), { recursive: true });
 
       const tempPath = `${finalPath}.upload-${randomUUID()}`;
@@ -69,18 +84,18 @@ export function createBlobStore(rootDir: string): BlobStore {
     },
 
     async putBytes(key, content) {
-      const finalPath = join(rootDir, key);
+      const finalPath = resolveContainedPath(rootDir, key);
       await mkdir(dirname(finalPath), { recursive: true });
       await writeFile(finalPath, content);
       return { sha256: hashBytes(content), sizeBytes: content.byteLength };
     },
 
     async getBytes(key) {
-      return readFile(join(rootDir, key));
+      return readFile(resolveContainedPath(rootDir, key));
     },
 
     async delete(key) {
-      await rm(join(rootDir, key), { force: true });
+      await rm(resolveContainedPath(rootDir, key), { force: true });
     },
   };
 }

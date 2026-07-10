@@ -109,8 +109,8 @@ function pendingAction(data: LeadDetailView): FulfillmentAction | null {
   return isFulfillmentAction(action) ? action : null;
 }
 
-async function downloadDocument(leadId: string, artifactId: string) {
-  const token = await requestFulfillmentDownloadToken({ leadId, artifactId });
+async function downloadDocument(leadId: string, fileId: string) {
+  const token = await requestFulfillmentDownloadToken({ leadId, fileId });
   window.location.href = `/api/files/download/${token.token}`;
 }
 
@@ -183,7 +183,7 @@ export function FulfillmentPanel(props: { data: LeadDetailView }) {
                           onClick={() =>
                             void downloadDocument(
                               props.data.lead.id,
-                              doc.artifactId,
+                              doc.fileId,
                             )
                           }
                         >
@@ -448,7 +448,7 @@ function DocumentUpload(props: {
                     variant="secondary"
                     size="sm"
                     onClick={() =>
-                      void downloadDocument(props.leadId, doc.artifactId)
+                      void downloadDocument(props.leadId, doc.fileId)
                     }
                   >
                     Descargar
@@ -619,7 +619,7 @@ function PaymentProofUpload(props: { leadId: string; units: Unit[] }) {
 
   return (
     <div class={styles.control}>
-      <For each={missingUnits(props.units, "paymentProofArtifactId")}>
+      <For each={missingUnits(props.units, "paymentProofFileId")}>
         {(unit) => (
           <div class={styles.unitEntry}>
             <span class={styles.unitLabel}>{unit.label}</span>
@@ -682,19 +682,17 @@ function ValidatePayment(props: { leadId: string; units: Unit[] }) {
           <div class={styles.contextRow}>
             <span class={styles.contextLabel}>{unit.label}</span>
             <Show
-              when={unit.paymentProofArtifactId}
+              when={unit.paymentProofFileId}
               fallback={
                 <span class={styles.contextValue}>Sin comprobante</span>
               }
             >
-              {(artifactId) => (
+              {(fileId) => (
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
-                  onClick={() =>
-                    void downloadDocument(props.leadId, artifactId())
-                  }
+                  onClick={() => void downloadDocument(props.leadId, fileId())}
                 >
                   Ver comprobante
                 </Button>
@@ -817,7 +815,7 @@ function UnitFileControl(props: {
 
 function paymentStatus(unit: Unit): string {
   if (unit.paymentValidated) return "Validado";
-  if (unit.paymentProofArtifactId) return "Comprobante recibido";
+  if (unit.paymentProofFileId) return "Comprobante recibido";
   if (unit.paymentUrl) return "Link enviado";
   return "Pendiente";
 }

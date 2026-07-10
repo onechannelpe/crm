@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { Role } from "~/lib/auth/access/rbac";
-import { maxUploadBytesForArtifactType } from "~/server/files/validators";
+import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
@@ -61,7 +61,7 @@ function parseImportUpload(
     return Err(fail("unsupported_file_type"));
   }
 
-  if (file.size > maxUploadBytesForArtifactType("integration_import")) {
+  if (file.size > maxUploadBytesForFilePurpose("integration_import")) {
     return Err(fail("file_too_large"));
   }
 

@@ -12,13 +12,13 @@ import type {
   Membership,
   OrganizationProfile,
 } from "~/server/organization/organization-repo";
+import type { WorkflowRateRevisionFileId } from "~/server/shared/ids";
 import type { DigitalPolicy } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import type {
   LeadSourceStatus,
   RateProposal,
   RateRevision,
-  RateRevisionFile,
 } from "~/server/workflow/lead/domain/rows";
 import type {
   LeadCommercialScope,
@@ -78,13 +78,12 @@ function resolveDisqualification(
 
 export type RateRevisionWithFiles = {
   revision: RateRevision;
-  files: Array<
-    RateRevisionFile & {
-      safeDisplayFilename: string;
-      detectedMime: string;
-      sizeBytes: number;
-    }
-  >;
+  files: Array<{
+    id: WorkflowRateRevisionFileId;
+    safeDisplayFilename: string;
+    detectedMime: string;
+    sizeBytes: number;
+  }>;
 };
 
 export type LeadDetailSource = {
@@ -125,13 +124,13 @@ function toFulfillmentView(
       venueId: unit.venueId,
       serial: unit.serial,
       paymentUrl: unit.paymentUrl,
-      paymentProofArtifactId: unit.paymentProofArtifactId,
+      paymentProofFileId: unit.paymentProofFileAssetId,
       serviceRef: unit.serviceRef,
       paymentValidated: unit.paymentValidated,
     })),
     documents: details.documents.map((doc) => ({
       docKind: doc.docKind,
-      artifactId: doc.artifactId,
+      fileId: doc.fileAssetId,
       filename: doc.safeDisplayFilename,
       detectedMime: doc.detectedMime,
       sizeBytes: doc.sizeBytes,
@@ -269,15 +268,14 @@ function toLeadDetailVenue(venue: LeadVenue): LeadDetailVenueView {
   return result;
 }
 
-function toRateRevisionFileView(
-  file: RateRevisionFile & {
-    safeDisplayFilename: string;
-    detectedMime: string;
-    sizeBytes: number;
-  },
-): LeadDetailRateRevisionFileView {
+function toRateRevisionFileView(file: {
+  id: WorkflowRateRevisionFileId;
+  safeDisplayFilename: string;
+  detectedMime: string;
+  sizeBytes: number;
+}): LeadDetailRateRevisionFileView {
   return {
-    artifactId: file.artifactId,
+    fileId: file.id,
     filename: file.safeDisplayFilename,
     detectedMime: file.detectedMime,
     sizeBytes: file.sizeBytes,

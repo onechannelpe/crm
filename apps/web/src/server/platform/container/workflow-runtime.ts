@@ -3,7 +3,7 @@ import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { createLeadArtifactsService } from "~/server/workflow/lead/read/lead-artifacts";
+import { createLeadFilesService } from "~/server/workflow/lead/files/lead-files";
 import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
@@ -39,11 +39,13 @@ export function createWorkflowRuntime(
     repos,
     organizationEnrichment,
     enrichmentQueue,
-    leadArtifacts: createLeadArtifactsService({
+    leadFiles: createLeadFilesService({
       leadReader: leadRepo,
       leadQueries: repos.leadQueries,
+      fulfillment: repos.fulfillment,
       filesRepo: files.repo,
       filesStorage: files.storage,
+      workflowPorts: () => ({ executor: infra.db, now: infra.now() }),
     }),
   };
 }

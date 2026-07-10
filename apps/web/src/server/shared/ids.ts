@@ -38,9 +38,10 @@ export type EventId = BrandedId<"EventId">;
 export type WorkflowLeadId = BrandedId<"WorkflowLeadId">;
 export type WorkflowRateProposalId = BrandedId<"WorkflowRateProposalId">;
 export type WorkflowRateRevisionId = BrandedId<"WorkflowRateRevisionId">;
-export type WorkflowArtifactId = BrandedId<"WorkflowArtifactId">;
+export type WorkflowRateRevisionFileId =
+  BrandedId<"WorkflowRateRevisionFileId">;
 export type FileAssetId = BrandedId<"FileAssetId">;
-export type ArtifactDownloadTokenId = BrandedId<"ArtifactDownloadTokenId">;
+export type FileDownloadTokenId = BrandedId<"FileDownloadTokenId">;
 export type WorkflowVenueId = BrandedId<"WorkflowVenueId">;
 export type FulfillmentOrderId = BrandedId<"FulfillmentOrderId">;
 export type IntegrationJobId = BrandedId<"IntegrationJobId">;
@@ -131,14 +132,14 @@ export function asWorkflowRateRevisionId(
   return assertNonEmptyStringId(value, "WorkflowRateRevisionId");
 }
 
-export function asWorkflowArtifactId(value: string): WorkflowArtifactId {
-  return assertNonEmptyStringId(value, "WorkflowArtifactId");
+export function asWorkflowRateRevisionFileId(
+  value: string,
+): WorkflowRateRevisionFileId {
+  return assertNonEmptyStringId(value, "WorkflowRateRevisionFileId");
 }
 
-export function asArtifactDownloadTokenId(
-  value: string,
-): ArtifactDownloadTokenId {
-  return assertNonEmptyStringId(value, "ArtifactDownloadTokenId");
+export function asFileDownloadTokenId(value: string): FileDownloadTokenId {
+  return assertNonEmptyStringId(value, "FileDownloadTokenId");
 }
 
 export function asFileAssetId(value: string): FileAssetId {

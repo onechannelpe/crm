@@ -11,7 +11,6 @@ import type {
   FileAssetId,
   FulfillmentOrderId,
   UserId,
-  WorkflowArtifactId,
   WorkflowLeadId,
   WorkflowVenueId,
 } from "~/server/shared/ids";
@@ -25,7 +24,7 @@ export type FulfillmentUnit = {
   label: string;
   serial: string | null;
   paymentUrl: string | null;
-  paymentProofArtifactId: WorkflowArtifactId | null;
+  paymentProofFileAssetId: FileAssetId | null;
   paymentValidated: boolean;
   serviceRef: string | null;
   createdAt: Date;
@@ -33,7 +32,6 @@ export type FulfillmentUnit = {
 
 export type FulfillmentDocument = {
   docKind: FulfillmentDocKind;
-  artifactId: WorkflowArtifactId;
   fileAssetId: FileAssetId;
   uploadedByUserId: UserId;
   createdAt: Date;
@@ -83,7 +81,7 @@ function toUnit(row: UnitRow): FulfillmentUnit {
     label: row.label,
     serial: row.serial_number,
     paymentUrl: row.payment_url,
-    paymentProofArtifactId: row.payment_proof_artifact_id,
+    paymentProofFileAssetId: row.payment_proof_file_asset_id,
     paymentValidated: row.payment_validated,
     serviceRef: row.service_a_ref,
     createdAt: row.created_at,
@@ -130,7 +128,7 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
           label: unit.label,
           serial_number: null,
           payment_url: null,
-          payment_proof_artifact_id: null,
+          payment_proof_file_asset_id: null,
           payment_validated: false,
           service_a_ref: null,
           created_at: unit.now,
@@ -161,7 +159,6 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
           .innerJoin("file_assets as f", "f.id", "d.file_asset_id")
           .select([
             "d.doc_kind as docKind",
-            "d.artifact_id as artifactId",
             "d.file_asset_id as fileAssetId",
             "d.uploaded_by_user_id as uploadedByUserId",
             "d.created_at as createdAt",
@@ -179,7 +176,6 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         units: unitRows.map(toUnit),
         documents: docRows.map((row) => ({
           docKind: row.docKind,
-          artifactId: row.artifactId,
           fileAssetId: row.fileAssetId,
           uploadedByUserId: row.uploadedByUserId,
           createdAt: row.createdAt,
@@ -261,7 +257,6 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
     async addDocument(input: {
       orderId: FulfillmentOrderId;
       docKind: FulfillmentDocKind;
-      artifactId: WorkflowArtifactId;
       fileAssetId: FileAssetId;
       uploadedByUserId: UserId;
       now: Date;
@@ -271,7 +266,6 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .values({
           order_id: input.orderId,
           doc_kind: input.docKind,
-          artifact_id: input.artifactId,
           file_asset_id: input.fileAssetId,
           uploaded_by_user_id: input.uploadedByUserId,
           created_at: input.now,
@@ -279,17 +273,37 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async findUploadedAsset(
-      artifactId: WorkflowArtifactId,
-    ): Promise<{ fileAssetId: FileAssetId } | null> {
+    async findDocumentByFileAssetId(input: {
+      orderId: FulfillmentOrderId;
+      fileAssetId: FileAssetId;
+    }): Promise<FulfillmentDocument | null> {
       const row = await db
-        .selectFrom("artifact_file_bindings")
-        .select(["file_asset_id as fileAssetId"])
-        .where("artifact_id", "=", artifactId)
-        .where("binding_role", "=", "source_upload")
-        .orderBy("version_no", "desc")
+        .selectFrom("lead_fulfillment_documents as d")
+        .innerJoin("file_assets as f", "f.id", "d.file_asset_id")
+        .select([
+          "d.doc_kind as docKind",
+          "d.file_asset_id as fileAssetId",
+          "d.uploaded_by_user_id as uploadedByUserId",
+          "d.created_at as createdAt",
+          "f.safe_display_filename as safeDisplayFilename",
+          "f.detected_mime as detectedMime",
+          "f.size_bytes as sizeBytes",
+        ])
+        .where("d.order_id", "=", input.orderId)
+        .where("d.file_asset_id", "=", input.fileAssetId)
         .executeTakeFirst();
-      return row ? { fileAssetId: row.fileAssetId } : null;
+
+      return row
+        ? {
+            docKind: row.docKind,
+            fileAssetId: row.fileAssetId,
+            uploadedByUserId: row.uploadedByUserId,
+            createdAt: row.createdAt,
+            safeDisplayFilename: row.safeDisplayFilename,
+            detectedMime: row.detectedMime,
+            sizeBytes: row.sizeBytes,
+          }
+        : null;
     },
   };
 }

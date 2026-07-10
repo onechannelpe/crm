@@ -5,8 +5,8 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import {
   asWorkflowRateRevisionId,
-  type WorkflowArtifactId,
   type WorkflowLeadId,
+  type WorkflowRateRevisionFileId,
 } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
@@ -21,10 +21,10 @@ import type { SubmitReadyRevisionFile } from "../domain/rows";
 import { runLeadTransaction } from "../write/transition";
 
 export async function requestRateRevisionCommand(
-  input: Omit<RequestRateRevisionInput, "leadId" | "artifactIds"> & {
+  input: Omit<RequestRateRevisionInput, "leadId" | "fileIds"> & {
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
-    artifactIds: WorkflowArtifactId[];
+    fileIds: WorkflowRateRevisionFileId[];
   },
   ports: {
     executor: DatabaseExecutor;
@@ -66,29 +66,29 @@ export async function requestRateRevisionCommand(
     const existingCount = await ctx.repos.rateRevisions.countByLeadId(state.id);
 
     const revisionFiles = await Promise.all(
-      input.artifactIds.map(async (artifactId) => {
+      input.fileIds.map(async (fileId) => {
         const file = await ctx.repos.rateRevisions.findSubmitReadyRevisionFile({
-          artifactId,
+          fileId,
           leadId: state.id,
           uploadedByUserId: input.actor.userId,
         });
 
-        return { artifactId, file };
+        return { fileId, file };
       }),
     );
 
-    const validatedArtifacts: SubmitReadyRevisionFile[] = [];
+    const validatedFiles: SubmitReadyRevisionFile[] = [];
 
-    for (const { artifactId, file } of revisionFiles) {
+    for (const { fileId, file } of revisionFiles) {
       if (!file) {
         return Err(
           fail("rate_revision_file_not_submit_ready", {
-            details: { artifactId },
+            details: { fileId },
           }),
         );
       }
 
-      validatedArtifacts.push(file);
+      validatedFiles.push(file);
     }
 
     const revisionId = asWorkflowRateRevisionId(randomUUIDv7());
@@ -99,7 +99,7 @@ export async function requestRateRevisionCommand(
       revisionId,
       round,
       justification: input.justification,
-      artifactIds: input.artifactIds,
+      fileIds: input.fileIds,
       reservationExpiresAt,
       now: ctx.now,
     });
@@ -125,14 +125,10 @@ export async function requestRateRevisionCommand(
     });
 
     await Promise.all(
-      validatedArtifacts.map((artifact) =>
-        ctx.repos.rateRevisions.insertFile({
-          leadId: state.id,
+      validatedFiles.map((file) =>
+        ctx.repos.rateRevisions.attachFileToRevision({
           revisionId,
-          artifactId: artifact.artifactId,
-          fileAssetId: artifact.fileAssetId,
-          uploadedByUserId: input.actor.userId,
-          createdAt: ctx.now,
+          fileId: file.fileId,
         }),
       ),
     );
