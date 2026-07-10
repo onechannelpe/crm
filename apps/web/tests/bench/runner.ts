@@ -10,7 +10,7 @@
 import { BenchmarkRunner, TestRunner } from "vitest";
 
 type Suite = Parameters<BenchmarkRunner["runSuite"]>[0];
-type SuiteHook = (...args: unknown[]) => unknown | Promise<unknown>;
+type SuiteHook = (...args: never[]) => unknown;
 
 function getChildSuites(suite: Suite): Suite[] {
   return suite.tasks.filter((task): task is Suite => task.type === "suite");
