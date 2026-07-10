@@ -1,5 +1,5 @@
+import { Motion } from "@crm/solid-motion";
 import { ErrorBoundary, Show, Suspense } from "solid-js";
-import { Motion } from "solid-motionone";
 
 import { Loading } from "~/components/feedback/loading/screen";
 
