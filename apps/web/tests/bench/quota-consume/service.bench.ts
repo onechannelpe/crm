@@ -1,37 +1,24 @@
-import { TEST_FIXTURES } from "@tests/support/runtime/db";
-import { afterAll, beforeAll, bench, describe } from "vitest";
+import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
-import {
-  asSearchReservationId,
-  asUserId,
-  type UserId,
-} from "~/server/shared/ids";
+import { asSearchReservationId, type UserId } from "~/server/shared/ids";
 import { Ok } from "~/server/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
+import { SINGLE_CALL } from "../_shared/options";
+import { resetQuotaUsage, seedQuotaUser } from "./fixtures";
 
 describe("search capacity consume service benchmark", () => {
   const db = createBenchDbFixture("bench-quota-consume-service");
-  let userIds: UserId[] = [];
-  const cursor = { value: 0 };
-  const actorUserId = asUserId(TEST_FIXTURES.users.backOne.id);
+  let userId: UserId;
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    userIds = await seedQuotaUsers(ctx);
+    userId = await seedQuotaUser(ctx);
+  });
 
-    for (const userId of userIds) {
-      await ctx.repos.searchCapacityGrants.insert({
-        user_id: userId,
-        actor_user_id: actorUserId,
-        amount: 2,
-        reason: "bench_seed",
-      });
-    }
+  beforeEach(async () => {
+    await resetQuotaUsage(db.ctx(), userId);
   });
 
   afterAll(async () => {
@@ -41,13 +28,6 @@ describe("search capacity consume service benchmark", () => {
   bench(
     "service path: reserve and commit search usage for one user",
     async () => {
-      const userId = takeFromPool(
-        userIds,
-        cursor,
-        "quota-consume pool exhausted before iterations completed",
-      );
-      const ctx = db.ctx();
-
       const result = await executeWithUsageReservation(
         {
           kind: "search",
@@ -59,8 +39,8 @@ describe("search capacity consume service benchmark", () => {
           brand: asSearchReservationId,
         },
         {
-          reservations: ctx.repos.searchUsageReservations,
-          commits: ctx.repos.searchUsageCommits,
+          reservations: db.ctx().repos.searchUsageReservations,
+          commits: db.ctx().repos.searchUsageCommits,
         },
         async () => Ok({ value: undefined, consumed: 1 }),
       );
@@ -70,6 +50,6 @@ describe("search capacity consume service benchmark", () => {
         );
       }
     },
-    fixedIterations(USER_POOL_SIZE),
+    SINGLE_CALL,
   );
 });

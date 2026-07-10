@@ -1,20 +1,18 @@
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
-import { afterAll, beforeAll, bench, describe } from "vitest";
+import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import type { InviteService } from "~/server/invites/application/types";
 import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import { asBranchId, asUserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import { CREATE_POOL_SIZE, seedTeamInviteFixtures } from "./fixtures";
+import { SINGLE_CALL } from "../_shared/options";
+import { freshInviteEmail } from "./fixtures";
 
 describe("team invite create benchmark", () => {
   const db = createBenchDbFixture("bench-team-invite-create");
   let inviteCreate!: InviteService["createInvite"];
-  let createEmails: string[] = [];
-  const createCursor = { value: 0 };
+  let email = "";
   const actorUserId = asUserId(TEST_FIXTURES.users.superUser.id);
   const branchId = asBranchId(TEST_FIXTURES.branches.norte.id);
 
@@ -22,9 +20,10 @@ describe("team invite create benchmark", () => {
     const ctx = await db.setup();
     const inviteService = createInviteServiceForExecutor(ctx.db);
     inviteCreate = (input) => inviteService.createInvite(input);
+  });
 
-    const fixtures = await seedTeamInviteFixtures(ctx);
-    createEmails = fixtures.createEmails;
+  beforeEach(() => {
+    email = freshInviteEmail();
   });
 
   afterAll(async () => {
@@ -34,17 +33,11 @@ describe("team invite create benchmark", () => {
   bench(
     "service path: create invite",
     async () => {
-      const email = takeFromPool(
-        createEmails,
-        createCursor,
-        "team-invite-create pool exhausted before iterations completed",
-      );
-
       const result = await inviteCreate({
         actorUserId,
         actorRole: "superuser",
         branchId,
-        names: `Bench Create ${createCursor.value}`,
+        names: "Bench Create",
         firstSurname: "User",
         secondSurname: "Bench",
         email,
@@ -59,6 +52,6 @@ describe("team invite create benchmark", () => {
         );
       }
     },
-    fixedIterations(CREATE_POOL_SIZE),
+    SINGLE_CALL,
   );
 });

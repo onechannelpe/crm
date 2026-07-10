@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, bench, describe } from "vitest";
+import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
@@ -7,19 +7,13 @@ import { createExecutorUow } from "~/server/shared/application/uow";
 
 import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import {
-  ACCEPT_POOL_SIZE,
-  type AcceptFixture,
-  seedTeamInviteFixtures,
-} from "./fixtures";
+import { SINGLE_CALL } from "../_shared/options";
+import { seedPendingInvite } from "./fixtures";
 
 describe("team invite accept command benchmark", () => {
   const db = createBenchDbFixture("bench-team-invite-accept-command");
   let inviteAccept!: InviteService["acceptInvite"];
-  let acceptFixtures: AcceptFixture[] = [];
-  const acceptCursor = { value: 0 };
+  let token = "";
 
   beforeAll(async () => {
     const ctx = await db.setup();
@@ -29,9 +23,10 @@ describe("team invite accept command benchmark", () => {
       hashPassword: async () => "bench-password-hash",
     });
     inviteAccept = (input) => inviteService.acceptInvite(input);
+  });
 
-    const fixtures = await seedTeamInviteFixtures(ctx);
-    acceptFixtures = fixtures.acceptFixtures;
+  beforeEach(async () => {
+    token = (await seedPendingInvite(db.ctx())).token;
   });
 
   afterAll(async () => {
@@ -41,14 +36,8 @@ describe("team invite accept command benchmark", () => {
   bench(
     "command path: accept invite",
     async () => {
-      const fixture = takeFromPool(
-        acceptFixtures,
-        acceptCursor,
-        "team-invite-accept command pool exhausted before iterations completed",
-      );
-
       const result = await inviteAccept({
-        token: fixture.token,
+        token,
         password: "StrongPass123",
       });
 
@@ -58,6 +47,6 @@ describe("team invite accept command benchmark", () => {
         );
       }
     },
-    fixedIterations(ACCEPT_POOL_SIZE),
+    SINGLE_CALL,
   );
 });

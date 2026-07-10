@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, bench, describe } from "vitest";
+import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { createLogger } from "~/lib/observability/logger";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
@@ -7,14 +7,12 @@ import {
   createDeliveryRepository,
   type DeliveryJob,
 } from "~/server/notifications/repos/delivery-repo";
+import type { UserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import { DISPATCH_DELIVERY_COUNT, seedDispatchFixtures } from "./fixtures";
+import { SINGLE_CALL } from "../_shared/options";
+import { seedDispatchDelivery, seedDispatchRecipient } from "./fixtures";
 
-// No-op gateway: the dispatch benchmark measures the send path (message build +
-// attempt recording), not provider I/O.
 const messaging: Pick<
   MessagingGateway,
   "sendCampaignEmail" | "sendWhatsAppText"
@@ -43,15 +41,15 @@ const messaging: Pick<
 
 describe("notifications dispatch benchmark", () => {
   const db = createBenchDbFixture("bench-notifications-dispatch");
-  const cursor = { value: 0 };
-  let pool: DeliveryJob[] = [];
-  let send: ReturnType<typeof createDeliverySender> | null = null;
+  let send: ReturnType<typeof createDeliverySender>;
+  let userId: UserId;
+  let job: DeliveryJob;
   const originalLogLevel = process.env.LOG_LEVEL;
 
   beforeAll(async () => {
     process.env.LOG_LEVEL = "error";
     const ctx = await db.setup();
-    pool = await seedDispatchFixtures(ctx);
+    userId = await seedDispatchRecipient(ctx);
 
     send = createDeliverySender({
       messaging,
@@ -59,6 +57,10 @@ describe("notifications dispatch benchmark", () => {
       publicOrigin: "http://localhost:3000",
       logger: createLogger("bench-notification-dispatch"),
     });
+  });
+
+  beforeEach(async () => {
+    job = await seedDispatchDelivery(db.ctx(), userId);
   });
 
   afterAll(async () => {
@@ -69,14 +71,8 @@ describe("notifications dispatch benchmark", () => {
   bench(
     "service path: send one delivery",
     async () => {
-      if (!send) throw new Error("dispatch benchmark used before setup");
-      const job = takeFromPool(pool, cursor, "dispatch pool exhausted");
       await send(job);
     },
-    {
-      ...fixedIterations(DISPATCH_DELIVERY_COUNT),
-      warmupTime: 0,
-      warmupIterations: 0,
-    },
+    SINGLE_CALL,
   );
 });

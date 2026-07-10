@@ -1,24 +1,22 @@
-import { afterAll, beforeAll, bench, describe } from "vitest";
+import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import type { UserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import { seedSessionDeleteFixtures, USER_POOL_SIZE } from "./fixtures";
+import { SINGLE_CALL } from "../_shared/options";
+import { SESSIONS_PER_USER, seedBenchUser, setUserSessions } from "./fixtures";
 
-describe("session delete repository benchmark", () => {
-  const db = createBenchDbFixture("bench-session-delete-repository-delete");
-  let userIds: UserId[] = [];
-  const cursor = { value: 0 };
+describe("sessions.deleteAllForUser", () => {
+  const db = createBenchDbFixture("bench-session-delete");
+  let userId: UserId;
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const fixtures = await seedSessionDeleteFixtures(
-      ctx,
-      "bench-repository-delete-session",
-    );
-    userIds = fixtures.userIds;
+    userId = await seedBenchUser(ctx);
+  });
+
+  beforeEach(async () => {
+    await setUserSessions(db.ctx(), userId, SESSIONS_PER_USER);
   });
 
   afterAll(async () => {
@@ -26,17 +24,10 @@ describe("session delete repository benchmark", () => {
   });
 
   bench(
-    "repository path: delete all sessions for user",
+    "delete all sessions for a heavy user",
     async () => {
-      const userId = takeFromPool(
-        userIds,
-        cursor,
-        "session-delete delete repository pool exhausted before iterations completed",
-      );
-      const ctx = db.ctx();
-
-      await ctx.repos.sessions.deleteAllForUser(userId);
+      await db.ctx().repos.sessions.deleteAllForUser(userId);
     },
-    fixedIterations(USER_POOL_SIZE),
+    SINGLE_CALL,
   );
 });

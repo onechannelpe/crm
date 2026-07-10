@@ -22,57 +22,25 @@ import { Ok, type Result } from "~/server/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
 
-export const USER_POOL_SIZE = 80;
 const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
 const ACTOR_USER_ID = asUserId(TEST_FIXTURES.users.backOne.id);
 
-interface LeadsRequestSeed {
+export interface LeadsBench {
   branchId: BranchId;
-  userIds: UserId[];
-  engineClient: EngineClient;
+  engine: EngineClient;
+  // Seeds a fresh user + org + capacity grant and returns the user.
+  seedUnit: () => Promise<UserId>;
 }
 
-export async function seedLeadsRequestFixtures(
-  ctx: TestDbContext,
-): Promise<LeadsRequestSeed> {
-  const users = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: asUserId(randomUUIDv7()),
-    branch_id: BRANCH_ID,
-    team_id: null,
-    username: `bench.leads${index}`,
-    email: `bench-leads-${index}@test.local`,
-    password_hash: "hash",
-    names: `Bench Leads ${index}`,
-    first_surname: "User",
-    second_surname: "Bench",
-    onboarding_completed_at: BENCH_NOW,
-    role: "executive" as const,
-    executive_category: "elite" as const,
-    is_active: true,
-    created_at: BENCH_NOW,
-  }));
+function ruc(index: number): string {
+  return `2099${String(index).padStart(8, "0")}`;
+}
 
-  await ctx.db.insertInto("users").values(users).execute();
-  const userIds = users.map((user) => user.id);
+export function createLeadsBench(ctx: TestDbContext): LeadsBench {
+  const unitIndexByUser = new Map<UserId, number>();
+  let seq = 0;
 
-  for (let index = 0; index < USER_POOL_SIZE; index += 1) {
-    await ctx.repos.organization.upsertOrganization({
-      ruc: `2099${String(index).padStart(8, "0")}`,
-      legalName: `Bench Org ${index}`,
-    });
-  }
-
-  // Capacity grants keep the benchmark on assignment work, not quota rejection.
-  for (const userId of userIds) {
-    await ctx.repos.leadCapacityGrants.insert({
-      user_id: userId,
-      amount: 5,
-      reason: "bench_seed",
-      actor_user_id: ACTOR_USER_ID,
-    });
-  }
-
-  const engineClient = {
+  const engine: EngineClient = {
     async search(
       _intent: SearchIntent,
       query: string,
@@ -124,10 +92,10 @@ export async function seedLeadsRequestFixtures(
     async requestCandidates(
       input: RecordCandidatesRequest,
     ): Promise<Result<RecordCandidate[], DomainError>> {
-      const index = userIds.indexOf(input.userId);
+      const index = unitIndexByUser.get(input.userId) ?? 0;
       return Ok([
         {
-          ruc: `2099${String(index).padStart(8, "0")}`,
+          ruc: ruc(index),
           organization_name: `Bench Org ${index}`,
           dni: `7000${String(index).padStart(4, "0")}`,
           person_name: `Bench Person ${index}`,
@@ -137,5 +105,47 @@ export async function seedLeadsRequestFixtures(
     },
   };
 
-  return { branchId: BRANCH_ID, userIds, engineClient };
+  async function seedUnit(): Promise<UserId> {
+    const index = seq;
+    seq += 1;
+    const userId = asUserId(randomUUIDv7());
+
+    await ctx.db
+      .insertInto("users")
+      .values({
+        id: userId,
+        branch_id: BRANCH_ID,
+        team_id: null,
+        username: `bench.leads.${index}`,
+        email: `bench-leads-${index}@test.local`,
+        password_hash: "hash",
+        names: `Bench Leads ${index}`,
+        first_surname: "User",
+        second_surname: "Bench",
+        onboarding_completed_at: BENCH_NOW,
+        role: "executive",
+        executive_category: "elite",
+        is_active: true,
+        created_at: BENCH_NOW,
+      })
+      .execute();
+
+    await ctx.repos.organization.upsertOrganization({
+      ruc: ruc(index),
+      legalName: `Bench Org ${index}`,
+    });
+
+    // Capacity grant keeps the benchmark on assignment work.
+    await ctx.repos.leadCapacityGrants.insert({
+      user_id: userId,
+      amount: 5,
+      reason: "bench_seed",
+      actor_user_id: ACTOR_USER_ID,
+    });
+
+    unitIndexByUser.set(userId, index);
+    return userId;
+  }
+
+  return { branchId: BRANCH_ID, engine, seedUnit };
 }

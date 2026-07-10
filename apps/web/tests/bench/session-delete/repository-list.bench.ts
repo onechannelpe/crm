@@ -3,49 +3,33 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 import type { UserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import {
-  expectedSessionsPerUser,
-  seedSessionDeleteFixtures,
-  USER_POOL_SIZE,
-} from "./fixtures";
+import { SESSIONS_PER_USER, seedBenchUser, setUserSessions } from "./fixtures";
 
-describe("session list repository benchmark", () => {
-  const db = createBenchDbFixture("bench-session-delete-repository");
-  let userIds: UserId[] = [];
-  const cursor = { value: 0 };
+describe("sessions.listForUser", () => {
+  const db = createBenchDbFixture("bench-session-list");
+  let userId: UserId;
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const fixtures = await seedSessionDeleteFixtures(
-      ctx,
-      "bench-repository-session",
-    );
-    userIds = fixtures.userIds;
+    userId = await seedBenchUser(ctx);
+    await setUserSessions(ctx, userId, SESSIONS_PER_USER);
+
+    // Guard against a silently empty benchmark: verify the seed produced the
+    // expected working set once, outside the measured call.
+    const rows = await ctx.repos.sessions.listForUser(userId);
+    if (rows.length !== SESSIONS_PER_USER) {
+      throw new Error(
+        `expected ${SESSIONS_PER_USER} sessions, seeded ${rows.length}`,
+      );
+    }
   });
 
   afterAll(async () => {
     await db.teardown();
   });
 
-  bench(
-    "repository path: list sessions for user",
-    async () => {
-      const userId = takeFromPool(
-        userIds,
-        cursor,
-        "session-delete repository pool exhausted before iterations completed",
-      );
-      const ctx = db.ctx();
-
-      const rows = await ctx.repos.sessions.listForUser(userId);
-      if (rows.length !== expectedSessionsPerUser()) {
-        throw new Error(
-          `expected ${expectedSessionsPerUser()} sessions, got ${rows.length}`,
-        );
-      }
-    },
-    fixedIterations(USER_POOL_SIZE),
-  );
+  // Read path: idempotent, so CodSpeed measures one call and repeats it itself.
+  bench("list sessions for a heavy user", async () => {
+    await db.ctx().repos.sessions.listForUser(userId);
+  });
 });

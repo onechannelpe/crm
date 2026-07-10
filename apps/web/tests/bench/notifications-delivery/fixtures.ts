@@ -2,6 +2,7 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
+import type { Json } from "~/contracts/json";
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import {
   createDeliveryRepository,
@@ -42,11 +43,15 @@ export const PLANNER_SCENARIOS = [
   },
 ] as const;
 
-export const EXPAND_INTENT_COUNT = 24;
 export const EXPAND_RECIPIENTS = 12;
-export const DISPATCH_DELIVERY_COUNT = 200;
 
 export type PlannerScenarioName = (typeof PLANNER_SCENARIOS)[number]["name"];
+
+export interface PlannerEntry {
+  event_type: string;
+  audience_json: Json;
+  channels_json: Json;
+}
 
 type PlannerScenario = (typeof PLANNER_SCENARIOS)[number];
 type PlannerScenarioResult<T> = Record<PlannerScenarioName, T>;
@@ -145,7 +150,7 @@ function createAudiencePool(
 async function seedPlannerScenario(
   ctx: TestDbContext,
   scenario: PlannerScenario,
-): Promise<NotificationIntentId[]> {
+): Promise<NotificationIntentId> {
   const stride = Math.max(
     1,
     Math.round(scenario.recipientsPerIntent * (1 - scenario.overlapRatio)),
@@ -177,53 +182,75 @@ async function seedPlannerScenario(
   );
 
   await enqueueNotifications(ctx.db, intents, BENCH_NOW);
-  return intents.map((intent) => asNotificationIntentId(intent.id));
+  return asNotificationIntentId(`bench-planner-${scenario.name}-0`);
 }
 
-export async function seedPlannerFixtures(
+async function loadPlannerEntry(
   ctx: TestDbContext,
-): Promise<PlannerScenarioResult<NotificationIntentId[]>> {
+  intentId: NotificationIntentId,
+): Promise<PlannerEntry> {
+  const entry = await ctx.db
+    .selectFrom("notification_intents")
+    .select(["event_type", "audience_json", "channels_json"])
+    .where("id", "=", intentId)
+    .executeTakeFirst();
+  if (!entry) {
+    throw new Error(`planner intent ${intentId} not seeded`);
+  }
+  return entry;
+}
+
+export async function seedPlannerEntries(
+  ctx: TestDbContext,
+): Promise<PlannerScenarioResult<PlannerEntry>> {
   const [disjoint, partialOverlap, highOverlap] = PLANNER_SCENARIOS;
 
-  const [disjointIds, partialOverlapIds, highOverlapIds] = await Promise.all([
+  const [disjointId, partialOverlapId, highOverlapId] = await Promise.all([
     seedPlannerScenario(ctx, disjoint),
     seedPlannerScenario(ctx, partialOverlap),
     seedPlannerScenario(ctx, highOverlap),
   ]);
 
+  const [disjointEntry, partialOverlapEntry, highOverlapEntry] =
+    await Promise.all([
+      loadPlannerEntry(ctx, disjointId),
+      loadPlannerEntry(ctx, partialOverlapId),
+      loadPlannerEntry(ctx, highOverlapId),
+    ]);
+
   return {
-    disjoint: disjointIds,
-    "partial-overlap": partialOverlapIds,
-    "high-overlap": highOverlapIds,
+    disjoint: disjointEntry,
+    "partial-overlap": partialOverlapEntry,
+    "high-overlap": highOverlapEntry,
   };
 }
 
-// One independent intent per iteration for the expansion-stage benchmark. Each
-// intent fans out to the same recipient set across all three channels; the
-// returned jobs are the content the expander operates on.
-export async function seedExpandFixtures(
+export async function seedExpandRecipients(
   ctx: TestDbContext,
-): Promise<IntentJob[]> {
+): Promise<UserId[]> {
   const userIds = createUserIds(EXPAND_RECIPIENTS);
   await seedUsersAndAddresses(ctx, userIds, "expand");
+  return userIds;
+}
 
-  const intents: NotificationIntent[] = Array.from(
-    { length: EXPAND_INTENT_COUNT },
-    (_, index) => ({
-      id: `bench-expand-${index}`,
-      eventType: "lead.ready_for_quotation",
-      audience: { kind: "user_ids", userIds },
-      channels: ["in_app", "email", "whatsapp"],
-      priority: "normal",
-      title: `Bench expand ${index}`,
-      bodyText: "Bench expand body",
-      actionUrl: null,
-    }),
-  );
-  await enqueueNotifications(ctx.db, intents, BENCH_NOW);
-  const intentIds = intents.map((intent) => asNotificationIntentId(intent.id));
+export async function seedExpandIntent(
+  ctx: TestDbContext,
+  userIds: UserId[],
+): Promise<IntentJob> {
+  const id = `bench-expand-${randomUUIDv7()}`;
+  const intent: NotificationIntent = {
+    id,
+    eventType: "lead.ready_for_quotation",
+    audience: { kind: "user_ids", userIds },
+    channels: ["in_app", "email", "whatsapp"],
+    priority: "normal",
+    title: "Bench expand",
+    bodyText: "Bench expand body",
+    actionUrl: null,
+  };
+  await enqueueNotifications(ctx.db, [intent], BENCH_NOW);
 
-  return ctx.db
+  const job = await ctx.db
     .selectFrom("notification_intents")
     .select([
       "id",
@@ -237,37 +264,48 @@ export async function seedExpandFixtures(
       "body_text",
       "action_url",
     ])
-    .where("id", "in", intentIds)
-    .execute();
+    .where("id", "=", asNotificationIntentId(id))
+    .executeTakeFirst();
+  if (!job) {
+    throw new Error(`expand intent ${id} not seeded`);
+  }
+  return job;
 }
 
-// One independent pending delivery per iteration for the dispatch-stage
-// benchmark. Distinct intent ids keep the unique (intent,user,channel) key from
-// collapsing the rows.
-export async function seedDispatchFixtures(
+export async function seedDispatchRecipient(
   ctx: TestDbContext,
-): Promise<DeliveryJob[]> {
-  const userIds = createUserIds(1);
-  await seedUsersAndAddresses(ctx, userIds, "dispatch");
-  const [userId] = userIds;
+): Promise<UserId> {
+  const [userId] = createUserIds(1);
+  await seedUsersAndAddresses(ctx, [userId], "dispatch");
+  return userId;
+}
 
+// A fresh pending delivery to send. send() consumes it (records an attempt,
+// marks it sent). A unique intent id keeps the (intent,user,channel) key from
+// collapsing rows.
+export async function seedDispatchDelivery(
+  ctx: TestDbContext,
+  userId: UserId,
+): Promise<DeliveryJob> {
+  const intentId = asNotificationIntentId(`bench-dispatch-${randomUUIDv7()}`);
   const deliveries = createDeliveryRepository(ctx.db);
-  const plannedDeliveries = Array.from(
-    { length: DISPATCH_DELIVERY_COUNT },
-    (_, index) => ({
-      intent_id: asNotificationIntentId(`bench-dispatch-${index}`),
-      user_id: userId,
-      channel: "email" as const,
-      recipient_address: `bench-dispatch-${index}@test.local`,
-      title: `Bench dispatch ${index}`,
-      body_text: "Bench dispatch body",
-      action_url: null,
-    }),
+
+  await deliveries.insertPlanned(
+    [
+      {
+        intent_id: intentId,
+        user_id: userId,
+        channel: "email" as const,
+        recipient_address: "bench-dispatch@test.local",
+        title: "Bench dispatch",
+        body_text: "Bench dispatch body",
+        action_url: null,
+      },
+    ],
+    BENCH_NOW,
   );
 
-  await deliveries.insertPlanned(plannedDeliveries, BENCH_NOW);
-
-  return ctx.db
+  const job = await ctx.db
     .selectFrom("notification_deliveries")
     .select([
       "id",
@@ -281,10 +319,10 @@ export async function seedDispatchFixtures(
       "body_text",
       "action_url",
     ])
-    .where(
-      "intent_id",
-      "in",
-      plannedDeliveries.map((delivery) => delivery.intent_id),
-    )
-    .execute();
+    .where("intent_id", "=", intentId)
+    .executeTakeFirst();
+  if (!job) {
+    throw new Error(`dispatch delivery for ${intentId} not seeded`);
+  }
+  return job;
 }
