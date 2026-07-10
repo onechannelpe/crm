@@ -96,6 +96,10 @@ function parseResponseBody(response: Response, text: string): unknown {
   }
 }
 
+function isRetryableMetaGraphStatus(status: number): boolean {
+  return status === 408 || status === 429 || status >= 500;
+}
+
 export async function sendMetaGraphWhatsAppText(
   config: MetaGraphWhatsAppConfig,
   input: { to: string; body: string },
@@ -147,7 +151,7 @@ export async function sendMetaGraphWhatsAppText(
     message:
       parsed?.message ??
       `WhatsApp send failed (HTTP ${response.status}): ${text}`,
-    retryable: response.status === 429 || response.status >= 500,
+    retryable: isRetryableMetaGraphStatus(response.status),
   };
   throw failure;
 }

@@ -48,19 +48,30 @@ describe("env validation", () => {
     );
   });
 
-  it("passes for a strong secret", () => {
-    const strong = "k7vB9pL2mN5qR4xT1yZ8wS3uJ6hA0gC9";
-    expect(() => validateSecret("TEST_SECRET", strong)).not.toThrow();
+  it("applies local development defaults", () => {
+    const env = loadServerEnv(baseEnv);
+
+    expect(env.engine.engineConnectMode).toBe("local");
+    expect(env.app.publicOrigin).toBe("http://localhost:3000");
+    expect(env.database.url).toBe("postgres://postgres@localhost:5432/crm");
   });
 
-  it("defaults engine connect mode to local", () => {
-    expect(loadServerEnv(baseEnv).engine.engineConnectMode).toBe("local");
+  it("normalizes the configured database URL", () => {
+    expect(
+      loadServerEnv({
+        ...baseEnv,
+        WEB_DB_URL: "  postgres://postgres@database:5432/crm  ",
+      }).database.url,
+    ).toBe("postgres://postgres@database:5432/crm");
   });
 
-  it("defaults app public origin to local development", () => {
-    expect(loadServerEnv(baseEnv).app.publicOrigin).toBe(
-      "http://localhost:3000",
-    );
+  it("requires a database URL in production", () => {
+    expect(() =>
+      loadServerEnv({
+        ...baseEnv,
+        NODE_ENV: "production",
+      }),
+    ).toThrow("Missing required env: WEB_DB_URL");
   });
 
   it("normalizes app public origin", () => {

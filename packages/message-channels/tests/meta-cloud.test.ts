@@ -11,6 +11,7 @@ describe("sendWithWhatsAppCloudText", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ messages: [{ id: "wamid.1" }] }), {
         status: 200,
+        headers: { "content-type": "application/json" },
       }),
     );
 
@@ -52,5 +53,26 @@ describe("sendWithWhatsAppCloudText", () => {
     });
 
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("treats HTTP 408 as retryable", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("timeout", { status: 408 }),
+    );
+
+    await expect(
+      sendWithWhatsAppCloudText({
+        accessToken: "token",
+        phoneNumberId: "123",
+        apiVersion: "v23.0",
+        to: "+1 (555) 123-4567",
+        body: "Hello",
+      }),
+    ).rejects.toMatchObject({
+      provider: "whatsapp_cloud",
+      code: "http_error",
+      statusCode: 408,
+      retryable: true,
+    });
   });
 });

@@ -9,6 +9,7 @@ import {
 
 const SECRET_MIN_LENGTH = 32;
 const SECRET_MIN_UNIQUE_CHARS = 10;
+const LOCAL_DEV_DB_URL = "postgres://postgres@localhost:5432/crm";
 const SEQUENTIAL_CHARS =
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -157,6 +158,19 @@ function parseUploadsEnv(source: EnvSource) {
       ".local-storage/documents",
     ),
   } as const;
+}
+
+function parseDatabaseEnv(source: EnvSource) {
+  const configuredUrl = source["WEB_DB_URL"]?.trim();
+  if (configuredUrl) {
+    return { url: configuredUrl } as const;
+  }
+
+  if (source["NODE_ENV"] === "production") {
+    throw new Error("Missing required env: WEB_DB_URL");
+  }
+
+  return { url: LOCAL_DEV_DB_URL } as const;
 }
 
 function parseEngineEnv(source: EnvSource) {
@@ -325,6 +339,7 @@ export function loadServerEnv(source: EnvSource) {
     security: parseSecurityEnv(source),
     app: parseAppEnv(source),
     uploads: parseUploadsEnv(source),
+    database: parseDatabaseEnv(source),
     engine: parseEngineEnv(source),
     googleOAuth: parseGoogleOAuthEnv(source),
     notifications: parseNotificationsEnv(source),
@@ -346,6 +361,7 @@ export const extensionConfig = section(parseExtensionEnv);
 export const securityConfig = section(parseSecurityEnv);
 export const appConfig = section(parseAppEnv);
 export const uploadsConfig = section(parseUploadsEnv);
+export const databaseConfig = section(parseDatabaseEnv);
 export const engineConfig = section(parseEngineEnv);
 export const googleOAuthConfig = section(parseGoogleOAuthEnv);
 export const notificationsConfig = section(parseNotificationsEnv);

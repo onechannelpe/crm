@@ -1,5 +1,5 @@
 import { Kysely, PostgresDialect } from "kysely";
-import { Pool, types } from "pg";
+import { Pool, TypeOverrides, types } from "pg";
 
 import { createLogger } from "~/lib/observability/logger";
 
@@ -7,24 +7,44 @@ import type { Database as DatabaseSchema } from "./types";
 
 const logger = createLogger("db-client");
 
-// node-pg parses `numeric` (OID 1700) as a string to preserve arbitrary
-// precision. Our numeric columns are rate/fee money values read into number
-// arithmetic, so parse them back to a JS number globally.
-types.setTypeParser(types.builtins.NUMERIC, Number.parseFloat);
+function createPoolTypes(): TypeOverrides {
+  const poolTypes = new TypeOverrides();
 
-// Same story for `int8` (OID 20). Postgres's `count(*)` always returns bigint
-// regardless of the counted column's type, so every repo's `count()` aggregate
-// hits this. Our counts stay well under Number.MAX_SAFE_INTEGER, so parsing
-// to a JS number is safe.
-types.setTypeParser(types.builtins.INT8, Number.parseInt);
+  // node-postgres returns `numeric` as string to preserve arbitrary precision.
+  // This pool accepts JS floating-point precision for all `numeric` values.
+  poolTypes.setTypeParser(types.builtins.NUMERIC, Number.parseFloat);
 
-// One Kysely instance per connection string. The pool is owned by the
-// returned instance; callers that build throwaway databases (the test
-// harness) must `destroy()` to release the pool.
+  // node-postgres returns `int8` as string because it can exceed
+  // Number.MAX_SAFE_INTEGER. All `int8` values returned through this pool
+  // must remain within that limit.
+  poolTypes.setTypeParser(types.builtins.INT8, Number.parseInt);
+
+  return poolTypes;
+}
+
+function connectionTarget(connectionString: string) {
+  try {
+    const url = new URL(connectionString);
+    return {
+      protocol: url.protocol.replace(":", ""),
+      host: url.hostname,
+      port: url.port || null,
+      database: url.pathname.replace(/^\//, "") || null,
+    };
+  } catch {
+    return {
+      protocol: "unknown",
+      host: "unparseable",
+      port: null,
+      database: null,
+    };
+  }
+}
+
 export function createDb(connectionString: string): Kysely<DatabaseSchema> {
-  logger.info("db_initialization_started", { url: connectionString });
+  logger.info("db_initialization_started", connectionTarget(connectionString));
 
-  const pool = new Pool({ connectionString });
+  const pool = new Pool({ connectionString, types: createPoolTypes() });
 
   return new Kysely<DatabaseSchema>({
     dialect: new PostgresDialect({ pool }),

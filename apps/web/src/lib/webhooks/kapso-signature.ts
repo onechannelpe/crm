@@ -37,7 +37,6 @@ export function verifyKapsoSignature({
 
   if (expectedBuf.length !== actualBuf.length) {
     logger.warn("kapso_signature_length_mismatch", {
-      actualPrefix: signature.slice(0, 8),
       actualLength: actualBuf.length,
       expectedLength: expectedBuf.length,
       bodyLength: rawBody.length,
@@ -47,8 +46,6 @@ export function verifyKapsoSignature({
 
   if (!timingSafeEqual(expectedBuf, actualBuf)) {
     logger.warn("kapso_signature_mismatch", {
-      actualPrefix: signature.slice(0, 8),
-      expectedPrefix: expected.slice(0, 8),
       bodyLength: rawBody.length,
     });
     return false;
