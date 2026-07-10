@@ -186,6 +186,8 @@ jobs:
 
       - name: build
         working-directory: apps/web
+        env:
+          WEB_DB_URL: postgres://postgres@localhost:5432/crm
         run: bun run build
 
   test:
