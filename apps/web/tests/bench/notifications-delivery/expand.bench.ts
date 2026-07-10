@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, bench, describe } from "vitest";
+import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { createLogger } from "~/lib/observability/logger";
 import { createIntentExpander } from "~/server/notifications/expansion/expand-intent";
@@ -6,24 +6,24 @@ import { createRecipientPlanner } from "~/server/notifications/expansion/plan-re
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import type { IntentJob } from "~/server/notifications/repos/intent-repo";
+import type { UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import { EXPAND_INTENT_COUNT, seedExpandFixtures } from "./fixtures";
+import { SINGLE_CALL } from "../_shared/options";
+import { seedExpandIntent, seedExpandRecipients } from "./fixtures";
 
 describe("notifications expansion benchmark", () => {
   const db = createBenchDbFixture("bench-notifications-expand");
-  const cursor = { value: 0 };
-  let pool: IntentJob[] = [];
-  let expand: ReturnType<typeof createIntentExpander> | null = null;
+  let expand: ReturnType<typeof createIntentExpander>;
+  let recipients: UserId[];
+  let job: IntentJob;
   const originalLogLevel = process.env.LOG_LEVEL;
 
   beforeAll(async () => {
     process.env.LOG_LEVEL = "error";
     const ctx = await db.setup();
-    pool = await seedExpandFixtures(ctx);
+    recipients = await seedExpandRecipients(ctx);
 
     const logger = createLogger("bench-notification-expand");
     expand = createIntentExpander({
@@ -34,6 +34,10 @@ describe("notifications expansion benchmark", () => {
     });
   });
 
+  beforeEach(async () => {
+    job = await seedExpandIntent(db.ctx(), recipients);
+  });
+
   afterAll(async () => {
     process.env.LOG_LEVEL = originalLogLevel;
     await db.teardown();
@@ -42,14 +46,8 @@ describe("notifications expansion benchmark", () => {
   bench(
     "service path: expand one intent",
     async () => {
-      if (!expand) throw new Error("expand benchmark used before setup");
-      const job = takeFromPool(pool, cursor, "expand pool exhausted");
       await expand(job, BENCH_NOW);
     },
-    {
-      ...fixedIterations(EXPAND_INTENT_COUNT),
-      warmupTime: 0,
-      warmupIterations: 0,
-    },
+    SINGLE_CALL,
   );
 });

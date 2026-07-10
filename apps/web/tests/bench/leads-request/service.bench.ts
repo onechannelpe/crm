@@ -1,34 +1,33 @@
-import { afterAll, beforeAll, bench, describe } from "vitest";
+import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
-import type { EngineClient } from "~/server/shared/engine/client";
 import type { BranchId, UserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import { seedLeadsRequestFixtures, USER_POOL_SIZE } from "./fixtures";
+import { SINGLE_CALL } from "../_shared/options";
+import { createLeadsBench, type LeadsBench } from "./fixtures";
 
 describe("lead refill service benchmark", () => {
   const db = createBenchDbFixture("bench-leads-request-service");
-  let engine!: EngineClient;
-  let branchId!: BranchId;
-  let userIds: UserId[] = [];
-  const cursor = { value: 0 };
-  let assignmentContext!: ReturnType<typeof createContactAssignmentsContext>;
+  let branchId: BranchId;
+  let seedUnit: LeadsBench["seedUnit"];
+  let assignmentContext: ReturnType<typeof createContactAssignmentsContext>;
+  let userId: UserId;
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const fixtures = await seedLeadsRequestFixtures(ctx);
-    branchId = fixtures.branchId;
-    userIds = fixtures.userIds;
-    engine = fixtures.engineClient;
-
+    const leads = createLeadsBench(ctx);
+    branchId = leads.branchId;
+    seedUnit = leads.seedUnit;
     assignmentContext = createContactAssignmentsContext({
       executor: ctx.db,
-      engine,
+      engine: leads.engine,
     });
+  });
+
+  beforeEach(async () => {
+    userId = await seedUnit();
   });
 
   afterAll(async () => {
@@ -38,17 +37,8 @@ describe("lead refill service benchmark", () => {
   bench(
     "service path: request lead refill for one user",
     async () => {
-      const userId = takeFromPool(
-        userIds,
-        cursor,
-        "leads-request pool exhausted before iterations completed",
-      );
-
       const result = await assignContacts(
-        {
-          actorUserId: userId,
-          branchId,
-        },
+        { actorUserId: userId, branchId },
         {
           repos: assignmentContext.repos,
           uow: assignmentContext.uow,
@@ -62,6 +52,6 @@ describe("lead refill service benchmark", () => {
         );
       }
     },
-    fixedIterations(USER_POOL_SIZE),
+    SINGLE_CALL,
   );
 });
