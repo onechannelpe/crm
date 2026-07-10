@@ -8,9 +8,6 @@ export class FocusGesture extends Feature {
 
   private isFocused = false;
   private removeFocus: VoidFunction | undefined;
-  constructor(state) {
-    super(state);
-  }
 
   private onFocus() {
     let isFocusVisible = false;

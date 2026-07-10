@@ -12,7 +12,7 @@ import {
   resolveVariant,
 } from "motion-dom";
 
-import { shallowCompare } from "./utils";
+import { getFinalTargetValues, shallowCompare } from "./utils";
 import { getVariantContext } from "./utils/get-variant-context";
 
 const variantPriorityOrder = [
@@ -125,8 +125,7 @@ export function createAnimationState(
       );
 
       if (resolved) {
-        const { transition, transitionEnd, ...target } = resolved;
-        acc = { ...acc, ...target, ...transitionEnd };
+        acc = { ...acc, ...getFinalTargetValues(resolved) };
       }
 
       return acc;

@@ -34,15 +34,15 @@ export class PanGesture extends Feature {
     return {
       onSessionStart: asyncHandler((_, info) => {
         const { onPanSessionStart } = this.state.options;
-        onPanSessionStart && onPanSessionStart(_, info);
+        onPanSessionStart?.(_, info);
       }),
       onStart: asyncHandler((_, info) => {
         const { onPanStart } = this.state.options;
-        onPanStart && onPanStart(_, info);
+        onPanStart?.(_, info);
       }),
       onMove: (event, info) => {
         const { onPan } = this.state.options;
-        onPan && onPan(event, info);
+        onPan?.(event, info);
       },
       onEnd: (event: PointerEvent, info: PanInfo) => {
         const { onPanEnd } = this.state.options;
@@ -66,6 +66,6 @@ export class PanGesture extends Feature {
 
   unmount() {
     this.removePointerDownListener();
-    this.session && this.session.end();
+    this.session?.end();
   }
 }

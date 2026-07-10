@@ -80,8 +80,7 @@ export class PanSession {
     this.history = [{ ...point, timestamp }];
 
     const { onSessionStart } = handlers;
-    onSessionStart &&
-      onSessionStart(event, getPanInfo(initialInfo, this.history));
+    onSessionStart?.(event, getPanInfo(initialInfo, this.history));
 
     this.removeListeners = pipe(
       addPointerEvent(
@@ -213,10 +212,10 @@ export class PanSession {
     const { onStart, onMove } = this.handlers;
 
     if (!isPanStarted) {
-      onStart && onStart(this.lastMoveEvent, info);
+      onStart?.(this.lastMoveEvent, info);
       this.startEvent = this.lastMoveEvent;
     }
-    onMove && onMove(this.lastMoveEvent, info);
+    onMove?.(this.lastMoveEvent, info);
   };
 
   private handlePointerMove = (event: PointerEvent, info: EventInfo) => {
@@ -232,7 +231,7 @@ export class PanSession {
 
     // A click pauses constraints during pointerdown but never starts a drag.
     if (this.dragSnapToOrigin || !this.startEvent) {
-      resumeAnimation && resumeAnimation();
+      resumeAnimation?.();
     }
     if (!(this.lastMoveEvent && this.lastMoveEventInfo)) return;
 
@@ -247,7 +246,7 @@ export class PanSession {
       onEnd(event, panInfo);
     }
 
-    onSessionEnd && onSessionEnd(event, panInfo);
+    onSessionEnd?.(event, panInfo);
   };
 
   updateHandlers(handlers: Partial<PanSessionHandlers>) {
@@ -255,7 +254,7 @@ export class PanSession {
   }
 
   end() {
-    this.removeListeners && this.removeListeners();
+    this.removeListeners?.();
     this.removeScrollListeners?.();
     this.scrollPositions.clear();
     cancelFrame(this.updatePoint);

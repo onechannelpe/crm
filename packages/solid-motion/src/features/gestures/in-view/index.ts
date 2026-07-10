@@ -8,10 +8,6 @@ export class InViewGesture extends Feature {
 
   private removeObserver: VoidFunction | undefined;
 
-  constructor(state) {
-    super(state);
-  }
-
   private isActive() {
     const { whileInView, onViewportEnter, onViewportLeave } = this.state
       .options as any;

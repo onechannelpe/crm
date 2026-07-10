@@ -45,10 +45,10 @@ export class MotionState {
     this.type = isSVGElement(this.options.as as any) ? "svg" : "html";
   }
 
-  private _context: MotionStateContext | null = null;
+  private contextProxy: MotionStateContext | null = null;
 
   get context() {
-    if (!this._context) {
+    if (!this.contextProxy) {
       const handler = {
         get: (target: MotionStateContext, prop: keyof MotionStateContext) => {
           const value = this.options[prop];
@@ -62,9 +62,9 @@ export class MotionState {
         },
       };
 
-      this._context = new Proxy({} as MotionStateContext, handler);
+      this.contextProxy = new Proxy({} as MotionStateContext, handler);
     }
-    return this._context;
+    return this.contextProxy;
   }
 
   updateFeatures() {
@@ -152,14 +152,19 @@ export class MotionState {
     }
     this.visualElement?.animationState
       ?.setActive(name as AnimationType, isActive)
-      .then(() => {
-        if (name === "exit" && isActive) {
-          this.isExiting = false;
-          this.options?.layoutId
-            ? frame.postRender(() => this.tryExitComplete())
-            : this.tryExitComplete();
-        }
-      });
+      .then(() => this.completeExitAnimation(name, isActive));
+  }
+
+  private completeExitAnimation(name: StateType, isActive: boolean) {
+    if (name !== "exit" || !isActive) return;
+
+    this.isExiting = false;
+    if (this.options.layoutId) {
+      frame.postRender(() => this.tryExitComplete());
+      return;
+    }
+
+    this.tryExitComplete();
   }
 
   isMounted() {
@@ -196,6 +201,6 @@ export class MotionState {
     }
   }
 
-  getSnapshot(options: Options, isPresent?: boolean) {}
+  getSnapshot(..._args: [options: Options, isPresent?: boolean]) {}
   didUpdate() {}
 }

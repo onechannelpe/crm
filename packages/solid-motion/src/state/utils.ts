@@ -1,5 +1,15 @@
 import type { AsTag, MotionStateContext, Options, VariantType } from "../types";
 
+export function getFinalTargetValues(
+  resolved: Record<string, any>,
+): Record<string, any> {
+  const target = { ...resolved };
+  delete target.transition;
+  delete target.transitionEnd;
+
+  return { ...target, ...resolved.transitionEnd };
+}
+
 function resolveVariantValue(
   definition?: Options["animate"],
   variants?: Options["variants"],
@@ -25,8 +35,7 @@ export function resolveVariant(
 ): VariantType | undefined {
   const resolved = resolveVariantValue(definition, variants, custom);
   if (!resolved) return undefined;
-  const { transition, transitionEnd, ...target } = resolved as any;
-  return { ...target, ...transitionEnd };
+  return getFinalTargetValues(resolved);
 }
 
 /** Builds initial inline styles for MotionState and server rendering. */

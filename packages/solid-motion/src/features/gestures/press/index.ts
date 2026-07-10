@@ -18,10 +18,6 @@ export class PressGesture extends Feature {
 
   private removePress: VoidFunction | undefined;
 
-  constructor(state) {
-    super(state);
-  }
-
   private isActive() {
     const { whilePress, onPress, onPressCancel, onPressStart } = this.state
       .options as any;

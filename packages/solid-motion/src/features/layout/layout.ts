@@ -51,7 +51,11 @@ export class LayoutFeature extends Feature {
       if (options.layoutId) {
         const isPresent = !isHidden(this.state.element as HTMLElement);
         projection.isPresent = isPresent;
-        isPresent ? projection.promote() : projection.relegate();
+        if (isPresent) {
+          projection.promote();
+        } else {
+          projection.relegate();
+        }
         this.updatePrevLead(projection);
       }
       layoutGroup?.group?.add(projection);

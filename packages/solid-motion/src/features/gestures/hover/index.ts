@@ -7,9 +7,6 @@ export class HoverGesture extends Feature {
   static key = "hover" as const;
 
   private removeHover: VoidFunction | undefined;
-  constructor(state) {
-    super(state);
-  }
 
   private isActive() {
     const { whileHover, onHoverStart, onHoverEnd } = this.state.options as any;

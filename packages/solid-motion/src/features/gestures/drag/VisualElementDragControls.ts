@@ -161,7 +161,7 @@ export class VisualElementDragControls {
         this.currentDirection = getCurrentDirection(offset);
 
         if (this.currentDirection !== null) {
-          onDirectionLock && onDirectionLock(this.currentDirection);
+          onDirectionLock?.(this.currentDirection);
         }
 
         return;
@@ -172,7 +172,7 @@ export class VisualElementDragControls {
       this.visualElement.render();
 
       // Render before onDrag because the callback may trigger a layout update.
-      onDrag && onDrag(event, info);
+      onDrag?.(event, info);
     };
 
     const onSessionEnd = (event: PointerEvent, info: PanInfo) =>
@@ -225,7 +225,7 @@ export class VisualElementDragControls {
     if (projection) {
       projection.isAnimationBlocked = false;
     }
-    this.panSession && this.panSession.end();
+    this.panSession?.end();
     this.panSession = undefined;
 
     const { dragPropagation } = this.getProps();
@@ -471,7 +471,7 @@ export class VisualElementDragControls {
     this.state.element.style.transform = transformTemplate
       ? transformTemplate({}, "")
       : "none";
-    projection.root && projection.root.updateScroll();
+    projection.root?.updateScroll();
     projection.updateLayout();
     this.resolveConstraints();
 
@@ -496,7 +496,9 @@ export class VisualElementDragControls {
       "pointerdown",
       (event) => {
         const { drag, dragListener = true } = this.getProps();
-        drag && dragListener && this.start(event);
+        if (drag && dragListener) {
+          this.start(event);
+        }
       },
     );
 
@@ -515,7 +517,7 @@ export class VisualElementDragControls {
     );
 
     if (projection && !projection!.layout) {
-      projection.root && projection.root.updateScroll();
+      projection.root?.updateScroll();
       projection.updateLayout();
     }
 
@@ -545,7 +547,7 @@ export class VisualElementDragControls {
       stopResizeListener();
       stopPointerListener();
       stopMeasureLayoutListener();
-      stopLayoutUpdateListener && stopLayoutUpdateListener();
+      stopLayoutUpdateListener?.();
     };
   }
 

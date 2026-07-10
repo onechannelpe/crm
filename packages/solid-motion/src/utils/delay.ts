@@ -1,5 +1,3 @@
 export function delay(fn: () => void) {
-  return Promise.resolve().then(() => {
-    fn();
-  });
+  return Promise.resolve().then(fn);
 }
