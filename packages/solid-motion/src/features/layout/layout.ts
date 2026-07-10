@@ -17,8 +17,10 @@ export class LayoutFeature extends Feature {
   constructor(state: MotionState) {
     super(state);
     addScaleCorrector(defaultScaleCorrector);
-    state.getSnapshot = this.getSnapshot.bind(this);
-    state.didUpdate = this.didUpdate.bind(this);
+    state.registerLayoutLifecycle({
+      getSnapshot: this.getSnapshot.bind(this),
+      didUpdate: this.didUpdate.bind(this),
+    });
   }
 
   private updatePrevLead(

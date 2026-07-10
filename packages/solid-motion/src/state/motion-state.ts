@@ -16,6 +16,11 @@ import { isSVGElement, resolveInitialValues } from "./utils";
 
 export const mountedStates = new WeakMap<Element, MotionState>();
 
+type LayoutLifecycle = {
+  getSnapshot: (options: Options, isPresent?: boolean) => void;
+  didUpdate: () => void;
+};
+
 export class MotionState {
   public type: "html" | "svg";
   public element: HTMLElement | SVGElement | null = null;
@@ -33,6 +38,7 @@ export class MotionState {
   public latestValues: DOMKeyframesDefinition;
 
   private features = new Map<FeatureKey, Feature>();
+  private layoutLifecycle?: LayoutLifecycle;
 
   public visualElement: VisualElement<Element>;
 
@@ -113,7 +119,7 @@ export class MotionState {
   }
 
   beforeUnmount() {
-    this.getSnapshot(this.options, false);
+    this.captureLayoutSnapshot(this.options, false);
   }
 
   unmount() {
@@ -124,12 +130,24 @@ export class MotionState {
   }
 
   beforeUpdate() {
-    this.getSnapshot(this.options, undefined);
+    this.captureLayoutSnapshot(this.options);
   }
 
   update() {
     this.updateFeatures();
-    this.didUpdate();
+    this.notifyLayoutUpdate();
+  }
+
+  registerLayoutLifecycle(layoutLifecycle: LayoutLifecycle) {
+    this.layoutLifecycle = layoutLifecycle;
+  }
+
+  captureLayoutSnapshot(options: Options, isPresent?: boolean) {
+    this.layoutLifecycle?.getSnapshot(options, isPresent);
+  }
+
+  notifyLayoutUpdate() {
+    this.layoutLifecycle?.didUpdate();
   }
 
   tryExitComplete() {
@@ -200,7 +218,4 @@ export class MotionState {
       this.visualElement.mount(this.element);
     }
   }
-
-  getSnapshot(..._args: [options: Options, isPresent?: boolean]) {}
-  didUpdate() {}
 }

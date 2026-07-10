@@ -52,7 +52,7 @@ export const AnimatePresence: FlowComponent<AnimatePresenceProps> = (props) => {
       const state = stateFor(el);
       if (!state) continue;
       state.setActive("exit", false);
-      state.getSnapshot(state.options, true);
+      state.captureLayoutSnapshot(state.options, true);
     }
 
     if (removed.length === 0) return;
@@ -82,9 +82,9 @@ export const AnimatePresence: FlowComponent<AnimatePresenceProps> = (props) => {
       exiting.set(state, settleOne);
       state.presenceContainer = state.element as HTMLElement;
       state.setActive("exit", true);
-      state.getSnapshot(state.options, false);
+      state.captureLayoutSnapshot(state.options, false);
     }
-    states[0]?.didUpdate();
+    states[0]?.notifyLayoutUpdate();
   }
 
   return (
