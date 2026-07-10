@@ -1,4 +1,3 @@
-// Sales, hr, admin, etc. define their own permission strings inline.
 export type CapacityPermission =
   | "search:use"
   | "capacity:read:self"

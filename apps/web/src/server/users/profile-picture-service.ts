@@ -136,7 +136,8 @@ export function createProfilePictureService(
         try {
           await blobStore.delete(storageKey);
         } catch {
-          // No-op: keep operation failure source deterministic for callers.
+          // Already mapped to repository_unavailable; a second blob failure
+          // cannot change the surfaced error.
         }
         return Err({ code: "repository_unavailable" });
       }

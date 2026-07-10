@@ -10,7 +10,7 @@ function readLastUsed(): LastUsedMethod {
     const v = localStorage.getItem(LAST_USED_KEY);
     if (v === "google" || v === "password" || v === "passkey") return v;
   } catch {
-    // localStorage unavailable (SSR / sandboxed)
+    // localStorage throws in SSR and sandboxed contexts
   }
   return null;
 }
@@ -19,7 +19,7 @@ function persistLastUsed(method: AuthMethod): void {
   try {
     localStorage.setItem(LAST_USED_KEY, method);
   } catch {
-    // localStorage unavailable (SSR / sandboxed)
+    // localStorage throws in SSR and sandboxed contexts
   }
 }
 

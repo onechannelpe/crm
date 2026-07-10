@@ -52,7 +52,8 @@ export function deriveLeadStageNotifications(input: {
         id: `${input.eventId}:ready_setup`,
         eventType: "lead.ready_for_sale",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
-        // Promotion beyond the in-app bell: high-value client work.
+        // The in-app bell alone would miss executives who don't open the app;
+        // whatsapp reaches them on their primary channel for a high-value step.
         channels: ["in_app", "whatsapp"],
         priority: "high",
         title: "Cliente listo para afiliación",

@@ -7,7 +7,8 @@ export interface WebhookVerifierInput {
 
 export type WebhookVerifier = (input: WebhookVerifierInput) => boolean;
 
-// Caps the buffered body so signature verification sees no partial payload.
+// 256 KiB caps the buffered body so signature verification runs over the
+// complete payload, not a stream chunk.
 export const WEBHOOK_BODY_LIMIT_BYTES = 256 * 1024;
 
 export type WebhookPolicy = {

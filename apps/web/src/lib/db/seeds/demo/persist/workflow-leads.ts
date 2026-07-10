@@ -106,8 +106,8 @@ export async function persistWorkflowLeadsAndAssignments(
         updated_by: BO2,
         created_at: new Date(now - 14 * day),
         updated_at: new Date(now - 10 * day),
-        // Quoted lead with a live hold: the pending proposal is still
-        // actionable until this date.
+        // reservation_expires_at is set for live holds; the back-office UI
+        // blocks registering a new lead on the same RUC until this passes.
         reservation_expires_at: new Date(now + 4 * day),
         current_provider: "INTERBANK",
         current_debit_rate: 2.55,

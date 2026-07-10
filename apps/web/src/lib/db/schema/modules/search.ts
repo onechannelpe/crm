@@ -76,7 +76,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
-  // Claim path: only pending rows that are due.
   await db.schema
     .createIndex("idx_company_registry_record_claim")
     .on("company_registry_record")
@@ -84,7 +83,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .where(sql.ref("queue_state"), "=", "pending")
     .execute();
 
-  // Stale-scan path: leased rows whose lease has expired.
   await db.schema
     .createIndex("idx_company_registry_record_stale")
     .on("company_registry_record")

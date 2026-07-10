@@ -79,7 +79,8 @@ export interface SessionUsersPort {
 }
 
 export interface SessionEventPort {
-  // The service ignores append results so adapters can return their native type.
+  // Service does not read the return; adapters can return void, an id, or an
+  // event count without breaking the contract.
   append(event: Parameters<EventsRepo["append"]>[0]): Promise<unknown>;
 }
 

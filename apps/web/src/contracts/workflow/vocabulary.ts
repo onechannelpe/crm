@@ -31,18 +31,20 @@ export const PRODUCT_KINDS = [
 
 export const FULFILLMENT_STEPS = [
   "CHOOSE_PRODUCT",
-  // refurbished branch
+  // Refurbished branch: back office uploads the transactions report, then
+  // a signed addendum, then compiles the PDF, then records the serials.
   "AWAITING_TRANSACTIONS_REPORT",
   "AWAITING_ADDENDUM",
   "AWAITING_SIGNATURE",
   "AWAITING_PDF_COMPILE",
   "AWAITING_SERIALS",
-  // new-pos branch
+  // New-POS branch: back office records the serial back from the field, then
+  // generates a payment link, then waits for payment and validation.
   "AWAITING_SERIAL_ENTRY",
   "AWAITING_PAYMENT_LINK",
   "AWAITING_PAYMENT",
   "AWAITING_PAYMENT_VALIDATION",
-  // shared tail
+  // Shared tail: register the sale, then close.
   "AWAITING_SALE_REGISTRATION",
   "COMPLETED",
 ] as const;

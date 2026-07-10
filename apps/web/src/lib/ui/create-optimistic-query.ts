@@ -3,16 +3,15 @@ import { createEffect, createSignal, on } from "solid-js";
 
 interface UpdateOptions<T, TResult> {
   optimistic: (current: T) => T;
-  // Use useAction(mutation) from lib/mutations/. SolidStart revalidates the
-  // query via the action's json({ revalidate }) return; once the query updates,
-  // the overlay clears.
+  // commit should be a useAction(mutation) call: SolidStart revalidates the
+  // query on the action's json({ revalidate }) return, which triggers the
+  // effect that clears the overlay.
   commit: () => Promise<TResult>;
 }
 
 interface OptimisticQueryResult<T> {
   data: () => T;
   update: <TResult>(options: UpdateOptions<T, TResult>) => Promise<TResult>;
-  // For mutations whose result cannot be predicted client-side.
   invalidate: () => Promise<void>;
 }
 

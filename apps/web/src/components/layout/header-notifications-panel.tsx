@@ -63,7 +63,7 @@ export function HeaderNotificationsPanel() {
         },
       });
     } catch {
-      // Rollback handled by update()
+      // update() rolls back the optimistic value on failure.
     }
   };
 
@@ -81,9 +81,7 @@ export function HeaderNotificationsPanel() {
           await markAllRead();
         },
       });
-    } catch {
-      // Rollback handled by update()
-    }
+    } catch {}
   };
 
   return (

@@ -23,6 +23,9 @@ export function createEnrichmentCommand(
         documentValue: document.value,
         requestedByUserId,
         requestedAt,
+        // 5 attempts: backed by nextAvailableAt's 5s-5min exponential schedule
+        // (~17min total), which clears short SUNAT blips while still leaving
+        // room for a later manual re-enqueue if SUNAT is fully down.
         maxAttempts: 5,
       });
     },

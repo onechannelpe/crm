@@ -45,9 +45,8 @@ export function createJobQueue<TJob extends QueueJobBase>(
     };
   }
 
-  // The store owns queue_state, the lease, and the table's mirror columns
-  // (finished-at, error, status); the handler's `patch` adds any extra domain
-  // columns.
+  // settle patches queue_state + lease + mirror columns; the handler's `patch`
+  // is the only place for extra domain columns.
   function settle(jobId: TJob["id"], outcome: SettleOutcome): Promise<boolean> {
     if (outcome.kind === "done") {
       return store.markDone(jobId, workerId, now(), outcome.patch);

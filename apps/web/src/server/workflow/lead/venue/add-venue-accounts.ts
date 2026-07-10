@@ -81,7 +81,7 @@ export async function addVenueAccountsCommand(
     }
 
     // Open the fulfillment order at FULFILLMENT so back office can pick the
-    // product kind. Units are created later, at product selection.
+    // product kind.
     if (transition.value.next.stage === "FULFILLMENT") {
       const orderId = await ctx.repos.fulfillment.createOrder({
         leadId: state.id,

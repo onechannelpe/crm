@@ -215,8 +215,7 @@ export function resolveAvailableActions(
   // The owning executive can correct the commercial data they entered at
   // registration (e.g. a mistyped current rate) while the lead is still being
   // qualified or priced, where that reference still informs a live decision.
-  // Owner enforcement also lives in authorizeLeadAction (edit-commercial-scope is
-  // in OWNER_REQUIRED); this keeps the UI gate in lockstep with the server.
+  // OWNER_REQUIRED carries the matching constraint on the server.
   if (
     caps.has("edit-commercial-scope") &&
     ownsLead &&

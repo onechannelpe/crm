@@ -67,7 +67,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .column("organization_id")
     .unique()
     // sql.ref bypasses createIndex().where typing, which only accepts the
-    // indexed column literal. Same pattern as the search-outbox partial index.
+    // indexed column literal.
     .where(sql.ref("deleted_at"), "is", null)
     .where(sql.ref("stage"), "!=", "EXPIRED")
     .execute();

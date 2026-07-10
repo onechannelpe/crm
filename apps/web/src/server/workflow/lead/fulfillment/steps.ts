@@ -6,7 +6,8 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import { FULFILLMENT_STEPS } from "~/contracts/workflow/vocabulary";
 
-// Drives the "whose turn" hint and the notification audience.
+// PendingOwner is the "whose turn" hint for the step; the notification reactor
+// uses it to pick the audience.
 export type PendingOwner = "executive" | "back_office";
 
 // The step completes only when every unit on the order carries a non-null

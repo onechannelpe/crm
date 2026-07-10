@@ -5,9 +5,9 @@ import type {
   ProductKind,
 } from "./vocabulary";
 
-// User-facing Spanish copy for fulfillment concepts. Shared by the server
-// timeline presenter and the client fulfillment panel so a step reads the same
-// everywhere.
+// Spanish fulfillment copy is the single source: the server timeline presenter
+// and the client fulfillment panel both read from this map, so a step reads
+// the same in both views.
 
 const PRODUCT_KIND_LABELS: Record<ProductKind, string> = {
   pos_new: "POS nuevo",

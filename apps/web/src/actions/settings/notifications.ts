@@ -37,9 +37,8 @@ export interface NotificationPreferencesView {
   categories: NotificationCategoryPreference[];
 }
 
-// Default-on: a row means "this user silenced this category on this channel",
-// absence means on. Locked (non-controllable) cells report enabled=true so
-// the UI shows them on but disabled.
+// Default-on: a row in notification_opt_outs means "this user silenced this
+// category on this channel"; absence means on.
 export async function getNotificationPreferences(): Promise<NotificationPreferencesView> {
   return runAction({
     name: "settings.notifications.read",
@@ -69,8 +68,9 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
         channels: EXTERNAL_CHANNELS.map((channel) => {
           const controllable = isChannelControllable(category, channel);
           const isAvailable = available.has(channel);
-          // Unavailable channels can't deliver, so they read as off. Mandatory
-          // channels are always on when available. Otherwise reflect the opt-out.
+          // Unavailable channels can't deliver (off). Mandatory channels are
+          // non-controllable, so the UI shows them on but disabled. Otherwise
+          // reflect the user's opt-out.
           const enabled = !isAvailable
             ? false
             : controllable

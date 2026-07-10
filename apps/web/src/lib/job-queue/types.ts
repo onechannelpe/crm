@@ -6,12 +6,9 @@ export interface QueueJobBase {
   max_attempts: number;
 }
 
-// The engine owns retry scheduling (backoff + the injected clock) and the
-// attempt-count ceiling, so a handler only classifies the outcome and
-// supplies any EXTRA domain columns to write in the same statement as the
-// queue transition (the store already owns queue_state, lease, finished-at,
-// error and status). A thrown error or a timed-out run is treated by the
-// engine as an implicit `retry`.
+// Handler returns the outcome; everything else (backoff, attempt ceiling,
+// queue_state, lease, mirror columns) is owned by the store/engine. A throw
+// or timeout is treated by the engine as an implicit `retry`.
 export type Settlement =
   | { kind: "done"; patch?: DomainPatch }
   | { kind: "retry"; reason?: string; patch?: DomainPatch }
@@ -42,16 +39,11 @@ export interface JobQueueConfig<
   // Lease-owner id scopes claim and settle writes, so a reaped-and-reclaimed
   // lease cannot be settled by the old worker.
   workerId: string;
-  // The lifecycle state machine for this queue's table. The engine drives it
-  // directly: it claims due rows, extends the lease while a handler runs, and
+  // The engine claims due rows, extends the lease while a handler runs, and
   // settles the classified outcome. No queue writes claim or settle SQL.
   store: JobStore<TId, TJob>;
-  // Restricts claims to one job kind when a table multiplexes several.
   claimFilter?: ClaimFilter;
-  // Runs the job. Returns a classification; extra domain columns ride `patch`.
   handle(job: TJob, signal: AbortSignal): Promise<Settlement>;
-  // Optional post-settle side effect (e.g. streaming records-import progress).
-  // Runs after the row is persisted, with the engine-resolved outcome.
   onSettled?(job: TJob, outcome: SettleOutcome): void | Promise<void>;
 }
 

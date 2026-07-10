@@ -1,6 +1,7 @@
 import type { Json } from "./json";
 
-// Stored values remain presentation-independent; labels resolve when read.
+// Field keys are stored verbatim; presentation labels resolve at read time,
+// so renaming a label does not rewrite history.
 export type FieldChangeValue = string | number | boolean | null;
 
 export type FieldChange = {
@@ -9,7 +10,6 @@ export type FieldChange = {
   to: FieldChangeValue;
 };
 
-// Read-time labels can change without rewriting stored field keys.
 const FIELD_LABELS: Record<string, string> = {
   paybackPricing: "Payback",
   proposedDebitRate: "T. débito",

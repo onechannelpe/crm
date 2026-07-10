@@ -9,9 +9,8 @@ import {
   type RecipientPlanner,
 } from "./plan-recipients";
 
-// Transient failures (e.g. DB error) throw and are retried by the queue;
-// classification is the queue's job. This function only resolves
-// expand vs terminally invalid.
+// This function only resolves expand vs terminally invalid. Throws bubble to
+// the queue, which decides retry vs fail.
 export type ExpansionOutcome =
   | { kind: "expanded"; deliveriesPlanned: number }
   | { kind: "invalid"; reason: string };

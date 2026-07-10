@@ -1,6 +1,5 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// Snapshotting the window keeps existing holds stable when policy changes.
 export function computeReservationExpiry(input: {
   now: Date;
   validityDays: number;

@@ -4,8 +4,8 @@ import { getServerRuntime } from "~/server/platform/container";
 
 import type { TelemetryRow } from "./telemetry";
 
-// Hand every clock, reporter, and recorder through a constructor argument so
-// tests can pass fakes.
+// Clock, error reporter, and recorder are injected so tests can swap fakes
+// without monkey-patching globals.
 export type RuntimePorts = {
   now: () => Date;
   report: (error: unknown) => void;

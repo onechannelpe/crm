@@ -16,6 +16,8 @@ export async function expireUsersAndInvalidateSessions(
   const expiredUserIds = await users.expireActiveUsersBefore(now);
 
   for (const userId of expiredUserIds) {
+    // Sequential: each session invalidation writes its own auth_event row,
+    // and concurrent fan-out would interleave those events.
     // eslint-disable-next-line no-await-in-loop
     await deps.invalidateUserSessions(userId);
   }

@@ -369,8 +369,8 @@ export async function recordUnitSerialCommand(
   },
   ports: Ports,
 ): Promise<LeadResult> {
-  // record_serials maps to AWAITING_SERIALS (refurbished) and
-  // AWAITING_SERIAL_ENTRY (new POS); loadForAction picks the right one.
+  // loadForAction picks the right step for record_serials; the action name is
+  // shared across both branches.
   const action: FulfillmentAction = "record_serials";
   return recordUnitValueCommand(
     { ...input, action },

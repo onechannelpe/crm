@@ -20,15 +20,14 @@ export type DomainPatch = Record<
   string | number | boolean | Date | null
 >;
 
-// Used when a single table holds several job kinds and a queue should only
-// claim its own (e.g. the integration table carries both imports and exports).
+// e.g. workflow_integration_jobs carries both imports and exports; a queue
+// restricts its claim to one kind by setting this.
 export interface ClaimFilter {
   column: string;
   values: readonly (string | number)[];
 }
 
-// All optional: a table with no user-facing status (the outbox) configures
-// none of these.
+// A table with no user-facing status (the outbox) configures none of these.
 export interface LifecycleColumns {
   // Stamped with the settle clock on done and fail (e.g. `completed_at`,
   // `sent_at`, `processed_at`, `expanded_at`).
@@ -106,19 +105,12 @@ export interface JobStore<TId extends string | number, TRow> {
   countOutstanding(): Promise<number>;
 }
 
-// claim() is a single FOR UPDATE SKIP LOCKED statement: a CTE locks the due
-// pending rows and the outer UPDATE transitions them to `processing` in one
-// round trip. Concurrent workers skip each other's locks, so no two can claim
-// the same job and no recheck pass is needed. Expired leases are returned to
-// `pending` by the stale-scanner, so the claim predicate does not inspect
-// `lease_until`.
-//
-// settle() is lease-guarded: it only acts while the row is still `processing`
-// under the caller's `lease_owner`, so a worker whose lease was reaped and
-// reclaimed cannot settle a job it no longer owns.
-//
-// Mirror columns stay in lockstep with `queue_state` via the lifecycle map so
-// resetStaleLeases reuses the same mapping.
+// claim() uses FOR UPDATE SKIP LOCKED in a CTE so concurrent workers cannot
+// pick the same row; the stale-scanner is the only path that resets an expired
+// lease. settle() is lease-guarded: it only updates while the row is still
+// `processing` under the caller's lease_owner, so a reaped-and-reclaimed lease
+// cannot be settled by the old worker. Mirror columns are written through the
+// lifecycle map, so resetStaleLeases reuses the same mapping.
 export function createJobStore<
   TRow,
   TId extends string | number = string | number,
@@ -127,9 +119,8 @@ export function createJobStore<
   table: JobTableName,
   selectColumns: readonly string[],
 ): JobStore<TId, TRow> {
-  // `table` is per-queue at runtime, so the Kysely handle here is untyped;
-  // the public API stays typed because every JobTableName carries the
-  // canonical columns by schema.
+  // The Kysely handle is untyped because `table` is per-queue at runtime; the
+  // public JobStore API is typed via TRow.
   // oxlint-disable-next-line no-unsafe-type-assertion
   const db = executor as unknown as Kysely<any>;
   const lifecycle = JOB_TABLE_LIFECYCLE[table];

@@ -54,8 +54,8 @@ function isValidationAvatarError(
   return exhaustiveCheck;
 }
 
-// Caller-fixable codes become validation; everything else is an external
-// failure (reported upstream, generic message to the client).
+// Codes the caller can fix (file shape, size, mime) become validation; the
+// rest is reported upstream with a generic client message.
 function toAvatarDomainError(code: AvatarDomainErrorCode): DomainError {
   if (isValidationAvatarError(code)) {
     return invalid({ code });

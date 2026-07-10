@@ -73,7 +73,8 @@ export function createRecordsImportQueue(
     now: runtime.now,
     workerId,
     store: runtime.jobs.store,
-    // The integration table multiplexes job kinds; this queue claims only imports.
+    // workflow_integration_jobs stores both import and other jobs; the claim
+    // filter restricts this worker to import types.
     claimFilter: { column: "type", values: [...RECORD_IMPORT_TYPES] },
     handle: async (job, signal: AbortSignal) => {
       const result = await runner.process(job, signal);

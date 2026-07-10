@@ -1,7 +1,5 @@
 import { sql, type Kysely } from "kysely";
 
-// All tables here reference the organization directory by id; none write
-// organization/person identity columns.
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("contact_assignments")

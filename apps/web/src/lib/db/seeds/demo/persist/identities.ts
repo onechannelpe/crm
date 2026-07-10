@@ -344,7 +344,7 @@ export async function persistDemoIdentities(
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Branch Supervisors
+  // Branch supervisors
   await db
     .insertInto("branch_supervisors")
     .values([
@@ -510,8 +510,8 @@ export async function persistDemoIdentities(
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // This user silenced broadcasts on WhatsApp; every other category/channel
-  // stays on with no row.
+  // Opt-out row exercises the deviation-from-default lookup; no rows for other
+  // (category, channel) pairs leave them on.
   await db
     .insertInto("notification_opt_outs")
     .values([

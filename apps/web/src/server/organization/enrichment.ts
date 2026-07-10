@@ -1,9 +1,8 @@
 import type { Ruc } from "~/server/shared/document";
 import type { EngineClient } from "~/server/shared/engine/client";
 
-// Resolves an organization's authoritative legal name and address from the
-// external registry by RUC. Owned here so lead registration and the bootstrap
-// preview share one port and one implementation.
+// Resolves legal name and address from the external registry by RUC. One port
+// shared by lead registration and the bootstrap preview.
 export type OrganizationEnrichment = {
   enrichByRuc(ruc: string): Promise<{
     legalName: string | null;

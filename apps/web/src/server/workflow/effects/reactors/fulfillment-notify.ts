@@ -146,7 +146,8 @@ export function deriveFulfillmentNotification(input: {
         id: `${input.eventId}:fulfillment_completed`,
         eventType: "lead.fulfillment_completed",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
-        // Promotion beyond the in-app bell: terminal funnel moment for the lead.
+        // Terminal funnel moment: whatsapp confirms the sale without requiring
+        // the executive to open the app.
         channels: ["in_app", "whatsapp"],
         priority: "high",
         title: "Venta registrada",
@@ -210,7 +211,8 @@ export function deriveFulfillmentNotification(input: {
       eventType: "lead.fulfillment_handoff",
       audience,
       channels: ["in_app"],
-      // Client-facing steps are time-sensitive; back-office work is queue-managed.
+      // Client-facing steps block the client on a reply: high priority.
+      // Back-office work sits in a queue: normal.
       priority: owner === "executive" ? "high" : "normal",
       title: message.title,
       bodyText: message.body(input.ruc),

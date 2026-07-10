@@ -20,7 +20,7 @@ interface CachedSession {
   cachedUntil: number;
 }
 
-// cacheTTL bounds staleness after a logout or session update that has not
+// cacheTTL caps staleness when a logout or session update has not yet
 // triggered an explicit delete.
 class SessionCache {
   private cache = new Map<string, CachedSession>();

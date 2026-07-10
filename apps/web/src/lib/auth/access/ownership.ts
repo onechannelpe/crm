@@ -28,5 +28,4 @@ export function assertOwnedRecord<T>(
   return record;
 }
 
-// Roles that bypass per-record ownership checks (audit / admin access).
 export const ADMIN_BYPASS = new Set<Role>(["admin", "superuser"]);

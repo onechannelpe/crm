@@ -42,7 +42,6 @@ export interface PgListener {
 }
 
 export interface PgListenerOptions {
-  // Runs after every successful connect, including the first.
   onConnected?: () => void | Promise<void>;
 }
 
@@ -123,7 +122,7 @@ export function createPgListener(
       try {
         await old.end();
       } catch {
-        // ignore: the connection is already broken.
+        // the connection is already broken; nothing left to release.
       }
     }
     const delay = reconnectDelayMs;
@@ -135,9 +134,8 @@ export function createPgListener(
   return {
     async start() {
       stopped = false;
-      // Route the first attempt through the same retry path a live drop
-      // uses: a blip at boot must retry, not disable NOTIFY delivery for
-      // the rest of the process's life.
+      // First connect uses the same retry path as a live drop, so a boot-time
+      // blip does not silently disable NOTIFY for the process lifetime.
       await connect().catch(() => void reconnect());
     },
     async stop() {

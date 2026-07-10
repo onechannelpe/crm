@@ -25,8 +25,8 @@ export interface LeadFulfillmentOrdersTable {
   lead_id: IdColumn<WorkflowLeadId>;
   product_kind: ProductKind | null;
   current_step: FulfillmentStep;
-  // External reference returned by service B when the signed addendum is loaded
-  // (refurbished branch). Free text the back office records.
+  // Back-office-typed text captured at AWAITING_PDF_COMPILE on the refurbished
+  // branch; the matching service-A reference lives on lead_fulfillment_units.
   service_b_ref: string | null;
   created_by: IdColumn<UserId>;
   created_at: Date;

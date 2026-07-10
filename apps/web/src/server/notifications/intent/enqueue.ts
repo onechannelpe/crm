@@ -15,8 +15,8 @@ export async function enqueueNotifications(
   now: Date,
 ): Promise<void> {
   if (intents.length === 0) return;
-  // `intents` is `unknown` so the validation step is visible at this boundary.
-  // Typed callers can pass a `NotificationIntent[]` directly.
+  // unknown[] so the producer boundary validates every intent regardless of
+  // caller type.
   const validated: NotificationIntent[] = intents.map((intent) =>
     validateNotificationIntent(intent),
   );

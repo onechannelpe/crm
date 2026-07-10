@@ -53,7 +53,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
-  // Planner lookup: opt-outs for one category across a set of recipients.
   await db.schema
     .createIndex("idx_notification_opt_outs_category_user")
     .on("notification_opt_outs")
@@ -95,8 +94,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
-  // Claim path: only pending rows that are due. Partial index keeps it to the
-  // live working set.
+  // Partial index keeps the live working set; claims only walk pending rows
+  // whose available_at has come due.
   await db.schema
     .createIndex("idx_notification_deliveries_claim")
     .on("notification_deliveries")
@@ -104,7 +103,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .where(sql.ref("queue_state"), "=", "pending")
     .execute();
 
-  // Stale-scan path: leased rows whose lease has expired.
   await db.schema
     .createIndex("idx_notification_deliveries_stale")
     .on("notification_deliveries")

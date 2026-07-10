@@ -51,10 +51,10 @@ export type Permission =
   | "file:artifact:upload"
   | "file:artifact:read"
   | "file:artifact:audit:read"
-  // Back office drives the fulfillment order end to end.
   | "fulfillment:manage"
-  // Executive performs the client-facing fulfillment handoffs on their leads,
-  // including uploading the refurbished transactions report.
+  // Client-facing fulfillment steps the executive performs on their own leads
+  // (e.g. the refurbished transactions report); back office holds the broader
+  // fulfillment:manage.
   | "fulfillment:client-step";
 
 export const ROLES = [

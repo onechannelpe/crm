@@ -10,11 +10,9 @@ interface SpringParallaxProps {
   mass?: number;
 }
 
-/*
- * Tracking maps the pointer directly to translate.
- * Leave uses an underdamped spring so the element returns to center without a CSS easing curve.
- * x(t) = exp(-zeta * omega0 * t) * (A * sin(omegaD * t) + x0 * cos(omegaD * t)).
- */
+// Leave uses an underdamped spring so the element returns to center without a
+// CSS easing curve:
+// >>  x(t) = exp(-zeta * omega0 * t) * (A * sin(omegaD * t) + x0 * cos(omegaD * t))
 export function SpringParallax(props: SpringParallaxProps) {
   let containerRef: HTMLDivElement | null = null;
   let rafId: number | undefined;
