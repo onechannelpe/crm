@@ -8,14 +8,10 @@
   flex-direction: row;
   min-height: 0;
   overflow: hidden;
-  padding-bottom: 12px;
-  padding-right: 12px;
 }
 
 .panelMain {
   background: var(--background);
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
   display: flex;
   flex: 1;
   flex-direction: column;

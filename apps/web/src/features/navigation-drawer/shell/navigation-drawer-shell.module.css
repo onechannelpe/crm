@@ -39,15 +39,8 @@
   flex-direction: column;
   gap: 12px;
   padding: 12px 0 16px 8px;
-  background: var(--background-transparent-light, rgba(255, 255, 255, 0.45));
-  backdrop-filter: blur(16px) saturate(180%);
-  border-right: 1px solid var(--border-light);
-}
-
-[data-theme="dark"] .drawerInner {
-  background: rgba(18, 18, 18, 0.45);
-  backdrop-filter: blur(16px) saturate(180%);
-  border-right: 1px solid var(--border-light);
+  background: var(--t-background-secondary);
+  border-right: 1px solid var(--t-border-color-medium);
 }
 
 .drawerSettings .drawerInner {

@@ -1,4 +1,5 @@
 import { ErrorBoundary, Show, Suspense } from "solid-js";
+import { Motion } from "solid-motionone";
 
 import { Loading } from "~/components/feedback/loading/screen";
 
@@ -17,9 +18,14 @@ export function Router(props: { isMobile: boolean }) {
   return (
     <Container isMobile={props.isMobile}>
       <div class={styles.router}>
-        <div class={styles.topBar}>
+        <Motion.div
+          class={styles.topBar}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.075, delay: 0.1 }}
+        >
           <TopBar isMobile={props.isMobile} />
-        </div>
+        </Motion.div>
         <div class={styles.pageBody}>
           <Show when={currentEntry()} keyed>
             {(entry) => {

@@ -23,8 +23,10 @@
     "Liberation Mono", "Courier New", monospace;
 
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-instant: 75ms;
   --motion-fast: 150ms;
   --motion-normal: 300ms;
+  --motion-slow: 1500ms;
 
   --focus-ring-shadow:
     0 0 0 1px color-mix(in oklab, var(--ring) 70%, transparent),
@@ -136,6 +138,7 @@
   --t-border-radius-xs: 2px;
   --t-border-radius-sm: var(--radius-sm);
   --t-border-radius-md: var(--radius-md);
+  --t-border-radius-lg: 16px;
   --t-border-radius-xl: 20px;
   --t-border-radius-xxl: 40px;
   --t-font-size-xxs: 0.625rem;
@@ -493,19 +496,4 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border, #e5e7eb);
-}
-
-.glass-panel {
-  background: var(
-    --background-transparent-light,
-    rgba(255, 255, 255, 0.7)
-  ) !important;
-  backdrop-filter: blur(12px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-[data-theme="dark"] .glass-panel {
-  background: rgba(18, 18, 18, 0.7) !important;
-  backdrop-filter: blur(12px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.03) !important;
 }

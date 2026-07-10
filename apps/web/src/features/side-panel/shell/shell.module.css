@@ -15,10 +15,8 @@
 }
 
 .aside {
-  background: var(--background-transparent-light, rgba(255, 255, 255, 0.7));
-  backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
+  background: var(--t-background-primary);
+  border-left: 1px solid var(--t-border-color-medium);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -26,11 +24,4 @@
   overflow: hidden;
   position: relative;
   width: 100%;
-  box-shadow: var(--shadow-elevation-3);
-}
-
-[data-theme="dark"] .aside {
-  background: rgba(18, 18, 18, 0.7);
-  backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.03);
 }
