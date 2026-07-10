@@ -1,15 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createDeliverySender } from "~/server/notifications/dispatch/send-delivery";
-import type {
-  DeliveryAttempt,
-  DeliveryJob,
-} from "~/server/notifications/repos/delivery-repo";
+import type { DeliveryJob } from "~/server/notifications/repos/delivery-repo";
 import {
   asNotificationDeliveryId,
   asNotificationIntentId,
   asUserId,
-  type NotificationDeliveryId,
 } from "~/server/shared/ids";
 
 import {
@@ -36,87 +32,93 @@ function emailJob(overrides: Partial<DeliveryJob> = {}): DeliveryJob {
 
 function createSender() {
   const messages = createScriptedMessagingGateway();
-  const recorded: Array<{
-    id: NotificationDeliveryId;
-    attempt: DeliveryAttempt;
-  }> = [];
   const sendDelivery = createDeliverySender({
     messaging: messages.gateway,
-    deliveries: {
-      async recordAttempt(id, attempt) {
-        recorded.push({ id, attempt });
-      },
-    },
     publicOrigin: "https://app.example.test",
     logger: { info: vi.fn<() => void>() },
   });
-  return { messages, recorded, sendDelivery };
+  return { messages, sendDelivery };
 }
 
 describe("createDeliverySender", () => {
-  it("sends an email and records the provider receipt", async () => {
-    const { sendDelivery, recorded, messages } = createSender();
+  it("returns the provider fields needed to settle a sent email", async () => {
+    const { sendDelivery, messages } = createSender();
 
     const outcome = await sendDelivery(emailJob());
 
-    expect(outcome).toEqual({ kind: "sent" });
+    expect(outcome).toEqual({
+      kind: "sent",
+      fields: {
+        provider: "resend",
+        provider_message_id: "test-email",
+        error_code: null,
+        error_message: null,
+      },
+    });
     expect(messages.campaignEmails).toEqual([
       {
         to: "user@test.local",
         params: { title: "Title", bodyText: "Body", platformName: "Culqi360" },
       },
     ]);
-    expect(recorded).toEqual([
-      {
-        id: asNotificationDeliveryId("1"),
-        attempt: {
-          provider: "resend",
-          provider_message_id: "test-email",
-          error_code: null,
-          error_message: null,
-        },
-      },
-    ]);
   });
 
-  it("sends a WhatsApp message and records the provider receipt", async () => {
-    const { sendDelivery, recorded, messages } = createSender();
+  it("returns the provider fields needed to settle a sent WhatsApp message", async () => {
+    const { sendDelivery, messages } = createSender();
 
     const outcome = await sendDelivery(
       emailJob({ channel: "whatsapp", recipient_address: "51911000001" }),
     );
 
-    expect(outcome).toEqual({ kind: "sent" });
+    expect(outcome).toEqual({
+      kind: "sent",
+      fields: {
+        provider: "whatsapp_cloud",
+        provider_message_id: "test-whatsapp",
+        error_code: null,
+        error_message: null,
+      },
+    });
     expect(messages.whatsAppMessages).toEqual([
       { to: "51911000001", body: "Body" },
     ]);
-    expect(recorded[0]?.attempt.provider).toBe("whatsapp_cloud");
   });
 
-  it("classifies a retryable provider error as retry and records the failure", async () => {
-    const { sendDelivery, recorded, messages } = createSender();
+  it("returns retry settlement fields for a retryable provider error", async () => {
+    const { sendDelivery, messages } = createSender();
     messages.scriptWhatsApp(
       retryableProviderError("whatsapp", "whatsapp_cloud"),
     );
 
     const outcome = await sendDelivery(emailJob({ channel: "whatsapp" }));
 
-    expect(outcome).toEqual({ kind: "retry", reason: "rate limited" });
-    expect(recorded[0]?.attempt).toMatchObject({
-      provider: "whatsapp_cloud",
-      provider_message_id: null,
-      error_code: "rate_limited",
-      error_message: "rate limited",
+    expect(outcome).toEqual({
+      kind: "retry",
+      reason: "rate limited",
+      fields: {
+        provider: "whatsapp_cloud",
+        provider_message_id: null,
+        error_code: "rate_limited",
+        error_message: "rate limited",
+      },
     });
   });
 
-  it("classifies a terminal provider error as failed", async () => {
-    const { sendDelivery, recorded, messages } = createSender();
+  it("returns failure settlement fields for a terminal provider error", async () => {
+    const { sendDelivery, messages } = createSender();
     messages.scriptEmail(terminalProviderError("email", "resend"));
 
     const outcome = await sendDelivery(emailJob());
 
-    expect(outcome).toEqual({ kind: "failed", reason: "permanently rejected" });
-    expect(recorded[0]?.attempt.error_code).toBe("bad_request");
+    expect(outcome).toEqual({
+      kind: "failed",
+      reason: "permanently rejected",
+      fields: {
+        provider: "resend",
+        provider_message_id: null,
+        error_code: "bad_request",
+        error_message: "permanently rejected",
+      },
+    });
   });
 });

@@ -6,6 +6,7 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { resetStaleLeases } from "~/lib/job-queue/job-store";
 import {
   createDeliveryRepository,
   type PlannedDeliveryRow,
@@ -14,6 +15,7 @@ import { asNotificationIntentId, asUserId } from "~/server/shared/ids";
 
 const NOW = new Date(1_700_000_000_000);
 const RETRY_AT = new Date(NOW.getTime() + 5_000);
+const RECLAIM_AT = new Date(NOW.getTime() + 30_001);
 const WORKER_ID = "worker";
 const INTENT_ID = asNotificationIntentId("intent-1");
 const USER_ID = asUserId("01974fd5-f261-7a7d-93f5-2f3d0f969001");
@@ -85,19 +87,18 @@ describe("delivery repository", () => {
     expect(second).toEqual([]);
   });
 
-  it("records the provider attempt then marks the delivery sent", async () => {
+  it("settles provider receipt and sent state in one lease-guarded update", async () => {
     const repository = createDeliveryRepository(ctx.db);
     await repository.insertPlanned([planned()], NOW);
     const [job] = await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
     if (!job) throw new Error("expected planned delivery job");
 
-    await repository.recordAttempt(job.id, {
+    await repository.store.markDone(job.id, WORKER_ID, NOW, {
       provider: "kapso",
       provider_message_id: "wamid.test",
       error_code: null,
       error_message: null,
     });
-    await repository.store.markDone(job.id, WORKER_ID, NOW);
 
     const row = await ctx.db
       .selectFrom("notification_deliveries")
@@ -127,13 +128,18 @@ describe("delivery repository", () => {
     const [first] = await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
     if (!first) throw new Error("expected planned delivery job");
 
-    await repository.recordAttempt(first.id, {
-      provider: "resend",
-      provider_message_id: null,
-      error_code: "rate_limited",
-      error_message: "try later",
-    });
-    await repository.store.scheduleRetry(first.id, WORKER_ID, RETRY_AT, null);
+    await repository.store.scheduleRetry(
+      first.id,
+      WORKER_ID,
+      RETRY_AT,
+      "try later",
+      {
+        provider: "resend",
+        provider_message_id: null,
+        error_code: "rate_limited",
+        error_message: "try later",
+      },
+    );
 
     const retryRow = await ctx.db
       .selectFrom("notification_deliveries")
@@ -156,19 +162,17 @@ describe("delivery repository", () => {
     expect(second?.attempt_count).toBe(2);
   });
 
-  it("marks a delivery failed while preserving the recorded error", async () => {
+  it("settles provider error and failed state in one lease-guarded update", async () => {
     const repository = createDeliveryRepository(ctx.db);
     await repository.insertPlanned([planned({ channel: "email" })], NOW);
     const [job] = await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
     if (!job) throw new Error("expected planned delivery job");
-    await repository.recordAttempt(job.id, {
+    await repository.store.markFailed(job.id, WORKER_ID, NOW, "rejected", {
       provider: "resend",
       provider_message_id: null,
       error_code: "bad_request",
       error_message: "rejected",
     });
-
-    await repository.store.markFailed(job.id, WORKER_ID, NOW, "rejected");
 
     const row = await ctx.db
       .selectFrom("notification_deliveries")
@@ -180,6 +184,63 @@ describe("delivery repository", () => {
       error_code: "bad_request",
       error_message: "rejected",
       lease_owner: null,
+    });
+  });
+
+  it("rejects provider fields from a worker whose lease was reclaimed", async () => {
+    const repository = createDeliveryRepository(ctx.db);
+    await repository.insertPlanned([planned()], NOW);
+    const [staleJob] = await repository.store.claim(
+      "stale-worker",
+      NOW,
+      1,
+      30_000,
+    );
+    if (!staleJob) throw new Error("expected planned delivery job");
+
+    await resetStaleLeases(ctx.db, "notification_deliveries", RECLAIM_AT);
+    const [currentJob] = await repository.store.claim(
+      "current-worker",
+      RECLAIM_AT,
+      1,
+      30_000,
+    );
+    if (!currentJob) throw new Error("expected reclaimed delivery job");
+
+    const staleSettled = await repository.store.markDone(
+      staleJob.id,
+      "stale-worker",
+      RECLAIM_AT,
+      {
+        provider: "kapso",
+        provider_message_id: "stale-message",
+        error_code: null,
+        error_message: null,
+      },
+    );
+    const currentSettled = await repository.store.markDone(
+      currentJob.id,
+      "current-worker",
+      RECLAIM_AT,
+      {
+        provider: "whatsapp_cloud",
+        provider_message_id: "current-message",
+        error_code: null,
+        error_message: null,
+      },
+    );
+
+    expect(staleSettled).toBe(false);
+    expect(currentSettled).toBe(true);
+    const row = await ctx.db
+      .selectFrom("notification_deliveries")
+      .select(["queue_state", "provider", "provider_message_id"])
+      .where("id", "=", currentJob.id)
+      .executeTakeFirstOrThrow();
+    expect(row).toEqual({
+      queue_state: "done",
+      provider: "whatsapp_cloud",
+      provider_message_id: "current-message",
     });
   });
 

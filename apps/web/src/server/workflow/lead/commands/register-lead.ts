@@ -1,11 +1,10 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
-import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import type { OrganizationEnrichment } from "~/server/organization/enrichment";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { parseRuc } from "~/server/shared/document";
-import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/server/shared/domain-error";
 import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Err, type Result } from "~/server/shared/result";
+import type { Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 import { createWorkflowRepos } from "~/server/workflow/repos";
@@ -96,16 +95,10 @@ export async function registerLead(
   }
 
   // Create path only: a reassign resolves an existing lead rather than adding
-  // a new client.
-  const pendingDecisions = await repos.leads.countPendingQuotationDecisions(
-    actor.userId,
-    now,
-  );
-
-  if (pendingDecisions >= MAX_PENDING_QUOTATION_DECISIONS) {
-    return Err(fail("pending_quotation_limit"));
-  }
-
+  // a new client. The pending-quotation cap is enforced inside
+  // createRegisteredLead's transaction (locked per executive), not here: a
+  // pre-check against this same repos read would be stale by the time the
+  // transaction runs, so it would only be an unreliable early-out.
   const commercialScope: LeadCommercialScope = {
     currentProvider: input.currentProvider,
     currentDebitRate: input.currentDebitRate,

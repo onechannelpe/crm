@@ -1,10 +1,24 @@
 import {
+  DummyDriver,
+  Kysely,
+  PostgresAdapter,
+  PostgresIntrospector,
+  PostgresQueryCompiler,
+} from "kysely";
+
+import type { Database } from "~/lib/db/types";
+import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
+import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
+import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import {
   asLeadReservationId,
   asSearchReservationId,
   type LeadReservationId,
   type SearchReservationId,
   type UserId,
 } from "~/server/shared/ids";
+import { isErr, Ok } from "~/server/shared/result";
 import type { ReservationStatus } from "~/server/shared/scope";
 
 type GrantRow = {
@@ -45,6 +59,17 @@ type LeadCommitRow = {
   amount: number;
   created_at: Date;
 };
+
+function createTransactionExecutor(): DatabaseExecutor {
+  return new Kysely<Database>({
+    dialect: {
+      createAdapter: () => new PostgresAdapter(),
+      createDriver: () => new DummyDriver(),
+      createIntrospector: (db) => new PostgresIntrospector(db),
+      createQueryCompiler: () => new PostgresQueryCompiler(),
+    },
+  });
+}
 
 export function makeSearchCapacityGrantsRepo() {
   const rows: GrantRow[] = [];
@@ -268,5 +293,49 @@ export function makeNullLeadPolicyRepos() {
       listActiveForUsers: async () => [],
       replaceForUser: async (): Promise<void> => undefined,
     },
+  };
+}
+
+type SearchReservationTestRepos = Parameters<
+  typeof getSearchCapacitySnapshot
+>[1] & {
+  searchUsageReservations: ReturnType<typeof makeSearchUsageReservationsRepo>;
+  searchUsageCommits: ReturnType<typeof makeSearchUsageCommitsRepo>;
+};
+
+export function makeSearchUsageReservationPorts(
+  repos: SearchReservationTestRepos,
+): UsageReservationPorts<"search"> {
+  return {
+    executor: createTransactionExecutor(),
+    async checkRemaining(_trx, actorUserId) {
+      const snapshot = await getSearchCapacitySnapshot(actorUserId, repos);
+      if (isErr(snapshot)) return snapshot;
+      return Ok(snapshot.value.remaining);
+    },
+    reservations: () => repos.searchUsageReservations,
+    commits: () => repos.searchUsageCommits,
+  };
+}
+
+type LeadReservationTestRepos = Parameters<
+  typeof getLeadCapacitySnapshot
+>[1] & {
+  leadUsageReservations: ReturnType<typeof makeLeadUsageReservationsRepo>;
+  leadUsageCommits: ReturnType<typeof makeLeadUsageCommitsRepo>;
+};
+
+export function makeLeadUsageReservationPorts(
+  repos: LeadReservationTestRepos,
+): UsageReservationPorts<"lead"> {
+  return {
+    executor: createTransactionExecutor(),
+    async checkRemaining(_trx, actorUserId) {
+      const snapshot = await getLeadCapacitySnapshot(actorUserId, repos);
+      if (isErr(snapshot)) return snapshot;
+      return Ok(snapshot.value.remaining);
+    },
+    reservations: () => repos.leadUsageReservations,
+    commits: () => repos.leadUsageCommits,
   };
 }

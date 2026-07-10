@@ -29,7 +29,6 @@ export type AssignmentPlanRepos = {
 
 export type ContactAssignmentPlan = {
   requested: number;
-  remainingCapacity: number;
 };
 
 export async function planContactAssignments(
@@ -46,6 +45,5 @@ export async function planContactAssignments(
       snapshotResult.value.activeAssignments,
       snapshotResult.value.policy.bufferTarget,
     ),
-    remainingCapacity: snapshotResult.value.remaining,
   });
 }

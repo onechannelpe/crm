@@ -1,6 +1,7 @@
 import {
   makeNullSearchPolicyRepos,
   makeSearchCapacityGrantsRepo,
+  makeSearchUsageReservationPorts,
   makeSearchUsageCommitsRepo,
   makeSearchUsageReservationsRepo,
 } from "@tests/support/fakes/capacity";
@@ -24,7 +25,7 @@ function makeRepos() {
   const searchCapacityGrants = makeSearchCapacityGrantsRepo();
   const searchUsageReservations = makeSearchUsageReservationsRepo();
   const searchUsageCommits = makeSearchUsageCommitsRepo();
-  return {
+  const repos = {
     users: {
       findById: async () => ({ teamId: null, branchId: asBranchId("1") }),
     },
@@ -32,6 +33,10 @@ function makeRepos() {
     searchCapacityGrants,
     searchUsageReservations,
     searchUsageCommits,
+  };
+  return {
+    ...repos,
+    usageReservationPorts: makeSearchUsageReservationPorts(repos),
   };
 }
 
@@ -86,7 +91,7 @@ describe("runDirectSearch", () => {
         query: "12345678",
         limit: 10,
       },
-      repos,
+      repos.usageReservationPorts,
       successEngine,
     );
 
@@ -106,7 +111,7 @@ describe("runDirectSearch", () => {
         query: "12345678",
         limit: 10,
       },
-      repos,
+      repos.usageReservationPorts,
       failEngine,
     );
 
@@ -157,7 +162,7 @@ describe("runDirectSearch", () => {
         query: "12345678",
         limit: 10,
       },
-      repos,
+      repos.usageReservationPorts,
       trackingEngine,
     );
 

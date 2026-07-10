@@ -1,3 +1,5 @@
+import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
+import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
 import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
 import {
   createLeadPolicyDefaultsRepo,
@@ -15,6 +17,7 @@ import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { EngineClient } from "~/server/shared/engine/client";
 import { createInteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
+import { isErr, Ok } from "~/server/shared/result";
 
 export type ContactAssignmentRepos = {
   users: ReturnType<typeof createCapacityUsersRepo>;
@@ -47,6 +50,24 @@ function buildRepos(executor: DatabaseExecutor): ContactAssignmentRepos {
   };
 }
 
+function buildLeadUsageReservationPorts(
+  executor: DatabaseExecutor,
+): UsageReservationPorts<"lead"> {
+  return {
+    executor,
+    async checkRemaining(trx, actorUserId) {
+      const snapshot = await getLeadCapacitySnapshot(
+        actorUserId,
+        buildRepos(trx),
+      );
+      if (isErr(snapshot)) return snapshot;
+      return Ok(snapshot.value.remaining);
+    },
+    reservations: createLeadUsageReservationsRepo,
+    commits: createLeadUsageCommitsRepo,
+  };
+}
+
 export function createContactAssignmentsContext(
   deps: ContactAssignmentsContextDeps,
 ) {
@@ -60,6 +81,7 @@ export function createContactAssignmentsContext(
       interactionLogs: createInteractionLogsRepo(txDb),
     })),
     uow: createExecutorUow(executor, buildRepos),
+    leadUsageReservationPorts: buildLeadUsageReservationPorts(executor),
   };
 }
 

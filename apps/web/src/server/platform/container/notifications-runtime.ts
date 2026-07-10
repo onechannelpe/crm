@@ -74,7 +74,6 @@ export function assembleNotificationPipeline(
   });
   const send = createDeliverySender({
     messaging: deps.messaging,
-    deliveries,
     publicOrigin: deps.publicOrigin,
     logger: deps.logger,
   });

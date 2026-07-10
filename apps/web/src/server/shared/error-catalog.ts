@@ -482,6 +482,10 @@ export const ERROR_CATALOG = {
     kind: "validation",
     message: "El límite diario supera el máximo permitido.",
   },
+  invalid_consumed_amount: {
+    kind: "validation",
+    message: "La cantidad consumida no es válida para esta reserva.",
+  },
 
   email_required: {
     kind: "validation",

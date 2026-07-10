@@ -3,10 +3,7 @@ import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 import { createLogger } from "~/lib/observability/logger";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import { createDeliverySender } from "~/server/notifications/dispatch/send-delivery";
-import {
-  createDeliveryRepository,
-  type DeliveryJob,
-} from "~/server/notifications/repos/delivery-repo";
+import type { DeliveryJob } from "~/server/notifications/repos/delivery-repo";
 import type { UserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -53,7 +50,6 @@ describe("notifications dispatch benchmark", () => {
 
     send = createDeliverySender({
       messaging,
-      deliveries: createDeliveryRepository(ctx.db),
       publicOrigin: "http://localhost:3000",
       logger: createLogger("bench-notification-dispatch"),
     });

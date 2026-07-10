@@ -1,5 +1,6 @@
 import {
   makeLeadCapacityGrantsRepo,
+  makeLeadUsageReservationPorts,
   makeLeadUsageCommitsRepo,
   makeLeadUsageReservationsRepo,
   makeNullLeadPolicyRepos,
@@ -65,7 +66,7 @@ function makeOrganizationProfile(ruc: string): OrganizationProfile {
 
 function makeRepos(activeAssignments = 0) {
   let nextContactId = 1;
-  return {
+  const repos = {
     users: {
       findById: async () => ({ teamId: null, branchId: BRANCH_ID }),
     },
@@ -116,6 +117,10 @@ function makeRepos(activeAssignments = 0) {
       ): Promise<Map<OrganizationPersonId, CadenceSnapshot>> => new Map(),
     },
   };
+  return {
+    ...repos,
+    leadUsageReservationPorts: makeLeadUsageReservationPorts(repos),
+  };
 }
 
 function makeTransaction(
@@ -141,6 +146,7 @@ describe("assignContacts", () => {
         repos,
         uow: makeTransaction(repos),
         engine: emptyEngine,
+        leadUsageReservationPorts: repos.leadUsageReservationPorts,
       },
     );
 
@@ -197,7 +203,12 @@ describe("assignContacts", () => {
 
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, uow: makeTransaction(repos), engine },
+      {
+        repos,
+        uow: makeTransaction(repos),
+        engine,
+        leadUsageReservationPorts: repos.leadUsageReservationPorts,
+      },
     );
 
     expect(result.ok).toBe(true);
@@ -230,7 +241,12 @@ describe("assignContacts", () => {
 
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, uow: makeTransaction(repos), engine },
+      {
+        repos,
+        uow: makeTransaction(repos),
+        engine,
+        leadUsageReservationPorts: repos.leadUsageReservationPorts,
+      },
     );
 
     expect(result.ok).toBe(true);
@@ -264,7 +280,12 @@ describe("assignContacts", () => {
 
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, uow: makeTransaction(repos), engine },
+      {
+        repos,
+        uow: makeTransaction(repos),
+        engine,
+        leadUsageReservationPorts: repos.leadUsageReservationPorts,
+      },
     );
 
     expect(result.ok).toBe(false);
@@ -294,7 +315,12 @@ describe("assignContacts", () => {
     await expect(
       assignContacts(
         { actorUserId: USER_ID, branchId: BRANCH_ID },
-        { repos, uow: makeTransaction(repos), engine },
+        {
+          repos,
+          uow: makeTransaction(repos),
+          engine,
+          leadUsageReservationPorts: repos.leadUsageReservationPorts,
+        },
       ),
     ).rejects.toThrow("db write failed");
 

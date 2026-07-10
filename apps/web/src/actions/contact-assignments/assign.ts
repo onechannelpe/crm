@@ -9,12 +9,14 @@ export async function assignCurrentUserContacts() {
     name: "contact_assignments.assign_current_user",
     access: { kind: "permission", permission: "lead:work" },
     execute: (ctx) => {
+      const { repos, uow, engine, leadUsageReservationPorts } =
+        getServerRuntime().contactAssignments;
       return assignContacts(
         {
           actorUserId: ctx.actor.userId,
           branchId: ctx.actor.branchId,
         },
-        getServerRuntime().contactAssignments,
+        { repos, uow, engine, leadUsageReservationPorts },
       );
     },
   });

@@ -34,29 +34,19 @@ export interface DeliveryJob {
   action_url: string | null;
 }
 
-export interface DeliveryAttempt {
-  provider: DeliveryProviderId | null;
-  provider_message_id: string | null;
-  error_code: string | null;
-  error_message: string | null;
-}
-
 const DEFAULT_MAX_ATTEMPTS = 5;
 
 export interface DeliveryRepository {
   store: JobStore<NotificationDeliveryId, DeliveryJob>;
   insertPlanned(rows: PlannedDeliveryRow[], now: Date): Promise<void>;
-  recordAttempt(
-    id: NotificationDeliveryId,
-    attempt: DeliveryAttempt,
-  ): Promise<void>;
 }
 
 export function createDeliveryRepository(
   db: Kysely<Database>,
 ): DeliveryRepository {
-  // sent_at is the finished-at stamp; recordAttempt writes the provider
-  // error separately, so the queue lifecycle needs no error column.
+  // sent_at is the only lifecycle mirror column; provider/message/error land
+  // via the dispatch queue's settle patch (see dispatch/queue.ts), in the
+  // same lease-guarded statement as the queue_state transition.
   const store = createJobStore<DeliveryJob, NotificationDeliveryId>(
     db,
     "notification_deliveries",
@@ -106,22 +96,6 @@ export function createDeliveryRepository(
         .onConflict((oc) =>
           oc.columns(["intent_id", "user_id", "channel"]).doNothing(),
         )
-        .execute();
-    },
-
-    // Send outcome (provider id, message id, error) belongs to the dispatch
-    // stage; queue lifecycle belongs to the store. Splitting keeps each
-    // owner's columns clear.
-    async recordAttempt(id, attempt) {
-      await db
-        .updateTable("notification_deliveries")
-        .set({
-          provider: attempt.provider,
-          provider_message_id: attempt.provider_message_id,
-          error_code: attempt.error_code,
-          error_message: attempt.error_message,
-        })
-        .where("id", "=", id)
         .execute();
     },
   };

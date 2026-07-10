@@ -15,11 +15,6 @@ export type ReserveReason<K extends CapacityKind> = K extends "lead"
   ? "lead_refill" | "admin_grant_adjustment"
   : "direct_search" | "admin_grant_adjustment";
 
-export type CancelReason =
-  | "external_failure"
-  | "partial_use"
-  | "workflow_cancelled";
-
 export interface UsageReservationsRepo<K extends CapacityKind> {
   insert(values: {
     user_id: UserId;

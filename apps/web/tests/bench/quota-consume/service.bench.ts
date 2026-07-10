@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
+import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
+import { createServerInfra } from "~/server/platform/container/infra";
+import { createSearchRuntime } from "~/server/platform/container/search-runtime";
 import { asSearchReservationId, type UserId } from "~/server/shared/ids";
 import { Ok } from "~/server/shared/result";
 
@@ -10,10 +13,14 @@ import { resetQuotaUsage, seedQuotaUser } from "./fixtures";
 
 describe("search capacity consume service benchmark", () => {
   const db = createBenchDbFixture("bench-quota-consume-service");
+  let usageReservationPorts: UsageReservationPorts<"search">;
   let userId: UserId;
 
   beforeAll(async () => {
     const ctx = await db.setup();
+    usageReservationPorts = createSearchRuntime(
+      createServerInfra(ctx.db),
+    ).usageReservationPorts;
     userId = await seedQuotaUser(ctx);
   });
 
@@ -33,15 +40,10 @@ describe("search capacity consume service benchmark", () => {
           kind: "search",
           actorUserId: userId,
           requested: 1,
-          remainingCapacity: 2,
           reserveReason: "direct_search",
-          failureReason: "external_failure",
           brand: asSearchReservationId,
         },
-        {
-          reservations: db.ctx().repos.searchUsageReservations,
-          commits: db.ctx().repos.searchUsageCommits,
-        },
+        usageReservationPorts,
         async () => Ok({ value: undefined, consumed: 1 }),
       );
       if (!result.ok) {

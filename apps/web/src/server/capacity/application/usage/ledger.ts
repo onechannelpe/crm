@@ -1,14 +1,17 @@
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { withAdvisoryLock } from "~/server/shared/db-lock";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type {
-  CancelReason,
   CapacityKind,
   GrantUsageCapacityCommand,
   ReserveReason,
+  UsageCommitsRepo,
   UsageLedgerRepos,
   UsageReservationId,
+  UsageReservationsRepo,
 } from "../../domain/usage-types";
 
 const EXHAUSTED_CODE = {
@@ -16,57 +19,89 @@ const EXHAUSTED_CODE = {
   search: "search_exhausted",
 } as const satisfies Record<CapacityKind, string>;
 
+export interface UsageReservationPorts<K extends CapacityKind> {
+  executor: DatabaseExecutor;
+  checkRemaining(
+    trx: DatabaseExecutor,
+    actorUserId: UserId,
+  ): Promise<Result<number, DomainError>>;
+  reservations(trx: DatabaseExecutor): UsageReservationsRepo<K>;
+  commits(trx: DatabaseExecutor): UsageCommitsRepo<K>;
+}
+
 interface ReserveUsageCommand<K extends CapacityKind> {
   kind: K;
   actorUserId: UserId;
   amount: number;
-  remainingCapacity: number;
   reason: ReserveReason<K>;
   brand: (id: string) => UsageReservationId<K>;
 }
 
+// The read (remaining capacity) and the write (the reservation row) must
+// happen in the same locked transaction, or two concurrent callers can both
+// read "capacity available" before either has inserted. The lock is per
+// (kind, user): unrelated users never contend, and the lock releases the
+// instant this transaction commits or rolls back.
 async function reserveUsage<K extends CapacityKind>(
   command: ReserveUsageCommand<K>,
-  repos: Pick<UsageLedgerRepos<K>, "reservations">,
+  ports: Pick<
+    UsageReservationPorts<K>,
+    "executor" | "checkRemaining" | "reservations"
+  >,
 ): Promise<Result<UsageReservationId<K>, DomainError>> {
-  if (command.remainingCapacity < command.amount) {
-    return Err(fail(EXHAUSTED_CODE[command.kind]));
-  }
-  const row = await repos.reservations.insert({
-    user_id: command.actorUserId,
-    amount: command.amount,
-    reason: command.reason,
-  });
-  return Ok(command.brand(row.id));
+  const lockKey = `usage:${command.kind}:${command.actorUserId}`;
+  return ports.executor.transaction().execute((trx) =>
+    withAdvisoryLock(trx, lockKey, async () => {
+      const remaining = await ports.checkRemaining(trx, command.actorUserId);
+      if (isErr(remaining)) return remaining;
+
+      if (remaining.value < command.amount) {
+        return Err(fail(EXHAUSTED_CODE[command.kind]));
+      }
+
+      const row = await ports.reservations(trx).insert({
+        user_id: command.actorUserId,
+        amount: command.amount,
+        reason: command.reason,
+      });
+      return Ok(command.brand(row.id));
+    }),
+  );
 }
 
+// commit/cancel only ever touch the single row reserveUsage just created for
+// this call, so unlike reserveUsage they need no lock
 async function commitUsage<K extends CapacityKind>(
   reservationId: UsageReservationId<K>,
   amount: number,
-  repos: Pick<UsageLedgerRepos<K>, "reservations" | "commits">,
+  ports: Pick<
+    UsageReservationPorts<K>,
+    "executor" | "reservations" | "commits"
+  >,
 ): Promise<Result<void, DomainError>> {
-  const reservation = await repos.reservations.findById(reservationId);
+  const reservations = ports.reservations(ports.executor);
+  const reservation = await reservations.findById(reservationId);
   if (!reservation) {
     return Err(fail("reservation_not_found"));
   }
-  await repos.commits.insert({ reservation_id: reservationId, amount });
-  await repos.reservations.updateAmountAndStatus(
-    reservationId,
+  await ports.commits(ports.executor).insert({
+    reservation_id: reservationId,
     amount,
-    "committed",
-  );
+  });
+  await reservations.updateAmountAndStatus(reservationId, amount, "committed");
   return Ok(undefined);
 }
 
 async function cancelUsage<K extends CapacityKind>(
   reservationId: UsageReservationId<K>,
-  repos: Pick<UsageLedgerRepos<K>, "reservations">,
+  ports: Pick<UsageReservationPorts<K>, "executor" | "reservations">,
 ): Promise<Result<void, DomainError>> {
-  const reservation = await repos.reservations.findById(reservationId);
+  const reservations = ports.reservations(ports.executor);
+  const reservation = await reservations.findById(reservationId);
   if (!reservation) {
     return Err(fail("reservation_not_found"));
   }
-  await repos.reservations.updateStatus(reservationId, "cancelled");
+  await reservations.updateStatus(reservationId, "cancelled");
   return Ok(undefined);
 }
 
@@ -74,17 +109,13 @@ export interface ExecuteWithUsageReservationCommand<K extends CapacityKind> {
   kind: K;
   actorUserId: UserId;
   requested: number;
-  remainingCapacity: number;
   reserveReason: ReserveReason<K>;
-  failureReason: CancelReason;
   brand: (id: string) => UsageReservationId<K>;
 }
 
-// Raw reserve/commit/cancel are private: every reservation must flow through
-// this path so a thrown work block triggers a cancel.
 export async function executeWithUsageReservation<K extends CapacityKind, T>(
   command: ExecuteWithUsageReservationCommand<K>,
-  repos: Pick<UsageLedgerRepos<K>, "reservations" | "commits">,
+  ports: UsageReservationPorts<K>,
   run: (
     reservationId: UsageReservationId<K>,
   ) => Promise<Result<{ value: T; consumed: number }, DomainError>>,
@@ -94,11 +125,10 @@ export async function executeWithUsageReservation<K extends CapacityKind, T>(
       kind: command.kind,
       actorUserId: command.actorUserId,
       amount: command.requested,
-      remainingCapacity: command.remainingCapacity,
       reason: command.reserveReason,
       brand: command.brand,
     },
-    repos,
+    ports,
   );
   if (isErr(reservationResult)) {
     return reservationResult;
@@ -110,22 +140,27 @@ export async function executeWithUsageReservation<K extends CapacityKind, T>(
   try {
     runResult = await run(reservationId);
   } catch (error) {
-    await cancelUsage(reservationId, repos);
+    await cancelUsage(reservationId, ports);
     throw error;
   }
 
   if (isErr(runResult)) {
-    await cancelUsage(reservationId, repos);
+    await cancelUsage(reservationId, ports);
     return runResult;
   }
 
   const consumed = runResult.value.consumed;
+  if (consumed < 0 || consumed > command.requested) {
+    await cancelUsage(reservationId, ports);
+    return Err(fail("invalid_consumed_amount"));
+  }
+
   if (consumed === 0) {
-    await cancelUsage(reservationId, repos);
+    await cancelUsage(reservationId, ports);
     return Ok(runResult.value.value);
   }
 
-  const commitResult = await commitUsage(reservationId, consumed, repos);
+  const commitResult = await commitUsage(reservationId, consumed, ports);
   if (isErr(commitResult)) {
     return commitResult;
   }
