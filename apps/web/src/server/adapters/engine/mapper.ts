@@ -32,7 +32,6 @@ export async function mapEngineErrorResponse(
 ): Promise<DomainError> {
   const payload = await extractEngineErrorPayload(response);
 
-  // Preserve the strongest available correlation id for downstream diagnostics.
   const headerRequestId = response.headers.get("x-request-id");
   const bodyRequestId = payload?.request_id;
   const correlationId = headerRequestId ?? bodyRequestId ?? requestId;
