@@ -1,11 +1,17 @@
 import type { Insertable, Kysely } from "kysely";
 
+import { notify } from "~/lib/db/notify";
 import type { Database } from "~/lib/db/types";
 import type {
   AuthFunnelEventName,
   AuthFunnelMethod,
   AuthFunnelOutcome,
 } from "~/lib/observability/auth-funnel";
+import { mapAuthFunnelEventRow } from "~/server/event-logs/mappers";
+import {
+  EVENT_LOGS_STREAM_CHANNEL,
+  serializeEventLogStreamPayload,
+} from "~/server/event-logs/stream-contract";
 
 type NewAuthFunnelEventRow = Insertable<Database["auth_funnel_events"]>;
 
@@ -28,11 +34,19 @@ export interface AuthFunnelSummaryFilter {
 
 export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewAuthFunnelEventRow) {
-      return db
+    async create(values: NewAuthFunnelEventRow) {
+      const row = await db
         .insertInto("auth_funnel_events")
         .values(values)
+        .returningAll()
         .executeTakeFirstOrThrow();
+
+      const payload = serializeEventLogStreamPayload(
+        mapAuthFunnelEventRow(row),
+      );
+      if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+
+      return row;
     },
 
     async findRecent(filter: AuthFunnelEventFilter) {

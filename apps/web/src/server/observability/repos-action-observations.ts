@@ -1,6 +1,12 @@
 import type { Insertable, Kysely } from "kysely";
 
+import { notify } from "~/lib/db/notify";
 import type { ActionObservationsTable, Database } from "~/lib/db/types";
+import { mapActionObservationRow } from "~/server/event-logs/mappers";
+import {
+  EVENT_LOGS_STREAM_CHANNEL,
+  serializeEventLogStreamPayload,
+} from "~/server/event-logs/stream-contract";
 import type { UserId } from "~/server/shared/ids";
 
 type NewActionObservationRow = Insertable<Database["action_observations"]>;
@@ -26,11 +32,19 @@ export interface ActionObservationSummaryFilter {
 
 export function createActionObservationsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewActionObservationRow) {
-      return db
+    async create(values: NewActionObservationRow) {
+      const row = await db
         .insertInto("action_observations")
         .values(values)
+        .returningAll()
         .executeTakeFirstOrThrow();
+
+      const payload = serializeEventLogStreamPayload(
+        mapActionObservationRow(row),
+      );
+      if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+
+      return row;
     },
 
     async findRecent(filter: ActionObservationFilter) {
