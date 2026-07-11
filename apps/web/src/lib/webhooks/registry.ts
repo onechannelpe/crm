@@ -1,4 +1,4 @@
-import { verifyWhatsAppSignature } from "./whatsapp-signature";
+import { verifyKapsoSignature } from "./kapso-signature";
 
 export interface WebhookVerifierInput {
   request: Request;
@@ -7,7 +7,8 @@ export interface WebhookVerifierInput {
 
 export type WebhookVerifier = (input: WebhookVerifierInput) => boolean;
 
-// Bounds body buffering before signature verification.
+// 256 KiB caps the buffered body so signature verification runs over the
+// complete payload, not a stream chunk.
 export const WEBHOOK_BODY_LIMIT_BYTES = 256 * 1024;
 
 export type WebhookPolicy = {
@@ -18,7 +19,7 @@ export type WebhookPolicy = {
 const WEBHOOK_POLICIES: Record<string, WebhookPolicy> = {
   "/api/webhooks/whatsapp": {
     handshakeMethods: ["GET"],
-    verify: verifyWhatsAppSignature,
+    verify: verifyKapsoSignature,
   },
 };
 
