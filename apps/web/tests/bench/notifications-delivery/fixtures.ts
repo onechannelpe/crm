@@ -164,7 +164,7 @@ async function seedPlannerScenario(
 
   const intents: NotificationIntent[] = audiences.map(
     (audienceUserIds, index) => ({
-      id: NotificationIntentId.trust(`bench-planner-${scenario.name}-${index}`),
+      id: NotificationIntentId.trust(`bench:planner:${scenario.name}:${index}`),
       eventType: "lead.ready_for_quotation",
       audience: { kind: "user_ids", userIds: audienceUserIds },
       channels: ["email", "whatsapp"],
@@ -176,7 +176,7 @@ async function seedPlannerScenario(
   );
 
   await enqueueNotifications(ctx.db, intents, BENCH_NOW);
-  return NotificationIntentId.trust(`bench-planner-${scenario.name}-0`);
+  return NotificationIntentId.trust(`bench:planner:${scenario.name}:0`);
 }
 
 async function loadPlannerEntry(
@@ -231,7 +231,7 @@ export async function seedExpandIntent(
   ctx: TestDbContext,
   userIds: UserId[],
 ): Promise<IntentJob> {
-  const id = NotificationIntentId.trust(`bench-expand-${randomUUIDv7()}`);
+  const id = NotificationIntentId.trust(`bench:expand:${randomUUIDv7()}`);
   const intent: NotificationIntent = {
     id,
     eventType: "lead.ready_for_quotation",

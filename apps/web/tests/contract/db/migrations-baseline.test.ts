@@ -36,7 +36,7 @@ describe("schema baseline", () => {
       SELECT indexname FROM pg_indexes WHERE schemaname = 'public'
     `.execute(ctx.db);
     const indexNames = new Set(indexes.rows.map((row) => row.indexname));
-    expect(indexNames.has("idx_app_notifications_source_event")).toBe(true);
+    expect(indexNames.has("idx_app_notifications_intent")).toBe(true);
     expect(indexNames.has("idx_events_occurred")).toBe(true);
     expect(indexNames.has("idx_events_type_occurred")).toBe(true);
     expect(indexNames.has("idx_events_actor_occurred")).toBe(true);
