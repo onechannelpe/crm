@@ -1,6 +1,11 @@
 import type { ActionSuccess } from "~/contracts/common";
-import type { CompleteContactAssignmentCallInput } from "~/contracts/contact-assignments/inputs";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { ContactAssignmentCallOutcome } from "~/contracts/contact-assignments/vocabulary";
+import type {
+  BranchId,
+  ContactAssignmentId,
+  OrganizationPersonId,
+  UserId,
+} from "~/server/shared/ids";
 
 export interface AssignContactsCommand {
   actorUserId: UserId;
@@ -14,7 +19,10 @@ export interface AssignContactsResult {
 
 export type CompleteContactAssignmentCallResult = ActionSuccess;
 
-export type CompleteContactAssignmentCallCommand =
-  CompleteContactAssignmentCallInput & {
-    actorUserId: UserId;
-  };
+export type CompleteContactAssignmentCallCommand = {
+  actorUserId: UserId;
+  assignmentId: ContactAssignmentId;
+  contactId: OrganizationPersonId;
+  outcome: ContactAssignmentCallOutcome;
+  notes: string | null;
+};

@@ -5,6 +5,7 @@ import { completeContactAssignmentCall as completeContactAssignmentCallUseCase }
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { ContactAssignmentId, OrganizationPersonId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function completeContactAssignmentCall(
@@ -16,8 +17,8 @@ export async function completeContactAssignmentCall(
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        assignmentId: r.posInt("assignmentId"),
-        contactId: r.posInt("contactId"),
+        assignmentId: r.id("assignmentId", ContactAssignmentId),
+        contactId: r.id("contactId", OrganizationPersonId),
         outcome: r.enum("outcome", CONTACT_ASSIGNMENT_CALL_OUTCOMES),
         notes: r.optStr("notes") ?? null,
       })),

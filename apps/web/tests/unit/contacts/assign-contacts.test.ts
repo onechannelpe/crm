@@ -1,5 +1,6 @@
 import {
   makeLeadCapacityGrantsRepo,
+  makeLeadUsageReservationPorts,
   makeLeadUsageCommitsRepo,
   makeLeadUsageReservationsRepo,
   makeNullLeadPolicyRepos,
@@ -11,12 +12,27 @@ import type {
   AssignContactsTransactionRepos,
   AssignContactsUow,
 } from "~/server/contact-assignments/application/contact-assignment-writer";
+import type { CadenceSnapshot } from "~/server/contact-assignments/infrastructure/cadence-repo";
+import type {
+  Membership,
+  OrganizationProfile,
+} from "~/server/organization/organization-repo";
 import { external, type DomainError } from "~/server/shared/domain-error";
 import { type RecordCandidate } from "~/server/shared/engine/record-contract";
+import {
+  BranchId,
+  OrganizationId,
+  OrganizationPersonId,
+  PersonId,
+  UserId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-const USER_ID = 1;
-const BRANCH_ID = 1;
+const USER_ID = UserId.trust("1");
+const BRANCH_ID: BranchId = BranchId.trust("1");
+const ORG_ID: OrganizationId = OrganizationId.trust(
+  "01974fd5-f261-7a7d-93f5-2f3d0f963001",
+);
 const EXHAUSTED_ACTIVE_ASSIGNMENTS = 9_999;
 
 function makeCandidate(n: number): RecordCandidate {
@@ -29,9 +45,24 @@ function makeCandidate(n: number): RecordCandidate {
   };
 }
 
+function makeOrganizationProfile(ruc: string): OrganizationProfile {
+  return {
+    id: ORG_ID,
+    ruc,
+    legalName: null,
+    lineOfBusiness: null,
+    address: null,
+    district: null,
+    province: null,
+    department: null,
+    phone: null,
+    email: null,
+  };
+}
+
 function makeRepos(activeAssignments = 0) {
   let nextContactId = 1;
-  return {
+  const repos = {
     users: {
       findById: async () => ({ teamId: null, branchId: BRANCH_ID }),
     },
@@ -43,22 +74,48 @@ function makeRepos(activeAssignments = 0) {
       countActiveByUser: async () => activeAssignments,
       createMany: async () => undefined,
     },
-    organizations: {
-      findOrCreate: async (_ruc: string, _name: string) => ({
-        id: "01974fd5-f261-7a7d-93f5-2f3d0f963001",
-      }),
+    organization: {
+      upsertOrganization: async (
+        input: AssignContactsTransactionRepos["organization"]["upsertOrganization"] extends (
+          arg: infer Arg,
+        ) => unknown
+          ? Arg
+          : never,
+      ) => makeOrganizationProfile(input.ruc),
+      upsertMembership: async (
+        input: AssignContactsTransactionRepos["organization"]["upsertMembership"] extends (
+          arg: infer Arg,
+        ) => unknown
+          ? Arg
+          : never,
+      ): Promise<Membership> => {
+        const id = OrganizationPersonId.trust(`contact-${nextContactId++}`);
+        return {
+          id,
+          organizationId: input.organizationId,
+          person: {
+            id: PersonId.trust(`person-${input.person.dni}`),
+            dni: input.person.dni,
+            names: input.person.names,
+            firstSurname: input.person.firstSurname,
+            secondSurname: input.person.secondSurname,
+            email: input.person.email,
+            displayName: input.person.names,
+          },
+          phone: input.phone,
+          email: input.email,
+        };
+      },
     },
-    contacts: {
-      findOrCreate: async (
-        _orgId: string,
-        _dni: string,
-        _name: string,
-        _phone: string,
-      ): Promise<{ id: number; cooldown_until: number | null }> => ({
-        id: nextContactId++,
-        cooldown_until: null,
-      }),
+    cadence: {
+      findMany: async (
+        _ids: OrganizationPersonId[],
+      ): Promise<Map<OrganizationPersonId, CadenceSnapshot>> => new Map(),
     },
+  };
+  return {
+    ...repos,
+    leadUsageReservationPorts: makeLeadUsageReservationPorts(repos),
   };
 }
 
@@ -85,6 +142,7 @@ describe("assignContacts", () => {
         repos,
         uow: makeTransaction(repos),
         engine: emptyEngine,
+        leadUsageReservationPorts: repos.leadUsageReservationPorts,
       },
     );
 
@@ -99,14 +157,31 @@ describe("assignContacts", () => {
   it("commits assigned amount and cancels unused when partial assignment occurs", async () => {
     const repos = makeRepos(0);
 
-    let contactCallCount = 0;
-    repos.contacts.findOrCreate = async (): Promise<{
-      id: number;
-      cooldown_until: number | null;
-    }> => {
-      contactCallCount++;
-      const cooldown_until = contactCallCount === 1 ? null : 1_700_000_099_999;
-      return { id: contactCallCount, cooldown_until };
+    // The third membership returns a contact_cadence entry whose cooldown is in
+    // the future, so the writer filters it out and the count of assigned is
+    // strictly less than the count of requested.
+    let cadenceCallCount = 0;
+    const cooldownMembership = OrganizationPersonId.trust("contact-3");
+    repos.cadence.findMany = async (ids: OrganizationPersonId[]) => {
+      cadenceCallCount++;
+      const map = new Map<OrganizationPersonId, CadenceSnapshot>();
+      if (cadenceCallCount >= 2) {
+        map.set(cooldownMembership, {
+          organizationPersonId: cooldownMembership,
+          lastContactedAt: null,
+          cooldownUntil: new Date(1_700_000_099_999),
+        });
+      }
+      for (const id of ids) {
+        if (!map.has(id)) {
+          map.set(id, {
+            organizationPersonId: id,
+            lastContactedAt: null,
+            cooldownUntil: null,
+          });
+        }
+      }
+      return map;
     };
 
     const candidates: RecordCandidate[] = [
@@ -116,15 +191,20 @@ describe("assignContacts", () => {
     ];
     const engine = {
       requestCandidates: async (_input: {
-        branchId: number;
-        userId: number;
+        branchId: BranchId;
+        userId: UserId;
         amount: number;
       }): Promise<Result<RecordCandidate[], DomainError>> => Ok(candidates),
     };
 
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, uow: makeTransaction(repos), engine },
+      {
+        repos,
+        uow: makeTransaction(repos),
+        engine,
+        leadUsageReservationPorts: repos.leadUsageReservationPorts,
+      },
     );
 
     expect(result.ok).toBe(true);
@@ -149,15 +229,20 @@ describe("assignContacts", () => {
     const candidates: RecordCandidate[] = [makeCandidate(1)];
     const engine = {
       requestCandidates: async (_input: {
-        branchId: number;
-        userId: number;
+        branchId: BranchId;
+        userId: UserId;
         amount: number;
       }): Promise<Result<RecordCandidate[], DomainError>> => Ok(candidates),
     };
 
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, uow: makeTransaction(repos), engine },
+      {
+        repos,
+        uow: makeTransaction(repos),
+        engine,
+        leadUsageReservationPorts: repos.leadUsageReservationPorts,
+      },
     );
 
     expect(result.ok).toBe(true);
@@ -173,8 +258,8 @@ describe("assignContacts", () => {
     const repos = makeRepos(0);
     const engine = {
       requestCandidates: async (_input: {
-        branchId: number;
-        userId: number;
+        branchId: BranchId;
+        userId: UserId;
         amount: number;
       }): Promise<Result<RecordCandidate[], DomainError>> =>
         Err(
@@ -191,7 +276,12 @@ describe("assignContacts", () => {
 
     const result = await assignContacts(
       { actorUserId: USER_ID, branchId: BRANCH_ID },
-      { repos, uow: makeTransaction(repos), engine },
+      {
+        repos,
+        uow: makeTransaction(repos),
+        engine,
+        leadUsageReservationPorts: repos.leadUsageReservationPorts,
+      },
     );
 
     expect(result.ok).toBe(false);
@@ -221,7 +311,12 @@ describe("assignContacts", () => {
     await expect(
       assignContacts(
         { actorUserId: USER_ID, branchId: BRANCH_ID },
-        { repos, uow: makeTransaction(repos), engine },
+        {
+          repos,
+          uow: makeTransaction(repos),
+          engine,
+          leadUsageReservationPorts: repos.leadUsageReservationPorts,
+        },
       ),
     ).rejects.toThrow("db write failed");
 

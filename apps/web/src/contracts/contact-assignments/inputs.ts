@@ -1,8 +1,8 @@
 import type { ContactAssignmentCallOutcome } from "./vocabulary";
 
 export type CompleteContactAssignmentCallInput = {
-  assignmentId: number;
-  contactId: number;
+  assignmentId: string;
+  contactId: string;
   outcome: ContactAssignmentCallOutcome;
   notes: string | null;
 };

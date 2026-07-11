@@ -1,14 +1,14 @@
-import type {
-  LeadCapacityGrantsRepo,
-  LeadUsageCommitsRepo,
-  LeadUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
 import type { ActorScope } from "~/server/capacity/application/actor-scope";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import type {
   LeadPolicyDefaultsRepo,
   LeadPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
+import type {
+  LeadCapacityGrantsRepo,
+  LeadUsageCommitsRepo,
+  LeadUsageReservationsRepo,
+} from "~/server/capacity/infrastructure/usage-repo";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
@@ -24,12 +24,11 @@ export type AssignmentPlanRepos = {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  contactAssignments: { countActiveByUser(userId: number): Promise<number> };
+  contactAssignments: { countActiveByUser(userId: UserId): Promise<number> };
 };
 
 export type ContactAssignmentPlan = {
   requested: number;
-  remainingCapacity: number;
 };
 
 export async function planContactAssignments(
@@ -46,6 +45,5 @@ export async function planContactAssignments(
       snapshotResult.value.activeAssignments,
       snapshotResult.value.policy.bufferTarget,
     ),
-    remainingCapacity: snapshotResult.value.remaining,
   });
 }

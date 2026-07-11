@@ -1,6 +1,6 @@
 "use server";
 
-import type { LeadCapacitySnapshot } from "~/actions/capacity/contracts";
+import type { LeadCapacitySnapshot } from "~/contracts/capacity";
 import type { ActiveContactAssignmentView } from "~/contracts/contact-assignments/views";
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
 import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";

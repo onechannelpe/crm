@@ -1,11 +1,11 @@
 import type { ContactAssignmentStatus } from "./vocabulary";
 
 export type ActiveContactAssignmentView = {
-  assignmentId: number;
+  assignmentId: string;
   assignedAt: number;
   expiresAt: number;
   status: ContactAssignmentStatus;
-  contactId: number;
+  contactId: string;
   name: string;
   dni: string;
   phonePrimary: string | null;
