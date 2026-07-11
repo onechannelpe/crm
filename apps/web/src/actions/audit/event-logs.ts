@@ -2,6 +2,7 @@
 
 import {
   EVENT_LOG_TABLES,
+  type EventLogStatus,
   type EventLogQueryInput,
   type EventLogQueryResult,
 } from "~/contracts/event-logs/event-log";
@@ -25,7 +26,9 @@ export async function getEventLogs(
           filters: r.optObj("filters", (f) => ({
             eventType: f.optStr("eventType") ?? undefined,
             actorUserId: f.optStr("actorUserId") ?? undefined,
-            status: f.optStr("status") ?? undefined,
+            status:
+              f.optEnum("status", ["ok", "error"] satisfies EventLogStatus[]) ??
+              undefined,
             onlyHighRisk: f.optBool("onlyHighRisk") ?? undefined,
             dateRange: f.optObj("dateRange", (d) => ({
               start: d.optNum("start") ?? undefined,

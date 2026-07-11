@@ -1,86 +1,46 @@
-import { createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, type Accessor } from "solid-js";
 
 import Pause from "~/components/icons/pause";
 import Play from "~/components/icons/play";
 import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { Card } from "~/components/ui/surfaces/card";
 import type {
-  EventLogFilters,
-  EventLogRecord,
+  EventLogQueryInput,
+  EventLogQueryResult,
   EventLogTable,
 } from "~/contracts/event-logs/event-log";
 
 import { useEventLogsLiveStream } from "../hooks/use-event-logs-live-stream";
 import { useQueryEventLogs } from "../hooks/use-query-event-logs";
+import { hasEventLogFilters } from "../model/event-log-location";
 import { getEventLogSource } from "../model/event-log-sources";
-import {
-  EventLogFilters as EventLogFiltersView,
-  type EventLogFiltersUi,
-} from "./event-log-filters";
+import { mergeEventLogRecords } from "../model/merge-event-log-records";
+import { EventLogFilters } from "./event-log-filters";
 import { EventLogResultsTable } from "./event-log-results-table";
 import { EventLogTableSelector } from "./event-log-table-selector";
 
 import styles from "./settings-logs.module.css";
 
-const RECORDS_PER_PAGE = 100;
-
-function hasActiveFilters(filters: EventLogFiltersUi): boolean {
-  return (
-    Boolean(filters.eventType) ||
-    Boolean(filters.actorUserId) ||
-    Boolean(filters.status) ||
-    filters.onlyHighRisk === true ||
-    filters.startDate !== undefined ||
-    filters.endDate !== undefined
-  );
-}
-
-function toContractFilters(ui: EventLogFiltersUi): EventLogFilters {
-  const dateRange =
-    ui.startDate || ui.endDate
-      ? { start: ui.startDate?.getTime(), end: ui.endDate?.getTime() }
-      : undefined;
-  return {
-    eventType: ui.eventType,
-    actorUserId: ui.actorUserId,
-    status: ui.status,
-    onlyHighRisk: ui.onlyHighRisk,
-    dateRange,
-  };
-}
-
-export function SettingsLogs() {
-  const [selectedTable, setSelectedTable] =
-    createSignal<EventLogTable>("DOMAIN_EVENT");
-  const [filters, setFilters] = createSignal<EventLogFiltersUi>({});
+export function SettingsLogs(props: {
+  input: Accessor<EventLogQueryInput>;
+  firstPage: Accessor<EventLogQueryResult | undefined>;
+  onTableChange: (table: EventLogTable) => void;
+  onFiltersChange: (filters: EventLogQueryInput["filters"]) => void;
+}) {
   const [isPaused, setIsPaused] = createSignal(false);
-
-  const source = createMemo(() => getEventLogSource(selectedTable()));
-
-  const baseInput = createMemo(() => ({
-    table: selectedTable(),
-    first: RECORDS_PER_PAGE,
-    filters: toContractFilters(filters()),
-  }));
-
-  const { records, totalCount, hasNextPage, loading, loadMore } =
-    useQueryEventLogs(baseInput);
-
-  const streamEnabled = () => !isPaused() && !hasActiveFilters(filters());
+  const source = createMemo(() => getEventLogSource(props.input().table));
+  const query = useQueryEventLogs(props.input, props.firstPage);
+  const streamEnabled = () => !isPaused() && !hasEventLogFilters(props.input());
   const liveRecords = useEventLogsLiveStream({
-    table: selectedTable,
+    table: () => props.input().table,
     enabled: streamEnabled,
   });
-
-  const displayedRecords = createMemo<EventLogRecord[]>(() => [
-    ...liveRecords(),
-    ...records(),
-  ]);
-
-  const handleTableChange = (table: EventLogTable) => {
-    setSelectedTable(table);
-    setFilters({});
-  };
+  const displayedRecords = createMemo(() =>
+    mergeEventLogRecords(liveRecords(), query.records()),
+  );
+  const liveOnlyCount = createMemo(
+    () => displayedRecords().length - query.records().length,
+  );
 
   return (
     <div class={styles.root}>
@@ -89,8 +49,8 @@ export function SettingsLogs() {
           <div class={styles.selectorRow}>
             <div class={styles.selectorGrow}>
               <EventLogTableSelector
-                value={selectedTable()}
-                onChange={handleTableChange}
+                value={props.input().table}
+                onChange={props.onTableChange}
               />
             </div>
             <LightIconButton
@@ -98,27 +58,27 @@ export function SettingsLogs() {
               accent="secondary"
               size="medium"
               aria-label={isPaused() ? "Reanudar" : "Pausar"}
-              onClick={() => setIsPaused((previous) => !previous)}
+              onClick={() => setIsPaused((paused) => !paused)}
             />
           </div>
-          <EventLogFiltersView
+          <EventLogFilters
             source={source()}
-            value={filters()}
-            onChange={setFilters}
+            value={props.input().filters ?? {}}
+            onChange={props.onFiltersChange}
           />
         </div>
       </Card>
-
       <div class={styles.results}>
         <span class={styles.recordCount}>
-          {displayedRecords().length} de {totalCount() + liveRecords().length}
+          {displayedRecords().length} de{" "}
+          {query.totalCount() + Math.max(0, liveOnlyCount())}
         </span>
         <EventLogResultsTable
           columns={source().columns}
           records={displayedRecords()}
-          loading={loading()}
-          hasNextPage={hasNextPage()}
-          onLoadMore={loadMore}
+          loading={query.loading()}
+          hasNextPage={query.hasNextPage()}
+          onLoadMore={query.loadMore}
         />
       </div>
     </div>

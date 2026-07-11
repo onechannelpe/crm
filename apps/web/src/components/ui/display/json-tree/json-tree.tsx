@@ -1,7 +1,7 @@
 import {
   createContext,
-  createMemo,
   createSignal,
+  For,
   Show,
   useContext,
   type Component,
@@ -15,21 +15,13 @@ import List from "~/components/icons/list";
 import MessageSquare from "~/components/icons/message-square";
 import Package from "~/components/icons/package";
 import Point from "~/components/icons/point";
+import type { Json } from "~/contracts/json";
 
 import styles from "./json-tree.module.css";
 
-export type JsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | JsonValue[]
-  | { [key: string]: JsonValue };
-
 type IconComponent = Component<{ size?: number; color?: string }>;
-
+type JsonObject = { [key: string]: Json };
 type ShouldExpand = (params: { keyPath: string; depth: number }) => boolean;
-
 type JsonTreeConfig = {
   shouldExpandNodeInitially: ShouldExpand;
   emptyArrayLabel: string;
@@ -41,13 +33,17 @@ type JsonTreeConfig = {
 const JsonTreeConfigContext = createContext<JsonTreeConfig>();
 
 function useConfig(): JsonTreeConfig {
-  const ctx = useContext(JsonTreeConfigContext);
-  if (!ctx) throw new Error("JsonTree node rendered outside JsonTree");
-  return ctx;
+  const config = useContext(JsonTreeConfigContext);
+  if (!config) throw new Error("JsonTree node rendered outside JsonTree");
+  return config;
 }
 
-function isArray(value: JsonValue): value is JsonValue[] {
+function isJsonArray(value: Json): value is Json[] {
   return Array.isArray(value);
+}
+
+function isJsonObject(value: Json): value is JsonObject {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function NodeLabel(props: { label: string; icon: IconComponent }) {
@@ -61,46 +57,46 @@ function NodeLabel(props: { label: string; icon: IconComponent }) {
 
 function NodeValue(props: { valueAsString: string }) {
   const config = useConfig();
-  const interactive = () => config.onNodeValueClick !== undefined;
   return (
-    <span
-      class={styles.value}
-      role={interactive() ? "button" : undefined}
-      tabIndex={interactive() ? 0 : undefined}
-      onClick={
-        interactive()
-          ? () => config.onNodeValueClick?.(props.valueAsString)
-          : undefined
-      }
+    <Show
+      when={config.onNodeValueClick}
+      fallback={<span class={styles.value}>{props.valueAsString}</span>}
     >
-      {props.valueAsString}
-    </span>
+      {(copy) => (
+        <button
+          type="button"
+          class={styles.value}
+          onClick={() => copy()(props.valueAsString)}
+        >
+          {props.valueAsString}
+        </button>
+      )}
+    </Show>
   );
 }
 
 function ValueNode(props: {
   label?: string;
   valueAsString: string;
-  icon?: IconComponent;
+  icon: IconComponent;
 }) {
   return (
     <li class={styles.valueListItem}>
-      <Show when={props.label !== undefined && props.icon}>
-        <NodeLabel
-          label={props.label as string}
-          icon={props.icon as IconComponent}
-        />
+      <Show when={props.label}>
+        {(label) => <NodeLabel label={label()} icon={props.icon} />}
       </Show>
       <NodeValue valueAsString={props.valueAsString} />
     </li>
   );
 }
 
+type Entry = { id: string; value: Json };
+
 function NestedNode(props: {
   label?: string;
   icon: IconComponent;
-  entries: Array<{ id: string; value: JsonValue }>;
-  renderCount: (count: number) => string;
+  entries: Entry[];
+  count: (value: number) => string;
   emptyText: string;
   depth: number;
   keyPath: string;
@@ -112,7 +108,6 @@ function NestedNode(props: {
       depth: props.depth,
     }),
   );
-
   const children = (
     <ul classList={{ [styles.list]: true, [styles.nested]: props.depth > 0 }}>
       <Show
@@ -123,124 +118,120 @@ function NestedNode(props: {
           </li>
         }
       >
-        {props.entries.map((entry) => (
-          <JsonNode
-            label={entry.id}
-            value={entry.value}
-            depth={props.depth + 1}
-            keyPath={props.keyPath ? `${props.keyPath}.${entry.id}` : entry.id}
-          />
-        ))}
+        <For each={props.entries}>
+          {(entry) => (
+            <JsonNode
+              label={entry.id}
+              value={entry.value}
+              depth={props.depth + 1}
+              keyPath={
+                props.keyPath ? `${props.keyPath}.${entry.id}` : entry.id
+              }
+            />
+          )}
+        </For>
       </Show>
     </ul>
   );
 
+  if (props.label === undefined)
+    return <li class={styles.container}>{children}</li>;
   return (
-    <Show
-      when={props.label !== undefined}
-      fallback={<li class={styles.container}>{children}</li>}
-    >
-      <li class={styles.container}>
-        <div class={styles.labelRow}>
-          <button
-            class={styles.arrowButton}
-            onClick={() => setIsOpen((open) => !open)}
-            aria-label={isOpen() ? "Collapse" : "Expand"}
-          >
-            <span class={styles.chevron} data-open={isOpen() ? "" : undefined}>
-              <ChevronDown size={16} />
-            </span>
-          </button>
-          <NodeLabel label={props.label as string} icon={props.icon} />
-          <span class={styles.elementsCount}>
-            {props.renderCount(props.entries.length)}
+    <li class={styles.container}>
+      <div class={styles.labelRow}>
+        <button
+          type="button"
+          class={styles.arrowButton}
+          onClick={() => setIsOpen((open) => !open)}
+          aria-label={isOpen() ? "Contraer" : "Expandir"}
+        >
+          <span class={styles.chevron} data-open={isOpen() ? "" : undefined}>
+            <ChevronDown size={16} />
           </span>
-        </div>
-        <Show when={isOpen()}>{children}</Show>
-      </li>
-    </Show>
+        </button>
+        <NodeLabel label={props.label} icon={props.icon} />
+        <span class={styles.elementsCount}>
+          {props.count(props.entries.length)}
+        </span>
+      </div>
+      <Show when={isOpen()}>{children}</Show>
+    </li>
   );
 }
 
 function JsonNode(props: {
   label?: string;
-  value: JsonValue;
+  value: Json;
   depth: number;
   keyPath: string;
 }) {
   const config = useConfig();
-  const kind = createMemo(() => {
-    const value = props.value;
-    if (value === null || value === undefined) return "null" as const;
-    if (typeof value === "string") return "string" as const;
-    if (typeof value === "number") return "number" as const;
-    if (typeof value === "boolean") return "boolean" as const;
-    if (isArray(value)) return "array" as const;
-    return "object" as const;
-  });
-
-  return (
-    <Show
-      when={kind() === "object" || kind() === "array"}
-      fallback={
-        <ValueNode
-          label={props.label}
-          icon={
-            kind() === "null"
-              ? CircleAlert
-              : kind() === "string"
-                ? MessageSquare
-                : kind() === "number"
-                  ? Point
-                  : Checkbox
-          }
-          valueAsString={
-            kind() === "null"
-              ? "null"
-              : kind() === "string"
-                ? (props.value as string) === ""
-                  ? config.emptyStringLabel
-                  : (props.value as string)
-                : String(props.value)
-          }
-        />
-      }
-    >
-      <Show
-        when={kind() === "array"}
-        fallback={
-          <NestedNode
-            label={props.label}
-            icon={Package}
-            entries={Object.entries(
-              props.value as Record<string, JsonValue>,
-            ).map(([key, value]) => ({ id: key, value }))}
-            renderCount={(count) => `{${count}}`}
-            emptyText={config.emptyObjectLabel}
-            depth={props.depth}
-            keyPath={props.keyPath}
-          />
-        }
-      >
-        <NestedNode
-          label={props.label}
-          icon={List}
-          entries={(props.value as JsonValue[]).map((value, index) => ({
-            id: String(index),
-            value,
-          }))}
-          renderCount={(count) => `[${count}]`}
-          emptyText={config.emptyArrayLabel}
-          depth={props.depth}
-          keyPath={props.keyPath}
-        />
-      </Show>
-    </Show>
-  );
+  const value = props.value;
+  if (value === null)
+    return (
+      <ValueNode label={props.label} icon={CircleAlert} valueAsString="null" />
+    );
+  if (typeof value === "string")
+    return (
+      <ValueNode
+        label={props.label}
+        icon={MessageSquare}
+        valueAsString={value === "" ? config.emptyStringLabel : value}
+      />
+    );
+  if (typeof value === "number")
+    return (
+      <ValueNode
+        label={props.label}
+        icon={Point}
+        valueAsString={String(value)}
+      />
+    );
+  if (typeof value === "boolean")
+    return (
+      <ValueNode
+        label={props.label}
+        icon={Checkbox}
+        valueAsString={String(value)}
+      />
+    );
+  if (isJsonArray(value)) {
+    return (
+      <NestedNode
+        label={props.label}
+        icon={List}
+        entries={value.map((entry, index) => ({
+          id: String(index),
+          value: entry,
+        }))}
+        count={(count) => `[${count}]`}
+        emptyText={config.emptyArrayLabel}
+        depth={props.depth}
+        keyPath={props.keyPath}
+      />
+    );
+  }
+  if (isJsonObject(value)) {
+    return (
+      <NestedNode
+        label={props.label}
+        icon={Package}
+        entries={Object.entries(value).map(([id, entry]) => ({
+          id,
+          value: entry,
+        }))}
+        count={(count) => `{${count}}`}
+        emptyText={config.emptyObjectLabel}
+        depth={props.depth}
+        keyPath={props.keyPath}
+      />
+    );
+  }
+  return null;
 }
 
 export function JsonTree(props: {
-  value: JsonValue;
+  value: Json;
   shouldExpandNodeInitially: ShouldExpand;
   emptyArrayLabel: string;
   emptyObjectLabel: string;

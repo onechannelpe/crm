@@ -3,24 +3,21 @@ import { Portal } from "solid-js/web";
 
 import styles from "./expanded-field-display.module.css";
 
-type ExpandedFieldDisplayProps = {
-  anchor: HTMLElement | undefined;
-  onClickOutside?: () => void;
-  children: JSX.Element;
-};
-
 const PANEL_WIDTH = 400;
 const PANEL_HEIGHT = 300;
 const VIEWPORT_PADDING = 8;
 
-export function ExpandedFieldDisplay(props: ExpandedFieldDisplayProps) {
+export function ExpandedFieldDisplay(props: {
+  anchor: HTMLElement | undefined;
+  onClickOutside?: () => void;
+  children: JSX.Element;
+}) {
   const [position, setPosition] = createSignal({ top: 0, left: 0 });
-  let panelRef: HTMLDivElement | undefined;
+  let panel: HTMLDivElement | undefined;
 
   createEffect(() => {
     const anchor = props.anchor;
     if (!anchor || typeof window === "undefined") return;
-
     const rect = anchor.getBoundingClientRect();
     const left = Math.min(
       rect.left,
@@ -33,25 +30,33 @@ export function ExpandedFieldDisplay(props: ExpandedFieldDisplayProps) {
     setPosition({ top, left: Math.max(VIEWPORT_PADDING, left) });
   });
 
-  const onPointerDown = (event: PointerEvent) => {
-    const target = event.target as Node | null;
-    if (panelRef && target && panelRef.contains(target)) return;
-    if (props.anchor && target && props.anchor.contains(target)) return;
-    props.onClickOutside?.();
-  };
-
   createEffect(() => {
+    if (!props.onClickOutside || typeof document === "undefined") return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) return;
+      if (panel?.contains(event.target) || props.anchor?.contains(event.target))
+        return;
+      props.onClickOutside?.();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") props.onClickOutside?.();
+    };
     document.addEventListener("pointerdown", onPointerDown, true);
-    onCleanup(() =>
-      document.removeEventListener("pointerdown", onPointerDown, true),
-    );
+    document.addEventListener("keydown", onKeyDown);
+    onCleanup(() => {
+      document.removeEventListener("pointerdown", onPointerDown, true);
+      document.removeEventListener("keydown", onKeyDown);
+    });
   });
 
   return (
     <Portal>
       <div
-        ref={panelRef}
+        ref={(element) => {
+          panel = element;
+        }}
         class={styles.panel}
+        role="dialog"
         style={{ top: `${position().top}px`, left: `${position().left}px` }}
       >
         {props.children}

@@ -1,11 +1,11 @@
 import {
-  isEventLogTable,
+  parseEventLogRecordText,
   type EventLogRecord,
   type EventLogTable,
 } from "~/contracts/event-logs/event-log";
 
 export const EVENT_LOGS_STREAM_CHANNEL = "event_logs_stream";
-const MAX_STREAM_PAYLOAD_BYTES = 7500;
+const MAX_STREAM_PAYLOAD_BYTES = 7_500;
 const TOPIC_PREFIX = "event-logs:";
 
 export function eventLogTopic(table: EventLogTable): string {
@@ -16,28 +16,10 @@ export function serializeEventLogStreamPayload(
   record: EventLogRecord,
 ): string | null {
   const text = JSON.stringify(record);
-  if (text.length > MAX_STREAM_PAYLOAD_BYTES) return null;
+  if (new TextEncoder().encode(text).byteLength > MAX_STREAM_PAYLOAD_BYTES) {
+    return null;
+  }
   return text;
 }
 
-function isRecordShape(value: unknown): value is EventLogRecord {
-  if (typeof value !== "object" || value === null) return false;
-  const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate.id === "string" &&
-    typeof candidate.event === "string" &&
-    typeof candidate.timestamp === "number" &&
-    typeof candidate.table === "string" &&
-    isEventLogTable(candidate.table)
-  );
-}
-
-export function parseEventLogStreamPayload(raw: string): EventLogRecord | null {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return null;
-  }
-  return isRecordShape(parsed) ? parsed : null;
-}
+export const parseEventLogStreamPayload = parseEventLogRecordText;

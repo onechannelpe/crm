@@ -3,31 +3,37 @@ import { Show } from "solid-js";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
+import {
+  isEventLogStatus,
+  type EventLogFilters as Filters,
+} from "~/contracts/event-logs/event-log";
 
-import type { EventLogSource } from "../model/event-log-sources";
+import type {
+  EventLogFilterField,
+  EventLogSource,
+} from "../model/event-log-sources";
 import { EventLogDatePickerInput } from "./event-log-date-picker-input";
 
 import styles from "./event-log-filters.module.css";
 
-export type EventLogFiltersUi = {
-  eventType?: string;
-  actorUserId?: string;
-  status?: string;
-  onlyHighRisk?: boolean;
-  startDate?: Date;
-  endDate?: Date;
-};
-
-type EventLogFiltersProps = {
+export function EventLogFilters(props: {
   source: EventLogSource;
-  value: EventLogFiltersUi;
-  onChange: (next: EventLogFiltersUi) => void;
-};
-
-export function EventLogFilters(props: EventLogFiltersProps) {
-  const has = (field: string) => props.source.filters.includes(field as never);
-  const patch = (partial: Partial<EventLogFiltersUi>) =>
+  value: Filters;
+  onChange: (next: Filters) => void;
+}) {
+  const has = (field: EventLogFilterField) =>
+    props.source.filters.includes(field);
+  const patch = (partial: Partial<Filters>) =>
     props.onChange({ ...props.value, ...partial });
+  const range = () => props.value.dateRange;
+  const startDate = () => {
+    const start = range()?.start;
+    return start === undefined ? undefined : new Date(start);
+  };
+  const endDate = () => {
+    const end = range()?.end;
+    return end === undefined ? undefined : new Date(end);
+  };
 
   return (
     <div class={styles.grid}>
@@ -41,7 +47,6 @@ export function EventLogFilters(props: EventLogFiltersProps) {
           }
         />
       </Show>
-
       <Show when={has("actorUserId")}>
         <Input
           label="Actor"
@@ -52,46 +57,48 @@ export function EventLogFilters(props: EventLogFiltersProps) {
           }
         />
       </Show>
-
       <Show when={has("status")}>
         <Select
           label="Estado"
           value={props.value.status ?? ""}
-          onChange={(event) =>
-            patch({ status: event.currentTarget.value || undefined })
-          }
+          onChange={(event) => {
+            const value = event.currentTarget.value;
+            patch({ status: isEventLogStatus(value) ? value : undefined });
+          }}
         >
           <option value="">Todos</option>
           <option value="ok">ok</option>
           <option value="error">error</option>
         </Select>
       </Show>
-
       <Show when={has("dateRange")}>
         <div class={styles.fullWidth}>
           <div class={styles.periodLabel}>Periodo</div>
           <div class={styles.periodRow}>
             <EventLogDatePickerInput
               placeholder="Fecha inicial"
-              value={props.value.startDate}
-              onChange={(date) => patch({ startDate: date })}
+              value={startDate()}
+              onChange={(date) =>
+                patch({ dateRange: { ...range(), start: date?.getTime() } })
+              }
             />
             <EventLogDatePickerInput
               placeholder="Fecha final"
-              value={props.value.endDate}
-              onChange={(date) => patch({ endDate: date })}
+              value={endDate()}
+              onChange={(date) =>
+                patch({ dateRange: { ...range(), end: date?.getTime() } })
+              }
             />
           </div>
         </div>
       </Show>
-
       <Show when={has("onlyHighRisk")}>
         <div class={styles.checkboxCell}>
           <Checkbox
             label="Solo riesgo alto"
             checked={props.value.onlyHighRisk ?? false}
             onInput={(event) =>
-              patch({ onlyHighRisk: event.currentTarget.checked })
+              patch({ onlyHighRisk: event.currentTarget.checked || undefined })
             }
           />
         </div>

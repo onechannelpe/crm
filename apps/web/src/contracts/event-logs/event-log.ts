@@ -1,3 +1,6 @@
+import type { FieldChange } from "~/contracts/events";
+import type { Json } from "~/contracts/json";
+
 export const EVENT_LOG_TABLES = [
   "DOMAIN_EVENT",
   "ACTION_LOG",
@@ -5,27 +8,46 @@ export const EVENT_LOG_TABLES = [
 ] as const;
 
 export type EventLogTable = (typeof EVENT_LOG_TABLES)[number];
+export type EventLogStatus = "ok" | "error";
+export type JsonObject = { [key: string]: Json };
 
-export function isEventLogTable(value: string): value is EventLogTable {
-  return (EVENT_LOG_TABLES as readonly string[]).includes(value);
-}
-
-export interface EventLogRecord {
+type EventLogRecordBase = {
   id: string;
-  table: EventLogTable;
   event: string;
   timestamp: number;
-  userId: string | null;
-  properties: Record<string, unknown> | null;
-  entityType: string | null;
-  entityId: string | null;
-  changesSummary: string | null;
-  status: string | null;
-  durationMs: number | null;
+  properties: JsonObject;
+};
+
+export type DomainEventLogRecord = EventLogRecordBase & {
+  table: "DOMAIN_EVENT";
+  actorUserId: string | null;
+  entity: { type: string; id: string };
+  changes: FieldChange[];
+};
+
+export type ActionEventLogRecord = EventLogRecordBase & {
+  table: "ACTION_LOG";
+  actorUserId: string | null;
+  status: EventLogStatus;
+  durationMs: number;
+};
+
+export type AuthEventLogRecord = EventLogRecordBase & {
+  table: "AUTH_EVENT";
   screen: string | null;
   method: string | null;
-  outcome: string | null;
-}
+  outcome: string;
+};
+
+export type EventLogRecord =
+  | DomainEventLogRecord
+  | ActionEventLogRecord
+  | AuthEventLogRecord;
+
+export type EventLogRecordFor<T extends EventLogTable> = Extract<
+  EventLogRecord,
+  { table: T }
+>;
 
 export interface EventLogPageInfo {
   endCursor: string | null;
@@ -41,7 +63,7 @@ export interface EventLogQueryResult {
 export interface EventLogFilters {
   eventType?: string;
   actorUserId?: string;
-  status?: string;
+  status?: EventLogStatus;
   onlyHighRisk?: boolean;
   dateRange?: { start?: number; end?: number };
 }
@@ -53,11 +75,142 @@ export interface EventLogQueryInput {
   after?: string | null;
 }
 
-// Keyset cursor over (timestamp, id): a time-ordered page marker that survives
-// inserts, unlike an offset. Encoded opaque so the client treats it as a token.
 export interface EventLogCursor {
   timestamp: number;
   id: string;
+}
+
+export function isEventLogTable(value: string): value is EventLogTable {
+  return EVENT_LOG_TABLES.some((table) => table === value);
+}
+
+export function isEventLogStatus(value: string): value is EventLogStatus {
+  return value === "ok" || value === "error";
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isJson(value: unknown): value is Json {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "boolean"
+  ) {
+    return true;
+  }
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isJson);
+  if (!isObject(value)) return false;
+  return Object.values(value).every(isJson);
+}
+
+function isJsonObject(value: unknown): value is JsonObject {
+  return isObject(value) && Object.values(value).every(isJson);
+}
+
+function isFieldChange(value: unknown): value is FieldChange {
+  if (!isObject(value) || typeof value.field !== "string") return false;
+  const isValue = (candidate: unknown) =>
+    candidate === null ||
+    typeof candidate === "string" ||
+    typeof candidate === "number" ||
+    typeof candidate === "boolean";
+  return isValue(value.from) && isValue(value.to);
+}
+
+function hasBaseRecord(
+  value: Record<string, unknown>,
+): value is Record<string, unknown> & EventLogRecordBase {
+  return (
+    typeof value.id === "string" &&
+    typeof value.event === "string" &&
+    typeof value.timestamp === "number" &&
+    Number.isFinite(value.timestamp) &&
+    isJsonObject(value.properties)
+  );
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === "string";
+}
+
+export function parseEventLogRecord(value: unknown): EventLogRecord | null {
+  if (!isObject(value) || !hasBaseRecord(value)) return null;
+
+  if (value.table === "DOMAIN_EVENT") {
+    if (!isNullableString(value.actorUserId) || !isObject(value.entity)) {
+      return null;
+    }
+    if (
+      typeof value.entity.type !== "string" ||
+      typeof value.entity.id !== "string" ||
+      !Array.isArray(value.changes) ||
+      !value.changes.every(isFieldChange)
+    ) {
+      return null;
+    }
+    return {
+      id: value.id,
+      table: value.table,
+      event: value.event,
+      timestamp: value.timestamp,
+      properties: value.properties,
+      actorUserId: value.actorUserId,
+      entity: { type: value.entity.type, id: value.entity.id },
+      changes: value.changes,
+    };
+  }
+
+  if (value.table === "ACTION_LOG") {
+    if (
+      !isNullableString(value.actorUserId) ||
+      typeof value.status !== "string" ||
+      !isEventLogStatus(value.status) ||
+      typeof value.durationMs !== "number" ||
+      !Number.isFinite(value.durationMs)
+    ) {
+      return null;
+    }
+    return {
+      id: value.id,
+      table: value.table,
+      event: value.event,
+      timestamp: value.timestamp,
+      properties: value.properties,
+      actorUserId: value.actorUserId,
+      status: value.status,
+      durationMs: value.durationMs,
+    };
+  }
+
+  if (value.table !== "AUTH_EVENT") return null;
+  if (
+    !isNullableString(value.screen) ||
+    !isNullableString(value.method) ||
+    typeof value.outcome !== "string"
+  ) {
+    return null;
+  }
+  return {
+    id: value.id,
+    table: value.table,
+    event: value.event,
+    timestamp: value.timestamp,
+    properties: value.properties,
+    screen: value.screen,
+    method: value.method,
+    outcome: value.outcome,
+  };
+}
+
+export function parseEventLogRecordText(raw: string): EventLogRecord | null {
+  try {
+    return parseEventLogRecord(JSON.parse(raw));
+  } catch {
+    return null;
+  }
 }
 
 export function encodeEventLogCursor(cursor: EventLogCursor): string {

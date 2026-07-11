@@ -66,8 +66,11 @@ export function createEventLogsService(db: Kysely<Database>) {
     first: number,
   ): Promise<EventLogQueryResult> {
     const window = resolveWindow(filters);
+    const from = window.from;
+    const to = window.to;
     const eventType = filters?.eventType?.trim();
     const actorUserId = filters?.actorUserId?.trim();
+    const actorId = actorUserId ? UserId.trust(actorUserId) : undefined;
     const onlyHighRisk = filters?.onlyHighRisk === true;
 
     let query = db
@@ -77,34 +80,7 @@ export function createEventLogsService(db: Kysely<Database>) {
         "policy.action",
         "events.type",
       )
-      .selectAll("events")
-      .$if(window.from !== undefined, (qb) =>
-        qb.where("events.occurred_at", ">=", window.from as Date),
-      )
-      .$if(window.to !== undefined, (qb) =>
-        qb.where("events.occurred_at", "<=", window.to as Date),
-      )
-      .$if(eventType !== undefined && eventType.length > 0, (qb) =>
-        qb.where("events.type", "ilike", `%${eventType}%`),
-      )
-      .$if(actorUserId !== undefined && actorUserId.length > 0, (qb) =>
-        qb.where(
-          "events.actor_user_id",
-          "=",
-          UserId.trust(actorUserId as string),
-        ),
-      )
-      .$if(onlyHighRisk, (qb) =>
-        qb.where((eb) =>
-          eb.or([
-            eb("policy.action", "is", null),
-            eb.and([
-              eb("policy.risk_level", "=", "high"),
-              eb("policy.is_active", "=", true),
-            ]),
-          ]),
-        ),
-      );
+      .selectAll("events");
 
     let countQuery = db
       .selectFrom("events")
@@ -113,34 +89,45 @@ export function createEventLogsService(db: Kysely<Database>) {
         "policy.action",
         "events.type",
       )
-      .select((eb) => eb.fn.countAll<number>().as("count"))
-      .$if(window.from !== undefined, (qb) =>
-        qb.where("events.occurred_at", ">=", window.from as Date),
-      )
-      .$if(window.to !== undefined, (qb) =>
-        qb.where("events.occurred_at", "<=", window.to as Date),
-      )
-      .$if(eventType !== undefined && eventType.length > 0, (qb) =>
-        qb.where("events.type", "ilike", `%${eventType}%`),
-      )
-      .$if(actorUserId !== undefined && actorUserId.length > 0, (qb) =>
-        qb.where(
-          "events.actor_user_id",
-          "=",
-          UserId.trust(actorUserId as string),
-        ),
-      )
-      .$if(onlyHighRisk, (qb) =>
-        qb.where((eb) =>
-          eb.or([
-            eb("policy.action", "is", null),
-            eb.and([
-              eb("policy.risk_level", "=", "high"),
-              eb("policy.is_active", "=", true),
-            ]),
+      .select((eb) => eb.fn.countAll<number>().as("count"));
+
+    if (from) {
+      query = query.where("events.occurred_at", ">=", from);
+      countQuery = countQuery.where("events.occurred_at", ">=", from);
+    }
+    if (to) {
+      query = query.where("events.occurred_at", "<=", to);
+      countQuery = countQuery.where("events.occurred_at", "<=", to);
+    }
+    if (eventType) {
+      const pattern = `%${eventType}%`;
+      query = query.where("events.type", "ilike", pattern);
+      countQuery = countQuery.where("events.type", "ilike", pattern);
+    }
+    if (actorId) {
+      query = query.where("events.actor_user_id", "=", actorId);
+      countQuery = countQuery.where("events.actor_user_id", "=", actorId);
+    }
+    if (onlyHighRisk) {
+      query = query.where((eb) =>
+        eb.or([
+          eb("policy.action", "is", null),
+          eb.and([
+            eb("policy.risk_level", "=", "high"),
+            eb("policy.is_active", "=", true),
           ]),
-        ),
+        ]),
       );
+      countQuery = countQuery.where((eb) =>
+        eb.or([
+          eb("policy.action", "is", null),
+          eb.and([
+            eb("policy.risk_level", "=", "high"),
+            eb("policy.is_active", "=", true),
+          ]),
+        ]),
+      );
+    }
 
     if (cursor) {
       const cursorDate = new Date(cursor.timestamp);
@@ -164,11 +151,7 @@ export function createEventLogsService(db: Kysely<Database>) {
       countQuery.executeTakeFirst(),
     ]);
 
-    return buildPage(
-      rows.map(mapDomainEventRow),
-      Number(countRow?.count ?? 0),
-      first,
-    );
+    return buildPage(rows.map(mapDomainEventRow), countRow?.count ?? 0, first);
   }
 
   async function queryAction(
@@ -177,47 +160,40 @@ export function createEventLogsService(db: Kysely<Database>) {
     first: number,
   ): Promise<EventLogQueryResult> {
     const window = resolveWindow(filters);
+    const from = window.from;
+    const to = window.to;
     const eventType = filters?.eventType?.trim();
     const actorUserId = filters?.actorUserId?.trim();
-    const status = filters?.status?.trim();
+    const actorId = actorUserId ? UserId.trust(actorUserId) : undefined;
+    const status = filters?.status;
 
-    let query = db
-      .selectFrom("action_observations")
-      .selectAll()
-      .$if(window.from !== undefined, (qb) =>
-        qb.where("created_at", ">=", window.from as Date),
-      )
-      .$if(window.to !== undefined, (qb) =>
-        qb.where("created_at", "<=", window.to as Date),
-      )
-      .$if(eventType !== undefined && eventType.length > 0, (qb) =>
-        qb.where("action_name", "ilike", `%${eventType}%`),
-      )
-      .$if(actorUserId !== undefined && actorUserId.length > 0, (qb) =>
-        qb.where("actor_user_id", "=", UserId.trust(actorUserId as string)),
-      )
-      .$if(status === "ok" || status === "error", (qb) =>
-        qb.where("status", "=", status as "ok" | "error"),
-      );
+    let query = db.selectFrom("action_observations").selectAll();
 
-    const countQuery = db
+    let countQuery = db
       .selectFrom("action_observations")
-      .select((eb) => eb.fn.countAll<number>().as("count"))
-      .$if(window.from !== undefined, (qb) =>
-        qb.where("created_at", ">=", window.from as Date),
-      )
-      .$if(window.to !== undefined, (qb) =>
-        qb.where("created_at", "<=", window.to as Date),
-      )
-      .$if(eventType !== undefined && eventType.length > 0, (qb) =>
-        qb.where("action_name", "ilike", `%${eventType}%`),
-      )
-      .$if(actorUserId !== undefined && actorUserId.length > 0, (qb) =>
-        qb.where("actor_user_id", "=", UserId.trust(actorUserId as string)),
-      )
-      .$if(status === "ok" || status === "error", (qb) =>
-        qb.where("status", "=", status as "ok" | "error"),
-      );
+      .select((eb) => eb.fn.countAll<number>().as("count"));
+
+    if (from) {
+      query = query.where("created_at", ">=", from);
+      countQuery = countQuery.where("created_at", ">=", from);
+    }
+    if (to) {
+      query = query.where("created_at", "<=", to);
+      countQuery = countQuery.where("created_at", "<=", to);
+    }
+    if (eventType) {
+      const pattern = `%${eventType}%`;
+      query = query.where("action_name", "ilike", pattern);
+      countQuery = countQuery.where("action_name", "ilike", pattern);
+    }
+    if (actorId) {
+      query = query.where("actor_user_id", "=", actorId);
+      countQuery = countQuery.where("actor_user_id", "=", actorId);
+    }
+    if (status) {
+      query = query.where("status", "=", status);
+      countQuery = countQuery.where("status", "=", status);
+    }
 
     if (cursor) {
       const cursorDate = new Date(cursor.timestamp);
@@ -240,7 +216,7 @@ export function createEventLogsService(db: Kysely<Database>) {
 
     return buildPage(
       rows.map(mapActionObservationRow),
-      Number(countRow?.count ?? 0),
+      countRow?.count ?? 0,
       first,
     );
   }
@@ -251,33 +227,29 @@ export function createEventLogsService(db: Kysely<Database>) {
     first: number,
   ): Promise<EventLogQueryResult> {
     const window = resolveWindow(filters);
+    const from = window.from;
+    const to = window.to;
     const eventType = filters?.eventType?.trim();
 
-    let query = db
-      .selectFrom("auth_funnel_events")
-      .selectAll()
-      .$if(window.from !== undefined, (qb) =>
-        qb.where("created_at", ">=", window.from as Date),
-      )
-      .$if(window.to !== undefined, (qb) =>
-        qb.where("created_at", "<=", window.to as Date),
-      )
-      .$if(eventType !== undefined && eventType.length > 0, (qb) =>
-        qb.where(sql<boolean>`event_name ilike ${`%${eventType}%`}`),
-      );
+    let query = db.selectFrom("auth_funnel_events").selectAll();
 
-    const countQuery = db
+    let countQuery = db
       .selectFrom("auth_funnel_events")
-      .select((eb) => eb.fn.countAll<number>().as("count"))
-      .$if(window.from !== undefined, (qb) =>
-        qb.where("created_at", ">=", window.from as Date),
-      )
-      .$if(window.to !== undefined, (qb) =>
-        qb.where("created_at", "<=", window.to as Date),
-      )
-      .$if(eventType !== undefined && eventType.length > 0, (qb) =>
-        qb.where(sql<boolean>`event_name ilike ${`%${eventType}%`}`),
-      );
+      .select((eb) => eb.fn.countAll<number>().as("count"));
+
+    if (from) {
+      query = query.where("created_at", ">=", from);
+      countQuery = countQuery.where("created_at", ">=", from);
+    }
+    if (to) {
+      query = query.where("created_at", "<=", to);
+      countQuery = countQuery.where("created_at", "<=", to);
+    }
+    if (eventType) {
+      const predicate = sql<boolean>`event_name ilike ${`%${eventType}%`}`;
+      query = query.where(predicate);
+      countQuery = countQuery.where(predicate);
+    }
 
     if (cursor) {
       const cursorDate = new Date(cursor.timestamp);
@@ -300,7 +272,7 @@ export function createEventLogsService(db: Kysely<Database>) {
 
     return buildPage(
       rows.map(mapAuthFunnelEventRow),
-      Number(countRow?.count ?? 0),
+      countRow?.count ?? 0,
       first,
     );
   }

@@ -18,15 +18,15 @@ import type { EventLogColumn } from "../model/event-log-sources";
 import styles from "./event-log-results-table.module.css";
 
 type ResultsProps = {
-  columns: EventLogColumn[];
+  columns: readonly EventLogColumn[];
   records: EventLogRecord[];
   loading: boolean;
   hasNextPage: boolean;
-  onLoadMore: () => void;
+  onLoadMore: () => Promise<void>;
 };
 
 function buildGridTemplateColumns(
-  columns: EventLogColumn[],
+  columns: readonly EventLogColumn[],
   widths: Record<string, number>,
 ): string {
   return columns
@@ -84,7 +84,7 @@ function ResultsBody(props: ResultsProps) {
       (entries) => {
         const entry = entries[0];
         if (entry?.isIntersecting && props.hasNextPage && !props.loading) {
-          props.onLoadMore();
+          void props.onLoadMore();
         }
       },
       { root: root ?? null, rootMargin: "400px" },

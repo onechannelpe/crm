@@ -1,7 +1,6 @@
 import {
   createEffect,
   createMemo,
-  createResource,
   createSignal,
   on,
   type Accessor,
@@ -11,54 +10,42 @@ import { getEventLogs } from "~/actions/audit/event-logs";
 import type {
   EventLogQueryInput,
   EventLogQueryResult,
-  EventLogRecord,
 } from "~/contracts/event-logs/event-log";
-import { eventLogsQuery } from "~/lib/queries/event-logs";
 
 type BaseInput = Omit<EventLogQueryInput, "after">;
 
-export function useQueryEventLogs(baseInput: Accessor<BaseInput>) {
+export function useQueryEventLogs(
+  baseInput: Accessor<BaseInput>,
+  firstPage: Accessor<EventLogQueryResult | undefined>,
+) {
   const [extraPages, setExtraPages] = createSignal<EventLogQueryResult[]>([]);
   const [loadingMore, setLoadingMore] = createSignal(false);
 
-  const [firstPage] = createResource(baseInput, (input) =>
-    eventLogsQuery({ ...input, after: undefined }),
-  );
-
   createEffect(on(baseInput, () => setExtraPages([]), { defer: true }));
-
-  const pages = createMemo<EventLogQueryResult[]>(() => {
-    const first = firstPage.latest;
-    return first ? [first, ...extraPages()] : extraPages();
-  });
-
-  const records = createMemo<EventLogRecord[]>(() =>
-    pages().flatMap((page) => page.records),
+  const pages = createMemo(() =>
+    firstPage() ? [firstPage()!, ...extraPages()] : extraPages(),
   );
-
-  const lastPage = (): EventLogQueryResult | undefined => pages().at(-1);
-  const hasNextPage = (): boolean => lastPage()?.pageInfo.hasNextPage ?? false;
-  const totalCount = (): number => firstPage.latest?.totalCount ?? 0;
-  const loading = (): boolean => firstPage.loading || loadingMore();
-
-  const error = (): Error | null => {
-    const err = firstPage.error;
-    if (err instanceof Error) return err;
-    if (err === undefined || err === null) return null;
-    return new Error(String(err));
-  };
+  const records = createMemo(() => pages().flatMap((page) => page.records));
+  const lastPage = () => pages().at(-1);
+  const hasNextPage = () => lastPage()?.pageInfo.hasNextPage ?? false;
 
   async function loadMore(): Promise<void> {
     const cursor = lastPage()?.pageInfo.endCursor;
-    if (!hasNextPage() || loading() || !cursor) return;
+    if (!hasNextPage() || loadingMore() || !cursor) return;
     setLoadingMore(true);
     try {
-      const next = await getEventLogs({ ...baseInput(), after: cursor });
-      setExtraPages((previous) => [...previous, next]);
+      const page = await getEventLogs({ ...baseInput(), after: cursor });
+      setExtraPages((previous) => [...previous, page]);
     } finally {
       setLoadingMore(false);
     }
   }
 
-  return { records, totalCount, hasNextPage, loading, error, loadMore };
+  return {
+    records,
+    totalCount: () => firstPage()?.totalCount ?? 0,
+    hasNextPage,
+    loading: () => firstPage() === undefined || loadingMore(),
+    loadMore,
+  };
 }

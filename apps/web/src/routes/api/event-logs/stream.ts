@@ -61,12 +61,12 @@ export async function GET(
         cursor,
         REPLAY_LIMIT,
       );
-    for (const record of missed) {
-      await stream.push({
+    await stream.push(
+      missed.map((record) => ({
         id: recordCursor(record),
         data: JSON.stringify(record),
-      });
-    }
+      })),
+    );
   }
 
   return stream.send();
