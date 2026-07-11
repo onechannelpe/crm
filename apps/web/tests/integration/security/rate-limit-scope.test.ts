@@ -1,10 +1,20 @@
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { createSecurityTestKit } from "@tests/support/security/kit";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import {
   ACTION_RATE_LIMIT_POLICY,
@@ -15,32 +25,49 @@ import { ActionError } from "~/lib/wire-error";
 describe("rate limit scope isolation", () => {
   let ctx: TestDbContext;
 
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("rate-limit-scope");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
   beforeEach(async () => {
+    await resetTestDb(ctx);
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(1_700_000_000_000);
-    ctx = await createIsolatedTestDb("rate-limit-scope");
   });
 
   afterEach(async () => {
     vi.useRealTimers();
-    await cleanupTestDb(ctx);
   });
 
   it("isolates counters by user", async () => {
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
+    await kit.consumeUserLimit(
+      "leads.request",
+      ctx.fixtures.users.execOne.id,
+      "198.51.100.1",
+    );
 
     await expect(
-      checkActionRateLimit("leads.request", 2, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "leads.request",
+        ctx.fixtures.users.backOne.id,
+        ctx.repos,
+        "198.51.100.1",
+      ),
     ).resolves.toBeUndefined();
   });
 
   it("keeps user counter ip agnostic", async () => {
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     await expect(
-      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.2"),
+      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.2"),
     ).rejects.toBeInstanceOf(ActionError);
   });
 
@@ -49,18 +76,34 @@ describe("rate limit scope isolation", () => {
     await kit.consumeIpLimit("leads.request", "198.51.100.99");
 
     await expect(
-      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.99"),
+      checkActionRateLimit(
+        "leads.request",
+        ctx.fixtures.users.execOne.id,
+        ctx.repos,
+        "198.51.100.99",
+      ),
     ).rejects.toBeInstanceOf(ActionError);
   });
 
   it("isolates counters by action name", async () => {
     const { userLimit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
+    const userId = ctx.fixtures.users.execOne.id;
     for (let index = 0; index < userLimit; index += 1) {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx.repos,
+        "198.51.100.1",
+      );
     }
 
     await expect(
-      checkActionRateLimit("team.invite.create", 1, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "team.invite.create",
+        userId,
+        ctx.repos,
+        "198.51.100.1",
+      ),
     ).resolves.toBeUndefined();
   });
 });

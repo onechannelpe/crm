@@ -1,9 +1,19 @@
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import {
   ACTION_RATE_LIMIT_POLICY,
@@ -13,19 +23,26 @@ import {
 describe("rate limit audit", () => {
   let ctx: TestDbContext;
 
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("rate-limit-audit");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
   beforeEach(async () => {
+    await resetTestDb(ctx);
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(1_700_000_000_000);
-    ctx = await createIsolatedTestDb("rate-limit-audit");
   });
 
   afterEach(async () => {
     vi.useRealTimers();
-    await cleanupTestDb(ctx);
   });
 
   it("logs a rate_limit_exceeded audit entry on violation", async () => {
-    const userId = 1;
+    const userId = ctx.fixtures.users.execOne.id;
     const { userLimit } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     for (let index = 0; index < userLimit; index += 1) {
       await checkActionRateLimit(
@@ -40,10 +57,10 @@ describe("rate limit audit", () => {
       checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
     ).rejects.toBeDefined();
 
-    const now = Date.now();
+    const now = new Date();
     const logs = await ctx.repos.events.listRecent({
-      fromInclusive: now - 1000,
-      toInclusive: now + 1000,
+      fromInclusive: new Date(now.getTime() - 1000),
+      toInclusive: new Date(now.getTime() + 1000),
       limit: 10,
       actorUserId: userId,
     });
@@ -51,15 +68,23 @@ describe("rate limit audit", () => {
     expect(entry).toBeDefined();
     expect(entry?.entity_type).toBe("user");
     expect(entry?.entity_id).toBe(String(userId));
-    expect(entry?.payload_json).toContain('"actionName":"leads.request"');
-    expect(entry?.payload_json).toContain('"scope":"user"');
-    expect(entry?.payload_json).toContain('"retryAfterMs"');
+    expect(entry?.payload_json).toMatchObject({
+      actionName: "leads.request",
+      scope: "user",
+    });
+    expect(entry?.payload_json).toHaveProperty("retryAfterMs");
   });
 
   it("cleans up stale counters", async () => {
-    await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await checkActionRateLimit(
+      "leads.request",
+      userId,
+      ctx.repos,
+      "198.51.100.1",
+    );
     const deleted = await ctx.repos.actionRateLimits.deleteUpdatedBefore(
-      Date.now() + 1,
+      new Date(Date.now() + 1),
     );
     expect(deleted).toBeGreaterThanOrEqual(1);
   });

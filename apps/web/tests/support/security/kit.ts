@@ -4,12 +4,13 @@ import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
 } from "~/lib/security/action-rate-limit";
+import type { UserId } from "~/server/shared/ids";
 
 export function createSecurityTestKit(ctx: TestDbContext) {
   return {
     async consumeUserLimit(
       actionName: keyof typeof ACTION_RATE_LIMIT_POLICY,
-      userId: number,
+      userId: UserId,
       ipAddress: string,
     ) {
       const { userLimit } = ACTION_RATE_LIMIT_POLICY[actionName];
@@ -22,10 +23,17 @@ export function createSecurityTestKit(ctx: TestDbContext) {
       ipAddress: string,
     ) {
       const { sourceIpLimit } = ACTION_RATE_LIMIT_POLICY[actionName];
+      const userIds = [
+        ctx.fixtures.users.execOne.id,
+        ctx.fixtures.users.backOne.id,
+        ctx.fixtures.users.execTwo.id,
+        ctx.fixtures.users.backTwo.id,
+        ctx.fixtures.users.superUser.id,
+      ];
       for (let index = 0; index < sourceIpLimit; index += 1) {
         await checkActionRateLimit(
           actionName,
-          (index % 5) + 1,
+          userIds[index % userIds.length],
           ctx.repos,
           ipAddress,
         );

@@ -1,10 +1,20 @@
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { createSecurityTestKit } from "@tests/support/security/kit";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import {
   ACTION_RATE_LIMIT_POLICY,
@@ -15,24 +25,37 @@ import { ActionError } from "~/lib/wire-error";
 describe("rate limit retry after", () => {
   let ctx: TestDbContext;
 
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("rate-limit-retry-after");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
   beforeEach(async () => {
+    await resetTestDb(ctx);
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(1_700_000_000_000);
-    ctx = await createIsolatedTestDb("rate-limit-retry-after");
   });
 
   afterEach(async () => {
     vi.useRealTimers();
-    await cleanupTestDb(ctx);
   });
 
   it("returns 429 with retry after header on block", async () => {
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     let blocked: ActionError | undefined;
     try {
-      await checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1");
+      await checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx.repos,
+        "198.51.100.1",
+      );
     } catch (error) {
       if (error instanceof ActionError) blocked = error;
     }
@@ -50,13 +73,14 @@ describe("rate limit retry after", () => {
   it("retry after decreases as window elapses", async () => {
     const { windowMs } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     const getRetryAfter = async () => {
       try {
         await checkActionRateLimit(
           "leads.request",
-          1,
+          userId,
           ctx.repos,
           "198.51.100.1",
         );
@@ -79,11 +103,12 @@ describe("rate limit retry after", () => {
   it("resets the counter after window expires", async () => {
     const { windowMs } = ACTION_RATE_LIMIT_POLICY["leads.request"];
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     vi.setSystemTime(Date.now() + windowMs + 1);
     await expect(
-      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
     ).resolves.toBeUndefined();
   });
 });

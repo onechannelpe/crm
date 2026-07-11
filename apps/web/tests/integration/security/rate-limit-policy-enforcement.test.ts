@@ -1,10 +1,20 @@
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { createSecurityTestKit } from "@tests/support/security/kit";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import {
   ACTION_RATE_LIMIT_POLICY,
@@ -15,32 +25,46 @@ import { ActionError } from "~/lib/wire-error";
 describe("rate limit policy enforcement", () => {
   let ctx: TestDbContext;
 
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("rate-limit-policy-enforcement");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
   beforeEach(async () => {
+    await resetTestDb(ctx);
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(1_700_000_000_000);
-    ctx = await createIsolatedTestDb("rate-limit-policy-enforcement");
   });
 
   afterEach(async () => {
     vi.useRealTimers();
-    await cleanupTestDb(ctx);
   });
 
   it("allows requests up to the per action limit", async () => {
+    const userId = ctx.fixtures.users.execOne.id;
     const userLimit = ACTION_RATE_LIMIT_POLICY["leads.request"].userLimit;
     for (let index = 0; index < userLimit; index += 1) {
       await expect(
-        checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
+        checkActionRateLimit(
+          "leads.request",
+          userId,
+          ctx.repos,
+          "198.51.100.1",
+        ),
       ).resolves.toBeUndefined();
     }
   });
 
   it("blocks the next request after limit is reached", async () => {
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("leads.request", 1, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     await expect(
-      checkActionRateLimit("leads.request", 1, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
     ).rejects.toBeInstanceOf(ActionError);
   });
 
@@ -49,11 +73,17 @@ describe("rate limit policy enforcement", () => {
     expect(windowMs).toBe(60 * 60_000);
 
     const kit = createSecurityTestKit(ctx);
-    await kit.consumeUserLimit("team.invite.create", 1, "198.51.100.1");
+    const userId = ctx.fixtures.users.execOne.id;
+    await kit.consumeUserLimit("team.invite.create", userId, "198.51.100.1");
 
     vi.setSystemTime(Date.now() + 30 * 60_000);
     await expect(
-      checkActionRateLimit("team.invite.create", 1, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "team.invite.create",
+        userId,
+        ctx.repos,
+        "198.51.100.1",
+      ),
     ).rejects.toBeInstanceOf(ActionError);
   });
 });
