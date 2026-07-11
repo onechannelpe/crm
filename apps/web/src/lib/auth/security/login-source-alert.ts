@@ -29,7 +29,7 @@ export async function sendAlertOnNewLoginSource(params: {
   const knownIp = await params.deps.authEvents.hasRecentSuccessFromIp(
     params.user.id,
     ipHash,
-    Date.now() - LOOKBACK_MS,
+    new Date(Date.now() - LOOKBACK_MS),
   );
   if (knownIp) {
     return;
@@ -42,6 +42,6 @@ export async function sendAlertOnNewLoginSource(params: {
     role: params.user.role,
     ipAddress: params.ipAddress,
     method: params.method,
-    occurredAt: Date.now(),
+    occurredAt: new Date(),
   });
 }

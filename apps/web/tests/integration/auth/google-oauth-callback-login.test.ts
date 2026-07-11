@@ -1,6 +1,14 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
@@ -29,13 +37,17 @@ describe("google oauth callback login", () => {
     userAgent: "vitest-agent",
   };
 
-  beforeEach(async () => {
-    vi.clearAllMocks();
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
+    vi.clearAllMocks();
   });
 
   it("returns bad_request when callback state does not match", async () => {

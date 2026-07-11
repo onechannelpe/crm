@@ -6,6 +6,7 @@ import { installSession } from "~/actions/auth/install-session";
 import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import type { AuthLoginFlowId } from "~/server/shared/ids";
 
 export function readPasskeyStartMode(
   formData: FormData,
@@ -32,7 +33,7 @@ export function readLoginText(
 export function readLoginFlowId(
   formData: FormData,
   field: "flowId",
-): number | null {
+): AuthLoginFlowId | null {
   const value = formData.get(field);
 
   return typeof value === "string" ? parseLoginFlowId(value) : null;

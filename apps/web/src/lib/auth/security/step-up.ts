@@ -18,7 +18,7 @@ export function checkRecentStrongAuth(
     return Err(fail("strong_auth_required"));
   }
 
-  if (Date.now() - session.strongAuthAt > maxAgeMs) {
+  if (Date.now() - session.strongAuthAt.getTime() > maxAgeMs) {
     return Err(fail("strong_auth_expired"));
   }
 

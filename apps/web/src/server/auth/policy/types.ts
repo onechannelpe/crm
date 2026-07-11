@@ -24,7 +24,7 @@ export type LoginDecision =
       kind: "issue_session";
       sessionClass: SessionClass;
       strongAuthMethod: StrongAuthMethod | null;
-      strongAuthAt: number | null;
+      strongAuthAt: Date | null;
     }
   | {
       kind: "require_totp";

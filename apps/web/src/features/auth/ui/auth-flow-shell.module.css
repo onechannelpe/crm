@@ -24,9 +24,9 @@
   justify-content: center;
   padding: 40px;
   text-align: center;
-  border: var(--panel-border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--panel-bg);
+  background: var(--surface);
   box-shadow: var(--shadow-elevation-2);
 }
 

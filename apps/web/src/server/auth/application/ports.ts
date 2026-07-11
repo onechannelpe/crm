@@ -1,23 +1,25 @@
+import type { UserId } from "~/server/shared/ids";
+
 export interface AdminSessionRevocationPort {
   revokeSession(sessionId: string): Promise<void>;
-  revokeUserSessions(userId: number): Promise<void>;
+  revokeUserSessions(userId: UserId): Promise<void>;
   revokeInstallationSessionsByAuthSession(
     sessionId: string,
-    now: number,
+    now: Date,
   ): Promise<void>;
-  revokeInstallationSessionsByUser(userId: number, now: number): Promise<void>;
+  revokeInstallationSessionsByUser(userId: UserId, now: Date): Promise<void>;
   updateExecutiveSyncHealth(input: {
-    userId: number;
+    userId: UserId;
     syncHealth: "ok" | "stale" | "reauth_required";
-    syncUpdatedAt: number;
+    syncUpdatedAt: Date;
   }): Promise<void>;
   appendEvent(input: {
     type: string;
     entityType: string;
     entityId: string;
-    actorUserId: number;
+    actorUserId: UserId;
     payload?: unknown;
-    occurredAt: number;
+    occurredAt: Date;
   }): Promise<void>;
 }
 
@@ -25,20 +27,20 @@ export interface AuthSessionLogoutPort {
   revokeSession(sessionId: string): Promise<void>;
   revokeInstallationSessionsByAuthSession(
     sessionId: string,
-    now: number,
+    now: Date,
   ): Promise<void>;
   updateExecutiveSyncHealth(input: {
-    userId: number;
+    userId: UserId;
     syncHealth: "ok" | "stale" | "reauth_required";
-    syncUpdatedAt: number;
+    syncUpdatedAt: Date;
   }): Promise<void>;
   clearSessionCookie(): void;
   appendEvent(input: {
     type: string;
     entityType: string;
     entityId: string;
-    actorUserId: number;
+    actorUserId: UserId;
     payload?: unknown;
-    occurredAt: number;
+    occurredAt: Date;
   }): Promise<void>;
 }

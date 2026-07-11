@@ -7,13 +7,14 @@ import {
   createTestPasskeyProvider,
   createWebauthnProviderWithAuth,
 } from "@tests/support/passkey/api";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import {
   createPasskeyLoginFinishAuthService,
   createPasskeyLoginStartAuthService,
 } from "~/server/auth/factors/passkey/service";
+import { AuthLoginFlowId } from "~/server/shared/ids";
 
 const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
@@ -23,12 +24,16 @@ describe("passkey authentication", () => {
   const execOne = getSeededIdentity("execOne");
   const backOne = getSeededIdentity("backOne");
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("begin identified login creates authentication challenge", async () => {
@@ -45,7 +50,9 @@ describe("passkey authentication", () => {
     const value = expectOk(result);
 
     expect(value.mode).toBe("identified");
-    const flow = await scenario.ctx.repos.loginFlows.findById(value.id);
+    const flow = await scenario.ctx.repos.loginFlows.findById(
+      AuthLoginFlowId.trust(value.id),
+    );
     const challenge = flow?.challenge_id
       ? await scenario.ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
@@ -64,7 +71,9 @@ describe("passkey authentication", () => {
     const value = expectOk(result);
 
     expect(value.mode).toBe("discoverable");
-    const flow = await scenario.ctx.repos.loginFlows.findById(value.id);
+    const flow = await scenario.ctx.repos.loginFlows.findById(
+      AuthLoginFlowId.trust(value.id),
+    );
     const challenge = flow?.challenge_id
       ? await scenario.ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
@@ -134,7 +143,7 @@ describe("passkey authentication", () => {
       scenario.ctx.repos,
       { webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos) },
     ).finishLogin({
-      flowId: 0,
+      flowId: AuthLoginFlowId.trust("01974fd5-f261-7a7d-93f5-2f3d0f96f101"),
       response: buildAssertionResponse("passkey-1"),
       ipAddress,
       userAgent: "vitest-agent",

@@ -1,3 +1,5 @@
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+
 import type { Role } from "./rbac";
 import {
   getWorkspaceScopeForRole,
@@ -6,36 +8,36 @@ import {
 } from "./workspace-scope";
 
 interface TeamRecord {
-  id: number;
+  id: TeamId;
   name: string;
-  branch_id: number;
+  branch_id: BranchId;
 }
 
 interface ManagedTeamRecord {
-  id: number;
+  id: TeamId;
   name: string;
-  branch_id: number;
+  branch_id: BranchId;
 }
 
 export interface WorkspaceIdentity {
   scopeType: WorkspaceScopeType;
-  team: { id: number; name: string } | null;
-  supervisor: { id: number; names: string } | null;
-  branch: { id: number; name: string } | null;
+  team: { id: TeamId; name: string } | null;
+  supervisor: { id: UserId; names: string } | null;
+  branch: { id: BranchId; name: string } | null;
 }
 
 interface ResolveWorkspaceContextInput {
   role: Role;
-  userId: number;
-  branchId: number;
+  userId: UserId;
+  branchId: BranchId;
   branchName: string | null;
-  userTeamId: number | null;
+  userTeamId: TeamId | null;
   assignedTeam: TeamRecord | null;
   managedTeam: ManagedTeamRecord | null;
-  branchSupervisors: Array<{ id: number; user_id: number; names: string }>;
+  branchSupervisors: Array<{ id: string; user_id: UserId; names: string }>;
 }
 
-function createTeam(team: { id: number; name: string } | null) {
+function createTeam(team: { id: TeamId; name: string } | null) {
   if (!team) return null;
   return { id: team.id, name: team.name };
 }

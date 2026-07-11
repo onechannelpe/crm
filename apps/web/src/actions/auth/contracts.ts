@@ -8,7 +8,7 @@ import type {
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 
 export interface CurrentUserView {
-  id: number;
+  id: string;
   email: string;
   names: string;
   firstSurname: string;
@@ -26,11 +26,11 @@ export interface CurrentUserView {
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
-  branchId: number;
+  branchId: string;
   scopeType: WorkspaceScopeType;
-  team: { id: number; name: string } | null;
-  supervisor: { id: number; names: string } | null;
-  branch: { id: number; name: string } | null;
+  team: { id: string; name: string } | null;
+  supervisor: { id: string; names: string } | null;
+  branch: { id: string; name: string } | null;
 }
 
 export type PasswordLoginSubmissionResult = {
@@ -44,7 +44,7 @@ export type PasskeyStartSubmissionResult = {
 
 export interface SessionInfo {
   id: string;
-  userId: number;
+  userId: string;
   userEmail: string;
   userName: string;
   role: Role;

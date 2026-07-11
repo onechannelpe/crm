@@ -22,7 +22,7 @@ export function LoginCredentialsForm() {
 
   const [username, setUsername] = createSignal("");
   const [handledPasskeyFlowId, setHandledPasskeyFlowId] = createSignal<
-    number | null
+    string | null
   >(null);
 
   let usernameInputRef: HTMLInputElement | undefined;

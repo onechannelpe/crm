@@ -19,7 +19,7 @@ export type UserSessionRow = Selectable<Database["user_sessions"]>;
 
 export interface AuthContextUsersPort {
   findById(userId: UserId): Promise<Selectable<UsersTable> | undefined>;
-  deactivateIfExpired(userId: UserId, now: number): Promise<boolean>;
+  deactivateIfExpired(userId: UserId, now: Date): Promise<boolean>;
 }
 
 export interface AuthContextDeps {
@@ -31,8 +31,8 @@ export interface AuthContextDeps {
 export interface SessionRepositoryPort {
   create(session: NewUserSessionRow): Promise<void>;
   findById(id: string): Promise<UserSessionRow | null | undefined>;
-  updateActivity(id: string, lastActivity: number): Promise<void>;
-  extendExpiry(id: string, expiresAt: number): Promise<void>;
+  updateActivity(id: string, lastActivity: Date): Promise<void>;
+  extendExpiry(id: string, expiresAt: Date): Promise<void>;
   delete(id: string): Promise<void>;
   deleteAllForUser(userId: UserId): Promise<void>;
 }
@@ -41,9 +41,9 @@ export interface SessionUsersPort {
   findById(
     userId: UserId,
   ): Promise<
-    { id: number; is_active: number; expires_at: number | null } | undefined
+    { id: UserId; is_active: boolean; expires_at: Date | null } | undefined
   >;
-  deactivateIfExpired(userId: UserId, now: number): Promise<boolean>;
+  deactivateIfExpired(userId: UserId, now: Date): Promise<boolean>;
 }
 
 export interface SessionDeps {
@@ -60,5 +60,5 @@ export interface CreateSessionParams {
   userAgent: string | null;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
-  strongAuthAt: number | null;
+  strongAuthAt: Date | null;
 }

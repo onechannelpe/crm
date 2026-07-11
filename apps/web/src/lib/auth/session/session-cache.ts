@@ -15,16 +15,13 @@ interface CachedSession {
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
-  strongAuthAt: number | null;
-  expiresAt: number;
+  strongAuthAt: Date | null;
+  expiresAt: Date;
   cachedUntil: number;
 }
 
-/**
- * In-memory cache for session data.
- * Reduces database queries by caching valid sessions with 5-minute TTL.
- * Cache invalidation happens on logout or session updates.
- */
+// cacheTTL caps staleness when a logout or session update has not yet
+// triggered an explicit delete.
 class SessionCache {
   private cache = new Map<string, CachedSession>();
   private readonly cacheTTL = 5 * 60 * 1000;
@@ -40,7 +37,7 @@ class SessionCache {
       return null;
     }
 
-    if (cached.expiresAt < now) {
+    if (cached.expiresAt.getTime() < now) {
       this.cache.delete(sessionId);
       return null;
     }
@@ -74,7 +71,7 @@ class SessionCache {
   cleanup(): void {
     const now = Date.now();
     for (const [key, value] of this.cache.entries()) {
-      if (value.cachedUntil < now || value.expiresAt < now) {
+      if (value.cachedUntil < now || value.expiresAt.getTime() < now) {
         this.cache.delete(key);
       }
     }
@@ -90,7 +87,7 @@ class SessionCache {
     let valid = 0;
 
     for (const value of this.cache.values()) {
-      if (value.cachedUntil < now || value.expiresAt < now) {
+      if (value.cachedUntil < now || value.expiresAt.getTime() < now) {
         expired++;
       } else {
         valid++;

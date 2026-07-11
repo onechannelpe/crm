@@ -1,4 +1,3 @@
-import { createApiEvent } from "@tests/support/unit/api-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Err, Ok } from "~/server/shared/result";
@@ -38,11 +37,11 @@ describe("GET /api/auth/google/callback", () => {
       Err({ kind: "bad_request" }),
     );
 
-    const response = await GET(
-      createApiEvent(
-        new Request("http://localhost/api/auth/google/callback?state=expected"),
+    const response = await GET({
+      request: new Request(
+        "http://localhost/api/auth/google/callback?state=expected",
       ),
-    );
+    });
 
     expect(response.status).toBe(400);
     expect(await response.text()).toBe("Bad request");
@@ -53,21 +52,19 @@ describe("GET /api/auth/google/callback", () => {
       Err({ kind: "redirect_to_login", error: "strong_auth_required" }),
     );
 
-    const response = await GET(
-      createApiEvent(
-        new Request(
-          "http://localhost/api/auth/google/callback?code=abc&state=expected",
-          {
-            headers: {
-              cookie:
-                "google_oauth_state=expected; google_code_verifier=verifier-123",
-              "user-agent": "vitest-agent",
-              "x-forwarded-for": "198.51.100.24",
-            },
+    const response = await GET({
+      request: new Request(
+        "http://localhost/api/auth/google/callback?code=abc&state=expected",
+        {
+          headers: {
+            cookie:
+              "google_oauth_state=expected; google_code_verifier=verifier-123",
+            "user-agent": "vitest-agent",
+            "x-forwarded-for": "198.51.100.24",
           },
-        ),
+        },
       ),
-    );
+    });
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
@@ -88,20 +85,18 @@ describe("GET /api/auth/google/callback", () => {
       }),
     );
 
-    const response = await GET(
-      createApiEvent(
-        new Request(
-          "http://localhost/api/auth/google/callback?code=abc&state=expected",
-          {
-            headers: {
-              cookie:
-                "google_oauth_state=expected; google_code_verifier=verifier-123",
-              "user-agent": "vitest-agent",
-            },
+    const response = await GET({
+      request: new Request(
+        "http://localhost/api/auth/google/callback?code=abc&state=expected",
+        {
+          headers: {
+            cookie:
+              "google_oauth_state=expected; google_code_verifier=verifier-123",
+            "user-agent": "vitest-agent",
           },
-        ),
+        },
       ),
-    );
+    });
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe("/");

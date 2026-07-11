@@ -4,7 +4,9 @@ import { installSession } from "~/actions/auth/install-session";
 import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-acceptance";
+import { runPublicAction } from "~/server/platform/action/public-action";
 import { getServerRuntime } from "~/server/platform/container";
+import { throwDomain } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 import { getInviteInfo as getInviteInfoService } from "~/server/team/application/invites";
 
@@ -90,18 +92,20 @@ function readStrongPassword(
 export async function getInviteActivationView(
   tokenInput: string,
 ): Promise<InviteActivationView | null> {
-  const safeToken = readInviteToken(tokenInput);
-  if (!safeToken.ok) {
-    return null;
-  }
-  const result = await getInviteInfoService({
-    token: safeToken.value,
-    repos: getServerRuntime().team.invites.repos,
+  return runPublicAction(async () => {
+    const safeToken = readInviteToken(tokenInput);
+    if (!safeToken.ok) {
+      return null;
+    }
+    const result = await getInviteInfoService({
+      token: safeToken.value,
+      repos: getServerRuntime().team.invites.repos,
+    });
+    if (isErr(result)) {
+      throwDomain(result.error);
+    }
+    return result.value;
   });
-  if (isErr(result)) {
-    throw result.error;
-  }
-  return result.value;
 }
 
 export async function acceptInvitePasswordStep(input: {
@@ -109,55 +113,57 @@ export async function acceptInvitePasswordStep(input: {
   password: string;
   confirmPassword?: string;
 }): Promise<AcceptInviteResult> {
-  if (
-    input.confirmPassword !== undefined &&
-    input.password !== input.confirmPassword
-  ) {
-    return {
-      ok: false,
-      code: "password_mismatch",
-      message: "Las contraseñas no coinciden.",
-    };
-  }
-
-  const token = readInviteToken(input.token);
-  if (!token.ok) {
-    return token;
-  }
-  const password = readStrongPassword(input.password);
-  if (!password.ok) {
-    return password;
-  }
-  const request = getRequestClientMetadata();
-
-  const result = await submitInviteAcceptance(
-    getServerRuntime().auth.inviteAcceptance,
-    {
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
-    },
-    { token: token.value, password: password.value },
-  );
-
-  if (isErr(result)) {
-    switch (result.error.code) {
-      case "invite_invalid_or_expired":
-        return {
-          ok: false,
-          code: "invite_invalid_or_expired",
-          message: "Esta invitación no es válida o ya expiró.",
-        };
-      case "invite_target_active":
-        return {
-          ok: false,
-          code: "invite_target_active",
-          message: "Esta cuenta ya fue activada.",
-        };
-      default:
-        throw result.error;
+  return runPublicAction(async () => {
+    if (
+      input.confirmPassword !== undefined &&
+      input.password !== input.confirmPassword
+    ) {
+      return {
+        ok: false,
+        code: "password_mismatch",
+        message: "Las contraseñas no coinciden.",
+      };
     }
-  }
 
-  await installSession(result.value.sessionToken);
-  return { ok: true, redirectTo: result.value.redirectTo };
+    const token = readInviteToken(input.token);
+    if (!token.ok) {
+      return token;
+    }
+    const password = readStrongPassword(input.password);
+    if (!password.ok) {
+      return password;
+    }
+    const request = getRequestClientMetadata();
+
+    const result = await submitInviteAcceptance(
+      getServerRuntime().auth.inviteAcceptance,
+      {
+        ipAddress: request.ipAddress,
+        userAgent: request.userAgent,
+      },
+      { token: token.value, password: password.value },
+    );
+
+    if (isErr(result)) {
+      switch (result.error.code) {
+        case "invite_invalid_or_expired":
+          return {
+            ok: false,
+            code: "invite_invalid_or_expired",
+            message: "Esta invitación no es válida o ya expiró.",
+          };
+        case "invite_target_active":
+          return {
+            ok: false,
+            code: "invite_target_active",
+            message: "Esta cuenta ya fue activada.",
+          };
+        default:
+          throwDomain(result.error);
+      }
+    }
+
+    await installSession(result.value.sessionToken);
+    return { ok: true, redirectTo: result.value.redirectTo };
+  });
 }

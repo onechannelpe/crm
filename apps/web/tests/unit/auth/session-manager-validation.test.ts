@@ -12,7 +12,8 @@ import type { UserSessionRow } from "~/lib/auth/types";
 const execOne = getSeededIdentity("execOne");
 
 function buildSessionRow(sessionId: string, nowTs: number): UserSessionRow {
-  const expiresAt = Date.now() + 60 * 60 * 1000;
+  const nowDate = new Date(nowTs);
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
   return {
     id: sessionId,
     user_id: execOne.userId,
@@ -24,10 +25,16 @@ function buildSessionRow(sessionId: string, nowTs: number): UserSessionRow {
     strong_auth_at: null,
     ip_address: null,
     user_agent: null,
-    created_at: nowTs,
-    last_activity: nowTs,
+    created_at: nowDate,
+    last_activity: nowDate,
     expires_at: expiresAt,
   };
+}
+
+function withPersistedRole(row: UserSessionRow, role: string): UserSessionRow {
+  const persistedRow = { ...row };
+  Object.defineProperty(persistedRow, "role", { value: role });
+  return persistedRow;
 }
 
 describe("session manager validation", () => {
@@ -87,5 +94,22 @@ describe("session manager validation", () => {
 
     expect(result?.onboardingCompleted).toBe(false);
     expect(spies.usersFindById).toHaveBeenCalledOnce();
+  });
+
+  it("deletes session when persisted role is invalid", async () => {
+    const nowTs = 1_700_000_000_000;
+    const store = new Map<string, UserSessionRow>();
+    const token = generateSessionToken();
+    const sessionId = hashSessionToken(token);
+    const row = buildSessionRow(sessionId, nowTs);
+    store.set(sessionId, withPersistedRole(row, "invalid_role"));
+
+    const { service, spies } = createSessionServiceHarness(nowTs, store);
+    const result = await service.resolve(token);
+
+    expect(result).toBeNull();
+    expect(spies.sessionsDelete).toHaveBeenCalledWith(sessionId);
+    expect(spies.usersFindById).not.toHaveBeenCalled();
+    expect(store.has(sessionId)).toBe(false);
   });
 });

@@ -3,6 +3,7 @@ import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import type { Phone } from "~/lib/phone/pe-mobile";
 import { createSessionService } from "~/server/auth/session/session.service";
 import { type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 import { completeAccountOnboardingWithRepos } from "~/server/users/service-account-onboarding";
 
@@ -12,11 +13,11 @@ export async function completeOnboarding(
   deps: AuthOnboardingContext,
   input: {
     session: {
-      userId: number;
+      userId: UserId;
       role: Role;
       primaryAuthMethod: "password" | "google" | "passkey";
       strongAuthMethod: "totp" | "passkey" | "federated" | null;
-      strongAuthAt: number | null;
+      strongAuthAt: Date | null;
     };
     phone: Phone;
     ipAddress: string;
@@ -52,7 +53,7 @@ export async function completeOnboarding(
   const strongAuthAt =
     strongAuthMethod === null
       ? null
-      : (input.session.strongAuthAt ?? Date.now());
+      : (input.session.strongAuthAt ?? new Date());
 
   const issued = await createSessionService(deps.repos).establish({
     user,

@@ -9,11 +9,12 @@ import { verifyTotpStepUp } from "~/server/auth/factors/totp";
 import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
 import { createSessionService } from "~/server/auth/session/session.service";
+import type { AuthLoginFlowId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 export async function submitTotpForLoginFlow(
   input: {
-    flowId: number;
+    flowId: AuthLoginFlowId;
     totpCode: string;
   } & SessionRequestMetadata,
   deps: AuthLoginDeps,
@@ -26,7 +27,7 @@ export async function submitTotpForLoginFlow(
 > {
   const flow = await deps.loginFlows.findById(input.flowId);
 
-  if (!flow || flow.state !== "totp" || flow.expires_at < Date.now()) {
+  if (!flow || flow.state !== "totp" || flow.expires_at < new Date()) {
     await deleteLoginFlow(flow, deps);
     return Err({ kind: "flow_expired" });
   }

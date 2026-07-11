@@ -89,7 +89,7 @@ export async function changePassword(
         entityType: "user",
         entityId: auditEntityId("user", userId),
         actorUserId: userId,
-        occurredAt: Date.now(),
+        occurredAt: new Date(),
       });
 
       return Ok({ message: "Contraseña actualizada" });
@@ -123,7 +123,7 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
         entityType: "user",
         entityId: auditEntityId("user", userId),
         actorUserId: userId,
-        occurredAt: Date.now(),
+        occurredAt: new Date(),
       });
 
       return Ok({ message: "Claves de acceso eliminadas" });
@@ -159,7 +159,7 @@ export async function disableTotp(): Promise<{ message: string }> {
         entityType: "user",
         entityId: auditEntityId("user", userId),
         actorUserId: userId,
-        occurredAt: Date.now(),
+        occurredAt: new Date(),
       });
 
       return Ok({ message: "Aplicación de autenticación desactivada" });

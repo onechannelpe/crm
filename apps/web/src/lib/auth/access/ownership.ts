@@ -1,17 +1,15 @@
 import { fail, forbidden, throwDomain } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 
 import type { Role } from "./rbac";
 import type { AuthSession } from "./session-types";
 
-/**
- * Enforces action-layer ownership for records that were already fetched.
- * Missing records resolve as not_found; non-owners resolve as forbidden unless
- * their role bypasses ownership. Prefer repo-level WHERE ownership for pure
- * mutations that can encode the user in SQL.
- */
+// Missing records resolve as not_found; non-owners as forbidden unless their
+// role bypasses ownership. Prefer repo-level WHERE ownership for pure mutations
+// that can encode the user in SQL.
 export function assertOwnedRecord<T>(
   record: T | null | undefined,
-  getOwnerId: (r: T) => number | null | undefined,
+  getOwnerId: (r: T) => UserId | null | undefined,
   session: Pick<AuthSession, "userId" | "role">,
   options?: {
     resourceName?: string;
@@ -30,5 +28,4 @@ export function assertOwnedRecord<T>(
   return record;
 }
 
-/** Roles that bypass per-record ownership checks (audit / admin access). */
 export const ADMIN_BYPASS = new Set<Role>(["admin", "superuser"]);

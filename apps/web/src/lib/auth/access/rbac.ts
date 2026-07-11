@@ -47,10 +47,11 @@ export type Permission =
   | "quotation:view:all"
   | "quotation:policy:manage"
   | "integration:manage"
-  | "file:artifact:request"
-  | "file:artifact:upload"
-  | "file:artifact:read"
-  | "file:artifact:audit:read";
+  | "fulfillment:manage"
+  // Client-facing fulfillment steps the executive performs on their own leads
+  // (e.g. the refurbished transactions report); back office holds the broader
+  // fulfillment:manage.
+  | "fulfillment:client-step";
 
 export const ROLES = [
   "executive",
@@ -78,6 +79,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:commercial-input:complete",
     "lead:sale:create",
     "lead:sale:upload-proof",
+    "fulfillment:client-step",
   ],
   supervisor: [
     "lead:note:add",
@@ -99,8 +101,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "team:read",
     "team:manage",
     "audit:read",
-    "file:artifact:read",
-    "file:artifact:audit:read",
   ],
   back_office: [
     "lead:note:add",
@@ -114,10 +114,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "quotation:revise",
     "quotation:view:all",
     "integration:manage",
-    "file:artifact:request",
-    "file:artifact:upload",
-    "file:artifact:read",
     "lead:sale:upload-proof",
+    "fulfillment:manage",
   ],
   sales_manager: [
     "lead:note:add",
@@ -143,8 +141,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "quotation:policy:manage",
-    "file:artifact:read",
-    "file:artifact:audit:read",
   ],
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],
@@ -182,10 +178,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "audit:read",
-    "file:artifact:request",
-    "file:artifact:upload",
-    "file:artifact:read",
-    "file:artifact:audit:read",
   ],
   superuser: [
     "lead:note:add",
@@ -224,10 +216,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "audit:read",
-    "file:artifact:request",
-    "file:artifact:upload",
-    "file:artifact:read",
-    "file:artifact:audit:read",
   ],
 };
 

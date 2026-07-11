@@ -1,22 +1,27 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { createPasskeyLoginStartAuthService } from "~/server/auth/factors/passkey/service";
+import { AuthLoginFlowId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 describe("login flow service", () => {
   const scenario = createAuthScenario("login-flow");
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
-    await scenario.setPassword("execOne", "Secret123!");
-    await scenario.setPassword("superuser", "SuperSecret123!");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
+    await scenario.setPassword("execOne", "Secret123!");
+    await scenario.setPassword("superuser", "SuperSecret123!");
   });
 
   it("completes a standard password login without creating a flow", async () => {
@@ -56,26 +61,19 @@ describe("login flow service", () => {
     }
 
     const user = scenario.identity("superuser");
-    const stored = await scenario.ctx.repos.loginFlows.findById(
-      passwordResult.value.flow.id,
-    );
+    const flowId = AuthLoginFlowId.trust(passwordResult.value.flow.id);
+    const stored = await scenario.ctx.repos.loginFlows.findById(flowId);
     expect(stored?.state).toBe("totp");
     expect(stored?.user_id).toBe(user.userId);
 
     const code = await scenario.currentTotpCode("superuser");
-    const totpResult = await scenario.loginTotp(
-      passwordResult.value.flow.id,
-      code,
-      {
-        ipAddress: "198.51.100.88",
-        userAgent: "vitest-agent",
-      },
-    );
+    const totpResult = await scenario.loginTotp(flowId, code, {
+      ipAddress: "198.51.100.88",
+      userAgent: "vitest-agent",
+    });
 
     expect(isErr(totpResult)).toBe(false);
-    const consumed = await scenario.ctx.repos.loginFlows.findById(
-      passwordResult.value.flow.id,
-    );
+    const consumed = await scenario.ctx.repos.loginFlows.findById(flowId);
     expect(consumed).toBeUndefined();
   });
 
@@ -97,7 +95,7 @@ describe("login flow service", () => {
     if (isErr(result)) throw new Error("expected passkey flow");
 
     const flow = await getLoginFlowState(
-      result.value.id,
+      AuthLoginFlowId.trust(result.value.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
     );

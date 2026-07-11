@@ -1,17 +1,21 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 
 describe("strong auth status", () => {
   const scenario = createAuthScenario("strong-auth-status");
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("derives verified strong auth from a configured passkey", async () => {
@@ -52,7 +56,7 @@ describe("strong auth status", () => {
       first_surname: "User",
       second_surname: "Test",
       role: "executive",
-      is_active: 1,
+      is_active: true,
     });
 
     const status = await getStrongAuthStatus(

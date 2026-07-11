@@ -1,4 +1,5 @@
 import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/server";
+import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
 import {
   createPasskeyProvider,
@@ -6,6 +7,7 @@ import {
   resolveWebauthnRelyingParty,
   type PasskeyProviderDeps,
 } from "~/server/auth/factors/passkey-provider";
+import type { UserId } from "~/server/shared/ids";
 
 import type { TestDbContext } from "../runtime/db";
 
@@ -17,14 +19,14 @@ export function createTestPasskeyProvider(repos: PasskeyProviderDeps) {
 
 type WebauthnOverrides = {
   getRegistrationOptions?: (
-    userId: number,
+    userId: UserId,
   ) => Promise<PublicKeyCredentialCreationOptionsJSON>;
   verifyRegistration?: (
-    userId: number,
-    response: unknown,
+    userId: UserId,
+    response: RegistrationResponseJSON,
     challenge: string,
   ) => Promise<{ verified: boolean }>;
-  verifyAuthentication?: () => Promise<{ verified: boolean; userId: number }>;
+  verifyAuthentication?: () => Promise<{ verified: boolean; userId: UserId }>;
 };
 
 interface PasskeyCredentialResponse {
@@ -34,13 +36,13 @@ interface PasskeyCredentialResponse {
   clientExtensionResults: Record<string, never>;
 }
 
-export function expiresAtFromNow(nowMs: number): number {
-  return nowMs + 60_000;
+export function expiresAtFromNow(nowMs: number): Date {
+  return new Date(nowMs + 60_000);
 }
 
 export async function createAuthFlow(input: {
   ctx: TestDbContext;
-  userId: number;
+  userId: UserId;
   challenge: string;
   identifier?: string;
   nowMs?: number;
@@ -65,7 +67,7 @@ export async function createAuthFlow(input: {
 
 export async function createRegistrationChallenge(input: {
   ctx: TestDbContext;
-  userId: number;
+  userId: UserId;
   challenge: string;
   nowMs?: number;
 }) {
@@ -80,15 +82,15 @@ export async function createRegistrationChallenge(input: {
 
 export function createWebauthnProvider(overrides: WebauthnOverrides = {}) {
   return {
-    async getRegistrationOptions(userId: number) {
+    async getRegistrationOptions(userId: UserId) {
       if (overrides.getRegistrationOptions) {
         return overrides.getRegistrationOptions(userId);
       }
       throw new Error("not used in this test");
     },
     async verifyRegistration(
-      userId: number,
-      response: unknown,
+      userId: UserId,
+      response: RegistrationResponseJSON,
       challenge: string,
     ) {
       if (overrides.verifyRegistration) {
@@ -106,7 +108,7 @@ export function createWebauthnProvider(overrides: WebauthnOverrides = {}) {
       if (overrides.verifyAuthentication) {
         return overrides.verifyAuthentication();
       }
-      return { verified: true, userId: 1 };
+      throw new Error("not used in this test");
     },
   };
 }

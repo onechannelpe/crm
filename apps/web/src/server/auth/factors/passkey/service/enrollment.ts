@@ -6,6 +6,7 @@ import { createAuthThrottleService } from "~/server/auth/application/throttle-se
 import { isPasskeyRequestError } from "~/server/auth/factors/passkey-provider";
 import { auditEntityId } from "~/server/shared/audit-entity";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId, WebauthnChallengeId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
@@ -13,10 +14,10 @@ import type { PasskeyAuthRepos } from "./shared";
 interface PasskeyEnrollmentServiceDeps {
   webauthnProvider: {
     getRegistrationOptions(
-      userId: number,
+      userId: UserId,
     ): Promise<PasskeyEnrollmentChallenge["options"]>;
     verifyRegistration(
-      userId: number,
+      userId: UserId,
       response: RegistrationResponseJSON,
       challenge: string,
     ): Promise<{ verified: boolean }>;
@@ -24,12 +25,12 @@ interface PasskeyEnrollmentServiceDeps {
 }
 
 interface BeginPasskeyEnrollmentInput {
-  userId: number;
+  userId: UserId;
   ipAddress: string;
 }
 
 interface FinishPasskeyEnrollmentInput extends BeginPasskeyEnrollmentInput {
-  challengeId: number;
+  challengeId: WebauthnChallengeId;
   response: RegistrationResponseJSON;
 }
 
@@ -64,7 +65,7 @@ export function createPasskeyEnrollmentService(
         user_id: input.userId,
         type: "registration",
         challenge: options.challenge,
-        expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
+        expires_at: new Date(Date.now() + config.auth.webauthnChallengeTtlMs),
       });
 
       return Ok({ challengeId, options });
@@ -74,10 +75,6 @@ export function createPasskeyEnrollmentService(
       input: FinishPasskeyEnrollmentInput,
     ): Promise<Result<void, DomainError>> {
       const identifier = `user:${input.userId}`;
-
-      if (!Number.isInteger(input.challengeId) || input.challengeId < 1) {
-        return Err(fail("invalid_passkey_request"));
-      }
 
       const throttle = await throttleService.checkPasskeyVerifyThrottle(
         identifier,
@@ -107,7 +104,7 @@ export function createPasskeyEnrollmentService(
 
       await repos.webauthnChallenges.delete(challenge.id);
 
-      if (challenge.expires_at < Date.now()) {
+      if (challenge.expires_at < new Date()) {
         await throttleService.recordPasskeyVerifyFailure(
           identifier,
           input.ipAddress,
@@ -154,7 +151,7 @@ export function createPasskeyEnrollmentService(
         entityType: "passkey",
         entityId: auditEntityId("passkey", input.userId),
         actorUserId: input.userId,
-        occurredAt: Date.now(),
+        occurredAt: new Date(),
       });
 
       return Ok(undefined);

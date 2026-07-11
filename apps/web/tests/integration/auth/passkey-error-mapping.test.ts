@@ -6,7 +6,7 @@ import {
   createAuthFlow,
   createTestPasskeyProvider,
 } from "@tests/support/passkey/api";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import {
@@ -21,12 +21,16 @@ describe("passkey error mapping", () => {
   const ipAddress = "198.51.100.66";
   const execOne = getSeededIdentity("execOne");
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("returns invalid credentials for empty identifier", async () => {

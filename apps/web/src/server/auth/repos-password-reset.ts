@@ -1,14 +1,15 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 export function createPasswordResetTokensRepo(db: Kysely<Database>) {
   return {
     create(values: {
-      user_id: number;
+      user_id: UserId;
       token_hash: string;
-      expires_at: number;
-      created_at: number;
+      expires_at: Date;
+      created_at: Date;
     }) {
       return db
         .insertInto("password_reset_tokens")
@@ -16,7 +17,7 @@ export function createPasswordResetTokensRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findValidByHash(tokenHash: string, now: number) {
+    findValidByHash(tokenHash: string, now: Date) {
       return db
         .selectFrom("password_reset_tokens")
         .selectAll()
@@ -26,7 +27,7 @@ export function createPasswordResetTokensRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    async countRecentForUser(userId: number, since: number): Promise<number> {
+    async countRecentForUser(userId: UserId, since: Date): Promise<number> {
       const row = await db
         .selectFrom("password_reset_tokens")
         .select((eb) => eb.fn.countAll<number>().as("count"))
@@ -36,7 +37,7 @@ export function createPasswordResetTokensRepo(db: Kysely<Database>) {
       return row.count;
     },
 
-    markUsed(id: number, usedAt: number) {
+    markUsed(id: string, usedAt: Date) {
       return db
         .updateTable("password_reset_tokens")
         .set({ used_at: usedAt })
@@ -44,7 +45,7 @@ export function createPasswordResetTokensRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    expireAllForUser(userId: number, now: number) {
+    expireAllForUser(userId: UserId, now: Date) {
       return db
         .updateTable("password_reset_tokens")
         .set({ used_at: now })

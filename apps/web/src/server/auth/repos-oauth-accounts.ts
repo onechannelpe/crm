@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 export function createOAuthAccountsRepo(db: Kysely<Database>) {
   return {
@@ -14,11 +15,11 @@ export function createOAuthAccountsRepo(db: Kysely<Database>) {
     },
 
     create(values: {
-      user_id: number;
+      user_id: UserId;
       provider: string;
       provider_user_id: string;
       email: string;
-      created_at: number;
+      created_at: Date;
     }) {
       return db
         .insertInto("user_oauth_accounts")

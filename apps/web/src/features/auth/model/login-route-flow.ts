@@ -1,7 +1,10 @@
+import { AuthLoginFlowId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
+
 export function parseLoginFlowId(
   raw: string | string[] | undefined,
-): number | null {
+): AuthLoginFlowId | null {
   if (!raw || Array.isArray(raw)) return null;
-  const parsed = Number(raw);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  const parsed = AuthLoginFlowId.parse(raw.trim());
+  return isErr(parsed) ? null : parsed.value;
 }

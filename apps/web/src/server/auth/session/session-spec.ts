@@ -9,7 +9,8 @@ import type {
 } from "~/lib/auth/core/session-contract";
 import type { UserSessionRow } from "~/lib/auth/types";
 import type { UsersTable } from "~/lib/db/types";
-import type { UserId } from "~/server/shared/ids";
+import type { Logger } from "~/lib/observability/logger-shared";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import type { EventsRepo } from "~/server/shared/repos-events";
 
 type UserRow = Selectable<UsersTable>;
@@ -30,7 +31,7 @@ export interface SessionSpec {
   request: SessionRequestMetadata;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
-  strongAuthAt: number | null;
+  strongAuthAt: Date | null;
   auditAction?: "login" | "login_passkey";
 }
 
@@ -41,29 +42,29 @@ export interface IssuedSession {
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
-  strongAuthAt: number | null;
+  strongAuthAt: Date | null;
   token: string;
 }
 
 export interface SessionRepositoryPort {
   create(session: {
     id: string;
-    user_id: number;
-    branch_id: number;
+    user_id: UserId;
+    branch_id: BranchId;
     role: Role;
     session_class: SessionClass;
     primary_auth_method: PrimaryAuthMethod;
     strong_auth_method: StrongAuthMethod | null;
-    strong_auth_at: number | null;
+    strong_auth_at: Date | null;
     ip_address: string | null;
     user_agent: string | null;
-    created_at: number;
-    last_activity: number;
-    expires_at: number;
+    created_at: Date;
+    last_activity: Date;
+    expires_at: Date;
   }): Promise<void>;
   findById(id: string): Promise<UserSessionRow | null | undefined>;
-  updateActivity(id: string, lastActivity: number): Promise<void>;
-  extendExpiry(id: string, expiresAt: number): Promise<void>;
+  updateActivity(id: string, lastActivity: Date): Promise<void>;
+  extendExpiry(id: string, expiresAt: Date): Promise<void>;
   delete(id: string): Promise<void>;
   deleteAllForUser(userId: UserId): Promise<void>;
 }
@@ -72,13 +73,14 @@ export interface SessionUsersPort {
   findById(
     userId: UserId,
   ): Promise<
-    { id: number; is_active: number; expires_at: number | null } | undefined
+    { id: UserId; is_active: boolean; expires_at: Date | null } | undefined
   >;
-  deactivateIfExpired(userId: UserId, now: number): Promise<boolean>;
+  deactivateIfExpired(userId: UserId, now: Date): Promise<boolean>;
 }
 
 export interface SessionEventPort {
-  // The service ignores append results so adapters can return their native type.
+  // Service does not read the return; adapters can return void, an id, or an
+  // event count without breaking the contract.
   append(event: Parameters<EventsRepo["append"]>[0]): Promise<unknown>;
 }
 
@@ -86,10 +88,8 @@ export interface SessionServiceDeps {
   sessions: SessionRepositoryPort;
   users: SessionUsersPort;
   events: SessionEventPort;
-  now?: () => number;
-  logger?: {
-    error(message: string, meta?: unknown): void;
-  };
+  now?: () => Date;
+  logger?: Pick<Logger, "error">;
 }
 
 export type { AuthSession };

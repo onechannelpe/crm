@@ -2,11 +2,12 @@ import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyLoginStateService } from "~/server/auth/factors/passkey/service/login-state";
 import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
+import type { AuthLoginFlowId } from "~/server/shared/ids";
 
 import type { LoginFlowState } from "../contracts";
 
 export async function getLoginFlowState(
-  flowId: number,
+  flowId: AuthLoginFlowId,
   deps: AuthLoginDeps,
   webauthnProvider: WebauthnProvider,
 ): Promise<LoginFlowState | null> {
@@ -16,7 +17,7 @@ export async function getLoginFlowState(
     return null;
   }
 
-  if (flow.expires_at < Date.now()) {
+  if (flow.expires_at < new Date()) {
     await deleteLoginFlow(flow, deps);
     return null;
   }

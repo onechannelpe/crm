@@ -1,4 +1,5 @@
 import { hashPassword } from "~/lib/auth/password/password";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import { type TestIdentity } from "../../identities/catalog";
 import type { BrowserDbRuntime } from "../runtime";
@@ -12,16 +13,16 @@ const BROWSER_TEST_PASSWORD = "placeholder";
 
 const BROWSER_IDENTITIES = {
   passkeyUser: {
-    userId: 1,
+    userId: UserId.trust("browser-passkey-user"),
     username: "valeria.paredes",
-    branchId: 1,
+    branchId: BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     role: "admin",
     password: BROWSER_TEST_PASSWORD,
   },
   strongAuthUser: {
-    userId: 12,
+    userId: UserId.trust("browser-strong-auth-user"),
     username: "mario.aguirre",
-    branchId: 1,
+    branchId: BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     role: "sales_manager",
     password: BROWSER_TEST_PASSWORD,
   },
@@ -116,7 +117,9 @@ export async function ensureBrowserUser(
       : generated.email;
   const passwordHash = await hashPassword(BROWSER_TEST_PASSWORD);
   const userId = await runtime.repos.users.create({
-    branch_id: options.branchId ?? 1,
+    branch_id:
+      options.branchId ??
+      BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     team_id: null,
     username,
     email,
@@ -125,12 +128,12 @@ export async function ensureBrowserUser(
     first_surname: generated.firstSurname,
     second_surname: generated.secondSurname,
     role: options.role,
-    is_active: options.active === false ? 0 : 1,
+    is_active: options.active !== false,
   });
 
   if (options.onboardingCompleted !== false) {
     await runtime.repos.users.completeOnboarding(userId, {
-      completedAt: Date.now(),
+      completedAt: new Date(),
     });
   }
 
@@ -138,7 +141,9 @@ export async function ensureBrowserUser(
     userId,
     username,
     email,
-    branchId: options.branchId ?? 1,
+    branchId:
+      options.branchId ??
+      BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     role: options.role,
     password: BROWSER_TEST_PASSWORD,
   };

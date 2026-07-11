@@ -4,6 +4,7 @@ import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
 import { createSessionService } from "~/server/auth/session/session.service";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId, WebauthnChallengeId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 import type { AuthOnboardingRepos } from "../infrastructure/onboarding-context";
@@ -22,7 +23,7 @@ function createEnrollmentService(
 export function beginPasskeyEnrollment(
   repos: AuthOnboardingRepos,
   input: {
-    userId: number;
+    userId: UserId;
     ipAddress: string;
     webauthnProvider: WebauthnProvider;
   },
@@ -33,12 +34,13 @@ export function beginPasskeyEnrollment(
   });
 }
 
-// Onboarding issues its session after all steps complete; enrollment must not double-issue.
+// Onboarding issues its session after all steps complete; enrollment must
+// not double-issue.
 export async function enrollPasskey(
   repos: AuthOnboardingRepos,
   input: {
-    userId: number;
-    challengeId: number;
+    userId: UserId;
+    challengeId: WebauthnChallengeId;
     response: RegistrationResponseJSON;
     ipAddress: string;
     webauthnProvider: WebauthnProvider;
@@ -61,11 +63,11 @@ export async function finishPasskeyEnrollment(
   repos: AuthOnboardingRepos,
   input: {
     session: {
-      userId: number;
+      userId: UserId;
       sessionClass: "pre_auth" | "app";
       primaryAuthMethod: "password" | "google" | "passkey";
     };
-    challengeId: number;
+    challengeId: WebauthnChallengeId;
     response: RegistrationResponseJSON;
     ipAddress: string;
     userAgent: string | null;
@@ -97,7 +99,7 @@ export async function finishPasskeyEnrollment(
     },
     primaryAuthMethod: input.session.primaryAuthMethod,
     strongAuthMethod: "passkey",
-    strongAuthAt: Date.now(),
+    strongAuthAt: new Date(),
   });
 
   return Ok({ sessionToken: issued.token });

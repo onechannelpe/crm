@@ -8,13 +8,9 @@ import {
   type WebauthnProvider,
 } from "~/server/auth/factors/passkey-provider";
 
-/**
- * Build the WebAuthn provider for the current request. The relying party is
- * derived from the origin the browser actually reached (`publicOrigin`), so
- * challenge-time and verify-time `rpID` always match, even behind a proxy.
- * Reads request-scoped state, so it must be called at the action boundary and
- * the resulting provider threaded into the flow.
- */
+// rpID is derived from publicOrigin so challenge and verify stay in sync behind
+// a proxy. Call at the action boundary and thread the resulting provider into
+// the flow.
 export function createRequestPasskeyProvider(
   repos: PasskeyProviderDeps,
 ): WebauthnProvider {

@@ -9,10 +9,11 @@ import {
   createWebauthnProviderWithRegistration,
   invalidRegistrationProvider,
 } from "@tests/support/passkey/api";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
+import { WebauthnChallengeId } from "~/server/shared/ids";
 
 describe("passkey registration", () => {
   const scenario = createAuthScenario("passkey-registration");
@@ -20,12 +21,16 @@ describe("passkey registration", () => {
   const execOne = getSeededIdentity("execOne");
   const backOne = getSeededIdentity("backOne");
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("begin enrollment creates registration challenge", async () => {
@@ -38,7 +43,7 @@ describe("passkey registration", () => {
     const value = expectOk(result);
 
     const challenge = await scenario.ctx.repos.webauthnChallenges.findById(
-      value.challengeId,
+      WebauthnChallengeId.trust(value.challengeId),
     );
     expect(challenge?.type).toBe("registration");
     expect(challenge?.user_id).toBe(execOne.userId);

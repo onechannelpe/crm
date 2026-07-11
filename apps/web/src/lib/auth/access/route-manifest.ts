@@ -7,7 +7,7 @@ export type AppPath =
   | "/settings/security-policies"
   | "/settings/capacity-policies"
   | "/settings/quotation-policies"
-  | "/settings/capacity-audit"
+  | "/settings/event-logs"
   | "/monitoring"
   | "/settings/catalog"
   | "/team"
@@ -16,13 +16,12 @@ export type AppPath =
   | "/team/import"
   | "/inventory"
   | "/records"
+  | "/fulfillment"
   | "/rate-simulator"
   | "/dashboard"
-  | "/audit"
-  | "/audit/auth"
-  | "/audit/log"
   | "/schedule"
   | "/settings/profile"
+  | "/settings/notifications"
   | "/me/capacity";
 
 export interface RouteConfig {
@@ -42,7 +41,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/settings/security-policies": { permission: "admin:manage" },
   "/settings/capacity-policies": { permission: "capacity:policy:manage" },
   "/settings/quotation-policies": { permission: "quotation:policy:manage" },
-  "/settings/capacity-audit": { permission: "capacity:policy:manage" },
+  "/settings/event-logs": { permission: "audit:read" },
   "/monitoring": { permission: "admin:read" },
   "/settings/catalog": { permission: "admin:manage" },
   "/team": { permission: "team:read", landingPriority: 6 },
@@ -51,13 +50,12 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
   "/records": {},
+  "/fulfillment": { permission: "fulfillment:manage" },
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
   "/dashboard": { permission: "lead:work", landingPriority: 1 },
-  "/audit": { permission: "audit:read", landingPriority: 8 },
-  "/audit/auth": { permission: "audit:read" },
-  "/audit/log": { permission: "audit:read" },
   "/schedule": {},
   "/settings/profile": {},
+  "/settings/notifications": {},
   "/me/capacity": { permission: "capacity:read:self" },
 };
 

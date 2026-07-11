@@ -1,9 +1,10 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
+import { AuthLoginFlowId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 describe("privileged password login", () => {
@@ -15,13 +16,17 @@ describe("privileged password login", () => {
     userAgent: "vitest-agent",
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
-    await scenario.setPassword(identity, rightPassword);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
+    await scenario.setPassword(identity, rightPassword);
   });
 
   it("rejects privileged login without strong auth after onboarding", async () => {
@@ -86,7 +91,7 @@ describe("privileged password login", () => {
     }
 
     const flow = await getLoginFlowState(
-      result.value.flow.id,
+      AuthLoginFlowId.trust(result.value.flow.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
     );
@@ -111,11 +116,8 @@ describe("privileged password login", () => {
       throw new Error("expected totp verification step");
     }
 
-    const result = await scenario.loginTotp(
-      passwordResult.value.flow.id,
-      code,
-      requestMeta,
-    );
+    const flowId = AuthLoginFlowId.trust(passwordResult.value.flow.id);
+    const result = await scenario.loginTotp(flowId, code, requestMeta);
     expect(isErr(result)).toBe(false);
     if (isErr(result)) throw new Error("expected successful totp login");
 
@@ -123,7 +125,7 @@ describe("privileged password login", () => {
     expect(sessions[0]?.session_class).toBe("app");
     expect(sessions[0]?.primary_auth_method).toBe("password");
     expect(sessions[0]?.strong_auth_method).toBe("totp");
-    expect(typeof sessions[0]?.strong_auth_at).toBe("number");
+    expect(sessions[0]?.strong_auth_at).toBeInstanceOf(Date);
   });
 
   it("rejects invalid totp code for privileged user", async () => {
@@ -143,7 +145,7 @@ describe("privileged password login", () => {
     }
 
     const result = await scenario.loginTotp(
-      passwordResult.value.flow.id,
+      AuthLoginFlowId.trust(passwordResult.value.flow.id),
       "000000",
       requestMeta,
     );
@@ -162,7 +164,7 @@ describe("privileged password login", () => {
     const enrolledPasskeys = await scenario.ctx.repos.passkeys.findByUser(
       user.userId,
     );
-    expect(enrolledFactor?.is_enabled).toBe(1);
+    expect(enrolledFactor?.is_enabled).toBe(true);
     expect(enrolledPasskeys).toHaveLength(1);
 
     await scenario.ctx.repos.users.updateInviteProvisioning(user.userId, {
@@ -171,7 +173,7 @@ describe("privileged password login", () => {
       first_surname: "User",
       second_surname: "Test",
       role: "executive",
-      is_active: 1,
+      is_active: true,
     });
 
     const downgradedUser = await scenario.ctx.repos.users.findById(user.userId);
@@ -183,7 +185,7 @@ describe("privileged password login", () => {
     expect(downgradedUser && requiresStrongAuthRole(downgradedUser.role)).toBe(
       false,
     );
-    expect(downgradedFactor?.is_enabled).toBe(1);
+    expect(downgradedFactor?.is_enabled).toBe(true);
     expect(downgradedPasskeys).toHaveLength(1);
   });
 });

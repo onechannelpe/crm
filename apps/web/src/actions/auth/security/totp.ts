@@ -28,8 +28,8 @@ export async function finishTotpEnrollment(
     name: "auth.totp.finish",
     access: { kind: "session" },
 
-    // The TOTP code is a secret in flight; parse validates presence but no
-    // audit projection records it.
+    // TOTP code is parsed then never written to the audit projection; only
+    // the enrollment result lands.
     parse: () =>
       parseObject({ code: rawCode }, validationFail, (r) => ({
         code: r.str("code"),

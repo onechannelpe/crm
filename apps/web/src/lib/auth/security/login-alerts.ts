@@ -1,6 +1,7 @@
 import { createLogger } from "~/lib/observability/logger";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import type { NotificationIntent } from "~/server/notifications/types";
+import { NotificationIntentId } from "~/server/shared/ids";
 
 import type {
   PrivilegedLoginAlertPayload,
@@ -8,8 +9,7 @@ import type {
 } from "./privileged-login-alert";
 
 interface AlertNotifications {
-  enqueue(intents: NotificationIntent[], now: number): Promise<void>;
-  dispatchPendingJobs(): void;
+  enqueue(intents: NotificationIntent[], now: Date): Promise<void>;
 }
 
 const logger = createLogger("login-alerts");
@@ -28,7 +28,9 @@ export function createPrivilegedLoginAlertSender(
       await notifications.enqueue(
         [
           {
-            id: `security:login:${params.userId}:${params.occurredAt}`,
+            id: NotificationIntentId.trust(
+              `security:login:${params.userId}:${params.occurredAt.toISOString()}`,
+            ),
             eventType: "security.privileged_login",
             audience: { kind: "user_ids", userIds: [params.userId] },
             channels: ["in_app", "email", "whatsapp"],
@@ -40,14 +42,13 @@ export function createPrivilegedLoginAlertSender(
               `Role: ${params.role}`,
               `Method: ${params.method}`,
               `IP: ${params.ipAddress}`,
-              `Time: ${new Date(params.occurredAt).toISOString()}`,
+              `Time: ${params.occurredAt.toISOString()}`,
             ].join("\n"),
             actionUrl: null,
           },
         ],
         params.occurredAt,
       );
-      notifications.dispatchPendingJobs();
     } catch (error) {
       logger.error("privileged_login_alert_failed", { error });
     }

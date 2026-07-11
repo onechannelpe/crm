@@ -1,5 +1,6 @@
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
+import type { UserId } from "~/server/shared/ids";
 
 type Deps = {
   authEvents: ReturnType<typeof createAuthEventsRepo>;
@@ -14,7 +15,7 @@ function normalize(value: string): string {
 }
 
 interface AuthEventInput {
-  userId: number | null;
+  userId: UserId | null;
   identifier: string;
   ipAddress: string;
   method: AuthEventMethod;
@@ -35,6 +36,6 @@ export async function recordAuthEvent(
     reason: input.reason ?? null,
     identifier_hash: hashAuthKey(`id:${normalize(input.identifier)}`),
     ip_hash: hashAuthKey(`ip:${input.ipAddress}`),
-    created_at: Date.now(),
+    created_at: new Date(),
   });
 }

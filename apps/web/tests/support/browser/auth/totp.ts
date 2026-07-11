@@ -11,7 +11,7 @@ export async function ensureTotp(
   const existing = await runtime.repos.userTotpFactors.findByUserId(
     identity.userId,
   );
-  if (existing?.is_enabled === 1) {
+  if (existing?.is_enabled === true) {
     return;
   }
 

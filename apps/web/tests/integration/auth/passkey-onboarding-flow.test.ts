@@ -6,7 +6,7 @@ import {
   createWebauthnProviderWithRegistration,
 } from "@tests/support/passkey/api";
 import { createTestRepositories } from "@tests/support/runtime/repos";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
 import { isErr } from "~/server/shared/result";
@@ -16,17 +16,21 @@ describe("passkey onboarding flow", () => {
   const scenario = createAuthScenario("passkey-onboarding-flow");
   const identity = "superuser" as const;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
+  });
+
+  afterAll(async () => {
+    await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
     await scenario.ctx.db
       .updateTable("users")
       .set({ onboarding_completed_at: null, role: "admin" })
       .where("id", "=", scenario.identity(identity).userId)
       .execute();
-  });
-
-  afterEach(async () => {
-    await scenario.teardown();
   });
 
   it("registers the passkey and completes onboarding in one flow", async () => {

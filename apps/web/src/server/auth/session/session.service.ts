@@ -32,8 +32,12 @@ const noopLogger = {
   error() {},
 };
 
+function addMilliseconds(date: Date, milliseconds: number): Date {
+  return new Date(date.getTime() + milliseconds);
+}
+
 export function createSessionService(deps: SessionServiceDeps) {
-  const now = deps.now ?? Date.now;
+  const now = deps.now ?? (() => new Date());
   const logger = deps.logger ?? noopLogger;
 
   return {
@@ -42,6 +46,7 @@ export function createSessionService(deps: SessionServiceDeps) {
       const token = generateSessionToken();
       const sessionId = hashSessionToken(token);
       const nowTs = now();
+      const expiresAt = addMilliseconds(nowTs, SESSION_DURATION);
 
       await deps.sessions.create({
         id: sessionId,
@@ -56,7 +61,7 @@ export function createSessionService(deps: SessionServiceDeps) {
         user_agent: spec.request.userAgent,
         created_at: nowTs,
         last_activity: nowTs,
-        expires_at: nowTs + SESSION_DURATION,
+        expires_at: expiresAt,
       });
 
       if (spec.auditAction) {
@@ -134,7 +139,7 @@ export function createSessionService(deps: SessionServiceDeps) {
       }
 
       const user = await deps.users.findById(dbSession.user_id);
-      if (!user || user.is_active !== 1) {
+      if (!user || !user.is_active) {
         await deps.sessions.delete(sessionId);
         return null;
       }
@@ -144,7 +149,10 @@ export function createSessionService(deps: SessionServiceDeps) {
         return null;
       }
 
-      if (nowTs - dbSession.last_activity > ACTIVITY_UPDATE_THRESHOLD) {
+      if (
+        nowTs.getTime() - dbSession.last_activity.getTime() >
+        ACTIVITY_UPDATE_THRESHOLD
+      ) {
         deps.sessions
           .updateActivity(sessionId, nowTs)
           .catch((error: unknown) => {
@@ -152,8 +160,11 @@ export function createSessionService(deps: SessionServiceDeps) {
           });
       }
 
-      if (dbSession.expires_at - nowTs < EXTENSION_THRESHOLD) {
-        const newExpiry = nowTs + SESSION_DURATION;
+      if (
+        dbSession.expires_at.getTime() - nowTs.getTime() <
+        EXTENSION_THRESHOLD
+      ) {
+        const newExpiry = addMilliseconds(nowTs, SESSION_DURATION);
         deps.sessions
           .extendExpiry(sessionId, newExpiry)
           .catch((error: unknown) => {

@@ -4,6 +4,7 @@ import {
   evaluateLoginPolicy,
   type LoginPolicyInput,
 } from "~/server/auth/policy/engine";
+import { UserId } from "~/server/shared/ids";
 
 function createInput(overrides?: {
   proof?: LoginPolicyInput["proof"];
@@ -13,13 +14,13 @@ function createInput(overrides?: {
   return {
     proof: overrides?.proof ?? {
       kind: "google",
-      userId: 1,
+      userId: UserId.trust("1"),
       trustedFederatedMfa: false,
     },
     context: {
       user: overrides?.user ?? {
         role: "admin",
-        onboarding_completed_at: 1_710_000_000_000,
+        onboarding_completed_at: new Date(1_710_000_000_000),
       },
       strongAuthStatus: overrides?.strongAuthStatus ?? {
         hasTotp: false,
@@ -94,7 +95,7 @@ describe("login policy", () => {
       createInput({
         proof: {
           kind: "google",
-          userId: 1,
+          userId: UserId.trust("1"),
           trustedFederatedMfa: true,
         },
       }),
@@ -104,7 +105,7 @@ describe("login policy", () => {
       kind: "issue_session",
       sessionClass: "app",
       strongAuthMethod: "federated",
-      strongAuthAt: expect.any(Number),
+      strongAuthAt: expect.any(Date),
     });
   });
 
@@ -113,7 +114,7 @@ describe("login policy", () => {
       createInput({
         proof: {
           kind: "password",
-          userId: 1,
+          userId: UserId.trust("1"),
         },
         user: {
           role: "admin",

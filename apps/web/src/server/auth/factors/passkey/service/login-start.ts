@@ -6,6 +6,7 @@ import type {
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { config } from "~/lib/config";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
@@ -15,7 +16,7 @@ const DISCOVERABLE_PASSKEY_IDENTIFIER = "discoverable";
 interface PasskeyLoginStartServiceDeps {
   webauthnProvider: {
     getAuthenticationOptions(input: {
-      userId?: number;
+      userId?: UserId;
       userVerification: "preferred" | "required";
     }): Promise<PasskeyLoginFlowState["requestOptions"]>;
   };
@@ -43,8 +44,8 @@ export function createPasskeyLoginStartService(
   });
 
   async function createAuthenticationFlow(input: {
-    challengeUserId: number | null;
-    flowUserId: number | null;
+    challengeUserId: UserId | null;
+    flowUserId: UserId | null;
     identifier: string;
     mode: PasskeyLoginMode;
     primaryAuthMethod: "password" | "google" | "passkey";
@@ -58,7 +59,7 @@ export function createPasskeyLoginStartService(
       user_id: input.challengeUserId,
       type: "authentication",
       challenge: options.challenge,
-      expires_at: Date.now() + config.auth.webauthnChallengeTtlMs,
+      expires_at: new Date(Date.now() + config.auth.webauthnChallengeTtlMs),
     });
     const flowId = await repos.loginFlows.create({
       identifier: input.identifier,
@@ -66,7 +67,7 @@ export function createPasskeyLoginStartService(
       user_id: input.flowUserId,
       challenge_id: challengeId,
       state: "passkey",
-      expires_at: Date.now() + config.auth.loginFlowTtlMs,
+      expires_at: new Date(Date.now() + config.auth.loginFlowTtlMs),
     });
 
     if (input.mode === "identified") {
@@ -131,10 +132,9 @@ export function createPasskeyLoginStartService(
         input.ipAddress,
       );
       if (!throttle.allowed) {
-        // Resolve the user even on the blocked path so lockout events stay
-        // attributable in per-user security analytics
-        // (findRecentLoginRetriesByUser); the identifier hash alone cannot be
-        // grouped by account.
+        // Resolve the user on the blocked path: lockout events stay
+        // attributable in findRecentLoginRetriesByUser. The identifier hash
+        // alone cannot be grouped by account.
         const blockedUser = await repos.users.findByUsername(identifier);
         await recordAuthEvent(repos, {
           userId: blockedUser?.id ?? null,

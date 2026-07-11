@@ -8,10 +8,13 @@ import {
 export function isThrottleWindowExpired(
   endpoint: AuthThrottleEndpoint,
   scope: AuthThrottleScope,
-  now: number,
-  startedAt: number,
+  now: Date,
+  startedAt: Date,
 ): boolean {
-  return now - startedAt >= AUTH_THROTTLE_POLICY[endpoint][scope].windowMs;
+  return (
+    now.getTime() - startedAt.getTime() >=
+    AUTH_THROTTLE_POLICY[endpoint][scope].windowMs
+  );
 }
 
 export function calculateBlockMs(

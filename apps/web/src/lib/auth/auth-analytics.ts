@@ -27,7 +27,7 @@ export function recordAuthAnalyticsEvent(
     method: resolveEventMethod(event),
     outcome: resolveEventOutcome(event),
     code: resolveEventCode(event),
-    createdAt: Date.now(),
+    createdAt: new Date(),
   });
 }
 

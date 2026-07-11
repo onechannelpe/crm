@@ -1,19 +1,14 @@
 "use server";
 
-import type { Selectable } from "kysely";
-
-import type { Database } from "~/lib/db/types";
 import { longName } from "~/lib/users/display-name";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 
-type AuthEventRow = Selectable<Database["auth_events"]>;
-
 export interface UserLoginRetryReport {
   user: {
-    id: number;
+    id: string;
     email: string;
     fullName: string;
     role: string;
@@ -21,7 +16,13 @@ export interface UserLoginRetryReport {
   };
   retryCount15m: number;
   retryCount24h: number;
-  recentRetries: AuthEventRow[];
+  recentRetries: Array<{
+    id: string;
+    createdAt: number;
+    stage: string;
+    outcome: string;
+    reason: string | null;
+  }>;
 }
 
 export async function getUserLoginRetryReport(
@@ -46,9 +47,9 @@ export async function getUserLoginRetryReport(
         return Ok(null);
       }
 
-      const now = Date.now();
-      const fifteenMinutesAgo = now - 15 * 60_000;
-      const twentyFourHoursAgo = now - 24 * 60 * 60_000;
+      const now = new Date();
+      const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60_000);
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60_000);
 
       const [retryCount15m, retryCount24h, recentRetries] = await Promise.all([
         authEvents.countLoginRetriesSince(user.id, fifteenMinutesAgo),
@@ -62,11 +63,17 @@ export async function getUserLoginRetryReport(
           email: user.email,
           fullName: longName(user),
           role: user.role,
-          isActive: user.is_active === 1,
+          isActive: user.is_active,
         },
         retryCount15m,
         retryCount24h,
-        recentRetries,
+        recentRetries: recentRetries.map((event) => ({
+          id: event.id,
+          createdAt: event.created_at.getTime(),
+          stage: event.stage,
+          outcome: event.outcome,
+          reason: event.reason,
+        })),
       });
     },
   });

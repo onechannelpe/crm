@@ -61,7 +61,7 @@ describe("auth middleware routing", () => {
 
   it("redirects users from routes they cannot access", async () => {
     const decision = await enforceAuthRequest({
-      request: new Request("http://localhost:3000/audit"),
+      request: new Request("http://localhost:3000/settings/event-logs"),
       locals: {
         nonce: "nonce",
         requestContext: createRequestContext(

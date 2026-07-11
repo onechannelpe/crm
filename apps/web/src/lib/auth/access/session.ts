@@ -14,10 +14,9 @@ export async function getSession(): Promise<AuthSession | null> {
   return getRequestContext().getAuthSession();
 }
 
-// Result-returning core. The action runtime consumes these so that an auth
-// denial is an outcome in the same Result channel as parsing and execution, not
-// a thrown exception that loses its kind. The throwing facades below wrap these
-// for the raw (non-runAction) callers in routes and standalone actions.
+// Auth denials return Err(...) in the same Result channel as parsing and
+// execution so the action runtime can branch on kind instead of catching.
+// Throwing facades further down wrap these for non-runAction callers.
 
 export async function authenticate(): Promise<
   Result<AuthSession, DomainError>

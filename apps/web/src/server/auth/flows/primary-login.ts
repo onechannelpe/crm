@@ -15,11 +15,12 @@ import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
 import type { AuthProof } from "~/server/auth/policy/types";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
 import { createSessionService } from "~/server/auth/session/session.service";
+import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 async function createTotpLoginFlow(
   identifier: string,
-  userId: number,
+  userId: UserId,
   primaryAuthMethod: "password" | "google" | "passkey",
   deps: Pick<AuthLoginDeps, "loginFlows">,
 ): Promise<TotpLoginFlowState> {
@@ -29,7 +30,7 @@ async function createTotpLoginFlow(
     user_id: userId,
     challenge_id: null,
     state: "totp",
-    expires_at: Date.now() + config.auth.loginFlowTtlMs,
+    expires_at: new Date(Date.now() + config.auth.loginFlowTtlMs),
   });
 
   return {

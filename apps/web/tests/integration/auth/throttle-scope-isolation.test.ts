@@ -1,6 +1,6 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createAuthThrottleKit } from "@tests/support/auth/throttle-kit";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 
@@ -9,12 +9,16 @@ describe("auth throttle scope isolation", () => {
     freezeAtMs: 1_700_000_000_000,
   });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await scenario.setup();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await scenario.teardown();
+  });
+
+  beforeEach(async () => {
+    await scenario.reset();
   });
 
   it("blocks when account scope is actively blocked", async () => {
@@ -30,7 +34,7 @@ describe("auth throttle scope isolation", () => {
       identifier: "exec1@test.local",
       ipAddress: "203.0.113.1",
       failureCount: 10,
-      blockedUntil: now + 60_000,
+      blockedUntil: new Date(now + 60_000),
     });
 
     const status = await svc.checkLoginThrottle(
@@ -53,7 +57,7 @@ describe("auth throttle scope isolation", () => {
       identifier: "exec1@test.local",
       ipAddress: "198.51.100.12",
       failureCount: 10,
-      blockedUntil: now + 60_000,
+      blockedUntil: new Date(now + 60_000),
     });
 
     const status = await svc.checkLoginThrottle(
@@ -78,7 +82,7 @@ describe("auth throttle scope isolation", () => {
       identifier,
       ipAddress,
       failureCount: 10,
-      blockedUntil: now + 60_000,
+      blockedUntil: new Date(now + 60_000),
     });
     await throttle.seedCounter({
       endpoint: "password_login",
@@ -86,7 +90,7 @@ describe("auth throttle scope isolation", () => {
       identifier,
       ipAddress,
       failureCount: 10,
-      blockedUntil: now + 60_000,
+      blockedUntil: new Date(now + 60_000),
     });
     await throttle.seedCounter({
       endpoint: "password_login",
@@ -94,7 +98,7 @@ describe("auth throttle scope isolation", () => {
       identifier: "someone-else@test.local",
       ipAddress,
       failureCount: 100,
-      blockedUntil: now + 60_000,
+      blockedUntil: new Date(now + 60_000),
     });
 
     await svc.clearLoginFailureState(identifier, ipAddress);
@@ -143,7 +147,7 @@ describe("auth throttle scope isolation", () => {
       identifier,
       ipAddress,
       failureCount: 10,
-      blockedUntil: now + 60_000,
+      blockedUntil: new Date(now + 60_000),
     });
 
     expect((await svc.checkLoginThrottle(identifier, ipAddress)).allowed).toBe(

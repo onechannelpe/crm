@@ -9,6 +9,7 @@ import { enrollPasskey } from "~/server/auth/flows/passkey-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import type { WebauthnChallengeId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 export async function completeOnboarding(
@@ -36,7 +37,7 @@ export async function completeOnboarding(
 
 export async function completePasskeyOnboarding(
   phone: Phone,
-  challengeId: number,
+  challengeId: WebauthnChallengeId,
   response: RegistrationResponseJSON,
 ): Promise<{ redirectTo: string }> {
   const onboarding = getServerRuntime().auth.onboarding;

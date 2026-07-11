@@ -1,18 +1,23 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type {
+  AuthLoginFlowId,
+  UserId,
+  WebauthnChallengeId,
+} from "~/server/shared/ids";
 
 export function createLoginFlowsRepo(db: Kysely<Database>) {
   return {
     async create(values: {
       identifier: string;
       primary_auth_method: "password" | "google" | "passkey";
-      user_id?: number | null;
-      challenge_id?: number | null;
+      user_id?: UserId | null;
+      challenge_id?: WebauthnChallengeId | null;
       state: "totp" | "passkey";
-      expires_at: number;
-    }): Promise<number> {
-      const now = Date.now();
+      expires_at: Date;
+    }): Promise<AuthLoginFlowId> {
+      const now = new Date();
       const inserted = await db
         .insertInto("login_flows")
         .values({
@@ -31,7 +36,7 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
       return inserted.id;
     },
 
-    findById(id: number) {
+    findById(id: AuthLoginFlowId) {
       return db
         .selectFrom("login_flows")
         .selectAll()
@@ -39,11 +44,11 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    async delete(id: number): Promise<void> {
+    async delete(id: AuthLoginFlowId): Promise<void> {
       await db.deleteFrom("login_flows").where("id", "=", id).execute();
     },
 
-    async deleteExpired(now = Date.now()): Promise<number> {
+    async deleteExpired(now = new Date()): Promise<number> {
       const result = await db
         .deleteFrom("login_flows")
         .where("expires_at", "<", now)

@@ -91,11 +91,7 @@ export default function LoginVerifyPage() {
                   action={totpLoginMutation}
                   method="post"
                 >
-                  <input
-                    type="hidden"
-                    name="flowId"
-                    value={String(flow().id)}
-                  />
+                  <input type="hidden" name="flowId" value={flow().id} />
                   <input type="hidden" name="totpCode" value={totpCode()} />
                   <OtpSlotInput
                     value={totpCode()}

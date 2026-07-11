@@ -24,7 +24,7 @@ export async function resetPassword(input: {
     return Err(fail("password_mismatch"));
   }
 
-  const now = Date.now();
+  const now = new Date();
   const record = await input.deps.repos.passwordResetTokens.findValidByHash(
     hashPasswordResetToken(input.token),
     now,

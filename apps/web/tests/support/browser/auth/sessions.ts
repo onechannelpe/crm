@@ -15,11 +15,11 @@ export async function seedBrowserSession(
     sessionClass?: "pre_auth" | "app";
     primaryAuthMethod?: "password" | "google" | "passkey";
     strongAuthMethod?: "totp" | "passkey" | "federated" | null;
-    strongAuthAt?: number | null;
+    strongAuthAt?: Date | null;
   },
 ): Promise<string> {
   const token = generateSessionToken();
-  const now = Date.now();
+  const now = new Date();
 
   await runtime.repos.sessions.create({
     id: hashSessionToken(token),
@@ -34,7 +34,7 @@ export async function seedBrowserSession(
     user_agent: "playwright",
     created_at: now,
     last_activity: now,
-    expires_at: now + 30 * 24 * 60 * 60 * 1000,
+    expires_at: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
   });
 
   return token;

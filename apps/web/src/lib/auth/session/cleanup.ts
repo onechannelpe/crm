@@ -53,7 +53,7 @@ async function cleanupStaleAuthThrottle(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const expiredBlocks = await repos.authThrottle.deleteExpiredBlocks();
   const stale = await repos.authThrottle.deleteUpdatedBefore(
-    Date.now() - config.auth.throttleRetentionMs,
+    new Date(Date.now() - config.auth.throttleRetentionMs),
   );
   const total = expiredBlocks + stale;
   if (total > 0) {
@@ -64,7 +64,7 @@ async function cleanupStaleAuthThrottle(): Promise<void> {
 async function cleanupStaleAuthEvents(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.authEvents.deleteCreatedBefore(
-    Date.now() - config.auth.eventsRetentionMs,
+    new Date(Date.now() - config.auth.eventsRetentionMs),
   );
   if (deleted > 0) {
     logger.info("stale_auth_events_deleted", { deleted });
@@ -74,7 +74,7 @@ async function cleanupStaleAuthEvents(): Promise<void> {
 async function cleanupStaleActionObservations(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.actionObservations.deleteCreatedBefore(
-    Date.now() - config.observability.retentionMs,
+    new Date(Date.now() - config.observability.retentionMs),
   );
   if (deleted > 0) {
     logger.info("stale_action_observations_deleted", { deleted });
@@ -84,7 +84,7 @@ async function cleanupStaleActionObservations(): Promise<void> {
 async function cleanupStaleAuthFunnelEvents(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.authFunnelEvents.deleteCreatedBefore(
-    Date.now() - config.observability.retentionMs,
+    new Date(Date.now() - config.observability.retentionMs),
   );
   if (deleted > 0) {
     logger.info("stale_auth_funnel_events_deleted", { deleted });
@@ -94,7 +94,7 @@ async function cleanupStaleAuthFunnelEvents(): Promise<void> {
 async function cleanupStaleActionRateLimits(): Promise<void> {
   const repos = createCleanupRepos(getServerRuntime().infra.db);
   const deleted = await repos.actionRateLimits.deleteUpdatedBefore(
-    Date.now() - config.security.rateLimitRetentionMs,
+    new Date(Date.now() - config.security.rateLimitRetentionMs),
   );
   if (deleted > 0) {
     logger.info("stale_rate_limit_counters_deleted", { deleted });
