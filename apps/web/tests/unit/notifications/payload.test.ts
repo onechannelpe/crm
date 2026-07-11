@@ -4,43 +4,44 @@ import {
   parseNotificationAudience,
   parseNotificationChannels,
   validateNotificationIntent,
-} from "~/server/notifications/outbox-payload";
+} from "~/server/notifications/intent/payload";
 
 describe("notification outbox payload", () => {
   it("parses valid audience variants", () => {
     expect(
-      parseNotificationAudience(
-        JSON.stringify({ kind: "branch_role", branchId: 2, role: "admin" }),
-      ),
-    ).toEqual({ kind: "branch_role", branchId: 2, role: "admin" });
+      parseNotificationAudience({
+        kind: "branch_role",
+        branchId: "2",
+        role: "admin",
+      }),
+    ).toEqual({ kind: "branch_role", branchId: "2", role: "admin" });
   });
 
   it("rejects invalid audience data", () => {
     expect(() =>
-      parseNotificationAudience(
-        JSON.stringify({ kind: "user_ids", userIds: [1, "2"] }),
-      ),
+      parseNotificationAudience({ kind: "user_ids", userIds: [1, "2"] }),
     ).toThrow("Invalid notification audience payload");
   });
 
   it("parses supported channels", () => {
-    expect(
-      parseNotificationChannels(JSON.stringify(["in_app", "whatsapp"])),
-    ).toEqual(["in_app", "whatsapp"]);
+    expect(parseNotificationChannels(["in_app", "whatsapp"])).toEqual([
+      "in_app",
+      "whatsapp",
+    ]);
   });
 
   it("rejects unsupported channels", () => {
-    expect(() =>
-      parseNotificationChannels(JSON.stringify(["in_app", "sms"])),
-    ).toThrow("Invalid notification channels payload");
+    expect(() => parseNotificationChannels(["in_app", "sms"])).toThrow(
+      "Invalid notification channels payload",
+    );
   });
 });
 
 describe("validateNotificationIntent", () => {
   const validIntent = {
-    id: "test-1",
+    id: "test-event-1:variant-1",
     eventType: "test.event",
-    audience: { kind: "user_ids", userIds: [1] },
+    audience: { kind: "user_ids", userIds: ["1"] },
     channels: ["in_app"],
     priority: "normal",
     title: "hello",
@@ -52,11 +53,11 @@ describe("validateNotificationIntent", () => {
     expect(validateNotificationIntent(validIntent)).toEqual(validIntent);
   });
 
-  it("rejects a non-positive user id at the producer boundary", () => {
+  it("rejects a non-string user id at the producer boundary", () => {
     expect(() =>
       validateNotificationIntent({
         ...validIntent,
-        audience: { kind: "user_ids", userIds: [1, 0] },
+        audience: { kind: "user_ids", userIds: ["1", 0] },
       }),
     ).toThrow("Invalid notification intent");
   });
@@ -74,7 +75,7 @@ describe("validateNotificationIntent", () => {
     expect(() =>
       validateNotificationIntent({
         ...validIntent,
-        audience: { kind: "branch_role", branchId: 1, role: "intruder" },
+        audience: { kind: "branch_role", branchId: "1", role: "intruder" },
       }),
     ).toThrow("Invalid notification intent");
   });

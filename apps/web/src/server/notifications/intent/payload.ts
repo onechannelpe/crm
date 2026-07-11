@@ -1,11 +1,13 @@
 import { isRole } from "~/lib/auth/access/rbac";
 import { isPlainRecord } from "~/lib/type-guards";
+import { NotificationIntentId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 import type {
   NotificationAudience,
   NotificationChannel,
   NotificationIntent,
-} from "./types";
+} from "../types";
 
 const NOTIFICATION_CHANNELS = [
   "in_app",
@@ -19,8 +21,8 @@ const NOTIFICATION_PRIORITIES = [
   "low",
 ] as const satisfies ReadonlyArray<NotificationIntent["priority"]>;
 
-function isPositiveInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value > 0;
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 function isNotificationAudience(value: unknown): value is NotificationAudience {
@@ -30,18 +32,18 @@ function isNotificationAudience(value: unknown): value is NotificationAudience {
     case "user_ids":
       return (
         Array.isArray(value["userIds"]) &&
-        value["userIds"].every(isPositiveInteger)
+        value["userIds"].every(isNonEmptyString)
       );
     case "branch_role":
       return (
-        isPositiveInteger(value["branchId"]) &&
+        isNonEmptyString(value["branchId"]) &&
         typeof value["role"] === "string" &&
         isRole(value["role"])
       );
     case "global_role":
       return typeof value["role"] === "string" && isRole(value["role"]);
     case "team_id":
-      return isPositiveInteger(value["teamId"]);
+      return isNonEmptyString(value["teamId"]);
     default:
       return false;
   }
@@ -67,6 +69,7 @@ function isNotificationIntent(value: unknown): value is NotificationIntent {
   if (!isPlainRecord(value)) return false;
   return (
     typeof value["id"] === "string" &&
+    !isErr(NotificationIntentId.parse(value["id"])) &&
     typeof value["eventType"] === "string" &&
     isNotificationAudience(value["audience"]) &&
     isNotificationChannels(value["channels"]) &&
@@ -86,20 +89,20 @@ export function validateNotificationIntent(input: unknown): NotificationIntent {
   return input;
 }
 
-export function parseNotificationAudience(value: string): NotificationAudience {
-  const parsed: unknown = JSON.parse(value);
-  if (!isNotificationAudience(parsed)) {
+export function parseNotificationAudience(
+  value: unknown,
+): NotificationAudience {
+  if (!isNotificationAudience(value)) {
     throw new Error("Invalid notification audience payload");
   }
-  return parsed;
+  return value;
 }
 
 export function parseNotificationChannels(
-  value: string,
+  value: unknown,
 ): NotificationChannel[] {
-  const parsed: unknown = JSON.parse(value);
-  if (!isNotificationChannels(parsed)) {
+  if (!isNotificationChannels(value)) {
     throw new Error("Invalid notification channels payload");
   }
-  return parsed;
+  return value;
 }

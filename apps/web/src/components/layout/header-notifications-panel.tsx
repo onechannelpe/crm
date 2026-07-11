@@ -41,7 +41,7 @@ export function HeaderNotificationsPanel() {
     getContainer: () => containerRef,
   });
 
-  const handleMarkRead = async (notificationId: number) => {
+  const handleMarkRead = async (notificationId: string) => {
     try {
       await updateFeed({
         optimistic: (prev) => ({
@@ -63,7 +63,7 @@ export function HeaderNotificationsPanel() {
         },
       });
     } catch {
-      // Rollback handled by update()
+      // update() rolls back the optimistic value on failure.
     }
   };
 
@@ -81,9 +81,7 @@ export function HeaderNotificationsPanel() {
           await markAllRead();
         },
       });
-    } catch {
-      // Rollback handled by update()
-    }
+    } catch {}
   };
 
   return (

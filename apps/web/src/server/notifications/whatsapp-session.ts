@@ -1,33 +1,35 @@
-import type { Kysely } from "kysely";
+import { sql } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId } from "~/server/shared/ids";
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 
-export function openSession(
-  db: Kysely<Database>,
-  userId: number,
-  now: number,
-): Promise<unknown> {
-  return db
+export async function openSession(
+  db: DatabaseExecutor,
+  userId: UserId,
+  messageSentAt: Date,
+): Promise<void> {
+  const expiresAt = new Date(messageSentAt.getTime() + SESSION_DURATION_MS);
+  await db
     .insertInto("whatsapp_sessions")
     .values({
       user_id: userId,
-      expires_at: now + SESSION_DURATION_MS,
+      expires_at: expiresAt,
     })
     .onConflict((oc) =>
-      oc
-        .column("user_id")
-        .doUpdateSet({ expires_at: now + SESSION_DURATION_MS }),
+      oc.column("user_id").doUpdateSet({
+        expires_at: sql<Date>`GREATEST(whatsapp_sessions.expires_at, EXCLUDED.expires_at)`,
+      }),
     )
     .execute();
 }
 
 export async function filterUsersWithActiveSession(
-  db: Kysely<Database>,
-  userIds: number[],
-  now: number,
-): Promise<Set<number>> {
+  db: DatabaseExecutor,
+  userIds: UserId[],
+  now: Date,
+): Promise<Set<UserId>> {
   if (userIds.length === 0) return new Set();
 
   const rows = await db

@@ -4,10 +4,14 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from "~/actions/app-notifications";
-import { headerNotificationsQuery } from "~/lib/queries/notifications";
+import { setNotificationPreference } from "~/actions/settings/notifications";
+import {
+  headerNotificationsQuery,
+  notificationPreferencesQuery,
+} from "~/lib/queries/notifications";
 
 export const markNotificationReadMutation = action(
-  async (notificationId: number) => {
+  async (notificationId: string) => {
     await markNotificationRead(notificationId);
     return json({}, { revalidate: headerNotificationsQuery.key });
   },
@@ -18,3 +22,11 @@ export const markAllNotificationsReadMutation = action(async () => {
   await markAllNotificationsRead();
   return json({}, { revalidate: headerNotificationsQuery.key });
 }, "markAllNotificationsRead");
+
+export const setNotificationPreferenceMutation = action(
+  async (category: string, channel: string, enabled: boolean) => {
+    const result = await setNotificationPreference(category, channel, enabled);
+    return json(result, { revalidate: notificationPreferencesQuery.key });
+  },
+  "setNotificationPreference",
+);
