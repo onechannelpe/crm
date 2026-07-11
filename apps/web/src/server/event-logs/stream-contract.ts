@@ -12,12 +12,6 @@ export function eventLogTopic(table: EventLogTable): string {
   return `${TOPIC_PREFIX}${table}`;
 }
 
-export function parseEventLogTopic(topic: string): EventLogTable | null {
-  if (!topic.startsWith(TOPIC_PREFIX)) return null;
-  const table = topic.slice(TOPIC_PREFIX.length);
-  return isEventLogTable(table) ? table : null;
-}
-
 export function serializeEventLogStreamPayload(
   record: EventLogRecord,
 ): string | null {

@@ -7,30 +7,28 @@ import {
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import {
   parseRecordImportProgressMessage,
-  recordImportTopic,
   type RecordImportProgressEvent,
   type RecordImportType,
 } from "~/features/records-imports/contracts";
-import { buildRealtimeSubscriptionMessage } from "~/lib/realtime/ws-protocol";
+import {
+  createEventSourceStream,
+  type EventSourceStream,
+} from "~/lib/realtime/event-source-stream";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 4000;
 const POLL_BASE_MS = 2_000;
 const POLL_MAX_MS = 15_000;
-const WS_RECONNECT_BASE_MS = 1_000;
-const WS_RECONNECT_MAX_MS = 15_000;
 const RECONNECT_JITTER_MS = 300;
 
 type ImportSession = {
   jobId: string;
   toastId: string;
   importType: RecordImportType;
-  socket: WebSocket | null;
+  stream: EventSourceStream | null;
   pollTimer: number | null;
-  wsReconnectTimer: number | null;
   pollFailureCount: number;
-  wsReconnectAttempt: number;
 };
 
 function importTypeLabel(type: RecordImportType): string {
@@ -74,9 +72,8 @@ function isSupportedFile(file: File): boolean {
   return name.endsWith(".csv") || name.endsWith(".xlsx");
 }
 
-function websocketUrl(): string {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${window.location.host}/api/records/imports/ws`;
+function recordImportStreamUrl(jobId: string): string {
+  return `/api/records/imports/${jobId}/stream`;
 }
 
 function withJitter(ms: number): number {
@@ -95,12 +92,7 @@ export function useRecordsImport() {
     const s = session;
     session = null;
     if (s.pollTimer !== null) window.clearTimeout(s.pollTimer);
-    if (s.wsReconnectTimer !== null) window.clearTimeout(s.wsReconnectTimer);
-    try {
-      s.socket?.close();
-    } catch {
-      // Closing an already-torn-down browser socket must not block local cleanup.
-    }
+    s.stream?.disconnect();
   }
 
   function handleJobEvent(
@@ -169,58 +161,24 @@ export function useRecordsImport() {
     }, delayMs);
   }
 
-  function scheduleWsReconnect(s: ImportSession): void {
-    if (s.wsReconnectTimer !== null) return;
-    s.wsReconnectAttempt++;
-    const retryExponent = Math.max(0, s.wsReconnectAttempt - 1);
-    const delay = withJitter(
-      Math.min(WS_RECONNECT_BASE_MS * 2 ** retryExponent, WS_RECONNECT_MAX_MS),
-    );
-    s.wsReconnectTimer = window.setTimeout(() => {
-      if (session !== s) return;
-      s.wsReconnectTimer = null;
-      connectWebsocket(s);
-    }, delay);
-  }
-
-  function connectWebsocket(s: ImportSession): void {
-    try {
-      s.socket?.close();
-    } catch {
-      // Reconnect replaces the socket even if the old browser handle is gone.
-    }
-    s.socket = null;
-
-    const socket = new WebSocket(websocketUrl());
-    s.socket = socket;
-
-    socket.addEventListener("open", () => {
-      s.wsReconnectAttempt = 0;
-      socket.send(
-        buildRealtimeSubscriptionMessage({
-          type: "subscribe",
-          topic: recordImportTopic(s.jobId),
-        }),
-      );
+  function connectStream(s: ImportSession): void {
+    const stream = createEventSourceStream({
+      onMessage: (raw) => {
+        if (session !== s) return;
+        const payload = parseRecordImportProgressMessage(raw);
+        if (payload) handleJobEvent(s, payload);
+      },
+      // The stream never established at all: fall back to polling. An
+      // established stream that later drops recovers on its own (the browser
+      // retries EventSource natively, and the route re-sends current state
+      // on every fresh connection), so this is not wired to every hiccup.
+      onNeverConnected: () => {
+        if (session !== s) return;
+        schedulePolling(s, 0);
+      },
     });
-
-    socket.addEventListener("message", (ev) => {
-      if (session !== s) return;
-      const payload = parseRecordImportProgressMessage(String(ev.data));
-      if (payload) handleJobEvent(s, payload);
-    });
-
-    socket.addEventListener("close", () => {
-      if (session !== s) return;
-      schedulePolling(s, 0);
-      scheduleWsReconnect(s);
-    });
-
-    socket.addEventListener("error", () => {
-      if (session !== s) return;
-      schedulePolling(s, 0);
-      scheduleWsReconnect(s);
-    });
+    s.stream = stream;
+    stream.connect(recordImportStreamUrl(s.jobId));
   }
 
   async function importFile(file: File): Promise<void> {
@@ -250,15 +208,12 @@ export function useRecordsImport() {
         jobId: result.jobId,
         toastId,
         importType: result.importType,
-        socket: null,
+        stream: null,
         pollTimer: null,
-        wsReconnectTimer: null,
         pollFailureCount: 0,
-        wsReconnectAttempt: 0,
       };
 
-      schedulePolling(session, 0);
-      connectWebsocket(session);
+      connectStream(session);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }

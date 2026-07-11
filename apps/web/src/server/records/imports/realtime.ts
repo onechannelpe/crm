@@ -1,24 +1,19 @@
 import {
-  recordImportTopic,
   parseRecordImportTopic,
+  recordImportTopic,
   parseRecordImportProgressMessage,
+  type RecordImportProgressEvent,
 } from "~/features/records-imports/contracts";
 import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
 import { getServerRuntime } from "~/server/platform/container";
-import { createPgTopicBridge } from "~/server/realtime/core/bridge";
-import { TopicHub } from "~/server/realtime/core/topic-hub";
+import type { TopicHub } from "~/server/realtime/topic-hub";
+import { createTopicRealtimeChannel } from "~/server/realtime/topic-realtime-channel";
+
 import {
   buildRecordImportProgressEvent,
   findRecordImportJob,
-} from "~/server/records/imports/progress-events";
+} from "./progress-events";
 
-const recordImportsTopicHub = new TopicHub();
-
-// NOTIFY only reaches this bridge's connection while it's live: any progress
-// event sent during a reconnect gap is gone for good. Since every peer that
-// stays subscribed through such a gap otherwise never learns the job moved
-// on, re-fetch each subscribed job's current row and rebroadcast it once the
-// connection comes back, mirroring the poll floor the job queues rely on.
 async function reconcileRecordImportsProgress(hub: TopicHub): Promise<void> {
   const { integration } = getServerRuntime().integrations;
 
@@ -38,20 +33,11 @@ async function reconcileRecordImportsProgress(hub: TopicHub): Promise<void> {
   );
 }
 
-const recordImportsBridge = createPgTopicBridge({
-  name: "records-imports",
-  channel: RECORDS_IMPORT_PROGRESS_CHANNEL,
-  hub: recordImportsTopicHub,
-  parseEvent: parseRecordImportProgressMessage,
-  topicForEvent: (event) => recordImportTopic(event.jobId),
-  serializeEvent: (event) => JSON.stringify(event),
-  reconcile: reconcileRecordImportsProgress,
-});
-
-export async function ensureRecordImportsRealtimeBridge(): Promise<void> {
-  await recordImportsBridge.start();
-}
-
-export function getRecordImportsTopicHub(): TopicHub {
-  return recordImportsTopicHub;
-}
+export const recordImportsRealtime =
+  createTopicRealtimeChannel<RecordImportProgressEvent>({
+    name: "records-imports",
+    channel: RECORDS_IMPORT_PROGRESS_CHANNEL,
+    parseEvent: parseRecordImportProgressMessage,
+    topicForEvent: (event) => recordImportTopic(event.jobId),
+    reconcile: reconcileRecordImportsProgress,
+  });

@@ -12,8 +12,7 @@ interface PgTopicBridgeConfig<TEvent> {
   topicForEvent: (event: TEvent) => string;
   serializeEvent?: (event: TEvent) => string;
   // Runs after every (re)connect. Use it to re-sync subscribers from
-  // durable state: a peer that stayed subscribed through a connection gap
-  // would otherwise stall on whatever it last received.
+  // durable state.
   reconcile?: (hub: TopicHub) => Promise<void>;
 }
 

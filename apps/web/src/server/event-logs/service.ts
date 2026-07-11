@@ -7,6 +7,7 @@ import {
   type EventLogQueryInput,
   type EventLogQueryResult,
   type EventLogRecord,
+  type EventLogTable,
 } from "~/contracts/event-logs/event-log";
 import type { Database } from "~/lib/db/types";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
@@ -304,7 +305,74 @@ export function createEventLogsService(db: Kysely<Database>) {
     );
   }
 
+  // Ascending catch-up from a cursor, unfiltered: the live stream only runs
+  // while no filters are active, so replay never needs to consider them.
+  async function replayAfter(
+    table: EventLogTable,
+    cursor: Cursor,
+    limit: number,
+  ): Promise<EventLogRecord[]> {
+    const cursorDate = new Date(cursor.timestamp);
+
+    if (table === "DOMAIN_EVENT") {
+      const rows = await db
+        .selectFrom("events")
+        .selectAll()
+        .where((eb) =>
+          eb.or([
+            eb("occurred_at", ">", cursorDate),
+            eb.and([
+              eb("occurred_at", "=", cursorDate),
+              eb("id", ">", EventId.trust(cursor.id)),
+            ]),
+          ]),
+        )
+        .orderBy("occurred_at", "asc")
+        .orderBy("id", "asc")
+        .limit(limit)
+        .execute();
+      return rows.map(mapDomainEventRow);
+    }
+
+    if (table === "ACTION_LOG") {
+      const rows = await db
+        .selectFrom("action_observations")
+        .selectAll()
+        .where((eb) =>
+          eb.or([
+            eb("created_at", ">", cursorDate),
+            eb.and([
+              eb("created_at", "=", cursorDate),
+              eb("id", ">", cursor.id),
+            ]),
+          ]),
+        )
+        .orderBy("created_at", "asc")
+        .orderBy("id", "asc")
+        .limit(limit)
+        .execute();
+      return rows.map(mapActionObservationRow);
+    }
+
+    const rows = await db
+      .selectFrom("auth_funnel_events")
+      .selectAll()
+      .where((eb) =>
+        eb.or([
+          eb("created_at", ">", cursorDate),
+          eb.and([eb("created_at", "=", cursorDate), eb("id", ">", cursor.id)]),
+        ]),
+      )
+      .orderBy("created_at", "asc")
+      .orderBy("id", "asc")
+      .limit(limit)
+      .execute();
+    return rows.map(mapAuthFunnelEventRow);
+  }
+
   return {
+    replayAfter,
+
     async getEventLogs(
       input: EventLogQueryInput,
     ): Promise<Result<EventLogQueryResult, DomainError>> {
