@@ -1,4 +1,4 @@
-import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
+import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createEventsRepo } from "~/server/shared/repos-events";
 import { createTeamsRepo } from "~/server/users/repos-teams";
@@ -10,7 +10,7 @@ import type { InviteManagementQueryPort } from "../application/ports";
 export function createInviteManagementContext(
   executor: DatabaseExecutor,
 ): InviteManagementQueryPort {
-  const { inviteService } = createInviteServiceContext(executor);
+  const inviteService = createInviteServiceForExecutor(executor);
   const repos = {
     events: createEventsRepo(executor),
     teams: createTeamsRepo(executor),

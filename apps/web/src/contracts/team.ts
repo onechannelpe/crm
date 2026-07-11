@@ -6,21 +6,21 @@ export interface BulkImportSetup {
 }
 
 export interface TeamInvite {
-  inviteId: number;
-  userId: number;
+  inviteId: string;
+  userId: string;
   names: string;
   firstSurname: string;
   secondSurname: string;
   email: string;
   role: Role;
-  teamId: number | null;
+  teamId: string | null;
   expiresAt: number;
   createdAt: number;
   sentAt: number | null;
 }
 
 export interface TeamOption {
-  id: number;
+  id: string;
   name: string;
 }
 
@@ -37,6 +37,6 @@ export interface CreateTeamInviteInput {
   email: string;
   role: string;
   executiveCategory: string | null;
-  teamId: number | null;
+  teamId: string | null;
   expiresAt: number | null;
 }

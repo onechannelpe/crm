@@ -1,9 +1,6 @@
 "use server";
 
-import type {
-  BulkImportSetup,
-  InviteManagement,
-} from "~/actions/team/contracts";
+import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import {

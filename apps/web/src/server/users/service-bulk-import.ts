@@ -12,7 +12,7 @@ import {
   type CsvDelimiter,
 } from "~/server/csv/core";
 import type { InviteService } from "~/server/invites/application/types";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { BranchId, UserId, UserInviteId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 type ProvisioningInterface = Pick<
@@ -34,9 +34,9 @@ export async function applyImport(
   provisioning: ProvisioningInterface,
   onInviteCreated: (params: {
     row: BulkImportRow;
-    inviteId: number;
+    inviteId: UserInviteId;
     token: string;
-    expiresAt: number;
+    expiresAt: Date;
   }) => Promise<void>,
 ): Promise<BulkApplyResult> {
   let created = 0;
@@ -59,7 +59,7 @@ export async function applyImport(
         role: safeRole,
         executiveCategory: row.executiveCategory,
         teamId: null,
-        expiresAt: row.expiresAt,
+        expiresAt: row.expiresAt ? new Date(row.expiresAt) : null,
       });
 
       if (!result.ok) {

@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/server/shared/ids";
 
 export function createPasskeysRepo(db: Kysely<Database>) {
   return {
@@ -12,7 +13,7 @@ export function createPasskeysRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    findByUser(userId: number) {
+    findByUser(userId: UserId) {
       return db
         .selectFrom("passkeys")
         .selectAll()
@@ -22,26 +23,26 @@ export function createPasskeysRepo(db: Kysely<Database>) {
 
     create(values: {
       id: string;
-      user_id: number;
+      user_id: UserId;
       public_key: string;
       counter: number;
       transports: string | null;
     }) {
       return db
         .insertInto("passkeys")
-        .values({ ...values, created_at: Date.now() })
+        .values({ ...values, created_at: new Date() })
         .executeTakeFirstOrThrow();
     },
 
     updateCounter(id: string, counter: number) {
       return db
         .updateTable("passkeys")
-        .set({ counter, last_used_at: Date.now() })
+        .set({ counter, last_used_at: new Date() })
         .where("id", "=", id)
         .execute();
     },
 
-    deleteAllByUser(userId: number) {
+    deleteAllByUser(userId: UserId) {
       return db.deleteFrom("passkeys").where("user_id", "=", userId).execute();
     },
   };

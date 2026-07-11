@@ -1,9 +1,12 @@
+import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
 import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/platform/action/context";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserInviteId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { epochMilliseconds } from "~/server/shared/time";
 
 import type {
   TeamInviteCreateContext,
@@ -15,12 +18,7 @@ import {
   buildInviteUrl,
   sendInviteEmail,
 } from "../infrastructure/invite-delivery";
-import type {
-  BulkImportSetup,
-  CreateTeamInviteCommand,
-  InviteInfo,
-  InviteManagement,
-} from "./contracts";
+import type { CreateTeamInviteCommand, InviteInfo } from "./contracts";
 import type { InviteManagementQueryPort } from "./ports";
 
 export async function getInviteInfo(input: {
@@ -29,7 +27,7 @@ export async function getInviteInfo(input: {
 }): Promise<Result<InviteInfo | null, DomainError>> {
   const invite = await input.repos.userInvites.findPendingByTokenHash(
     hashInviteToken(input.token),
-    Date.now(),
+    new Date(),
   );
   if (!invite) {
     return Ok(null);
@@ -54,7 +52,19 @@ export async function getInviteManagement(
   }
 
   return Ok({
-    pendingInvites: pendingInvites.value,
+    pendingInvites: pendingInvites.value.map((invite) => ({
+      inviteId: invite.inviteId,
+      userId: invite.userId,
+      names: invite.names,
+      firstSurname: invite.firstSurname,
+      secondSurname: invite.secondSurname,
+      email: invite.email,
+      role: invite.role,
+      teamId: invite.teamId,
+      expiresAt: epochMilliseconds(invite.expiresAt),
+      createdAt: epochMilliseconds(invite.createdAt),
+      sentAt: invite.sentAt ? epochMilliseconds(invite.sentAt) : null,
+    })),
     teams,
     assignableRoles: getAssignableRoleOptions(ctx.actor.role),
   });
@@ -72,7 +82,7 @@ export async function createTeamInvite(
   ctx: AppContext,
   deps: TeamInviteCreateContext,
   input: CreateTeamInviteCommand,
-): Promise<Result<{ inviteId: number }, DomainError>> {
+): Promise<Result<{ inviteId: string }, DomainError>> {
   await deps.enforceInviteCreateRateLimit(ctx.actor.userId);
 
   const result = await deps.inviteService.createInvite({
@@ -92,7 +102,7 @@ export async function createTeamInvite(
     return result;
   }
 
-  await sendInviteEmail({
+  const emailResult = await sendInviteEmail({
     email: input.email,
     fullName: shortName({
       names: input.names,
@@ -103,6 +113,9 @@ export async function createTeamInvite(
     inviteUrl: buildInviteUrl(result.value.token),
     expiresAt: result.value.expiresAt,
   });
+  if (isErr(emailResult)) {
+    return emailResult;
+  }
 
   const deliveryResult = await deps.inviteService.markInviteDelivered(
     result.value.inviteId,
@@ -117,7 +130,7 @@ export async function createTeamInvite(
 export async function resendTeamInvite(
   ctx: AppContext,
   deps: TeamInviteResendContext,
-  input: { inviteId: number },
+  input: { inviteId: UserInviteId },
 ): Promise<Result<void, DomainError>> {
   const result = await deps.inviteService.resendInvite({
     actorUserId: ctx.actor.userId,
@@ -135,13 +148,16 @@ export async function resendTeamInvite(
     return Err(fail("invite_target_missing"));
   }
 
-  await sendInviteEmail({
+  const emailResult = await sendInviteEmail({
     email: user.email,
     fullName: shortName(user),
     role: user.role,
     inviteUrl: buildInviteUrl(result.value.token),
     expiresAt: result.value.expiresAt,
   });
+  if (isErr(emailResult)) {
+    return emailResult;
+  }
 
   const deliveryResult = await deps.inviteService.markInviteDelivered(
     result.value.inviteId,
@@ -156,7 +172,7 @@ export async function resendTeamInvite(
 export async function revokeTeamInvite(
   ctx: AppContext,
   deps: TeamInviteProvisioningContext,
-  input: { inviteId: number },
+  input: { inviteId: UserInviteId },
 ): Promise<Result<void, DomainError>> {
   return deps.inviteService.revokeInvite({
     actorUserId: ctx.actor.userId,

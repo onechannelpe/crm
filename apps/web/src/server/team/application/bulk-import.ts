@@ -6,7 +6,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { shortName } from "~/lib/users/display-name";
 import type { AppContext } from "~/server/platform/action/context";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import {
   applyImport,
   parseAndValidateCsvRows,
@@ -61,7 +61,7 @@ export async function applyBulkImport(
     input.role,
     deps.inviteService,
     async ({ row, inviteId, token, expiresAt }) => {
-      await sendInviteEmail({
+      const emailResult = await sendInviteEmail({
         email: row.email,
         fullName: shortName({
           names: row.names,
@@ -72,6 +72,16 @@ export async function applyBulkImport(
         inviteUrl: buildInviteUrl(token),
         expiresAt,
       });
+      // Re-throw failures: applyImport's per-row loop catches into rowErrors,
+      // so a Result check here could not signal the loop.
+      if (isErr(emailResult)) {
+        const { error } = emailResult;
+        const message =
+          error.kind === "external" || error.kind === "internal"
+            ? error.internalMessage
+            : (error.code ?? error.kind);
+        throw new Error(message);
+      }
       await deps.inviteService.markInviteDelivered(inviteId);
     },
   );

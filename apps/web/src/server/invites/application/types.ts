@@ -2,166 +2,70 @@ import type { Role } from "~/lib/auth/access/rbac";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
 import type { AppUow } from "~/server/shared/application/uow";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type {
+  BranchId,
+  TeamId,
+  UserId,
+  UserInviteId,
+} from "~/server/shared/ids";
 import type { EventsRepo } from "~/server/shared/repos-events";
 import type { Result } from "~/server/shared/result";
-
-export interface InviteUsersPort {
-  findById(id: number): Promise<
-    | {
-        id: number;
-        branch_id: number;
-        role: Role;
-        email: string;
-        names: string;
-        first_surname: string;
-        second_surname: string;
-        is_active: number;
-      }
-    | undefined
-  >;
-  findByEmail(email: string): Promise<
-    | {
-        id: number;
-        branch_id: number;
-        role: Role;
-        email: string;
-        is_active: number;
-      }
-    | undefined
-  >;
-  findByUsername(username: string): Promise<{ id: number } | undefined>;
-  create(values: {
-    branch_id: number;
-    team_id?: number | null;
-    username: string;
-    email: string;
-    password_hash: string;
-    names: string;
-    first_surname: string;
-    second_surname: string;
-    expires_at?: number | null;
-    role: Role;
-    executive_category?: ExecutiveCategoryValue | null;
-    is_active: number;
-  }): Promise<number>;
-  updateInviteProvisioning(
-    id: number,
-    values: {
-      team_id: number | null;
-      names: string;
-      first_surname: string;
-      second_surname: string;
-      role: Role;
-      executive_category?: ExecutiveCategoryValue | null;
-      is_active: number;
-    },
-  ): Promise<unknown>;
-  updatePassword(id: number, passwordHash: string): Promise<unknown>;
-}
-
-export interface InviteTeamsPort {
-  findById(id: number): Promise<
-    | {
-        id: number;
-        branch_id: number;
-      }
-    | undefined
-  >;
-}
-
-export interface InviteWithUserRecord {
-  invite_id: number;
-  invite_status: "pending" | "accepted" | "revoked" | "expired";
-  invite_expires_at: number;
-  invite_created_at: number;
-  invite_created_by_user_id: number;
-  invite_sent_at: number | null;
-  user_id: number;
-  user_email: string;
-  user_role: Role;
-  user_branch_id: number;
-  user_team_id: number | null;
-  user_names: string;
-  user_first_surname: string;
-  user_second_surname: string;
-  user_username?: string;
-  user_is_active: number;
-}
-
-export interface InviteUserInvitesPort {
-  create(values: {
-    user_id: number;
-    branch_id: number;
-    email: string;
-    role: Role;
-    token_hash: string;
-    status: "pending";
-    expires_at: number;
-    created_by_user_id: number;
-    accepted_at: null;
-    revoked_at: null;
-    created_at: number;
-    sent_at: null;
-  }): Promise<number>;
-  findLatestPendingByBranch(
-    branchId: number,
-    now: number,
-  ): Promise<InviteWithUserRecord[]>;
-  findById(inviteId: number): Promise<
-    | {
-        id: number;
-        user_id: number;
-        branch_id: number;
-        status: "pending" | "accepted" | "revoked" | "expired";
-        expires_at: number;
-      }
-    | undefined
-  >;
-  findPendingByTokenHash(
-    tokenHash: string,
-    now: number,
-  ): Promise<InviteWithUserRecord | undefined>;
-  revokePendingByUser(userId: number, revokedAt: number): Promise<unknown>;
-  expirePendingBefore(now: number): Promise<unknown>;
-  markAccepted(inviteId: number, acceptedAt: number): Promise<unknown>;
-  markSent(inviteId: number, sentAt: number): Promise<unknown>;
-}
+import type { TeamsRepo } from "~/server/users/repos-teams";
+import type { UserInvitesRepo } from "~/server/users/repos-user-invites";
+import type { UsersRepo } from "~/server/users/repos-users";
 
 export interface InviteDeps {
-  users: InviteUsersPort;
-  teams: InviteTeamsPort;
-  userInvites: InviteUserInvitesPort;
+  users: Pick<
+    UsersRepo,
+    | "findById"
+    | "findByEmail"
+    | "findByUsername"
+    | "create"
+    | "updateInviteProvisioning"
+    | "updatePassword"
+  >;
+  teams: Pick<TeamsRepo, "findById">;
+  userInvites: Pick<
+    UserInvitesRepo,
+    | "create"
+    | "findLatestPendingByBranch"
+    | "findById"
+    | "findPendingByTokenHash"
+    | "revokePendingByUser"
+    | "expirePendingBefore"
+    | "markAccepted"
+    | "markSent"
+  >;
   events: Pick<EventsRepo, "append">;
 }
 
 export interface InviteServiceDeps {
   inviteTtlMs?: number;
-  now?: () => number;
+  now?: () => Date;
   uow: AppUow<InviteDeps>;
   hashPassword?: (password: string) => Promise<string>;
 }
 
 export interface InviteRuntime {
-  now: () => number;
+  now: () => Date;
   inviteTtlMs: number;
   uow: AppUow<InviteDeps>;
   hashPassword: (password: string) => Promise<string>;
 }
 
 export interface PendingBranchInvite {
-  inviteId: number;
-  userId: number;
+  inviteId: UserInviteId;
+  userId: UserId;
   email: string;
   names: string;
   firstSurname: string;
   secondSurname: string;
   role: Role;
-  teamId: number | null;
-  expiresAt: number;
-  createdAt: number;
-  createdByUserId: number;
-  sentAt: number | null;
+  teamId: TeamId | null;
+  expiresAt: Date;
+  createdAt: Date;
+  createdByUserId: UserId;
+  sentAt: Date | null;
 }
 
 export interface CreateInviteInput {
@@ -174,22 +78,22 @@ export interface CreateInviteInput {
   email: string;
   role: Role;
   executiveCategory?: ExecutiveCategoryValue | null;
-  teamId: number | null;
-  expiresAt?: number | null;
+  teamId: TeamId | null;
+  expiresAt?: Date | null;
 }
 
 export interface ResendInviteInput {
   actorUserId: UserId;
   actorRole: Role;
   branchId: BranchId;
-  inviteId: number;
+  inviteId: UserInviteId;
 }
 
 export interface RevokeInviteInput {
   actorUserId: UserId;
   actorRole: Role;
   branchId: BranchId;
-  inviteId: number;
+  inviteId: UserInviteId;
 }
 
 export interface AcceptInviteInput {
@@ -198,18 +102,18 @@ export interface AcceptInviteInput {
 }
 
 export interface IssueInviteInput {
-  actorUserId: number;
-  branchId: number;
-  userId: number;
+  actorUserId: UserId;
+  branchId: BranchId;
+  userId: UserId;
   email: string;
   role: Role;
-  expiresAt?: number | null;
+  expiresAt?: Date | null;
 }
 
 export interface InviteIssueResult {
-  inviteId: number;
+  inviteId: UserInviteId;
   token: string;
-  expiresAt: number;
+  expiresAt: Date;
 }
 
 export interface InviteAcceptedResult {
@@ -229,49 +133,16 @@ export interface InviteService {
     input: ResendInviteInput,
   ): Promise<Result<InviteIssueResult, DomainError>>;
   revokeInvite(input: RevokeInviteInput): Promise<Result<void, DomainError>>;
-  markInviteDelivered(inviteId: number): Promise<Result<void, DomainError>>;
+  markInviteDelivered(
+    inviteId: UserInviteId,
+  ): Promise<Result<void, DomainError>>;
   acceptInvite(
     input: AcceptInviteInput,
   ): Promise<Result<InviteAcceptedResult, DomainError>>;
 }
 
-export interface TeamInviteReadTeamsPort {
-  findByBranch(branchId: number): Promise<Array<{ id: number; name: string }>>;
-}
-
-export interface TeamInviteReadUsersPort {
-  findById(id: number): Promise<
-    | {
-        id: number;
-        email: string;
-        role: Role;
-        names: string;
-        first_surname: string;
-        second_surname: string;
-      }
-    | undefined
-  >;
-}
-
-export interface TeamInviteReadUserInvitesPort {
-  findById(inviteId: number): Promise<{ user_id: number } | undefined>;
-  findPendingByTokenHash(
-    tokenHash: string,
-    now: number,
-  ): Promise<
-    | {
-        user_names: string;
-        user_first_surname: string;
-        user_second_surname: string;
-        user_username: string;
-        user_email: string;
-      }
-    | undefined
-  >;
-}
-
 export interface TeamInviteReadRepos {
-  teams: TeamInviteReadTeamsPort;
-  userInvites: TeamInviteReadUserInvitesPort;
-  users: TeamInviteReadUsersPort;
+  teams: Pick<TeamsRepo, "findByBranch">;
+  userInvites: Pick<UserInvitesRepo, "findById" | "findPendingByTokenHash">;
+  users: Pick<UsersRepo, "findById">;
 }

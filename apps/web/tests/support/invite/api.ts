@@ -13,7 +13,7 @@ type InviteTestRepoFactory = (db: TestDbContext["db"]) => InviteDeps;
 export function createInviteTestKit(
   ctx: TestDbContext,
   options: {
-    now?: () => number;
+    now?: () => Date;
     hashPassword?: (password: string) => Promise<string>;
     createRepos?: InviteTestRepoFactory;
   } = {},
@@ -26,8 +26,14 @@ export function createInviteTestKit(
     revoke: InviteService["revokeInvite"];
   };
   expect: {
-    inviteStatus(inviteId: number): Promise<string | undefined>;
-    userActive(userId: number): Promise<number | undefined>;
+    inviteStatus(
+      inviteId: Parameters<
+        TestDbContext["repos"]["userInvites"]["findById"]
+      >[0],
+    ): Promise<string | undefined>;
+    userActive(
+      userId: Parameters<TestDbContext["repos"]["users"]["findById"]>[0],
+    ): Promise<boolean | undefined>;
   };
 } {
   const createRepos = options.createRepos ?? createTestRepositories;
@@ -62,13 +68,19 @@ export function createInviteTestKit(
     },
 
     expect: {
-      async inviteStatus(inviteId: number) {
+      async inviteStatus(
+        inviteId: Parameters<
+          TestDbContext["repos"]["userInvites"]["findById"]
+        >[0],
+      ) {
         const invite = await ctx.repos.userInvites.findById(inviteId);
 
         return invite?.status;
       },
 
-      async userActive(userId: number) {
+      async userActive(
+        userId: Parameters<TestDbContext["repos"]["users"]["findById"]>[0],
+      ) {
         const user = await ctx.repos.users.findById(userId);
 
         return user?.is_active;

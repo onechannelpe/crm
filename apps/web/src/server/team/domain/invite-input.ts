@@ -4,14 +4,14 @@ import {
   type ExecutiveCategoryValue,
 } from "~/lib/db/types";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { TeamId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { CreateTeamInviteCommand } from "../application/contracts";
 
-// The boundary has proven each field is present and well typed; this owns the
-// invite's cross-field and format rules, so single and future bulk creation
-// paths enforce them identically. Email is validated for shape only; the
-// invites domain lower-cases and dedupes it.
+// Cross-field and format rules: applied identically by single and bulk
+// creation paths. Email is shape-only here; the invites domain lower-cases
+// and dedupes.
 export type TeamInviteShape = {
   names: string;
   firstSurname: string;
@@ -19,7 +19,7 @@ export type TeamInviteShape = {
   email: string;
   role: Role;
   executiveCategory: string | null;
-  teamId: number | null;
+  teamId: TeamId | null;
   expiresAt: number | null;
 };
 
@@ -42,10 +42,7 @@ export function validateTeamInviteInput(
     return category;
   }
 
-  if (
-    input.teamId !== null &&
-    (!Number.isInteger(input.teamId) || input.teamId < 1)
-  ) {
+  if (input.teamId !== null && input.teamId.trim().length === 0) {
     return Err(fail("invalid_team_id"));
   }
 
@@ -67,7 +64,7 @@ export function validateTeamInviteInput(
   });
 }
 
-// Category applies only to executives; for every other role it is dropped so a
+// Category applies only to executives; for other roles it is dropped so a
 // stray value cannot smuggle a category onto a non-executive invite.
 function resolveExecutiveCategory(
   role: Role,
@@ -86,7 +83,7 @@ function resolveExecutiveCategory(
 
 function validateExpiry(
   expiresAt: number | null,
-): Result<number | null, DomainError> {
+): Result<Date | null, DomainError> {
   if (expiresAt === null) {
     return Ok(null);
   }
@@ -99,5 +96,5 @@ function validateExpiry(
     return Err(fail("expires_at_too_soon"));
   }
 
-  return Ok(expiresAt);
+  return Ok(new Date(expiresAt));
 }

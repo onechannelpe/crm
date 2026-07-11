@@ -1,7 +1,6 @@
 import { useAction, useSubmissions } from "@solidjs/router";
 import { For, Show, createSignal } from "solid-js";
 
-import type { TeamInvite } from "~/actions/team/contracts";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import Mail from "~/components/icons/mail";
@@ -18,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import type { TeamInvite } from "~/contracts/team";
 import {
   getRoleBadgeVariant,
   getRoleLabel,
@@ -37,21 +37,21 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
   const revokeSubmissions = useSubmissions(revokeTeamInviteMutation);
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
 
-  const [pendingRevokeId, setPendingRevokeId] = createSignal<number | null>(
+  const [pendingRevokeId, setPendingRevokeId] = createSignal<string | null>(
     null,
   );
 
-  const isResendPending = (inviteId: number) =>
+  const isResendPending = (inviteId: string) =>
     resendSubmissions.some(
       (submission) => submission.pending && submission.input[0] === inviteId,
     );
 
-  const isRevokePending = (inviteId: number) =>
+  const isRevokePending = (inviteId: string) =>
     revokeSubmissions.some(
       (submission) => submission.pending && submission.input[0] === inviteId,
     );
 
-  async function handleResend(inviteId: number): Promise<void> {
+  async function handleResend(inviteId: string): Promise<void> {
     try {
       const { message } = await resendInvite(inviteId);
       enqueueSuccessSnackBar(message);
@@ -84,7 +84,7 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
         title="Revocar invitación"
         description="La persona no podrá usar este enlace para unirse al equipo."
         confirmLabel="Revocar"
-        loading={isRevokePending(pendingRevokeId() ?? -1)}
+        loading={isRevokePending(pendingRevokeId() ?? "")}
         onConfirm={() => void confirmRevoke()}
         onClose={() => setPendingRevokeId(null)}
       />

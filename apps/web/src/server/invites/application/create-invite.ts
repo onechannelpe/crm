@@ -40,7 +40,7 @@ export async function createInvite(
 
     let user = await transactionRepos.users.findByEmail(normalizedEmail);
 
-    if (user?.is_active === 1) {
+    if (user?.is_active) {
       return Err(fail("active_user_exists"));
     }
 
@@ -79,7 +79,7 @@ export async function createInvite(
         if (!racedUser) {
           throw raceError;
         }
-        if (racedUser.is_active === 1) {
+        if (racedUser.is_active) {
           return Err(fail("active_user_exists"));
         }
         if (racedUser.branch_id !== input.branchId) {
@@ -100,7 +100,7 @@ export async function createInvite(
       second_surname: input.secondSurname,
       role: input.role,
       executive_category: input.executiveCategory ?? null,
-      is_active: 0,
+      is_active: false,
     });
 
     const issued = await issueInvite(transactionRepos, runtime, {

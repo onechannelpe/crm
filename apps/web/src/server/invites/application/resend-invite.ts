@@ -34,7 +34,7 @@ export async function resendInvite(
     if (!user || user.branch_id !== input.branchId) {
       return Err(fail("invite_target_missing"));
     }
-    if (user.is_active === 1) {
+    if (user.is_active) {
       return Err(fail("invite_target_active"));
     }
     if (!canAssignRole(input.actorRole, user.role)) {

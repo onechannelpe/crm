@@ -3,6 +3,7 @@
 import { ROLES } from "~/lib/auth/access/rbac";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { TeamId, UserInviteId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, Ok } from "~/server/shared/result";
 import {
@@ -14,22 +15,26 @@ import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
 
 export async function createTeamInvite(
   input: unknown,
-): Promise<{ inviteId: number; message: string }> {
+): Promise<{ inviteId: string; message: string }> {
   return runAction({
     name: "team.invite.create",
     access: { kind: "permission", permission: "hr:manage" },
 
     parse: () => {
-      const command = parseObject(input, validationFail, (r) => ({
-        names: r.str("names"),
-        firstSurname: r.str("firstSurname"),
-        secondSurname: r.str("secondSurname"),
-        email: r.str("email"),
-        role: r.enum("role", ROLES),
-        executiveCategory: r.optStr("executiveCategory"),
-        teamId: r.optNum("teamId"),
-        expiresAt: r.optNum("expiresAt"),
-      }));
+      const command = parseObject(input, validationFail, (r) => {
+        const teamId = r.optStr("teamId");
+
+        return {
+          names: r.str("names"),
+          firstSurname: r.str("firstSurname"),
+          secondSurname: r.str("secondSurname"),
+          email: r.str("email"),
+          role: r.enum("role", ROLES),
+          executiveCategory: r.optStr("executiveCategory"),
+          teamId: teamId ? r.id("teamId", TeamId) : null,
+          expiresAt: r.optNum("expiresAt"),
+        };
+      });
 
       if (isErr(command)) {
         return command;
@@ -68,7 +73,7 @@ export async function resendTeamInvite(
 
     parse: () =>
       parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({
-        inviteId: r.posInt("inviteId"),
+        inviteId: r.id("inviteId", UserInviteId),
       })),
 
     audit: (command) => ({ inviteId: command.inviteId }),
@@ -98,7 +103,7 @@ export async function revokeTeamInvite(
 
     parse: () =>
       parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({
-        inviteId: r.posInt("inviteId"),
+        inviteId: r.id("inviteId", UserInviteId),
       })),
 
     audit: (command) => ({ inviteId: command.inviteId }),

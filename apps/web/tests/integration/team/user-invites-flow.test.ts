@@ -1,31 +1,40 @@
 import { expectOk } from "@tests/support/_core/assertions";
 import { createInviteTestKit } from "@tests/support/invite/api";
-import type { TestDbContext } from "@tests/support/runtime/db";
-import { cleanupTestDb, createIsolatedTestDb } from "@tests/support/runtime/db";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  resetTestDb,
+  TEST_FIXTURES,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
 import { createTestRepositories } from "@tests/support/runtime/repos";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("user invite lifecycle", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx: TestDbContext;
 
-  afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-      ctx = null;
-    }
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("user-invites-flow");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("creates and accepts an invite for a new user", async () => {
-    ctx = await createIsolatedTestDb("user-invites");
     const kit = createInviteTestKit(ctx, {
-      now: () => 1_700_000_000_000,
+      now: () => new Date(1_700_000_000_000),
     });
 
     const created = expectOk(
       await kit.commands.create({
-        actorUserId: 5,
+        actorUserId: TEST_FIXTURES.users.superUser.id,
         actorRole: "superuser",
-        branchId: 2,
+        branchId: TEST_FIXTURES.branches.norte.id,
         names: "Nueva",
         firstSurname: "Ejecutiva",
         secondSurname: "Garcia",
@@ -43,21 +52,20 @@ describe("user invite lifecycle", () => {
       }),
     );
 
-    expect(await kit.expect.userActive(accepted.userId)).toBe(1);
+    expect(await kit.expect.userActive(accepted.userId)).toBe(true);
     expect(await kit.expect.inviteStatus(created.inviteId)).toBe("accepted");
   });
 
   it("can revoke a pending invite", async () => {
-    ctx = await createIsolatedTestDb("user-invites-revoke");
     const kit = createInviteTestKit(ctx, {
-      now: () => 1_700_000_000_000,
+      now: () => new Date(1_700_000_000_000),
     });
 
     const created = expectOk(
       await kit.commands.create({
-        actorUserId: 5,
+        actorUserId: TEST_FIXTURES.users.superUser.id,
         actorRole: "superuser",
-        branchId: 2,
+        branchId: TEST_FIXTURES.branches.norte.id,
         names: "Nuevo",
         firstSurname: "Analista",
         secondSurname: "Lopez",
@@ -69,9 +77,9 @@ describe("user invite lifecycle", () => {
 
     expectOk(
       await kit.commands.revoke({
-        actorUserId: 5,
+        actorUserId: TEST_FIXTURES.users.superUser.id,
         actorRole: "superuser",
-        branchId: 2,
+        branchId: TEST_FIXTURES.branches.norte.id,
         inviteId: created.inviteId,
       }),
     );
@@ -80,10 +88,9 @@ describe("user invite lifecycle", () => {
   });
 
   it("recovers the invite when a concurrent insert wins the email race", async () => {
-    ctx = await createIsolatedTestDb("user-invites-race");
     let raceTriggered = false;
     const kit = createInviteTestKit(ctx, {
-      now: () => 1_700_000_000_000,
+      now: () => new Date(1_700_000_000_000),
       createRepos(db) {
         const repos = createTestRepositories(db);
         return {
@@ -110,9 +117,9 @@ describe("user invite lifecycle", () => {
 
     const created = expectOk(
       await kit.commands.create({
-        actorUserId: 5,
+        actorUserId: TEST_FIXTURES.users.superUser.id,
         actorRole: "superuser",
-        branchId: 2,
+        branchId: TEST_FIXTURES.branches.norte.id,
         names: "Race",
         firstSurname: "User",
         secondSurname: "Test",
@@ -126,8 +133,8 @@ describe("user invite lifecycle", () => {
     expect(raceTriggered).toBe(true);
 
     const racedUser = await ctx.repos.users.findByEmail("race-user@test.local");
-    expect(racedUser?.is_active).toBe(0);
-    expect(racedUser?.branch_id).toBe(2);
+    expect(racedUser?.is_active).toBe(false);
+    expect(racedUser?.branch_id).toBe(TEST_FIXTURES.branches.norte.id);
 
     const invite = await ctx.repos.userInvites.findById(created.inviteId);
     expect(invite?.status).toBe("pending");

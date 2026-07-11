@@ -2,13 +2,13 @@ import { makeActor, makeAppContext } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
 import { external } from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import { BranchId, UserId, UserInviteId } from "~/server/shared/ids";
 import { Err, Ok } from "~/server/shared/result";
 import { getInviteManagement } from "~/server/team/application/invites";
 import type { InviteManagementQueryPort } from "~/server/team/application/ports";
 
-const HR_USER_ID = 7 as UserId;
-const HR_BRANCH_ID = 3 as BranchId;
+const HR_USER_ID = UserId.trust("7");
+const HR_BRANCH_ID = BranchId.trust("3");
 
 function makeHrContext() {
   return makeAppContext({
@@ -22,30 +22,30 @@ function makeHrContext() {
 
 describe("getInviteManagement", () => {
   it("returns teams, pending invites, and assignable roles for the actor branch", async () => {
-    const teamBranchCalls: number[] = [];
-    const inviteBranchCalls: number[] = [];
+    const teamBranchCalls: BranchId[] = [];
+    const inviteBranchCalls: BranchId[] = [];
 
     const port = {
-      listTeamsByBranch: async (branchId: number) => {
+      listTeamsByBranch: async (branchId: BranchId) => {
         teamBranchCalls.push(branchId);
-        return [{ id: 11, name: "Operaciones" }];
+        return [{ id: "11", name: "Operaciones" }];
       },
-      listPendingInvites: async (branchId: number) => {
+      listPendingInvites: async (branchId: BranchId) => {
         inviteBranchCalls.push(branchId);
         return Ok([
           {
-            inviteId: 1001,
-            userId: 91,
+            inviteId: UserInviteId.trust("1001"),
+            userId: UserId.trust("91"),
             email: "pending@crm.local",
             names: "Pending",
             firstSurname: "User",
             secondSurname: "",
             role: "executive",
             teamId: null,
-            expiresAt: 1_700_000_060_000,
-            createdAt: 1_700_000_000_000,
-            createdByUserId: 7,
-            sentAt: 1_700_000_000_100,
+            expiresAt: new Date(1_700_000_060_000),
+            createdAt: new Date(1_700_000_000_000),
+            createdByUserId: UserId.trust("7"),
+            sentAt: new Date(1_700_000_000_100),
           },
         ]);
       },
@@ -57,12 +57,12 @@ describe("getInviteManagement", () => {
     if (!result.ok) throw new Error("Expected success");
     const value = result.value;
 
-    expect(teamBranchCalls).toEqual([3]);
-    expect(inviteBranchCalls).toEqual([3]);
-    expect(value.teams).toEqual([{ id: 11, name: "Operaciones" }]);
+    expect(teamBranchCalls).toEqual([HR_BRANCH_ID]);
+    expect(inviteBranchCalls).toEqual([HR_BRANCH_ID]);
+    expect(value.teams).toEqual([{ id: "11", name: "Operaciones" }]);
     expect(value.pendingInvites).toEqual([
       expect.objectContaining({
-        inviteId: 1001,
+        inviteId: "1001",
         email: "pending@crm.local",
       }),
     ]);
@@ -78,7 +78,7 @@ describe("getInviteManagement", () => {
 
   it("propagates provisioning errors without masking them", async () => {
     const port = {
-      listTeamsByBranch: async () => [{ id: 11, name: "Operaciones" }],
+      listTeamsByBranch: async () => [{ id: "11", name: "Operaciones" }],
       listPendingInvites: async () =>
         Err(
           external("Invite service unavailable", {
