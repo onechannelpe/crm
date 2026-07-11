@@ -92,7 +92,7 @@ async function runExecuteEmpty<TOut, E extends DomainError>(
 export function createActionRunner(ports: RuntimePorts) {
   async function runAuthenticated<TOut>(
     def: ActionCommon,
-    startedAt: number,
+    startedAt: Date,
     audit: AuditFields,
     execute: (ctx: AppContext) => Promise<Result<TOut, WireError>>,
   ): Promise<Result<TOut, WireError>> {
@@ -161,8 +161,7 @@ export function createActionRunner(ports: RuntimePorts) {
   return { runAction, runActionResult };
 }
 
-// The default runner wires production ports. Tests use createActionRunner with
-// fake ports while request-scoped reads remain stubbed at their module boundary.
+// Production ports; tests build their own runner with fakes.
 const runner = createActionRunner(defaultPorts);
 export const runAction = runner.runAction;
 export const runActionResult = runner.runActionResult;

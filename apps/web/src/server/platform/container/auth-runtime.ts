@@ -13,8 +13,8 @@ import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-c
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createSessionService } from "~/server/auth/session/session.service";
-import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
-import type { MessagingGateway } from "~/server/notifications/messaging-gateway";
+import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
+import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createEventsRepo } from "~/server/shared/repos-events";
 
@@ -24,8 +24,7 @@ export function createAuthRuntime(
   infra: ServerInfra,
   notifications: {
     messaging: MessagingGateway;
-    enqueue(intents: NotificationIntent[], now?: number): Promise<void>;
-    dispatchPendingJobs(): void;
+    enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
   },
 ) {
   const sessionService = createSessionService({
@@ -41,14 +40,13 @@ export function createAuthRuntime(
     now: infra.now,
   });
   const onboarding = createAuthOnboardingContext(infra.db);
-  const inviteService = createInviteServiceContext(infra.db).inviteService;
+  const inviteService = createInviteServiceForExecutor(infra.db);
 
   return {
     authThrottleService,
     sessionService,
     login: createAuthLoginContext(infra.db, {
       enqueue: (intents, now) => notifications.enqueue(intents, now),
-      dispatchPendingJobs: () => notifications.dispatchPendingJobs(),
     }),
     onboarding,
     inviteAcceptance: {

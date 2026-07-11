@@ -4,15 +4,16 @@ import { getServerRuntime } from "~/server/platform/container";
 
 import type { TelemetryRow } from "./telemetry";
 
-// Injection isolates side effects and gives tests a deterministic clock.
+// Clock, error reporter, and recorder are injected so tests can swap fakes
+// without monkey-patching globals.
 export type RuntimePorts = {
-  now: () => number;
+  now: () => Date;
   report: (error: unknown) => void;
   record: (row: TelemetryRow) => void;
 };
 
 export const defaultPorts: RuntimePorts = {
-  now: Date.now,
+  now: () => new Date(),
   report: (error) => {
     captureException(error);
   },

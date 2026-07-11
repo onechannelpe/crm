@@ -6,14 +6,6 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró el ejecutivo.",
   },
-  artifact_not_found: {
-    kind: "not_found",
-    message: "No se encontró el documento.",
-  },
-  artifact_file_not_found: {
-    kind: "not_found",
-    message: "No se encontró el archivo del documento.",
-  },
   reservation_not_found: {
     kind: "not_found",
     message: "No se encontró la reserva.",
@@ -39,6 +31,43 @@ export const ERROR_CATALOG = {
   venue_not_found: {
     kind: "not_found",
     message: "No se encontró la sede para este cliente.",
+  },
+  fulfillment_not_started: {
+    kind: "not_found",
+    message: "La entrega de este cliente aún no ha iniciado.",
+  },
+  fulfillment_unit_not_found: {
+    kind: "not_found",
+    message: "No se encontró el equipo de entrega.",
+  },
+  fulfillment_document_not_found: {
+    kind: "not_found",
+    message: "No se encontró el documento de entrega.",
+  },
+  invalid_fulfillment_step: {
+    kind: "validation",
+    message: "Esta acción no corresponde al paso actual de la entrega.",
+  },
+  invalid_fulfillment_action: {
+    kind: "validation",
+    message: "Acción de entrega inválida.",
+  },
+  fulfillment_product_required: {
+    kind: "validation",
+    message: "Primero define el producto del cliente.",
+  },
+  reject_reason_required: {
+    kind: "validation",
+    message: "Indica el motivo de la devolución.",
+  },
+  lead_not_in_fulfillment: {
+    kind: "validation",
+    message: "El cliente no está en etapa de entrega.",
+  },
+  pending_quotation_limit: {
+    kind: "validation",
+    message:
+      "Tienes el máximo de cotizaciones pendientes de decisión. Acéptalas, solicita revisión o ciérralas antes de registrar nuevos clientes.",
   },
   sale_proof_not_found: {
     kind: "not_found",
@@ -139,11 +168,6 @@ export const ERROR_CATALOG = {
     message:
       "Los comprobantes de venta solo se permiten cuando el lead está activo.",
   },
-  download_artifact_requires_generated_payload: {
-    kind: "conflict",
-    message:
-      "El archivo de descarga debe generarlo el servicio correspondiente.",
-  },
   concurrency_conflict: {
     kind: "conflict",
     message: "El lead fue modificado por otra persona. Vuelve a intentarlo.",
@@ -151,10 +175,6 @@ export const ERROR_CATALOG = {
   assignment_inactive: {
     kind: "conflict",
     message: "El contacto asignado no está disponible.",
-  },
-  artifact_not_downloadable: {
-    kind: "conflict",
-    message: "El archivo del documento aún no está listo.",
   },
   accounts_already_added: {
     kind: "conflict",
@@ -444,6 +464,10 @@ export const ERROR_CATALOG = {
   daily_refill_exceeds_max: {
     kind: "validation",
     message: "El límite diario supera el máximo permitido.",
+  },
+  invalid_consumed_amount: {
+    kind: "validation",
+    message: "La cantidad consumida no es válida para esta reserva.",
   },
 
   email_required: {

@@ -99,9 +99,12 @@ async function loadRequestSessionState(
   const requestSessions = getServerRuntime().security.requestSessions;
   if (existingId) {
     const existing = await requestSessions.findById(existingId);
-    const now = Date.now();
+    const now = new Date();
     if (existing && existing.expires_at >= now) {
-      if (now - existing.last_activity > REQUEST_SESSION_ACTIVITY_UPDATE_MS) {
+      if (
+        now.getTime() - existing.last_activity.getTime() >
+        REQUEST_SESSION_ACTIVITY_UPDATE_MS
+      ) {
         void requestSessions.updateActivity(existing.id, now).catch(() => {});
       }
       return { id: existing.id, csrfToken: existing.csrf_token };
@@ -113,10 +116,12 @@ async function loadRequestSessionState(
     return null;
   }
 
-  const now = Date.now();
+  const now = new Date();
   const id = crypto.randomUUID();
   const csrfToken = crypto.randomUUID().replace(/-/g, "");
-  const expiresAt = now + getRequestSessionMaxAgeSeconds() * 1000;
+  const expiresAt = new Date(
+    now.getTime() + getRequestSessionMaxAgeSeconds() * 1000,
+  );
 
   await requestSessions.create({
     id,

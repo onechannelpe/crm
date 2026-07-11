@@ -9,12 +9,12 @@ export interface AppContext {
   ipAddress: string;
   userAgent: string | null;
   publicOrigin: string;
-  now: () => number;
+  now: () => Date;
 }
 
 export function createAppContext(
   actor: AuthSession,
-  now: () => number,
+  now: () => Date,
 ): AppContext {
   const request = getRequestContext();
   const action = getActionRequestContext();

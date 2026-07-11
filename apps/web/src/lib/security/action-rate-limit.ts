@@ -5,6 +5,7 @@ import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { auditEntityId } from "~/server/shared/audit-entity";
 import { rateLimited, throwDomain } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import type { EventsRepo } from "~/server/shared/repos-events";
 
 interface ActionRateLimitPolicy {
@@ -42,7 +43,7 @@ function resolveRequestIp(): string {
   return getClientIp(event.request.headers);
 }
 
-function buildUserKey(actionName: string, userId: number): string {
+function buildUserKey(actionName: string, userId: UserId): string {
   return hashAuthKey(`action:${actionName}:user:${userId}`);
 }
 
@@ -52,12 +53,12 @@ function buildIpKey(actionName: string, ip: string): string {
 
 async function blockWithAudit(params: {
   actionName: RateLimitedAction;
-  userId: number;
+  userId: UserId;
   scope: "user" | "ip";
   limit: number;
   windowMs: number;
-  windowStartedAt: number;
-  now: number;
+  windowStartedAt: Date;
+  now: Date;
   deps: RateLimitDeps;
 }): Promise<never> {
   const {
@@ -70,11 +71,10 @@ async function blockWithAudit(params: {
     now,
     deps,
   } = params;
-  const retryAfterMs = windowMs - (now - windowStartedAt);
+  const retryAfterMs = windowMs - (now.getTime() - windowStartedAt.getTime());
   const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
 
-  // RFC 6585 §4: 429 responses must carry Retry-After when the reset time is known.
-  // event.response is the outgoing response headers for the current server request.
+  // RFC 6585: a 429 must carry Retry-After when the reset is known.
   getRequestEvent()?.response.headers.set(
     "Retry-After",
     String(retryAfterSeconds),
@@ -98,16 +98,15 @@ async function blockWithAudit(params: {
 
 export async function checkActionRateLimit(
   actionName: RateLimitedAction,
-  userId: number,
+  userId: UserId,
   deps: RateLimitDeps,
   ip: string = resolveRequestIp(),
 ): Promise<void> {
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
-  const now = Date.now();
+  const now = new Date();
 
-  // Check the per-user counter first. If the user is already over limit, skip
-  // the shared IP counter entirely. Incrementing it for a blocked user would
-  // consume IP budget and could deny legitimate users on the same NAT/proxy.
+  // Skip the IP counter when the user is over their limit; incrementing it
+  // would consume IP budget shared with legitimate users behind the same NAT.
   const userSnapshot = await deps.actionRateLimits.checkAndIncrement(
     buildUserKey(actionName, userId),
     now,
@@ -127,7 +126,7 @@ export async function checkActionRateLimit(
     });
   }
 
-  // User is within the limit, now check the shared IP counter.
+  // IP counter runs only when the user is within their personal budget.
   const ipSnapshot = await deps.actionRateLimits.checkAndIncrement(
     buildIpKey(actionName, ip),
     now,

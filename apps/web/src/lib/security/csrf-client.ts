@@ -2,14 +2,8 @@ import { CSRF_CONFIG } from "./csrf-config";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
 
-/**
- * Patches window.fetch to automatically include the CSRF token header for mutations.
- *
- * This instrumentation is necessary because SolidStart "use server" actions
- * and RPC calls use a global fetcher. By intercepting at the window level,
- * we ensure that all framework mutation requests (actions, forms, RPC)
- * automatically carry the required CSRF token without developer intervention.
- */
+// SolidStart actions and RPC share a global fetch. Install the CSRF header at
+// the window boundary so every mutation carries the token without per-call work.
 export function setupCsrfInterceptor() {
   if (typeof window === "undefined" || !("fetch" in window)) return;
 
@@ -40,8 +34,8 @@ export function setupCsrfInterceptor() {
 
   Object.assign(patchedFetch, originalFetch);
 
-  // Object.defineProperty bypasses lint rules on window.fetch reassignment
-  // while preserving configurability for other instrumentation layers.
+  // defineProperty keeps fetch configurable for downstream instrumentation
+  // and bypasses the no-window-fetch-reassignment lint rule.
   Object.defineProperty(window, "fetch", {
     value: patchedFetch,
     configurable: true,

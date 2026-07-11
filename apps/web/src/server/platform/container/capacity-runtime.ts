@@ -1,12 +1,3 @@
-import {
-  createLeadCapacityGrantsRepo,
-  createLeadUsageCommitsRepo,
-  createLeadUsageReservationsRepo,
-  createSearchCapacityGrantsRepo,
-  createSearchUsageCommitsRepo,
-  createSearchUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
-import { getAuditEvents } from "~/server/capacity/application/queries/get-audit-events";
 import { getExecutiveDetail } from "~/server/capacity/application/queries/get-executive-detail";
 import { getPolicyDefaults } from "~/server/capacity/application/queries/get-policy-defaults";
 import { listManagedExecutives } from "~/server/capacity/application/queries/list-managed-executives";
@@ -29,7 +20,15 @@ import {
   createSearchPolicyDefaultsRepo,
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
-import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
+import {
+  createLeadCapacityGrantsRepo,
+  createLeadUsageCommitsRepo,
+  createLeadUsageReservationsRepo,
+  createSearchCapacityGrantsRepo,
+  createSearchUsageCommitsRepo,
+  createSearchUsageReservationsRepo,
+} from "~/server/capacity/infrastructure/usage-repo";
+import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createExecutorUow } from "~/server/shared/application/uow";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -116,10 +115,6 @@ export function createCapacityRuntime(infra: ServerInfra) {
         listPendingRequests(ctx, { repos: readRepos }),
       getPolicyDefaults: (ctx: Parameters<typeof getPolicyDefaults>[0]) =>
         getPolicyDefaults(ctx, { repos: readRepos }),
-      getAuditEvents: (
-        ctx: Parameters<typeof getAuditEvents>[0],
-        input: Parameters<typeof getAuditEvents>[2],
-      ) => getAuditEvents(ctx, { repos: readRepos }, input),
     },
   };
 }

@@ -1,5 +1,9 @@
-import { engineConfig, notificationsConfig, uploadsConfig } from "~/lib/env";
-import { createRedisQueueDoorbell } from "~/lib/job-queue/doorbell";
+import {
+  appConfig,
+  engineConfig,
+  notificationsConfig,
+  uploadsConfig,
+} from "~/lib/env";
 import { createDefaultEngineClient } from "~/server/shared/engine/client";
 
 import { createAdminRuntime } from "./admin-runtime";
@@ -7,6 +11,7 @@ import { createAuthRuntime } from "./auth-runtime";
 import { createCapacityRuntime } from "./capacity-runtime";
 import { createClientSearchRuntime } from "./client-search-runtime";
 import { createContactAssignmentsRuntime } from "./contact-assignments-runtime";
+import { createEventLogsRuntime } from "./event-logs-runtime";
 import { createExtensionRuntime } from "./extension-runtime";
 import { createFilesRuntime } from "./files-runtime";
 import { createServerInfra } from "./infra";
@@ -31,27 +36,23 @@ function memo<T>(build: () => T): () => T {
 function createServerRuntime() {
   const infra = createServerInfra();
 
-  const queueDoorbell = memo(createRedisQueueDoorbell);
   const engine = memo(() => createDefaultEngineClient(engineConfig()));
   const notifications = memo(() =>
-    createNotificationsRuntime(infra, notificationsConfig(), queueDoorbell()),
+    createNotificationsRuntime(infra, notificationsConfig(), appConfig()),
   );
   const files = memo(() => createFilesRuntime(infra, uploadsConfig()));
   const admin = memo(() => createAdminRuntime(infra));
   const auth = memo(() => createAuthRuntime(infra, notifications()));
   const capacity = memo(() => createCapacityRuntime(infra));
-  const clientSearch = memo(() =>
-    createClientSearchRuntime(infra, queueDoorbell()),
-  );
+  const clientSearch = memo(() => createClientSearchRuntime(infra, engine()));
   const contactAssignments = memo(() =>
     createContactAssignmentsRuntime(infra, engine()),
   );
+  const eventLogs = memo(() => createEventLogsRuntime(infra));
   const extension = memo(() => createExtensionRuntime(infra));
   const integrations = memo(() => createIntegrationsRuntime(infra));
   const observability = memo(() => createObservabilityRuntime(infra));
-  const workflow = memo(() =>
-    createWorkflowRuntime(infra, engine(), files(), queueDoorbell()),
-  );
+  const workflow = memo(() => createWorkflowRuntime(infra, engine(), files()));
   const profilePicture = memo(() =>
     createProfilePictureRuntime(infra, uploadsConfig()),
   );
@@ -62,9 +63,6 @@ function createServerRuntime() {
 
   return {
     infra,
-    get queueDoorbell() {
-      return queueDoorbell();
-    },
     get engine() {
       return engine();
     },
@@ -85,6 +83,9 @@ function createServerRuntime() {
     },
     get contactAssignments() {
       return contactAssignments();
+    },
+    get eventLogs() {
+      return eventLogs();
     },
     get extension() {
       return extension();

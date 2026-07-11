@@ -18,10 +18,6 @@ export function formatDate(timestamp: number): string {
   });
 }
 
-/**
- * Sentence-cases a string: lowercases the whole value, then uppercases the
- * first character (locale-aware).
- */
 export function capitalize(value: string): string {
   if (value.length === 0) {
     return value;

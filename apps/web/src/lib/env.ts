@@ -9,6 +9,7 @@ import {
 
 const SECRET_MIN_LENGTH = 32;
 const SECRET_MIN_UNIQUE_CHARS = 10;
+const LOCAL_DEV_DB_URL = "postgres://postgres@localhost:5432/crm";
 const SEQUENTIAL_CHARS =
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -120,6 +121,35 @@ function parseSecurityEnv(source: EnvSource) {
   } as const;
 }
 
+function parseAppEnv(source: EnvSource) {
+  return {
+    publicOrigin: parsePublicOrigin(
+      optional(source, "APP_PUBLIC_ORIGIN", "http://localhost:3000"),
+    ),
+  } as const;
+}
+
+function parsePublicOrigin(raw: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error("APP_PUBLIC_ORIGIN must be a valid URL origin");
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("APP_PUBLIC_ORIGIN must use http or https");
+  }
+
+  if (url.pathname !== "/" || url.search || url.hash) {
+    throw new Error(
+      "APP_PUBLIC_ORIGIN must not include a path, query, or hash",
+    );
+  }
+
+  return url.origin;
+}
+
 function parseUploadsEnv(source: EnvSource) {
   return {
     storageRoot: optional(
@@ -130,12 +160,25 @@ function parseUploadsEnv(source: EnvSource) {
   } as const;
 }
 
+function parseDatabaseEnv(source: EnvSource) {
+  const configuredUrl = source["WEB_DB_URL"]?.trim();
+  if (configuredUrl) {
+    return { url: configuredUrl } as const;
+  }
+
+  if (source["NODE_ENV"] === "production") {
+    throw new Error("Missing required env: WEB_DB_URL");
+  }
+
+  return { url: LOCAL_DEV_DB_URL } as const;
+}
+
 function parseEngineEnv(source: EnvSource) {
   return {
     engineConnectMode: optionalEnum(
       source,
       "ENGINE_CONNECT_MODE",
-      ["local", "remote"] as const,
+      ["local", "internal", "remote"] as const,
       "local",
     ),
     engineUrl: optional(source, "ENGINE_URL", "http://127.0.0.1:3001"),
@@ -263,7 +306,11 @@ function parseNotificationsEnv(source: EnvSource) {
       "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
       true,
     ),
-    whatsappAppSecret: required(source, "WHATSAPP_APP_SECRET"),
+    // Optional: only required for the POST signature check. The GET handshake
+    // works without it, so a missing secret should not crash boot. The
+    // signature verifier treats an empty string as "always fail", which is
+    // the safe default until the secret is set.
+    kapsoWebhookSecret: source["KAPSO_WEBHOOK_SECRET"] ?? "",
   } as const;
 }
 
@@ -290,7 +337,9 @@ export function loadServerEnv(source: EnvSource) {
     totp: parseTotpEnv(source),
     extension: parseExtensionEnv(source),
     security: parseSecurityEnv(source),
+    app: parseAppEnv(source),
     uploads: parseUploadsEnv(source),
+    database: parseDatabaseEnv(source),
     engine: parseEngineEnv(source),
     googleOAuth: parseGoogleOAuthEnv(source),
     notifications: parseNotificationsEnv(source),
@@ -310,13 +359,16 @@ function section<T>(parse: (source: EnvSource) => T): () => T {
 export const totpConfig = section(parseTotpEnv);
 export const extensionConfig = section(parseExtensionEnv);
 export const securityConfig = section(parseSecurityEnv);
+export const appConfig = section(parseAppEnv);
 export const uploadsConfig = section(parseUploadsEnv);
+export const databaseConfig = section(parseDatabaseEnv);
 export const engineConfig = section(parseEngineEnv);
 export const googleOAuthConfig = section(parseGoogleOAuthEnv);
 export const notificationsConfig = section(parseNotificationsEnv);
 export const sentryConfig = section(parseSentryEnv);
 
 export type NotificationsConfig = ReturnType<typeof parseNotificationsEnv>;
+export type AppConfig = ReturnType<typeof parseAppEnv>;
 export type EngineConfig = ReturnType<typeof parseEngineEnv>;
 export type UploadsConfig = ReturnType<typeof parseUploadsEnv>;
 

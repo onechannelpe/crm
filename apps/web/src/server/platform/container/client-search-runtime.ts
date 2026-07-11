@@ -1,29 +1,38 @@
-import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
-import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import { createEnrichmentQueue } from "~/server/client-search/worker";
+import { createOrganizationEnrichmentProjection } from "~/server/organization/apply-enrichment";
+import { createOrganizationEnrichment } from "~/server/organization/enrichment";
+import { createOrganizationRepo } from "~/server/organization/organization-repo";
+import type { EngineClient } from "~/server/shared/engine/client";
 
 import type { ServerInfra } from "./infra";
 
 export function createClientSearchRuntime(
   infra: ServerInfra,
-  doorbell: QueueDoorbell,
+  engine: EngineClient,
 ) {
-  const enrichmentRepo = createSearchEnrichmentRepo(infra.db);
+  const registry = createCompanyRegistryRepo(infra.db);
   const scraper = createSunatScraperClient();
-  const enrichmentCommand = createEnrichmentCommand(enrichmentRepo, doorbell);
-  const enrichmentQuery = createEnrichmentQuery(enrichmentRepo);
+  const enrichmentCommand = createEnrichmentCommand(registry);
+  const enrichmentQuery = createEnrichmentQuery(registry);
+
+  const engineFallback = createOrganizationEnrichment(engine);
+  const projectOrganization = createOrganizationEnrichmentProjection(
+    createOrganizationRepo(infra.db),
+  );
 
   return {
     enrichmentCommand,
     enrichmentQuery,
     createEnrichmentQueue: (workerId: string) =>
       createEnrichmentQueue(workerId, {
-        doorbell,
-        enrichmentRepo,
+        registry,
         scraper,
+        engineFallback: (ruc) => engineFallback.enrichByRuc(ruc),
+        projectOrganization,
       }),
   };
 }

@@ -6,23 +6,121 @@ import {
   createWhatsAppCloudProvider,
   type DeliveryProvider,
 } from "@crm/message-channels";
+import type { Kysely } from "kysely";
 
-import type { NotificationsConfig } from "~/lib/env";
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
-import { createMessagingGateway } from "~/server/notifications/messaging-gateway";
-import { enqueueNotifications } from "~/server/notifications/outbox";
-import { createNotificationProcessor } from "~/server/notifications/processor";
+import { notify } from "~/lib/db/notify";
+import type { Database } from "~/lib/db/types";
+import type { AppConfig, NotificationsConfig } from "~/lib/env";
+import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
+import type { QueueRunner } from "~/lib/job-queue/types";
+import { createLogger } from "~/lib/observability/logger";
+import type { Logger } from "~/lib/observability/logger-shared";
+import {
+  createMessagingGateway,
+  type MessagingGateway,
+} from "~/server/notifications/channels/messaging-gateway";
+import { createDeliveryDispatchQueue } from "~/server/notifications/dispatch/queue";
+import { createDeliverySender } from "~/server/notifications/dispatch/send-delivery";
+import { createIntentExpander } from "~/server/notifications/expansion/expand-intent";
+import { createRecipientPlanner } from "~/server/notifications/expansion/plan-recipients";
+import { createIntentExpansionQueue } from "~/server/notifications/expansion/queue";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
+import { createOutboundWhatsAppQueue } from "~/server/notifications/outbound/queue";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
+import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
+import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
+import {
+  createNotificationOptOutRepo,
+  type NotificationOptOutRepo,
+} from "~/server/notifications/repos/opt-out-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
+import { createWhatsAppInboundQueue } from "~/server/notifications/whatsapp-inbound/queue";
 
 import type { ServerInfra } from "./infra";
+
+export interface NotificationPipelineDeps {
+  db: Kysely<Database>;
+  messaging: MessagingGateway;
+  clock: () => Date;
+  publicOrigin: string;
+  logger: Logger;
+}
+
+export interface NotificationPipeline {
+  messaging: MessagingGateway;
+  appNotifications: ReturnType<typeof createAppNotificationRepo>;
+  preferences: NotificationOptOutRepo;
+  createQueues(workerId: string): {
+    expansion: QueueRunner;
+    dispatch: QueueRunner;
+    whatsappInbound: QueueRunner;
+    outboundWhatsApp: QueueRunner;
+  };
+  enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
+}
+
+export function assembleNotificationPipeline(
+  deps: NotificationPipelineDeps,
+): NotificationPipeline {
+  const intents = createIntentRepository(deps.db);
+  const deliveries = createDeliveryRepository(deps.db);
+  const appNotifications = createAppNotificationRepo(deps.db);
+  const preferences = createNotificationOptOutRepo(deps.db);
+
+  const expand = createIntentExpander({
+    planRecipients: createRecipientPlanner(deps.db, deps.logger),
+    appNotifications,
+    deliveries,
+    logger: deps.logger,
+  });
+  const send = createDeliverySender({
+    messaging: deps.messaging,
+    publicOrigin: deps.publicOrigin,
+    logger: deps.logger,
+  });
+
+  return {
+    messaging: deps.messaging,
+    appNotifications,
+    preferences,
+    createQueues(workerId) {
+      return {
+        expansion: createIntentExpansionQueue(workerId, {
+          intents,
+          expand,
+          clock: deps.clock,
+          onExpanded: () =>
+            notify(deps.db, JOB_TABLE_CHANNELS.notification_deliveries),
+        }),
+        dispatch: createDeliveryDispatchQueue(workerId, {
+          deliveries,
+          send,
+          clock: deps.clock,
+        }),
+        whatsappInbound: createWhatsAppInboundQueue(
+          deps.db,
+          workerId,
+          deps.clock,
+        ),
+        outboundWhatsApp: createOutboundWhatsAppQueue(
+          deps.db,
+          deps.messaging,
+          workerId,
+          deps.clock,
+        ),
+      };
+    },
+    enqueue(intentsToEnqueue, now = deps.clock()) {
+      return enqueueNotifications(deps.db, intentsToEnqueue, now);
+    },
+  };
+}
 
 export function createNotificationsRuntime(
   infra: ServerInfra,
   config: NotificationsConfig,
-  doorbell: QueueDoorbell,
-) {
+  app: AppConfig,
+): NotificationPipeline {
   const providers: DeliveryProvider[] = [];
   if (config.resend) {
     providers.push(createResendProvider(config.resend));
@@ -40,30 +138,17 @@ export function createNotificationsRuntime(
     providers.push(createWhatsAppCloudProvider(config.whatsappCloud));
   }
 
-  const channels = createMessageChannels({
-    routes: config.routes,
-    providers,
+  const channels = createMessageChannels({ routes: config.routes, providers });
+  const messaging = createMessagingGateway({
+    channels,
+    composer: createEmailComposer(),
   });
-  const composer = createEmailComposer();
-  const messaging = createMessagingGateway({ channels, composer });
 
-  const runProcessor = createNotificationProcessor(infra.db, messaging);
-
-  return {
+  return assembleNotificationPipeline({
+    db: infra.db,
     messaging,
-    createIntentQueue: (workerId: string) => ({
-      name: "notifications-intents",
-      runOnce: () => runProcessor(workerId, 50),
-    }),
-    dispatchPendingJobs(): void {
-      doorbell.wake(JOB_CHANNELS.NOTIFICATIONS_INTENTS, Date.now());
-    },
-    async enqueue(
-      intents: NotificationIntent[],
-      now = Date.now(),
-    ): Promise<void> {
-      await enqueueNotifications(infra.db, intents, now);
-    },
-    appNotifications: createAppNotificationRepo(infra.db),
-  };
+    clock: () => new Date(),
+    publicOrigin: app.publicOrigin,
+    logger: createLogger("notifications"),
+  });
 }

@@ -27,6 +27,7 @@ export async function generateUsername(
     if (!(await exists(candidate))) return candidate;
   }
 
-  // Fallback with timestamp suffix, should not be reached in practice.
+  // 100 sequential names are taken, so the first.last namespace is exhausted;
+  // append a timestamp to land a unique value.
   return `${first}.${fs}.${Date.now()}`;
 }

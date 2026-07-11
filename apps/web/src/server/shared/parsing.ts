@@ -1,6 +1,7 @@
 import { isPlainRecord } from "~/lib/type-guards";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { IdCodec } from "~/server/shared/ids";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 export type FieldFail<E> = (field: string, reason: "required" | "invalid") => E;
 
@@ -12,6 +13,13 @@ export type StrListConstraints = {
 
 export interface Reader<E> {
   str(field: string): string;
+  id<Id extends string>(field: string, codec: IdCodec<Id>): Id;
+  optId<Id extends string>(field: string, codec: IdCodec<Id>): Id | undefined;
+  idList<Id extends string>(
+    field: string,
+    codec: IdCodec<Id>,
+    opts?: StrListConstraints,
+  ): Id[];
   num(field: string): number;
   posInt(field: string): number;
   bool(field: string): boolean;
@@ -47,6 +55,33 @@ class RecordReader<E> implements Reader<E> {
     const trimmed = value.trim();
     if (!trimmed) this.reject(field, "required");
     return trimmed;
+  }
+
+  id<Id extends string>(field: string, codec: IdCodec<Id>): Id {
+    const raw = this.str(field);
+    const parsed = codec.parse(raw);
+    if (isErr(parsed)) this.reject(field, "invalid");
+    return parsed.value;
+  }
+
+  optId<Id extends string>(field: string, codec: IdCodec<Id>): Id | undefined {
+    const raw = this.optStr(field);
+    if (raw === null) return undefined;
+    const parsed = codec.parse(raw);
+    if (isErr(parsed)) this.reject(field, "invalid");
+    return parsed.value;
+  }
+
+  idList<Id extends string>(
+    field: string,
+    codec: IdCodec<Id>,
+    opts?: StrListConstraints,
+  ): Id[] {
+    return this.strList(field, opts).map((raw) => {
+      const parsed = codec.parse(raw);
+      if (isErr(parsed)) this.reject(field, "invalid");
+      return parsed.value;
+    });
   }
 
   num(field: string): number {

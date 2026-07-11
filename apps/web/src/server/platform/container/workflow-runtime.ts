@@ -1,11 +1,9 @@
-import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
-import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
+import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
-import { createSunatEnrichmentWritebackQueue } from "~/server/identity/enrichment/writeback-queue";
-import { createOrganizationEnrichment } from "~/server/identity/organization/enrichment";
-import type { OrganizationEnrichmentQueue } from "~/server/identity/organization/enrichment";
+import { createOrganizationEnrichment } from "~/server/organization/enrichment";
+import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { createLeadArtifactsService } from "~/server/workflow/lead/read/lead-artifacts";
+import { createLeadFilesService } from "~/server/workflow/lead/files/lead-files";
 import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
@@ -16,15 +14,13 @@ export function createWorkflowRuntime(
   infra: ServerInfra,
   engine: EngineClient,
   files: Pick<FilesRuntime, "repo" | "storage">,
-  doorbell: QueueDoorbell,
 ) {
   const organizationEnrichment = createOrganizationEnrichment(engine);
   const repos = createWorkflowRepos(infra.db);
   const leadRepo = createLeadRepo(infra.db);
 
   const enrichmentCommand = createEnrichmentCommand(
-    createSearchEnrichmentRepo(infra.db),
-    doorbell,
+    createCompanyRegistryRepo(infra.db),
   );
 
   const enrichmentQueue: OrganizationEnrichmentQueue = {
@@ -39,22 +35,17 @@ export function createWorkflowRuntime(
 
   return {
     now: infra.now,
-    // Lead commands take their executor only through here; runLeadTransaction
-    // opens its own transaction from it. No raw db handle is exposed, so a
-    // command cannot hand-roll its own transaction ports.
     ports: () => ({ executor: infra.db, now: infra.now() }),
     repos,
     organizationEnrichment,
     enrichmentQueue,
-    leadArtifacts: createLeadArtifactsService({
+    leadFiles: createLeadFilesService({
       leadReader: leadRepo,
       leadQueries: repos.leadQueries,
+      fulfillment: repos.fulfillment,
       filesRepo: files.repo,
       filesStorage: files.storage,
+      workflowPorts: () => ({ executor: infra.db, now: infra.now() }),
     }),
-    createSunatEnrichmentWritebackQueue: (workerId: string) =>
-      createSunatEnrichmentWritebackQueue(workerId, {
-        executor: infra.db,
-      }),
   };
 }

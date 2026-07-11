@@ -5,15 +5,22 @@ import {
   serializeFieldChanges,
   type FieldChange,
 } from "~/contracts/events";
+import { notify } from "~/lib/db/notify";
+import { mapDomainEventRow } from "~/server/event-logs/mappers";
+import {
+  EVENT_LOGS_STREAM_CHANNEL,
+  serializeEventLogStreamPayload,
+} from "~/server/event-logs/stream-contract";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { EventId, type UserId } from "~/server/shared/ids";
 
 export interface AuditReaderQueryFilter {
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   limit: number;
   action?: string;
   entityType?: string;
-  actorUserId?: number;
+  actorUserId?: UserId;
   onlyHighRisk?: boolean;
 }
 
@@ -21,16 +28,16 @@ export type EventToAppend = {
   entityType: string;
   entityId: string;
   type: string;
-  actorUserId?: number | null;
-  subjectUserId?: number | null;
+  actorUserId?: UserId | null;
+  subjectUserId?: UserId | null;
   payload?: unknown;
   changes?: FieldChange[];
-  occurredAt: number;
+  occurredAt: Date;
 };
 
 export function createEventsRepo(db: DatabaseExecutor) {
   return {
-    async append(input: EventToAppend | EventToAppend[]): Promise<string[]> {
+    async append(input: EventToAppend | EventToAppend[]): Promise<EventId[]> {
       const list = Array.isArray(input) ? input : [input];
       if (list.length === 0) return [];
 
@@ -49,7 +56,13 @@ export function createEventsRepo(db: DatabaseExecutor) {
       }));
 
       await db.insertInto("events").values(rows).execute();
-      return rows.map((row) => row.id);
+
+      for (const row of rows) {
+        const payload = serializeEventLogStreamPayload(mapDomainEventRow(row));
+        if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+      }
+
+      return rows.map((row) => EventId.trust(row.id));
     },
 
     async listRecent(filter: AuditReaderQueryFilter) {
@@ -69,7 +82,7 @@ export function createEventsRepo(db: DatabaseExecutor) {
               eb("policy.action", "is", null),
               eb.and([
                 eb("policy.risk_level", "=", "high"),
-                eb("policy.is_active", "=", 1),
+                eb("policy.is_active", "=", true),
               ]),
             ]),
           )
