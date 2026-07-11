@@ -1,23 +1,21 @@
 import type { LifecycleColumns } from "./job-store";
 
-// The notify channel, `JobTableName`, and the table list (derived on demand
-// by `jobTables()`) all flow from this one map, so adding a queue is a single
-// entry rather than parallel lists.
+// One map defines the channel and table-name unions. Adding a queue requires
+// one entry instead of updates to separate lists.
 export const JOB_TABLE_CHANNELS = {
   workflow_integration_jobs: "job:records-import",
   company_registry_record: "job:enrichment",
   notification_intents: "job:notifications-intents",
   notification_deliveries: "job:notifications-deliveries",
+  whatsapp_inbound_events: "job:whatsapp-inbound-events",
+  outbound_whatsapp_messages: "job:outbound-whatsapp-messages",
 } as const;
 
 export type JobTableName = keyof typeof JOB_TABLE_CHANNELS;
 export type JobChannel = (typeof JOB_TABLE_CHANNELS)[JobTableName];
 
-// `createJobStore` reads its table's entry here instead of taking `lifecycle`
-// as a per-call argument, and the stale-scanner reads the same entry to
-// correct the mirror when it resets a crashed lease. A table's status column
-// can therefore never disagree with `queue_state` for longer than it takes
-// the scanner to run.
+// The job store and stale-lease scanner use this map to update each table's
+// lifecycle columns.
 export const JOB_TABLE_LIFECYCLE: Record<JobTableName, LifecycleColumns> = {
   workflow_integration_jobs: {
     finishedAt: "completed_at",
@@ -33,15 +31,13 @@ export const JOB_TABLE_LIFECYCLE: Record<JobTableName, LifecycleColumns> = {
   company_registry_record: { error: "last_error" },
   notification_intents: { finishedAt: "expanded_at", error: "error" },
   notification_deliveries: { finishedAt: "sent_at" },
+  whatsapp_inbound_events: { finishedAt: "processed_at", error: "error" },
+  outbound_whatsapp_messages: { finishedAt: "sent_at", error: "error_message" },
 };
 
-// The cast is sound because the registry is a `const` literal so
-// `Object.keys` cannot return anything outside the union.
 // oxlint-disable-next-line typescript/no-unsafe-type-assertion
 const jobTableList = Object.keys(JOB_TABLE_CHANNELS) as JobTableName[];
 export const jobTables = (): readonly JobTableName[] => jobTableList;
 
-// Realtime record-import progress is not a job-wake: it streams progress
-// events straight to the browser bridge, so it rides its own channel rather
-// than a job table.
+// Progress events use a browser channel. They do not wake a job queue.
 export const RECORDS_IMPORT_PROGRESS_CHANNEL = "records-import-progress";

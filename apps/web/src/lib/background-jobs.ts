@@ -14,10 +14,7 @@ import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/l
 const WORKER_ID = `bg-${process.pid}`;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
-// The poll floor backstops the LISTEN/NOTIFY doorbell: even if a wake is
-// lost (listener reconnecting, NOTIFY dropped), every queue still drains
-// within POLL_FLOOR_MS. NOTIFY makes the common path immediate; the floor
-// makes it reliable.
+// A lost LISTEN/NOTIFY wake is recovered within POLL_FLOOR_MS.
 const POLL_FLOOR_MS = 1_000;
 
 // Coalesces a queue's wakeups (NOTIFY bursts plus the poll floor) into at
@@ -71,6 +68,10 @@ export function startBackgroundJobs() {
     [JOB_TABLE_CHANNELS.company_registry_record]: enrichmentQueue,
     [JOB_TABLE_CHANNELS.notification_intents]: notificationQueues.expansion,
     [JOB_TABLE_CHANNELS.notification_deliveries]: notificationQueues.dispatch,
+    [JOB_TABLE_CHANNELS.whatsapp_inbound_events]:
+      notificationQueues.whatsappInbound,
+    [JOB_TABLE_CHANNELS.outbound_whatsapp_messages]:
+      notificationQueues.outboundWhatsApp,
   };
 
   const wakers = new Map<string, () => void>();

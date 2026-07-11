@@ -25,6 +25,7 @@ import { createIntentExpander } from "~/server/notifications/expansion/expand-in
 import { createRecipientPlanner } from "~/server/notifications/expansion/plan-recipients";
 import { createIntentExpansionQueue } from "~/server/notifications/expansion/queue";
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
+import { createOutboundWhatsAppQueue } from "~/server/notifications/outbound/queue";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
@@ -33,12 +34,10 @@ import {
   type NotificationOptOutRepo,
 } from "~/server/notifications/repos/opt-out-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
+import { createWhatsAppInboundQueue } from "~/server/notifications/whatsapp-inbound/queue";
 
 import type { ServerInfra } from "./infra";
 
-// Wires expansion and dispatch through injected clock and messaging ports.
-// Config adapter and test harness both build through this, so the two cannot
-// drift.
 export interface NotificationPipelineDeps {
   db: Kysely<Database>;
   messaging: MessagingGateway;
@@ -54,6 +53,8 @@ export interface NotificationPipeline {
   createQueues(workerId: string): {
     expansion: QueueRunner;
     dispatch: QueueRunner;
+    whatsappInbound: QueueRunner;
+    outboundWhatsApp: QueueRunner;
   };
   enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
 }
@@ -96,6 +97,17 @@ export function assembleNotificationPipeline(
           send,
           clock: deps.clock,
         }),
+        whatsappInbound: createWhatsAppInboundQueue(
+          deps.db,
+          workerId,
+          deps.clock,
+        ),
+        outboundWhatsApp: createOutboundWhatsAppQueue(
+          deps.db,
+          deps.messaging,
+          workerId,
+          deps.clock,
+        ),
       };
     },
     enqueue(intentsToEnqueue, now = deps.clock()) {
@@ -104,8 +116,6 @@ export function assembleNotificationPipeline(
   };
 }
 
-// Builds the provider-backed messaging gateway from env config and hands
-// real-clock dependencies to assembleNotificationPipeline.
 export function createNotificationsRuntime(
   infra: ServerInfra,
   config: NotificationsConfig,

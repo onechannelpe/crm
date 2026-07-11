@@ -1,17 +1,15 @@
-import type { Kysely } from "kysely";
-
-import type { Database } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { UserId } from "~/server/shared/ids";
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 
-export function openSession(
-  db: Kysely<Database>,
+export async function openSession(
+  db: DatabaseExecutor,
   userId: UserId,
   now: Date,
-): Promise<unknown> {
+): Promise<void> {
   const expiresAt = new Date(now.getTime() + SESSION_DURATION_MS);
-  return db
+  await db
     .insertInto("whatsapp_sessions")
     .values({
       user_id: userId,
@@ -24,7 +22,7 @@ export function openSession(
 }
 
 export async function filterUsersWithActiveSession(
-  db: Kysely<Database>,
+  db: DatabaseExecutor,
   userIds: UserId[],
   now: Date,
 ): Promise<Set<UserId>> {

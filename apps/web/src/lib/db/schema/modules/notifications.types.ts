@@ -35,9 +35,6 @@ export interface NotificationOptOutsTable {
   created_at: Date;
 }
 
-// The unit of work for the dispatch stage. Leased, retried, idempotent on
-// (intent_id, user_id, channel). Title/body/action_url are snapshotted at
-// expansion so dispatch never reads the intent table.
 export interface NotificationDeliveriesTable {
   id: GeneratedId<NotificationDeliveryId>;
   intent_id: IdColumn<NotificationIntentId>;
@@ -75,10 +72,6 @@ export interface AppNotificationsTable {
   read_at: Date | null;
 }
 
-// Written transactionally with the business action (Stage 0); the expansion
-// stage leases it, fans it out into in-app rows and external delivery rows,
-// then marks it expanded. audience_json/channels_json are jsonb validated
-// at the expansion boundary, so they read back as `unknown`.
 export interface NotificationIntentsTable {
   id: IdColumn<NotificationIntentId>;
   event_type: string;
@@ -97,4 +90,53 @@ export interface NotificationIntentsTable {
   error: string | null;
   created_at: Date;
   expanded_at: Date | null;
+}
+
+export interface KapsoWebhookDeliveriesTable {
+  idempotency_key: string;
+  event_type: string;
+  payload_version: string;
+  is_batch: boolean;
+  payload_json: Json;
+  received_at: Date;
+}
+
+export interface WhatsAppInboundEventsTable {
+  id: string;
+  delivery_key: string;
+  conversation_id: string;
+  phone_number_id: string;
+  sender_address: string;
+  body: string | null;
+  sequence: number | null;
+  provider_timestamp: Date;
+  payload_json: Json;
+  queue_state: "pending" | "processing" | "done" | "failed";
+  attempt_count: number;
+  max_attempts: number;
+  available_at: Date;
+  lease_owner: string | null;
+  lease_until: Date | null;
+  outcome: string | null;
+  error: string | null;
+  received_at: Date;
+  processed_at: Date | null;
+}
+
+export interface OutboundWhatsAppMessagesTable {
+  id: string;
+  recipient_address: string;
+  body_text: string;
+  queue_state: "pending" | "processing" | "done" | "failed";
+  attempt_count: number;
+  max_attempts: number;
+  available_at: Date;
+  lease_owner: string | null;
+  lease_until: Date | null;
+  provider: "whatsapp_cloud" | "kapso" | null;
+  provider_message_id: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  created_at: Date;
+  sent_at: Date | null;
 }

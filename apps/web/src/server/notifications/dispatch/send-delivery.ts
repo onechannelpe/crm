@@ -2,13 +2,12 @@ import type { Logger } from "~/lib/observability/logger-shared";
 import { toE164Peru } from "~/lib/phone/pe-mobile";
 
 import type { MessagingGateway } from "../channels/messaging-gateway";
+import { classifySendReceipt } from "../channels/send-result";
 import type { DeliveryJob, DeliveryProviderId } from "../repos/delivery-repo";
 import { formatWhatsAppNotificationBody } from "./format-message";
 
-// The dispatch queue's settle call writes these as the patch on the same
-// lease-guarded statement as the queue_state transition (see dispatch/
-// queue.ts). Keeping them out of a separate write is what makes a
-// reaped-and-reclaimed lease unable to clobber a newer worker's result.
+// The queue writes these fields with queue_state in one lease-guarded update.
+// A worker with an expired lease cannot overwrite a newer worker's result.
 export interface DeliveryProviderFields {
   provider: DeliveryProviderId | null;
   provider_message_id: string | null;
@@ -16,9 +15,8 @@ export interface DeliveryProviderFields {
   error_message: string | null;
 }
 
-// retry: transient provider failure. failed: terminal (bad address,
-// unsupported template). Mapping retry vs failed to the queue's decision is
-// the dispatch queue's job.
+// Retry means the provider may succeed later. Failed means the address or message
+// cannot succeed. The queue converts these outcomes into its state values.
 export type DeliveryOutcome =
   | { kind: "sent"; fields: DeliveryProviderFields }
   | { kind: "retry"; reason: string; fields: DeliveryProviderFields }
@@ -47,7 +45,8 @@ export function createDeliverySender(deps: {
             body: formatWhatsAppNotificationBody(job, deps.publicOrigin),
           });
 
-    if (receipt.ok) {
+    const result = classifySendReceipt(receipt);
+    if (result.ok) {
       deps.logger.info("external_delivered", {
         id: job.intent_id,
         channel: job.channel,
@@ -56,32 +55,30 @@ export function createDeliverySender(deps: {
       return {
         kind: "sent",
         fields: {
-          provider: receipt.value.provider,
-          provider_message_id: receipt.value.providerMessageId ?? null,
+          provider: result.provider,
+          provider_message_id: result.providerMessageId,
           error_code: null,
           error_message: null,
         },
       };
     }
 
-    const provider =
-      receipt.error.kind === "provider_error" ? receipt.error.provider : null;
     deps.logger.info("external_failed", {
       id: job.intent_id,
       channel: job.channel,
       userId: job.user_id,
-      retryable: receipt.error.retryable,
+      retryable: result.retryable,
     });
 
     const fields: DeliveryProviderFields = {
-      provider,
+      provider: result.provider,
       provider_message_id: null,
-      error_code: receipt.error.code,
-      error_message: receipt.error.message,
+      error_code: result.code,
+      error_message: result.message,
     };
-    return receipt.error.retryable
-      ? { kind: "retry", reason: receipt.error.message, fields }
-      : { kind: "failed", reason: receipt.error.message, fields };
+    return result.retryable
+      ? { kind: "retry", reason: result.message, fields }
+      : { kind: "failed", reason: result.message, fields };
   };
 }
 

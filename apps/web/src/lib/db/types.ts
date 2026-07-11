@@ -75,6 +75,9 @@ export interface Database {
   app_notifications: notifications.AppNotificationsTable;
   notification_intents: notifications.NotificationIntentsTable;
   whatsapp_sessions: notifications.WhatsAppSessionsTable;
+  kapso_webhook_deliveries: notifications.KapsoWebhookDeliveriesTable;
+  whatsapp_inbound_events: notifications.WhatsAppInboundEventsTable;
+  outbound_whatsapp_messages: notifications.OutboundWhatsAppMessagesTable;
   extension_handoffs: extensions.ExtensionHandoffsTable;
   extension_installation_sessions: extensions.ExtensionInstallationSessionsTable;
   extension_runtime_events: extensions.ExtensionRuntimeEventsTable;

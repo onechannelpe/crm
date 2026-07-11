@@ -1,16 +1,18 @@
+import type { Kysely } from "kysely";
+
 import { db } from "~/lib/db/db";
+import type { Database } from "~/lib/db/types";
 import { createLogger } from "~/lib/observability/logger";
 import type { Logger } from "~/lib/observability/logger-shared";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 export interface ServerInfra {
-  db: DatabaseExecutor;
+  db: Kysely<Database>;
   now: () => Date;
   logger: Pick<Logger, "info" | "error">;
 }
 
 export function createServerInfra(
-  executor: DatabaseExecutor = db,
+  executor: Kysely<Database> = db,
 ): ServerInfra {
   return {
     db: executor,

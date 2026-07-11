@@ -31,10 +31,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
-  // Opt-outs are stored as deviations from the default: a row means "this user
-  // silenced this category on this channel". Absence means on. Default-on needs
-  // no per-user seeding, and a new category is on for everyone without a
-  // backfill. Enforced in planRecipients.
+  // A row means this user disabled this category on this channel. No row means
+  // enabled.
   await db.schema
     .createTable("notification_opt_outs")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -94,8 +92,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
-  // Partial index keeps the live working set; claims only walk pending rows
-  // whose available_at has come due.
+  // Covers pending deliveries and lets claims filter by available_at.
   await db.schema
     .createIndex("idx_notification_deliveries_claim")
     .on("notification_deliveries")
@@ -142,10 +139,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("notification_intents")
-    // `id` is a caller-supplied deterministic idempotency key
-    // (`${eventId}:${stage}`, see reactors/notify.ts and
-    // reactors/fulfillment-notify.ts), not a generated row id; `text` lets
-    // re-expansion collide on the same row.
+    // The caller supplies id as a deterministic idempotency key. Text preserves it
+    // when the intent is expanded again.
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("event_type", "text", (col) => col.notNull())
     .addColumn("audience_json", "jsonb", (col) => col.notNull())
@@ -188,5 +183,102 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().unique().references("users.id").onDelete("cascade"),
     )
     .addColumn("expires_at", "timestamptz", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("kapso_webhook_deliveries")
+    .addColumn("idempotency_key", "text", (col) => col.primaryKey())
+    .addColumn("event_type", "text", (col) => col.notNull())
+    .addColumn("payload_version", "text", (col) => col.notNull())
+    .addColumn("is_batch", "boolean", (col) => col.notNull())
+    .addColumn("payload_json", "jsonb", (col) => col.notNull())
+    .addColumn("received_at", "timestamptz", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("whatsapp_inbound_events")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("delivery_key", "text", (col) =>
+      col.notNull().references("kapso_webhook_deliveries.idempotency_key"),
+    )
+    .addColumn("conversation_id", "text", (col) => col.notNull())
+    .addColumn("phone_number_id", "text", (col) => col.notNull())
+    .addColumn("sender_address", "text", (col) => col.notNull())
+    .addColumn("body", "text")
+    // sequence stores Kapso's ordering value. Quarantined rows have no sequence,
+    // but pending rows need one for the conversation-ordered claim.
+    .addColumn("sequence", "bigint")
+    .addColumn("provider_timestamp", "timestamptz", (col) => col.notNull())
+    .addColumn("payload_json", "jsonb", (col) => col.notNull())
+    .addColumn("queue_state", "text", (col) =>
+      col.notNull().defaultTo("pending"),
+    )
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
+    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("lease_owner", "text")
+    .addColumn("lease_until", "timestamptz")
+    .addColumn("outcome", "text")
+    .addColumn("error", "text")
+    .addColumn("received_at", "timestamptz", (col) => col.notNull())
+    .addColumn("processed_at", "timestamptz")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_whatsapp_inbound_events_claim")
+    .on("whatsapp_inbound_events")
+    .columns(["available_at", "sequence"])
+    .where(sql.ref("queue_state"), "=", "pending")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_whatsapp_inbound_events_stale")
+    .on("whatsapp_inbound_events")
+    .column("lease_until")
+    .where(sql.ref("queue_state"), "=", "processing")
+    .execute();
+
+  // The inbound claim checks this index for an earlier pending or processing event
+  // in the same conversation.
+  await db.schema
+    .createIndex("idx_whatsapp_inbound_events_ordering")
+    .on("whatsapp_inbound_events")
+    .columns(["conversation_id", "sequence"])
+    .where(sql`queue_state IN ('pending', 'processing')`)
+    .execute();
+
+  await db.schema
+    .createTable("outbound_whatsapp_messages")
+    .addColumn("id", "text", (col) => col.primaryKey())
+    .addColumn("recipient_address", "text", (col) => col.notNull())
+    .addColumn("body_text", "text", (col) => col.notNull())
+    .addColumn("queue_state", "text", (col) =>
+      col.notNull().defaultTo("pending"),
+    )
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
+    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("lease_owner", "text")
+    .addColumn("lease_until", "timestamptz")
+    .addColumn("provider", "text")
+    .addColumn("provider_message_id", "text")
+    .addColumn("error_code", "text")
+    .addColumn("error_message", "text")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("sent_at", "timestamptz")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_outbound_whatsapp_messages_claim")
+    .on("outbound_whatsapp_messages")
+    .column("available_at")
+    .where(sql.ref("queue_state"), "=", "pending")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_outbound_whatsapp_messages_stale")
+    .on("outbound_whatsapp_messages")
+    .column("lease_until")
+    .where(sql.ref("queue_state"), "=", "processing")
     .execute();
 }
