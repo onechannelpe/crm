@@ -134,18 +134,20 @@ function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === "string";
 }
 
-function parseError(message: string): EventLogParseResult {
-  return { ok: false, error: { message } };
-}
-
 export function parseEventLogRecord(value: unknown): EventLogParseResult {
   if (!isObject(value) || !hasBaseRecord(value)) {
-    return parseError("Event log record has an invalid base shape");
+    return {
+      ok: false,
+      error: { message: "Event log record has an invalid base shape" },
+    };
   }
 
   if (value.table === "DOMAIN_EVENT") {
     if (!isNullableString(value.actorUserId) || !isObject(value.entity)) {
-      return parseError("Domain event has an invalid actor or entity");
+      return {
+        ok: false,
+        error: { message: "Domain event has an invalid actor or entity" },
+      };
     }
     if (
       typeof value.entity.type !== "string" ||
@@ -153,7 +155,12 @@ export function parseEventLogRecord(value: unknown): EventLogParseResult {
       !Array.isArray(value.changes) ||
       !value.changes.every(isFieldChange)
     ) {
-      return parseError("Domain event has invalid entity fields or changes");
+      return {
+        ok: false,
+        error: {
+          message: "Domain event has invalid entity fields or changes",
+        },
+      };
     }
     return {
       ok: true,
@@ -178,7 +185,10 @@ export function parseEventLogRecord(value: unknown): EventLogParseResult {
       typeof value.durationMs !== "number" ||
       !Number.isFinite(value.durationMs)
     ) {
-      return parseError("Action event has invalid action metadata");
+      return {
+        ok: false,
+        error: { message: "Action event has invalid action metadata" },
+      };
     }
     return {
       ok: true,
@@ -196,14 +206,20 @@ export function parseEventLogRecord(value: unknown): EventLogParseResult {
   }
 
   if (value.table !== "AUTH_EVENT") {
-    return parseError("Event log record has an unknown table");
+    return {
+      ok: false,
+      error: { message: "Event log record has an unknown table" },
+    };
   }
   if (
     !isNullableString(value.screen) ||
     !isNullableString(value.method) ||
     typeof value.outcome !== "string"
   ) {
-    return parseError("Authentication event has invalid metadata");
+    return {
+      ok: false,
+      error: { message: "Authentication event has invalid metadata" },
+    };
   }
   return {
     ok: true,
@@ -224,7 +240,10 @@ export function parseEventLogRecordText(raw: string): EventLogParseResult {
   try {
     return parseEventLogRecord(JSON.parse(raw));
   } catch {
-    return parseError("Event log payload is not valid JSON");
+    return {
+      ok: false,
+      error: { message: "Event log payload is not valid JSON" },
+    };
   }
 }
 

@@ -51,7 +51,14 @@ export function AnchoredPopover(props: {
 
   return (
     <Portal>
-      <div ref={panel} id={props.id} class={styles.panel} popover="auto">
+      <div
+        ref={(element) => {
+          panel = element;
+        }}
+        id={props.id}
+        class={styles.panel}
+        popover="auto"
+      >
         {props.children}
       </div>
     </Portal>

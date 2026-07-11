@@ -195,23 +195,37 @@ function JsonNode(props: {
 }) {
   const config = useConfig();
   const node = createMemo(() => toNodeModel(props.value));
-  const nodeOfKind = <TKind extends JsonNodeModel["kind"]>(kind: TKind) => {
+  const stringNode = () => {
     const current = node();
-    return current.kind === kind
-      ? (current as Extract<JsonNodeModel, { kind: TKind }>)
-      : undefined;
+    return current.kind === "string" ? current : undefined;
+  };
+  const numberNode = () => {
+    const current = node();
+    return current.kind === "number" ? current : undefined;
+  };
+  const booleanNode = () => {
+    const current = node();
+    return current.kind === "boolean" ? current : undefined;
+  };
+  const arrayNode = () => {
+    const current = node();
+    return current.kind === "array" ? current : undefined;
+  };
+  const objectNode = () => {
+    const current = node();
+    return current.kind === "object" ? current : undefined;
   };
 
   return (
     <Switch>
-      <Match when={nodeOfKind("null")}>
+      <Match when={node().kind === "null"}>
         <ValueNode
           label={props.label}
           icon={CircleAlert}
           valueAsString="null"
         />
       </Match>
-      <Match when={nodeOfKind("string")} keyed>
+      <Match when={stringNode()} keyed>
         {(current) => (
           <ValueNode
             label={props.label}
@@ -222,7 +236,7 @@ function JsonNode(props: {
           />
         )}
       </Match>
-      <Match when={nodeOfKind("number")} keyed>
+      <Match when={numberNode()} keyed>
         {(current) => (
           <ValueNode
             label={props.label}
@@ -231,7 +245,7 @@ function JsonNode(props: {
           />
         )}
       </Match>
-      <Match when={nodeOfKind("boolean")} keyed>
+      <Match when={booleanNode()} keyed>
         {(current) => (
           <ValueNode
             label={props.label}
@@ -240,7 +254,7 @@ function JsonNode(props: {
           />
         )}
       </Match>
-      <Match when={nodeOfKind("array")} keyed>
+      <Match when={arrayNode()} keyed>
         {(current) => (
           <NestedNode
             label={props.label}
@@ -253,7 +267,7 @@ function JsonNode(props: {
           />
         )}
       </Match>
-      <Match when={nodeOfKind("object")} keyed>
+      <Match when={objectNode()} keyed>
         {(current) => (
           <NestedNode
             label={props.label}
