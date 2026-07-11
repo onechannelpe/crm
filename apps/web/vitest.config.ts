@@ -3,38 +3,64 @@ import path from "node:path";
 import codspeedPlugin from "@codspeed/vitest-plugin";
 import { defineConfig } from "vitest/config";
 
+const alias = {
+  "~": path.resolve(__dirname, "./src"),
+  "@tests": path.resolve(__dirname, "./tests"),
+};
+
+function databaseProject(namespace: string) {
+  return {
+    globalSetup: ["./tests/setup/global-setup.ts"],
+    environment: "node" as const,
+    fileParallelism: true,
+    env: {
+      TEST_DB_NAMESPACE: namespace,
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [codspeedPlugin()],
   test: {
     reporters: process.env.GITHUB_ACTIONS
       ? ["dot", "github-actions"]
-      : ["github-actions"],
+      : ["default", "github-actions"],
     projects: [
       {
+        extends: true,
         test: {
-          name: "default",
-          globalSetup: ["./tests/setup/global-setup.ts"],
-          include: ["tests/**/*.test.ts"],
+          name: "unit",
+          include: ["tests/unit/**/*.test.ts"],
           environment: "node",
-          env: {
-            WEB_DB_URL: `file:${path.resolve(
-              __dirname,
-              ".vitest-db/__global-test-runtime.db",
-            )}`,
-          },
           fileParallelism: true,
-          alias: {
-            "~": path.resolve(__dirname, "./src"),
-            "@tests": path.resolve(__dirname, "./tests"),
-          },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "contract",
+          ...databaseProject("contract"),
+          include: ["tests/contract/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "integration",
+          ...databaseProject("integration"),
+          include: ["tests/integration/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "journey",
+          ...databaseProject("journey"),
+          include: ["tests/journey/**/*.test.ts"],
+          fileParallelism: false,
         },
       },
     ],
   },
-  resolve: {
-    alias: {
-      "~": path.resolve(__dirname, "./src"),
-      "@tests": path.resolve(__dirname, "./tests"),
-    },
-  },
+  resolve: { alias },
 });

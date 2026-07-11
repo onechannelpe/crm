@@ -10,14 +10,6 @@ import {
   createUserTotpFactorsRepo,
   createUserTotpRecoveryCodesRepo,
 } from "~/server/auth/repos-user-totp-factors";
-import {
-  createLeadCapacityGrantsRepo,
-  createLeadUsageCommitsRepo,
-  createLeadUsageReservationsRepo,
-  createSearchCapacityGrantsRepo,
-  createSearchUsageCommitsRepo,
-  createSearchUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
 import { createCapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import {
   createLeadPolicyDefaultsRepo,
@@ -25,17 +17,24 @@ import {
   createSearchPolicyDefaultsRepo,
   createSearchPolicyOverridesRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
-import { createSearchEnrichmentRepo } from "~/server/client-search/repository";
-import { createContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
-import { createContactsRepo } from "~/server/contacts/repos-contacts";
-import { createOrganizationsRepo } from "~/server/contacts/repos-organizations";
+import {
+  createLeadCapacityGrantsRepo,
+  createLeadUsageCommitsRepo,
+  createLeadUsageReservationsRepo,
+  createSearchCapacityGrantsRepo,
+  createSearchUsageCommitsRepo,
+  createSearchUsageReservationsRepo,
+} from "~/server/capacity/infrastructure/usage-repo";
+import { createCompanyRegistryRepo } from "~/server/client-search/repository";
+import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
+import { createContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createIntegrationJobRepo } from "~/server/integrations/infrastructure/integration-job-repo";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
-import { createNotificationPreferenceRepo } from "~/server/notifications/repos/preference";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
+import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
@@ -62,10 +61,10 @@ export function createTestRepositories(db: Kysely<Database>) {
     actionRateLimits: createActionRateLimitsRepo(db),
     userTotpFactors: createUserTotpFactorsRepo(db),
     userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
-    organizations: createOrganizationsRepo(db),
-    searchEnrichment: createSearchEnrichmentRepo(db),
-    contacts: createContactsRepo(db),
+    organization: createOrganizationRepo(db),
+    searchEnrichment: createCompanyRegistryRepo(db),
     contactAssignments: createContactAssignmentsRepo(db),
+    cadence: createContactCadenceRepo(db),
     searchPolicyDefaults: createSearchPolicyDefaultsRepo(db),
     searchPolicyOverrides: createSearchPolicyOverridesRepo(db),
     leadPolicyDefaults: createLeadPolicyDefaultsRepo(db),
@@ -79,7 +78,6 @@ export function createTestRepositories(db: Kysely<Database>) {
     capacityRequests: createCapacityRequestsRepo(db),
     interactionLogs: createInteractionLogsRepo(db),
     userChannelAddresses: createUserChannelAddressRepo(db),
-    notificationPreferences: createNotificationPreferenceRepo(db),
     appNotifications: createAppNotificationRepo(db),
     actionObservations: createActionObservationsRepo(db),
     authFunnelEvents: createAuthFunnelEventsRepo(db),

@@ -22,7 +22,7 @@ export function createSessionServiceHarness(
 ) {
   const usersFindById = vi.fn<SessionUsersPort["findById"]>(async (userId) => ({
     id: userId,
-    is_active: 1,
+    is_active: true,
     expires_at: null,
   }));
   const usersDeactivateIfExpired = noopDeactivateIfExpired;
@@ -68,7 +68,7 @@ export function createSessionServiceHarness(
     sessions,
     users,
     events,
-    now: () => nowTs,
+    now: () => new Date(nowTs),
     logger: { error() {} },
   });
 

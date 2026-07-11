@@ -6,7 +6,12 @@ import type { EngineClient } from "~/server/shared/engine/client";
 import type { SearchResult } from "~/server/shared/engine/types";
 import { createEventsRepo } from "~/server/shared/repos-events";
 
-import { cleanupTestDb, createIsolatedTestDb, type TestDbContext } from "./db";
+import {
+  cleanupTestDb,
+  createIsolatedTestDb,
+  resetTestDb,
+  type TestDbContext,
+} from "./db";
 
 interface TestLogger {
   info(message: string, meta?: unknown): void;
@@ -34,6 +39,9 @@ function createFakeEngine() {
     client,
     company(ruc: string, overlay: CompanyOverlay) {
       companies.set(ruc, overlay);
+    },
+    clear() {
+      companies.clear();
     },
   };
 }
@@ -67,8 +75,8 @@ function companyResult(ruc: string, overlay: CompanyOverlay): SearchResult {
 export interface TestRuntime {
   ctx: TestDbContext;
   now: {
-    get(): number;
-    set(value: number): void;
+    get(): Date;
+    set(value: Date): void;
   };
   auth: {
     sessionService: ReturnType<typeof createSessionService>;
@@ -78,17 +86,21 @@ export interface TestRuntime {
     client: EngineClient;
     company(ruc: string, overlay: CompanyOverlay): void;
   };
+  // Restores the shared database to its seeded baseline and resets the clock
+  // to a fresh `new Date()`. Call this in `beforeEach`; the runtime itself is
+  // built once per file in `beforeAll`.
+  reset(): Promise<void>;
   dispose(): Promise<void>;
 }
 
 export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   const ctx = await createIsolatedTestDb(prefix);
 
-  let currentNow = Date.now();
+  let currentNow = new Date();
 
   const now = {
     get: () => currentNow,
-    set: (value: number) => {
+    set: (value: Date) => {
       currentNow = value;
     },
   };
@@ -109,7 +121,10 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   };
 
   const engine = createFakeEngine();
-  const integrations = createIntegrationRuntime(ctx.db);
+  const integrations = createIntegrationRuntime({
+    executor: ctx.db,
+    now: now.get,
+  });
 
   return {
     ctx,
@@ -119,6 +134,12 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     engine: {
       client: engine.client,
       company: (ruc, overlay) => engine.company(ruc, overlay),
+    },
+
+    async reset() {
+      await resetTestDb(ctx);
+      currentNow = new Date();
+      engine.clear();
     },
 
     async dispose() {

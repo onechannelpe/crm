@@ -18,7 +18,7 @@ describe("env validation", () => {
     KAPSO_WHATSAPP_PHONE_NUMBER_ID: "test-whatsapp-phone-number-id",
     WHATSAPP_WEBHOOK_VERIFY_TOKEN:
       "stable-test-whatsapp-verify-token-satisfies-entropy-checks-12345",
-    WHATSAPP_APP_SECRET: "test-whatsapp-app-secret",
+    KAPSO_WEBHOOK_SECRET: "test-kapso-webhook-secret",
   } satisfies Record<string, string>;
 
   it("throws if secret is too short", () => {
@@ -48,13 +48,48 @@ describe("env validation", () => {
     );
   });
 
-  it("passes for a strong secret", () => {
-    const strong = "k7vB9pL2mN5qR4xT1yZ8wS3uJ6hA0gC9";
-    expect(() => validateSecret("TEST_SECRET", strong)).not.toThrow();
+  it("applies local development defaults", () => {
+    const env = loadServerEnv(baseEnv);
+
+    expect(env.engine.engineConnectMode).toBe("local");
+    expect(env.app.publicOrigin).toBe("http://localhost:3000");
+    expect(env.database.url).toBe("postgres://postgres@localhost:5432/crm");
   });
 
-  it("defaults engine connect mode to local", () => {
-    expect(loadServerEnv(baseEnv).engine.engineConnectMode).toBe("local");
+  it("normalizes the configured database URL", () => {
+    expect(
+      loadServerEnv({
+        ...baseEnv,
+        WEB_DB_URL: "  postgres://postgres@database:5432/crm  ",
+      }).database.url,
+    ).toBe("postgres://postgres@database:5432/crm");
+  });
+
+  it("requires a database URL in production", () => {
+    expect(() =>
+      loadServerEnv({
+        ...baseEnv,
+        NODE_ENV: "production",
+      }),
+    ).toThrow("Missing required env: WEB_DB_URL");
+  });
+
+  it("normalizes app public origin", () => {
+    expect(
+      loadServerEnv({
+        ...baseEnv,
+        APP_PUBLIC_ORIGIN: "https://crm.example.com/",
+      }).app.publicOrigin,
+    ).toBe("https://crm.example.com");
+  });
+
+  it("rejects invalid app public origins", () => {
+    expect(() =>
+      loadServerEnv({
+        ...baseEnv,
+        APP_PUBLIC_ORIGIN: "https://crm.example.com/app",
+      }),
+    ).toThrow("APP_PUBLIC_ORIGIN must not include a path, query, or hash");
   });
 
   it("routes email to Resend and WhatsApp to Kapso", () => {
@@ -112,6 +147,6 @@ describe("env validation", () => {
         ...baseEnv,
         ENGINE_CONNECT_MODE: "invalid",
       }),
-    ).toThrow("ENGINE_CONNECT_MODE must be one of: local, remote");
+    ).toThrow("ENGINE_CONNECT_MODE must be one of: local, internal, remote");
   });
 });

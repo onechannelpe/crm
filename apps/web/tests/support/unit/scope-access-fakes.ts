@@ -1,11 +1,13 @@
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+
 export function makeMockRepos(
   overrides: {
-    users?: { findById: (id: number) => Promise<any> };
+    users?: { findById: (id: UserId) => Promise<any> };
     teams?: {
-      findById: (id: number) => Promise<any>;
+      findById: (id: TeamId) => Promise<any>;
     };
     branchSupervisors?: {
-      findByBranch: (id: number) => Promise<any>;
+      findByBranch: (id: BranchId) => Promise<any>;
     };
   } = {},
 ) {
