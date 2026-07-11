@@ -1,72 +1,110 @@
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
-import type { ProcessResult } from "~/server/client-search/model";
-import type { EnrichmentRepositoryPort } from "~/server/client-search/ports";
+import type { Overlay } from "~/server/client-search/model";
+import type {
+  CompanyRegistryPort,
+  OrganizationProjection,
+  RegistryRow,
+} from "~/server/client-search/ports";
 import {
   processEnrichmentJob,
-  overlayToRow,
+  overlayToPatch,
 } from "~/server/client-search/process";
 
+// SUNAT-unreachable fallback: supplies legal name + address only. The
+// degraded record expires quickly so the next refresh re-attempts the
+// authoritative scrape.
+type EngineFallback = (
+  ruc: string,
+) => Promise<{ legalName: string | null; address: string | null } | null>;
+
 type EnrichmentWorkerDeps = {
-  enrichmentRepo: EnrichmentRepositoryPort;
+  registry: CompanyRegistryPort;
   scraper: SunatScraperClient;
-  doorbell: QueueDoorbell;
+  engineFallback: EngineFallback;
+  projectOrganization: (input: OrganizationProjection) => Promise<void>;
+  now?: () => Date;
 };
+
+const DEGRADED_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export function createEnrichmentQueue(
   workerId: string,
   deps: EnrichmentWorkerDeps,
 ) {
-  const leaseMs = 30_000;
-  const batchSize = 20;
-  const maxConcurrency = 3;
-  const { doorbell, enrichmentRepo, scraper } = deps;
+  const { registry, scraper, engineFallback, projectOrganization } = deps;
+  const now = deps.now ?? (() => new Date());
 
-  return createJobQueue({
+  async function project(overlay: Overlay): Promise<void> {
+    if (overlay.documentType !== "ruc") return;
+    await projectOrganization({
+      ruc: overlay.documentValue,
+      legalName: overlay.legalName,
+      address: overlay.address,
+      district: overlay.district,
+      department: overlay.department,
+    });
+  }
+
+  async function fallbackOverlay(job: RegistryRow): Promise<Overlay | null> {
+    if (job.document_type !== "ruc") return null;
+    const hit = await engineFallback(job.document_value);
+    if (!hit) return null;
+    const fetchedAt = now();
+    return {
+      documentType: "ruc",
+      documentValue: job.document_value,
+      fullName: null,
+      legalName: hit.legalName,
+      address: hit.address,
+      district: null,
+      department: null,
+      contributorStatus: null,
+      contributorCondition: null,
+      economicActivities: [],
+      source: "engine",
+      fetchedAt,
+      expiresAt: new Date(fetchedAt.getTime() + DEGRADED_TTL_MS),
+      payload: null,
+    };
+  }
+
+  return createJobQueue<RegistryRow>({
     name: "enrichment",
-    leaseMs,
-    batchSize,
-    maxConcurrency,
-    poll: (limit: number) => enrichmentRepo.leaseJobs(limit, leaseMs, workerId),
+    leaseMs: 30_000,
+    maxConcurrency: 3,
+    now,
+    workerId,
+    store: registry.store,
     handle: async (job, signal) => {
-      return processEnrichmentJob(job, scraper, signal);
-    },
-    onResult: async (job, result: ProcessResult) => {
+      const result = await processEnrichmentJob(job, scraper, signal, now());
+
       if (result.ok) {
-        await enrichmentRepo.completeJob(
-          job.id,
-          workerId,
-          overlayToRow(result.overlay),
-          Date.now(),
-        );
-        doorbell.wake(JOB_CHANNELS.ENRICHMENT_WRITEBACK, job.id);
-        return { kind: "complete" };
+        // Result columns ride the engine's settle. The org projection is an
+        // inline idempotent local write: a projection failure rethrows, so the
+        // job retries and re-projects.
+        await project(result.overlay);
+        return { kind: "done", patch: overlayToPatch(result.overlay) };
       }
 
-      if (result.shouldRetry) {
-        return {
-          kind: "retry",
-          availableAt: Date.now() + 60_000,
-        };
+      // SUNAT has no record: settle done with no result.
+      if (result.error.kind === "not_found") {
+        return { kind: "done" };
       }
 
-      return {
-        kind: "fail",
-        reason: `enrichment:${result.error.kind}`,
-      };
-    },
-    extendLease: (id: number) =>
-      enrichmentRepo.extendLease(id, workerId, leaseMs),
-    onComplete: async (_id: number) => {
-      // Job completion is persisted in onResult.
-    },
-    onRetry: async (id: number, availableAt: number) => {
-      await enrichmentRepo.retryJob(id, workerId, "Retrying", availableAt);
-    },
-    onFail: async (id: number, reason: string) => {
-      await enrichmentRepo.failJob(id, workerId, reason, Date.now());
+      const exhausted = job.attempt_count >= job.max_attempts;
+      if (result.shouldRetry && !exhausted) {
+        return { kind: "retry", reason: `enrichment:${result.error.kind}` };
+      }
+
+      // Engine fallback so the record is not left empty; a miss (or a DNI) is
+      // a terminal failure.
+      const fallback = await fallbackOverlay(job);
+      if (fallback) {
+        await project(fallback);
+        return { kind: "done", patch: overlayToPatch(fallback) };
+      }
+      return { kind: "fail", reason: `enrichment:${result.error.kind}` };
     },
   });
 }

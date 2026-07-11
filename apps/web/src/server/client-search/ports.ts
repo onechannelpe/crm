@@ -1,68 +1,40 @@
 import type { Selectable } from "kysely";
 
-import type { SearchEnrichmentJobsTable } from "~/lib/db/types";
+import type { CompanyRegistryRecordTable } from "~/lib/db/schema/modules/search.types";
+import type { JobStore } from "~/lib/job-queue/job-store";
 import type { DocumentKind } from "~/server/shared/document";
 
-export type OverlayRow = {
-  document_type: DocumentKind;
-  document_value: string;
-  full_name: string | null;
-  legal_name: string | null;
+export type RegistryRow = Selectable<CompanyRegistryRecordTable>;
+
+export type EnrichmentRequest = {
+  documentType: DocumentKind;
+  documentValue: string;
+  requestedByUserId: string | null;
+  requestedAt: Date;
+  maxAttempts: number;
+};
+
+// The enrichment worker hands this to the identity side after a scrape (or
+// engine fallback) so the organization row reflects the latest registry data:
+// an inline, idempotent local write, not a second queue.
+export type OrganizationProjection = {
+  ruc: string;
+  legalName: string | null;
   address: string | null;
   district: string | null;
   department: string | null;
-  contributor_status: string | null;
-  contributor_condition: string | null;
-  economic_activities_json: string | null;
-  source: "sunat";
-  fetched_at: number;
-  expires_at: number;
-  payload_json: string;
 };
 
-export type JobRow = Selectable<SearchEnrichmentJobsTable>;
-
-export type EnrichmentJobRequest = {
-  document_type: DocumentKind;
-  document_value: string;
-  requested_by_user_id: number;
-  now: number;
-  max_attempts: number;
-};
-
-export interface EnrichmentRepositoryPort {
-  upsertJob(values: EnrichmentJobRequest): Promise<number>;
-  upsertJobs(values: EnrichmentJobRequest[]): Promise<void>;
-  leaseJobs(
-    limit: number,
-    leaseMs: number,
-    leaseOwner: string,
-  ): Promise<JobRow[]>;
-  completeJob(
-    id: number,
-    leaseOwner: string,
-    overlay: OverlayRow,
-    now: number,
-  ): Promise<void>;
-  failJob(
-    id: number,
-    leaseOwner: string,
-    errorMessage: string,
-    now: number,
-  ): Promise<void>;
-  retryJob(
-    id: number,
-    leaseOwner: string,
-    errorMessage: string,
-    nextAttemptAt: number,
-  ): Promise<void>;
-  extendLease(id: number, workerId: string, leaseMs: number): Promise<boolean>;
-  getOverlay(
+export interface CompanyRegistryPort {
+  // The worker drives the store through the queue engine; result columns are
+  // written as the engine settles the row.
+  store: JobStore<string, RegistryRow>;
+  // Insert or reset the record to `pending` and wake the queue on the same
+  // executor so a wrapping transaction buffers the NOTIFY to commit.
+  upsertRequest(values: EnrichmentRequest): Promise<string>;
+  upsertRequests(values: EnrichmentRequest[]): Promise<void>;
+  getRecord(
     documentType: DocumentKind,
     documentValue: string,
-  ): Promise<OverlayRow | null | undefined>;
-  getJobStatus(
-    documentType: DocumentKind,
-    documentValue: string,
-  ): Promise<JobRow | null | undefined>;
+  ): Promise<RegistryRow | null | undefined>;
 }

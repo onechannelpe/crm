@@ -1,35 +1,33 @@
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import type { QueueDoorbell } from "~/lib/job-queue/doorbell";
 import type { Document } from "~/server/shared/document";
 
-import type { EnrichmentRepositoryPort } from "./ports";
+import type { CompanyRegistryPort } from "./ports";
 
 export interface EnrichmentCommand {
   enqueueRequest(
     document: Document,
-    requestedByUserId: number,
-    now?: number,
-  ): Promise<number>;
+    requestedByUserId: string | null,
+    requestedAt?: Date,
+  ): Promise<string>;
 }
 
+// The wake lives in the repository's upsert, on the same executor the row is
+// written on, so the enrichment queue is notified transactionally without a
+// separate doorbell.
 export function createEnrichmentCommand(
-  repo: EnrichmentRepositoryPort,
-  doorbell: QueueDoorbell,
+  repo: CompanyRegistryPort,
 ): EnrichmentCommand {
   return {
-    async enqueueRequest(document, requestedByUserId, now = Date.now()) {
-      const jobId = await repo.upsertJob({
-        document_type: document.kind,
-        document_value: document.value,
-        requested_by_user_id: requestedByUserId,
-        now,
-        max_attempts: 5,
+    enqueueRequest(document, requestedByUserId, requestedAt = new Date()) {
+      return repo.upsertRequest({
+        documentType: document.kind,
+        documentValue: document.value,
+        requestedByUserId,
+        requestedAt,
+        // 5 attempts: backed by nextAvailableAt's 5s-5min exponential schedule
+        // (~17min total), which clears short SUNAT blips while still leaving
+        // room for a later manual re-enqueue if SUNAT is fully down.
+        maxAttempts: 5,
       });
-
-      // Persistence is authoritative; Redis only wakes the worker.
-      doorbell.wake(JOB_CHANNELS.ENRICHMENT, jobId);
-
-      return jobId;
     },
   };
 }

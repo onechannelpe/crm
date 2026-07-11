@@ -6,6 +6,9 @@ type Lifecycle = "idle" | "queued" | "running" | "succeeded" | "failed";
 
 type Freshness = "fresh" | "stale" | "none";
 
+// `source` records which provider supplied the result: 'sunat' is
+// authoritative; 'engine' is the degraded fallback written only when SUNAT
+// was unreachable (legal name + address only).
 export interface Overlay {
   documentType: DocumentKind;
   documentValue: string;
@@ -17,10 +20,10 @@ export interface Overlay {
   contributorStatus: string | null;
   contributorCondition: string | null;
   economicActivities: SunatEconomicActivity[];
-  source: "sunat";
-  fetchedAt: number;
-  expiresAt: number;
-  payloadJson: string;
+  source: "sunat" | "engine";
+  fetchedAt: Date;
+  expiresAt: Date;
+  payload: unknown;
 }
 
 export interface EnrichmentStatus {
@@ -30,7 +33,7 @@ export interface EnrichmentStatus {
   freshness: Freshness;
   overlay: Overlay | null;
   lastError: string | null;
-  requestedAt: number | null;
+  requestedAt: Date | null;
 }
 
 export type EnrichmentError =

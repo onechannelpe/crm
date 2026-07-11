@@ -1,6 +1,7 @@
 import {
   makeNullSearchPolicyRepos,
   makeSearchCapacityGrantsRepo,
+  makeSearchUsageReservationPorts,
   makeSearchUsageCommitsRepo,
   makeSearchUsageReservationsRepo,
 } from "@tests/support/fakes/capacity";
@@ -9,23 +10,29 @@ import { describe, expect, it } from "vitest";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { external, type DomainError } from "~/server/shared/domain-error";
 import type { SearchResult } from "~/server/shared/engine/types";
+import { BranchId, SearchReservationId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-const USER_ID = 1;
+const USER_ID = UserId.trust("1");
 const EXHAUSTED_SEARCH_COMMIT_AMOUNT = 999_999;
+const PRE_EXISTING_AT = new Date(1_700_000_000_000);
 
 function makeRepos() {
   const searchCapacityGrants = makeSearchCapacityGrantsRepo();
   const searchUsageReservations = makeSearchUsageReservationsRepo();
   const searchUsageCommits = makeSearchUsageCommitsRepo();
-  return {
+  const repos = {
     users: {
-      findById: async () => ({ teamId: null, branchId: 1 }),
+      findById: async () => ({ teamId: null, branchId: BranchId.trust("1") }),
     },
     ...makeNullSearchPolicyRepos(),
     searchCapacityGrants,
     searchUsageReservations,
     searchUsageCommits,
+  };
+  return {
+    ...repos,
+    usageReservationPorts: makeSearchUsageReservationPorts(repos),
   };
 }
 
@@ -80,7 +87,7 @@ describe("runDirectSearch", () => {
         query: "12345678",
         limit: 10,
       },
-      repos,
+      repos.usageReservationPorts,
       successEngine,
     );
 
@@ -100,7 +107,7 @@ describe("runDirectSearch", () => {
         query: "12345678",
         limit: 10,
       },
-      repos,
+      repos.usageReservationPorts,
       failEngine,
     );
 
@@ -122,18 +129,18 @@ describe("runDirectSearch", () => {
 
     repos.searchUsageCommits.rows.push({
       id: "pre-existing",
-      reservation_id: "pre-res",
+      reservation_id: SearchReservationId.trust("pre-res"),
       amount: EXHAUSTED_SEARCH_COMMIT_AMOUNT,
-      created_at: 1_700_000_000_000,
+      created_at: PRE_EXISTING_AT,
     });
     repos.searchUsageReservations.rows.push({
-      id: "pre-res",
+      id: SearchReservationId.trust("pre-res"),
       user_id: USER_ID,
       amount: 999999,
       reason: "direct_search",
       status: "committed",
-      created_at: 1_700_000_000_000,
-      updated_at: 1_700_000_000_000,
+      created_at: PRE_EXISTING_AT,
+      updated_at: PRE_EXISTING_AT,
     });
 
     let engineCalled = false;
@@ -151,7 +158,7 @@ describe("runDirectSearch", () => {
         query: "12345678",
         limit: 10,
       },
-      repos,
+      repos.usageReservationPorts,
       trackingEngine,
     );
 

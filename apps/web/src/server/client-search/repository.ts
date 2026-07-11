@@ -1,283 +1,127 @@
+import { notify } from "~/lib/db/notify";
+import { createJobStore } from "~/lib/job-queue/job-store";
+import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import type { EnrichmentRepositoryPort } from "./ports";
+import type {
+  CompanyRegistryPort,
+  EnrichmentRequest,
+  RegistryRow,
+} from "./ports";
 
-export function createSearchEnrichmentRepo(
-  db: DatabaseExecutor,
-): EnrichmentRepositoryPort {
+const RECORD_COLUMNS = [
+  "id",
+  "document_type",
+  "document_value",
+  "full_name",
+  "legal_name",
+  "address",
+  "district",
+  "department",
+  "contributor_status",
+  "contributor_condition",
+  "economic_activities_json",
+  "payload_json",
+  "source",
+  "fetched_at",
+  "expires_at",
+  "queue_state",
+  "lease_owner",
+  "lease_until",
+  "attempt_count",
+  "max_attempts",
+  "available_at",
+  "last_error",
+  "requested_by_user_id",
+  "requested_at",
+] as const;
+
+// Queue-control columns only: result and source stay so the UI keeps showing
+// the last known value (marked stale) while the re-scrape runs.
+function resetPatch(values: EnrichmentRequest) {
   return {
-    async upsertJob(values) {
+    queue_state: "pending" as const,
+    available_at: values.requestedAt,
+    attempt_count: 0,
+    max_attempts: values.maxAttempts,
+    lease_owner: null,
+    lease_until: null,
+    last_error: null,
+    requested_at: values.requestedAt,
+    requested_by_user_id: values.requestedByUserId,
+  };
+}
+
+export function createCompanyRegistryRepo(
+  db: DatabaseExecutor,
+): CompanyRegistryPort {
+  // queue_state, lease, and last_error are owned by the store. The UI lifecycle
+  // derives from (queue_state, source, expires_at); the worker writes the
+  // result columns and source/fetched_at/expires_at through the settle patch.
+  const store = createJobStore<RegistryRow, string>(
+    db,
+    "company_registry_record",
+    RECORD_COLUMNS,
+  );
+
+  return {
+    store,
+    async upsertRequest(values) {
       const result = await db
-        .insertInto("search_enrichment_jobs")
+        .insertInto("company_registry_record")
         .values({
-          document_type: values.document_type,
-          document_value: values.document_value,
-          status: "queued",
-          requested_by_user_id: values.requested_by_user_id,
-          requested_at: values.now,
-          completed_at: null,
-          lease_owner: null,
-          lease_until: null,
-          attempt_count: 0,
-          max_attempts: values.max_attempts,
-          last_error: null,
-          next_attempt_at: values.now,
+          document_type: values.documentType,
+          document_value: values.documentValue,
+          ...resetPatch(values),
         })
         .onConflict((oc) =>
-          oc.columns(["document_type", "document_value"]).doUpdateSet({
-            status: "queued",
-            requested_by_user_id: values.requested_by_user_id,
-            requested_at: values.now,
-            completed_at: null,
-            lease_owner: null,
-            lease_until: null,
-            attempt_count: 0,
-            max_attempts: values.max_attempts,
-            last_error: null,
-            next_attempt_at: values.now,
-          }),
+          oc
+            .columns(["document_type", "document_value"])
+            .doUpdateSet(resetPatch(values)),
         )
         .returning("id")
         .executeTakeFirstOrThrow();
 
+      notify(db, JOB_TABLE_CHANNELS.company_registry_record);
       return result.id;
     },
 
-    async upsertJobs(values) {
+    async upsertRequests(values) {
       if (values.length === 0) return;
 
       await db
-        .insertInto("search_enrichment_jobs")
+        .insertInto("company_registry_record")
         .values(
-          values.map((job) => ({
-            document_type: job.document_type,
-            document_value: job.document_value,
-            status: "queued" as const,
-            requested_by_user_id: job.requested_by_user_id,
-            requested_at: job.now,
-            completed_at: null,
-            lease_owner: null,
-            lease_until: null,
-            attempt_count: 0,
-            max_attempts: job.max_attempts,
-            last_error: null,
-            next_attempt_at: job.now,
+          values.map((request) => ({
+            document_type: request.documentType,
+            document_value: request.documentValue,
+            ...resetPatch(request),
           })),
         )
         .onConflict((oc) =>
           oc.columns(["document_type", "document_value"]).doUpdateSet((eb) => ({
-            status: "queued",
-            requested_by_user_id: eb.ref("excluded.requested_by_user_id"),
-            requested_at: eb.ref("excluded.requested_at"),
-            completed_at: null,
-            lease_owner: null,
-            lease_until: null,
+            queue_state: "pending" as const,
+            available_at: eb.ref("excluded.available_at"),
             attempt_count: 0,
             max_attempts: eb.ref("excluded.max_attempts"),
+            lease_owner: null,
+            lease_until: null,
             last_error: null,
-            next_attempt_at: eb.ref("excluded.next_attempt_at"),
+            requested_at: eb.ref("excluded.requested_at"),
+            requested_by_user_id: eb.ref("excluded.requested_by_user_id"),
           })),
         )
         .execute();
+
+      notify(db, JOB_TABLE_CHANNELS.company_registry_record);
     },
 
-    async leaseJobs(limit, leaseMs, leaseOwner) {
-      const now = Date.now();
-      const leaseUntil = now + leaseMs;
-      const candidates = await db
-        .selectFrom("search_enrichment_jobs")
-        .select(["id"])
-        .where((eb) =>
-          eb.and([
-            eb("status", "=", "queued"),
-            eb("next_attempt_at", "<=", now),
-            eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
-          ]),
-        )
-        .orderBy("requested_at", "asc")
-        .limit(limit)
-        .execute();
-
-      const leased = await Promise.all(
-        candidates.map(async ({ id }) => {
-          const updated = await db
-            .updateTable("search_enrichment_jobs")
-            .set((eb) => ({
-              status: "running",
-              lease_owner: leaseOwner,
-              lease_until: leaseUntil,
-              last_error: null,
-              attempt_count: eb("attempt_count", "+", 1),
-            }))
-            .where("id", "=", id)
-            .where((eb) =>
-              eb.and([
-                eb("status", "=", "queued"),
-                eb("next_attempt_at", "<=", now),
-                eb.or([
-                  eb("lease_until", "is", null),
-                  eb("lease_until", "<", now),
-                ]),
-              ]),
-            )
-            .executeTakeFirst();
-
-          if (Number(updated.numUpdatedRows ?? 0) === 0) {
-            return null;
-          }
-
-          return db
-            .selectFrom("search_enrichment_jobs")
-            .selectAll()
-            .where("id", "=", id)
-            .where("status", "=", "running")
-            .where("lease_owner", "=", leaseOwner)
-            .executeTakeFirst();
-        }),
-      );
-
-      return leased.filter(
-        (job): job is NonNullable<(typeof leased)[number]> => job !== null,
-      );
-    },
-
-    async extendLease(id, workerId, leaseMs) {
-      const now = Date.now();
-      const result = await db
-        .updateTable("search_enrichment_jobs")
-        .set({ lease_until: now + leaseMs })
-        .where("id", "=", id)
-        .where("lease_owner", "=", workerId)
-        .where("status", "=", "running")
-        .executeTakeFirst();
-
-      return Number(result.numUpdatedRows ?? 0) > 0;
-    },
-
-    async completeJob(id, leaseOwner, overlay, now) {
-      await db.transaction().execute(async (trx) => {
-        const updated = await trx
-          .updateTable("search_enrichment_jobs")
-          .set({
-            status: "succeeded",
-            completed_at: now,
-            lease_owner: null,
-            lease_until: null,
-            last_error: null,
-          })
-          .where("id", "=", id)
-          .where("status", "=", "running")
-          .where("lease_owner", "=", leaseOwner)
-          .executeTakeFirst();
-
-        if (Number(updated.numUpdatedRows ?? 0) === 0) {
-          return;
-        }
-
-        await trx
-          .insertInto("search_enrichment_overlays")
-          .values(overlay)
-          .onConflict((oc) =>
-            oc.columns(["document_type", "document_value"]).doUpdateSet({
-              full_name: overlay.full_name,
-              legal_name: overlay.legal_name,
-              address: overlay.address,
-              district: overlay.district,
-              department: overlay.department,
-              contributor_status: overlay.contributor_status,
-              contributor_condition: overlay.contributor_condition,
-              economic_activities_json: overlay.economic_activities_json,
-              source: overlay.source,
-              fetched_at: overlay.fetched_at,
-              expires_at: overlay.expires_at,
-              payload_json: overlay.payload_json,
-            }),
-          )
-          .execute();
-
-        const activeOutboxEntry = await trx
-          .selectFrom("search_enrichment_completion_outbox")
-          .select("id")
-          .where("document_type", "=", overlay.document_type)
-          .where("document_value", "=", overlay.document_value)
-          .where("status", "in", ["queued", "running"])
-          .limit(1)
-          .executeTakeFirst();
-
-        if (activeOutboxEntry) {
-          return;
-        }
-
-        await trx
-          .insertInto("search_enrichment_completion_outbox")
-          .values({
-            document_type: overlay.document_type,
-            document_value: overlay.document_value,
-            legal_name: overlay.legal_name,
-            address: overlay.address,
-            district: overlay.district,
-            department: overlay.department,
-            fetched_at: overlay.fetched_at,
-            status: "queued",
-            attempt_count: 0,
-            max_attempts: 5,
-            available_at: now,
-            lease_owner: null,
-            lease_until: null,
-            error_message: null,
-            created_at: now,
-            processed_at: null,
-          })
-          .execute();
-      });
-    },
-
-    async failJob(id, leaseOwner, errorMessage, now) {
-      await db
-        .updateTable("search_enrichment_jobs")
-        .set({
-          status: "failed",
-          completed_at: now,
-          lease_owner: null,
-          lease_until: null,
-          last_error: errorMessage,
-        })
-        .where("id", "=", id)
-        .where("lease_owner", "=", leaseOwner)
-        .execute();
-    },
-
-    async retryJob(id, leaseOwner, errorMessage, nextAttemptAt) {
-      await db
-        .updateTable("search_enrichment_jobs")
-        .set({
-          status: "queued",
-          next_attempt_at: nextAttemptAt,
-          lease_owner: null,
-          lease_until: null,
-          last_error: errorMessage,
-        })
-        .where("id", "=", id)
-        .where("lease_owner", "=", leaseOwner)
-        .execute();
-    },
-
-    async getOverlay(documentType, documentValue) {
+    async getRecord(documentType, documentValue) {
       return db
-        .selectFrom("search_enrichment_overlays")
+        .selectFrom("company_registry_record")
         .selectAll()
         .where("document_type", "=", documentType)
         .where("document_value", "=", documentValue)
-        .executeTakeFirst();
-    },
-
-    async getJobStatus(documentType, documentValue) {
-      return db
-        .selectFrom("search_enrichment_jobs")
-        .selectAll()
-        .where("document_type", "=", documentType)
-        .where("document_value", "=", documentValue)
-        .orderBy("requested_at", "desc")
         .executeTakeFirst();
     },
   };
