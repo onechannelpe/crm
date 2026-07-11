@@ -7,14 +7,10 @@ export type KapsoInboundEvent = {
   phoneNumberId: string;
   senderAddress: string;
   body: string | null;
-  sequence: number;
   providerTimestamp: Date;
   payloadJson: string;
 };
 
-// Quarantined events are recorded as failed and never processed. Later messages
-// can then pass the ordering check. `missing-sequence` means the delivery arrived
-// without a usable batch_info sequence and cannot be safely ordered.
 export type QuarantinedInboundEvent = {
   id: string;
   conversationId: string;
@@ -22,7 +18,7 @@ export type QuarantinedInboundEvent = {
   senderAddress: string;
   body: string | null;
   providerTimestamp: Date | null;
-  reason: "unparseable-message" | "missing-sequence";
+  reason: "unparseable-message";
   payloadJson: string;
 };
 
@@ -92,31 +88,6 @@ function parseMessageFields(payload: unknown): MessageFields | null {
   };
 }
 
-// Recommended Kapso webhook config: Debounce Window 1s, Maximum Batch Size 50.
-// Debouncing makes Kapso provide a contiguous batch_info sequence for ordering.
-// The values must still match the received batch before the sequence is trusted.
-function parseSequenceBase(
-  payload: Record<string, unknown>,
-  messageCount: number,
-): number | null {
-  const info = isPlainRecord(payload["batch_info"])
-    ? payload["batch_info"]
-    : null;
-  if (!info) return null;
-  const first = info["first_sequence"];
-  const last = info["last_sequence"];
-  const size = info["size"];
-  if (
-    typeof first !== "number" ||
-    typeof last !== "number" ||
-    typeof size !== "number"
-  ) {
-    return null;
-  }
-  if (size !== messageCount || last - first + 1 !== size) return null;
-  return first;
-}
-
 export function parseKapsoEnvelope(
   rawBody: string,
   idempotencyKey: string,
@@ -134,10 +105,6 @@ export function parseKapsoEnvelope(
   if (!Array.isArray(rawEvents) || rawEvents.length === 0) {
     return Err("invalid-envelope");
   }
-
-  const sequenceBase = isBatch
-    ? parseSequenceBase(payload, rawEvents.length)
-    : null;
 
   const accepted: KapsoInboundEvent[] = [];
   const quarantined: QuarantinedInboundEvent[] = [];
@@ -159,11 +126,7 @@ export function parseKapsoEnvelope(
       });
       return;
     }
-    if (sequenceBase === null) {
-      quarantined.push({ ...fields, reason: "missing-sequence", payloadJson });
-      return;
-    }
-    accepted.push({ ...fields, sequence: sequenceBase + index, payloadJson });
+    accepted.push({ ...fields, payloadJson });
   });
 
   return Ok({ isBatch, accepted, quarantined, payloadJson: rawBody });

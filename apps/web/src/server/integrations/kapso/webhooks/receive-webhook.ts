@@ -17,11 +17,12 @@ const DEFAULT_MAX_ATTEMPTS = 5;
 
 type ReceiptError =
   | KapsoEnvelopeError
-  | "invalid-event"
   | "missing-idempotency-key"
   | "unsupported-payload-version";
 
-export type KapsoWebhookReceipt = "accepted" | "duplicate";
+// "ignored" is an event type we don't handle: acknowledged so the provider stops
+// retrying, but nothing is captured. Distinct from an error, which is a 4xx.
+export type KapsoWebhookReceipt = "accepted" | "duplicate" | "ignored";
 
 function toEventRows(
   envelope: KapsoEnvelope,
@@ -45,7 +46,6 @@ function toEventRows(
     phone_number_id: event.phoneNumberId,
     sender_address: event.senderAddress,
     body: event.body,
-    sequence: event.sequence,
     provider_timestamp: event.providerTimestamp,
     payload_json: event.payloadJson,
     queue_state: "pending" as const,
@@ -54,8 +54,7 @@ function toEventRows(
     processed_at: null,
   }));
 
-  // Quarantined rows are failed with no sequence. The claim skips them, so later
-  // messages are not blocked.
+  // Quarantined rows land terminal (failed) and are never claimed.
   const quarantined = envelope.quarantined.map((event) => ({
     ...base,
     id: event.id,
@@ -63,7 +62,6 @@ function toEventRows(
     phone_number_id: event.phoneNumberId,
     sender_address: event.senderAddress,
     body: event.body,
-    sequence: null,
     provider_timestamp: event.providerTimestamp ?? now,
     payload_json: event.payloadJson,
     queue_state: "failed" as const,
@@ -90,7 +88,7 @@ export async function receiveKapsoWebhook(
     return Err("missing-idempotency-key");
   }
   const { eventType, payloadVersion } = input;
-  if (eventType !== INBOUND_EVENT) return Err("invalid-event");
+  if (eventType !== INBOUND_EVENT) return Ok("ignored" as const);
   if (payloadVersion !== "v2") return Err("unsupported-payload-version");
 
   const envelope = parseKapsoEnvelope(input.rawBody, idempotencyKey);

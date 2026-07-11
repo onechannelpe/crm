@@ -1,4 +1,4 @@
-import { sql, type Kysely, type SqlBool } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -205,9 +205,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("phone_number_id", "text", (col) => col.notNull())
     .addColumn("sender_address", "text", (col) => col.notNull())
     .addColumn("body", "text")
-    // sequence stores Kapso's ordering value. Quarantined rows have no sequence,
-    // but pending rows need one for the conversation-ordered claim.
-    .addColumn("sequence", "bigint")
     .addColumn("provider_timestamp", "timestamptz", (col) => col.notNull())
     .addColumn("payload_json", "jsonb", (col) => col.notNull())
     .addColumn("queue_state", "text", (col) =>
@@ -227,7 +224,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createIndex("idx_whatsapp_inbound_events_claim")
     .on("whatsapp_inbound_events")
-    .columns(["available_at", "sequence"])
+    .column("available_at")
     .where(sql.ref("queue_state"), "=", "pending")
     .execute();
 
@@ -236,15 +233,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("whatsapp_inbound_events")
     .column("lease_until")
     .where(sql.ref("queue_state"), "=", "processing")
-    .execute();
-
-  // The inbound claim checks this index for an earlier pending or processing event
-  // in the same conversation.
-  await db.schema
-    .createIndex("idx_whatsapp_inbound_events_ordering")
-    .on("whatsapp_inbound_events")
-    .columns(["conversation_id", "sequence"])
-    .where(sql<SqlBool>`queue_state IN ('pending', 'processing')`)
     .execute();
 
   await db.schema

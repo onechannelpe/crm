@@ -1,3 +1,5 @@
+import { sql } from "kysely";
+
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { UserId } from "~/server/shared/ids";
 
@@ -6,9 +8,9 @@ const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 export async function openSession(
   db: DatabaseExecutor,
   userId: UserId,
-  now: Date,
+  messageSentAt: Date,
 ): Promise<void> {
-  const expiresAt = new Date(now.getTime() + SESSION_DURATION_MS);
+  const expiresAt = new Date(messageSentAt.getTime() + SESSION_DURATION_MS);
   await db
     .insertInto("whatsapp_sessions")
     .values({
@@ -16,7 +18,9 @@ export async function openSession(
       expires_at: expiresAt,
     })
     .onConflict((oc) =>
-      oc.column("user_id").doUpdateSet({ expires_at: expiresAt }),
+      oc.column("user_id").doUpdateSet({
+        expires_at: sql<Date>`GREATEST(whatsapp_sessions.expires_at, EXCLUDED.expires_at)`,
+      }),
     )
     .execute();
 }

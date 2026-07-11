@@ -84,59 +84,71 @@ export async function processInboundWhatsAppEvent(
     if (!claim) return { outcome: "unknown-sender", enqueuedReply: false };
 
     const command = classifyInboundMessage(event.body);
+
     if (command === "opt-out") {
       const categories = categoriesControllableOn("whatsapp");
-      if (categories.length > 0) {
-        await trx
-          .insertInto("notification_opt_outs")
-          .values(
-            categories.map((category) => ({
-              user_id: claim.user_id,
-              category,
-              channel: "whatsapp" as const,
-              created_at: now,
-            })),
-          )
-          .onConflict((oc) =>
-            oc.columns(["user_id", "category", "channel"]).doNothing(),
-          )
-          .execute();
+      const inserted =
+        categories.length > 0
+          ? await trx
+              .insertInto("notification_opt_outs")
+              .values(
+                categories.map((category) => ({
+                  user_id: claim.user_id,
+                  category,
+                  channel: "whatsapp" as const,
+                  created_at: now,
+                })),
+              )
+              .onConflict((oc) =>
+                oc.columns(["user_id", "category", "channel"]).doNothing(),
+              )
+              .returning("id")
+              .execute()
+          : [];
+      const changed = inserted.length > 0;
+      if (changed) {
+        await enqueueReply(
+          trx,
+          event.id,
+          "opt-out",
+          sender,
+          OPT_OUT_REPLY_BODY,
+          now,
+        );
       }
-      await enqueueReply(
-        trx,
-        event.id,
-        "opt-out",
-        sender,
-        OPT_OUT_REPLY_BODY,
-        now,
-      );
-      return { outcome: "opted-out", enqueuedReply: true };
+      return { outcome: "opted-out", enqueuedReply: changed };
     }
 
-    if (!claim.is_verified && command === "verify") {
-      await trx
+    if (command === "verify" && !claim.is_verified) {
+      const won = await trx
         .updateTable("user_channel_addresses")
         .set({ is_verified: true, verified_at: now, updated_at: now })
         .where("user_id", "=", claim.user_id)
         .where("channel", "=", "whatsapp")
         .where("address", "=", claim.address)
-        .execute();
-      await openSession(trx, claim.user_id, now);
-      await enqueueReply(
-        trx,
-        event.id,
-        "verification",
-        sender,
-        VERIFY_REPLY_BODY,
-        now,
-      );
-      return { outcome: "verified", enqueuedReply: true };
+        .where("is_verified", "=", false)
+        .returning("user_id")
+        .executeTakeFirst();
+      await openSession(trx, claim.user_id, event.provider_timestamp);
+      if (won) {
+        await enqueueReply(
+          trx,
+          event.id,
+          "verification",
+          sender,
+          VERIFY_REPLY_BODY,
+          now,
+        );
+        return { outcome: "verified", enqueuedReply: true };
+      }
+      return { outcome: "already-verified", enqueuedReply: false };
     }
 
     if (!claim.is_verified) {
       return { outcome: "unverified-activity", enqueuedReply: false };
     }
-    await openSession(trx, claim.user_id, now);
+
+    await openSession(trx, claim.user_id, event.provider_timestamp);
     return {
       outcome: command === "verify" ? "already-verified" : "session-opened",
       enqueuedReply: false,

@@ -6,7 +6,6 @@ import { receiveKapsoWebhook } from "~/server/integrations/kapso/webhooks/receiv
 import { getServerRuntime } from "~/server/platform/container";
 
 const logger = createLogger("whatsapp-webhook");
-const INBOUND_MESSAGE_EVENT = "whatsapp.message.received";
 
 export function GET(event: APIEvent): Response {
   const url = new URL(event.request.url);
@@ -30,20 +29,16 @@ export function GET(event: APIEvent): Response {
 }
 
 export async function POST(event: APIEvent): Promise<Response> {
-  const eventType = event.request.headers.get("x-webhook-event");
-  if (eventType !== INBOUND_MESSAGE_EVENT) {
-    return new Response("OK", { status: 200 });
-  }
-
   try {
     const { infra } = getServerRuntime();
     const result = await receiveKapsoWebhook(infra.db, {
       idempotencyKey: event.request.headers.get("x-idempotency-key"),
-      eventType,
+      eventType: event.request.headers.get("x-webhook-event"),
       payloadVersion: event.request.headers.get("x-webhook-payload-version"),
       rawBody: await event.request.text(),
       now: infra.now(),
     });
+
     if (!result.ok) {
       logger.warn("whatsapp_webhook_rejected", { reason: result.error });
       return new Response("Bad Request", { status: 400 });

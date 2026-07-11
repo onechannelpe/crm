@@ -108,7 +108,6 @@ export interface WhatsAppInboundEventsTable {
   phone_number_id: string;
   sender_address: string;
   body: string | null;
-  sequence: number | null;
   provider_timestamp: Date;
   payload_json: Json;
   queue_state: "pending" | "processing" | "done" | "failed";
