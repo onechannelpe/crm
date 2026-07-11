@@ -2,42 +2,47 @@ import { bench, describe } from "vitest";
 
 import { createAssignment } from "~/server/contact-assignments/domain/assignment";
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
+import {
+  OrganizationId,
+  OrganizationPersonId,
+  UserId,
+} from "~/server/shared/ids";
 
-import { BENCH_NOW, COMPONENT_ITERATIONS } from "../_shared/constants";
-import { fixedIterations } from "../_shared/options";
+import { BENCH_NOW } from "../_shared/constants";
+
+const USER_ID = UserId.trust("bench-component-user");
+const CONTACT_ID = OrganizationPersonId.trust("bench-component-contact");
+const ORGANIZATION_ID = OrganizationId.trust(
+  "01974fd5-f261-7a7d-93f5-2f3d0f963001",
+);
 
 describe("lead assignment component benchmark", () => {
-  bench(
-    "component path: build lead assignment payload",
-    () => {
-      const assignment = createAssignment(1, 1, 24);
-      if (assignment.user_id !== 1 || assignment.contact_id !== 1) {
-        throw new Error("unexpected assignment payload");
-      }
-    },
-    fixedIterations(COMPONENT_ITERATIONS),
-  );
+  bench("component path: build lead assignment payload", () => {
+    const assignment = createAssignment(USER_ID, CONTACT_ID, 24);
+    if (
+      assignment.user_id !== USER_ID ||
+      assignment.contact_id !== CONTACT_ID
+    ) {
+      throw new Error("unexpected assignment payload");
+    }
+  });
 
-  bench(
-    "component path: evaluate contact cooldown rule",
-    () => {
-      const contact = {
-        id: 1,
-        organization_id: "01974fd5-f261-7a7d-93f5-2f3d0f963001",
-        dni: "70000001",
-        name: "Bench",
-        phone_primary: "911111111",
-        phone_secondary: null,
-        last_contacted_at: null,
-        last_contacted_by_user_id: null,
-        cooldown_until: BENCH_NOW - 1,
-        created_at: BENCH_NOW,
-      };
-      const canContact = canContactNow(contact, BENCH_NOW);
-      if (!canContact) {
-        throw new Error("expected contact to be outside cooldown window");
-      }
-    },
-    fixedIterations(COMPONENT_ITERATIONS),
-  );
+  bench("component path: evaluate contact cooldown rule", () => {
+    const contact = {
+      id: CONTACT_ID,
+      organization_id: ORGANIZATION_ID,
+      dni: "70000001",
+      name: "Bench",
+      phone_primary: "911111111",
+      phone_secondary: null,
+      last_contacted_at: null,
+      last_contacted_by_user_id: null,
+      cooldown_until: new Date(BENCH_NOW.getTime() - 1),
+      created_at: BENCH_NOW,
+    };
+    const canContact = canContactNow(contact, BENCH_NOW);
+    if (!canContact) {
+      throw new Error("expected contact to be outside cooldown window");
+    }
+  });
 });

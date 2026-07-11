@@ -1,11 +1,20 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
+import { TEST_FIXTURES } from "@tests/support/runtime/db";
+import { randomUUIDv7 } from "bun";
 
-import { enqueueNotifications } from "~/server/notifications/outbox";
+import type { Json } from "~/contracts/json";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
+import {
+  createDeliveryRepository,
+  type DeliveryJob,
+} from "~/server/notifications/repos/delivery-repo";
+import type { IntentJob } from "~/server/notifications/repos/intent-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
+import { BranchId, NotificationIntentId, UserId } from "~/server/shared/ids";
 
-import { BENCH_NOW } from "../_shared/constants";
+import { BENCH_NOW, benchDate } from "../_shared/constants";
 
-const USER_ID_START = 300_000;
+const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
 
 export const PLANNER_SCENARIOS = [
   {
@@ -28,21 +37,26 @@ export const PLANNER_SCENARIOS = [
   },
 ] as const;
 
-export const PROCESSOR_SMOKE_INTENT_COUNT = 8;
-export const PROCESSOR_SMOKE_RECIPIENTS = 12;
+export const EXPAND_RECIPIENTS = 12;
 
 export type PlannerScenarioName = (typeof PLANNER_SCENARIOS)[number]["name"];
+
+export interface PlannerEntry {
+  event_type: string;
+  audience_json: Json;
+  channels_json: Json;
+}
 
 type PlannerScenario = (typeof PLANNER_SCENARIOS)[number];
 type PlannerScenarioResult<T> = Record<PlannerScenarioName, T>;
 
-function createUserIds(start: number, count: number): number[] {
-  return Array.from({ length: count }, (_, index) => start + index);
+function createUserIds(count: number): UserId[] {
+  return Array.from({ length: count }, () => UserId.trust(randomUUIDv7()));
 }
 
 async function seedUsersAndAddresses(
   ctx: TestDbContext,
-  userIds: number[],
+  userIds: UserId[],
   seedKey: string,
 ): Promise<void> {
   await ctx.db
@@ -50,9 +64,9 @@ async function seedUsersAndAddresses(
     .values(
       userIds.map((userId, index) => ({
         id: userId,
-        branch_id: 1,
+        branch_id: BRANCH_ID,
         team_id: null,
-        username: `bench.notify.${seedKey}.${userId}`,
+        username: `bench.notify.${seedKey}.${index}`,
         email: `bench-${seedKey}-${index}@test.local`,
         password_hash: "bench-hash",
         names: `Bench Notify ${seedKey} ${index}`,
@@ -61,7 +75,7 @@ async function seedUsersAndAddresses(
         onboarding_completed_at: BENCH_NOW,
         role: "executive" as const,
         executive_category: "elite" as const,
-        is_active: 1,
+        is_active: true,
         created_at: BENCH_NOW,
       })),
     )
@@ -75,7 +89,7 @@ async function seedUsersAndAddresses(
           user_id: userId,
           channel: "email" as const,
           address: `bench-${seedKey}-${index}@test.local`,
-          is_verified: 1,
+          is_verified: true,
           verified_at: BENCH_NOW,
           created_at: BENCH_NOW,
           updated_at: BENCH_NOW,
@@ -83,8 +97,8 @@ async function seedUsersAndAddresses(
         {
           user_id: userId,
           channel: "whatsapp" as const,
-          address: `9${String(userId).padStart(8, "0")}`,
-          is_verified: 1,
+          address: `9${userId}`,
+          is_verified: true,
           verified_at: BENCH_NOW,
           created_at: BENCH_NOW,
           updated_at: BENCH_NOW,
@@ -92,14 +106,24 @@ async function seedUsersAndAddresses(
       ]),
     )
     .execute();
+
+  await ctx.db
+    .insertInto("whatsapp_sessions")
+    .values(
+      userIds.map((userId) => ({
+        user_id: userId,
+        expires_at: benchDate(24 * 60 * 60 * 1000),
+      })),
+    )
+    .execute();
 }
 
 function createAudiencePool(
-  userIds: number[],
+  userIds: UserId[],
   recipientsPerIntent: number,
   overlapRatio: number,
   intentCount: number,
-): number[][] {
+): UserId[][] {
   const stride = Math.max(
     1,
     Math.round(recipientsPerIntent * (1 - overlapRatio)),
@@ -120,16 +144,14 @@ function createAudiencePool(
 async function seedPlannerScenario(
   ctx: TestDbContext,
   scenario: PlannerScenario,
-  scenarioIndex: number,
-): Promise<string[]> {
+): Promise<NotificationIntentId> {
   const stride = Math.max(
     1,
     Math.round(scenario.recipientsPerIntent * (1 - scenario.overlapRatio)),
   );
   const totalUsers =
     scenario.recipientsPerIntent + stride * (scenario.intentCount - 1);
-  const userStart = USER_ID_START + scenarioIndex * 20_000;
-  const userIds = createUserIds(userStart, totalUsers);
+  const userIds = createUserIds(totalUsers);
 
   await seedUsersAndAddresses(ctx, userIds, `planner-${scenario.name}`);
 
@@ -142,8 +164,8 @@ async function seedPlannerScenario(
 
   const intents: NotificationIntent[] = audiences.map(
     (audienceUserIds, index) => ({
-      id: `bench-planner-${scenario.name}-${index}`,
-      eventType: "bench.notification.delivery",
+      id: NotificationIntentId.trust(`bench:planner:${scenario.name}:${index}`),
+      eventType: "lead.ready_for_quotation",
       audience: { kind: "user_ids", userIds: audienceUserIds },
       channels: ["email", "whatsapp"],
       priority: "normal",
@@ -154,49 +176,149 @@ async function seedPlannerScenario(
   );
 
   await enqueueNotifications(ctx.db, intents, BENCH_NOW);
-  return intents.map((intent) => intent.id);
+  return NotificationIntentId.trust(`bench:planner:${scenario.name}:0`);
 }
 
-export async function seedPlannerFixtures(
+async function loadPlannerEntry(
   ctx: TestDbContext,
-): Promise<PlannerScenarioResult<string[]>> {
+  intentId: NotificationIntentId,
+): Promise<PlannerEntry> {
+  const entry = await ctx.db
+    .selectFrom("notification_intents")
+    .select(["event_type", "audience_json", "channels_json"])
+    .where("id", "=", intentId)
+    .executeTakeFirst();
+  if (!entry) {
+    throw new Error(`planner intent ${intentId} not seeded`);
+  }
+  return entry;
+}
+
+export async function seedPlannerEntries(
+  ctx: TestDbContext,
+): Promise<PlannerScenarioResult<PlannerEntry>> {
   const [disjoint, partialOverlap, highOverlap] = PLANNER_SCENARIOS;
 
-  const [disjointIds, partialOverlapIds, highOverlapIds] = await Promise.all([
-    seedPlannerScenario(ctx, disjoint, 0),
-    seedPlannerScenario(ctx, partialOverlap, 1),
-    seedPlannerScenario(ctx, highOverlap, 2),
+  const [disjointId, partialOverlapId, highOverlapId] = await Promise.all([
+    seedPlannerScenario(ctx, disjoint),
+    seedPlannerScenario(ctx, partialOverlap),
+    seedPlannerScenario(ctx, highOverlap),
   ]);
 
+  const [disjointEntry, partialOverlapEntry, highOverlapEntry] =
+    await Promise.all([
+      loadPlannerEntry(ctx, disjointId),
+      loadPlannerEntry(ctx, partialOverlapId),
+      loadPlannerEntry(ctx, highOverlapId),
+    ]);
+
   return {
-    disjoint: disjointIds,
-    "partial-overlap": partialOverlapIds,
-    "high-overlap": highOverlapIds,
+    disjoint: disjointEntry,
+    "partial-overlap": partialOverlapEntry,
+    "high-overlap": highOverlapEntry,
   };
 }
 
-export async function seedProcessorSmokeFixtures(
+export async function seedExpandRecipients(
   ctx: TestDbContext,
-): Promise<string[]> {
-  const userStart = USER_ID_START + 90_000;
-  const userIds = createUserIds(userStart, PROCESSOR_SMOKE_RECIPIENTS);
+): Promise<UserId[]> {
+  const userIds = createUserIds(EXPAND_RECIPIENTS);
+  await seedUsersAndAddresses(ctx, userIds, "expand");
+  return userIds;
+}
 
-  await seedUsersAndAddresses(ctx, userIds, "processor-smoke");
+export async function seedExpandIntent(
+  ctx: TestDbContext,
+  userIds: UserId[],
+): Promise<IntentJob> {
+  const id = NotificationIntentId.trust(`bench:expand:${randomUUIDv7()}`);
+  const intent: NotificationIntent = {
+    id,
+    eventType: "lead.ready_for_quotation",
+    audience: { kind: "user_ids", userIds },
+    channels: ["in_app", "email", "whatsapp"],
+    priority: "normal",
+    title: "Bench expand",
+    bodyText: "Bench expand body",
+    actionUrl: null,
+  };
+  await enqueueNotifications(ctx.db, [intent], BENCH_NOW);
 
-  const intents: NotificationIntent[] = Array.from(
-    { length: PROCESSOR_SMOKE_INTENT_COUNT },
-    (_, index) => ({
-      id: `bench-processor-smoke-${index}`,
-      eventType: "bench.notification.delivery",
-      audience: { kind: "user_ids", userIds },
-      channels: ["in_app", "email", "whatsapp"],
-      priority: "normal",
-      title: `Bench processor smoke ${index}`,
-      bodyText: "Bench processor body",
-      actionUrl: null,
-    }),
+  const job = await ctx.db
+    .selectFrom("notification_intents")
+    .select([
+      "id",
+      "attempt_count",
+      "max_attempts",
+      "event_type",
+      "audience_json",
+      "channels_json",
+      "priority",
+      "title",
+      "body_text",
+      "action_url",
+    ])
+    .where("id", "=", NotificationIntentId.trust(id))
+    .executeTakeFirst();
+  if (!job) {
+    throw new Error(`expand intent ${id} not seeded`);
+  }
+  return job;
+}
+
+export async function seedDispatchRecipient(
+  ctx: TestDbContext,
+): Promise<UserId> {
+  const [userId] = createUserIds(1);
+  await seedUsersAndAddresses(ctx, [userId], "dispatch");
+  return userId;
+}
+
+// A fresh pending delivery to send. send() consumes it (records an attempt,
+// marks it sent). A unique intent id keeps the (intent,user,channel) key from
+// collapsing rows.
+export async function seedDispatchDelivery(
+  ctx: TestDbContext,
+  userId: UserId,
+): Promise<DeliveryJob> {
+  const intentId = NotificationIntentId.trust(
+    `bench-dispatch-${randomUUIDv7()}`,
+  );
+  const deliveries = createDeliveryRepository(ctx.db);
+
+  await deliveries.insertPlanned(
+    [
+      {
+        intent_id: intentId,
+        user_id: userId,
+        channel: "email" as const,
+        recipient_address: "bench-dispatch@test.local",
+        title: "Bench dispatch",
+        body_text: "Bench dispatch body",
+        action_url: null,
+      },
+    ],
+    BENCH_NOW,
   );
 
-  await enqueueNotifications(ctx.db, intents, BENCH_NOW);
-  return intents.map((intent) => intent.id);
+  const job = await ctx.db
+    .selectFrom("notification_deliveries")
+    .select([
+      "id",
+      "attempt_count",
+      "max_attempts",
+      "intent_id",
+      "user_id",
+      "channel",
+      "recipient_address",
+      "title",
+      "body_text",
+      "action_url",
+    ])
+    .where("intent_id", "=", intentId)
+    .executeTakeFirst();
+  if (!job) {
+    throw new Error(`dispatch delivery for ${intentId} not seeded`);
+  }
+  return job;
 }

@@ -1,48 +1,33 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
+import { createLogger } from "~/lib/observability/logger";
 import {
-  planDeliveries,
-  type NotificationOutboxEntry,
-} from "~/server/notifications/delivery-planner";
+  createRecipientPlanner,
+  projectIntentForPlanning,
+} from "~/server/notifications/expansion/plan-recipients";
+import { isErr } from "~/server/shared/result";
 
+import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import { PLANNER_SCENARIOS, seedPlannerFixtures } from "./fixtures";
-
-type ScenarioState = {
-  cursor: { value: number };
-  entries: NotificationOutboxEntry[];
-};
+import {
+  PLANNER_SCENARIOS,
+  type PlannerEntry,
+  type PlannerScenarioName,
+  seedPlannerEntries,
+} from "./fixtures";
 
 describe("notifications delivery planner benchmark", () => {
   const db = createBenchDbFixture("bench-notifications-delivery-planner");
-  const scenarios: {
-    disjoint: ScenarioState;
-    "partial-overlap": ScenarioState;
-    "high-overlap": ScenarioState;
-  } = {
-    disjoint: { cursor: { value: 0 }, entries: [] },
-    "partial-overlap": { cursor: { value: 0 }, entries: [] },
-    "high-overlap": { cursor: { value: 0 }, entries: [] },
-  };
+  let planRecipients: ReturnType<typeof createRecipientPlanner>;
+  let entries: Record<PlannerScenarioName, PlannerEntry>;
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const intentIdsByScenario = await seedPlannerFixtures(ctx);
-
-    for (const scenario of PLANNER_SCENARIOS) {
-      const entries = await ctx.db
-        .selectFrom("notification_outbox")
-        .select(["id", "event_type", "audience_json", "channels_json"])
-        .where("id", "in", intentIdsByScenario[scenario.name])
-        .execute();
-
-      scenarios[scenario.name] = {
-        cursor: { value: 0 },
-        entries,
-      };
-    }
+    planRecipients = createRecipientPlanner(
+      ctx.db,
+      createLogger("bench-notification-planner"),
+    );
+    entries = await seedPlannerEntries(ctx);
   });
 
   afterAll(async () => {
@@ -50,23 +35,12 @@ describe("notifications delivery planner benchmark", () => {
   });
 
   for (const scenario of PLANNER_SCENARIOS) {
-    bench(
-      `service path: plan deliveries (${scenario.name})`,
-      async () => {
-        const scenarioState = scenarios[scenario.name];
-        const entry = takeFromPool(
-          scenarioState.entries,
-          scenarioState.cursor,
-          `planner pool exhausted for scenario ${scenario.name}`,
-        );
-
-        await planDeliveries(db.ctx().db, entry);
-      },
-      {
-        ...fixedIterations(scenario.intentCount),
-        warmupTime: 0,
-        warmupIterations: 0,
-      },
-    );
+    bench(`service path: plan deliveries (${scenario.name})`, async () => {
+      const input = projectIntentForPlanning(entries[scenario.name]);
+      if (isErr(input)) {
+        throw new Error(input.error);
+      }
+      await planRecipients(input.value, BENCH_NOW);
+    });
   }
 });

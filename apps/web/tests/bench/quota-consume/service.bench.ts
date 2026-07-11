@@ -1,32 +1,32 @@
-import { afterAll, beforeAll, bench, describe } from "vitest";
+import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
-import {
-  commitSearchUsage,
-  reserveSearchUsage,
-} from "~/server/capacity-usage/search-usage";
+import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
+import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
+import { createServerInfra } from "~/server/platform/container/infra";
+import { createSearchRuntime } from "~/server/platform/container/search-runtime";
+import type { UserId } from "~/server/shared/ids";
+import { SearchReservationId } from "~/server/shared/ids";
+import { Ok } from "~/server/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import { seedQuotaUsers, USER_POOL_SIZE } from "./fixtures";
+import { SINGLE_CALL } from "../_shared/options";
+import { resetQuotaUsage, seedQuotaUser } from "./fixtures";
 
 describe("search capacity consume service benchmark", () => {
   const db = createBenchDbFixture("bench-quota-consume-service");
-  let userIds: number[] = [];
-  const cursor = { value: 0 };
+  let usageReservationPorts: UsageReservationPorts<"search">;
+  let userId: UserId;
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    userIds = await seedQuotaUsers(ctx);
+    usageReservationPorts = createSearchRuntime(
+      createServerInfra(ctx.db),
+    ).usageReservationPorts;
+    userId = await seedQuotaUser(ctx);
+  });
 
-    for (const userId of userIds) {
-      await ctx.repos.searchCapacityGrants.insert({
-        user_id: userId,
-        actor_user_id: 2,
-        amount: 2,
-        reason: "bench_seed",
-      });
-    }
+  beforeEach(async () => {
+    await resetQuotaUsage(db.ctx(), userId);
   });
 
   afterAll(async () => {
@@ -36,38 +36,23 @@ describe("search capacity consume service benchmark", () => {
   bench(
     "service path: reserve and commit search usage for one user",
     async () => {
-      const userId = takeFromPool(
-        userIds,
-        cursor,
-        "quota-consume pool exhausted before iterations completed",
-      );
-      const ctx = db.ctx();
-
-      const reserveResult = await reserveSearchUsage(
+      const result = await executeWithUsageReservation(
         {
+          kind: "search",
           actorUserId: userId,
-          amount: 1,
-          remainingCapacity: 2,
-          reason: "direct_search",
+          requested: 1,
+          reserveReason: "direct_search",
+          brand: SearchReservationId.trust,
         },
-        ctx.repos,
+        usageReservationPorts,
+        async () => Ok({ value: undefined, consumed: 1 }),
       );
-      if (!reserveResult.ok) {
+      if (!result.ok) {
         throw new Error(
-          `expected reserve success, got ${reserveResult.error.code}`,
-        );
-      }
-
-      const commitResult = await commitSearchUsage(
-        { reservationId: reserveResult.value, amount: 1 },
-        ctx.repos,
-      );
-      if (!commitResult.ok) {
-        throw new Error(
-          `expected commit success, got ${commitResult.error.code}`,
+          `expected reserve+commit success, got ${result.error.code}`,
         );
       }
     },
-    fixedIterations(USER_POOL_SIZE),
+    SINGLE_CALL,
   );
 });

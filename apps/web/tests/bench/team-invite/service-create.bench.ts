@@ -1,26 +1,29 @@
-import { afterAll, beforeAll, bench, describe } from "vitest";
+import { TEST_FIXTURES } from "@tests/support/runtime/db";
+import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import type { InviteService } from "~/server/invites/application/types";
-import { createInviteServiceContext } from "~/server/invites/infrastructure/invite-service-context";
+import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
-import { fixedIterations } from "../_shared/options";
-import { takeFromPool } from "../_shared/pool";
-import { CREATE_POOL_SIZE, seedTeamInviteFixtures } from "./fixtures";
+import { SINGLE_CALL } from "../_shared/options";
+import { freshInviteEmail } from "./fixtures";
 
 describe("team invite create benchmark", () => {
   const db = createBenchDbFixture("bench-team-invite-create");
   let inviteCreate!: InviteService["createInvite"];
-  let createEmails: string[] = [];
-  const createCursor = { value: 0 };
+  let email = "";
+  const actorUserId = UserId.trust(TEST_FIXTURES.users.superUser.id);
+  const branchId = BranchId.trust(TEST_FIXTURES.branches.norte.id);
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const { inviteService } = createInviteServiceContext(ctx.db);
+    const inviteService = createInviteServiceForExecutor(ctx.db);
     inviteCreate = (input) => inviteService.createInvite(input);
+  });
 
-    const fixtures = await seedTeamInviteFixtures(ctx);
-    createEmails = fixtures.createEmails;
+  beforeEach(() => {
+    email = freshInviteEmail();
   });
 
   afterAll(async () => {
@@ -30,17 +33,11 @@ describe("team invite create benchmark", () => {
   bench(
     "service path: create invite",
     async () => {
-      const email = takeFromPool(
-        createEmails,
-        createCursor,
-        "team-invite-create pool exhausted before iterations completed",
-      );
-
       const result = await inviteCreate({
-        actorUserId: 5,
+        actorUserId,
         actorRole: "superuser",
-        branchId: 2,
-        names: `Bench Create ${createCursor.value}`,
+        branchId,
+        names: "Bench Create",
         firstSurname: "User",
         secondSurname: "Bench",
         email,
@@ -55,6 +52,6 @@ describe("team invite create benchmark", () => {
         );
       }
     },
-    fixedIterations(CREATE_POOL_SIZE),
+    SINGLE_CALL,
   );
 });

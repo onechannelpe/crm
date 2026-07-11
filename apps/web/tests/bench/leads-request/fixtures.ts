@@ -1,66 +1,41 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
+import { TEST_FIXTURES } from "@tests/support/runtime/db";
+import { randomUUIDv7 } from "bun";
 
 import type { SearchIntent } from "~/contracts/search/vocabulary";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { EngineClient } from "~/server/shared/engine/client";
+import type {
+  EngineClient,
+  RecordCandidatesRequest,
+} from "~/server/shared/engine/client";
 import type {
   RecordCandidate,
   SearchResult,
 } from "~/server/shared/engine/types";
+import { BranchId, UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
 
-export const USER_POOL_SIZE = 80;
-const USER_ID_START = 90_000;
+const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
+const ACTOR_USER_ID = UserId.trust(TEST_FIXTURES.users.backOne.id);
 
-interface LeadsRequestSeed {
-  userIds: number[];
-  engineClient: EngineClient;
+export interface LeadsBench {
+  branchId: BranchId;
+  engine: EngineClient;
+  // Seeds a fresh user + org + capacity grant and returns the user.
+  seedUnit: () => Promise<UserId>;
 }
 
-export async function seedLeadsRequestFixtures(
-  ctx: TestDbContext,
-): Promise<LeadsRequestSeed> {
-  const users = Array.from({ length: USER_POOL_SIZE }, (_, index) => ({
-    id: USER_ID_START + index,
-    branch_id: 1,
-    team_id: null,
-    username: `bench.leads${USER_ID_START + index}`,
-    email: `bench-leads-${USER_ID_START + index}@test.local`,
-    password_hash: "hash",
-    names: `Bench Leads ${USER_ID_START + index}`,
-    first_surname: "User",
-    second_surname: "Bench",
-    onboarding_completed_at: BENCH_NOW,
-    role: "executive" as const,
-    executive_category: "elite" as const,
-    is_active: 1,
-    created_at: BENCH_NOW,
-  }));
+function ruc(index: number): string {
+  return `2099${String(index).padStart(8, "0")}`;
+}
 
-  await ctx.db.insertInto("users").values(users).execute();
-  const userIds = users.map((user) => user.id);
+export function createLeadsBench(ctx: TestDbContext): LeadsBench {
+  const unitIndexByUser = new Map<UserId, number>();
+  let seq = 0;
 
-  for (let index = 0; index < USER_POOL_SIZE; index += 1) {
-    await ctx.repos.organizations.findOrCreate(
-      `2099${String(index).padStart(8, "0")}`,
-      `Bench Org ${index}`,
-    );
-  }
-
-  // Seed lead capacity grants so each user can complete one refill.
-  // bufferTarget defaults to system default; grant 5 units per user to cover it.
-  for (const userId of userIds) {
-    await ctx.repos.leadCapacityGrants.insert({
-      user_id: userId,
-      amount: 5,
-      reason: "bench_seed",
-      actor_user_id: 2,
-    });
-  }
-
-  const engineClient = {
+  const engine: EngineClient = {
     async search(
       _intent: SearchIntent,
       query: string,
@@ -109,15 +84,13 @@ export async function seedLeadsRequestFixtures(
         },
       ]);
     },
-    async requestCandidates(input: {
-      branchId: number;
-      userId: number;
-      amount: number;
-    }): Promise<Result<RecordCandidate[], DomainError>> {
-      const index = input.userId - USER_ID_START;
+    async requestCandidates(
+      input: RecordCandidatesRequest,
+    ): Promise<Result<RecordCandidate[], DomainError>> {
+      const index = unitIndexByUser.get(input.userId) ?? 0;
       return Ok([
         {
-          ruc: `2099${String(index).padStart(8, "0")}`,
+          ruc: ruc(index),
           organization_name: `Bench Org ${index}`,
           dni: `7000${String(index).padStart(4, "0")}`,
           person_name: `Bench Person ${index}`,
@@ -127,5 +100,47 @@ export async function seedLeadsRequestFixtures(
     },
   };
 
-  return { userIds, engineClient };
+  async function seedUnit(): Promise<UserId> {
+    const index = seq;
+    seq += 1;
+    const userId = UserId.trust(randomUUIDv7());
+
+    await ctx.db
+      .insertInto("users")
+      .values({
+        id: userId,
+        branch_id: BRANCH_ID,
+        team_id: null,
+        username: `bench.leads.${index}`,
+        email: `bench-leads-${index}@test.local`,
+        password_hash: "hash",
+        names: `Bench Leads ${index}`,
+        first_surname: "User",
+        second_surname: "Bench",
+        onboarding_completed_at: BENCH_NOW,
+        role: "executive",
+        executive_category: "elite",
+        is_active: true,
+        created_at: BENCH_NOW,
+      })
+      .execute();
+
+    await ctx.repos.organization.upsertOrganization({
+      ruc: ruc(index),
+      legalName: `Bench Org ${index}`,
+    });
+
+    // Capacity grant keeps the benchmark on assignment work.
+    await ctx.repos.leadCapacityGrants.insert({
+      user_id: userId,
+      amount: 5,
+      reason: "bench_seed",
+      actor_user_id: ACTOR_USER_ID,
+    });
+
+    unitIndexByUser.set(userId, index);
+    return userId;
+  }
+
+  return { branchId: BRANCH_ID, engine, seedUnit };
 }
