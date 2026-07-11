@@ -1,0 +1,34 @@
+services:
+  engine:
+    image: crm-engine:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.engine
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ENGINE_CONNECT_MODE: internal
+      ENGINE_HOST: 0.0.0.0
+      ENGINE_PORT: 3001
+      ENGINE_CONTACTS_DB_PATH: /var/lib/crm-engine/contacts.sqlite
+      ENGINE_LEADS_DB_PATH: /var/lib/crm-engine/leads.sqlite
+    volumes:
+      - ${ENGINE_DATA_PATH:?Set ENGINE_DATA_PATH}:/var/lib/crm-engine
+    expose:
+      - "3001"
+    healthcheck:
+      test:
+        ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:3001/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 10s
+    networks:
+      shared-engine:
+        aliases:
+          - engine
+
+networks:
+  shared-engine:
+    name: crm-engine

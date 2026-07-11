@@ -58,7 +58,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.3.13"
+          bun-version: "1.3.14"
 
       - name: install dependencies
         run: bun install --frozen-lockfile
@@ -72,8 +72,9 @@ jobs:
           name: web-generated-artifacts
           if-no-files-found: error
           path: |
-            apps/web/src/server/shared/engine/contract.ts
-            apps/web/src/server/shared/engine/projection-contract.ts
+            apps/web/src/server/shared/engine/record-contract.ts
+            apps/web/src/server/shared/engine/doc-projection-contract.ts
+            apps/web/src/server/shared/engine/company-projection-contract.ts
             apps/web/src/server/shared/engine/result-contract.ts
             packages/email-composer/src/templates/compiled/**
 
@@ -91,7 +92,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.3.13"
+          bun-version: "1.3.14"
 
       - name: install dependencies
         run: bun install --frozen-lockfile
@@ -114,7 +115,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.3.13"
+          bun-version: "1.3.14"
 
       - name: install dependencies
         run: bun install --frozen-lockfile
@@ -143,7 +144,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.3.13"
+          bun-version: "1.3.14"
 
       - name: install dependencies
         run: bun install --frozen-lockfile
@@ -173,7 +174,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.3.13"
+          bun-version: "1.3.14"
 
       - name: install dependencies
         run: bun install --frozen-lockfile
@@ -186,6 +187,17 @@ jobs:
 
       - name: build
         working-directory: apps/web
+        env:
+          ENGINE_HMAC_KEY_ID: web
+          ENGINE_HMAC_SECRET: ci-build-engine-hmac-secret-7Kp4xQ9m2Vw8
+          GOOGLE_CLIENT_ID: ci-build-client
+          GOOGLE_CLIENT_SECRET: ci-build-client-secret
+          GOOGLE_REDIRECT_URI: http://localhost:3000/api/auth/google/callback
+          NOTIFICATION_ROUTES: ""
+          SESSION_SECRET: ci-build-session-secret-4Nq8vR2m7Kx5
+          TOTP_ENCRYPTION_KEY: ci-build-totp-encryption-key-9Wp3mK7xQ2v8
+          WEB_DB_URL: postgres://postgres@localhost:5432/crm
+          WHATSAPP_WEBHOOK_VERIFY_TOKEN: ci-build-webhook-token-6Kr9mQ2xV7p4
         run: bun run build
 
   test:
@@ -196,6 +208,19 @@ jobs:
     permissions:
       contents: read
 
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v6
         with:
@@ -203,7 +228,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.3.13"
+          bun-version: "1.3.14"
 
       - name: install dependencies
         run: bun install --frozen-lockfile
@@ -227,6 +252,19 @@ jobs:
     permissions:
       contents: read
 
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v6
         with:
@@ -234,7 +272,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: "1.3.13"
+          bun-version: "1.3.14"
 
       - name: install dependencies
         run: bun install --frozen-lockfile

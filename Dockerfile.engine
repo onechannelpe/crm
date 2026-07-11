@@ -1,0 +1,24 @@
+FROM rust:1.96.0-bookworm AS build
+
+WORKDIR /app
+
+COPY . .
+RUN cargo build --locked --release -p engine --bin engine
+
+FROM debian:bookworm-slim AS runtime
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system --gid 10001 engine \
+    && useradd --system --uid 10001 --gid engine --home-dir /var/lib/crm-engine engine \
+    && install --directory --owner=engine --group=engine /var/lib/crm-engine
+
+COPY --from=build /app/target/release/engine /usr/local/bin/engine
+
+USER engine
+WORKDIR /var/lib/crm-engine
+
+EXPOSE 3001
+
+CMD ["engine"]

@@ -6,6 +6,7 @@ dist
 app.config.timestamp_*.js
 
 # test artifacts
+.vitest-db
 test-results
 
 # rollup-plugin-visualizer artifacts

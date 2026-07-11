@@ -1,0 +1,106 @@
+x-app: &app
+  image: crm-app-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}:latest
+  build:
+    context: .
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  env_file:
+    - .env
+  environment:
+    NODE_ENV: production
+    NITRO_HOST: 0.0.0.0
+    NITRO_PORT: 3000
+    WEB_DB_URL: postgres://postgres@postgres:5432/crm
+    ENGINE_CONNECT_MODE: internal
+    ENGINE_URL: http://engine:3001
+    WEB_UPLOADS_ROOT: /var/lib/crm-web/documents
+  volumes:
+    - ${APP_DATA_PATH:?Set APP_DATA_PATH}/uploads:/var/lib/crm-web
+  networks:
+    - default
+    - shared-engine
+    - dokploy-network
+
+services:
+  postgres:
+    image: postgres:18-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: crm
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - ${APP_DATA_PATH:?Set APP_DATA_PATH}/postgres:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crm"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+  migrate:
+    image: crm-app-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      WEB_DB_URL: postgres://postgres@postgres:5432/crm
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        bun run migrate:prod &&
+        bun src/lib/db/seed.ts
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    <<: *app
+    expose:
+      - "3000"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.entrypoints=web
+      - traefik.http.routers.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.rule=Host(`${APP_DOMAIN:?Set APP_DOMAIN}`)
+      - traefik.http.services.crm-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}.loadbalancer.server.port=3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - >-
+          const response = await fetch("http://127.0.0.1:3000/");
+          if (response.status >= 500) process.exit(1);
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  worker:
+    <<: *app
+    command: ["bun", "run", "worker:maintenance:prod"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+networks:
+  shared-engine:
+    external: true
+    name: crm-engine
+  dokploy-network:
+    external: true
+    name: dokploy-network

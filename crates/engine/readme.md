@@ -130,8 +130,9 @@ ENGINE_MAX_LIMIT=100
 ```
 
 In local mode, `ENGINE_HOST` must bind to loopback. Use
+`ENGINE_CONNECT_MODE=internal` for a private container network. Use
 `ENGINE_CONNECT_MODE=remote` when the service is intentionally exposed behind
-network infrastructure.
+public network infrastructure.
 
 ## Running
 
