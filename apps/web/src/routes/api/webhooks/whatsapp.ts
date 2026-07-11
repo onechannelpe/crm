@@ -1,13 +1,12 @@
-import type { APIEvent } from "@solidjs/start/server";
-
 import { notificationsConfig } from "~/lib/env";
 import { createLogger } from "~/lib/observability/logger";
+import type { ApiRequestEvent } from "~/routes/api/request-event";
 import { receiveKapsoWebhook } from "~/server/integrations/kapso/webhooks/receive-webhook";
 import { getServerRuntime } from "~/server/platform/container";
 
 const logger = createLogger("whatsapp-webhook");
 
-export function GET(event: APIEvent): Response {
+export function GET(event: ApiRequestEvent): Response {
   const url = new URL(event.request.url);
   const mode = url.searchParams.get("hub.mode");
   const token = url.searchParams.get("hub.verify_token");
@@ -28,7 +27,7 @@ export function GET(event: APIEvent): Response {
   return new Response("Forbidden", { status: 403 });
 }
 
-export async function POST(event: APIEvent): Promise<Response> {
+export async function POST(event: ApiRequestEvent): Promise<Response> {
   try {
     const { infra } = getServerRuntime();
     const result = await receiveKapsoWebhook(infra.db, {

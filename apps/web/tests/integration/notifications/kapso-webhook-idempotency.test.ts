@@ -17,7 +17,7 @@ const state = vi.hoisted(() => ({
     | undefined
     | {
         ctx: { db: unknown };
-        now: { get(): Date };
+        now: { get: () => Date };
       },
 }));
 
