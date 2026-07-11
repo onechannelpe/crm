@@ -24,7 +24,7 @@ export interface AuthFunnelSummaryRow {
 }
 
 export interface AuthFunnelRecentEvent {
-  id: number;
+  id: string;
   createdAt: number;
   eventName: AuthFunnelEventName;
   screen: AuthFunnelScreen | null;

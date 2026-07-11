@@ -1,16 +1,17 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
 import type { WireKind } from "~/lib/wire-error";
+import type { UserId } from "~/server/shared/ids";
 
 export async function seedEvent(
   ctx: TestDbContext,
   input: {
-    actorUserId: number;
+    actorUserId: UserId;
     type: string;
     entityType: string;
     entityId: string;
     payload?: unknown;
-    occurredAt: number;
+    occurredAt: Date;
   },
 ): Promise<void> {
   await ctx.repos.events.append({
@@ -28,11 +29,11 @@ export type ActionObservationSeed = {
   requestId: string;
   routePath: string;
   actionName: string;
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: "executive" | "superuser";
   status: "ok" | "error";
   durationMs: number;
-  createdAt: number;
+  createdAt: Date;
   errorCode?: WireKind | null;
   errorMessage?: string | null;
   input?: Record<string, unknown>;

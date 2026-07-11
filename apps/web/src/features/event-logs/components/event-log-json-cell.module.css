@@ -1,0 +1,19 @@
+.preview {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  max-width: 100%;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--foreground-secondary);
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, "Cascadia Mono", monospace;
+  font-size: var(--font-size-xs);
+}
+
+.empty {
+  color: var(--foreground-tertiary);
+}

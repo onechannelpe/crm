@@ -1,17 +1,23 @@
 import type { Insertable, Kysely } from "kysely";
 
+import { notify } from "~/lib/db/notify";
 import type { Database } from "~/lib/db/types";
 import type {
   AuthFunnelEventName,
   AuthFunnelMethod,
   AuthFunnelOutcome,
 } from "~/lib/observability/auth-funnel";
+import { mapAuthFunnelEventRow } from "~/server/event-logs/mappers";
+import {
+  EVENT_LOGS_STREAM_CHANNEL,
+  serializeEventLogStreamPayload,
+} from "~/server/event-logs/stream-contract";
 
 type NewAuthFunnelEventRow = Insertable<Database["auth_funnel_events"]>;
 
 export interface AuthFunnelEventFilter {
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   eventName?: AuthFunnelEventName;
   method?: Exclude<AuthFunnelMethod, null>;
   outcome?: AuthFunnelOutcome;
@@ -19,8 +25,8 @@ export interface AuthFunnelEventFilter {
 }
 
 export interface AuthFunnelSummaryFilter {
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   eventName?: AuthFunnelEventName;
   method?: Exclude<AuthFunnelMethod, null>;
   outcome?: AuthFunnelOutcome;
@@ -28,11 +34,19 @@ export interface AuthFunnelSummaryFilter {
 
 export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewAuthFunnelEventRow) {
-      return db
+    async create(values: NewAuthFunnelEventRow) {
+      const row = await db
         .insertInto("auth_funnel_events")
         .values(values)
+        .returningAll()
         .executeTakeFirstOrThrow();
+
+      const payload = serializeEventLogStreamPayload(
+        mapAuthFunnelEventRow(row),
+      );
+      if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+
+      return row;
     },
 
     async findRecent(filter: AuthFunnelEventFilter) {
@@ -87,10 +101,10 @@ export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteCreatedBefore(cutoffMs: number): Promise<number> {
+    async deleteCreatedBefore(cutoff: Date): Promise<number> {
       const result = await db
         .deleteFrom("auth_funnel_events")
-        .where("created_at", "<", cutoffMs)
+        .where("created_at", "<", cutoff)
         .executeTakeFirst();
       return Number(result.numDeletedRows ?? 0);
     },

@@ -5,7 +5,7 @@ export interface AuditActionPolicyItem {
   riskLevel: AuditPolicyRiskLevel;
   isActive: boolean;
   isProtected: boolean;
-  updatedByUserId: number | null;
+  updatedByUserId: string | null;
   updatedAt: number;
   createdAt: number;
 }

@@ -1,35 +1,50 @@
 import type { Insertable, Kysely } from "kysely";
 
+import { notify } from "~/lib/db/notify";
 import type { ActionObservationsTable, Database } from "~/lib/db/types";
+import { mapActionObservationRow } from "~/server/event-logs/mappers";
+import {
+  EVENT_LOGS_STREAM_CHANNEL,
+  serializeEventLogStreamPayload,
+} from "~/server/event-logs/stream-contract";
+import type { UserId } from "~/server/shared/ids";
 
 type NewActionObservationRow = Insertable<Database["action_observations"]>;
 
 type ObservationStatus = ActionObservationsTable["status"];
 
 export interface ActionObservationFilter {
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   actionName?: string;
   status?: ObservationStatus;
-  actorUserId?: number;
+  actorUserId?: UserId;
   limit: number;
 }
 
 export interface ActionObservationSummaryFilter {
-  fromInclusive: number;
-  toInclusive: number;
+  fromInclusive: Date;
+  toInclusive: Date;
   actionName?: string;
   status?: ObservationStatus;
-  actorUserId?: number;
+  actorUserId?: UserId;
 }
 
 export function createActionObservationsRepo(db: Kysely<Database>) {
   return {
-    create(values: NewActionObservationRow) {
-      return db
+    async create(values: NewActionObservationRow) {
+      const row = await db
         .insertInto("action_observations")
         .values(values)
+        .returningAll()
         .executeTakeFirstOrThrow();
+
+      const payload = serializeEventLogStreamPayload(
+        mapActionObservationRow(row),
+      );
+      if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+
+      return row;
     },
 
     async findRecent(filter: ActionObservationFilter) {
@@ -84,10 +99,10 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
       return query.groupBy("action_name").orderBy("count", "desc").execute();
     },
 
-    async deleteCreatedBefore(cutoffMs: number): Promise<number> {
+    async deleteCreatedBefore(cutoff: Date): Promise<number> {
       const result = await db
         .deleteFrom("action_observations")
-        .where("created_at", "<", cutoffMs)
+        .where("created_at", "<", cutoff)
         .executeTakeFirst();
       return Number(result.numDeletedRows ?? 0);
     },

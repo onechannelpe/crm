@@ -1,4 +1,7 @@
-// Stored values remain presentation-independent; labels resolve when read.
+import type { Json } from "./json";
+
+// Field keys are stored verbatim; presentation labels resolve at read time,
+// so renaming a label does not rewrite history.
 export type FieldChangeValue = string | number | boolean | null;
 
 export type FieldChange = {
@@ -7,7 +10,28 @@ export type FieldChange = {
   to: FieldChangeValue;
 };
 
-// Read-time labels can change without rewriting stored field keys.
+export function isFieldChangeValue(value: unknown): value is FieldChangeValue {
+  return (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  );
+}
+
+export function isFieldChange(value: unknown): value is FieldChange {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "field" in value &&
+    typeof value.field === "string" &&
+    "from" in value &&
+    isFieldChangeValue(value.from) &&
+    "to" in value &&
+    isFieldChangeValue(value.to)
+  );
+}
+
 const FIELD_LABELS: Record<string, string> = {
   paybackPricing: "Payback",
   proposedDebitRate: "T. débito",
@@ -22,7 +46,7 @@ const FIELD_LABELS: Record<string, string> = {
   ticket: "Ticket",
   settlementBank: "Banco de abono",
   posCount: "POS total",
-  giroNegocio: "Giro de negocio",
+  lineOfBusiness: "Giro de negocio",
   status: "Estado",
   priority: "Prioridad",
   stage: "Etapa",
@@ -71,32 +95,24 @@ export function summarizeFieldChanges(changes: FieldChange[]): string {
     .join(", ");
 }
 
-function isFieldChange(value: unknown): value is FieldChange {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "field" in value &&
-    "from" in value &&
-    "to" in value
-  );
+export function serializeFieldChanges(
+  changes: FieldChange[],
+): FieldChange[] | null {
+  return changes.length === 0 ? null : changes;
 }
 
-export function serializeFieldChanges(changes: FieldChange[]): string | null {
-  return changes.length === 0 ? null : JSON.stringify(changes);
-}
-
-export function parseFieldChanges(raw: string | null): FieldChange[] {
+export function parseFieldChanges(raw: unknown): FieldChange[] {
   if (!raw) return [];
-  try {
-    const value: unknown = JSON.parse(raw);
-    return Array.isArray(value) ? value.filter(isFieldChange) : [];
-  } catch {
-    return [];
-  }
+  if (Array.isArray(raw)) return raw.filter(isFieldChange);
+  return [];
 }
 
-// Event-specific payloads remain opaque because their data is heterogeneous.
-export function serializeEventPayload(payload?: unknown): string | null {
+// The trust boundary sits with the consumer: a non-JSON value would still be
+// passed through and break at the next read that does parse it. Accepts
+// `unknown` because callers often hold values that are JSON-shaped but not
+// statically narrowed (form data, third-party responses, etc).
+export function serializeEventPayload(payload?: unknown): Json | null {
   if (payload === null || payload === undefined) return null;
-  return JSON.stringify(payload);
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  return payload as Json;
 }
