@@ -1,6 +1,8 @@
-import { createEventStream, type EventStream, type H3Event } from "h3";
+import { createEventStream, type H3Event } from "h3";
 
 import type { RealtimePeer, TopicHub } from "./topic-hub";
+
+type EventStream = ReturnType<typeof createEventStream>;
 
 // Adapts one h3 EventStream into a TopicHub peer: subscribes immediately (so
 // no broadcast is missed while a caller replays history afterward) and
@@ -19,7 +21,10 @@ export function openTopicStream(
   const peer: RealtimePeer = {
     send: (message) => {
       const id = eventId?.(message);
-      return stream.push(id ? { id, data: message } : message).catch(() => {
+      const pushed = id
+        ? stream.push({ id, data: message })
+        : stream.push(message);
+      return pushed.catch(() => {
         hub.removePeer(peer);
       });
     },
