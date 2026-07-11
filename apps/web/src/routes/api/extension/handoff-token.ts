@@ -1,20 +1,28 @@
-import type { APIEvent } from "@solidjs/start/server";
-
 import { authorizeRoutePermission } from "~/lib/auth/access/route-access";
 import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contracts";
 import { getServerRuntime } from "~/server/platform/container";
 import { toWire } from "~/server/shared/domain-error";
+import { ContactAssignmentId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
+import type { ApiRequestEvent } from "../request-event";
 import { readJsonBody } from "./json-body";
 
-export async function POST(event: APIEvent): Promise<Response> {
+export async function POST(event: ApiRequestEvent): Promise<Response> {
   const parsed = await readJsonBody(event.request);
   if (!parsed.ok) {
     return parsed.response;
   }
   const body = parsed.body;
   if (!isCreateExtensionHandoffTokenRequest(body)) {
+    return Response.json(
+      { error: "Invalid handoff token request" },
+      { status: 400 },
+    );
+  }
+
+  const assignmentId = ContactAssignmentId.parse(body.assignmentId);
+  if (isErr(assignmentId)) {
     return Response.json(
       { error: "Invalid handoff token request" },
       { status: 400 },
@@ -31,7 +39,7 @@ export async function POST(event: APIEvent): Promise<Response> {
       userId: session.userId,
       authSessionId: session.id,
       branchId: session.branchId,
-      assignmentId: body.assignmentId,
+      assignmentId: assignmentId.value,
       origin,
     });
 

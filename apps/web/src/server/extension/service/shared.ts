@@ -1,29 +1,28 @@
-import type { ContactAssignmentsRepo } from "~/server/contacts/repos-assignments";
-import type { ContactsRepo } from "~/server/contacts/repos-contacts";
-import type { OrganizationsRepo } from "~/server/contacts/repos-organizations";
+import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
+import type { OrganizationRepository } from "~/server/organization/organization-repo";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
 import type { AppUow } from "~/server/shared/application/uow";
+import type { Clock } from "~/server/shared/time";
 
 import type { ExtensionRuntimeRepo } from "../repos";
 
 export type ExtensionRepos = {
   contactAssignments: ContactAssignmentsRepo;
-  contacts: ContactsRepo;
   extensionRuntime: ExtensionRuntimeRepo;
-  organizations: OrganizationsRepo;
+  organization: OrganizationRepository;
   sessions: SessionRepository;
 };
 
 export interface ExtensionServiceDeps {
-  now?: () => number;
+  now?: Clock;
   uow: AppUow<ExtensionRepos>;
 }
 
 export async function hasActiveAuthSession(
   repos: ExtensionRepos,
   authSessionId: string,
-  nowMs: number,
+  now: Date,
 ): Promise<boolean> {
   const authSession = await repos.sessions.findById(authSessionId);
-  return authSession !== null && authSession.expires_at > nowMs;
+  return authSession !== null && authSession.expires_at > now;
 }

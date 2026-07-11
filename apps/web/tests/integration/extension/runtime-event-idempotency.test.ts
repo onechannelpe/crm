@@ -1,25 +1,31 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
+import { createExtensionFixture } from "@tests/support/extension/fixture";
 import {
-  createExtensionFixture,
-  disposeExtensionFixture,
-} from "@tests/support/extension/fixture";
-import type { TestDbContext } from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+  cleanupTestDb,
+  resetTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("extension runtime event idempotency", () => {
   let ctx: TestDbContext;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await createExtensionFixture("extension-runtime-event-idempotency");
   });
 
-  afterEach(async () => {
-    await disposeExtensionFixture(ctx);
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("accepts duplicate event delivery without creating a second runtime event", async () => {
     const scenario = createExtensionScenario(ctx);
+    const { lima: contact } = ctx.fixtures.organizationPeople;
     const { sessionToken, assignmentId } = await scenario.claim(
       "11111111-1111-4111-8111-111111111111",
     );
@@ -31,7 +37,7 @@ describe("extension runtime event idempotency", () => {
       payload: {
         presenceStatus: "ready" as const,
         assignmentId,
-        contactId: 1,
+        contactId: contact.id,
         callSessionId: null,
         updatedAt: 10_000,
       },
@@ -59,13 +65,15 @@ describe("extension runtime event idempotency", () => {
 
   it("revokes older installations when a new installation claims the user session", async () => {
     const scenario = createExtensionScenario(ctx);
+    const { execOne } = ctx.fixtures.users;
+    const { lima } = ctx.fixtures.branches;
     const authSessionId = await scenario.session();
     const assignmentId = await scenario.assignment();
 
     const firstHandoff = await scenario.service.createHandoffToken({
-      userId: 1,
+      userId: execOne.id,
       authSessionId,
-      branchId: 1,
+      branchId: lima.id,
       assignmentId,
       origin: "http://localhost:3000",
     });
@@ -78,9 +86,9 @@ describe("extension runtime event idempotency", () => {
     const firstClaimValue = expectOk(firstClaim);
 
     const secondHandoff = await scenario.service.createHandoffToken({
-      userId: 1,
+      userId: execOne.id,
       authSessionId,
-      branchId: 1,
+      branchId: lima.id,
       assignmentId,
       origin: "http://localhost:3000",
     });

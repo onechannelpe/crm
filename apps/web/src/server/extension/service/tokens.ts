@@ -1,25 +1,22 @@
 import {
+  addMilliseconds,
+  epochMilliseconds,
+  epochSeconds,
+} from "~/server/shared/time";
+
+import {
   EXTENSION_HANDOFF_TOKEN_ISSUER,
   EXTENSION_SESSION_TOKEN_AUDIENCE,
 } from "../contracts";
 import { hashExtensionSecretToken, signExtensionToken } from "../crypto";
+import type { ExtensionRuntimeRepo } from "../repos";
 
 const EXTENSION_INSTALLATION_SESSION_TTL_MS = 8 * 60 * 60_000;
 const EXTENSION_ACCESS_TOKEN_TTL_MS = 15 * 60_000;
 
-export interface InstallationSessionRecord {
-  jti: string;
-  user_id: number;
-  branch_id: number;
-  auth_session_id: string;
-  installation_id: string;
-  refresh_token_hash: string;
-  issued_at: number;
-  expires_at: number;
-  revoked_at: number | null;
-  last_seen_at: number | null;
-  refreshed_at: number | null;
-}
+export type InstallationSessionRecord = NonNullable<
+  Awaited<ReturnType<ExtensionRuntimeRepo["findValidInstallationSession"]>>
+>;
 
 export interface SessionCredentials {
   refreshToken: string;
@@ -28,12 +25,12 @@ export interface SessionCredentials {
   expiresAt: number;
 }
 
-function accessTokenExpiresAt(issuedAt: number): number {
-  return issuedAt + EXTENSION_ACCESS_TOKEN_TTL_MS;
+function accessTokenExpiresAt(issuedAt: Date): Date {
+  return addMilliseconds(issuedAt, EXTENSION_ACCESS_TOKEN_TTL_MS);
 }
 
-export function installationSessionExpiresAt(issuedAt: number): number {
-  return issuedAt + EXTENSION_INSTALLATION_SESSION_TTL_MS;
+export function installationSessionExpiresAt(issuedAt: Date): Date {
+  return addMilliseconds(issuedAt, EXTENSION_INSTALLATION_SESSION_TTL_MS);
 }
 
 function generateRefreshToken(): string {
@@ -42,8 +39,10 @@ function generateRefreshToken(): string {
 
 async function signInstallationSessionToken(
   session: InstallationSessionRecord,
-  issuedAt: number,
+  issuedAt: Date,
 ): Promise<string> {
+  const accessExpiresAt = accessTokenExpiresAt(issuedAt);
+
   return signExtensionToken({
     iss: EXTENSION_HANDOFF_TOKEN_ISSUER,
     aud: EXTENSION_SESSION_TOKEN_AUDIENCE,
@@ -52,22 +51,23 @@ async function signInstallationSessionToken(
     branchId: session.branch_id,
     installationId: session.installation_id,
     jti: session.jti,
-    iat: issuedAt,
-    exp: Math.floor(accessTokenExpiresAt(issuedAt) / 1000),
+    iat: epochSeconds(issuedAt),
+    exp: epochSeconds(accessExpiresAt),
   });
 }
 
 export async function issueSessionCredentials(
   session: InstallationSessionRecord,
-  issuedAt: number,
+  issuedAt: Date,
 ): Promise<SessionCredentials> {
   const refreshToken = generateRefreshToken();
   const refreshTokenHash = await hashExtensionSecretToken(refreshToken);
+  const expiresAt = accessTokenExpiresAt(issuedAt);
 
   return {
     refreshToken,
     refreshTokenHash,
     sessionToken: await signInstallationSessionToken(session, issuedAt),
-    expiresAt: accessTokenExpiresAt(issuedAt),
+    expiresAt: epochMilliseconds(expiresAt),
   };
 }

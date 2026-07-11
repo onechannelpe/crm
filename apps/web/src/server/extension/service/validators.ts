@@ -1,3 +1,6 @@
+import { UserId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
+
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
   EXTENSION_HANDOFF_TOKEN_ISSUER,
@@ -7,24 +10,17 @@ import {
 } from "../contracts";
 import { ExtensionTokenVerificationError } from "../crypto";
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function isUuid(value: string): boolean {
-  return UUID_PATTERN.test(value);
+export function isTokenExpired(expSeconds: number, now: Date): boolean {
+  return expSeconds <= Math.floor(now.getTime() / 1000);
 }
 
-export function isTokenExpired(expSeconds: number, nowMs: number): boolean {
-  return expSeconds <= Math.floor(nowMs / 1000);
-}
-
-export function parseSubjectUserId(subject: string): number | null {
+export function parseSubjectUserId(subject: string): UserId | null {
   if (!subject.startsWith("user:")) {
     return null;
   }
 
-  const parsed = Number(subject.slice("user:".length));
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  const parsed = UserId.parse(subject.slice("user:".length));
+  return isErr(parsed) ? null : parsed.value;
 }
 
 export function isExtensionHandoffClaims(
@@ -42,11 +38,11 @@ export function isExtensionHandoffClaims(
     "authSessionId" in value &&
     typeof value.authSessionId === "string" &&
     "branchId" in value &&
-    typeof value.branchId === "number" &&
+    typeof value.branchId === "string" &&
     "assignmentId" in value &&
-    typeof value.assignmentId === "number" &&
+    typeof value.assignmentId === "string" &&
     "contactId" in value &&
-    typeof value.contactId === "number" &&
+    typeof value.contactId === "string" &&
     "phone" in value &&
     typeof value.phone === "string" &&
     "clientName" in value &&
@@ -82,7 +78,7 @@ export function isExtensionInstallationSessionClaims(
     "authSessionId" in value &&
     typeof value.authSessionId === "string" &&
     "branchId" in value &&
-    typeof value.branchId === "number" &&
+    typeof value.branchId === "string" &&
     "installationId" in value &&
     typeof value.installationId === "string" &&
     "jti" in value &&

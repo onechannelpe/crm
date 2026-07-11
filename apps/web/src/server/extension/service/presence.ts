@@ -1,3 +1,6 @@
+import type { BranchId, UserId } from "~/server/shared/ids";
+import { epochMilliseconds } from "~/server/shared/time";
+
 import type {
   ExtensionExecutivePresenceStatus,
   ExtensionRuntimeEventEnvelope,
@@ -25,22 +28,42 @@ export function mapLifecycleStatus(
 }
 
 export function withDerivedProjectionStatuses(
-  statuses: TeamExecutiveStatusView[],
-  now: number,
+  statuses: Awaited<ReturnType<ExtensionRuntimeRepo["listBranchStatuses"]>>,
+  now: Date,
 ): TeamExecutiveStatusView[] {
+  const nowMs = now.getTime();
+
   return statuses.map((status) => {
+    const presenceUpdatedAt = status.presenceUpdatedAt
+      ? epochMilliseconds(status.presenceUpdatedAt)
+      : null;
+    const syncUpdatedAt = status.syncUpdatedAt
+      ? epochMilliseconds(status.syncUpdatedAt)
+      : null;
+
     return {
-      ...status,
+      userId: status.userId,
+      names: status.names,
+      firstSurname: status.firstSurname,
+      teamId: status.teamId,
+      teamName: status.teamName,
+      assignmentId: status.assignmentId,
+      contactId: status.contactId,
+      callSessionId: status.callSessionId,
+      presenceUpdatedAt,
+      syncUpdatedAt,
       presenceStatus:
         status.presenceStatus === null ||
         status.presenceUpdatedAt === null ||
-        now - status.presenceUpdatedAt < EXECUTIVE_STATUS_OFFLINE_AFTER_MS
+        nowMs - status.presenceUpdatedAt.getTime() <
+          EXECUTIVE_STATUS_OFFLINE_AFTER_MS
           ? status.presenceStatus
           : "offline",
       syncHealth:
         status.syncHealth === "reauth_required" ||
         (status.syncUpdatedAt !== null &&
-          now - status.syncUpdatedAt < EXECUTIVE_SYNC_STALE_AFTER_MS)
+          nowMs - status.syncUpdatedAt.getTime() <
+            EXECUTIVE_SYNC_STALE_AFTER_MS)
           ? status.syncHealth
           : "stale",
     };
@@ -50,10 +73,10 @@ export function withDerivedProjectionStatuses(
 export async function upsertSyncHealth(
   extensionRuntime: ExtensionRuntimeRepo,
   values: {
-    userId: number;
-    branchId: number;
+    userId: UserId;
+    branchId: BranchId;
     syncHealth: ExtensionSyncHealth;
-    updatedAt: number;
+    updatedAt: Date;
   },
 ): Promise<void> {
   await extensionRuntime.upsertExecutiveSyncHealth({

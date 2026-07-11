@@ -1,7 +1,6 @@
 import { generateKeyPairSync } from "node:crypto";
 
 import {
-  cleanupTestDb,
   createIsolatedTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
@@ -25,10 +24,4 @@ export async function createExtensionFixture(
   );
   vi.stubEnv("EXTENSION_EXPECTED_ORIGIN", "http://localhost:3000");
   return createIsolatedTestDb(prefix);
-}
-
-export async function disposeExtensionFixture(
-  ctx: TestDbContext,
-): Promise<void> {
-  await cleanupTestDb(ctx);
 }

@@ -6,7 +6,19 @@ import {
   invalid,
   type DomainError,
 } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { InstallationId } from "~/server/shared/ids";
+import type {
+  BranchId,
+  ContactAssignmentId,
+  UserId,
+} from "~/server/shared/ids";
+import { Err, Ok, isErr, type Result } from "~/server/shared/result";
+import {
+  addMilliseconds,
+  epochMilliseconds,
+  epochSeconds,
+  type Clock,
+} from "~/server/shared/time";
 
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
@@ -28,7 +40,6 @@ import {
   isExtensionHandoffClaims,
   isInvalidExtensionToken,
   isTokenExpired,
-  isUuid,
   parseSubjectUserId,
 } from "./validators";
 
@@ -36,27 +47,27 @@ const EXTENSION_HANDOFF_TTL_MS = 120_000;
 
 interface HandoffMethodContext {
   repos: ExtensionRepos;
-  now: () => number;
+  now: Clock;
   uow: AppUow<ExtensionRepos>;
 }
 
 export async function createHandoffToken(
   context: HandoffMethodContext,
   input: {
-    userId: number;
+    userId: UserId;
     authSessionId: string;
-    branchId: number;
-    assignmentId: number;
+    branchId: BranchId;
+    assignmentId: ContactAssignmentId;
     origin: string;
   },
 ): Promise<Result<CreateExtensionHandoffTokenResponse, DomainError>> {
   const { repos, now } = context;
 
-  if (!Number.isInteger(input.assignmentId) || input.assignmentId < 1) {
+  if (input.assignmentId.trim() === "") {
     return Err(
       invalid({
-        code: "assignment_id_positive_integer",
-        details: { field: "assignment_id", rule: "positive_integer" },
+        code: "assignment_id_required",
+        details: { field: "assignment_id", rule: "required" },
       }),
     );
   }
@@ -83,21 +94,26 @@ export async function createHandoffToken(
       return Err(fail("assignment_not_found"));
     }
 
-    const contact = await repos.contacts.findById(assignment.contact_id);
+    const contact = await repos.organization.findMembershipById(
+      assignment.contact_id,
+    );
 
     if (!contact) {
       return Err(fail("assignment_inactive"));
     }
 
-    if (!contact.phone_primary || contact.phone_primary.trim() === "") {
+    if (!contact.phone || contact.phone.trim() === "") {
       return Err(fail("assignment_inactive"));
     }
 
-    const organization = await repos.organizations.findById(
-      contact.organization_id,
+    const organization = await repos.organization.findOrganizationById(
+      contact.organizationId,
     );
     const issuedAt = now();
-    const handoffExpiresAt = issuedAt + EXTENSION_HANDOFF_TTL_MS;
+    const handoffExpiresAt = addMilliseconds(
+      issuedAt,
+      EXTENSION_HANDOFF_TTL_MS,
+    );
     const handoffJti = crypto.randomUUID();
 
     const handoffToken = await signExtensionToken({
@@ -108,14 +124,14 @@ export async function createHandoffToken(
       branchId: input.branchId,
       assignmentId,
       contactId: contact.id,
-      phone: contact.phone_primary,
-      clientName: contact.name,
+      phone: contact.phone,
+      clientName: contact.person.displayName,
       organizationLabel: organization ? `Org #${organization.id}` : null,
       action: "start_call",
       origin: input.origin,
       jti: handoffJti,
-      iat: issuedAt,
-      exp: Math.floor(handoffExpiresAt / 1000),
+      iat: epochSeconds(issuedAt),
+      exp: epochSeconds(handoffExpiresAt),
     });
 
     await repos.extensionRuntime.createHandoff({
@@ -131,7 +147,7 @@ export async function createHandoffToken(
 
     return Ok({
       handoffToken,
-      expiresAt: handoffExpiresAt,
+      expiresAt: epochMilliseconds(handoffExpiresAt),
     });
   } catch (error: unknown) {
     if (isCryptoMisconfiguration(error)) {
@@ -162,7 +178,8 @@ export async function claimInstallationSession(
 ): Promise<Result<ClaimExtensionSessionResponse, DomainError>> {
   const { now, uow } = context;
 
-  if (!isUuid(input.installationId)) {
+  const installationId = InstallationId.parse(input.installationId);
+  if (isErr(installationId)) {
     return Err(invalid({ code: "installation_invalid" }));
   }
 
@@ -215,7 +232,7 @@ export async function claimInstallationSession(
 
       if (handoff.consumed_at !== null) {
         if (
-          handoff.installation_id !== input.installationId ||
+          handoff.installation_id !== installationId.value ||
           !handoff.installation_session_jti
         ) {
           return Err(fail("handoff_claimed_by_other_installation"));
@@ -236,14 +253,14 @@ export async function claimInstallationSession(
         const reusableSession =
           await txRepos.extensionRuntime.findActiveInstallationSession(
             handoff.auth_session_id,
-            input.installationId,
+            installationId.value,
             claimedAt,
           );
         const sessionJti = reusableSession?.jti ?? crypto.randomUUID();
 
         const consumeResult = await txRepos.extensionRuntime.consumeHandoff({
           jti: handoff.jti,
-          installation_id: input.installationId,
+          installation_id: installationId.value,
           installation_session_jti: sessionJti,
           consumed_at: claimedAt,
         });
@@ -255,7 +272,7 @@ export async function claimInstallationSession(
 
           if (
             !racedHandoff ||
-            racedHandoff.installation_id !== input.installationId ||
+            racedHandoff.installation_id !== installationId.value ||
             !racedHandoff.installation_session_jti
           ) {
             return Err(fail("handoff_claimed_by_other_installation"));
@@ -280,7 +297,7 @@ export async function claimInstallationSession(
             user_id: handoff.user_id,
             branch_id: handoff.branch_id,
             auth_session_id: handoff.auth_session_id,
-            installation_id: input.installationId,
+            installation_id: installationId.value,
             refresh_token_hash: "",
             issued_at: claimedAt,
             expires_at: installationSessionExpiresAt(claimedAt),

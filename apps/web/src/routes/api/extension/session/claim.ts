@@ -1,13 +1,12 @@
-import type { APIEvent } from "@solidjs/start/server";
-
 import { isClaimExtensionSessionRequest } from "~/server/extension/contracts";
 import { getServerRuntime } from "~/server/platform/container";
 import { toWire } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
+import type { ApiRequestEvent } from "../../request-event";
 import { readJsonBody } from "../json-body";
 
-export async function POST(event: APIEvent): Promise<Response> {
+export async function POST(event: ApiRequestEvent): Promise<Response> {
   try {
     const parsed = await readJsonBody(event.request);
     if (!parsed.ok) {

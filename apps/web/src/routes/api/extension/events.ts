@@ -1,10 +1,9 @@
-import type { APIEvent } from "@solidjs/start/server";
-
 import { isExtensionRuntimeEventEnvelope } from "~/server/extension/contracts";
 import { getServerRuntime } from "~/server/platform/container";
 import { toWire } from "~/server/shared/domain-error";
 import { isErr } from "~/server/shared/result";
 
+import type { ApiRequestEvent } from "../request-event";
 import { readJsonBody } from "./json-body";
 
 function getBearerToken(request: Request): string | null {
@@ -14,7 +13,7 @@ function getBearerToken(request: Request): string | null {
   return token === "" ? null : token;
 }
 
-export async function POST(event: APIEvent): Promise<Response> {
+export async function POST(event: ApiRequestEvent): Promise<Response> {
   try {
     const sessionToken = getBearerToken(event.request);
     if (!sessionToken) {

@@ -1,21 +1,26 @@
 import { expectErr } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
+import { createExtensionFixture } from "@tests/support/extension/fixture";
 import {
-  createExtensionFixture,
-  disposeExtensionFixture,
-} from "@tests/support/extension/fixture";
-import type { TestDbContext } from "@tests/support/runtime/db";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+  cleanupTestDb,
+  resetTestDb,
+  type TestDbContext,
+} from "@tests/support/runtime/db";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("extension runtime token validation", () => {
   let ctx: TestDbContext;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await createExtensionFixture("extension-runtime-token-validation");
   });
 
-  afterEach(async () => {
-    await disposeExtensionFixture(ctx);
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("classifies malformed handoff tokens as handoff_invalid", async () => {
@@ -32,14 +37,19 @@ describe("extension runtime token validation", () => {
 
   it("rejects handoff creation when assigned contact has no primary phone", async () => {
     const scenario = createExtensionScenario(ctx);
+    const { execOne } = ctx.fixtures.users;
+    const { lima } = ctx.fixtures.branches;
     const authSessionId = await scenario.session();
     const contactId = await scenario.contactWithoutPhone(1);
-    const assignmentId = await scenario.assignment({ userId: 1, contactId });
+    const assignmentId = await scenario.assignment({
+      userId: execOne.id,
+      contactId,
+    });
 
     const result = await scenario.service.createHandoffToken({
-      userId: 1,
+      userId: execOne.id,
       authSessionId,
-      branchId: 1,
+      branchId: lima.id,
       assignmentId,
       origin: "http://localhost:3000",
     });

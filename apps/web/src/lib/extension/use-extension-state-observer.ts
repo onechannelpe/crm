@@ -16,7 +16,6 @@ interface UseExtensionStateObserverOptions {
 export function useExtensionStateObserver(
   options: UseExtensionStateObserverOptions,
 ): void {
-  // Track previous state to detect changes
   let prevState: ExecutiveStateSnapshot | null = null;
   let prevError: string | null = null;
 
@@ -24,11 +23,9 @@ export function useExtensionStateObserver(
     const currentState = options.extensionState?.();
     const currentError = options.extensionErrorMessage?.();
 
-    // Notify on state change
     if (currentState !== prevState) {
       options.onStateChange?.(currentState);
 
-      // Check if reauth is required
       if (
         currentState?.syncHealth === "reauth_required" &&
         prevState?.syncHealth !== "reauth_required"
@@ -36,7 +33,6 @@ export function useExtensionStateObserver(
         options.onReauthRequired?.();
       }
 
-      // Check if sync health went to error
       if (
         currentState?.syncHealth === "error" &&
         prevState?.syncHealth !== "error"
@@ -44,7 +40,6 @@ export function useExtensionStateObserver(
         options.onSyncError?.();
       }
 
-      // Check if active assignment changed
       if (currentState?.assignmentId !== prevState?.assignmentId) {
         options.onActiveAssignmentChange?.(currentState?.assignmentId ?? null);
       }
@@ -52,7 +47,6 @@ export function useExtensionStateObserver(
       prevState = currentState;
     }
 
-    // Notify on error change
     if (currentError !== prevError) {
       options.onErrorChange?.(currentError);
       prevError = currentError;
