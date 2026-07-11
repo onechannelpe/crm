@@ -10,6 +10,7 @@
 
 :root {
   --background-noisy: url(/images/light-noise.png);
+  --border-medium: var(--quaternary);
 
   --font-sans:
     "Inter Variable", Inter, "Segoe UI", "Helvetica Neue", Helvetica, Arial,
@@ -86,10 +87,6 @@
 
   --table-checkbox-width: 32px;
   --table-cell-padding-x: 8px;
-
-  --panel-border: 1px solid var(--border);
-  --panel-radius: var(--radius-md);
-  --panel-bg: var(--surface);
 
   --side-panel-width: 400px;
   --side-panel-width-min: 320px;
@@ -188,6 +185,7 @@
   color-scheme: light;
 
   --background: color(display-p3 1 1 1);
+  --background-app: color(display-p3 0.976 0.976 0.976);
   --foreground: color(display-p3 0.2 0.2 0.2);
   --card: color(display-p3 1 1 1);
   --card-foreground: color(display-p3 0.4 0.4 0.4);
@@ -277,6 +275,7 @@
   --background-noisy: url(/images/dark-noise.jpg);
 
   --background: color(display-p3 0.09 0.09 0.09);
+  --background-app: color(display-p3 0.098 0.098 0.098);
   --foreground: color(display-p3 0.922 0.922 0.922);
   --card: color(display-p3 0.09 0.09 0.09);
   --card-foreground: color(display-p3 0.702 0.702 0.702);

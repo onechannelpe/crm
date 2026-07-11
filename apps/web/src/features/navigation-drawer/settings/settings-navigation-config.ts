@@ -1,3 +1,4 @@
+import Activity from "~/components/icons/activity";
 import Bell from "~/components/icons/bell";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import LogOut from "~/components/icons/log-out";
@@ -69,14 +70,6 @@ export function createSettingsNavigationSections(
             "/settings/quotation-policies",
           ),
         },
-        {
-          id: "capacity-audit",
-          label: "Auditoria de capacidad",
-          href: "/settings/capacity-audit",
-          icon: Settings,
-          section: "operations",
-          isHidden: !canAccessPath(options.role, "/settings/capacity-audit"),
-        },
       ],
     },
     {
@@ -99,6 +92,15 @@ export function createSettingsNavigationSections(
           icon: ShieldCheck,
           section: "administration",
           isHidden: !canAccessPath(options.role, "/settings/security-policies"),
+          isAdvanced: true,
+        },
+        {
+          id: "event-logs",
+          label: "Registro de eventos",
+          href: "/settings/event-logs",
+          icon: Activity,
+          section: "administration",
+          isHidden: !canAccessPath(options.role, "/settings/event-logs"),
           isAdvanced: true,
         },
         {

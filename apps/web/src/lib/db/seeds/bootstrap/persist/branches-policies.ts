@@ -1,8 +1,9 @@
+import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "../../../types";
 
-const INFINITY_BRANCH_ID = "00000000-0000-0000-0000-000000000004";
+export const INFINITY_BRANCH_ID = randomUUIDv7();
 
 export async function persistBranchesAndPolicies(
   db: Kysely<Database>,

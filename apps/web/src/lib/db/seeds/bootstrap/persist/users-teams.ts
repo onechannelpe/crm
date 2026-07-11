@@ -1,16 +1,13 @@
+import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "../../../types";
+import { INFINITY_BRANCH_ID } from "./branches-policies";
 
-const INFINITY_BRANCH_ID = seedUuid(4);
-const INFINITY_LIMA_TEAM_ID = seedUuid(5);
-const INFINITY_CHICLAYO_TEAM_ID = seedUuid(6);
-const LUIS_BETALLELUZ_ID = seedUuid(23);
-const JOSE_MENDOZA_ID = seedUuid(30);
-
-function seedUuid(value: number): string {
-  return `00000000-0000-0000-0000-${String(value).padStart(12, "0")}`;
-}
+const INFINITY_LIMA_TEAM_ID = randomUUIDv7();
+const INFINITY_CHICLAYO_TEAM_ID = randomUUIDv7();
+const LUIS_BETALLELUZ_ID = randomUUIDv7();
+const JOSE_MENDOZA_ID = randomUUIDv7();
 
 export async function persistUsersAndTeams(
   db: Kysely<Database>,
@@ -40,7 +37,7 @@ export async function persistUsersAndTeams(
     .insertInto("users")
     .values([
       {
-        id: seedUuid(21),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "jorge.quezada",
@@ -55,7 +52,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(22),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "karina.yalta",
@@ -70,7 +67,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(23),
+        id: LUIS_BETALLELUZ_ID,
         branch_id: INFINITY_BRANCH_ID,
         team_id: null,
         username: "luis.betalleluz",
@@ -85,7 +82,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(24),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "sebastian.salazar",
@@ -100,7 +97,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(25),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "giancarlo.aranguri",
@@ -115,7 +112,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(26),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "paola.lozano",
@@ -130,7 +127,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(27),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "veronica.banquez",
@@ -145,7 +142,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(28),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "wendy.sarmiento",
@@ -160,7 +157,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(29),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: null,
         username: "victor.franco",
@@ -175,7 +172,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(30),
+        id: JOSE_MENDOZA_ID,
         branch_id: INFINITY_BRANCH_ID,
         team_id: null,
         username: "jose.mendoza",
@@ -190,7 +187,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(31),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "renato.santacruz",
@@ -205,7 +202,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(32),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "francisco.suyon",
@@ -220,7 +217,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(33),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "franco.fernandez",
@@ -235,7 +232,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(34),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "eber.montalvo",
@@ -250,7 +247,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(35),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "pool.ortega",
@@ -265,7 +262,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(36),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "jesus.avalos",
@@ -280,7 +277,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(37),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "joyce.llanos",
@@ -295,7 +292,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(38),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "junior.cardozo",
@@ -310,7 +307,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(39),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "ricardo.nurena",
@@ -325,7 +322,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(40),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: null,
         username: "david.duran",
@@ -340,7 +337,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(41),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "luisa.ramirez",
@@ -355,7 +352,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(42),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "erick.azucena",
@@ -370,7 +367,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(43),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "christian.arango",
@@ -385,7 +382,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(44),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "ray.castillo",
@@ -400,7 +397,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(45),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "victor.tineo",
@@ -415,7 +412,7 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: seedUuid(46),
+        id: randomUUIDv7(),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "carlos.lazarte",

@@ -1,10 +1,39 @@
+import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import { hashPassword } from "~/lib/auth/password/password";
-import { UserId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
 import { resolveSeedPassword } from "../../shared/seed-password";
+import {
+  ANDRES,
+  CAMILA,
+  CLAUDIA,
+  DEMO_BRANCH_1,
+  DEMO_BRANCH_2,
+  DEMO_BRANCH_3,
+  DEMO_TEAM_ALPHA,
+  DEMO_TEAM_BRAVO,
+  DEMO_TEAM_NORTE,
+  DEMO_TEAM_NORTE_B,
+  DIEGO,
+  ELENA,
+  FERNANDA,
+  GABRIEL,
+  ISABELLA,
+  JOSE,
+  JOSEFINA,
+  LUCIA,
+  MANUEL,
+  MARIANA,
+  MARINA,
+  MATIAS,
+  NICOLAS,
+  PABLO,
+  ROBERTO,
+  SOFIA,
+  VALERIA,
+} from "../demo-ids";
 
 export async function persistDemoIdentities(
   db: Kysely<Database>,
@@ -17,20 +46,19 @@ export async function persistDemoIdentities(
   await db
     .insertInto("branches")
     .values([
-      { id: seedUuid(1), name: "Demo Branch 1", created_at: now },
-      { id: seedUuid(2), name: "Demo Branch 2", created_at: now },
-      { id: seedUuid(3), name: "Demo Branch 3", created_at: now },
+      { id: DEMO_BRANCH_1, name: "Demo Branch 1", created_at: now },
+      { id: DEMO_BRANCH_2, name: "Demo Branch 2", created_at: now },
+      { id: DEMO_BRANCH_3, name: "Demo Branch 3", created_at: now },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Demo users (IDs 1-20)
   await db
     .insertInto("users")
     .values([
       {
-        id: seedUuid(1),
-        branch_id: seedUuid(1),
+        id: VALERIA,
+        branch_id: DEMO_BRANCH_1,
         username: "valeria.paredes",
         email: "valeria.paredes@onechannel.pe",
         password_hash: passwordHash,
@@ -43,8 +71,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(2),
-        branch_id: seedUuid(1),
+        id: DIEGO,
+        branch_id: DEMO_BRANCH_1,
         username: "diego.ramirez",
         email: "diego.ramirez@onechannel.pe",
         password_hash: passwordHash,
@@ -57,8 +85,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(3),
-        branch_id: seedUuid(1),
+        id: CAMILA,
+        branch_id: DEMO_BRANCH_1,
         username: "camila.rojas",
         email: "camila.rojas@onechannel.pe",
         password_hash: passwordHash,
@@ -71,8 +99,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(4),
-        branch_id: seedUuid(1),
+        id: JOSEFINA,
+        branch_id: DEMO_BRANCH_1,
         username: "josefina.salazar",
         email: "josefina.salazar@onechannel.pe",
         password_hash: passwordHash,
@@ -85,8 +113,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(5),
-        branch_id: seedUuid(1),
+        id: MATIAS,
+        branch_id: DEMO_BRANCH_1,
         username: "matias.castillo",
         email: "matias.castillo@onechannel.pe",
         password_hash: passwordHash,
@@ -99,8 +127,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(6),
-        branch_id: seedUuid(1),
+        id: LUCIA,
+        branch_id: DEMO_BRANCH_1,
         username: "lucia.mendoza",
         email: "lucia.mendoza@onechannel.pe",
         password_hash: passwordHash,
@@ -113,8 +141,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(7),
-        branch_id: seedUuid(1),
+        id: ANDRES,
+        branch_id: DEMO_BRANCH_1,
         username: "andres.huaman",
         email: "andres.huaman@onechannel.pe",
         password_hash: passwordHash,
@@ -127,8 +155,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(8),
-        branch_id: seedUuid(2),
+        id: NICOLAS,
+        branch_id: DEMO_BRANCH_2,
         username: "nicolas.torres",
         email: "nicolas.torres@onechannel.pe",
         password_hash: passwordHash,
@@ -141,8 +169,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(9),
-        branch_id: seedUuid(2),
+        id: SOFIA,
+        branch_id: DEMO_BRANCH_2,
         username: "sofia.espinoza",
         email: "sofia.espinoza@onechannel.pe",
         password_hash: passwordHash,
@@ -155,8 +183,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(10),
-        branch_id: seedUuid(2),
+        id: GABRIEL,
+        branch_id: DEMO_BRANCH_2,
         username: "gabriel.vargas",
         email: "gabriel.vargas@onechannel.pe",
         password_hash: passwordHash,
@@ -169,8 +197,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(11),
-        branch_id: seedUuid(2),
+        id: ELENA,
+        branch_id: DEMO_BRANCH_2,
         username: "elena.gomez",
         email: "elena.gomez@onechannel.pe",
         password_hash: passwordHash,
@@ -183,8 +211,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(12),
-        branch_id: seedUuid(3),
+        id: ROBERTO,
+        branch_id: DEMO_BRANCH_3,
         username: "roberto.quispe",
         email: "roberto.quispe@onechannel.pe",
         password_hash: passwordHash,
@@ -197,8 +225,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(13),
-        branch_id: seedUuid(3),
+        id: ISABELLA,
+        branch_id: DEMO_BRANCH_3,
         username: "isabella.silva",
         email: "isabella.silva@onechannel.pe",
         password_hash: passwordHash,
@@ -211,8 +239,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(14),
-        branch_id: seedUuid(3),
+        id: MANUEL,
+        branch_id: DEMO_BRANCH_3,
         username: "manuel.suarez",
         email: "manuel.suarez@onechannel.pe",
         password_hash: passwordHash,
@@ -225,8 +253,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(15),
-        branch_id: seedUuid(3),
+        id: FERNANDA,
+        branch_id: DEMO_BRANCH_3,
         username: "fernanda.ruiz",
         email: "fernanda.ruiz@onechannel.pe",
         password_hash: passwordHash,
@@ -239,8 +267,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(16),
-        branch_id: seedUuid(1),
+        id: CLAUDIA,
+        branch_id: DEMO_BRANCH_1,
         username: "claudia.vasquez",
         email: "claudia.vasquez@onechannel.pe",
         password_hash: passwordHash,
@@ -253,8 +281,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(17),
-        branch_id: seedUuid(1),
+        id: PABLO,
+        branch_id: DEMO_BRANCH_1,
         username: "pablo.flores",
         email: "pablo.flores@onechannel.pe",
         password_hash: passwordHash,
@@ -267,8 +295,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(18),
-        branch_id: seedUuid(1),
+        id: MARINA,
+        branch_id: DEMO_BRANCH_1,
         username: "marina.guillen",
         email: "marina.guillen@onechannel.pe",
         password_hash: passwordHash,
@@ -281,8 +309,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(19),
-        branch_id: seedUuid(2),
+        id: MARIANA,
+        branch_id: DEMO_BRANCH_2,
         username: "mariana.velasquez",
         email: "mariana.velasquez@onechannel.pe",
         password_hash: passwordHash,
@@ -295,8 +323,8 @@ export async function persistDemoIdentities(
         created_at: now,
       },
       {
-        id: seedUuid(20),
-        branch_id: seedUuid(2),
+        id: JOSE,
+        branch_id: DEMO_BRANCH_2,
         username: "jose.torres",
         email: "jose.torres@onechannel.pe",
         password_hash: passwordHash,
@@ -312,31 +340,30 @@ export async function persistDemoIdentities(
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Teams
   await db
     .insertInto("teams")
     .values([
       {
-        id: seedUuid(1),
-        branch_id: seedUuid(1),
+        id: DEMO_TEAM_ALPHA,
+        branch_id: DEMO_BRANCH_1,
         name: "Team Alpha",
         created_at: now,
       },
       {
-        id: seedUuid(2),
-        branch_id: seedUuid(1),
+        id: DEMO_TEAM_BRAVO,
+        branch_id: DEMO_BRANCH_1,
         name: "Team Bravo",
         created_at: now,
       },
       {
-        id: seedUuid(3),
-        branch_id: seedUuid(2),
+        id: DEMO_TEAM_NORTE,
+        branch_id: DEMO_BRANCH_2,
         name: "Team Norte",
         created_at: now,
       },
       {
-        id: seedUuid(4),
-        branch_id: seedUuid(2),
+        id: DEMO_TEAM_NORTE_B,
+        branch_id: DEMO_BRANCH_2,
         name: "Team Norte B",
         created_at: now,
       },
@@ -344,77 +371,73 @@ export async function persistDemoIdentities(
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Branch supervisors
   await db
     .insertInto("branch_supervisors")
     .values([
-      { branch_id: seedUuid(1), user_id: seedUuid(2), created_at: now }, // Diego Ramirez @ branch 1
-      { branch_id: seedUuid(2), user_id: seedUuid(8), created_at: now }, // Nicolas Torres @ branch 2
-      { branch_id: seedUuid(2), user_id: seedUuid(19), created_at: now }, // Mariana Velasquez @ branch 2
+      { branch_id: DEMO_BRANCH_1, user_id: DIEGO, created_at: now },
+      { branch_id: DEMO_BRANCH_2, user_id: NICOLAS, created_at: now },
+      { branch_id: DEMO_BRANCH_2, user_id: MARIANA, created_at: now },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Back office assignments
   await db
     .insertInto("back_office_assignments")
     .values([
       {
-        back_office_user_id: seedUuid(4),
-        team_id: seedUuid(1),
+        back_office_user_id: JOSEFINA,
+        team_id: DEMO_TEAM_ALPHA,
         assigned_at: now,
-      }, // Josefina Salazar @ team 1
+      },
       {
-        back_office_user_id: seedUuid(4),
-        team_id: seedUuid(2),
+        back_office_user_id: JOSEFINA,
+        team_id: DEMO_TEAM_BRAVO,
         assigned_at: now,
-      }, // Josefina Salazar @ team 2
+      },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Demo team assignments
   await db
     .updateTable("users")
-    .set({ team_id: seedUuid(1) })
-    .where("id", "in", [3, 5, 6, 7].map(seedUserId))
+    .set({ team_id: DEMO_TEAM_ALPHA })
+    .where("id", "in", [CAMILA, MATIAS, LUCIA, ANDRES])
     .execute();
   await db
     .updateTable("users")
-    .set({ team_id: seedUuid(2) })
-    .where("id", "in", [16, 17, 18].map(seedUserId))
+    .set({ team_id: DEMO_TEAM_BRAVO })
+    .where("id", "in", [CLAUDIA, PABLO, MARINA])
     .execute();
   await db
     .updateTable("users")
-    .set({ team_id: seedUuid(3) })
-    .where("id", "in", [9, 10, 11].map(seedUserId))
+    .set({ team_id: DEMO_TEAM_NORTE })
+    .where("id", "in", [SOFIA, GABRIEL, ELENA])
     .execute();
   await db
     .updateTable("users")
-    .set({ team_id: seedUuid(4) })
-    .where("id", "in", [20].map(seedUserId))
+    .set({ team_id: DEMO_TEAM_NORTE_B })
+    .where("id", "in", [JOSE])
     .execute();
 
-  // Activity logs for demo users
   await db
     .insertInto("agent_status_logs")
     .values([
       {
-        user_id: seedUuid(3),
+        user_id: CAMILA,
         status: "available",
         latitude: -12.046374,
         longitude: -77.042793,
         started_at: new Date(nowMs - 3 * oneHour),
       },
       {
-        user_id: seedUuid(5),
+        user_id: MATIAS,
         status: "available",
         latitude: -12.046374,
         longitude: -77.042793,
         started_at: new Date(nowMs - 2 * oneHour),
       },
       {
-        user_id: seedUuid(6),
+        user_id: LUCIA,
         status: "break",
         latitude: -12.046374,
         longitude: -77.042793,
@@ -427,7 +450,7 @@ export async function persistDemoIdentities(
     .insertInto("auth_events")
     .values([
       {
-        user_id: seedUuid(1),
+        user_id: VALERIA,
         method: "password",
         stage: "login",
         outcome: "success",
@@ -436,7 +459,7 @@ export async function persistDemoIdentities(
         created_at: new Date(nowMs - oneDay),
       },
       {
-        user_id: seedUuid(2),
+        user_id: DIEGO,
         method: "password",
         stage: "login",
         outcome: "success",
@@ -451,7 +474,7 @@ export async function persistDemoIdentities(
     .insertInto("user_totp_factors")
     .values([
       {
-        user_id: seedUuid(12),
+        user_id: ROBERTO,
         secret_encrypted: "seed_dummy_secret",
         is_enabled: true,
         enabled_at: now,
@@ -462,13 +485,12 @@ export async function persistDemoIdentities(
     .onConflict((oc) => oc.doNothing())
     .execute();
 
-  // Notification system
   await db
     .insertInto("user_channel_addresses")
     .values([
       {
-        id: seedUuid(1),
-        user_id: seedUuid(1),
+        id: randomUUIDv7(),
+        user_id: VALERIA,
         channel: "email",
         address: "valeria.paredes@onechannel.pe",
         is_verified: true,
@@ -477,8 +499,8 @@ export async function persistDemoIdentities(
         updated_at: new Date(nowMs - oneDay),
       },
       {
-        id: seedUuid(2),
-        user_id: seedUuid(1),
+        id: randomUUIDv7(),
+        user_id: VALERIA,
         channel: "whatsapp",
         address: "911000001",
         is_verified: true,
@@ -487,8 +509,8 @@ export async function persistDemoIdentities(
         updated_at: new Date(nowMs - oneDay),
       },
       {
-        id: seedUuid(3),
-        user_id: seedUuid(12),
+        id: randomUUIDv7(),
+        user_id: ROBERTO,
         channel: "email",
         address: "roberto.quispe@onechannel.pe",
         is_verified: true,
@@ -497,8 +519,8 @@ export async function persistDemoIdentities(
         updated_at: new Date(nowMs - oneDay),
       },
       {
-        id: seedUuid(4),
-        user_id: seedUuid(12),
+        id: randomUUIDv7(),
+        user_id: ROBERTO,
         channel: "whatsapp",
         address: "911000012",
         is_verified: true,
@@ -516,8 +538,8 @@ export async function persistDemoIdentities(
     .insertInto("notification_opt_outs")
     .values([
       {
-        id: seedUuid(4),
-        user_id: seedUuid(12),
+        id: randomUUIDv7(),
+        user_id: ROBERTO,
         category: "broadcasts",
         channel: "whatsapp",
         created_at: new Date(nowMs - oneDay * 6),
@@ -529,19 +551,11 @@ export async function persistDemoIdentities(
   await db
     .insertInto("whatsapp_sessions")
     .values([
-      { user_id: seedUuid(1), expires_at: new Date(nowMs + oneDay) },
-      { user_id: seedUuid(12), expires_at: new Date(nowMs + oneDay) },
+      { user_id: VALERIA, expires_at: new Date(nowMs + oneDay) },
+      { user_id: ROBERTO, expires_at: new Date(nowMs + oneDay) },
     ])
     .onConflict((oc) => oc.doNothing())
     .execute();
-}
-
-function seedUuid(value: number): string {
-  return `00000000-0000-0000-0000-${String(value).padStart(12, "0")}`;
-}
-
-function seedUserId(value: number) {
-  return UserId.trust(seedUuid(value));
 }
 
 const oneMinute = 60 * 1000;

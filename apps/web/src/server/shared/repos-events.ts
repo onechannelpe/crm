@@ -5,6 +5,12 @@ import {
   serializeFieldChanges,
   type FieldChange,
 } from "~/contracts/events";
+import { notify } from "~/lib/db/notify";
+import { mapDomainEventRow } from "~/server/event-logs/mappers";
+import {
+  EVENT_LOGS_STREAM_CHANNEL,
+  serializeEventLogStreamPayload,
+} from "~/server/event-logs/stream-contract";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { EventId, type UserId } from "~/server/shared/ids";
 
@@ -50,6 +56,12 @@ export function createEventsRepo(db: DatabaseExecutor) {
       }));
 
       await db.insertInto("events").values(rows).execute();
+
+      for (const row of rows) {
+        const payload = serializeEventLogStreamPayload(mapDomainEventRow(row));
+        if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+      }
+
       return rows.map((row) => EventId.trust(row.id));
     },
 

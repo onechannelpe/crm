@@ -16,7 +16,7 @@ export function RecordShowShell(props: RouteSectionProps) {
         <RecordShowHeader leadId={params.recordId}>
           <RecordShowHeaderActions leadId={params.recordId} />
         </RecordShowHeader>
-        <main class={shellStyles.recordShowBody}>
+        <main class={shellStyles.fixedBody}>
           <MainContainerWithSidePanel>
             {props.children}
           </MainContainerWithSidePanel>

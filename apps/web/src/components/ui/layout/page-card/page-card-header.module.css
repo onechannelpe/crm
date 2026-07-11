@@ -1,0 +1,86 @@
+.header {
+  align-items: center;
+  background-color: var(--secondary);
+  border-bottom: 1px solid var(--border-medium);
+  box-sizing: border-box;
+  column-gap: var(--spacing-2);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
+  min-height: 48px;
+  padding: 0 var(--spacing-3);
+  width: 100%;
+}
+
+.headerNoCenter {
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+}
+
+.left {
+  align-items: center;
+  display: flex;
+  gap: var(--spacing-2);
+  grid-column: 1;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.title {
+  align-items: center;
+  color: var(--foreground);
+  display: flex;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.centeredTitle {
+  grid-column: 2;
+  justify-content: center;
+  justify-self: stretch;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.right {
+  align-items: center;
+  display: flex;
+  gap: var(--spacing-2);
+  grid-column: 3;
+  justify-content: flex-end;
+  justify-self: end;
+  min-width: 0;
+  width: 100%;
+}
+
+.rightNoCenter {
+  grid-column: 2;
+}
+
+.collapseButton {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 28px;
+  justify-content: center;
+  transition:
+    background var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard);
+  width: 28px;
+}
+
+.collapseButton:hover {
+  background: var(--background-transparent-light);
+  color: var(--foreground);
+}

@@ -1,0 +1,12 @@
+.card {
+  background-color: var(--card-background-color, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--foreground-secondary);
+  overflow: hidden;
+  width: auto;
+}
+
+.card[data-full-width] {
+  width: 100%;
+}

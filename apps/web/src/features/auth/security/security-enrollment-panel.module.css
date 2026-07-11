@@ -4,11 +4,7 @@
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: color-mix(
-    in oklab,
-    var(--panel-bg, var(--background)) 95%,
-    white 5%
-  );
+  background: color-mix(in oklab, var(--surface) 95%, white 5%);
 }
 
 .methodHeader {
@@ -140,11 +136,7 @@
   border-radius: 16px;
   border: 1px solid
     color-mix(in oklab, var(--border) 65%, var(--foreground) 35%);
-  background: color-mix(
-    in oklab,
-    var(--panel-bg, var(--background)) 88%,
-    white 12%
-  );
+  background: color-mix(in oklab, var(--surface) 88%, white 12%);
 }
 
 .recoveryHeader {
@@ -175,11 +167,7 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   color: var(--foreground);
-  background: color-mix(
-    in oklab,
-    var(--panel-bg, var(--background)) 90%,
-    white 10%
-  );
+  background: color-mix(in oklab, var(--surface) 90%, white 10%);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 8px 10px;

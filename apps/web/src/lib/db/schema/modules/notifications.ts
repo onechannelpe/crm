@@ -1,4 +1,4 @@
-import { sql, type Kysely } from "kysely";
+import { sql, type Kysely, type SqlBool } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
@@ -244,7 +244,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_whatsapp_inbound_events_ordering")
     .on("whatsapp_inbound_events")
     .columns(["conversation_id", "sequence"])
-    .where(sql`queue_state IN ('pending', 'processing')`)
+    .where(sql<SqlBool>`queue_state IN ('pending', 'processing')`)
     .execute();
 
   await db.schema

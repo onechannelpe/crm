@@ -14,6 +14,7 @@ export type StrListConstraints = {
 export interface Reader<E> {
   str(field: string): string;
   id<Id extends string>(field: string, codec: IdCodec<Id>): Id;
+  optId<Id extends string>(field: string, codec: IdCodec<Id>): Id | undefined;
   idList<Id extends string>(
     field: string,
     codec: IdCodec<Id>,
@@ -58,6 +59,14 @@ class RecordReader<E> implements Reader<E> {
 
   id<Id extends string>(field: string, codec: IdCodec<Id>): Id {
     const raw = this.str(field);
+    const parsed = codec.parse(raw);
+    if (isErr(parsed)) this.reject(field, "invalid");
+    return parsed.value;
+  }
+
+  optId<Id extends string>(field: string, codec: IdCodec<Id>): Id | undefined {
+    const raw = this.optStr(field);
+    if (raw === null) return undefined;
     const parsed = codec.parse(raw);
     if (isErr(parsed)) this.reject(field, "invalid");
     return parsed.value;

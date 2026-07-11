@@ -1,4 +1,3 @@
-import { getAuditEvents } from "~/server/capacity/application/queries/get-audit-events";
 import { getExecutiveDetail } from "~/server/capacity/application/queries/get-executive-detail";
 import { getPolicyDefaults } from "~/server/capacity/application/queries/get-policy-defaults";
 import { listManagedExecutives } from "~/server/capacity/application/queries/list-managed-executives";
@@ -116,10 +115,6 @@ export function createCapacityRuntime(infra: ServerInfra) {
         listPendingRequests(ctx, { repos: readRepos }),
       getPolicyDefaults: (ctx: Parameters<typeof getPolicyDefaults>[0]) =>
         getPolicyDefaults(ctx, { repos: readRepos }),
-      getAuditEvents: (
-        ctx: Parameters<typeof getAuditEvents>[0],
-        input: Parameters<typeof getAuditEvents>[2],
-      ) => getAuditEvents(ctx, { repos: readRepos }, input),
     },
   };
 }

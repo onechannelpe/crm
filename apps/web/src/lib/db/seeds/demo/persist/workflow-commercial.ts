@@ -3,7 +3,7 @@ import type { Kysely } from "kysely";
 import type { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
-import { BO1, EXEC_DANIELA, type OrganizationSeedKey } from "../scenario";
+import { BACK_OFFICE, EXECUTIVES, type OrganizationSeedKey } from "../scenario";
 import type { WorkflowCommercialIds, WorkflowLeadIds } from "./history-events";
 
 export async function persistWorkflowCommercialData(
@@ -29,7 +29,7 @@ export async function persistWorkflowCommercialData(
         proposed_foreign_rate: 1.7,
         fee: 18.0,
         currency: "PEN",
-        proposed_by: BO1,
+        proposed_by: BACK_OFFICE.JOSEFINA,
         proposed_at: new Date(now - 10 * day),
         outcome: "pending",
         decided_at: null,
@@ -44,7 +44,7 @@ export async function persistWorkflowCommercialData(
         proposed_foreign_rate: 1.6,
         fee: 20.0,
         currency: "PEN",
-        proposed_by: BO1,
+        proposed_by: BACK_OFFICE.JOSEFINA,
         proposed_at: new Date(now - 18 * day),
         outcome: "accepted",
         decided_at: new Date(now - 16 * day),
@@ -59,7 +59,7 @@ export async function persistWorkflowCommercialData(
         proposed_foreign_rate: 1.8,
         fee: 15.0,
         currency: "PEN",
-        proposed_by: BO1,
+        proposed_by: BACK_OFFICE.JOSEFINA,
         proposed_at: new Date(now - 27 * day),
         outcome: "accepted",
         decided_at: new Date(now - 25 * day),
@@ -100,7 +100,7 @@ export async function persistWorkflowCommercialData(
         province: "LIMA",
         department: "LIMA",
         created_at: new Date(now - 22 * day),
-        created_by: EXEC_DANIELA,
+        created_by: EXECUTIVES.CLAUDIA,
       },
     ])
     .onConflict((oc) =>
@@ -170,7 +170,7 @@ export async function persistWorkflowCommercialData(
         online_url: null,
         online_collection_mode: null,
         updated_at: new Date(now - 28 * day),
-        updated_by: EXEC_DANIELA,
+        updated_by: EXECUTIVES.CLAUDIA,
       },
     ])
     .onConflict((oc) =>

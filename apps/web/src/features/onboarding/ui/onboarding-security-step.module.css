@@ -20,7 +20,7 @@
 .choiceCard {
   appearance: none;
   border: 1px solid var(--border);
-  background: var(--panel-bg);
+  background: var(--surface);
   border-radius: 12px;
   min-height: 96px;
   padding: 14px;

@@ -47,10 +47,7 @@ export async function queryLeadList(
         stage: r.optEnum("stage", LEAD_STAGES),
         status: r.optEnum("status", LEAD_STATUSES),
         priority: r.optEnum("priority", LEAD_PRIORITIES),
-        executiveId:
-          r.optStr("executiveId") === undefined
-            ? undefined
-            : r.id("executiveId", UserId),
+        executiveId: r.optId("executiveId", UserId),
         anyFieldSearch: r.optStr("anyFieldSearch") ?? undefined,
         updatedSinceMs: r.optNum("updatedSinceMs") ?? undefined,
         updatedUntilMs: r.optNum("updatedUntilMs") ?? undefined,

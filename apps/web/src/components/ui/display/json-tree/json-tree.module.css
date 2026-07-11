@@ -1,0 +1,97 @@
+.list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  row-gap: var(--spacing-2);
+  list-style-type: none;
+}
+
+.nested {
+  padding-left: var(--spacing-8);
+}
+
+.nested > :first-of-type {
+  margin-top: var(--spacing-2);
+}
+
+.container {
+  display: grid;
+  list-style-type: none;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.valueListItem {
+  display: flex;
+  align-items: center;
+  column-gap: var(--spacing-2);
+  list-style-type: none;
+  white-space: nowrap;
+}
+
+.labelContainer {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 24px;
+  column-gap: var(--spacing-2);
+  padding-inline: var(--spacing-2);
+  background-color: var(--background-transparent-lighter);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  white-space: nowrap;
+}
+
+.labelContainer > span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.value {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 24px;
+  color: var(--foreground-tertiary);
+  line-height: 1;
+}
+
+.value[role="button"] {
+  cursor: pointer;
+}
+
+.elementsCount {
+  color: var(--foreground-tertiary);
+}
+
+.arrowButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  padding-inline: var(--spacing-1);
+  background-color: var(--background-transparent-lighter);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  cursor: pointer;
+}
+
+.chevron {
+  display: inline-flex;
+  transform: rotate(-90deg);
+  transition: transform var(--motion-normal) ease;
+}
+
+.chevron[data-open] {
+  transform: rotate(0deg);
+}

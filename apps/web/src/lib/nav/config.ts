@@ -82,11 +82,6 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     match: "/team/import",
     header: { label: "Importar miembros", icon: "team" },
   },
-  { match: "/audit/auth", header: { label: "Autenticación", icon: "audit" } },
-  {
-    match: "/audit/log",
-    header: { label: "Registro de auditoría", icon: "audit" },
-  },
   { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
   {
@@ -94,8 +89,8 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Políticas comerciales", icon: "settings" },
   },
   {
-    match: "/settings/capacity-audit",
-    header: { label: "Auditoría de capacidad", icon: "settings" },
+    match: "/settings/event-logs",
+    header: { label: "Registro de eventos", icon: "settings" },
   },
 ];
 
@@ -197,22 +192,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
       { href: "/team/requests", label: "Solicitudes", order: 2 },
       { href: "/team/invite", label: "Invitaciones", order: 3 },
       { href: "/team/import", label: "Importar", order: 4 },
-    ],
-  },
-  {
-    id: "audit",
-    href: "/audit/log",
-    activePrefixes: ["/audit"],
-    label: "Auditoría",
-    navLabel: "Auditoría",
-    icon: "audit",
-    tileColor: "red",
-    section: "secondary",
-    order: 7,
-    group: "Administración",
-    children: [
-      { href: "/audit/log", label: "Registro", order: 1 },
-      { href: "/audit/auth", label: "Autenticación", order: 2 },
     ],
   },
   {

@@ -1,23 +1,28 @@
-import { UserId } from "~/server/shared/ids";
+import {
+  CAMILA,
+  CLAUDIA,
+  DIEGO,
+  FERNANDA,
+  GABRIEL,
+  JOSEFINA,
+  LUCIA,
+  MATIAS,
+  NICOLAS,
+  PABLO,
+  SOFIA,
+} from "./demo-ids";
 
-function seedUserId(value: number) {
-  return UserId.trust(
-    `00000000-0000-0000-0000-${String(value).padStart(12, "0")}`,
-  );
-}
-
-export const SUP1 = seedUserId(2);
-export const SUP2 = seedUserId(8);
-export const BO1 = seedUserId(4);
-export const BO2 = seedUserId(10);
-
-export const EXEC_CAMILA = seedUserId(3);
-export const EXEC_PATRICIA = seedUserId(5);
-export const EXEC_ROBERTO = seedUserId(6);
-export const EXEC_ANDREA = seedUserId(9);
-export const EXEC_RENATO = seedUserId(15);
-export const EXEC_DANIELA = seedUserId(16);
-export const EXEC_GABRIEL = seedUserId(17);
+export const SUPERVISORS = { DIEGO, NICOLAS } as const;
+export const BACK_OFFICE = { JOSEFINA, GABRIEL } as const;
+export const EXECUTIVES = {
+  CAMILA,
+  MATIAS,
+  LUCIA,
+  SOFIA,
+  FERNANDA,
+  CLAUDIA,
+  PABLO,
+} as const;
 
 export const ORGANIZATIONS = {
   pending: {
@@ -87,11 +92,11 @@ export const LEADS = [
   {
     key: "pending",
     organizationKey: "pending",
-    executiveId: EXEC_CAMILA,
+    executiveId: EXECUTIVES.CAMILA,
     stage: "QUALIFYING",
     status: null,
     priority: null,
-    createdBy: SUP1,
+    createdBy: SUPERVISORS.DIEGO,
     updatedBy: null,
     createdOffsetDays: 1,
     updatedOffsetDays: 1,
@@ -99,72 +104,72 @@ export const LEADS = [
   {
     key: "needs",
     organizationKey: "needs",
-    executiveId: EXEC_PATRICIA,
+    executiveId: EXECUTIVES.MATIAS,
     stage: "PRICING",
     status: "DISPONIBLE",
     priority: "P2",
-    createdBy: SUP1,
-    updatedBy: BO1,
+    createdBy: SUPERVISORS.DIEGO,
+    updatedBy: BACK_OFFICE.JOSEFINA,
     createdOffsetDays: 4,
     updatedOffsetDays: 3,
   },
   {
     key: "ready",
     organizationKey: "ready",
-    executiveId: EXEC_ROBERTO,
+    executiveId: EXECUTIVES.LUCIA,
     stage: "PRICING",
     status: "DISPONIBLE",
     priority: "P1",
-    createdBy: SUP1,
-    updatedBy: BO1,
+    createdBy: SUPERVISORS.DIEGO,
+    updatedBy: BACK_OFFICE.JOSEFINA,
     createdOffsetDays: 7,
     updatedOffsetDays: 6,
   },
   {
     key: "quoted",
     organizationKey: "quoted",
-    executiveId: EXEC_ANDREA,
+    executiveId: EXECUTIVES.SOFIA,
     stage: "PRICING",
     status: "DISPONIBLE",
     priority: "P2",
-    createdBy: SUP2,
-    updatedBy: BO2,
+    createdBy: SUPERVISORS.NICOLAS,
+    updatedBy: BACK_OFFICE.GABRIEL,
     createdOffsetDays: 14,
     updatedOffsetDays: 10,
   },
   {
     key: "forSale",
     organizationKey: "forSale",
-    executiveId: EXEC_RENATO,
+    executiveId: EXECUTIVES.FERNANDA,
     stage: "SETUP",
     status: "DISPONIBLE",
     priority: "P1",
-    createdBy: SUP1,
-    updatedBy: BO1,
+    createdBy: SUPERVISORS.DIEGO,
+    updatedBy: BACK_OFFICE.JOSEFINA,
     createdOffsetDays: 21,
     updatedOffsetDays: 15,
   },
   {
     key: "converted",
     organizationKey: "converted",
-    executiveId: EXEC_DANIELA,
+    executiveId: EXECUTIVES.CLAUDIA,
     stage: "LIVE",
     status: "DISPONIBLE",
     priority: "P1",
-    createdBy: SUP1,
-    updatedBy: EXEC_DANIELA,
+    createdBy: SUPERVISORS.DIEGO,
+    updatedBy: EXECUTIVES.CLAUDIA,
     createdOffsetDays: 30,
     updatedOffsetDays: 20,
   },
   {
     key: "rejected",
     organizationKey: "rejected",
-    executiveId: EXEC_GABRIEL,
+    executiveId: EXECUTIVES.PABLO,
     stage: "DISQUALIFIED",
     status: "CARTERIZADO",
     priority: "SIN RESULTADO",
-    createdBy: SUP2,
-    updatedBy: BO2,
+    createdBy: SUPERVISORS.NICOLAS,
+    updatedBy: BACK_OFFICE.GABRIEL,
     createdOffsetDays: 3,
     updatedOffsetDays: 2,
   },

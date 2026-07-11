@@ -11,6 +11,7 @@ import { createAuthRuntime } from "./auth-runtime";
 import { createCapacityRuntime } from "./capacity-runtime";
 import { createClientSearchRuntime } from "./client-search-runtime";
 import { createContactAssignmentsRuntime } from "./contact-assignments-runtime";
+import { createEventLogsRuntime } from "./event-logs-runtime";
 import { createExtensionRuntime } from "./extension-runtime";
 import { createFilesRuntime } from "./files-runtime";
 import { createServerInfra } from "./infra";
@@ -47,6 +48,7 @@ function createServerRuntime() {
   const contactAssignments = memo(() =>
     createContactAssignmentsRuntime(infra, engine()),
   );
+  const eventLogs = memo(() => createEventLogsRuntime(infra));
   const extension = memo(() => createExtensionRuntime(infra));
   const integrations = memo(() => createIntegrationsRuntime(infra));
   const observability = memo(() => createObservabilityRuntime(infra));
@@ -81,6 +83,9 @@ function createServerRuntime() {
     },
     get contactAssignments() {
       return contactAssignments();
+    },
+    get eventLogs() {
+      return eventLogs();
     },
     get extension() {
       return extension();

@@ -89,8 +89,9 @@ export async function receiveKapsoWebhook(
   if (!idempotencyKey || idempotencyKey.length > 256) {
     return Err("missing-idempotency-key");
   }
-  if (input.eventType !== INBOUND_EVENT) return Err("invalid-event");
-  if (input.payloadVersion !== "v2") return Err("unsupported-payload-version");
+  const { eventType, payloadVersion } = input;
+  if (eventType !== INBOUND_EVENT) return Err("invalid-event");
+  if (payloadVersion !== "v2") return Err("unsupported-payload-version");
 
   const envelope = parseKapsoEnvelope(input.rawBody, idempotencyKey);
   if (!envelope.ok) return envelope;
@@ -102,8 +103,8 @@ export async function receiveKapsoWebhook(
       .insertInto("kapso_webhook_deliveries")
       .values({
         idempotency_key: idempotencyKey,
-        event_type: input.eventType,
-        payload_version: input.payloadVersion,
+        event_type: eventType,
+        payload_version: payloadVersion,
         is_batch: envelope.value.isBatch,
         payload_json: envelope.value.payloadJson,
         received_at: input.now,

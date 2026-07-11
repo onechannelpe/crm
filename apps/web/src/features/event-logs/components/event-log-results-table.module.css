@@ -1,0 +1,41 @@
+.container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.headerCell {
+  position: relative;
+  user-select: none;
+}
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+}
+
+.resizeHandle:hover,
+.resizeHandle[data-resizing] {
+  background: var(--color-blue);
+}
+
+.sentinel {
+  height: 1px;
+}
+
+.loadingMore {
+  padding: var(--spacing-4);
+  text-align: center;
+  color: var(--foreground-tertiary);
+}
+
+.empty {
+  padding: var(--spacing-4) var(--spacing-3);
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+}

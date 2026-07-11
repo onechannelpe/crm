@@ -130,8 +130,8 @@ export default function TeamPage() {
             <A href="/settings/capacity-policies" class="underline">
               Políticas
             </A>
-            <A href="/settings/capacity-audit" class="underline">
-              Audit
+            <A href="/settings/event-logs" class="underline">
+              Eventos
             </A>
           </div>
         </div>

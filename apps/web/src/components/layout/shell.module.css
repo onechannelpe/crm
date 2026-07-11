@@ -1,6 +1,5 @@
 .layoutRoot {
-  background-image: var(--background-noisy);
-  background-blend-mode: overlay;
+  background: var(--background-app);
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -15,24 +14,11 @@
 }
 
 .root {
-  --settings-shell-width: 220px;
-  --settings-content-width: 512px;
   box-sizing: border-box;
   display: flex;
   flex: 1 1 auto;
   flex-direction: row;
   min-height: 0;
-}
-
-.settingsShift {
-  margin-left: calc(
-    (
-        100vw -
-          (var(--settings-content-width) + var(--settings-shell-width) + 76px)
-      ) /
-      2
-  );
-  transition: margin-left var(--motion-fast) var(--ease-standard);
 }
 
 .main {
@@ -54,7 +40,7 @@
   padding: 0;
 }
 
-.settingsBody {
+.fixedBody {
   box-sizing: border-box;
   display: flex;
   flex: 1;
@@ -62,20 +48,4 @@
   min-height: 0;
   overflow: hidden;
   padding: 0;
-}
-
-.recordShowBody {
-  box-sizing: border-box;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-  padding: 0;
-}
-
-@media (max-width: 768px) {
-  .settingsShift {
-    margin-left: 0;
-  }
 }

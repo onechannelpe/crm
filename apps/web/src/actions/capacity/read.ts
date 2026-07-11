@@ -1,7 +1,6 @@
 "use server";
 
 import type {
-  CapacityAuditEvent,
   CapacityPolicyDefaultsView,
   ExecutiveCapacityDetailView,
   ManagedExecutiveView,
@@ -63,22 +62,5 @@ export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
 
     execute: (ctx) =>
       getServerRuntime().capacity.useCases.getPolicyDefaults(ctx),
-  });
-}
-
-export async function getAuditEvents(
-  limit?: number,
-): Promise<CapacityAuditEvent[]> {
-  return runAction({
-    name: "capacity.audit.read",
-    access: { kind: "permission", permission: "capacity:audit:read" },
-
-    parse: () =>
-      parseObject({ limit }, validationFail, (r) => ({
-        limit: limit != null ? r.posInt("limit") : undefined,
-      })),
-
-    execute: (ctx, params) =>
-      getServerRuntime().capacity.useCases.getAuditEvents(ctx, params),
   });
 }

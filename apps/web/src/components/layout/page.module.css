@@ -25,10 +25,10 @@
 }
 
 .section {
-  border: var(--panel-border);
-  border-radius: var(--panel-radius);
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--panel-bg);
+  background: var(--surface);
 }
 
 .sectionBody {

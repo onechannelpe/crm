@@ -51,6 +51,10 @@ export default defineConfig({
           route: "/api/records/imports/ws",
           handler: "./src/server/realtime/records-imports-ws.ts",
         },
+        {
+          route: "/api/audit/event-logs/ws",
+          handler: "./src/server/realtime/event-logs-ws.ts",
+        },
       ],
       prerender: {
         autoSubfolderIndex: true,
