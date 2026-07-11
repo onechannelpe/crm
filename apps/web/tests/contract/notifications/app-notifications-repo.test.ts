@@ -21,13 +21,13 @@ describe("app notifications repo", () => {
     await resetTestDb(ctx);
   });
 
-  it("deduplicates notifications by user and source event id", async () => {
+  it("deduplicates notifications by user and intent id", async () => {
     const now = new Date();
     const userId = ctx.fixtures.users.execOne.id;
     await ctx.repos.appNotifications.createMany([
       {
         user_id: userId,
-        source_event_id: "quota:1:today",
+        intent_id: "quota:1:today",
         event_type: "quota.assigned",
         priority: "normal",
         title: "Test",
@@ -39,7 +39,7 @@ describe("app notifications repo", () => {
       },
       {
         user_id: userId,
-        source_event_id: "quota:1:today",
+        intent_id: "quota:1:today",
         event_type: "quota.assigned",
         priority: "normal",
         title: "Test Duplicate",

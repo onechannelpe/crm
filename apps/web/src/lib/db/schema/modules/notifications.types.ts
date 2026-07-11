@@ -3,7 +3,6 @@ import type { Generated } from "kysely";
 import type { Json } from "~/contracts/json";
 import type {
   AppNotificationId,
-  EventId,
   GeneratedId,
   IdColumn,
   NotificationDeliveryId,
@@ -65,7 +64,7 @@ export interface NotificationDeliveriesTable {
 export interface AppNotificationsTable {
   id: GeneratedId<AppNotificationId>;
   user_id: IdColumn<UserId>;
-  source_event_id: IdColumn<EventId>;
+  intent_id: IdColumn<NotificationIntentId>;
   event_type: string;
   priority: "high" | "normal" | "low";
   title: string;

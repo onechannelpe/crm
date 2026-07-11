@@ -57,7 +57,7 @@ describe("createIntentExpander", () => {
     expect(createMany).toHaveBeenCalledWith([
       expect.objectContaining({
         user_id: UserId.trust("1"),
-        source_event_id: NotificationIntentId.trust("intent-1"),
+        intent_id: NotificationIntentId.trust("intent-1"),
         event_type: "lead.ready_for_sale",
         title: "Title",
         action_url: "/records/1",
@@ -65,7 +65,7 @@ describe("createIntentExpander", () => {
       }),
       expect.objectContaining({
         user_id: UserId.trust("2"),
-        source_event_id: NotificationIntentId.trust("intent-1"),
+        intent_id: NotificationIntentId.trust("intent-1"),
       }),
     ]);
     expect(insertPlanned).toHaveBeenCalledWith(

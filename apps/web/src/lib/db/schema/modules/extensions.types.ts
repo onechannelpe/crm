@@ -2,7 +2,6 @@ import type { Json } from "~/contracts/json";
 import type {
   BranchId,
   ContactAssignmentId,
-  EventId,
   IdColumn,
   InstallationId,
   NullableIdColumn,
@@ -75,6 +74,6 @@ export interface ExtensionExecutiveStatusesTable {
   presence_updated_at: Date | null;
   sync_health: "ok" | "stale" | "reauth_required";
   sync_updated_at: Date | null;
-  source_event_id: NullableIdColumn<EventId>;
+  source_event_id: string | null;
   source_event_sequence: number | null;
 }

@@ -37,7 +37,7 @@ export function createIntentExpander(deps: {
     await deps.appNotifications.createMany(
       plan.inAppRecipients.map((userId) => ({
         user_id: userId,
-        source_event_id: job.id,
+        intent_id: job.id,
         event_type: job.event_type,
         priority: job.priority,
         title: job.title,

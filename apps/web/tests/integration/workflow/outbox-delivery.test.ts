@@ -107,12 +107,12 @@ describe("outbox delivery", () => {
       {
         user_id: actorBy("backOne").userId,
         event_type: "lead.ready_for_quotation",
-        source_event_id: expect.stringContaining(":ready_pricing"),
+        intent_id: expect.stringContaining(":ready_pricing"),
       },
       {
         user_id: actorBy("backTwo").userId,
         event_type: "lead.ready_for_quotation",
-        source_event_id: expect.stringContaining(":ready_pricing"),
+        intent_id: expect.stringContaining(":ready_pricing"),
       },
     ]);
 

@@ -3,7 +3,6 @@ import type { AppUow } from "~/server/shared/application/uow";
 import { external, fail, type DomainError } from "~/server/shared/domain-error";
 import {
   ContactAssignmentId,
-  EventId,
   OrganizationPersonId,
   type BranchId,
   type UserId,
@@ -176,7 +175,7 @@ export async function ingestRuntimeEvent(
           presence_updated_at: dateFromEpochMilliseconds(
             input.event.payload.updatedAt,
           ),
-          source_event_id: EventId.trust(input.event.id),
+          source_event_id: input.event.id,
           source_event_sequence: input.event.sequence,
         });
         return Ok(undefined);
@@ -193,7 +192,7 @@ export async function ingestRuntimeEvent(
           presence_updated_at: dateFromEpochMilliseconds(
             input.event.payload.at,
           ),
-          source_event_id: EventId.trust(input.event.id),
+          source_event_id: input.event.id,
           source_event_sequence: input.event.sequence,
         });
       }

@@ -12,7 +12,7 @@ export function createNotificationReader(runtime: TestRuntime) {
     appNotifications() {
       return runtime.ctx.db
         .selectFrom("app_notifications")
-        .select(["user_id", "event_type", "source_event_id"])
+        .select(["user_id", "event_type", "intent_id"])
         .orderBy("id", "asc")
         .execute();
     },

@@ -201,7 +201,7 @@ describe("workflow notification pipeline", () => {
       {
         user_id: actorBy("backOne").userId,
         event_type: "lead.ready_for_quotation",
-        source_event_id: "in-app-only",
+        intent_id: "in-app-only",
       },
     ]);
     expect(await reader.deliveries()).toEqual([]);

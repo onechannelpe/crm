@@ -5,7 +5,6 @@ import type { Database } from "~/lib/db/types";
 import type {
   BranchId,
   ContactAssignmentId,
-  EventId,
   InstallationId,
   OrganizationPersonId,
   UserId,
@@ -241,7 +240,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       call_session_id: string | null;
       presence_status: ExtensionExecutivePresenceStatus;
       presence_updated_at: Date;
-      source_event_id: EventId | null;
+      source_event_id: string | null;
       source_event_sequence: number;
     }) {
       return db

@@ -33,9 +33,7 @@ export function createAppNotificationRepo(db: DatabaseExecutor) {
       await db
         .insertInto("app_notifications")
         .values(values)
-        .onConflict((oc) =>
-          oc.columns(["user_id", "source_event_id"]).doNothing(),
-        )
+        .onConflict((oc) => oc.columns(["user_id", "intent_id"]).doNothing())
         .execute();
     },
 
