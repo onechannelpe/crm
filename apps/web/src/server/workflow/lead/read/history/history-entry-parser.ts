@@ -1,4 +1,5 @@
 import type { DomainError } from "~/server/shared/domain-error";
+import { WorkflowVenueId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 
@@ -13,9 +14,18 @@ import {
   toVenueUpdatedEntry,
 } from "./history-commercial-parser";
 import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
+import {
+  toFulfillmentCompletedEntry,
+  toFulfillmentDocumentUploadedEntry,
+  toFulfillmentProductChosenEntry,
+  toFulfillmentStartedEntry,
+  toFulfillmentStepAdvancedEntry,
+  toFulfillmentStepRejectedEntry,
+} from "./history-fulfillment-parser";
 import { toNoteEntry } from "./history-interaction-parser";
 import {
   toAssignmentEntry,
+  toLeadClosedEntry,
   toLeadDeletedEntry,
   toPriorityUpdatedEntry,
   toReassignmentEntry,
@@ -60,6 +70,8 @@ export function toHistoryEntry(
       return toRateProposalCorrectedEntry(row, payload.value);
     case "commercial_scope_corrected":
       return toCommercialScopeCorrectedEntry(row);
+    case "lead_closed":
+      return toLeadClosedEntry(row, payload.value);
     case "lead_reservation_expired":
       return toReservationExpiredEntry(row, payload.value);
     case "venue_added":
@@ -72,9 +84,21 @@ export function toHistoryEntry(
       return Ok({
         ...toHistoryEntryBase(row),
         eventType: "venue_accounts_added",
-        payload: { venueId: venueId.value },
+        payload: { venueId: WorkflowVenueId.trust(venueId.value) },
       });
     }
+    case "fulfillment_started":
+      return toFulfillmentStartedEntry(row, payload.value);
+    case "fulfillment_product_chosen":
+      return toFulfillmentProductChosenEntry(row, payload.value);
+    case "fulfillment_step_advanced":
+      return toFulfillmentStepAdvancedEntry(row, payload.value);
+    case "fulfillment_step_rejected":
+      return toFulfillmentStepRejectedEntry(row, payload.value);
+    case "fulfillment_document_uploaded":
+      return toFulfillmentDocumentUploadedEntry(row, payload.value);
+    case "fulfillment_completed":
+      return toFulfillmentCompletedEntry(row);
     case "note_added":
       return toNoteEntry(row, payload.value);
     case "lead_deleted":

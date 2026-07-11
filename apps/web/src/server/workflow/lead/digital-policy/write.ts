@@ -1,6 +1,7 @@
 import type { SaveDigitalPolicyInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
@@ -13,12 +14,13 @@ import { authorizeLeadAction } from "../../lead/domain/policy";
 import { runLeadTransaction } from "../write/transition";
 
 export async function saveDigitalPolicyCommand(
-  input: SaveDigitalPolicyInput & {
+  input: Omit<SaveDigitalPolicyInput, "leadId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {

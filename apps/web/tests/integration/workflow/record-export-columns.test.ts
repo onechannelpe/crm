@@ -1,30 +1,42 @@
+import { MERCHANT } from "@tests/support/database/workflow-defaults";
+import {
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
+import { seedRateProposal } from "@tests/support/database/workflow-seed";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { MERCHANT } from "@tests/support/workflow/fixtures";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+
+import { WorkflowRateProposalId } from "~/server/shared/ids";
 
 describe("integration record export columns", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("integration-record-export-columns");
-    runtime.now.set(2_000);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
   });
 
-  it("exports lead commercial snapshot and the latest quotation rates", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const executiveId = scenario.actor.by("execOne").userId;
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(new Date(2_000));
+  });
 
-    const withData = await scenario.lead.atStage("PRICING", {
+  it("exports lead commercial snapshot and the latest quotation rates", async () => {
+    const givenLead = createLeadFixtureWriter(runtime);
+    const executiveId = actorBy("execOne").userId;
+
+    const withData = await givenLead({
+      kind: "pricing",
       key: "export-with-data",
       organization: { key: "export-with-data" },
+      proposal: "none",
       commercial: {
         currentProvider: "Niubiz",
         currentDebitRate: 3.5,
@@ -34,7 +46,8 @@ describe("integration record export columns", () => {
         posCount: 3,
       },
     });
-    const withoutData = await scenario.lead.atStage("QUALIFYING", {
+    const withoutData = await givenLead({
+      kind: "qualifying",
       key: "export-without-data",
       organization: { key: "export-without-data" },
     });
@@ -42,8 +55,8 @@ describe("integration record export columns", () => {
     // Two versions pinned to specific rounds: the export must surface the
     // highest-version (latest) rates. Proposals are direct-seeded because this is a
     // projection test, not a test of how proposals are created.
-    await scenario.seedDirect.rateProposal({
-      id: "quote-old",
+    await seedRateProposal(runtime, {
+      id: WorkflowRateProposalId.trust("quote-old"),
       leadId: withData.id,
       round: 1,
       proposedDebitRate: 1.0,
@@ -53,11 +66,11 @@ describe("integration record export columns", () => {
       paybackPricing: 10,
       proposedBy: executiveId,
       outcome: "revision_requested",
-      proposedAt: 1_000,
-      decidedAt: 1_200,
+      proposedAt: new Date(1_000),
+      decidedAt: new Date(1_200),
     });
-    await scenario.seedDirect.rateProposal({
-      id: "quote-latest",
+    await seedRateProposal(runtime, {
+      id: WorkflowRateProposalId.trust("quote-latest"),
       leadId: withData.id,
       round: 2,
       proposedDebitRate: 1.5,
@@ -67,14 +80,14 @@ describe("integration record export columns", () => {
       paybackPricing: 11,
       proposedBy: executiveId,
       outcome: "pending",
-      proposedAt: 1_500,
+      proposedAt: new Date(1_500),
       decidedAt: null,
     });
 
     const rows = await runtime.integrations.recordExportQuery.export({
       actorUserId: executiveId,
       actorRole: "superuser",
-      actorBranchId: 1,
+      actorBranchId: actorBy("execOne").branchId,
     });
 
     const enriched = rows.find((row) => row.id === withData.id);

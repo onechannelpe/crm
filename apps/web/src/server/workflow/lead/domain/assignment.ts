@@ -1,10 +1,11 @@
 import { type LeadStage } from "~/contracts/workflow/vocabulary";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export function ensureCanReassignLead(input: {
-  currentExecutiveId: number;
-  newExecutiveId: number;
+  currentExecutiveId: UserId;
+  newExecutiveId: UserId;
 }): Result<void, DomainError> {
   if (input.currentExecutiveId === input.newExecutiveId) {
     return Err(fail("same_executive"));

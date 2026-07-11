@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { IntegrationJobId, UserId } from "~/server/shared/ids";
 import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
@@ -7,14 +8,19 @@ import { applyLeadMutation } from "./lead-mutation-writer";
 import { stageImportRows } from "./staging-repo";
 import type { ImportRowInput, RowResult } from "./types";
 
+interface ImportApplyPorts {
+  executor: DatabaseExecutor;
+  now: Date;
+}
+
 function resultSort(a: RowResult, b: RowResult): number {
   return a.row - b.row;
 }
 
 async function loadImportActor(
   executor: DatabaseExecutor,
-  actorId: number,
-): Promise<{ userId: number; role: Role }> {
+  actorId: UserId,
+): Promise<{ userId: UserId; role: Role }> {
   const user = await executor
     .selectFrom("users")
     .select(["id", "role"])
@@ -26,8 +32,8 @@ async function loadImportActor(
 
 export async function applyImportRows(
   input: {
-    jobId: string;
-    actorId: number;
+    jobId: IntegrationJobId;
+    actorId: UserId;
     validRows: ImportRowInput[];
     invalidRows: Array<{
       row: number;
@@ -41,14 +47,14 @@ export async function applyImportRows(
     }) => void;
     progressEveryRows?: number;
   },
-  executor: DatabaseExecutor,
+  ports: ImportApplyPorts,
 ): Promise<{
   results: RowResult[];
   applied: number;
   failed: number;
 }> {
   const rowsTotal = input.validRows.length + input.invalidRows.length;
-  const now = Date.now();
+  const { executor, now } = ports;
   const results: RowResult[] = input.invalidRows.map((row) => ({
     row: row.row,
     ok: false,
@@ -90,8 +96,8 @@ export async function applyImportRows(
 
     await stageImportRows(trx, input.jobId, sortedRows, input.invalidRows, now);
 
-    // Rows apply in file order inside one transaction so later rows see earlier
-    // mutations and the outbox plan matches the committed import sequence.
+    // File order matters: later rows must see earlier mutations so the outbox
+    // plan matches the committed import sequence.
     /* eslint-disable no-await-in-loop */
     for (const row of sortedRows) {
       const mutationResult = await applyLeadMutation({
@@ -99,7 +105,7 @@ export async function applyImportRows(
         jobId: input.jobId,
         actor,
         row,
-        now: Date.now(),
+        now,
       });
       results.push(mutationResult.rowResult);
       if (!mutationResult.ok) {
@@ -114,7 +120,7 @@ export async function applyImportRows(
     }
     /* eslint-enable no-await-in-loop */
 
-    await enqueueLeadEffects(trx, committedEvents, Date.now());
+    await enqueueLeadEffects(trx, committedEvents, now);
   });
   emitProgress(true);
 

@@ -4,8 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { Role } from "~/lib/auth/access/rbac";
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { maxUploadBytesForArtifactType } from "~/server/files/validators";
+import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
@@ -21,6 +20,8 @@ import {
   type DomainError,
   throwDomain,
 } from "~/server/shared/domain-error";
+import type { BranchId, UserId } from "~/server/shared/ids";
+import { IntegrationJobId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -56,7 +57,7 @@ function parseImportUpload(
     return Err(fail("unsupported_file_type"));
   }
 
-  if (file.size > maxUploadBytesForArtifactType("integration_import")) {
+  if (file.size > maxUploadBytesForFilePurpose("integration_import")) {
     return Err(fail("file_too_large"));
   }
 
@@ -65,11 +66,11 @@ function parseImportUpload(
 
 async function getAuthorizedRecordImportJob(
   actor: {
-    userId: number;
-    branchId: number;
+    userId: UserId;
+    branchId: BranchId;
     role: Role;
   },
-  jobId: string,
+  jobId: IntegrationJobId,
 ): Promise<IntegrationJobRow> {
   const { integration } = getServerRuntime().integrations;
 
@@ -160,8 +161,6 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         }),
       );
 
-      runtime.queueDoorbell.wake(JOB_CHANNELS.RECORDS_IMPORT, jobId);
-
       return Ok({ jobId, importType, rowsTotal });
     },
   });
@@ -176,7 +175,7 @@ export async function getRecordImportJob(
 
     parse: () =>
       parseObject({ jobId: rawJobId }, validationFail, (r) => ({
-        jobId: r.str("jobId"),
+        jobId: r.id("jobId", IntegrationJobId),
       })),
 
     audit: (query) => ({ jobId: query.jobId }),

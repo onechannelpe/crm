@@ -1,4 +1,5 @@
 import type { DomainError } from "~/server/shared/domain-error";
+import { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 
@@ -7,10 +8,10 @@ import {
   optionalLeadPriority,
   optionalLeadStatus,
   optionalString,
+  requireCloseReason,
   requireLeadPriority,
   requireLeadStage,
   requireLeadStatus,
-  requireNumber,
   requireString,
 } from "./history-payload-fields";
 
@@ -84,6 +85,30 @@ export function toReservationExpiredEntry(
   });
 }
 
+export function toLeadClosedEntry(
+  row: HistoryEventRow,
+  payload: Record<string, unknown> | null,
+): Result<LeadHistoryEntry, DomainError> {
+  const reason = requireCloseReason(payload, "reason", row);
+  if (!reason.ok) return reason;
+
+  const note = optionalString(payload, "note", row);
+  if (!note.ok) return note;
+
+  const fromStage = requireLeadStage(payload, "fromStage", row);
+  if (!fromStage.ok) return fromStage;
+
+  return Ok({
+    ...toHistoryEntryBase(row),
+    eventType: "lead_closed",
+    payload: {
+      reason: reason.value,
+      note: note.value ?? null,
+      fromStage: fromStage.value,
+    },
+  });
+}
+
 export function toStatusUpdatedEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
@@ -153,7 +178,7 @@ export function toAssignmentEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
-  const executiveId = requireNumber(payload, "executiveId", row);
+  const executiveId = requireString(payload, "executiveId", row);
   if (!executiveId.ok) return executiveId;
 
   const reason = optionalString(payload, "reason", row);
@@ -162,7 +187,10 @@ export function toAssignmentEntry(
   return Ok({
     ...toHistoryEntryBase(row),
     eventType: "lead_assigned",
-    payload: { executiveId: executiveId.value, reason: reason.value },
+    payload: {
+      executiveId: UserId.trust(executiveId.value),
+      reason: reason.value,
+    },
   });
 }
 
@@ -170,10 +198,10 @@ export function toReassignmentEntry(
   row: HistoryEventRow,
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
-  const fromExecutiveId = requireNumber(payload, "fromExecutiveId", row);
+  const fromExecutiveId = requireString(payload, "fromExecutiveId", row);
   if (!fromExecutiveId.ok) return fromExecutiveId;
 
-  const toExecutiveId = requireNumber(payload, "toExecutiveId", row);
+  const toExecutiveId = requireString(payload, "toExecutiveId", row);
   if (!toExecutiveId.ok) return toExecutiveId;
 
   const reason = optionalString(payload, "reason", row);
@@ -183,8 +211,8 @@ export function toReassignmentEntry(
     ...toHistoryEntryBase(row),
     eventType: "lead_reassigned",
     payload: {
-      fromExecutiveId: fromExecutiveId.value,
-      toExecutiveId: toExecutiveId.value,
+      fromExecutiveId: UserId.trust(fromExecutiveId.value),
+      toExecutiveId: UserId.trust(toExecutiveId.value),
       reason: reason.value,
     },
   });

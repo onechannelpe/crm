@@ -1,24 +1,65 @@
-import { randomUUIDv7 } from "bun";
-
+import { notify } from "~/lib/db/notify";
+import { createJobStore } from "~/lib/job-queue/job-store";
+import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
 import type {
   IntegrationJobRow,
-  IntegrationJobType,
+  IntegrationJobsPort,
   NewIntegrationJob,
 } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { IntegrationJobId } from "~/server/shared/ids";
 
-export function createIntegrationJobRepo(db: DatabaseExecutor) {
+const JOB_COLUMNS = [
+  "id",
+  "type",
+  "status",
+  "created_at",
+  "completed_at",
+  "error_message",
+  "rows_total",
+  "rows_applied",
+  "rows_failed",
+  "results_json",
+  "available_at",
+  "lease_owner",
+  "lease_until",
+  "file_path",
+  "requested_by_user_id",
+  "attempt_count",
+  "max_attempts",
+] as const;
+
+export function createIntegrationJobRepo(
+  db: DatabaseExecutor,
+): IntegrationJobsPort {
+  // `status` mirrors queue_state 1:1 via JOB_TABLE_LIFECYCLE; the store stamps
+  // completed_at and error_message on settle.
+  const store = createJobStore<IntegrationJobRow, IntegrationJobRow["id"]>(
+    db,
+    "workflow_integration_jobs",
+    JOB_COLUMNS,
+  );
+
   return {
-    async insert(values: NewIntegrationJob): Promise<string> {
-      const id = randomUUIDv7();
-      await db
+    store,
+    async insert(values: NewIntegrationJob): Promise<IntegrationJobRow["id"]> {
+      const row = await db
         .insertInto("workflow_integration_jobs")
-        .values({ ...values, id })
+        .values({
+          ...values,
+          queue_state: "pending",
+          available_at: values.created_at,
+        })
+        .returning("id")
         .executeTakeFirstOrThrow();
-      return id;
+
+      // Wake the records-import queue on the same executor the job was written
+      // on, so a wrapping transaction buffers the NOTIFY until commit.
+      notify(db, JOB_TABLE_CHANNELS.workflow_integration_jobs);
+      return row.id;
     },
 
-    findById(id: string) {
+    findById(id: IntegrationJobId) {
       return db
         .selectFrom("workflow_integration_jobs")
         .selectAll()
@@ -36,104 +77,8 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async claimPending(
-      leaseMs: number,
-      workerId: string,
-      batchSize: number,
-      types?: IntegrationJobType[],
-    ): Promise<IntegrationJobRow[]> {
-      const now = Date.now();
-      const leaseUntil = now + leaseMs;
-
-      let query = db
-        .selectFrom("workflow_integration_jobs")
-        .select(["id", "status", "lease_until"])
-        .where((eb) =>
-          eb.and([
-            eb("status", "=", "PENDING"),
-            eb.or([
-              eb("available_at", "is", null),
-              eb("available_at", "<=", now),
-            ]),
-            eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
-          ]),
-        );
-
-      if (types && types.length > 0) {
-        query = query.where("type", "in", types);
-      }
-
-      const candidates = await query
-        .orderBy("created_at", "asc")
-        .limit(batchSize)
-        .execute();
-
-      if (candidates.length === 0) return [];
-
-      const ids = candidates.map((row) => row.id);
-      let updateQuery = db
-        .updateTable("workflow_integration_jobs")
-        .set((eb) => ({
-          status: "PROCESSING",
-          lease_owner: workerId,
-          lease_until: leaseUntil,
-          attempt_count: eb("attempt_count", "+", 1),
-        }))
-        .where("id", "in", ids)
-        .where((eb) =>
-          eb.and([
-            eb("status", "=", "PENDING"),
-            eb.or([
-              eb("available_at", "is", null),
-              eb("available_at", "<=", now),
-            ]),
-            eb.or([eb("lease_until", "is", null), eb("lease_until", "<", now)]),
-          ]),
-        );
-
-      if (types && types.length > 0) {
-        updateQuery = updateQuery.where("type", "in", types);
-      }
-
-      await updateQuery.execute();
-
-      return db
-
-        .selectFrom("workflow_integration_jobs")
-        .selectAll()
-        .where("id", "in", ids)
-        .where("status", "=", "PROCESSING")
-        .where("lease_owner", "=", workerId)
-        .execute();
-    },
-
-    markCompleted(
-      id: string,
-      result: {
-        rowsTotal: number;
-        rowsApplied: number;
-        rowsFailed: number;
-        resultsJson: string | null;
-      },
-    ) {
-      return db
-        .updateTable("workflow_integration_jobs")
-        .set({
-          status: "COMPLETED",
-          rows_total: result.rowsTotal,
-          rows_applied: result.rowsApplied,
-          rows_failed: result.rowsFailed,
-          results_json: result.resultsJson,
-          completed_at: Date.now(),
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .execute();
-    },
-
     updateProgress(
-      id: string,
+      id: IntegrationJobId,
       progress: {
         rowsTotal?: number;
         rowsApplied?: number;
@@ -166,51 +111,7 @@ export function createIntegrationJobRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async extendLease(
-      id: string,
-      workerId: string,
-      leaseMs: number,
-    ): Promise<boolean> {
-      const now = Date.now();
-      const result = await db
-        .updateTable("workflow_integration_jobs")
-        .set({ lease_until: now + leaseMs })
-        .where("id", "=", id)
-        .where("lease_owner", "=", workerId)
-        .where("status", "=", "PROCESSING")
-        .executeTakeFirst();
-
-      return Number(result.numUpdatedRows ?? 0) > 0;
-    },
-
-    scheduleRetry(id: string, availableAt: number) {
-      return db
-        .updateTable("workflow_integration_jobs")
-        .set({
-          status: "PENDING",
-          available_at: availableAt,
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .execute();
-    },
-
-    markFailed(id: string, errorMessage: string) {
-      return db
-        .updateTable("workflow_integration_jobs")
-        .set({
-          status: "FAILED",
-          error_message: errorMessage,
-          completed_at: Date.now(),
-          lease_owner: null,
-          lease_until: null,
-        })
-        .where("id", "=", id)
-        .execute();
-    },
-
-    setFilePath(id: string, filePath: string) {
+    setFilePath(id: IntegrationJobId, filePath: string) {
       return db
         .updateTable("workflow_integration_jobs")
         .set({ file_path: filePath })

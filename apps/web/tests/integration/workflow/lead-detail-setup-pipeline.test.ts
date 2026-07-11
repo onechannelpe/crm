@@ -1,15 +1,19 @@
 import { expectOk } from "@tests/support/_core/assertions";
 import {
-  createTestRuntime,
-  type TestRuntime,
-} from "@tests/support/runtime/app";
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
 import {
   workflowCommandPorts,
   workflowRepos,
-} from "@tests/support/workflow/deps";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+} from "@tests/support/integration/workflow-ports";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { WorkflowVenueId } from "~/server/shared/ids";
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
@@ -18,24 +22,28 @@ import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
 describe("lead detail setup pipeline", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-lead-detail-setup-pipeline");
-    runtime.now.set(1_000);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
   });
 
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(new Date(1_000));
+  });
+
   it("composes profile from lead commercial scope, organization, and optional digital policy", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("SETUP", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "setup",
       key: "detail-profile",
       organization: {
         key: "detail-profile",
         legalName: "Acme SAC",
-        giroNegocio: "Retail",
+        lineOfBusiness: "Retail",
       },
       commercial: {
         currentProvider: "Izipay",
@@ -65,7 +73,7 @@ describe("lead detail setup pipeline", () => {
       currentCreditRate: 3.4,
       gpv: 80_000,
       ticket: 150,
-      giroNegocio: "Retail",
+      lineOfBusiness: "Retail",
       settlementBank: "BCP",
       posCount: 4,
       linkScope: "none",
@@ -108,9 +116,9 @@ describe("lead detail setup pipeline", () => {
   });
 
   it("persists per-venue digital configuration and clears setup blockers when venue accounts are complete", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("SETUP", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "setup",
       key: "detail-venue-digital",
       organization: { key: "detail-venue-digital" },
     });
@@ -173,7 +181,7 @@ describe("lead detail setup pipeline", () => {
         {
           actor,
           leadId: lead.id,
-          venueId: withVenue.venues[0].id,
+          venueId: WorkflowVenueId.trust(withVenue.venues[0].id),
           solesAccount: {
             currency: "PEN",
             banco: "BCP",
@@ -194,7 +202,7 @@ describe("lead detail setup pipeline", () => {
         leadId: lead.id,
       }),
     );
-    expect(completed.lead.stage).toBe("LIVE");
+    expect(completed.lead.stage).toBe("FULFILLMENT");
     expect(completed.blockingFields).toEqual([]);
     expect(completed.venues[0].solesAccount).toMatchObject({
       currency: "PEN",

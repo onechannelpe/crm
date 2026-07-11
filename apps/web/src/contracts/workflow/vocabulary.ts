@@ -3,8 +3,71 @@ export const LEAD_STAGES = [
   "DISQUALIFIED",
   "PRICING",
   "SETUP",
+  "FULFILLMENT",
   "LIVE",
   "EXPIRED",
+  "CLOSED_LOST",
+] as const;
+
+// Reasons an executive closes a quotation as lost. Recorded on the lead_closed
+// history event so the business can report on why deals fall through at pricing.
+// Distinct from DISQUALIFIED, which is a back-office availability call at
+// qualifying, not an executive commercial loss.
+export const CLOSE_REASONS = [
+  "RATE",
+  "CULQI_REFERENCES",
+  "DECLINED_TAX_REPORT",
+  "QUOTE_DELAYS",
+  "BCP_REFUSAL",
+  "OTHER_CHANNEL_QUOTE",
+  "POS_COST_REFUSAL",
+] as const;
+
+export const PRODUCT_KINDS = [
+  "pos_new",
+  "pos_refurbished",
+  "digital_only",
+] as const;
+
+export const FULFILLMENT_STEPS = [
+  "CHOOSE_PRODUCT",
+  // Refurbished branch: back office uploads the transactions report, then
+  // a signed addendum, then compiles the PDF, then records the serials.
+  "AWAITING_TRANSACTIONS_REPORT",
+  "AWAITING_ADDENDUM",
+  "AWAITING_SIGNATURE",
+  "AWAITING_PDF_COMPILE",
+  "AWAITING_SERIALS",
+  // New-POS branch: back office records the serial back from the field, then
+  // generates a payment link, then waits for payment and validation.
+  "AWAITING_SERIAL_ENTRY",
+  "AWAITING_PAYMENT_LINK",
+  "AWAITING_PAYMENT",
+  "AWAITING_PAYMENT_VALIDATION",
+  // Shared tail: register the sale, then close.
+  "AWAITING_SALE_REGISTRATION",
+  "COMPLETED",
+] as const;
+
+export const FULFILLMENT_DOC_KINDS = [
+  "transactions_report",
+  "addendum_unsigned",
+  "addendum_signed_photo",
+  "addendum_signed_pdf",
+  "payment_proof",
+] as const;
+
+export const FULFILLMENT_ACTIONS = [
+  "choose_product",
+  "upload_transactions_report",
+  "generate_addendum",
+  "submit_signed_addendum",
+  "compile_signed_pdf",
+  "record_serials",
+  "register_payment_link",
+  "upload_payment_proof",
+  "validate_payment",
+  "register_sale",
 ] as const;
 
 export const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;
@@ -21,6 +84,7 @@ const LEAD_NEXT_STEPS = [
   "ACCEPT_RATE",
   "DEFINE_DIGITAL_POLICY",
   "REGISTER_VENUE_ACCOUNTS",
+  "COMPLETE_FULFILLMENT",
 ] as const;
 export const CURRENCIES = ["PEN", "USD"] as const;
 export const SETTLEMENT_BANKS = [
@@ -41,6 +105,11 @@ export const ACCOUNT_TYPE_KINDS = ["AHORROS", "CORRIENTE"] as const;
 
 export type ProductScope = (typeof PRODUCT_SCOPES)[number];
 export type LeadStage = (typeof LEAD_STAGES)[number];
+export type CloseReason = (typeof CLOSE_REASONS)[number];
+export type ProductKind = (typeof PRODUCT_KINDS)[number];
+export type FulfillmentStep = (typeof FULFILLMENT_STEPS)[number];
+export type FulfillmentDocKind = (typeof FULFILLMENT_DOC_KINDS)[number];
+export type FulfillmentAction = (typeof FULFILLMENT_ACTIONS)[number];
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export type LeadPriority = (typeof LEAD_PRIORITIES)[number];
 export type LeadNextStep = (typeof LEAD_NEXT_STEPS)[number];
@@ -48,6 +117,25 @@ export type Currency = (typeof CURRENCIES)[number];
 export type SettlementBank = (typeof SETTLEMENT_BANKS)[number];
 export type CollectionMode = (typeof COLLECTION_MODES)[number];
 export type AccountTypeKind = (typeof ACCOUNT_TYPE_KINDS)[number];
+
+function isStringMember<const T extends readonly string[]>(
+  values: T,
+  value: string,
+): value is T[number] {
+  return values.some((member) => member === value);
+}
+
+export function isProductKind(value: string): value is ProductKind {
+  return isStringMember(PRODUCT_KINDS, value);
+}
+
+export function isFulfillmentAction(value: string): value is FulfillmentAction {
+  return isStringMember(FULFILLMENT_ACTIONS, value);
+}
+
+export function isCloseReason(value: string): value is CloseReason {
+  return isStringMember(CLOSE_REASONS, value);
+}
 
 export function isBcpBank(value: string | null | undefined): boolean {
   return (value ?? "").trim().toUpperCase() === "BCP";

@@ -2,16 +2,17 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 type LeadSourcingPolicy = {
-  branchId: number;
+  branchId: BranchId;
   engineAssignmentEnabled: boolean;
-  updatedAt: number;
-  updatedByUserId: number;
+  updatedAt: Date;
+  updatedByUserId: UserId;
 };
 
 export type LeadSourcingPolicyRepository = {
-  findByBranchId(branchId: number): Promise<LeadSourcingPolicy | undefined>;
+  findByBranchId(branchId: BranchId): Promise<LeadSourcingPolicy | undefined>;
   upsert(values: LeadSourcingPolicy): Promise<unknown>;
 };
 
@@ -21,7 +22,7 @@ type NewSourcingPolicyRow = Insertable<Database["lead_sourcing_policies"]>;
 function toLeadSourcingPolicy(row: SourcingPolicyRow): LeadSourcingPolicy {
   return {
     branchId: row.branch_id,
-    engineAssignmentEnabled: row.engine_assignment_enabled === 1,
+    engineAssignmentEnabled: row.engine_assignment_enabled,
     updatedAt: row.updated_at,
     updatedByUserId: row.updated_by_user_id,
   };
@@ -30,7 +31,7 @@ function toLeadSourcingPolicy(row: SourcingPolicyRow): LeadSourcingPolicy {
 export function createSourcingPolicyRepo(db: DatabaseExecutor) {
   return {
     async findByBranchId(
-      branchId: number,
+      branchId: BranchId,
     ): Promise<LeadSourcingPolicy | undefined> {
       const row = await db
         .selectFrom("lead_sourcing_policies")
@@ -42,19 +43,17 @@ export function createSourcingPolicyRepo(db: DatabaseExecutor) {
     },
 
     upsert(values: LeadSourcingPolicy) {
-      const engineAssignmentEnabled = values.engineAssignmentEnabled ? 1 : 0;
-
       return db
         .insertInto("lead_sourcing_policies")
         .values({
           branch_id: values.branchId,
-          engine_assignment_enabled: engineAssignmentEnabled,
+          engine_assignment_enabled: values.engineAssignmentEnabled,
           updated_at: values.updatedAt,
           updated_by_user_id: values.updatedByUserId,
         } satisfies NewSourcingPolicyRow)
         .onConflict((oc) =>
           oc.column("branch_id").doUpdateSet({
-            engine_assignment_enabled: engineAssignmentEnabled,
+            engine_assignment_enabled: values.engineAssignmentEnabled,
             updated_at: values.updatedAt,
             updated_by_user_id: values.updatedByUserId,
           }),

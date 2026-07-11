@@ -1,20 +1,28 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
+  UserId,
+  WorkflowLeadId,
+  WorkflowRateRevisionFileId,
+  WorkflowRateRevisionId,
+} from "~/server/shared/ids";
+import type {
   RateRevision,
-  RateRevisionFile,
   SubmitReadyRevisionFile,
 } from "~/server/workflow/lead/domain/rows";
 
 export type RateRevisionRepository = {
   insert(values: RateRevision): Promise<void>;
-  insertFile(values: RateRevisionFile & { leadId: string }): Promise<void>;
+  attachFileToRevision(input: {
+    fileId: WorkflowRateRevisionFileId;
+    revisionId: WorkflowRateRevisionId;
+  }): Promise<void>;
   findSubmitReadyRevisionFile(input: {
-    artifactId: string;
-    leadId: string;
-    uploadedByUserId: number;
+    fileId: WorkflowRateRevisionFileId;
+    leadId: WorkflowLeadId;
+    uploadedByUserId: UserId;
   }): Promise<SubmitReadyRevisionFile | null>;
-  countByLeadId(leadId: string): Promise<number>;
-  listByLeadId(leadId: string): Promise<RateRevision[]>;
+  countByLeadId(leadId: WorkflowLeadId): Promise<number>;
+  listByLeadId(leadId: WorkflowLeadId): Promise<RateRevision[]>;
 };
 
 export function createRateRevisionRepo(
@@ -36,78 +44,29 @@ export function createRateRevisionRepo(
         .executeTakeFirstOrThrow();
     },
 
-    async insertFile(
-      values: RateRevisionFile & { leadId: string },
-    ): Promise<void> {
+    async attachFileToRevision(input): Promise<void> {
       await db
-        .insertInto("workflow_rate_revision_files")
-        .values({
-          lead_id: values.leadId,
-          revision_id: values.revisionId,
-          artifact_id: values.artifactId,
-          file_asset_id: values.fileAssetId,
-          uploaded_by_user_id: values.uploadedByUserId,
-          created_at: values.createdAt,
-        })
+        .updateTable("workflow_rate_revision_files")
+        .set({ revision_id: input.revisionId })
+        .where("id", "=", input.fileId)
+        .where("revision_id", "is", null)
         .executeTakeFirstOrThrow();
     },
 
-    async findSubmitReadyRevisionFile(input: {
-      artifactId: string;
-      leadId: string;
-      uploadedByUserId: number;
-    }) {
+    async findSubmitReadyRevisionFile(input) {
       const row = await db
-        .selectFrom("artifact_file_bindings")
-        .innerJoin(
-          "workflow_artifacts",
-          "workflow_artifacts.id",
-          "artifact_file_bindings.artifact_id",
-        )
-        .select([
-          "artifact_file_bindings.artifact_id as artifactId",
-          "artifact_file_bindings.file_asset_id as fileAssetId",
-        ])
-        .where("artifact_file_bindings.artifact_id", "=", input.artifactId)
-        .where("artifact_file_bindings.binding_role", "=", "source_upload")
-        .where("workflow_artifacts.artifact_type", "=", "rate_revision_file")
-        .where("workflow_artifacts.status", "=", "ready")
-        .where(
-          "workflow_artifacts.requested_by_user_id",
-          "=",
-          input.uploadedByUserId,
-        )
-        .where(
-          (eb) =>
-            eb.fn("json_extract", [
-              eb.ref("workflow_artifacts.workflow_context_json"),
-              eb.val("$.leadId"),
-            ]),
-          "=",
-          input.leadId,
-        )
-        .where((eb) =>
-          eb.not(
-            eb.exists(
-              eb
-                .selectFrom("workflow_rate_revision_files")
-                .select("id")
-                .whereRef(
-                  "workflow_rate_revision_files.artifact_id",
-                  "=",
-                  "artifact_file_bindings.artifact_id",
-                ),
-            ),
-          ),
-        )
+        .selectFrom("workflow_rate_revision_files")
+        .select(["id as fileId", "file_asset_id as fileAssetId"])
+        .where("id", "=", input.fileId)
+        .where("lead_id", "=", input.leadId)
+        .where("uploaded_by_user_id", "=", input.uploadedByUserId)
+        .where("revision_id", "is", null)
         .executeTakeFirst();
 
-      return row
-        ? { artifactId: row.artifactId, fileAssetId: row.fileAssetId }
-        : null;
+      return row ? { fileId: row.fileId, fileAssetId: row.fileAssetId } : null;
     },
 
-    async countByLeadId(leadId: string): Promise<number> {
+    async countByLeadId(leadId: WorkflowLeadId): Promise<number> {
       const row = await db
         .selectFrom("workflow_rate_revisions")
         .select((eb) => eb.fn.countAll<number>().as("count"))
@@ -116,7 +75,7 @@ export function createRateRevisionRepo(
       return row.count;
     },
 
-    async listByLeadId(leadId: string): Promise<RateRevision[]> {
+    async listByLeadId(leadId: WorkflowLeadId): Promise<RateRevision[]> {
       const rows = await db
         .selectFrom("workflow_rate_revisions")
         .selectAll()

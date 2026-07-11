@@ -1,35 +1,42 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
+  actorBy,
+  actorWithRole,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
+import { workflowRepos } from "@tests/support/integration/workflow-ports";
+import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { workflowRepos } from "@tests/support/workflow/deps";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 describe("workflow read access", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-read-access");
-    runtime.now.set(10);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
   });
 
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(new Date(10));
+  });
+
   it("lets review users read record detail even when they are not the assigned executive", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.seedDirect.leadAt("execOne", {
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "qualifying",
       key: "read-access-back-office",
       organization: { key: "read-access-back-office" },
-      stage: "QUALIFYING",
     });
 
-    const actor = scenario.actor.by("backOne");
+    const actor = actorBy("backOne");
     const result = await getLeadDetail(workflowRepos(runtime), {
       actorUserId: actor.userId,
       actorRole: actor.role,
@@ -44,14 +51,14 @@ describe("workflow read access", () => {
   it.each(["supervisor", "sales_manager"] as const)(
     "lets %s read record detail even when they are not the assigned executive",
     async (role) => {
-      const scenario = createWorkflowScenario(runtime);
-      const lead = await scenario.seedDirect.leadAt("execOne", {
+      const lead = await createLeadFixtureWriter(runtime)({
+        kind: "pricing",
         key: `read-access-${role}`,
         organization: { key: `read-access-${role}` },
-        stage: "PRICING",
+        proposal: "none",
       });
 
-      const actor = scenario.actor.withRole("backOne", role);
+      const actor = actorWithRole("backOne", role);
       const result = await getLeadDetail(workflowRepos(runtime), {
         actorUserId: actor.userId,
         actorRole: actor.role,
@@ -64,14 +71,13 @@ describe("workflow read access", () => {
   );
 
   it("blocks executives from reading another executive's record detail", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.seedDirect.leadAt("execOne", {
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "qualifying",
       key: "read-access-exec-blocked",
       organization: { key: "read-access-exec-blocked" },
-      stage: "QUALIFYING",
     });
 
-    const actor = scenario.actor.by("execTwo");
+    const actor = actorBy("execTwo");
     const result = await getLeadDetail(workflowRepos(runtime), {
       actorUserId: actor.userId,
       actorRole: actor.role,

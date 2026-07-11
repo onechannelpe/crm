@@ -1,63 +1,44 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
-  createTestRuntime,
-  type TestRuntime,
-} from "@tests/support/runtime/app";
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
+import { proposePendingRate } from "@tests/support/integration/pricing";
 import {
   workflowCommandPorts,
   workflowRepos,
-} from "@tests/support/workflow/deps";
-import { proposePendingRate } from "@tests/support/workflow/pricing";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+} from "@tests/support/integration/workflow-ports";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
+import { randomUUIDv7 } from "bun";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
+import {
+  WorkflowRateRevisionFileId,
+  WorkflowRateRevisionId,
+} from "~/server/shared/ids";
 import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
-type Scenario = ReturnType<typeof createWorkflowScenario>;
-
-// Cross-subsystem fixture: stages a rate-revision file artifact (workflow_artifacts +
-// file_assets + bindings). This is the files/upload subsystem, not workflow lead state, and
-// has no workflow command to reach it, so it is seeded directly here rather than driven.
-async function seedRateRevisionArtifact(
+async function seedRateRevisionFile(
   runtime: TestRuntime,
   input: {
-    artifactId: string;
-    leadId: string;
-    requestedByUserId: number;
-    status?: "ready" | "requested";
-    linkedRevisionId?: string;
+    fileId: WorkflowRateRevisionFileId;
+    leadId: WorkflowLeadId;
+    uploadedByUserId: UserId;
+    linkedRevisionId?: WorkflowRateRevisionId;
   },
 ): Promise<void> {
   const now = runtime.now.get();
-  await runtime.ctx.db
-    .insertInto("workflow_artifacts")
-    .values({
-      id: input.artifactId,
-      artifact_type: "rate_revision_file",
-      direction: "upload",
-      execution_mode: "async",
-      status: input.status ?? "ready",
-      requested_by_user_id: input.requestedByUserId,
-      scope_branch_id: 1,
-      scope_team_id: null,
-      policy_snapshot_json: "{}",
-      workflow_context_json: JSON.stringify({
-        kind: "rate_revision_file",
-        leadId: input.leadId,
-      }),
-      error_code: null,
-      error_message: null,
-      expires_at: null,
-      created_at: now,
-      updated_at: now,
-    })
-    .executeTakeFirstOrThrow();
 
-  const fileAsset = await runtime.ctx.db
+  const { id: fileAssetId } = await runtime.ctx.db
     .insertInto("file_assets")
     .values({
-      storage_key: `test/${input.artifactId}.xlsx`,
+      storage_key: `test/${input.fileId}.xlsx`,
+      purpose: "rate_revision_file",
       original_filename: "support.xlsx",
       safe_display_filename: "support.xlsx",
       detected_mime:
@@ -70,32 +51,20 @@ async function seedRateRevisionArtifact(
       scan_status: "clean",
       scan_engine: null,
       scan_reference: null,
+      created_by_user_id: input.uploadedByUserId,
       created_at: now,
     })
+    .returning("id")
     .executeTakeFirstOrThrow();
-  const fileAssetId = Number(fileAsset.insertId);
-
-  await runtime.ctx.db
-    .insertInto("artifact_file_bindings")
-    .values({
-      artifact_id: input.artifactId,
-      file_asset_id: fileAssetId,
-      binding_role: "source_upload",
-      version_no: 1,
-      created_at: now,
-    })
-    .executeTakeFirstOrThrow();
-
-  if (!input.linkedRevisionId) return;
 
   await runtime.ctx.db
     .insertInto("workflow_rate_revision_files")
     .values({
+      id: input.fileId,
       lead_id: input.leadId,
-      revision_id: input.linkedRevisionId,
-      artifact_id: input.artifactId,
+      revision_id: input.linkedRevisionId ?? null,
       file_asset_id: fileAssetId,
-      uploaded_by_user_id: input.requestedByUserId,
+      uploaded_by_user_id: input.uploadedByUserId,
       created_at: now,
     })
     .executeTakeFirstOrThrow();
@@ -104,17 +73,22 @@ async function seedRateRevisionArtifact(
 describe("request rate revision command", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-rate-revision");
-    runtime.now.set(1_000);
-  });
+  }, 30_000);
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
+  }, 30_000);
+
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(new Date(1_000));
   });
 
-  async function loadDetail(scenario: Scenario, leadId: string) {
-    const actor = scenario.actor.by("execOne");
+  async function loadDetail(leadId: WorkflowLeadId) {
+    const actor = actorBy("execOne");
+
     return expectOk(
       await getLeadDetail(workflowRepos(runtime), {
         actorUserId: actor.userId,
@@ -125,16 +99,19 @@ describe("request rate revision command", () => {
   }
 
   it("requires a pending proposal before opening a revision round", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("PRICING", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "pricing",
+      proposal: "none",
       key: "revision-no-proposal",
       organization: { key: "revision-no-proposal" },
     });
-    await seedRateRevisionArtifact(runtime, {
-      artifactId: "artifact-no-proposal",
+    const fileId = WorkflowRateRevisionFileId.trust(randomUUIDv7());
+
+    await seedRateRevisionFile(runtime, {
+      fileId,
       leadId: lead.id,
-      requestedByUserId: actor.userId,
+      uploadedByUserId: actor.userId,
     });
 
     const result = await requestRateRevisionCommand(
@@ -142,30 +119,33 @@ describe("request rate revision command", () => {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
-        artifactIds: ["artifact-no-proposal"],
+        fileIds: [fileId],
       },
       workflowCommandPorts(runtime),
     );
 
     expect(expectErr(result).code).toBe("rate_proposal_not_found");
-    expect((await loadDetail(scenario, lead.id)).rateRevisions).toHaveLength(0);
+    expect((await loadDetail(lead.id)).rateRevisions).toHaveLength(0);
   });
 
   it("creates a revision, links ready files, and marks the proposal decided", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("PRICING", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "pricing",
+      proposal: "none",
       key: "revision-ready",
       organization: { key: "revision-ready" },
     });
     const { proposalId } = await proposePendingRate(runtime, {
       leadId: lead.id,
-      backOffice: scenario.actor.by("backOne"),
+      backOffice: actorBy("backOne"),
     });
-    await seedRateRevisionArtifact(runtime, {
-      artifactId: "artifact-ready-1",
+    const fileId = WorkflowRateRevisionFileId.trust(randomUUIDv7());
+
+    await seedRateRevisionFile(runtime, {
+      fileId,
       leadId: lead.id,
-      requestedByUserId: actor.userId,
+      uploadedByUserId: actor.userId,
     });
 
     const result = await requestRateRevisionCommand(
@@ -173,42 +153,47 @@ describe("request rate revision command", () => {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
-        artifactIds: ["artifact-ready-1"],
+        fileIds: [fileId],
       },
       workflowCommandPorts(runtime),
     );
 
     expectOk(result);
 
-    const detail = await loadDetail(scenario, lead.id);
-    const proposal = detail.rateProposals.find((p) => p.id === proposalId);
-    expect(proposal?.outcome).toBe("revision_requested");
+    const detail = await loadDetail(lead.id);
+    const proposal = detail.rateProposals.find(
+      (candidate) => candidate.id === proposalId,
+    );
 
+    expect(proposal?.outcome).toBe("revision_requested");
     expect(detail.rateRevisions).toHaveLength(1);
     expect(detail.rateRevisions[0]).toMatchObject({
       round: 1,
       justification: "Need better rate",
     });
-    expect(detail.rateRevisions[0].files.map((f) => f.artifactId)).toEqual([
-      "artifact-ready-1",
+    expect(detail.rateRevisions[0].files.map((file) => file.fileId)).toEqual([
+      fileId,
     ]);
   });
 
-  it("rolls back when duplicate artifact ids fail transition validation", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("PRICING", {
+  it("rolls back when duplicate file ids fail transition validation", async () => {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "pricing",
+      proposal: "none",
       key: "revision-duplicate",
       organization: { key: "revision-duplicate" },
     });
     const { proposalId } = await proposePendingRate(runtime, {
       leadId: lead.id,
-      backOffice: scenario.actor.by("backOne"),
+      backOffice: actorBy("backOne"),
     });
-    await seedRateRevisionArtifact(runtime, {
-      artifactId: "artifact-dup",
+    const fileId = WorkflowRateRevisionFileId.trust(randomUUIDv7());
+
+    await seedRateRevisionFile(runtime, {
+      fileId,
       leadId: lead.id,
-      requestedByUserId: actor.userId,
+      uploadedByUserId: actor.userId,
     });
 
     const result = await requestRateRevisionCommand(
@@ -216,65 +201,66 @@ describe("request rate revision command", () => {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
-        artifactIds: ["artifact-dup", "artifact-dup"],
+        fileIds: [fileId, fileId],
       },
       workflowCommandPorts(runtime),
     );
 
     expect(expectErr(result).code).toBe("duplicate_rate_revision_file");
 
-    const detail = await loadDetail(scenario, lead.id);
+    const detail = await loadDetail(lead.id);
+
     expect(detail.rateRevisions).toHaveLength(0);
-    expect(detail.rateProposals.find((p) => p.id === proposalId)?.outcome).toBe(
-      "pending",
-    );
+    expect(
+      detail.rateProposals.find((proposal) => proposal.id === proposalId)
+        ?.outcome,
+    ).toBe("pending");
   });
 
   it.each([
     {
       name: "uploaded by another user",
-      artifactId: "artifact-other-user",
-      override: (scenario: Scenario) => ({
-        requestedByUserId: scenario.actor.by("execTwo").userId,
+      fileId: WorkflowRateRevisionFileId.trust(randomUUIDv7()),
+      override: () => ({
+        uploadedByUserId: actorBy("execTwo").userId,
       }),
     },
     {
-      name: "attached to another lead",
-      artifactId: "artifact-other-lead",
-      override: () => ({ leadId: "lead-external" }),
-    },
-    {
-      name: "not ready",
-      artifactId: "artifact-not-ready",
-      override: () => ({ status: "requested" as const }),
+      name: "unknown",
+      fileId: WorkflowRateRevisionFileId.trust(randomUUIDv7()),
+      seed: false,
     },
   ])(
     "rejects a staged file that is $name",
-    async ({ artifactId, override }) => {
-      const scenario = createWorkflowScenario(runtime);
-      const actor = scenario.actor.by("execOne");
-      const lead = await scenario.lead.atStage("PRICING", {
-        key: artifactId,
-        organization: { key: artifactId },
+    async ({ fileId, override, seed = true }) => {
+      const actor = actorBy("execOne");
+      const lead = await createLeadFixtureWriter(runtime)({
+        kind: "pricing",
+        proposal: "none",
+        key: fileId,
+        organization: { key: fileId },
       });
+
       await proposePendingRate(runtime, {
         leadId: lead.id,
-        backOffice: scenario.actor.by("backOne"),
+        backOffice: actorBy("backOne"),
       });
-      const artifactOverride = override(scenario);
-      await seedRateRevisionArtifact(runtime, {
-        artifactId,
-        leadId: lead.id,
-        requestedByUserId: actor.userId,
-        ...artifactOverride,
-      });
+
+      if (seed) {
+        await seedRateRevisionFile(runtime, {
+          fileId,
+          leadId: lead.id,
+          uploadedByUserId: actor.userId,
+          ...override?.(),
+        });
+      }
 
       const result = await requestRateRevisionCommand(
         {
           actor,
           leadId: lead.id,
           justification: "Need better rate",
-          artifactIds: [artifactId],
+          fileIds: [fileId],
         },
         workflowCommandPorts(runtime),
       );
@@ -282,30 +268,31 @@ describe("request rate revision command", () => {
       expect(expectErr(result).code).toBe(
         "rate_revision_file_not_submit_ready",
       );
-      expect((await loadDetail(scenario, lead.id)).rateRevisions).toHaveLength(
-        0,
-      );
+      expect((await loadDetail(lead.id)).rateRevisions).toHaveLength(0);
     },
   );
 
   it("rejects already linked revision files", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("PRICING", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "pricing",
+      proposal: "none",
       key: "revision-linked",
       organization: { key: "revision-linked" },
     });
     const { proposalId } = await proposePendingRate(runtime, {
       leadId: lead.id,
-      backOffice: scenario.actor.by("backOne"),
+      backOffice: actorBy("backOne"),
     });
-    // A revision that already owns the artifact, while the proposal is still pending:
-    // an edge a simple command sequence cannot reach (a real revision would decide the
-    // proposal), so it is seeded directly.
+
+    // This state cannot be reached through the normal command sequence because
+    // creating a revision decides the proposal, so the revision is seeded directly.
+    const revisionId = WorkflowRateRevisionId.trust("revision-existing");
+
     await runtime.ctx.db
       .insertInto("workflow_rate_revisions")
       .values({
-        id: "revision-existing",
+        id: revisionId,
         lead_id: lead.id,
         proposal_id: proposalId,
         round: 1,
@@ -313,12 +300,15 @@ describe("request rate revision command", () => {
         requested_by: actor.userId,
         requested_at: runtime.now.get(),
       })
-      .execute();
-    await seedRateRevisionArtifact(runtime, {
-      artifactId: "artifact-linked",
+      .executeTakeFirstOrThrow();
+
+    const fileId = WorkflowRateRevisionFileId.trust(randomUUIDv7());
+
+    await seedRateRevisionFile(runtime, {
+      fileId,
       leadId: lead.id,
-      requestedByUserId: actor.userId,
-      linkedRevisionId: "revision-existing",
+      uploadedByUserId: actor.userId,
+      linkedRevisionId: revisionId,
     });
 
     const result = await requestRateRevisionCommand(
@@ -326,12 +316,12 @@ describe("request rate revision command", () => {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
-        artifactIds: ["artifact-linked"],
+        fileIds: [fileId],
       },
       workflowCommandPorts(runtime),
     );
 
     expect(expectErr(result).code).toBe("rate_revision_file_not_submit_ready");
-    expect((await loadDetail(scenario, lead.id)).rateRevisions).toHaveLength(1);
+    expect((await loadDetail(lead.id)).rateRevisions).toHaveLength(1);
   });
 });

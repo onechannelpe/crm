@@ -14,8 +14,8 @@ export type DigitalPolicySnapshot = {
 
 export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
   switch (lead.stage) {
-    // Awaiting availability qualification, which happens via the export/import
-    // round-trip, not an in-app action. So there is no agent next step here.
+    // QUALIFYING advances via the export/import round-trip, not an in-app
+    // action: no agent next step.
     case "QUALIFYING":
       return "NO_ACTION";
     case "DISQUALIFIED":
@@ -24,9 +24,13 @@ export function resolveLeadNextStep(lead: { stage: LeadStage }): LeadNextStep {
       return "PROPOSE_RATE";
     case "SETUP":
       return "DEFINE_DIGITAL_POLICY";
+    case "FULFILLMENT":
+      return "COMPLETE_FULFILLMENT";
     case "LIVE":
       return "NO_ACTION";
     case "EXPIRED":
+      return "NO_ACTION";
+    case "CLOSED_LOST":
       return "NO_ACTION";
     default: {
       const exhaustive: never = lead.stage;
@@ -44,8 +48,10 @@ export function resolveLeadBlockingFields(input: {
     case "QUALIFYING":
     case "DISQUALIFIED":
     case "PRICING":
+    case "FULFILLMENT":
     case "LIVE":
     case "EXPIRED":
+    case "CLOSED_LOST":
       return [];
     case "SETUP": {
       const p = input.digitalPolicy;

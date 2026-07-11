@@ -1,6 +1,7 @@
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import type { Role } from "~/lib/auth/access/rbac";
 import type { DomainError } from "~/server/shared/domain-error";
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import {
   authorizeLeadAction,
@@ -18,9 +19,9 @@ import {
 export async function getLeadDetail(
   deps: LeadDetailQueryDeps,
   input: {
-    actorUserId: number;
+    actorUserId: UserId;
     actorRole: Role;
-    leadId: string;
+    leadId: WorkflowLeadId;
   },
 ): Promise<Result<LeadDetailView, DomainError>> {
   const loaded = await loadLeadDetailSections(deps, {
@@ -47,7 +48,7 @@ export async function getLeadDetail(
     : null;
 
   const latestProposal = loaded.value.rateProposals.at(-1);
-  const now = Date.now();
+  const now = new Date();
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
   const availableActions = resolveAvailableActions(
     { userId: input.actorUserId, role: input.actorRole },
@@ -56,6 +57,7 @@ export async function getLeadDetail(
       hasActivePendingProposal:
         latestProposal?.outcome === "pending" && isReservationActive(lead, now),
       rateRevisionCount: loaded.value.rateRevisionRows.length,
+      fulfillmentStep: loaded.value.fulfillment?.order.currentStep ?? null,
     },
   );
 
@@ -77,6 +79,7 @@ export async function getLeadDetail(
       sourceStatus: loaded.value.sourceStatus,
       organization: loaded.value.organization,
       legalRepresentative: loaded.value.legalRepresentative,
+      fulfillment: loaded.value.fulfillment,
     }),
   );
 }

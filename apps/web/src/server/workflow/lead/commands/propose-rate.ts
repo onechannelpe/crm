@@ -3,6 +3,10 @@ import { randomUUIDv7 } from "bun";
 import type { ProposeRateInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import {
+  WorkflowRateProposalId,
+  type WorkflowLeadId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -12,14 +16,15 @@ import { computeReservationExpiry } from "../../lead/domain/reservation";
 import { runLeadTransaction } from "../write/transition";
 
 export async function proposeRateCommand(
-  input: ProposeRateInput & {
+  input: Omit<ProposeRateInput, "leadId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
-): Promise<Result<{ proposalId: string }, DomainError>> {
+): Promise<Result<{ proposalId: WorkflowRateProposalId }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
@@ -28,7 +33,7 @@ export async function proposeRateCommand(
     }
 
     const round = await ctx.repos.rateProposals.nextRound(state.id);
-    const proposalId = randomUUIDv7();
+    const proposalId = WorkflowRateProposalId.trust(randomUUIDv7());
 
     const proposalPolicy = resolveRateProposalPolicy({
       branchPolicy: await ctx.repos.rateProposalPolicies.findByBranchId(

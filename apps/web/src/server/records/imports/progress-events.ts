@@ -2,12 +2,16 @@ import {
   type RecordImportProgressEvent,
   type RecordImportType,
 } from "~/features/records-imports/contracts";
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { publishMessage } from "~/lib/redis/publisher";
+import { db } from "~/lib/db/db";
+import { notify } from "~/lib/db/notify";
+import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
 import type {
   IntegrationJobRow,
+  IntegrationJobsPort,
   IntegrationJobStatus,
 } from "~/server/integrations/types";
+import { IntegrationJobId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 function toRecordImportType(type: IntegrationJobRow["type"]): RecordImportType {
   if (type === "import_status" || type === "import_prioridad") {
@@ -15,6 +19,20 @@ function toRecordImportType(type: IntegrationJobRow["type"]): RecordImportType {
   }
 
   throw new Error(`Unsupported record import type: ${type}`);
+}
+
+export async function findRecordImportJob(
+  jobs: Pick<IntegrationJobsPort, "findById">,
+  jobId: string,
+): Promise<IntegrationJobRow | null> {
+  const parsedJobId = IntegrationJobId.parse(jobId);
+  if (isErr(parsedJobId)) return null;
+  const job = await jobs.findById(parsedJobId.value);
+  if (job?.type !== "import_status" && job?.type !== "import_prioridad") {
+    return null;
+  }
+
+  return job;
 }
 
 export function buildRecordImportProgressEvent(input: {
@@ -49,5 +67,7 @@ export function buildRecordImportProgressEvent(input: {
 export function publishRecordImportProgress(
   event: RecordImportProgressEvent,
 ): void {
-  publishMessage(JOB_CHANNELS.RECORDS_IMPORT_PROGRESS, event);
+  // Progress is ephemeral and not part of any business transaction: fires on
+  // the pooled db handle and delivers immediately.
+  notify(db, RECORDS_IMPORT_PROGRESS_CHANNEL, JSON.stringify(event));
 }

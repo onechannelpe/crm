@@ -1,15 +1,18 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
-  createTestRuntime,
-  type TestRuntime,
-} from "@tests/support/runtime/app";
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
+import { proposePendingRate } from "@tests/support/integration/pricing";
 import {
   workflowCommandPorts,
   workflowRepos,
-} from "@tests/support/workflow/deps";
-import { proposePendingRate } from "@tests/support/workflow/pricing";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+} from "@tests/support/integration/workflow-ports";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { expireLapsedReservations } from "~/server/workflow/lead/commands/expire-reservation";
@@ -26,24 +29,29 @@ const RESERVATION_WINDOW_MS =
 describe("lead reservation expiry", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-reservation-expiry");
-    runtime.now.set(1_000);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
   });
 
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(new Date(1_000));
+  });
+
   it("retires a lead to EXPIRED once its hold lapses and the sweep runs", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const lead = await scenario.lead.atStage("PRICING", {
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "pricing",
+      proposal: "none",
       key: "expiry-sweep",
       organization: { key: "expiry-sweep" },
     });
     await proposePendingRate(runtime, {
       leadId: lead.id,
-      backOffice: scenario.actor.by("backOne"),
+      backOffice: actorBy("backOne"),
     });
 
     expect(
@@ -53,7 +61,9 @@ describe("lead reservation expiry", () => {
       ),
     ).toBe(0);
 
-    runtime.now.set(runtime.now.get() + RESERVATION_WINDOW_MS + 1);
+    runtime.now.set(
+      new Date(runtime.now.get().getTime() + RESERVATION_WINDOW_MS + 1),
+    );
     expect(
       await expireLapsedReservations(
         { executor: runtime.ctx.db },
@@ -61,7 +71,7 @@ describe("lead reservation expiry", () => {
       ),
     ).toBe(1);
 
-    const actor = scenario.actor.by("execOne");
+    const actor = actorBy("execOne");
     const detail = expectOk(
       await getLeadDetail(workflowRepos(runtime), {
         actorUserId: actor.userId,
@@ -74,18 +84,21 @@ describe("lead reservation expiry", () => {
   });
 
   it("rejects accepting a rate after the hold has lapsed", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("PRICING", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "pricing",
+      proposal: "none",
       key: "expiry-accept",
       organization: { key: "expiry-accept" },
     });
     const { proposalId } = await proposePendingRate(runtime, {
       leadId: lead.id,
-      backOffice: scenario.actor.by("backOne"),
+      backOffice: actorBy("backOne"),
     });
 
-    runtime.now.set(runtime.now.get() + RESERVATION_WINDOW_MS + 1);
+    runtime.now.set(
+      new Date(runtime.now.get().getTime() + RESERVATION_WINDOW_MS + 1),
+    );
 
     const result = await acceptRateCommand(
       {

@@ -1,7 +1,6 @@
-import { randomUUIDv7 } from "bun";
-
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
 import { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
@@ -15,30 +14,29 @@ export type LeadTransition = {
 };
 
 export type LeadAssignment = {
-  toExecutiveId: number;
-  assignedBy: number;
-  at: number;
+  toExecutiveId: UserId;
+  assignedBy: UserId;
+  at: Date;
 };
 
 async function replaceActiveAssignment(
   tx: DatabaseExecutor,
-  input: LeadAssignment & { leadId: string },
+  input: LeadAssignment & { leadId: WorkflowLeadId },
 ): Promise<void> {
   await tx
     .updateTable("workflow_lead_assignments")
-    .set({ is_active: 0 })
+    .set({ is_active: false })
     .where("lead_id", "=", input.leadId)
-    .where("is_active", "=", 1)
+    .where("is_active", "=", true)
     .execute();
 
   await tx
     .insertInto("workflow_lead_assignments")
     .values({
-      id: randomUUIDv7(),
       lead_id: input.leadId,
       executive_id: input.toExecutiveId,
       assigned_by: input.assignedBy,
-      is_active: 1,
+      is_active: true,
       assigned_at: input.at,
     })
     .execute();
@@ -87,7 +85,7 @@ export async function commitTransition(
 export async function appendFacts(
   tx: DatabaseExecutor,
   events: LeadHistoryEventDraft[],
-  now: number,
+  now: Date,
 ): Promise<Result<{ eventIds: string[] }, DomainError>> {
   const leadId = events[0]?.leadId;
   if (!leadId) return Ok({ eventIds: [] });

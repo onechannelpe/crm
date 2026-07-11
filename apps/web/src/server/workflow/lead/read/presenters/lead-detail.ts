@@ -1,5 +1,7 @@
 import type {
   LeadAvailableAction,
+  LeadDetailDisqualificationView,
+  LeadDetailFulfillmentView,
   LeadDetailLeadView,
   LeadDetailRateProposalView,
   LeadDetailRateRevisionView,
@@ -7,21 +9,26 @@ import type {
   LeadDetailView,
 } from "~/contracts/workflow/views";
 import type {
-  LegalRepresentative,
+  Membership,
   OrganizationProfile,
-} from "~/server/identity/organization/repo";
+} from "~/server/organization/organization-repo";
+import type { WorkflowRateRevisionFileId } from "~/server/shared/ids";
 import type { DigitalPolicy } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import type {
   LeadSourceStatus,
   RateProposal,
   RateRevision,
-  RateRevisionFile,
 } from "~/server/workflow/lead/domain/rows";
 import type {
   LeadCommercialScope,
   LeadState,
 } from "~/server/workflow/lead/domain/state";
+import type { FulfillmentOrderDetails } from "~/server/workflow/lead/fulfillment/repo";
+import {
+  fulfillmentProgress,
+  pendingOwnerForStep,
+} from "~/server/workflow/lead/fulfillment/steps";
 import {
   resolveLeadBlockingFields,
   resolveLeadNextStep,
@@ -35,16 +42,48 @@ import type {
   LeadDetailSourceStatusView,
 } from "./lead-detail-types";
 import { presentTimeline } from "./timeline";
+import { formatTimelineActorName } from "./timeline-actor-name";
+
+type LeadReviewedEntry = Extract<
+  LeadHistoryEntry,
+  { eventType: "lead_reviewed" }
+>;
+
+// The disqualification reason is not a stored column: it lives in the
+// lead_reviewed event that moved the lead to DISQUALIFIED. Read it back from the
+// latest such event so the terminal screen can explain "why" without new schema.
+function resolveDisqualification(
+  history: LeadHistoryEntry[],
+  stage: LeadState["stage"],
+  revealFullNames: boolean,
+): LeadDetailDisqualificationView | null {
+  if (stage !== "DISQUALIFIED") return null;
+
+  const reviewed = history
+    .toReversed()
+    .find(
+      (entry): entry is LeadReviewedEntry =>
+        entry.eventType === "lead_reviewed" &&
+        entry.payload.toStage === "DISQUALIFIED",
+    );
+
+  if (!reviewed) return null;
+
+  return {
+    reason: reviewed.payload.reason,
+    byName: formatTimelineActorName(reviewed.actor, revealFullNames),
+    at: reviewed.occurredAt,
+  };
+}
 
 export type RateRevisionWithFiles = {
   revision: RateRevision;
-  files: Array<
-    RateRevisionFile & {
-      safeDisplayFilename: string;
-      detectedMime: string;
-      sizeBytes: number;
-    }
-  >;
+  files: Array<{
+    id: WorkflowRateRevisionFileId;
+    safeDisplayFilename: string;
+    detectedMime: string;
+    sizeBytes: number;
+  }>;
 };
 
 export type LeadDetailSource = {
@@ -63,8 +102,43 @@ export type LeadDetailSource = {
   availableActions: LeadAvailableAction[];
   sourceStatus: LeadSourceStatus;
   organization: OrganizationProfile;
-  legalRepresentative: LegalRepresentative | undefined;
+  legalRepresentative: Membership | null;
+  fulfillment: FulfillmentOrderDetails | null;
 };
+
+function toFulfillmentView(
+  details: FulfillmentOrderDetails,
+): LeadDetailFulfillmentView {
+  return {
+    orderId: details.order.id,
+    productKind: details.order.productKind,
+    currentStep: details.order.currentStep,
+    pendingOwner: pendingOwnerForStep(details.order.currentStep),
+    steps: fulfillmentProgress(
+      details.order.productKind,
+      details.order.currentStep,
+    ),
+    units: details.units.map((unit) => ({
+      id: unit.id,
+      label: unit.label,
+      venueId: unit.venueId,
+      serial: unit.serial,
+      paymentUrl: unit.paymentUrl,
+      paymentProofFileId: unit.paymentProofFileAssetId,
+      serviceRef: unit.serviceRef,
+      paymentValidated: unit.paymentValidated,
+    })),
+    documents: details.documents.map((doc) => ({
+      docKind: doc.docKind,
+      fileId: doc.fileAssetId,
+      filename: doc.safeDisplayFilename,
+      detectedMime: doc.detectedMime,
+      sizeBytes: doc.sizeBytes,
+      uploadedByUserId: doc.uploadedByUserId,
+      uploadedAt: doc.createdAt.getTime(),
+    })),
+  };
+}
 
 function toLeadSourceStatus(
   sourceStatus: LeadSourceStatus,
@@ -72,7 +146,7 @@ function toLeadSourceStatus(
   return {
     sunat: {
       status: sourceStatus.sunat.status,
-      fetchedAt: sourceStatus.sunat.fetchedAt,
+      fetchedAt: sourceStatus.sunat.fetchedAt?.getTime() ?? null,
       district: sourceStatus.sunat.district,
       department: sourceStatus.sunat.department,
       contributorStatus: sourceStatus.sunat.contributorStatus,
@@ -109,9 +183,9 @@ function toLeadDetailLead(
     status: lead.status,
     priority: lead.priority,
     nextStep: resolveLeadNextStep(lead),
-    createdAt: lead.createdAt,
-    updatedAt: lead.updatedAt,
-    reservationExpiresAt: lead.reservationExpiresAt,
+    createdAt: lead.createdAt.getTime(),
+    updatedAt: lead.updatedAt.getTime(),
+    reservationExpiresAt: lead.reservationExpiresAt?.getTime() ?? null,
   };
 }
 
@@ -128,7 +202,7 @@ function toLeadDetailProfile(
     currentCreditRate: commercial.currentCreditRate,
     gpv: commercial.gpv,
     ticket: commercial.ticket,
-    giroNegocio: organization.giroNegocio,
+    lineOfBusiness: organization.lineOfBusiness,
     settlementBank: commercial.settlementBank,
     posCount: commercial.posCount,
     linkScope: digitalPolicy?.linkScope ?? "none",
@@ -139,16 +213,14 @@ function toLeadDetailProfile(
   };
 }
 
-function toLeadDetailRepLegal(
-  legalRepresentative: LegalRepresentative,
-): LeadDetailRepLegalView {
+function toLeadDetailRepLegal(rep: Membership): LeadDetailRepLegalView {
   return {
-    nombres: legalRepresentative.nombres,
-    apellidoPaterno: legalRepresentative.apellidoPaterno,
-    apellidoMaterno: legalRepresentative.apellidoMaterno,
-    dni: legalRepresentative.dni,
-    telefono: legalRepresentative.telefono ?? null,
-    email: legalRepresentative.email ?? null,
+    nombres: rep.person.names,
+    apellidoPaterno: rep.person.firstSurname ?? "",
+    apellidoMaterno: rep.person.secondSurname ?? "",
+    dni: rep.person.dni,
+    telefono: rep.phone,
+    email: rep.email,
   };
 }
 
@@ -167,8 +239,8 @@ function toRateProposalView(
     proposedForeignRate: proposal.proposedForeignRate,
     outcome: proposal.outcome,
     proposedBy: proposal.proposedBy,
-    proposedAt: proposal.proposedAt,
-    decidedAt: proposal.decidedAt,
+    proposedAt: proposal.proposedAt.getTime(),
+    decidedAt: proposal.decidedAt?.getTime() ?? null,
   };
 }
 
@@ -186,7 +258,7 @@ function toLeadDetailVenue(venue: LeadVenue): LeadDetailVenueView {
     district: venue.district,
     province: venue.province,
     department: venue.department,
-    createdAt: venue.createdAt,
+    createdAt: venue.createdAt.getTime(),
     createdBy: venue.createdBy,
   };
 
@@ -196,15 +268,14 @@ function toLeadDetailVenue(venue: LeadVenue): LeadDetailVenueView {
   return result;
 }
 
-function toRateRevisionFileView(
-  file: RateRevisionFile & {
-    safeDisplayFilename: string;
-    detectedMime: string;
-    sizeBytes: number;
-  },
-): LeadDetailRateRevisionFileView {
+function toRateRevisionFileView(file: {
+  id: WorkflowRateRevisionFileId;
+  safeDisplayFilename: string;
+  detectedMime: string;
+  sizeBytes: number;
+}): LeadDetailRateRevisionFileView {
   return {
-    artifactId: file.artifactId,
+    fileId: file.id,
     filename: file.safeDisplayFilename,
     detectedMime: file.detectedMime,
     sizeBytes: file.sizeBytes,
@@ -220,7 +291,7 @@ function toRateRevisionView(
     round: item.revision.round,
     justification: item.revision.justification,
     requestedBy: item.revision.requestedBy,
-    requestedAt: item.revision.requestedAt,
+    requestedAt: item.revision.requestedAt.getTime(),
     files: item.files.map(toRateRevisionFileView),
   };
 }
@@ -249,6 +320,9 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
     rateProposals: source.rateProposals.map(toRateProposalView),
     venues: source.venues.map(toLeadDetailVenue),
     rateRevisions: source.rateRevisions.map(toRateRevisionView),
+    fulfillment: source.fulfillment
+      ? toFulfillmentView(source.fulfillment)
+      : null,
     timeline: presentTimeline(source.history, source.canRevealFullTimeline),
     availableActions: source.availableActions,
     blockingFields: resolveLeadBlockingFields({
@@ -257,6 +331,11 @@ export function presentLeadDetail(source: LeadDetailSource): LeadDetailView {
       venuesWithAccountsCount: source.venues.filter((v) => v.solesAccount)
         .length,
     }),
+    disqualification: resolveDisqualification(
+      source.history,
+      source.lead.stage,
+      source.canRevealFullTimeline,
+    ),
     sourceStatus: toLeadSourceStatus(source.sourceStatus),
   };
 }

@@ -1,11 +1,19 @@
 import type { Currency } from "~/contracts/workflow/vocabulary";
 import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
+import type {
+  FileAssetId,
+  UserId,
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+  WorkflowRateRevisionId,
+  WorkflowRateRevisionFileId,
+} from "~/server/shared/ids";
 
 export type RateProposalOutcome = "pending" | "accepted" | "revision_requested";
 
 export type RateProposal = {
-  id: string;
-  leadId: string;
+  id: WorkflowRateProposalId;
+  leadId: WorkflowLeadId;
   round: number;
   proposedDebitRate: number;
   proposedCreditRate: number;
@@ -13,10 +21,10 @@ export type RateProposal = {
   fee: number;
   paybackPricing: number;
   currency: Currency;
-  proposedBy: number;
-  proposedAt: number;
+  proposedBy: UserId;
+  proposedAt: Date;
   outcome: RateProposalOutcome;
-  decidedAt: number | null;
+  decidedAt: Date | null;
 };
 
 export type RateProposalNumbers = {
@@ -29,26 +37,26 @@ export type RateProposalNumbers = {
 };
 
 export type RateRevision = {
-  id: string;
-  leadId: string;
-  proposalId: string;
+  id: WorkflowRateRevisionId;
+  leadId: WorkflowLeadId;
+  proposalId: WorkflowRateProposalId;
   round: number;
   justification: string;
-  requestedBy: number;
-  requestedAt: number;
+  requestedBy: UserId;
+  requestedAt: Date;
 };
 
 export type RateRevisionFile = {
-  revisionId: string;
-  artifactId: string;
-  fileAssetId: number;
-  uploadedByUserId: number;
-  createdAt: number;
+  id: WorkflowRateRevisionFileId;
+  revisionId: WorkflowRateRevisionId;
+  fileAssetId: FileAssetId;
+  uploadedByUserId: UserId;
+  createdAt: Date;
 };
 
 export type SubmitReadyRevisionFile = {
-  artifactId: string;
-  fileAssetId: number;
+  fileId: WorkflowRateRevisionFileId;
+  fileAssetId: FileAssetId;
 };
 
 export type SunatSourceStatus =
@@ -62,7 +70,7 @@ export type SunatSourceStatus =
 export type LeadSourceStatus = {
   sunat: {
     status: SunatSourceStatus;
-    fetchedAt: number | null;
+    fetchedAt: Date | null;
     district: string | null;
     department: string | null;
     contributorStatus: string | null;

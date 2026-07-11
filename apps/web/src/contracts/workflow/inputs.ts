@@ -6,14 +6,16 @@ import type {
   LeadStatus,
   CollectionMode,
   Currency,
+  CloseReason,
   ProductScope,
+  ProductKind,
 } from "./vocabulary";
 
 export type ListLeadsFiltersInput = {
   stage?: LeadStage;
   status?: LeadStatus;
   priority?: LeadPriority;
-  executiveId?: number;
+  executiveId?: string;
   anyFieldSearch?: string;
   updatedSinceMs?: number;
   updatedUntilMs?: number;
@@ -35,7 +37,7 @@ export type CommercialScope = {
   currentCreditRate: number;
   gpv: number;
   ticket: number;
-  giroNegocio: string;
+  lineOfBusiness: string;
   settlementBank: SettlementBank;
   posCount: number;
 };
@@ -46,7 +48,18 @@ export type EditCommercialScopeInput = { leadId: string } & CommercialScope;
 
 export type ReassignLeadInput = {
   leadId: string;
-  newExecutiveId: number;
+  newExecutiveId: string;
+};
+
+export type ReviewLeadInput = {
+  leadId: string;
+  status: LeadStatus;
+  priority: LeadPriority;
+  reason: string;
+};
+
+export type RestartQuotationInput = {
+  leadId: string;
 };
 
 export type AddLeadNoteInput = {
@@ -67,6 +80,12 @@ export type ProposeRateInput = {
 export type AcceptRateInput = {
   leadId: string;
   proposalId: string;
+};
+
+export type CloseLeadInput = {
+  leadId: string;
+  reason: CloseReason;
+  note: string | null;
 };
 
 export type EditRateProposalInput = {
@@ -125,5 +144,48 @@ export type AddVenueAccountsInput = {
 export type RequestRateRevisionInput = {
   leadId: string;
   justification: string;
-  artifactIds: string[];
+  fileIds: string[];
+};
+
+export type ChooseFulfillmentProductInput = {
+  leadId: string;
+  productKind: ProductKind;
+};
+
+export type AttachFulfillmentDocumentInput = {
+  leadId: string;
+  fileId: string;
+};
+
+export type RecordUnitSerialInput = {
+  leadId: string;
+  unitId: string;
+  serial: string;
+};
+
+export type RegisterUnitPaymentLinkInput = {
+  leadId: string;
+  unitId: string;
+  paymentUrl: string;
+};
+
+export type UploadUnitPaymentProofInput = {
+  leadId: string;
+  unitId: string;
+  fileId: string;
+};
+
+export type RegisterUnitSaleInput = {
+  leadId: string;
+  unitId: string;
+  serviceRef: string;
+};
+
+export type ValidateFulfillmentPaymentInput = {
+  leadId: string;
+};
+
+export type RejectFulfillmentStepInput = {
+  leadId: string;
+  reason: string;
 };

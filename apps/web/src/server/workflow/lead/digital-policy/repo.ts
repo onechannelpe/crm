@@ -6,6 +6,7 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
 
 export type DigitalPolicyFields = {
   linkScope: ProductScope;
@@ -16,19 +17,19 @@ export type DigitalPolicyFields = {
 };
 
 export type DigitalPolicy = {
-  leadId: string;
+  leadId: WorkflowLeadId;
 } & DigitalPolicyFields & {
-    updatedAt: number;
-    updatedBy: number;
+    updatedAt: Date;
+    updatedBy: UserId;
   };
 
 export type DigitalPolicyRepository = {
-  findByLeadId(leadId: string): Promise<DigitalPolicy | undefined>;
+  findByLeadId(leadId: WorkflowLeadId): Promise<DigitalPolicy | undefined>;
   upsert(values: {
-    leadId: string;
+    leadId: WorkflowLeadId;
     fields: DigitalPolicyFields;
-    updatedAt: number;
-    updatedBy: number;
+    updatedAt: Date;
+    updatedBy: UserId;
   }): Promise<void>;
 };
 
@@ -61,7 +62,9 @@ export function createDigitalPolicyRepo(
   db: DatabaseExecutor,
 ): DigitalPolicyRepository {
   return {
-    async findByLeadId(leadId: string): Promise<DigitalPolicy | undefined> {
+    async findByLeadId(
+      leadId: WorkflowLeadId,
+    ): Promise<DigitalPolicy | undefined> {
       const row = await db
         .selectFrom("workflow_lead_digital_policy")
         .selectAll()

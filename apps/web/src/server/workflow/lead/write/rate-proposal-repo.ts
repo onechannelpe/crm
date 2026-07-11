@@ -3,6 +3,10 @@ import type { Insertable, Selectable } from "kysely";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+} from "~/server/shared/ids";
+import type {
   RateProposal,
   RateProposalNumbers,
   RateProposalOutcome,
@@ -10,14 +14,17 @@ import type {
 
 export type RateProposalRepository = {
   insert(values: RateProposal): Promise<void>;
-  listByLeadId(leadId: string): Promise<RateProposal[]>;
-  findLatest(leadId: string): Promise<RateProposal | undefined>;
-  nextRound(leadId: string): Promise<number>;
-  updateNumbers(id: string, values: RateProposalNumbers): Promise<void>;
+  listByLeadId(leadId: WorkflowLeadId): Promise<RateProposal[]>;
+  findLatest(leadId: WorkflowLeadId): Promise<RateProposal | undefined>;
+  nextRound(leadId: WorkflowLeadId): Promise<number>;
+  updateNumbers(
+    id: WorkflowRateProposalId,
+    values: RateProposalNumbers,
+  ): Promise<void>;
   markOutcome(
-    id: string,
+    id: WorkflowRateProposalId,
     outcome: RateProposalOutcome,
-    decidedAt: number,
+    decidedAt: Date,
   ): Promise<void>;
 };
 
@@ -67,7 +74,7 @@ export function createRateProposalRepo(
         .executeTakeFirstOrThrow();
     },
 
-    async listByLeadId(leadId: string): Promise<RateProposal[]> {
+    async listByLeadId(leadId: WorkflowLeadId): Promise<RateProposal[]> {
       const rows = await db
         .selectFrom("workflow_rate_proposals")
         .selectAll()
@@ -78,7 +85,9 @@ export function createRateProposalRepo(
       return rows.map(toRateProposal);
     },
 
-    async findLatest(leadId: string): Promise<RateProposal | undefined> {
+    async findLatest(
+      leadId: WorkflowLeadId,
+    ): Promise<RateProposal | undefined> {
       const row = await db
         .selectFrom("workflow_rate_proposals")
         .selectAll()
@@ -91,7 +100,7 @@ export function createRateProposalRepo(
     },
 
     async updateNumbers(
-      id: string,
+      id: WorkflowRateProposalId,
       values: RateProposalNumbers,
     ): Promise<void> {
       await db
@@ -108,7 +117,7 @@ export function createRateProposalRepo(
         .execute();
     },
 
-    async nextRound(leadId: string): Promise<number> {
+    async nextRound(leadId: WorkflowLeadId): Promise<number> {
       const row = await db
         .selectFrom("workflow_rate_proposals")
         .select("round")
@@ -121,9 +130,9 @@ export function createRateProposalRepo(
     },
 
     async markOutcome(
-      id: string,
+      id: WorkflowRateProposalId,
       outcome: RateProposalOutcome,
-      decidedAt: number,
+      decidedAt: Date,
     ): Promise<void> {
       await db
         .updateTable("workflow_rate_proposals")

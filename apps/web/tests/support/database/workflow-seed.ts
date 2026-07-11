@@ -5,44 +5,51 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
+import type {
+  IntegrationJobId,
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+} from "~/server/shared/ids";
+import { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
 import type { TestRuntime } from "../runtime/app";
-import { MERCHANT } from "./fixtures";
+import { MERCHANT } from "./workflow-defaults";
 
 export type OrganizationSeedOptions = {
   key?: string;
   ruc?: string;
   legalName?: string | null;
-  giroNegocio?: string | null;
+  lineOfBusiness?: string | null;
 };
 
 export type LeadCommercialOptions = Partial<LeadCommercialScope>;
 
 type OrganizationSeed = OrganizationSeedOptions & {
   key: string;
-  id?: string;
-  createdAt?: number;
+  id?: OrganizationId;
+  createdAt?: Date;
 };
 
 export type SeededOrganizationRef = {
-  id: string;
+  id: OrganizationId;
   ruc: string;
   legalName: string | null;
 };
 
 type LeadSeed = {
-  id: string;
-  organizationId?: string;
+  id: WorkflowLeadId;
+  organizationId?: OrganizationId;
   organization?: SeededOrganizationRef;
-  executiveId: number;
+  executiveId: UserId;
   stage: LeadStage;
   status: LeadStatus | null;
   priority: LeadPriority | null;
-  createdBy?: number;
-  updatedBy?: number | null;
-  createdAt?: number;
-  updatedAt?: number;
+  createdBy?: UserId;
+  updatedBy?: UserId | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  reservationExpiresAt?: Date | null;
   commercial?: LeadCommercialOptions;
 };
 
@@ -52,15 +59,15 @@ type LeadScenarioSeed = {
 };
 
 type UserSeed = {
-  id: number;
+  id: UserId;
   username: string;
   email: string;
   names: string;
   firstSurname: string;
   secondSurname: string;
   role: "admin" | "executive";
-  branchId?: number;
-  createdAt?: number;
+  branchId?: BranchId;
+  createdAt?: Date;
 };
 
 export async function seedOrganization(
@@ -68,7 +75,7 @@ export async function seedOrganization(
   input: OrganizationSeed,
 ): Promise<SeededOrganizationRef> {
   const createdAt = input.createdAt ?? runtime.now.get();
-  const id = input.id ?? randomUUIDv7();
+  const id = input.id ?? OrganizationId.trust(randomUUIDv7());
   const key = input.key?.trim();
   if (!key) {
     throw new Error("missing_seed_organization_key");
@@ -82,7 +89,7 @@ export async function seedOrganization(
       id,
       ruc,
       legal_name: legalName,
-      giro_negocio: input.giroNegocio ?? null,
+      line_of_business: input.lineOfBusiness ?? null,
       created_at: createdAt,
     })
     .execute();
@@ -104,7 +111,8 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       stage: input.stage,
       status: input.status,
       priority: input.priority,
-      created_by: input.createdBy ?? 1,
+      created_by:
+        input.createdBy ?? UserId.trust("01974fd5-f261-7a7d-93f5-2f3d0f961001"),
       updated_by: input.updatedBy ?? null,
       created_at: createdAt,
       updated_at: updatedAt,
@@ -115,6 +123,7 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       ticket: commercial.ticket,
       settlement_bank: commercial.settlementBank,
       pos_count: commercial.posCount,
+      reservation_expires_at: input.reservationExpiresAt ?? null,
     })
     .execute();
 }
@@ -122,7 +131,7 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
 export async function seedLeadScenario(
   runtime: TestRuntime,
   input: LeadScenarioSeed,
-): Promise<{ organization: SeededOrganizationRef; leadId: string }> {
+): Promise<{ organization: SeededOrganizationRef; leadId: WorkflowLeadId }> {
   const organization = await seedOrganization(runtime, input.organization);
   await seedLead(runtime, {
     ...input.lead,
@@ -131,7 +140,7 @@ export async function seedLeadScenario(
   return { organization, leadId: input.lead.id };
 }
 
-function resolveLeadOrganizationId(input: LeadSeed): string {
+function resolveLeadOrganizationId(input: LeadSeed): OrganizationId {
   if (input.organization) {
     return input.organization.id;
   }
@@ -173,7 +182,9 @@ export async function seedUser(runtime: TestRuntime, input: UserSeed) {
     .insertInto("users")
     .values({
       id: input.id,
-      branch_id: input.branchId ?? 1,
+      branch_id:
+        input.branchId ??
+        BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
       team_id: null,
       username: input.username,
       email: input.email,
@@ -183,26 +194,26 @@ export async function seedUser(runtime: TestRuntime, input: UserSeed) {
       second_surname: input.secondSurname,
       onboarding_completed_at: createdAt,
       role: input.role,
-      is_active: 1,
+      is_active: true,
       created_at: createdAt,
     })
     .execute();
 }
 
 type RateProposalSeed = {
-  id: string;
-  leadId: string;
+  id: WorkflowRateProposalId;
+  leadId: WorkflowLeadId;
   round: number;
   proposedDebitRate: number;
   proposedCreditRate: number;
   proposedForeignRate: number;
   fee: number;
   paybackPricing: number;
-  proposedBy: number;
+  proposedBy: UserId;
   currency?: "PEN" | "USD";
   outcome?: "pending" | "accepted" | "revision_requested";
-  proposedAt?: number;
-  decidedAt?: number | null;
+  proposedAt?: Date;
+  decidedAt?: Date | null;
 };
 
 export async function seedRateProposal(
@@ -232,16 +243,17 @@ export async function seedRateProposal(
 
 export async function seedImportJob(
   runtime: TestRuntime,
-  input: { id: string },
-) {
+): Promise<{ id: IntegrationJobId }> {
   const now = runtime.now.get();
-  await runtime.ctx.db
+  const row = await runtime.ctx.db
     .insertInto("workflow_integration_jobs")
     .values({
-      id: input.id,
       type: "import_status",
       status: "PROCESSING",
-      requested_by_user_id: 5,
+      queue_state: "processing",
+      requested_by_user_id: UserId.trust(
+        "01974fd5-f261-7a7d-93f5-2f3d0f961005",
+      ),
       file_path: "inline",
       error_message: null,
       rows_total: null,
@@ -249,12 +261,14 @@ export async function seedImportJob(
       rows_failed: null,
       results_json: null,
       lease_owner: "test-worker",
-      lease_until: now + 30_000,
+      lease_until: new Date(now.getTime() + 30_000),
       attempt_count: 1,
       max_attempts: 3,
-      available_at: null,
+      available_at: now,
       created_at: now,
       completed_at: null,
     })
-    .execute();
+    .returning("id")
+    .executeTakeFirstOrThrow();
+  return { id: row.id };
 }

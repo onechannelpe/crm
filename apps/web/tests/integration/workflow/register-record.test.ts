@@ -1,22 +1,26 @@
 import {
+  registerLead,
+  registerLeadAndLoadSnapshot,
+} from "@tests/support/integration/register-lead";
+import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import {
-  registerLead,
-  registerLeadAndLoadSnapshot,
-} from "@tests/support/workflow/register";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("register lead", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-register-record");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
+  });
+
+  beforeEach(async () => {
+    await runtime.reset();
   });
 
   it("reuses an existing organization for the same RUC", async () => {
@@ -68,7 +72,7 @@ describe("register lead", () => {
       currentCreditRate: 3.4,
       gpv: 80000,
       ticket: 150,
-      giroNegocio: "Gastronomía",
+      lineOfBusiness: "Gastronomía",
       posCount: 4,
     });
 
@@ -81,6 +85,6 @@ describe("register lead", () => {
       settlementBank: expect.any(String),
       posCount: 4,
     });
-    expect(result.snapshot.organizationGiroNegocio).toBe("Gastronomía");
+    expect(result.snapshot.organizationLineOfBusiness).toBe("Gastronomía");
   });
 });

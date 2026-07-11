@@ -1,4 +1,4 @@
-import type { OrganizationEnrichmentQueue } from "~/server/identity/organization/enrichment";
+import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";

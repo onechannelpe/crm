@@ -1,3 +1,5 @@
+import type { UserId } from "~/server/shared/ids";
+
 import type { LeadHistoryEventDraft } from "./history";
 import type { LeadState } from "./state";
 
@@ -30,7 +32,7 @@ function applyEvent(state: LeadState, event: LeadHistoryEventDraft): LeadState {
 export function applyEvents(
   state: LeadState,
   events: LeadHistoryEventDraft[],
-  meta: { actorUserId: number | null; now: number },
+  meta: { actorUserId: UserId | null; now: Date },
 ): LeadState {
   const next = events.reduce(applyEvent, state);
   return {

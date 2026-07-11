@@ -7,7 +7,11 @@ import {
 import type { Ruc } from "~/server/shared/document";
 import { parseRuc } from "~/server/shared/document";
 import type { DomainError } from "~/server/shared/domain-error";
-import type { OrganizationId } from "~/server/shared/ids";
+import type {
+  OrganizationId,
+  UserId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 export type LeadCommercialScope = {
@@ -21,30 +25,29 @@ export type LeadCommercialScope = {
 };
 
 export type LeadState = {
-  id: string;
+  id: WorkflowLeadId;
   organizationId: OrganizationId;
   ruc: Ruc;
   legalName: string | null;
   address: string | null;
   district: string | null;
   department: string | null;
-  executiveId: number;
-  createdBy: number;
-  updatedBy: number | null;
+  executiveId: UserId;
+  createdBy: UserId;
+  updatedBy: UserId | null;
   stage: LeadStage;
   status: LeadStatus | null;
   priority: LeadPriority | null;
-  createdAt: number;
-  updatedAt: number;
-  deletedAt: number | null;
-  reservationExpiresAt: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  reservationExpiresAt: Date | null;
   version: number;
 };
 
-// deletedAt is a lifecycle column set only by the delete command; a freshly
-// created lead is never deleted, so it is not part of the creation draft.
-// The draft also carries the born-complete commercial scope, which the INSERT
-// writes onto the lead row alongside the lifecycle columns.
+// deletedAt is set only by the delete command, so a freshly created lead
+// never carries it. The draft also carries the commercial scope, which the
+// INSERT writes alongside the lifecycle columns.
 export type LeadDraft = Omit<LeadState, "id" | "version" | "deletedAt"> &
   LeadCommercialScope;
 
@@ -53,10 +56,10 @@ export function createLeadDraft(input: {
   ruc: string;
   legalName: string | null;
   address: string | null;
-  executiveId: number;
-  createdBy: number;
+  executiveId: UserId;
+  createdBy: UserId;
   commercialScope: LeadCommercialScope;
-  now: number;
+  now: Date;
 }): Result<LeadDraft, DomainError> {
   const ruc = parseRuc(input.ruc);
   if (!ruc.ok) return ruc;

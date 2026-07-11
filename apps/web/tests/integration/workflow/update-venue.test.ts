@@ -1,15 +1,19 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import {
-  createTestRuntime,
-  type TestRuntime,
-} from "@tests/support/runtime/app";
+  actorBy,
+  createLeadFixtureWriter,
+} from "@tests/support/database/workflow-fixtures";
 import {
   workflowCommandPorts,
   workflowRepos,
-} from "@tests/support/workflow/deps";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+} from "@tests/support/integration/workflow-ports";
+import {
+  createTestRuntime,
+  type TestRuntime,
+} from "@tests/support/runtime/app";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { WorkflowVenueId } from "~/server/shared/ids";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
 import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
@@ -17,18 +21,22 @@ import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
 describe("update venue", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("workflow-update-venue");
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
   });
 
+  beforeEach(async () => {
+    await runtime.reset();
+  });
+
   it("updates venue fields during setup", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("SETUP", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "setup",
       key: "venue-update",
       organization: { key: "venue-update" },
     });
@@ -57,7 +65,7 @@ describe("update venue", () => {
         leadId: lead.id,
       }),
     );
-    const venueId = seeded.venues[0].id;
+    const venueId = WorkflowVenueId.trust(seeded.venues[0].id);
 
     const result = await updateVenueCommand(
       {
@@ -91,9 +99,9 @@ describe("update venue", () => {
   });
 
   it("blocks venue updates after setup", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const actor = scenario.actor.by("execOne");
-    const lead = await scenario.lead.atStage("LIVE", {
+    const actor = actorBy("execOne");
+    const lead = await createLeadFixtureWriter(runtime)({
+      kind: "live",
       key: "venue-update-live",
       organization: { key: "venue-update-live" },
     });

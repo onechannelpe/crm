@@ -13,7 +13,7 @@ async function runReservationSweepTick(deps: LeadReservationMaintenanceDeps) {
   try {
     const expiredCount = await expireLapsedReservations(
       { executor: deps.executor },
-      Date.now(),
+      new Date(),
     );
     if (expiredCount > 0) {
       logger.info("lead_reservations_expired", { count: expiredCount });
@@ -25,7 +25,8 @@ async function runReservationSweepTick(deps: LeadReservationMaintenanceDeps) {
   }
 }
 
-// Registration also releases lazily, so cadence only bounds stale visibility.
+// Cadence bounds stale visibility only; the registration path releases
+// reservations on its own, not via this sweep.
 export function startLeadReservationMaintenance(
   deps: LeadReservationMaintenanceDeps,
 ) {

@@ -2,6 +2,7 @@ import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import { isBcpBank } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId, WorkflowVenueId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   createHistoryEvent,
@@ -10,11 +11,16 @@ import {
 import { authorizeLeadAction } from "~/server/workflow/lead/domain/policy";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
 
-type Actor = { userId: number; role: Role };
+type Actor = { userId: UserId; role: Role };
 
 export function createVenue(
   state: LeadState,
-  input: { actor: Actor; venueId: string; tradeName: string; now: number },
+  input: {
+    actor: Actor;
+    venueId: WorkflowVenueId;
+    tradeName: string;
+    now: Date;
+  },
 ): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("create-venue", input.actor, state);
   if (!authz.ok) return authz;
@@ -33,7 +39,12 @@ export function createVenue(
 
 export function updateVenue(
   state: LeadState,
-  input: { actor: Actor; venueId: string; tradeName: string; now: number },
+  input: {
+    actor: Actor;
+    venueId: WorkflowVenueId;
+    tradeName: string;
+    now: Date;
+  },
 ): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("update-venue", input.actor, state);
   if (!authz.ok) return authz;

@@ -1,5 +1,6 @@
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS,
@@ -9,11 +10,11 @@ import {
 import type { RateProposalPolicyRepository } from "../rate-proposal-policy-repo";
 
 export type RateProposalPolicyView = {
-  branchId: number;
+  branchId: string;
   validityDays: number;
   defaultValidityDays: number;
   updatedAt: number | null;
-  updatedByUserId: number | null;
+  updatedByUserId: string | null;
 };
 
 export async function getRateProposalPolicy(
@@ -22,7 +23,7 @@ export async function getRateProposalPolicy(
   },
   input: {
     actorRole: Role;
-    branchId: number;
+    branchId: BranchId;
   },
 ): Promise<Result<RateProposalPolicyView, DomainError>> {
   if (!hasPermission(input.actorRole, "quotation:policy:manage")) {
@@ -38,7 +39,7 @@ export async function getRateProposalPolicy(
     branchId: input.branchId,
     validityDays: policy.validityDays,
     defaultValidityDays: DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS,
-    updatedAt: current?.updatedAt ?? null,
+    updatedAt: current?.updatedAt.getTime() ?? null,
     updatedByUserId: current?.updatedByUserId ?? null,
   });
 }

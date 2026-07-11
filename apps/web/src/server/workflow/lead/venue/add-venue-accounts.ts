@@ -1,20 +1,25 @@
 import type { AddVenueAccountsInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId, WorkflowVenueId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { addVenueAccounts } from "../../lead/domain/decide";
+import { createHistoryEvent } from "../../lead/domain/history";
+import { INITIAL_FULFILLMENT_STEP } from "../fulfillment/steps";
 import { runLeadTransaction } from "../write/transition";
 import { buildVenueAccounts } from "./domain";
 
 export async function addVenueAccountsCommand(
-  input: AddVenueAccountsInput & {
+  input: Omit<AddVenueAccountsInput, "leadId" | "venueId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
+    venueId: WorkflowVenueId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   const parsedAccounts = buildVenueAccounts(input);
@@ -73,6 +78,26 @@ export async function addVenueAccountsCommand(
 
     if (!committed.ok) {
       return committed;
+    }
+
+    if (transition.value.next.stage === "FULFILLMENT") {
+      const orderId = await ctx.repos.fulfillment.createOrder({
+        leadId: state.id,
+        createdBy: input.actor.userId,
+        currentStep: INITIAL_FULFILLMENT_STEP,
+        now: ctx.now,
+      });
+
+      const started = await ctx.appendFacts([
+        createHistoryEvent({
+          leadId: state.id,
+          eventType: "fulfillment_started",
+          actorUserId: input.actor.userId,
+          payload: { orderId, unitCount: 0 },
+          occurredAt: ctx.now,
+        }),
+      ]);
+      if (!started.ok) return started;
     }
 
     return Ok({ leadId: state.id });

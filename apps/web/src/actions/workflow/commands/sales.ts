@@ -14,6 +14,7 @@ import {
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import type { DomainError } from "~/server/shared/domain-error";
+import { WorkflowLeadId, WorkflowVenueId } from "~/server/shared/ids";
 import {
   parseObject,
   validationFail,
@@ -25,9 +26,14 @@ import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
 
 import { workflowActor } from "./actor";
 
-function venueFields(r: Reader<DomainError>): CreateVenueInput {
+function venueFields(r: Reader<DomainError>): Omit<
+  CreateVenueInput,
+  "leadId"
+> & {
+  leadId: WorkflowLeadId;
+} {
   return {
-    leadId: r.str("leadId"),
+    leadId: r.id("leadId", WorkflowLeadId),
     tradeName: r.str("tradeName"),
     posQuantity: r.posInt("posQuantity"),
     digitalConfig: r.optObj("digitalConfig", (c) => ({
@@ -84,9 +90,14 @@ export async function requestVenueUpdate(input: unknown) {
       parseObject(
         input,
         validationFail,
-        (r): UpdateVenueInput => ({
+        (
+          r,
+        ): Omit<UpdateVenueInput, "leadId" | "venueId"> & {
+          leadId: WorkflowLeadId;
+          venueId: WorkflowVenueId;
+        } => ({
           ...venueFields(r),
-          venueId: r.str("venueId"),
+          venueId: r.id("venueId", WorkflowVenueId),
         }),
       ),
 
@@ -109,9 +120,14 @@ export async function requestVenueAccountsAddition(input: unknown) {
       parseObject(
         input,
         validationFail,
-        (r): AddVenueAccountsInput => ({
-          leadId: r.str("leadId"),
-          venueId: r.str("venueId"),
+        (
+          r,
+        ): Omit<AddVenueAccountsInput, "leadId" | "venueId"> & {
+          leadId: WorkflowLeadId;
+          venueId: WorkflowVenueId;
+        } => ({
+          leadId: r.id("leadId", WorkflowLeadId),
+          venueId: r.id("venueId", WorkflowVenueId),
           solesAccount: r.obj("solesAccount", (a) => accountFields(a, "PEN")),
           dollarAccount: r.optObj("dollarAccount", (a) =>
             accountFields(a, "USD"),

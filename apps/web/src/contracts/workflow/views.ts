@@ -9,21 +9,31 @@ import type {
   CollectionMode,
   Currency,
   ProductScope,
+  ProductKind,
+  FulfillmentStep,
+  FulfillmentAction,
+  FulfillmentDocKind,
 } from "./vocabulary";
 
 export type LeadAvailableAction =
   | "add-note"
+  | "review"
+  | "edit-commercial-scope"
   | "propose-rate"
   | "edit-rate-proposal"
   | "accept-rate"
   | "request-rate-revision"
+  | "restart-quotation"
+  | "close-lead"
   | "update-venue"
-  | "reassign-lead";
+  | "reassign-lead"
+  | `fulfillment:${FulfillmentAction}`
+  | "fulfillment-reject";
 
 export type LeadBlockingField = "digitalPolicy" | "venueAccounts";
 
 export type AssignableExecutiveView = {
-  id: number;
+  id: string;
   fullName: string;
 };
 
@@ -38,9 +48,9 @@ export type LeadListRowView = {
   ruc: string;
   legalName: string | null;
   address: string | null;
-  executiveId: number;
+  executiveId: string;
   executiveName: string;
-  createdBy: number;
+  createdBy: string;
   createdByName: string;
   stage: LeadStage;
   status: LeadStatus | null;
@@ -73,11 +83,11 @@ export type LeadDetailLeadView = {
   address: string | null;
   district: string | null;
   department: string | null;
-  executiveId: number;
+  executiveId: string;
   executiveName: string;
-  createdBy: number;
+  createdBy: string;
   createdByName: string;
-  updatedBy: number | null;
+  updatedBy: string | null;
   updatedByName: string | null;
   stage: LeadStage;
   status: LeadStatus | null;
@@ -99,7 +109,7 @@ export type LeadDetailRateProposalView = {
   proposedCreditRate: number;
   proposedForeignRate: number;
   outcome: "pending" | "accepted" | "revision_requested";
-  proposedBy: number;
+  proposedBy: string;
   proposedAt: number;
   decidedAt: number | null;
 };
@@ -120,7 +130,7 @@ export type LeadDetailVenueView = {
   solesAccount?: SaleVenueAccount & { currency: "PEN" };
   dollarAccount?: SaleVenueAccount & { currency: "USD" };
   createdAt: number;
-  createdBy: number;
+  createdBy: string;
 };
 
 export type LeadDetailRateRevisionView = {
@@ -128,9 +138,73 @@ export type LeadDetailRateRevisionView = {
   proposalId: string;
   round: number;
   justification: string;
-  requestedBy: number;
+  requestedBy: string;
   requestedAt: number;
   files: LeadDetailRateRevisionFileView[];
+};
+
+export type LeadDetailFulfillmentDocView = {
+  docKind: FulfillmentDocKind;
+  fileId: string;
+  filename: string;
+  detectedMime: string;
+  sizeBytes: number;
+  uploadedByUserId: string;
+  uploadedAt: number;
+};
+
+export type LeadDetailFulfillmentUnitView = {
+  id: string;
+  label: string;
+  venueId: string | null;
+  serial: string | null;
+  paymentUrl: string | null;
+  paymentProofFileId: string | null;
+  serviceRef: string | null;
+  paymentValidated: boolean;
+};
+
+export type FulfillmentQueueRowView = {
+  leadId: string;
+  ruc: string;
+  legalName: string | null;
+  executiveName: string;
+  productKind: ProductKind | null;
+  currentStep: FulfillmentStep;
+  pendingOwner: "executive" | "back_office" | null;
+  waitingSince: number;
+};
+
+export type FulfillmentQueueView = {
+  rows: FulfillmentQueueRowView[];
+};
+
+// Quotations awaiting the executive's decision, against the registration cap.
+// Drives the blocked-registration affordance in the leads workspace.
+export type PendingQuotationCountView = {
+  count: number;
+  limit: number;
+};
+
+export type LeadDetailFulfillmentStepView = {
+  step: FulfillmentStep;
+  status: "done" | "current" | "pending";
+};
+
+export type LeadDetailFulfillmentView = {
+  orderId: string;
+  productKind: ProductKind | null;
+  currentStep: FulfillmentStep;
+  pendingOwner: "executive" | "back_office" | null;
+  steps: LeadDetailFulfillmentStepView[];
+  units: LeadDetailFulfillmentUnitView[];
+  documents: LeadDetailFulfillmentDocView[];
+};
+
+export type LeadDetailDisqualificationView = {
+  reason: string;
+  byName: string;
+  at: number;
 };
 
 export type LeadDetailView = {
@@ -140,9 +214,11 @@ export type LeadDetailView = {
   rateProposals: LeadDetailRateProposalView[];
   venues: LeadDetailVenueView[];
   rateRevisions: LeadDetailRateRevisionView[];
+  fulfillment: LeadDetailFulfillmentView | null;
   timeline: LeadTimelineItem[];
   availableActions: LeadAvailableAction[];
   blockingFields: LeadBlockingField[];
+  disqualification: LeadDetailDisqualificationView | null;
   sourceStatus: LeadDetailSourceStatusView;
 };
 
@@ -153,7 +229,7 @@ type LeadDetailProfileView = {
   currentCreditRate: number;
   gpv: number;
   ticket: number;
-  giroNegocio: string | null;
+  lineOfBusiness: string | null;
   settlementBank: SettlementBank;
   posCount: number;
   linkScope: ProductScope;
@@ -192,7 +268,7 @@ type LeadDetailSourceStatusView = {
 };
 
 type LeadDetailRateRevisionFileView = {
-  artifactId: string;
+  fileId: string;
   filename: string;
   detectedMime: string;
   sizeBytes: number;

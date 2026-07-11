@@ -1,6 +1,7 @@
 import type { UpdateVenueInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId, WorkflowVenueId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
@@ -12,12 +13,14 @@ import { runLeadTransaction } from "../write/transition";
 import { updateVenue } from "./domain";
 
 export async function updateVenueCommand(
-  input: UpdateVenueInput & {
+  input: Omit<UpdateVenueInput, "leadId" | "venueId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
+    venueId: WorkflowVenueId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {

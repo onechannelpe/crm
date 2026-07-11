@@ -1,50 +1,47 @@
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
+import type {
+  IntegrationJobId,
+  UserId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
 
+import type { TestActorKey } from "../database/workflow-fixtures";
+import { actorBy } from "../database/workflow-fixtures";
+import { seedImportJob } from "../database/workflow-seed";
 import type { TestRuntime } from "../runtime/app";
-import type { ScenarioActorKey, ScenarioLeadRef } from "./leads";
-import { seedImportJob } from "./seed";
+
+type ImportLeadRef = {
+  id: WorkflowLeadId;
+  organization: { ruc: string };
+};
 
 export function createWorkflowImporter(input: {
   runtime: TestRuntime;
-  resolveActorUserId(actor: ScenarioActorKey | number): number;
-  nextJobKey(key?: string): string;
+  resolveActorUserId?: (actor: TestActorKey) => UserId;
 }) {
   const { runtime } = input;
 
-  const job = {
-    async importRun(key: string): Promise<{ id: string }> {
-      const id = `job-${key}`;
-      await seedImportJob(runtime, { id });
-      return { id };
-    },
-  };
-
-  const jobFactory = {
-    async importRun(key?: string): Promise<{ id: string }> {
-      return job.importRun(input.nextJobKey(key));
-    },
-  };
-
-  const importer = {
+  return {
     async run(payload: {
-      actor: ScenarioActorKey | number;
+      actor: TestActorKey;
       rows: Array<
         | {
             type: "status";
-            lead: ScenarioLeadRef;
+            lead: ImportLeadRef;
             status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK";
           }
         | {
             type: "priority";
-            lead: ScenarioLeadRef;
+            lead: ImportLeadRef;
             priority: "P1" | "P2" | "SIN RESULTADO";
           }
       >;
-      jobKey?: string;
     }) {
-      const seededJob = await jobFactory.importRun(payload.jobKey);
-      const actorUserId = input.resolveActorUserId(payload.actor);
+      const seededJob = await seedImportJob(runtime);
+      const actorUserId = input.resolveActorUserId
+        ? input.resolveActorUserId(payload.actor)
+        : actorBy(payload.actor).userId;
       const validRows: ImportRowInput[] = payload.rows.map((row, index) => {
         const rowNo = index + 1;
         if (row.type === "status") {
@@ -70,13 +67,16 @@ export function createWorkflowImporter(input: {
           validRows,
           invalidRows: [],
         },
-        runtime.integrations.executor,
+        {
+          executor: runtime.integrations.executor,
+          now: runtime.integrations.now(),
+        },
       );
     },
 
     async apply(payload: {
-      jobId: string;
-      actorId: number;
+      jobId: IntegrationJobId;
+      actorId: UserId;
       rows: ImportRowInput[];
     }) {
       return applyImportRows(
@@ -86,13 +86,11 @@ export function createWorkflowImporter(input: {
           validRows: payload.rows,
           invalidRows: [],
         },
-        runtime.integrations.executor,
+        {
+          executor: runtime.integrations.executor,
+          now: runtime.integrations.now(),
+        },
       );
     },
-  };
-
-  return {
-    job: jobFactory,
-    importer,
   };
 }

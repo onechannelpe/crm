@@ -1,17 +1,24 @@
 import type { SettlementBank } from "~/contracts/workflow/vocabulary";
+import type {
+  BranchId,
+  OrganizationId,
+  UserId,
+  WorkflowLeadId,
+} from "~/server/shared/ids";
 import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/commands/register-lead";
 
+import { actorBy } from "../database/workflow-fixtures";
+import { withMerchantDefaults } from "../database/workflow-seed";
 import type { TestRuntime } from "../runtime/app";
-import { registerLeadPorts } from "./deps";
-import { withMerchantDefaults } from "./seed";
+import { registerLeadPorts } from "./workflow-ports";
 
 export type RegisteredLeadSnapshot = {
-  id: string;
-  organizationId: string;
+  id: WorkflowLeadId;
+  organizationId: OrganizationId;
   organizationRuc: string;
   organizationLegalName: string | null;
   organizationAddress: string | null;
-  organizationGiroNegocio: string | null;
+  organizationLineOfBusiness: string | null;
 };
 
 export type RegisteredLeadCommercialSnapshot = {
@@ -25,7 +32,7 @@ export type RegisteredLeadCommercialSnapshot = {
 };
 
 export type RegisterLeadResult = {
-  leadId: string;
+  leadId: WorkflowLeadId;
   snapshot: RegisteredLeadSnapshot;
   commercial: RegisteredLeadCommercialSnapshot;
   historyEventTypes: string[];
@@ -34,23 +41,23 @@ export type RegisterLeadResult = {
 export async function registerLead(input: {
   runtime: TestRuntime;
   ruc: string;
-  actor?: { userId: number; role: "executive" | "admin"; branchId: number };
+  actor?: { userId: UserId; role: "executive" | "admin"; branchId: BranchId };
   currentProvider?: string;
   currentDebitRate?: number;
   currentCreditRate?: number;
   gpv?: number;
   ticket?: number;
-  giroNegocio?: string | null;
+  lineOfBusiness?: string | null;
   settlementBank?: SettlementBank;
   posCount?: number;
 }): Promise<RegisterLeadResult> {
-  const actor = input.actor ?? { userId: 1, role: "executive", branchId: 1 };
+  const actor = input.actor ?? actorBy("execOne");
   const result = await workflowRegisterLead(
     {
       actor,
       ruc: input.ruc,
       ...withMerchantDefaults(input),
-      giroNegocio: input.giroNegocio ?? "Retail",
+      lineOfBusiness: input.lineOfBusiness ?? "Retail",
     },
     registerLeadPorts(input.runtime),
   );
@@ -62,8 +69,8 @@ export async function registerLead(input: {
   const row = await input.runtime.ctx.db
     .selectFrom("workflow_leads as lead")
     .innerJoin("organizations as org", "org.id", "lead.organization_id")
-    .select([
-      "lead.id",
+    .select((eb) => [
+      eb.ref("lead.id").as("id"),
       "lead.organization_id",
       "lead.current_provider",
       "lead.current_debit_rate",
@@ -75,7 +82,7 @@ export async function registerLead(input: {
       "org.ruc",
       "org.legal_name",
       "org.address",
-      "org.giro_negocio",
+      "org.line_of_business",
     ])
     .where("lead.id", "=", result.value.leadId)
     .executeTakeFirstOrThrow();
@@ -96,7 +103,7 @@ export async function registerLead(input: {
       organizationRuc: row.ruc,
       organizationLegalName: row.legal_name,
       organizationAddress: row.address,
-      organizationGiroNegocio: row.giro_negocio,
+      organizationLineOfBusiness: row.line_of_business,
     },
     commercial: {
       currentProvider: row.current_provider,

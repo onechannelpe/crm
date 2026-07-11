@@ -1,6 +1,7 @@
 import type { AssignableExecutiveView } from "~/contracts/workflow/views";
 import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId, UserId, WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   authorizeLeadAction,
@@ -18,10 +19,10 @@ type AssignableExecutivesQueryDeps = {
 export async function listAssignableExecutives(
   deps: AssignableExecutivesQueryDeps,
   input: {
-    actorUserId: number;
+    actorUserId: UserId;
     actorRole: Role;
-    actorBranchId: number;
-    leadId: string;
+    actorBranchId: BranchId;
+    leadId: WorkflowLeadId;
     search?: string;
     limit?: number;
   },

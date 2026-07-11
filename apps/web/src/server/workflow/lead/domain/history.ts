@@ -4,7 +4,21 @@ import type {
   LeadStage,
   LeadStatus,
   Currency,
+  CloseReason,
+  ProductKind,
+  FulfillmentStep,
+  FulfillmentAction,
+  FulfillmentDocKind,
 } from "~/contracts/workflow/vocabulary";
+import type {
+  FileAssetId,
+  FulfillmentOrderId,
+  UserId,
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+  WorkflowRateRevisionId,
+  WorkflowVenueId,
+} from "~/server/shared/ids";
 
 export type LeadHistoryEventType =
   | "lead_registered"
@@ -20,10 +34,17 @@ export type LeadHistoryEventType =
   | "rate_accepted"
   | "rate_proposal_corrected"
   | "commercial_scope_corrected"
+  | "lead_closed"
   | "lead_reservation_expired"
   | "venue_added"
   | "venue_updated"
   | "venue_accounts_added"
+  | "fulfillment_started"
+  | "fulfillment_product_chosen"
+  | "fulfillment_step_advanced"
+  | "fulfillment_step_rejected"
+  | "fulfillment_document_uploaded"
+  | "fulfillment_completed"
   | "note_added"
   | "lead_deleted";
 
@@ -41,10 +62,17 @@ const LEAD_HISTORY_EVENT_TYPES = {
   rate_accepted: true,
   rate_proposal_corrected: true,
   commercial_scope_corrected: true,
+  lead_closed: true,
   lead_reservation_expired: true,
   venue_added: true,
   venue_updated: true,
   venue_accounts_added: true,
+  fulfillment_started: true,
+  fulfillment_product_chosen: true,
+  fulfillment_step_advanced: true,
+  fulfillment_step_rejected: true,
+  fulfillment_document_uploaded: true,
+  fulfillment_completed: true,
   note_added: true,
   lead_deleted: true,
 } satisfies Record<LeadHistoryEventType, true>;
@@ -82,12 +110,12 @@ export type LeadHistoryPayloadByEvent = {
     to: LeadStage;
   };
   lead_assigned: {
-    executiveId: number;
+    executiveId: UserId;
     reason?: string;
   };
   lead_reassigned: {
-    fromExecutiveId: number;
-    toExecutiveId: number;
+    fromExecutiveId: UserId;
+    toExecutiveId: UserId;
     reason?: string;
   };
   rep_legal_recorded: {
@@ -99,36 +127,69 @@ export type LeadHistoryPayloadByEvent = {
     email: string;
   };
   rate_proposed: {
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
     round: number;
     currency: Currency;
   };
   rate_revision_requested: {
-    revisionId: string;
+    revisionId: WorkflowRateRevisionId;
     round: number;
     justification: string;
   };
   rate_accepted: {
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
   };
   rate_proposal_corrected: {
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
     round: number;
   };
   commercial_scope_corrected: Record<string, never>;
+  lead_closed: {
+    reason: CloseReason;
+    note: string | null;
+    fromStage: LeadStage;
+  };
   lead_reservation_expired: {
     fromStage: LeadStage;
   };
   venue_added: {
-    venueId: string;
+    venueId: WorkflowVenueId;
     tradeName: string;
   };
   venue_updated: {
-    venueId: string;
+    venueId: WorkflowVenueId;
     tradeName: string;
   };
   venue_accounts_added: {
-    venueId: string;
+    venueId: WorkflowVenueId;
+  };
+  fulfillment_started: {
+    orderId: FulfillmentOrderId;
+    unitCount: number;
+  };
+  fulfillment_product_chosen: {
+    orderId: FulfillmentOrderId;
+    productKind: ProductKind;
+  };
+  fulfillment_step_advanced: {
+    orderId: FulfillmentOrderId;
+    from: FulfillmentStep;
+    to: FulfillmentStep;
+    action: FulfillmentAction;
+  };
+  fulfillment_step_rejected: {
+    orderId: FulfillmentOrderId;
+    from: FulfillmentStep;
+    to: FulfillmentStep;
+    reason: string;
+  };
+  fulfillment_document_uploaded: {
+    orderId: FulfillmentOrderId;
+    docKind: FulfillmentDocKind;
+    fileAssetId: FileAssetId;
+  };
+  fulfillment_completed: {
+    orderId: FulfillmentOrderId;
   };
   note_added: {
     body: string;
@@ -138,13 +199,13 @@ export type LeadHistoryPayloadByEvent = {
 
 export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =
   {
-    leadId: string;
+    leadId: WorkflowLeadId;
     eventType: TEventType;
-    actorUserId: number | null;
-    subjectUserId: number | null;
+    actorUserId: UserId | null;
+    subjectUserId: UserId | null;
     payload: LeadHistoryPayloadByEvent[TEventType];
     changes: FieldChange[];
-    occurredAt: number;
+    occurredAt: Date;
   };
 
 export type LeadHistoryEventDraft = {
@@ -163,8 +224,8 @@ export type LeadHistoryEntryFor<
   id: string;
   leadId: string;
   eventType: TEventType;
-  actorUserId: number | null;
-  subjectUserId: number | null;
+  actorUserId: string | null;
+  subjectUserId: string | null;
   payload: LeadHistoryPayloadByEvent[TEventType];
   changes: FieldChange[];
   occurredAt: number;
@@ -179,13 +240,13 @@ export type LeadHistoryEntry = {
 export function createHistoryEvent<
   TEventType extends LeadHistoryEventType,
 >(input: {
-  leadId: string;
+  leadId: WorkflowLeadId;
   eventType: TEventType;
-  actorUserId?: number | null;
-  subjectUserId?: number | null;
+  actorUserId?: UserId | null;
+  subjectUserId?: UserId | null;
   payload: LeadHistoryPayloadByEvent[TEventType];
   changes?: FieldChange[];
-  occurredAt: number;
+  occurredAt: Date;
 }): LeadHistoryEventDraftFor<TEventType> {
   return {
     leadId: input.leadId,

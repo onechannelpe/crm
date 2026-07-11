@@ -4,13 +4,22 @@ import {
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
 import type {
+  CloseReason,
   Currency,
   LeadPriority,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { Role } from "~/lib/auth/access/rbac";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type {
+  FulfillmentOrderId,
+  UserId,
+  WorkflowRateProposalId,
+  WorkflowRateRevisionId,
+  WorkflowRateRevisionFileId,
+  WorkflowVenueId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import type { WorkflowActor } from "~/server/workflow/actor";
 
 import { applyEvents } from "./evolve";
 import { createHistoryEvent, type LeadHistoryEventDraft } from "./history";
@@ -19,7 +28,7 @@ import { isReservationActive } from "./reservation";
 import { resolveReviewTransition } from "./review";
 import type { LeadState } from "./state";
 
-type Actor = { userId: number; role: Role };
+type Actor = Pick<WorkflowActor, "userId" | "role">;
 type TransitionResult = Result<
   { next: LeadState; events: LeadHistoryEventDraft[] },
   DomainError
@@ -29,8 +38,8 @@ function finish(
   state: LeadState,
   events: LeadHistoryEventDraft[],
   actor: Actor,
-  now: number,
-  reservationExpiresAt?: number | null,
+  now: Date,
+  reservationExpiresAt?: Date | null,
 ): TransitionResult {
   const next = applyEvents(state, events, { actorUserId: actor.userId, now });
   return Ok({
@@ -44,7 +53,7 @@ function finish(
 
 export function deleteLead(
   state: LeadState,
-  input: { actor: Actor; now: number },
+  input: { actor: Actor; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("delete", input.actor, state);
   if (!authz.ok) return authz;
@@ -64,7 +73,7 @@ export function deleteLead(
 
 export function reassignLead(
   state: LeadState,
-  input: { actor: Actor; toExecutiveId: number; now: number },
+  input: { actor: Actor; toExecutiveId: UserId; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("reassign", input.actor, state);
   if (!authz.ok) return authz;
@@ -94,11 +103,11 @@ export function proposeRate(
   state: LeadState,
   input: {
     actor: Actor;
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
     round: number;
     currency: Currency;
-    reservationExpiresAt: number;
-    now: number;
+    reservationExpiresAt: Date;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("propose-rate", input.actor, state);
@@ -132,10 +141,10 @@ export function editRateProposal(
   state: LeadState,
   input: {
     actor: Actor;
-    proposalId: string;
+    proposalId: WorkflowRateProposalId;
     round: number;
     changes: FieldChange[];
-    now: number;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("propose-rate", input.actor, state);
@@ -164,7 +173,7 @@ export function editRateProposal(
 
 export function editCommercialScope(
   state: LeadState,
-  input: { actor: Actor; changes: FieldChange[]; now: number },
+  input: { actor: Actor; changes: FieldChange[]; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction(
     "edit-commercial-scope",
@@ -195,7 +204,7 @@ export function reviewLead(
     status: LeadStatus | null;
     priority: LeadPriority | null;
     reason: string;
-    now: number;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
@@ -268,9 +277,80 @@ export function reviewLead(
   return finish(state, events, input.actor, input.now);
 }
 
+// In-app qualification: back office sets status and priority together in one
+// step. reviewLead handles the incremental import path (one row at a time); this
+// is the atomic form for the interactive "Calificar disponibilidad" panel. Both
+// share resolveReviewTransition so the DISQUALIFIED/PRICING rule stays in one place.
+export function qualifyLead(
+  state: LeadState,
+  input: {
+    actor: Actor;
+    status: LeadStatus;
+    priority: LeadPriority;
+    reason: string;
+    now: Date;
+  },
+): TransitionResult {
+  const authz = authorizeLeadAction("review", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
+
+  const toStage = resolveReviewTransition({
+    status: input.status,
+    priority: input.priority,
+  });
+
+  const events: LeadHistoryEventDraft[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_status_updated",
+      actorUserId: input.actor.userId,
+      payload: {
+        fromStatus: state.status,
+        toStatus: input.status,
+        reason: input.reason,
+      },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_priority_updated",
+      actorUserId: input.actor.userId,
+      payload: {
+        fromPrioridad: state.priority,
+        toPrioridad: input.priority,
+        reason: input.reason,
+      },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_reviewed",
+      actorUserId: input.actor.userId,
+      payload: {
+        status: input.status,
+        priority: input.priority,
+        reason: input.reason,
+        fromStage: state.stage,
+        toStage,
+      },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: toStage },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now);
+}
+
 export function acceptRate(
   state: LeadState,
-  input: { actor: Actor; proposalId: string; now: number },
+  input: { actor: Actor; proposalId: WorkflowRateProposalId; now: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("accept-rate", input.actor, state);
   if (!authz.ok) return authz;
@@ -296,9 +376,48 @@ export function acceptRate(
   return finish(state, events, input.actor, input.now, null);
 }
 
+// Available throughout PRICING (a client can decline before or after a rate
+// arrives). Third outcome alongside accept-rate and request-rate-revision.
+export function closeLead(
+  state: LeadState,
+  input: {
+    actor: Actor;
+    reason: CloseReason;
+    note: string | null;
+    now: Date;
+  },
+): TransitionResult {
+  const authz = authorizeLeadAction("close-lead", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+
+  const events: LeadHistoryEventDraft[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "lead_closed",
+      actorUserId: input.actor.userId,
+      payload: {
+        reason: input.reason,
+        note: input.note,
+        fromStage: state.stage,
+      },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: "CLOSED_LOST" },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now, null);
+}
+
 export function expireReservation(
   state: LeadState,
-  input: { now: number },
+  input: { now: Date },
 ): TransitionResult {
   if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
 
@@ -319,6 +438,32 @@ export function expireReservation(
   return Ok({ next: { ...next, reservationExpiresAt: null }, events });
 }
 
+// Reopens pricing for a lead whose rate reservation lapsed. The stale proposal
+// is left as-is: expireReservation already cleared the reservation, so it no
+// longer counts as an active pending proposal. Back office therefore lands on
+// propose-rate (seeded by the last numbers) instead of the executive being asked
+// to decide on an offer that already expired.
+export function restartQuotation(
+  state: LeadState,
+  input: { actor: Actor; now: Date },
+): TransitionResult {
+  const authz = authorizeLeadAction("restart-quotation", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "EXPIRED") return Err(fail("invalid_stage"));
+
+  const events: LeadHistoryEventDraft[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: "PRICING" },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now);
+}
+
 export function recordRepLegal(
   state: LeadState,
   input: {
@@ -329,7 +474,7 @@ export function recordRepLegal(
     dni: string;
     telefono: string;
     email: string;
-    now: number;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("record-rep-legal", input.actor, state);
@@ -360,10 +505,10 @@ export function addVenueAccounts(
   state: LeadState,
   input: {
     actor: Actor;
-    venueId: string;
+    venueId: WorkflowVenueId;
     totalVenues: number;
     fundedVenues: number;
-    now: number;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("add-venue-accounts", input.actor, state);
@@ -383,13 +528,15 @@ export function addVenueAccounts(
   const completesLastVenue =
     input.totalVenues > 0 && input.fundedVenues + 1 === input.totalVenues;
 
+  // Hand off to fulfillment once affiliation is complete. LIVE later means
+  // the sale is registered, not that the form is filled.
   if (completesLastVenue) {
     events.push(
       createHistoryEvent({
         leadId: state.id,
         eventType: "workflow_stage_changed",
         actorUserId: input.actor.userId,
-        payload: { from: state.stage, to: "LIVE" },
+        payload: { from: state.stage, to: "FULFILLMENT" },
         occurredAt: input.now,
       }),
     );
@@ -398,16 +545,46 @@ export function addVenueAccounts(
   return finish(state, events, input.actor, input.now);
 }
 
+// Emitted by the register-sale handoff alongside the per-unit service
+// references.
+export function completeFulfillment(
+  state: LeadState,
+  input: { actor: Actor; orderId: FulfillmentOrderId; now: Date },
+): TransitionResult {
+  const authz = authorizeLeadAction("complete-fulfillment", input.actor, state);
+  if (!authz.ok) return authz;
+  if (state.stage !== "FULFILLMENT") return Err(fail("invalid_stage"));
+
+  const events: LeadHistoryEventDraft[] = [
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "fulfillment_completed",
+      actorUserId: input.actor.userId,
+      payload: { orderId: input.orderId },
+      occurredAt: input.now,
+    }),
+    createHistoryEvent({
+      leadId: state.id,
+      eventType: "workflow_stage_changed",
+      actorUserId: input.actor.userId,
+      payload: { from: state.stage, to: "LIVE" },
+      occurredAt: input.now,
+    }),
+  ];
+
+  return finish(state, events, input.actor, input.now);
+}
+
 export function requestRateRevision(
   state: LeadState,
   input: {
     actor: Actor;
-    revisionId: string;
+    revisionId: WorkflowRateRevisionId;
     round: number;
     justification: string;
-    artifactIds: string[];
-    reservationExpiresAt: number;
-    now: number;
+    fileIds: WorkflowRateRevisionFileId[];
+    reservationExpiresAt: Date;
+    now: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction(
@@ -421,13 +598,13 @@ export function requestRateRevision(
   if (input.round > MAX_RATE_REVISION_ROUNDS) {
     return Err(fail("max_rate_revision_rounds_reached"));
   }
-  if (input.artifactIds.length < 1) {
+  if (input.fileIds.length < 1) {
     return Err(fail("rate_revision_files_required"));
   }
-  if (input.artifactIds.length > MAX_RATE_REVISION_FILES) {
+  if (input.fileIds.length > MAX_RATE_REVISION_FILES) {
     return Err(fail("max_rate_revision_files_exceeded"));
   }
-  if (new Set(input.artifactIds).size !== input.artifactIds.length) {
+  if (new Set(input.fileIds).size !== input.fileIds.length) {
     return Err(fail("duplicate_rate_revision_file"));
   }
 

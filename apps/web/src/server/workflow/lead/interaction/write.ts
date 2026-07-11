@@ -1,6 +1,7 @@
 import type { AddLeadNoteInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { runLeadTransaction } from "~/server/workflow/lead/write/transition";
@@ -9,12 +10,13 @@ import { recordNote } from "./domain";
 
 type Ports = {
   executor: DatabaseExecutor;
-  now: number;
+  now: Date;
 };
 
 export async function addLeadNote(
-  input: AddLeadNoteInput & {
+  input: Omit<AddLeadNoteInput, "leadId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
   },
   ports: Ports,
 ): Promise<Result<{ interactionId: string }, DomainError>> {

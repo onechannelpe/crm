@@ -1,4 +1,4 @@
-import { createOrganizationEnrichment } from "~/server/identity/organization/enrichment";
+import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
 import type { TestRuntime } from "../runtime/app";

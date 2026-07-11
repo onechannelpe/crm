@@ -1,10 +1,19 @@
 import { MAX_RATE_REVISION_ROUNDS } from "~/contracts/workflow/limits";
 import type { LeadAvailableAction } from "~/contracts/workflow/views";
-import { type LeadStage } from "~/contracts/workflow/vocabulary";
+import {
+  type FulfillmentStep,
+  type LeadStage,
+} from "~/contracts/workflow/vocabulary";
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
 import { forbidden, type DomainError } from "~/server/shared/domain-error";
+import type { BranchId, UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
+import {
+  pendingOwnerForStep,
+  rejectRuleForStep,
+  stepDefinition,
+} from "../fulfillment/steps";
 import type { LeadState } from "./state";
 
 export type LeadCapability =
@@ -20,16 +29,19 @@ export type LeadCapability =
   | "propose-rate"
   | "accept-rate"
   | "request-rate-revision"
+  | "restart-quotation"
+  | "close-lead"
   | "review"
   | "register"
   | "request-sunat-refresh"
+  | "complete-fulfillment"
   | "list-assignable-executives";
 
 export type AssignableExecutivesScope =
-  | { actorRole: "superuser"; actorBranchId: number }
+  | { actorRole: "superuser"; actorBranchId: BranchId }
   | {
       actorRole: "admin" | "sales_manager" | "supervisor";
-      actorBranchId: number;
+      actorBranchId: BranchId;
     };
 
 const OWNER_REQUIRED = new Set<LeadCapability>([
@@ -40,6 +52,7 @@ const OWNER_REQUIRED = new Set<LeadCapability>([
   "add-venue-accounts",
   "accept-rate",
   "request-rate-revision",
+  "close-lead",
   "request-sunat-refresh",
 ]);
 
@@ -74,6 +87,8 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("add-venue-accounts");
     caps.add("accept-rate");
     caps.add("request-rate-revision");
+    caps.add("restart-quotation");
+    caps.add("close-lead");
     caps.add("request-sunat-refresh");
   }
   if (hasPermission(role, "lead:sale:create")) {
@@ -83,6 +98,7 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("update-venue");
     caps.add("add-venue-accounts");
     caps.add("accept-rate");
+    caps.add("restart-quotation");
     caps.add("request-sunat-refresh");
   }
   if (
@@ -90,11 +106,41 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
     hasPermission(role, "quotation:revise")
   ) {
     caps.add("propose-rate");
+    caps.add("restart-quotation");
   }
   if (hasPermission(role, "lead:review")) caps.add("review");
   if (hasPermission(role, "lead:register")) caps.add("register");
+  if (hasPermission(role, "fulfillment:manage")) {
+    caps.add("complete-fulfillment");
+  }
 
   return caps;
+}
+
+// Back office runs the order; the executive performs client-facing steps
+// (including the transactions-report upload) only on their own lead.
+export function authorizeFulfillmentStep(
+  step: FulfillmentStep,
+  actor: { userId: UserId; role: Role },
+  state: { executiveId: UserId; stage: LeadStage },
+): Result<void, DomainError> {
+  if (state.stage !== "FULFILLMENT") return Err(forbidden());
+
+  const owner = pendingOwnerForStep(step);
+  if (owner === null) return Err(forbidden());
+
+  if (owner === "executive") {
+    if (state.executiveId !== actor.userId) return Err(forbidden());
+    if (!hasPermission(actor.role, "fulfillment:client-step")) {
+      return Err(forbidden());
+    }
+    return Ok(undefined);
+  }
+
+  if (!hasPermission(actor.role, "fulfillment:manage")) {
+    return Err(forbidden());
+  }
+  return Ok(undefined);
 }
 
 function canViewAllLeads(role: Role): boolean {
@@ -112,8 +158,8 @@ export function canRevealFullTimeline(role: Role): boolean {
 
 export function authorizeLeadAction(
   capability: LeadCapability,
-  actor: { userId: number; role: Role },
-  state: { executiveId: number; stage: LeadStage },
+  actor: { userId: UserId; role: Role },
+  state: { executiveId: UserId; stage: LeadStage },
 ): Result<void, DomainError> {
   const caps = resolveCapabilities(actor.role);
 
@@ -125,7 +171,9 @@ export function authorizeLeadAction(
   if (!caps.has(capability)) return Err(forbidden());
 
   if (
-    (capability === "accept-rate" || capability === "request-rate-revision") &&
+    (capability === "accept-rate" ||
+      capability === "request-rate-revision" ||
+      capability === "close-lead") &&
     actor.role !== "executive"
   ) {
     return Err(forbidden());
@@ -145,9 +193,13 @@ export function requireCapability(
 }
 
 export function resolveAvailableActions(
-  actor: { userId: number; role: Role },
+  actor: { userId: UserId; role: Role },
   state: LeadState,
-  meta: { hasActivePendingProposal: boolean; rateRevisionCount: number },
+  meta: {
+    hasActivePendingProposal: boolean;
+    rateRevisionCount: number;
+    fulfillmentStep: FulfillmentStep | null;
+  },
 ): LeadAvailableAction[] {
   const caps = resolveCapabilities(actor.role);
   const ownsLead = state.executiveId === actor.userId;
@@ -156,6 +208,20 @@ export function resolveAvailableActions(
 
   if (caps.has("add-note")) {
     actions.push("add-note");
+  }
+  if (caps.has("review") && state.stage === "QUALIFYING") {
+    actions.push("review");
+  }
+  // The owning executive can correct the commercial data they entered at
+  // registration (e.g. a mistyped current rate) while the lead is still being
+  // qualified or priced, where that reference still informs a live decision.
+  // OWNER_REQUIRED carries the matching constraint on the server.
+  if (
+    caps.has("edit-commercial-scope") &&
+    ownsLead &&
+    (state.stage === "QUALIFYING" || state.stage === "PRICING")
+  ) {
+    actions.push("edit-commercial-scope");
   }
   const canProposeRate =
     caps.has("propose-rate") && actor.role === "back_office";
@@ -182,8 +248,33 @@ export function resolveAvailableActions(
   ) {
     actions.push("request-rate-revision");
   }
+  // Available throughout PRICING: a client can decline before or after a rate
+  // arrives, so close stays open at every step.
+  if (caps.has("close-lead") && ownsLead && inPricing) {
+    actions.push("close-lead");
+  }
   if (caps.has("update-venue") && ownsLead && state.stage === "SETUP") {
     actions.push("update-venue");
+  }
+  if (
+    caps.has("restart-quotation") &&
+    state.stage === "EXPIRED" &&
+    (ownsLead || canViewAllLeads(actor.role))
+  ) {
+    actions.push("restart-quotation");
+  }
+  if (
+    state.stage === "FULFILLMENT" &&
+    meta.fulfillmentStep !== null &&
+    authorizeFulfillmentStep(meta.fulfillmentStep, actor, state).ok
+  ) {
+    const def = stepDefinition(meta.fulfillmentStep);
+    if (def.action !== null) {
+      actions.push(`fulfillment:${def.action}`);
+    }
+    if (rejectRuleForStep(meta.fulfillmentStep)) {
+      actions.push("fulfillment-reject");
+    }
   }
   if (caps.has("reassign")) {
     actions.push("reassign-lead");
@@ -193,10 +284,10 @@ export function resolveAvailableActions(
 }
 
 export function resolveLeadListExecutiveScope(input: {
-  actorUserId: number;
+  actorUserId: UserId;
   actorRole: Role;
-  requestedExecutiveId?: number;
-}): number | undefined {
+  requestedExecutiveId?: UserId;
+}): UserId | undefined {
   return canViewAllLeads(input.actorRole)
     ? input.requestedExecutiveId
     : input.actorUserId;
@@ -204,7 +295,7 @@ export function resolveLeadListExecutiveScope(input: {
 
 export function resolveAssignableExecutivesScope(input: {
   actorRole: Role;
-  actorBranchId: number;
+  actorBranchId: BranchId;
 }): Result<AssignableExecutivesScope, DomainError> {
   if (input.actorRole === "superuser") {
     return Ok({ actorRole: "superuser", actorBranchId: input.actorBranchId });

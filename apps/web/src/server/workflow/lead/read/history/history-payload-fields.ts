@@ -1,8 +1,10 @@
 import {
+  CLOSE_REASONS,
   LEAD_PRIORITIES,
   LEAD_STAGES,
   LEAD_STATUSES,
   CURRENCIES,
+  type CloseReason,
   type LeadPriority,
   type LeadStage,
   type LeadStatus,
@@ -30,12 +32,9 @@ export function parsePayload(
     return Ok(null);
   }
 
-  try {
-    const value = JSON.parse(row.payload_json) as unknown;
-    if (isPlainRecord(value)) {
-      return Ok(value);
-    }
-  } catch {}
+  if (isPlainRecord(row.payload_json)) {
+    return Ok(row.payload_json);
+  }
 
   return invalidPayload(row);
 }
@@ -101,6 +100,23 @@ export function requireLeadStage(
     return parsed;
   }
   return Ok(parsed.value);
+}
+
+export function requireCloseReason(
+  payload: Record<string, unknown> | null,
+  key: string,
+  row: HistoryEventRow,
+): Result<CloseReason, DomainError> {
+  const value = requireString(payload, key, row);
+  if (!value.ok) {
+    return value;
+  }
+
+  return parseVocabularyValue(
+    value.value,
+    CLOSE_REASONS,
+    "invalid_close_reason",
+  );
 }
 
 export function requireLeadStatus(

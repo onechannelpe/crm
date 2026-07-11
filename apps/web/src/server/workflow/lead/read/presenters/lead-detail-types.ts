@@ -26,7 +26,7 @@ export type LeadDetailProfileView = {
   currentCreditRate: number;
   gpv: number;
   ticket: number;
-  giroNegocio: string | null;
+  lineOfBusiness: string | null;
   settlementBank: SettlementBank;
   posCount: number;
   linkScope: ProductScope;
@@ -46,7 +46,7 @@ export type LeadDetailRepLegalView = {
 };
 
 export type LeadDetailRateRevisionFileView = {
-  artifactId: string;
+  fileId: string;
   filename: string;
   detectedMime: string;
   sizeBytes: number;

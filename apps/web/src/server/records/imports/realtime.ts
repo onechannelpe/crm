@@ -1,26 +1,43 @@
 import {
+  parseRecordImportTopic,
   recordImportTopic,
   parseRecordImportProgressMessage,
+  type RecordImportProgressEvent,
 } from "~/features/records-imports/contracts";
-import { JOB_CHANNELS } from "~/lib/job-queue/channels";
-import { createRedisTopicBridge } from "~/server/realtime/core/bridge";
-import { TopicHub } from "~/server/realtime/core/topic-hub";
+import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
+import { getServerRuntime } from "~/server/platform/container";
+import type { TopicHub } from "~/server/realtime/topic-hub";
+import { createTopicRealtimeChannel } from "~/server/realtime/topic-realtime-channel";
 
-const recordImportsTopicHub = new TopicHub();
+import {
+  buildRecordImportProgressEvent,
+  findRecordImportJob,
+} from "./progress-events";
 
-const recordImportsBridge = createRedisTopicBridge({
-  name: "records-imports",
-  channel: JOB_CHANNELS.RECORDS_IMPORT_PROGRESS,
-  hub: recordImportsTopicHub,
-  parseEvent: parseRecordImportProgressMessage,
-  topicForEvent: (event) => recordImportTopic(event.jobId),
-  serializeEvent: (event) => JSON.stringify(event),
-});
+async function reconcileRecordImportsProgress(hub: TopicHub): Promise<void> {
+  const { integration } = getServerRuntime().integrations;
 
-export async function ensureRecordImportsRealtimeBridge(): Promise<void> {
-  await recordImportsBridge.start();
+  await Promise.all(
+    hub.topics().map(async (topic) => {
+      const jobId = parseRecordImportTopic(topic);
+      if (jobId === null) return;
+
+      const job = await findRecordImportJob(integration.jobs, jobId);
+      if (!job) return;
+
+      hub.broadcast(
+        topic,
+        JSON.stringify(buildRecordImportProgressEvent({ job })),
+      );
+    }),
+  );
 }
 
-export function getRecordImportsTopicHub(): TopicHub {
-  return recordImportsTopicHub;
-}
+export const recordImportsRealtime =
+  createTopicRealtimeChannel<RecordImportProgressEvent>({
+    name: "records-imports",
+    channel: RECORDS_IMPORT_PROGRESS_CHANNEL,
+    parseEvent: parseRecordImportProgressMessage,
+    topicForEvent: (event) => recordImportTopic(event.jobId),
+    reconcile: reconcileRecordImportsProgress,
+  });

@@ -1,13 +1,17 @@
+import type {
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+} from "~/server/shared/ids";
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 
+import type { TestActor } from "../database/workflow-fixtures";
 import type { TestRuntime } from "../runtime/app";
-import { workflowCommandPorts } from "./deps";
-import type { ScenarioActor } from "./leads";
+import { workflowCommandPorts } from "./workflow-ports";
 
 export async function proposePendingRate(
   runtime: TestRuntime,
-  input: { leadId: string; backOffice: ScenarioActor },
-): Promise<{ proposalId: string }> {
+  input: { leadId: WorkflowLeadId; backOffice: TestActor },
+): Promise<{ proposalId: WorkflowRateProposalId }> {
   const result = await proposeRateCommand(
     {
       actor: input.backOffice,

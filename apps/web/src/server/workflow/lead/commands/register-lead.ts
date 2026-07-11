@@ -1,24 +1,25 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
-import type { OrganizationEnrichment } from "~/server/identity/organization/enrichment";
+import type { OrganizationEnrichment } from "~/server/organization/enrichment";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { parseRuc } from "~/server/shared/document";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId } from "~/server/shared/ids";
+import type { Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
-import { createHistoryEvent } from "~/server/workflow/lead/domain/history";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
-import { reassignLead } from "../../lead/domain/decide";
 import { requireCapability } from "../../lead/domain/policy";
 import { isReservationLapsed } from "../../lead/domain/reservation";
-import { createLeadDraft } from "../../lead/domain/state";
-import { runLeadTransaction } from "../write/transition";
 import { expireLeadReservation } from "./expire-reservation";
 import {
   ensureActiveExecutive,
   resolveLeadRegistration,
 } from "./register-lead-resolution";
+import {
+  createRegisteredLead,
+  reassignRegisteredLead,
+} from "./register-lead-write";
 
 export async function registerLead(
   input: CreateLeadInput & {
@@ -26,10 +27,10 @@ export async function registerLead(
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
     identity: OrganizationEnrichment;
   },
-): Promise<Result<{ leadId: string }, DomainError>> {
+): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   const actor = input.actor;
   const now = ports.now;
   const repos = createWorkflowRepos(ports.executor);
@@ -55,9 +56,9 @@ export async function registerLead(
     return activeExecutive;
   }
 
-  // Lazy release: if the RUC is still held by a lapsed lead the sweep has not
-  // retired yet, expire it now so this registration sees the RUC as available
-  // instead of waiting for the next sweep tick.
+  // Lazy release: if the RUC is still held by a lapsed lead the sweep has
+  // not retired yet, expire it now so registration sees the RUC as available
+  // without waiting for the next sweep tick.
   const heldLead = await repos.leads.findActiveByRuc(ruc.value);
 
   if (heldLead && isReservationLapsed(heldLead, now)) {
@@ -86,42 +87,18 @@ export async function registerLead(
   }
 
   if (resolution.value.kind === "reassign") {
-    const leadId = resolution.value.lead.id;
-
-    return runLeadTransaction(
-      { executor: ports.executor, now },
-      async (ctx) => {
-        const state = await ctx.repos.leads.findById(leadId);
-
-        if (!state) {
-          return Err(fail("lead_not_found"));
-        }
-
-        const transition = reassignLead(state, {
-          actor,
-          toExecutiveId: actor.userId,
-          now: ctx.now,
-        });
-
-        if (!transition.ok) {
-          return transition;
-        }
-
-        const committed = await ctx.commitTransition(transition.value, {
-          toExecutiveId: actor.userId,
-          assignedBy: actor.userId,
-          at: ctx.now,
-        });
-
-        if (!committed.ok) {
-          return committed;
-        }
-
-        return Ok({ leadId: state.id });
-      },
-    );
+    return reassignRegisteredLead({
+      leadId: resolution.value.lead.id,
+      actor,
+      ports: { executor: ports.executor, now },
+    });
   }
 
+  // Create path only: a reassign resolves an existing lead rather than adding
+  // a new client. The pending-quotation cap is enforced inside
+  // createRegisteredLead's transaction (locked per executive), not here: a
+  // pre-check against this same repos read would be stale by the time the
+  // transaction runs, so it would only be an unreliable early-out.
   const commercialScope: LeadCommercialScope = {
     currentProvider: input.currentProvider,
     currentDebitRate: input.currentDebitRate,
@@ -134,65 +111,12 @@ export async function registerLead(
 
   const overlay = await ports.identity.enrichByRuc(ruc.value);
 
-  return runLeadTransaction({ executor: ports.executor, now }, async (ctx) => {
-    const organization =
-      (await ctx.repos.party.findOrganizationByRuc(ruc.value)) ??
-      (await ctx.repos.party.createOrganization({
-        ruc: ruc.value,
-        legalName: overlay?.legalName ?? null,
-        giroNegocio: input.giroNegocio,
-        address: overlay?.address ?? null,
-        district: null,
-        department: null,
-      }));
-
-    const draft = createLeadDraft({
-      organizationId: organization.id,
-      ruc: ruc.value,
-      legalName: organization.legalName,
-      address: organization.address,
-      executiveId: actor.userId,
-      createdBy: actor.userId,
-      commercialScope,
-      now: ctx.now,
-    });
-
-    if (!draft.ok) {
-      return draft;
-    }
-
-    const leadId = await ctx.repos.leads.insert(draft.value);
-
-    await ctx.repos.leadAssignments.insert({
-      leadId,
-      executiveId: actor.userId,
-      assignedBy: actor.userId,
-      isActive: true,
-      assignedAt: ctx.now,
-    });
-
-    const appended = await ctx.appendFacts([
-      createHistoryEvent({
-        leadId,
-        eventType: "lead_registered",
-        actorUserId: actor.userId,
-        payload: { ruc: draft.value.ruc, toStage: "QUALIFYING" },
-        occurredAt: ctx.now,
-      }),
-      createHistoryEvent({
-        leadId,
-        eventType: "lead_assigned",
-        actorUserId: actor.userId,
-        subjectUserId: actor.userId,
-        payload: { executiveId: actor.userId },
-        occurredAt: ctx.now,
-      }),
-    ]);
-
-    if (!appended.ok) {
-      return appended;
-    }
-
-    return Ok({ leadId });
+  return createRegisteredLead({
+    command: input,
+    actor,
+    ruc: ruc.value,
+    commercialScope,
+    enrichment: overlay,
+    ports: { executor: ports.executor, now },
   });
 }

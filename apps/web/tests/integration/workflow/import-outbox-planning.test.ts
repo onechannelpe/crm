@@ -1,40 +1,50 @@
+import { createLeadFixtureWriter } from "@tests/support/database/workflow-fixtures";
+import { createWorkflowImporter } from "@tests/support/integration/workflow-import";
+import { createNotificationReader } from "@tests/support/readers/notifications";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { createWorkflowScenario } from "@tests/support/workflow/scenario";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 describe("import outbox planning", () => {
   let runtime: TestRuntime;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     runtime = await createTestRuntime("import-outbox-planning");
-    runtime.now.set(2_000);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await runtime.dispose();
   });
 
+  beforeEach(async () => {
+    await runtime.reset();
+    runtime.now.set(new Date(2_000));
+  });
+
   it("plans unified notification outbox entries for matching import mutations", async () => {
-    const scenario = createWorkflowScenario(runtime);
-    const leadOne = await scenario.seedDirect.leadAt("execOne", {
+    const givenLead = createLeadFixtureWriter(runtime);
+    const importer = createWorkflowImporter({
+      runtime,
+    });
+    const leadOne = await givenLead({
+      kind: "qualifying",
       key: "planning-one",
       organization: { key: "planning-one" },
-      stage: "QUALIFYING",
       status: "DISPONIBLE",
       priority: "P1",
     });
-    const leadTwo = await scenario.seedDirect.leadAt("execTwo", {
+    const leadTwo = await givenLead({
+      kind: "qualifying",
+      executive: "execTwo",
       key: "planning-two",
       organization: { key: "planning-two" },
-      stage: "QUALIFYING",
       status: "SIN RESULTADO",
       priority: "P1",
     });
 
-    const applied = await scenario.importer.run({
+    const applied = await importer.run({
       actor: "superuser",
       rows: [
         { type: "priority", lead: leadOne, priority: "SIN RESULTADO" },
@@ -45,7 +55,18 @@ describe("import outbox planning", () => {
     expect(applied.applied).toBe(2);
     expect(applied.failed).toBe(0);
 
-    const pending = await scenario.outbox.counts("pending");
-    expect(pending.notifications).toBe(2);
+    const intents = await createNotificationReader(runtime).intents();
+    expect(
+      intents.filter(({ queue_state }) => queue_state === "pending"),
+    ).toHaveLength(2);
+    expect(
+      intents.map(({ available_at, created_at }) => ({
+        available_at,
+        created_at,
+      })),
+    ).toEqual([
+      { available_at: new Date(2_000), created_at: new Date(2_000) },
+      { available_at: new Date(2_000), created_at: new Date(2_000) },
+    ]);
   });
 });

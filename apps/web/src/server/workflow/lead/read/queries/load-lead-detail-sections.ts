@@ -1,6 +1,13 @@
 import { createLogger } from "~/lib/observability/logger";
-import type { PartyRepository } from "~/server/identity/organization/repo";
+import type { OrganizationRepository } from "~/server/organization/organization-repo";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type {
+  FileAssetId,
+  UserId,
+  WorkflowLeadId,
+  WorkflowRateRevisionFileId,
+  WorkflowRateRevisionId,
+} from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { DigitalPolicyRepository } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
@@ -12,6 +19,10 @@ import type {
   LeadCommercialScope,
   LeadState,
 } from "~/server/workflow/lead/domain/state";
+import type {
+  FulfillmentOrderDetails,
+  FulfillmentRepository,
+} from "~/server/workflow/lead/fulfillment/repo";
 import type { LeadHistoryRepository } from "~/server/workflow/lead/read/history/history-repo";
 import type { LeadFavoriteRepository } from "~/server/workflow/lead/read/lead-favorite-repo";
 import type {
@@ -47,13 +58,13 @@ function reportSectionDegradation(section: string, error: DomainError): void {
 }
 
 export type RateRevisionFilesQuery = {
-  listByRevisionId(revisionId: string): Promise<
+  listByRevisionId(revisionId: WorkflowRateRevisionId): Promise<
     Array<{
-      artifactId: string;
-      revisionId: string;
-      fileAssetId: number;
-      uploadedByUserId: number;
-      createdAt: number;
+      id: WorkflowRateRevisionFileId;
+      revisionId: WorkflowRateRevisionId | null;
+      fileAssetId: FileAssetId;
+      uploadedByUserId: UserId;
+      createdAt: Date;
       safeDisplayFilename: string;
       detectedMime: string;
       sizeBytes: number;
@@ -72,7 +83,8 @@ export type LeadDetailQueryDeps = {
   rateRevisionFiles: RateRevisionFilesQuery;
   sourceStatuses: SourceStatusReader;
   users: WorkflowUserRepository;
-  party: PartyRepository;
+  organization: OrganizationRepository;
+  fulfillment: FulfillmentRepository;
 };
 
 export type LeadDetailLoadedSections = {
@@ -87,20 +99,21 @@ export type LeadDetailLoadedSections = {
   sourceStatus: Awaited<ReturnType<SourceStatusReader["findByRuc"]>>;
   userRows: LeadUserWithName[];
   organization: NonNullable<
-    Awaited<ReturnType<PartyRepository["findOrganizationById"]>>
+    Awaited<ReturnType<OrganizationRepository["findOrganizationById"]>>
   >;
   legalRepresentative: Awaited<
-    ReturnType<PartyRepository["findPrimaryLegalRepresentative"]>
+    ReturnType<OrganizationRepository["findPrimaryRepresentative"]>
   >;
   rateRevisions: Array<{
     revision: RateRevision;
     files: Awaited<ReturnType<RateRevisionFilesQuery["listByRevisionId"]>>;
   }>;
+  fulfillment: FulfillmentOrderDetails | null;
 };
 
 export async function loadLeadDetailSections(
   deps: LeadDetailQueryDeps,
-  input: { leadId: string; actorUserId: number },
+  input: { leadId: WorkflowLeadId; actorUserId: UserId },
 ): Promise<Result<LeadDetailLoadedSections, DomainError>> {
   const lead = await deps.leads.findById(input.leadId);
   if (!lead) {
@@ -123,6 +136,7 @@ export async function loadLeadDetailSections(
     userRows,
     organization,
     legalRepresentative,
+    fulfillment,
   ] = await Promise.all([
     deps.leadFavorites.isFavoriteForUser({
       leadId: input.leadId,
@@ -139,8 +153,9 @@ export async function loadLeadDetailSections(
       lead.createdBy,
       ...(lead.updatedBy ? [lead.updatedBy] : []),
     ]),
-    deps.party.findOrganizationById(lead.organizationId),
-    deps.party.findPrimaryLegalRepresentative(lead.organizationId),
+    deps.organization.findOrganizationById(lead.organizationId),
+    deps.organization.findPrimaryRepresentative(lead.organizationId),
+    deps.fulfillment.findByLeadId(input.leadId),
   ]);
 
   if (!historyResult.ok && !isRecoverableSectionError(historyResult.error)) {
@@ -190,5 +205,6 @@ export async function loadLeadDetailSections(
     organization,
     legalRepresentative,
     rateRevisions,
+    fulfillment,
   });
 }

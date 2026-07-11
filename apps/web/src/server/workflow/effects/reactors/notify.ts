@@ -1,6 +1,11 @@
-import { enqueueNotifications } from "~/server/notifications/outbox";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import type { NotificationIntent } from "~/server/notifications/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import {
+  NotificationIntentId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 import type { LeadHistoryEventDraftFor } from "~/server/workflow/lead/domain/history";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
@@ -15,20 +20,23 @@ function isCommittedStageChange(
   return committed.event.eventType === "workflow_stage_changed";
 }
 
-function deriveLeadStageNotifications(input: {
+export function deriveLeadStageNotifications(input: {
   eventId: string;
   leadId: string;
   toStage: string;
   ruc: string;
-  executiveId: number;
-  branchId: number | null;
+  executiveId: UserId;
+  branchId: BranchId | null;
 }): NotificationIntent[] {
   // Availability qualification cleared the lead: back office now proposes a rate.
   if (input.toStage === "PRICING") {
     if (input.branchId === null) return [];
     return [
       {
-        id: `${input.eventId}:ready_pricing`,
+        id: NotificationIntentId.derive({
+          sourceEventId: input.eventId,
+          discriminator: "ready_pricing",
+        }),
         eventType: "lead.ready_for_quotation",
         audience: {
           kind: "branch_role",
@@ -48,10 +56,15 @@ function deriveLeadStageNotifications(input: {
   if (input.toStage === "SETUP") {
     return [
       {
-        id: `${input.eventId}:ready_setup`,
+        id: NotificationIntentId.derive({
+          sourceEventId: input.eventId,
+          discriminator: "ready_setup",
+        }),
         eventType: "lead.ready_for_sale",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
-        channels: ["in_app"],
+        // The in-app bell alone would miss executives who don't open the app;
+        // whatsapp reaches them on their primary channel for a high-value step.
+        channels: ["in_app", "whatsapp"],
         priority: "high",
         title: "Cliente listo para afiliación",
         bodyText: `El cliente RUC ${input.ruc} aceptó la tarifa. Define la política digital para continuar.`,
@@ -63,13 +76,12 @@ function deriveLeadStageNotifications(input: {
   return [];
 }
 
-// Reactor: turn committed stage changes into notification-outbox rows. Reads the
-// fresh lead row inside the same transaction, so the snapshot it sees already
-// reflects the transition that produced the event.
+// Reads the fresh lead row inside the same transaction, so the snapshot it
+// sees already reflects the transition that produced the event.
 export async function reactToStageChanges(
   tx: DatabaseExecutor,
   committed: CommittedLeadEvent[],
-  now: number,
+  now: Date,
 ): Promise<void> {
   const stageChanges = committed.filter(isCommittedStageChange);
   if (stageChanges.length === 0) return;
@@ -93,7 +105,7 @@ export async function reactToStageChanges(
   for (const { event, id } of stageChanges) {
     const lead = leadsById.get(event.leadId);
 
-    if (!lead || lead.executiveId <= 0) continue;
+    if (!lead) continue;
 
     intents.push(
       ...deriveLeadStageNotifications({

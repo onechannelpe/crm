@@ -2,6 +2,7 @@ import { diffFields } from "~/contracts/events";
 import type { EditCommercialScopeInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 
@@ -16,7 +17,7 @@ type CommercialSnapshot = {
   ticket: number;
   settlementBank: string;
   posCount: number;
-  giroNegocio: string | null;
+  lineOfBusiness: string | null;
 };
 
 const COMMERCIAL_FIELD_KEYS = [
@@ -27,16 +28,17 @@ const COMMERCIAL_FIELD_KEYS = [
   "ticket",
   "settlementBank",
   "posCount",
-  "giroNegocio",
+  "lineOfBusiness",
 ] as const satisfies ReadonlyArray<keyof CommercialSnapshot>;
 
 export async function editCommercialScopeCommand(
-  input: EditCommercialScopeInput & {
+  input: Omit<EditCommercialScopeInput, "leadId"> & {
     actor: WorkflowActor;
+    leadId: WorkflowLeadId;
   },
   ports: {
     executor: DatabaseExecutor;
-    now: number;
+    now: Date;
   },
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(ports, async (ctx) => {
@@ -52,13 +54,16 @@ export async function editCommercialScopeCommand(
       return Err(fail("lead_not_found"));
     }
 
-    const org = await ctx.repos.party.findOrganizationById(
+    const org = await ctx.repos.organization.findOrganizationById(
       state.organizationId,
     );
 
+    // Normalize an absent line of business to "" (not null) so a per-field edit
+    // that leaves it untouched sends "" and diffs clean; diffFields treats
+    // null !== "" and would otherwise log a spurious change on every save.
     const prev: CommercialSnapshot = {
       ...commercial,
-      giroNegocio: org?.giroNegocio ?? null,
+      lineOfBusiness: org?.lineOfBusiness ?? "",
     };
 
     const next: CommercialSnapshot = {
@@ -69,7 +74,7 @@ export async function editCommercialScopeCommand(
       ticket: input.ticket,
       settlementBank: input.settlementBank,
       posCount: input.posCount,
-      giroNegocio: input.giroNegocio,
+      lineOfBusiness: input.lineOfBusiness,
     };
 
     const changes = diffFields(prev, next, COMMERCIAL_FIELD_KEYS);
@@ -103,9 +108,9 @@ export async function editCommercialScopeCommand(
       input.actor.userId,
     );
 
-    await ctx.repos.party.updateOrganizationCommercial({
+    await ctx.repos.organization.updateCommercialProfile({
       organizationId: state.organizationId,
-      giroNegocio: input.giroNegocio,
+      lineOfBusiness: input.lineOfBusiness,
     });
 
     const committed = await ctx.commitTransition(transition.value);

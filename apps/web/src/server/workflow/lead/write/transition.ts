@@ -20,7 +20,7 @@ export type CommittedLeadEvent = { event: LeadHistoryEventDraft; id: string };
 export type LeadTransaction = {
   tx: DatabaseExecutor;
   repos: WorkflowRepos;
-  now: number;
+  now: Date;
   commitTransition(
     transition: LeadTransition,
     assignment?: LeadAssignment,
@@ -30,9 +30,8 @@ export type LeadTransaction = {
   ): Promise<Result<{ eventIds: string[] }, DomainError>>;
 };
 
-// Carries a domain failure out of the Kysely transaction so the executor rolls
-// back. The runner unwraps it back into an `Err`; any other throw is a genuine
-// fault and propagates to the action fault boundary.
+// A domain failure is thrown as a sentinel so the transaction rolls back; the
+// runner unwraps it into Err. Any other throw is a fault and propagates.
 class LeadTransactionRollback {
   constructor(readonly error: DomainError) {}
 }
@@ -45,7 +44,7 @@ function zip(
 }
 
 export function runLeadTransaction<O>(
-  ports: { executor: DatabaseExecutor; now: number },
+  ports: { executor: DatabaseExecutor; now: Date },
   body: (ctx: LeadTransaction) => Promise<Result<O, DomainError>>,
 ): Promise<Result<O, DomainError>> {
   return ports.executor
@@ -74,7 +73,7 @@ export function runLeadTransaction<O>(
 
       if (isErr(result)) throw new LeadTransactionRollback(result.error);
 
-      // Effects share the transaction with source events to prevent orphaned delivery.
+      // Effects share the transaction with source events: no orphaned delivery.
       await enqueueLeadEffects(tx, committed, ports.now);
       return result;
     })

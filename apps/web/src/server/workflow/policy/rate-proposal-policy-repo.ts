@@ -2,17 +2,18 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 type RateProposalPolicyDefault = {
-  branchId: number;
+  branchId: BranchId;
   validityDays: number;
-  updatedAt: number;
-  updatedByUserId: number;
+  updatedAt: Date;
+  updatedByUserId: UserId;
 };
 
 export type RateProposalPolicyRepository = {
   findByBranchId(
-    branchId: number,
+    branchId: BranchId,
   ): Promise<RateProposalPolicyDefault | undefined>;
   upsert(values: RateProposalPolicyDefault): Promise<unknown>;
 };
@@ -41,7 +42,7 @@ export function createRateProposalPolicyRepo(
 ): RateProposalPolicyRepository {
   return {
     async findByBranchId(
-      branchId: number,
+      branchId: BranchId,
     ): Promise<RateProposalPolicyDefault | undefined> {
       const row = await db
         .selectFrom("workflow_rate_proposal_policies")
