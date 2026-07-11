@@ -1,16 +1,17 @@
-import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
+import { grantUsageCapacity } from "~/server/capacity/application/usage/ledger";
 import type { AppContext } from "~/server/platform/action/context";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "../../domain/access-policy";
 import { validateRequestAmount } from "../../domain/limits";
+import { canManageExecutive } from "../authorize-capacity-actor";
 import type { CapacityGrantDeps } from "./shared";
 
 export async function grantLeadCapacityDirect(
   ctx: AppContext,
   deps: CapacityGrantDeps,
-  input: { targetUserId: number; amount: number; reason: string },
+  input: { targetUserId: UserId; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   const amount = validateRequestAmount(input.amount);
   if (!amount.ok) return amount;
@@ -24,9 +25,15 @@ export async function grantLeadCapacityDirect(
       return Err(fail("cannot_manage_executive"));
     }
 
-    const result = await grantLeadCapacity(
-      { actorUserId: ctx.actor.userId, ...input, amount: amount.value },
-      tx,
+    const result = await grantUsageCapacity(
+      {
+        kind: "lead",
+        actorUserId: ctx.actor.userId,
+        targetUserId: input.targetUserId,
+        amount: amount.value,
+        reason: input.reason,
+      },
+      { grants: tx.leadCapacityGrants },
     );
     if (isErr(result)) return result;
     return Ok({ success: true });

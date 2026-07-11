@@ -2,6 +2,7 @@
 
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 const SCOPE_TYPES = ["branch", "team"] as const;
@@ -13,7 +14,7 @@ export async function updateSearchPolicyOverride(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        userId: r.posInt("userId"),
+        userId: r.id("userId", UserId),
         monthlyLimit: r.posInt("monthlySearchLimit"),
         expiresAt: r.optNum("expiresAt"),
       })),
@@ -35,7 +36,7 @@ export async function updateLeadPolicyOverride(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        userId: r.posInt("userId"),
+        userId: r.id("userId", UserId),
         bufferTarget: r.posInt("activeBufferTarget"),
         dailyLimit: r.posInt("dailyRefillLimit"),
         expiresAt: r.optNum("expiresAt"),
@@ -58,10 +59,12 @@ export async function updateSearchPolicyDefault(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        scope: {
-          kind: r.enum("scopeType", SCOPE_TYPES),
-          scopeId: r.posInt("scopeId"),
-        },
+        scope: (() => {
+          const kind = r.enum("scopeType", SCOPE_TYPES);
+          return kind === "branch"
+            ? { kind, scopeId: r.id("scopeId", BranchId) }
+            : { kind, scopeId: r.id("scopeId", TeamId) };
+        })(),
         monthlyLimit: r.posInt("monthlySearchLimit"),
       })),
 
@@ -85,10 +88,12 @@ export async function updateLeadPolicyDefault(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        scope: {
-          kind: r.enum("scopeType", SCOPE_TYPES),
-          scopeId: r.posInt("scopeId"),
-        },
+        scope: (() => {
+          const kind = r.enum("scopeType", SCOPE_TYPES);
+          return kind === "branch"
+            ? { kind, scopeId: r.id("scopeId", BranchId) }
+            : { kind, scopeId: r.id("scopeId", TeamId) };
+        })(),
         bufferTarget: r.posInt("activeBufferTarget"),
         dailyLimit: r.posInt("dailyRefillLimit"),
       })),

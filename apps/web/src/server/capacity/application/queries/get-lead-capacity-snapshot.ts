@@ -1,19 +1,19 @@
-import type {
-  LeadCapacityGrantsRepo,
-  LeadUsageCommitsRepo,
-  LeadUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
 import {
   buildLeadCapacitySnapshot,
   type LeadCapacitySnapshot,
 } from "~/server/capacity/domain/snapshot";
+import type {
+  LeadCapacityGrantsRepo,
+  LeadUsageCommitsRepo,
+  LeadUsageReservationsRepo,
+} from "~/server/capacity/infrastructure/usage-repo";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import { currentDailyPeriod } from "~/server/shared/time";
 
 import type { ActorScope } from "../actor-scope";
-import { getEffectiveLeadPolicy } from "../lead-policy";
+import { getEffectiveLeadPolicy } from "../resolve-lead-policy";
 
 interface SnapshotRepos {
   users: {
@@ -28,7 +28,7 @@ interface SnapshotRepos {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  contactAssignments: { countActiveByUser(userId: number): Promise<number> };
+  contactAssignments: { countActiveByUser(userId: UserId): Promise<number> };
 }
 
 export async function getLeadCapacitySnapshot(

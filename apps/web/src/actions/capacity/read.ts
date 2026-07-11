@@ -1,14 +1,14 @@
 "use server";
 
 import type {
-  CapacityAuditEvent,
   CapacityPolicyDefaultsView,
   ExecutiveCapacityDetailView,
   ManagedExecutiveView,
   PendingCapacityRequestView,
-} from "~/actions/capacity/contracts";
+} from "~/contracts/capacity";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function getManagedExecutivesList(): Promise<
@@ -24,7 +24,7 @@ export async function getManagedExecutivesList(): Promise<
 }
 
 export async function getExecutiveDetail(
-  userId: number,
+  userId: string,
 ): Promise<ExecutiveCapacityDetailView> {
   return runAction({
     name: "capacity.executive_detail.read",
@@ -32,7 +32,7 @@ export async function getExecutiveDetail(
 
     parse: () =>
       parseObject({ userId }, validationFail, (r) => {
-        const parsedUserId = r.posInt("userId");
+        const parsedUserId = r.id("userId", UserId);
         return { userId: parsedUserId };
       }),
 
@@ -62,22 +62,5 @@ export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
 
     execute: (ctx) =>
       getServerRuntime().capacity.useCases.getPolicyDefaults(ctx),
-  });
-}
-
-export async function getAuditEvents(
-  limit?: number,
-): Promise<CapacityAuditEvent[]> {
-  return runAction({
-    name: "capacity.audit.read",
-    access: { kind: "permission", permission: "capacity:audit:read" },
-
-    parse: () =>
-      parseObject({ limit }, validationFail, (r) => ({
-        limit: limit != null ? r.posInt("limit") : undefined,
-      })),
-
-    execute: (ctx, params) =>
-      getServerRuntime().capacity.useCases.getAuditEvents(ctx, params),
   });
 }

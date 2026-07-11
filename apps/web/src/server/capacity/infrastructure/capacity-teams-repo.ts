@@ -1,11 +1,12 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { BranchId, TeamId } from "~/server/shared/ids";
 
 import type { CapacityTeam } from "../application/actor-scope";
 
 function toCapacityTeam(team: {
-  id: number;
+  id: TeamId;
   name: string;
-  branch_id: number;
+  branch_id: BranchId;
 }): CapacityTeam {
   return {
     id: team.id,
@@ -16,7 +17,7 @@ function toCapacityTeam(team: {
 
 export function createCapacityTeamsRepo(db: DatabaseExecutor) {
   return {
-    findByBranch(branchId: number) {
+    findByBranch(branchId: BranchId) {
       return db
         .selectFrom("teams")
         .selectAll()
@@ -26,7 +27,7 @@ export function createCapacityTeamsRepo(db: DatabaseExecutor) {
         .then((teams) => teams.map(toCapacityTeam));
     },
 
-    findById(id: number) {
+    findById(id: TeamId) {
       return db
         .selectFrom("teams")
         .select(["teams.id", "teams.name", "teams.branch_id"])

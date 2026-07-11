@@ -1,19 +1,19 @@
-import type {
-  SearchCapacityGrantsRepo,
-  SearchUsageCommitsRepo,
-  SearchUsageReservationsRepo,
-} from "~/server/capacity-usage/repos";
 import {
   buildSearchCapacitySnapshot,
   type SearchCapacitySnapshot,
 } from "~/server/capacity/domain/snapshot";
+import type {
+  SearchCapacityGrantsRepo,
+  SearchUsageCommitsRepo,
+  SearchUsageReservationsRepo,
+} from "~/server/capacity/infrastructure/usage-repo";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import { currentMonthlyPeriod } from "~/server/shared/time";
 
 import type { ActorScope } from "../actor-scope";
-import { getEffectiveSearchPolicy } from "../search-policy";
+import { getEffectiveSearchPolicy } from "../resolve-search-policy";
 
 interface SnapshotRepos {
   users: {

@@ -1,49 +1,86 @@
-/**
- * In-memory repo fakes for capacity-usage integration tests.
- * Each factory returns a stateful object that mirrors the real repo interface.
- */
+import {
+  DummyDriver,
+  Kysely,
+  PostgresAdapter,
+  PostgresIntrospector,
+  PostgresQueryCompiler,
+} from "kysely";
 
+import type { Database } from "~/lib/db/types";
+import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
+import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
+import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { UserId } from "~/server/shared/ids";
+import { LeadReservationId, SearchReservationId } from "~/server/shared/ids";
+import { isErr, Ok } from "~/server/shared/result";
 import type { ReservationStatus } from "~/server/shared/scope";
 
 type GrantRow = {
   id: string;
-  user_id: number;
+  user_id: UserId;
   amount: number;
   reason: string;
-  actor_user_id: number;
-  created_at: number;
+  actor_user_id: UserId;
+  created_at: Date;
 };
-type ReservationRow = {
-  id: string;
-  user_id: number;
+type SearchReservationRow = {
+  id: SearchReservationId;
+  user_id: UserId;
   amount: number;
   reason: string;
   status: ReservationStatus;
-  created_at: number;
-  updated_at: number;
+  created_at: Date;
+  updated_at: Date;
 };
-type CommitRow = {
-  id: string;
-  reservation_id: string;
+type LeadReservationRow = {
+  id: LeadReservationId;
+  user_id: UserId;
   amount: number;
-  created_at: number;
+  reason: string;
+  status: ReservationStatus;
+  created_at: Date;
+  updated_at: Date;
 };
+type SearchCommitRow = {
+  id: string;
+  reservation_id: SearchReservationId;
+  amount: number;
+  created_at: Date;
+};
+type LeadCommitRow = {
+  id: string;
+  reservation_id: LeadReservationId;
+  amount: number;
+  created_at: Date;
+};
+
+function createTransactionExecutor(): DatabaseExecutor {
+  return new Kysely<Database>({
+    dialect: {
+      createAdapter: () => new PostgresAdapter(),
+      createDriver: () => new DummyDriver(),
+      createIntrospector: (db) => new PostgresIntrospector(db),
+      createQueryCompiler: () => new PostgresQueryCompiler(),
+    },
+  });
+}
 
 export function makeSearchCapacityGrantsRepo() {
   const rows: GrantRow[] = [];
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-      actor_user_id: number;
+      actor_user_id: UserId;
     }): Promise<void> {
-      rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
+      rows.push({ id: crypto.randomUUID(), ...values, created_at: new Date() });
       return Promise.resolve();
     },
     findByUserAndPeriod(
-      userId: number,
+      userId: UserId,
       _periodStart?: string,
       _periodEnd?: string,
     ): Promise<GrantRow[]> {
@@ -53,16 +90,16 @@ export function makeSearchCapacityGrantsRepo() {
 }
 
 export function makeSearchUsageReservationsRepo() {
-  const rows: ReservationRow[] = [];
+  const rows: SearchReservationRow[] = [];
   return {
     rows,
     insert(values: {
-      user_id: number;
+      user_id: UserId;
       amount: number;
       reason: string;
-    }): Promise<{ id: string }> {
-      const id = crypto.randomUUID();
-      const now = Date.now();
+    }): Promise<{ id: SearchReservationId }> {
+      const id = SearchReservationId.trust(crypto.randomUUID());
+      const now = new Date();
       rows.push({
         id,
         ...values,
@@ -72,86 +109,13 @@ export function makeSearchUsageReservationsRepo() {
       });
       return Promise.resolve({ id });
     },
-    findById(id: string): Promise<ReservationRow | undefined> {
+    findById(
+      id: SearchReservationId,
+    ): Promise<SearchReservationRow | undefined> {
       return Promise.resolve(rows.find((r) => r.id === id));
     },
     updateStatus(
-      id: string,
-      status: "committed" | "cancelled" | "expired",
-    ): Promise<void> {
-      const row = rows.find((r) => r.id === id);
-      if (row) row.status = status;
-      return Promise.resolve();
-    },
-    findByUserAndPeriod(userId: number): Promise<ReservationRow[]> {
-      return Promise.resolve(rows.filter((r) => r.user_id === userId));
-    },
-  };
-}
-
-export function makeSearchUsageCommitsRepo() {
-  const rows: CommitRow[] = [];
-  return {
-    rows,
-    insert(values: { reservation_id: string; amount: number }): Promise<void> {
-      rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
-      return Promise.resolve();
-    },
-    findByReservation(reservationId: string): Promise<CommitRow[]> {
-      return Promise.resolve(
-        rows.filter((r) => r.reservation_id === reservationId),
-      );
-    },
-    findByUserAndPeriod(): Promise<CommitRow[]> {
-      return Promise.resolve(rows);
-    },
-  };
-}
-
-export function makeLeadCapacityGrantsRepo() {
-  const rows: GrantRow[] = [];
-  return {
-    rows,
-    insert(values: {
-      user_id: number;
-      amount: number;
-      reason: string;
-      actor_user_id: number;
-    }): Promise<void> {
-      rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
-      return Promise.resolve();
-    },
-    findByUserAndDate(userId: number, _date?: string): Promise<GrantRow[]> {
-      return Promise.resolve(rows.filter((r) => r.user_id === userId));
-    },
-  };
-}
-
-export function makeLeadUsageReservationsRepo() {
-  const rows: ReservationRow[] = [];
-  return {
-    rows,
-    insert(values: {
-      user_id: number;
-      amount: number;
-      reason: string;
-    }): Promise<{ id: string }> {
-      const id = crypto.randomUUID();
-      const now = Date.now();
-      rows.push({
-        id,
-        ...values,
-        status: "pending",
-        created_at: now,
-        updated_at: now,
-      });
-      return Promise.resolve({ id });
-    },
-    findById(id: string): Promise<ReservationRow | undefined> {
-      return Promise.resolve(rows.find((r) => r.id === id));
-    },
-    updateStatus(
-      id: string,
+      id: SearchReservationId,
       status: "committed" | "cancelled" | "expired",
     ): Promise<void> {
       const row = rows.find((r) => r.id === id);
@@ -159,7 +123,7 @@ export function makeLeadUsageReservationsRepo() {
       return Promise.resolve();
     },
     updateAmountAndStatus(
-      id: string,
+      id: SearchReservationId,
       amount: number,
       status: "committed" | "cancelled" | "expired",
     ): Promise<void> {
@@ -170,32 +134,133 @@ export function makeLeadUsageReservationsRepo() {
       }
       return Promise.resolve();
     },
-    findByUserAndDate(userId: number): Promise<ReservationRow[]> {
+    findByUserAndPeriod(
+      userId: UserId,
+      _periodStart?: string,
+      _periodEnd?: string,
+    ): Promise<SearchReservationRow[]> {
+      return Promise.resolve(rows.filter((r) => r.user_id === userId));
+    },
+  };
+}
+
+export function makeSearchUsageCommitsRepo() {
+  const rows: SearchCommitRow[] = [];
+  return {
+    rows,
+    insert(values: {
+      reservation_id: SearchReservationId;
+      amount: number;
+    }): Promise<void> {
+      rows.push({ id: crypto.randomUUID(), ...values, created_at: new Date() });
+      return Promise.resolve();
+    },
+    findByReservation(
+      reservationId: SearchReservationId,
+    ): Promise<SearchCommitRow[]> {
+      return Promise.resolve(
+        rows.filter((r) => r.reservation_id === reservationId),
+      );
+    },
+    findByUserAndPeriod(): Promise<SearchCommitRow[]> {
+      return Promise.resolve(rows);
+    },
+  };
+}
+
+export function makeLeadCapacityGrantsRepo() {
+  const rows: GrantRow[] = [];
+  return {
+    rows,
+    insert(values: {
+      user_id: UserId;
+      amount: number;
+      reason: string;
+      actor_user_id: UserId;
+    }): Promise<void> {
+      rows.push({ id: crypto.randomUUID(), ...values, created_at: new Date() });
+      return Promise.resolve();
+    },
+    findByUserAndDate(userId: UserId, _date?: string): Promise<GrantRow[]> {
+      return Promise.resolve(rows.filter((r) => r.user_id === userId));
+    },
+  };
+}
+
+export function makeLeadUsageReservationsRepo() {
+  const rows: LeadReservationRow[] = [];
+  return {
+    rows,
+    insert(values: {
+      user_id: UserId;
+      amount: number;
+      reason: string;
+    }): Promise<{ id: LeadReservationId }> {
+      const id = LeadReservationId.trust(crypto.randomUUID());
+      const now = new Date();
+      rows.push({
+        id,
+        ...values,
+        status: "pending",
+        created_at: now,
+        updated_at: now,
+      });
+      return Promise.resolve({ id });
+    },
+    findById(id: LeadReservationId): Promise<LeadReservationRow | undefined> {
+      return Promise.resolve(rows.find((r) => r.id === id));
+    },
+    updateStatus(
+      id: LeadReservationId,
+      status: "committed" | "cancelled" | "expired",
+    ): Promise<void> {
+      const row = rows.find((r) => r.id === id);
+      if (row) row.status = status;
+      return Promise.resolve();
+    },
+    updateAmountAndStatus(
+      id: LeadReservationId,
+      amount: number,
+      status: "committed" | "cancelled" | "expired",
+    ): Promise<void> {
+      const row = rows.find((r) => r.id === id);
+      if (row) {
+        row.amount = amount;
+        row.status = status;
+      }
+      return Promise.resolve();
+    },
+    findByUserAndDate(userId: UserId): Promise<LeadReservationRow[]> {
       return Promise.resolve(rows.filter((r) => r.user_id === userId));
     },
   };
 }
 
 export function makeLeadUsageCommitsRepo() {
-  const rows: CommitRow[] = [];
+  const rows: LeadCommitRow[] = [];
   return {
     rows,
-    insert(values: { reservation_id: string; amount: number }): Promise<void> {
-      rows.push({ id: crypto.randomUUID(), ...values, created_at: Date.now() });
+    insert(values: {
+      reservation_id: LeadReservationId;
+      amount: number;
+    }): Promise<void> {
+      rows.push({ id: crypto.randomUUID(), ...values, created_at: new Date() });
       return Promise.resolve();
     },
-    findByReservation(reservationId: string): Promise<CommitRow[]> {
+    findByReservation(
+      reservationId: LeadReservationId,
+    ): Promise<LeadCommitRow[]> {
       return Promise.resolve(
         rows.filter((r) => r.reservation_id === reservationId),
       );
     },
-    findByUserAndDate(): Promise<CommitRow[]> {
+    findByUserAndDate(): Promise<LeadCommitRow[]> {
       return Promise.resolve(rows);
     },
   };
 }
 
-/** Minimal policy repos that return no overrides (system defaults apply). */
+// Policy repos with no overrides, so capacity tests use system defaults.
 export function makeNullSearchPolicyRepos() {
   return {
     searchPolicyDefaults: {
@@ -223,5 +288,49 @@ export function makeNullLeadPolicyRepos() {
       listActiveForUsers: async () => [],
       replaceForUser: async (): Promise<void> => undefined,
     },
+  };
+}
+
+type SearchReservationTestRepos = Parameters<
+  typeof getSearchCapacitySnapshot
+>[1] & {
+  searchUsageReservations: ReturnType<typeof makeSearchUsageReservationsRepo>;
+  searchUsageCommits: ReturnType<typeof makeSearchUsageCommitsRepo>;
+};
+
+export function makeSearchUsageReservationPorts(
+  repos: SearchReservationTestRepos,
+): UsageReservationPorts<"search"> {
+  return {
+    executor: createTransactionExecutor(),
+    async checkRemaining(_trx, actorUserId) {
+      const snapshot = await getSearchCapacitySnapshot(actorUserId, repos);
+      if (isErr(snapshot)) return snapshot;
+      return Ok(snapshot.value.remaining);
+    },
+    reservations: () => repos.searchUsageReservations,
+    commits: () => repos.searchUsageCommits,
+  };
+}
+
+type LeadReservationTestRepos = Parameters<
+  typeof getLeadCapacitySnapshot
+>[1] & {
+  leadUsageReservations: ReturnType<typeof makeLeadUsageReservationsRepo>;
+  leadUsageCommits: ReturnType<typeof makeLeadUsageCommitsRepo>;
+};
+
+export function makeLeadUsageReservationPorts(
+  repos: LeadReservationTestRepos,
+): UsageReservationPorts<"lead"> {
+  return {
+    executor: createTransactionExecutor(),
+    async checkRemaining(_trx, actorUserId) {
+      const snapshot = await getLeadCapacitySnapshot(actorUserId, repos);
+      if (isErr(snapshot)) return snapshot;
+      return Ok(snapshot.value.remaining);
+    },
+    reservations: () => repos.leadUsageReservations,
+    commits: () => repos.leadUsageCommits,
   };
 }

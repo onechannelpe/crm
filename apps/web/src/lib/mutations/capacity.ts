@@ -53,7 +53,7 @@ export const requestMoreLeadRefillMutation = action(
 );
 
 export const approveCapacityRequestMutation = action(
-  async (requestId: number, note?: string) => {
+  async (requestId: string, note?: string) => {
     const result = await approveCapacity(requestId, note);
     return json(result, {
       revalidate: [
@@ -70,7 +70,7 @@ export const approveCapacityRequestMutation = action(
 );
 
 export const rejectCapacityRequestMutation = action(
-  async (requestId: number, note: string) => {
+  async (requestId: string, note: string) => {
     const result = await rejectCapacity(requestId, note);
     return json(result, {
       revalidate: [
@@ -84,7 +84,7 @@ export const rejectCapacityRequestMutation = action(
 );
 
 export const grantMoreSearchesMutation = action(
-  async (userId: number, amount: number, reason: string) => {
+  async (userId: string, amount: number, reason: string) => {
     const result = await grantMoreSearches(userId, amount, reason);
     return json(result, {
       revalidate: [
@@ -98,7 +98,7 @@ export const grantMoreSearchesMutation = action(
 );
 
 export const grantMoreLeadRefillMutation = action(
-  async (userId: number, amount: number, reason: string) => {
+  async (userId: string, amount: number, reason: string) => {
     const result = await grantMoreLeadRefill(userId, amount, reason);
     return json(result, {
       revalidate: [
@@ -113,7 +113,7 @@ export const grantMoreLeadRefillMutation = action(
 
 export const updateSearchPolicyOverrideMutation = action(
   async (input: {
-    userId: number;
+    userId: string;
     monthlySearchLimit: number;
     expiresAt: number | null;
   }) => {
@@ -130,7 +130,7 @@ export const updateSearchPolicyOverrideMutation = action(
 
 export const updateLeadPolicyOverrideMutation = action(
   async (input: {
-    userId: number;
+    userId: string;
     activeBufferTarget: number;
     dailyRefillLimit: number;
     expiresAt: number | null;
@@ -149,7 +149,7 @@ export const updateLeadPolicyOverrideMutation = action(
 export const updateSearchScopeDefaultMutation = action(
   async (input: {
     scopeType: "branch" | "team";
-    scopeId: number;
+    scopeId: string;
     monthlySearchLimit: number;
   }) => {
     const result = await updateSearchPolicyDefault(input);
@@ -163,7 +163,7 @@ export const updateSearchScopeDefaultMutation = action(
 export const updateLeadScopeDefaultMutation = action(
   async (input: {
     scopeType: "branch" | "team";
-    scopeId: number;
+    scopeId: string;
     activeBufferTarget: number;
     dailyRefillLimit: number;
   }) => {

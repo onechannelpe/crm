@@ -1,39 +1,26 @@
+import type { ExecutiveCapacityDetailView } from "~/contracts/capacity";
 import { longName } from "~/lib/users/display-name";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
+import type { CapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import type { AppContext } from "~/server/platform/action/context";
 import {
   fail,
   forbidden,
   type DomainError,
 } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { epochMilliseconds } from "~/server/shared/time";
 
-import { canManageExecutive } from "../../domain/access-policy";
 import { fromDbCapacityRequestKind } from "../../domain/request-policy";
 import type { CapacityUser } from "../actor-scope";
-import type { ExecutiveCapacityDetailView } from "../contracts";
+import { canManageExecutive } from "../authorize-capacity-actor";
 
 interface ExecutiveDetailDeps {
   repos: {
-    users: { findById(id: number): Promise<CapacityUser | undefined> };
-    capacityRequests: {
-      listByUser(userId: number): Promise<
-        Array<{
-          id: number;
-          user_id: number;
-          kind: "search_extra" | "lead_refill_extra";
-          status: "pending" | "approved" | "rejected" | "canceled";
-          requested_amount: number;
-          reason: string;
-          decision_note: string | null;
-          reviewer_user_id: number | null;
-          created_at: number;
-          updated_at: number;
-          decided_at: number | null;
-        }>
-      >;
-    };
+    users: { findById(id: UserId): Promise<CapacityUser | undefined> };
+    capacityRequests: Pick<CapacityRequestsRepo, "listByUser">;
   } & Omit<Parameters<typeof getSearchCapacitySnapshot>[1], "users"> &
     Omit<Parameters<typeof getLeadCapacitySnapshot>[1], "users">;
 }
@@ -41,7 +28,7 @@ interface ExecutiveDetailDeps {
 export async function getExecutiveDetail(
   ctx: AppContext,
   deps: ExecutiveDetailDeps,
-  input: { userId: number },
+  input: { userId: UserId },
 ): Promise<Result<ExecutiveCapacityDetailView, DomainError>> {
   const managed = await canManageExecutive(ctx.actor, input.userId, deps.repos);
   if (!managed.target) {
@@ -79,9 +66,11 @@ export async function getExecutiveDetail(
       reason: request.reason,
       decisionNote: request.decision_note,
       reviewerUserId: request.reviewer_user_id,
-      createdAt: request.created_at,
-      updatedAt: request.updated_at,
-      decidedAt: request.decided_at,
+      createdAt: epochMilliseconds(request.created_at),
+      updatedAt: epochMilliseconds(request.updated_at),
+      decidedAt: request.decided_at
+        ? epochMilliseconds(request.decided_at)
+        : null,
     })),
   });
 }

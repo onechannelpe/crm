@@ -1,20 +1,21 @@
 import type { AppContext } from "~/server/platform/action/context";
 import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "../../domain/access-policy";
 import {
   validateOverrideExpiry,
   validateSearchLimit,
 } from "../../domain/limits";
-import { setSearchUserOverride } from "../search-policy";
+import { canManageExecutive } from "../authorize-capacity-actor";
+import { setSearchUserOverride } from "../resolve-search-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
 export async function updateSearchPolicyOverride(
   ctx: AppContext,
   deps: CapacityPolicyDeps,
   input: {
-    userId: number;
+    userId: UserId;
     monthlyLimit: number;
     expiresAt: number | null;
   },

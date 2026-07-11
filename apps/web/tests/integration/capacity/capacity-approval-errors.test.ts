@@ -10,30 +10,41 @@ import {
 import {
   cleanupTestDb,
   createIsolatedTestDb,
+  resetTestDb,
+  TEST_FIXTURES,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
 import { rejectCapacityRequest } from "~/server/capacity/application/use-cases/reject-capacity-request";
+import { CapacityRequestId } from "~/server/shared/ids";
 
 describe("capacity approval failures", () => {
-  let ctx: TestDbContext | null = null;
+  let ctx: TestDbContext;
 
-  afterEach(async () => {
-    if (ctx) {
-      await cleanupTestDb(ctx);
-      ctx = null;
-    }
+  beforeAll(async () => {
+    ctx = await createIsolatedTestDb("capacity-approval-errors");
+  });
+
+  afterAll(async () => {
+    await cleanupTestDb(ctx);
+  });
+
+  beforeEach(async () => {
+    await resetTestDb(ctx);
   });
 
   it("returns request_not_found when the request does not exist", async () => {
-    ctx = await createIsolatedTestDb("capacity-not-found");
-
     const result = await approveCapacityRequest(
       makeApprovalContext(),
       makeApprovalDeps(ctx),
-      { requestId: 999, note: null },
+      {
+        requestId: CapacityRequestId.trust(
+          "01974fd5-f261-7a7d-93f5-2f3d0f96f001",
+        ),
+        note: null,
+      },
     );
 
     expect(result.ok).toBe(false);
@@ -44,7 +55,6 @@ describe("capacity approval failures", () => {
   });
 
   it("returns request_not_pending and writes nothing when already approved", async () => {
-    ctx = await createIsolatedTestDb("capacity-not-pending");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_ID,
       kind: "search_extra",
@@ -69,7 +79,10 @@ describe("capacity approval failures", () => {
   });
 
   it("returns forbidden and writes nothing when the actor cannot manage the target", async () => {
-    ctx = await createIsolatedTestDb("capacity-forbidden");
+    // The target (`EXECUTIVE_OTHER_BRANCH_ID`) is seeded in Norte; the actor
+    // must be scoped to a different branch (Lima) for `canManageExecutiveRecord`
+    // to reject an `admin` on branch mismatch. An unscoped actor defaults to
+    // Norte too, which would make the request manageable and defeat the test.
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_OTHER_BRANCH_ID,
       kind: "search_extra",
@@ -79,7 +92,10 @@ describe("capacity approval failures", () => {
     });
 
     const result = await approveCapacityRequest(
-      makeApprovalContext({ role: "admin", branchId: 1 }),
+      makeApprovalContext({
+        role: "admin",
+        branchId: TEST_FIXTURES.branches.lima.id,
+      }),
       makeApprovalDeps(ctx),
       { requestId, note: null },
     );
@@ -94,7 +110,6 @@ describe("capacity approval failures", () => {
   });
 
   it("rolls back the approval write when the grant insert fails", async () => {
-    ctx = await createIsolatedTestDb("capacity-rollback");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_ID,
       kind: "search_extra",
@@ -118,7 +133,6 @@ describe("capacity approval failures", () => {
   });
 
   it("fails fast and writes nothing when the rejection note is empty", async () => {
-    ctx = await createIsolatedTestDb("capacity-empty-note");
     const requestId = await seedRequest(ctx, {
       userId: EXECUTIVE_ID,
       kind: "search_extra",

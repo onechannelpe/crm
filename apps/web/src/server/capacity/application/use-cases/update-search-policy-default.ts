@@ -2,10 +2,10 @@ import type { AppContext } from "~/server/platform/action/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageScope } from "../../domain/access-policy";
 import { validateSearchLimit } from "../../domain/limits";
 import type { ScopeRef } from "../../domain/types";
-import { setSearchScopeDefault } from "../search-policy";
+import { canManageScope } from "../authorize-capacity-actor";
+import { setSearchScopeDefault } from "../resolve-search-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
 export async function updateSearchPolicyDefault(
@@ -27,11 +27,17 @@ export async function updateSearchPolicyDefault(
     }
 
     const result = await setSearchScopeDefault(
-      {
-        scopeType: input.scope.kind,
-        scopeId: input.scope.scopeId,
-        monthlyLimit: monthlyLimit.value,
-      },
+      input.scope.kind === "branch"
+        ? {
+            scopeType: "branch",
+            scopeId: input.scope.scopeId,
+            monthlyLimit: monthlyLimit.value,
+          }
+        : {
+            scopeType: "team",
+            scopeId: input.scope.scopeId,
+            monthlyLimit: monthlyLimit.value,
+          },
       tx,
     );
 

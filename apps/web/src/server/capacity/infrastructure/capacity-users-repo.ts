@@ -2,6 +2,7 @@ import type { Selectable } from "kysely";
 
 import type { UsersTable } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { BranchId, UserId } from "~/server/shared/ids";
 
 import type { CapacityUser } from "../application/actor-scope";
 
@@ -23,7 +24,7 @@ function toCapacityUser(user: UserRow): CapacityUser {
 
 export function createCapacityUsersRepo(db: DatabaseExecutor) {
   return {
-    findById(id: number) {
+    findById(id: UserId) {
       return db
         .selectFrom("users")
         .selectAll()
@@ -32,7 +33,7 @@ export function createCapacityUsersRepo(db: DatabaseExecutor) {
         .then((user) => (user ? toCapacityUser(user) : undefined));
     },
 
-    findByBranchIncludingInactive(branchId: number) {
+    findByBranchIncludingInactive(branchId: BranchId) {
       return db
         .selectFrom("users")
         .selectAll()
@@ -41,12 +42,12 @@ export function createCapacityUsersRepo(db: DatabaseExecutor) {
         .then((users) => users.map(toCapacityUser));
     },
 
-    findByBranch(branchId: number) {
+    findByBranch(branchId: BranchId) {
       return db
         .selectFrom("users")
         .selectAll()
         .where("branch_id", "=", branchId)
-        .where("is_active", "=", 1)
+        .where("is_active", "=", true)
         .execute()
         .then((users) => users.map(toCapacityUser));
     },
@@ -55,7 +56,7 @@ export function createCapacityUsersRepo(db: DatabaseExecutor) {
       return db
         .selectFrom("users")
         .selectAll()
-        .where("is_active", "=", 1)
+        .where("is_active", "=", true)
         .execute()
         .then((users) => users.map(toCapacityUser));
     },

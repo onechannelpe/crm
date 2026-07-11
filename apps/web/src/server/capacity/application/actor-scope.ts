@@ -1,9 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 export type ActorScope = {
-  teamId: number | null;
-  branchId: number;
+  teamId: TeamId | null;
+  branchId: BranchId;
 };
 
 export type ManageableCapacityUser = ActorScope & {
@@ -11,7 +12,7 @@ export type ManageableCapacityUser = ActorScope & {
 };
 
 export type CapacityUser = ManageableCapacityUser & {
-  id: number;
+  id: UserId;
   email: string;
   names: string;
   firstSurname: string;
@@ -20,7 +21,7 @@ export type CapacityUser = ManageableCapacityUser & {
 };
 
 export type CapacityTeam = {
-  id: number;
+  id: TeamId;
   name: string;
-  branchId: number;
+  branchId: BranchId;
 };

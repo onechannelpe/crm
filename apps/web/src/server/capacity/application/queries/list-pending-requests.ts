@@ -1,34 +1,15 @@
+import type { PendingCapacityRequestView } from "~/contracts/capacity";
+import type { CapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import type { AppContext } from "~/server/platform/action/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
+import { epochMilliseconds } from "~/server/shared/time";
 
 import { fromDbCapacityRequestKind } from "../../domain/request-policy";
-import type { PendingCapacityRequestView } from "../contracts";
 
 interface PendingRequestsDeps {
   repos: {
-    capacityRequests: {
-      listPendingByBranch(branchId: number): Promise<
-        Array<{
-          id: number;
-          user_id: number;
-          kind: "search_extra" | "lead_refill_extra";
-          status: "pending" | "approved" | "rejected" | "canceled";
-          requested_amount: number;
-          reason: string;
-          decision_note: string | null;
-          reviewer_user_id: number | null;
-          created_at: number;
-          updated_at: number;
-          decided_at: number | null;
-          names: string;
-          first_surname: string;
-          second_surname: string;
-          team_id: number | null;
-          branch_id: number;
-        }>
-      >;
-    };
+    capacityRequests: Pick<CapacityRequestsRepo, "listPendingByBranch">;
   };
 }
 
@@ -48,9 +29,11 @@ export async function listPendingRequests(
     reason: request.reason,
     decisionNote: request.decision_note,
     reviewerUserId: request.reviewer_user_id,
-    createdAt: request.created_at,
-    updatedAt: request.updated_at,
-    decidedAt: request.decided_at,
+    createdAt: epochMilliseconds(request.created_at),
+    updatedAt: epochMilliseconds(request.updated_at),
+    decidedAt: request.decided_at
+      ? epochMilliseconds(request.decided_at)
+      : null,
     names: request.names,
     firstSurname: request.first_surname,
     secondSurname: request.second_surname,

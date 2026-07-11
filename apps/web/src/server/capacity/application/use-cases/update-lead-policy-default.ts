@@ -2,10 +2,10 @@ import type { AppContext } from "~/server/platform/action/context";
 import type { DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageScope } from "../../domain/access-policy";
 import { validateLeadPolicyValues } from "../../domain/limits";
 import type { ScopeRef } from "../../domain/types";
-import { setLeadScopeDefault } from "../lead-policy";
+import { canManageScope } from "../authorize-capacity-actor";
+import { setLeadScopeDefault } from "../resolve-lead-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
 export async function updateLeadPolicyDefault(
@@ -28,12 +28,19 @@ export async function updateLeadPolicyDefault(
     }
 
     const result = await setLeadScopeDefault(
-      {
-        scopeType: input.scope.kind,
-        scopeId: input.scope.scopeId,
-        bufferTarget: values.value.bufferTarget,
-        dailyLimit: values.value.dailyLimit,
-      },
+      input.scope.kind === "branch"
+        ? {
+            scopeType: "branch",
+            scopeId: input.scope.scopeId,
+            bufferTarget: values.value.bufferTarget,
+            dailyLimit: values.value.dailyLimit,
+          }
+        : {
+            scopeType: "team",
+            scopeId: input.scope.scopeId,
+            bufferTarget: values.value.bufferTarget,
+            dailyLimit: values.value.dailyLimit,
+          },
       tx,
     );
 

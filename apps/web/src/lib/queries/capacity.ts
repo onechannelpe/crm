@@ -1,7 +1,6 @@
 import { query } from "@solidjs/router";
 
 import {
-  getAuditEvents,
   getExecutiveDetail,
   getManagedExecutivesList,
   getPendingRequests,
@@ -23,8 +22,4 @@ export const pendingCapacityRequestsQuery = query(
 export const capacityPolicyDefaultsQuery = query(
   getPolicyDefaults,
   "capacityPolicyDefaults",
-);
-export const capacityAuditEventsQuery = query(
-  getAuditEvents,
-  "capacityAuditEvents",
 );

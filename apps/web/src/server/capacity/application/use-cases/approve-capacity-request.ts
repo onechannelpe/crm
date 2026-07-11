@@ -1,22 +1,22 @@
 import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
-import { grantLeadCapacity } from "~/server/capacity-usage/lead-usage";
-import { grantSearchCapacity } from "~/server/capacity-usage/search-usage";
+import { grantUsageCapacity } from "~/server/capacity/application/usage/ledger";
 import type { AppContext } from "~/server/platform/action/context";
 import {
   fail,
   forbidden,
   type DomainError,
 } from "~/server/shared/domain-error";
+import type { CapacityRequestId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { canManageExecutive } from "../../domain/access-policy";
 import { normalizeDecisionNote } from "../../domain/request-policy";
+import { canManageExecutive } from "../authorize-capacity-actor";
 import type { CapacityApprovalDeps } from "./shared";
 
 export async function approveCapacityRequest(
   ctx: AppContext,
   deps: CapacityApprovalDeps,
-  input: { requestId: number; note: string | null },
+  input: { requestId: CapacityRequestId; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
   await checkActionRateLimit(
     "capacity.approve",
@@ -52,25 +52,27 @@ export async function approveCapacityRequest(
     }
 
     if (request.kind === "search_extra") {
-      const granted = await grantSearchCapacity(
+      const granted = await grantUsageCapacity(
         {
+          kind: "search",
           actorUserId: ctx.actor.userId,
           targetUserId: request.user_id,
           amount: request.requested_amount,
           reason: note ?? request.reason,
         },
-        tx,
+        { grants: tx.searchCapacityGrants },
       );
       if (isErr(granted)) return granted;
     } else {
-      const granted = await grantLeadCapacity(
+      const granted = await grantUsageCapacity(
         {
+          kind: "lead",
           actorUserId: ctx.actor.userId,
           targetUserId: request.user_id,
           amount: request.requested_amount,
           reason: note ?? request.reason,
         },
-        tx,
+        { grants: tx.leadCapacityGrants },
       );
       if (isErr(granted)) return granted;
     }
