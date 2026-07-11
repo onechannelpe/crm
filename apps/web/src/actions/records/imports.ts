@@ -20,12 +20,8 @@ import {
   type DomainError,
   throwDomain,
 } from "~/server/shared/domain-error";
-import {
-  asIntegrationJobId,
-  type IntegrationJobId,
-  type BranchId,
-  type UserId,
-} from "~/server/shared/ids";
+import type { BranchId, UserId } from "~/server/shared/ids";
+import { IntegrationJobId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -179,7 +175,7 @@ export async function getRecordImportJob(
 
     parse: () =>
       parseObject({ jobId: rawJobId }, validationFail, (r) => ({
-        jobId: asIntegrationJobId(r.str("jobId")),
+        jobId: r.id("jobId", IntegrationJobId),
       })),
 
     audit: (query) => ({ jobId: query.jobId }),

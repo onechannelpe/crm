@@ -10,17 +10,11 @@ import {
 } from "~/server/notifications/repos/delivery-repo";
 import type { IntentJob } from "~/server/notifications/repos/intent-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
-import {
-  asBranchId,
-  asNotificationIntentId,
-  asUserId,
-  type NotificationIntentId,
-  type UserId,
-} from "~/server/shared/ids";
+import { BranchId, NotificationIntentId, UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW, benchDate } from "../_shared/constants";
 
-const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
+const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
 
 export const PLANNER_SCENARIOS = [
   {
@@ -57,7 +51,7 @@ type PlannerScenario = (typeof PLANNER_SCENARIOS)[number];
 type PlannerScenarioResult<T> = Record<PlannerScenarioName, T>;
 
 function createUserIds(count: number): UserId[] {
-  return Array.from({ length: count }, () => asUserId(randomUUIDv7()));
+  return Array.from({ length: count }, () => UserId.trust(randomUUIDv7()));
 }
 
 async function seedUsersAndAddresses(
@@ -170,7 +164,7 @@ async function seedPlannerScenario(
 
   const intents: NotificationIntent[] = audiences.map(
     (audienceUserIds, index) => ({
-      id: `bench-planner-${scenario.name}-${index}`,
+      id: NotificationIntentId.trust(`bench-planner-${scenario.name}-${index}`),
       eventType: "lead.ready_for_quotation",
       audience: { kind: "user_ids", userIds: audienceUserIds },
       channels: ["email", "whatsapp"],
@@ -182,7 +176,7 @@ async function seedPlannerScenario(
   );
 
   await enqueueNotifications(ctx.db, intents, BENCH_NOW);
-  return asNotificationIntentId(`bench-planner-${scenario.name}-0`);
+  return NotificationIntentId.trust(`bench-planner-${scenario.name}-0`);
 }
 
 async function loadPlannerEntry(
@@ -237,7 +231,7 @@ export async function seedExpandIntent(
   ctx: TestDbContext,
   userIds: UserId[],
 ): Promise<IntentJob> {
-  const id = `bench-expand-${randomUUIDv7()}`;
+  const id = NotificationIntentId.trust(`bench-expand-${randomUUIDv7()}`);
   const intent: NotificationIntent = {
     id,
     eventType: "lead.ready_for_quotation",
@@ -264,7 +258,7 @@ export async function seedExpandIntent(
       "body_text",
       "action_url",
     ])
-    .where("id", "=", asNotificationIntentId(id))
+    .where("id", "=", NotificationIntentId.trust(id))
     .executeTakeFirst();
   if (!job) {
     throw new Error(`expand intent ${id} not seeded`);
@@ -287,7 +281,9 @@ export async function seedDispatchDelivery(
   ctx: TestDbContext,
   userId: UserId,
 ): Promise<DeliveryJob> {
-  const intentId = asNotificationIntentId(`bench-dispatch-${randomUUIDv7()}`);
+  const intentId = NotificationIntentId.trust(
+    `bench-dispatch-${randomUUIDv7()}`,
+  );
   const deliveries = createDeliveryRepository(ctx.db);
 
   await deliveries.insertPlanned(

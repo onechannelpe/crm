@@ -14,7 +14,7 @@ import {
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import type { DomainError } from "~/server/shared/domain-error";
-import { asWorkflowLeadId, asWorkflowVenueId } from "~/server/shared/ids";
+import { WorkflowLeadId, WorkflowVenueId } from "~/server/shared/ids";
 import {
   parseObject,
   validationFail,
@@ -30,10 +30,10 @@ function venueFields(r: Reader<DomainError>): Omit<
   CreateVenueInput,
   "leadId"
 > & {
-  leadId: ReturnType<typeof asWorkflowLeadId>;
+  leadId: WorkflowLeadId;
 } {
   return {
-    leadId: asWorkflowLeadId(r.str("leadId")),
+    leadId: r.id("leadId", WorkflowLeadId),
     tradeName: r.str("tradeName"),
     posQuantity: r.posInt("posQuantity"),
     digitalConfig: r.optObj("digitalConfig", (c) => ({
@@ -93,11 +93,11 @@ export async function requestVenueUpdate(input: unknown) {
         (
           r,
         ): Omit<UpdateVenueInput, "leadId" | "venueId"> & {
-          leadId: ReturnType<typeof asWorkflowLeadId>;
-          venueId: ReturnType<typeof asWorkflowVenueId>;
+          leadId: WorkflowLeadId;
+          venueId: WorkflowVenueId;
         } => ({
           ...venueFields(r),
-          venueId: asWorkflowVenueId(r.str("venueId")),
+          venueId: r.id("venueId", WorkflowVenueId),
         }),
       ),
 
@@ -123,11 +123,11 @@ export async function requestVenueAccountsAddition(input: unknown) {
         (
           r,
         ): Omit<AddVenueAccountsInput, "leadId" | "venueId"> & {
-          leadId: ReturnType<typeof asWorkflowLeadId>;
-          venueId: ReturnType<typeof asWorkflowVenueId>;
+          leadId: WorkflowLeadId;
+          venueId: WorkflowVenueId;
         } => ({
-          leadId: asWorkflowLeadId(r.str("leadId")),
-          venueId: asWorkflowVenueId(r.str("venueId")),
+          leadId: r.id("leadId", WorkflowLeadId),
+          venueId: r.id("venueId", WorkflowVenueId),
           solesAccount: r.obj("solesAccount", (a) => accountFields(a, "PEN")),
           dollarAccount: r.optObj("dollarAccount", (a) =>
             accountFields(a, "USD"),

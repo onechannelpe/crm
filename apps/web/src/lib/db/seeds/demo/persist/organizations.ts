@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
-import { asOrganizationId, type OrganizationId } from "~/server/shared/ids";
+import { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
 import { ORGANIZATIONS, type OrganizationSeedKey } from "../scenario";
@@ -28,7 +28,7 @@ export async function persistOrganizations(
   for (const key of organizationKeys) {
     const { name, ...organization } = ORGANIZATIONS[key];
     organizationsToInsert.push({
-      id: asOrganizationId(randomUUIDv7()),
+      id: OrganizationId.trust(randomUUIDv7()),
       ...organization,
       legal_name: name,
       created_at: now,

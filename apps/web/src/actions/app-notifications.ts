@@ -2,7 +2,7 @@
 
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { asAppNotificationId } from "~/server/shared/ids";
+import { AppNotificationId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
 
@@ -49,7 +49,7 @@ export async function markNotificationRead(
         { notificationId: rawNotificationId },
         validationFail,
         (r) => ({
-          notificationId: asAppNotificationId(r.str("notificationId")),
+          notificationId: r.id("notificationId", AppNotificationId),
         }),
       ),
 

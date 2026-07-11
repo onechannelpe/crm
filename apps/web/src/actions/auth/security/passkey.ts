@@ -11,7 +11,8 @@ import {
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { asWebauthnChallengeId } from "~/server/shared/ids";
+import { WebauthnChallengeId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {
   const { repos } = getServerRuntime().auth.onboarding;
@@ -41,19 +42,23 @@ export async function finishPasskeyEnrollment(
     name: "auth.passkey.enroll.finish",
     access: { kind: "session" },
 
-    execute: ({ actor, ipAddress, userAgent }) =>
-      finishPasskeyEnrollmentCommand(repos, {
+    execute: async ({ actor, ipAddress, userAgent }) => {
+      const parsedChallengeId = WebauthnChallengeId.parse(challengeId);
+      if (isErr(parsedChallengeId)) return parsedChallengeId;
+
+      return finishPasskeyEnrollmentCommand(repos, {
         session: {
           userId: actor.userId,
           sessionClass: actor.sessionClass,
           primaryAuthMethod: actor.primaryAuthMethod,
         },
-        challengeId: asWebauthnChallengeId(challengeId),
+        challengeId: parsedChallengeId.value,
         response,
         ipAddress,
         userAgent,
         webauthnProvider,
-      }),
+      });
+    },
   });
 
   await installSession(result.sessionToken);

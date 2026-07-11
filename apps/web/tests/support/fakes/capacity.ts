@@ -11,13 +11,8 @@ import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/g
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import {
-  asLeadReservationId,
-  asSearchReservationId,
-  type LeadReservationId,
-  type SearchReservationId,
-  type UserId,
-} from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
+import { LeadReservationId, SearchReservationId } from "~/server/shared/ids";
 import { isErr, Ok } from "~/server/shared/result";
 import type { ReservationStatus } from "~/server/shared/scope";
 
@@ -103,7 +98,7 @@ export function makeSearchUsageReservationsRepo() {
       amount: number;
       reason: string;
     }): Promise<{ id: SearchReservationId }> {
-      const id = asSearchReservationId(crypto.randomUUID());
+      const id = SearchReservationId.trust(crypto.randomUUID());
       const now = new Date();
       rows.push({
         id,
@@ -201,7 +196,7 @@ export function makeLeadUsageReservationsRepo() {
       amount: number;
       reason: string;
     }): Promise<{ id: LeadReservationId }> {
-      const id = asLeadReservationId(crypto.randomUUID());
+      const id = LeadReservationId.trust(crypto.randomUUID());
       const now = new Date();
       rows.push({
         id,

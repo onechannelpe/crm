@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import type { InviteService } from "~/server/invites/application/types";
 import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
-import { asBranchId, asUserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";
@@ -13,8 +13,8 @@ describe("team invite create benchmark", () => {
   const db = createBenchDbFixture("bench-team-invite-create");
   let inviteCreate!: InviteService["createInvite"];
   let email = "";
-  const actorUserId = asUserId(TEST_FIXTURES.users.superUser.id);
-  const branchId = asBranchId(TEST_FIXTURES.branches.norte.id);
+  const actorUserId = UserId.trust(TEST_FIXTURES.users.superUser.id);
+  const branchId = BranchId.trust(TEST_FIXTURES.branches.norte.id);
 
   beforeAll(async () => {
     const ctx = await db.setup();

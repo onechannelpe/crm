@@ -1,11 +1,6 @@
 import { isRole, type Role } from "~/lib/auth/access/rbac";
 import { getServerRuntime } from "~/server/platform/container";
-import {
-  asBranchId,
-  asUserId,
-  type BranchId,
-  type UserId,
-} from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import type { WsPeer } from "./ws-types";
 
@@ -64,8 +59,8 @@ export function readPeerSession(peer: WsPeer): AppPeerSession | null {
   }
 
   return {
-    userId: asUserId(userId),
-    branchId: asBranchId(branchId),
+    userId: UserId.trust(userId),
+    branchId: BranchId.trust(branchId),
     role,
     sessionClass,
     onboardingCompleted,

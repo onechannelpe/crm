@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { createDeliverySender } from "~/server/notifications/dispatch/send-delivery";
 import type { DeliveryJob } from "~/server/notifications/repos/delivery-repo";
 import {
-  asNotificationDeliveryId,
-  asNotificationIntentId,
-  asUserId,
+  NotificationDeliveryId,
+  NotificationIntentId,
+  UserId,
 } from "~/server/shared/ids";
 
 import {
@@ -16,11 +16,11 @@ import {
 
 function emailJob(overrides: Partial<DeliveryJob> = {}): DeliveryJob {
   return {
-    id: asNotificationDeliveryId("1"),
+    id: NotificationDeliveryId.trust("1"),
     attempt_count: 1,
     max_attempts: 5,
-    intent_id: asNotificationIntentId("intent-1"),
-    user_id: asUserId("1"),
+    intent_id: NotificationIntentId.trust("intent-1"),
+    user_id: UserId.trust("1"),
     channel: "email",
     recipient_address: "user@test.local",
     title: "Title",

@@ -15,11 +15,7 @@ import {
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
-import {
-  asFileAssetId,
-  asWorkflowLeadId,
-  type WorkflowLeadId,
-} from "~/server/shared/ids";
+import { FileAssetId, WorkflowLeadId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import {
@@ -67,7 +63,7 @@ function parseFulfillmentDocumentUpload(
     },
     validationFail,
     (r) => ({
-      leadId: asWorkflowLeadId(r.str("leadId")),
+      leadId: r.id("leadId", WorkflowLeadId),
       action: r.enum("action", FULFILLMENT_ACTIONS),
     }),
   );
@@ -107,7 +103,7 @@ function parseFulfillmentPaymentProofUpload(
     },
     validationFail,
     (r) => ({
-      leadId: asWorkflowLeadId(r.str("leadId")),
+      leadId: r.id("leadId", WorkflowLeadId),
       unitId: r.str("unitId"),
     }),
   );
@@ -147,7 +143,7 @@ export async function chooseFulfillmentProduct(input: unknown) {
         ): Omit<ChooseFulfillmentProductInput, "leadId"> & {
           leadId: WorkflowLeadId;
         } => ({
-          leadId: asWorkflowLeadId(r.str("leadId")),
+          leadId: r.id("leadId", WorkflowLeadId),
           productKind: r.enum("productKind", PRODUCT_KINDS),
         }),
       ),
@@ -202,7 +198,7 @@ export async function recordFulfillmentSerial(input: unknown) {
         ): Omit<RecordUnitSerialInput, "leadId"> & {
           leadId: WorkflowLeadId;
         } => ({
-          leadId: asWorkflowLeadId(r.str("leadId")),
+          leadId: r.id("leadId", WorkflowLeadId),
           unitId: r.str("unitId"),
           serial: r.str("serial"),
         }),
@@ -235,7 +231,7 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
         ): Omit<RegisterUnitPaymentLinkInput, "leadId"> & {
           leadId: WorkflowLeadId;
         } => ({
-          leadId: asWorkflowLeadId(r.str("leadId")),
+          leadId: r.id("leadId", WorkflowLeadId),
           unitId: r.str("unitId"),
           paymentUrl: r.str("paymentUrl"),
         }),
@@ -284,7 +280,7 @@ export async function validateFulfillmentPayment(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
+        leadId: r.id("leadId", WorkflowLeadId),
       })),
 
     audit: ({ leadId }) => ({ leadId }),
@@ -314,7 +310,7 @@ export async function rejectFulfillmentStep(input: unknown) {
         ): Omit<RejectFulfillmentStepInput, "leadId"> & {
           leadId: WorkflowLeadId;
         } => ({
-          leadId: asWorkflowLeadId(r.str("leadId")),
+          leadId: r.id("leadId", WorkflowLeadId),
           reason: r.str("reason"),
         }),
       ),
@@ -346,7 +342,7 @@ export async function registerFulfillmentSale(input: unknown) {
         ): Omit<RegisterUnitSaleInput, "leadId"> & {
           leadId: WorkflowLeadId;
         } => ({
-          leadId: asWorkflowLeadId(r.str("leadId")),
+          leadId: r.id("leadId", WorkflowLeadId),
           unitId: r.str("unitId"),
           serviceRef: r.str("serviceRef"),
         }),
@@ -375,8 +371,8 @@ export async function requestFulfillmentDownloadToken(input: {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
-        fileAssetId: asFileAssetId(r.str("fileId")),
+        leadId: r.id("leadId", WorkflowLeadId),
+        fileAssetId: r.id("fileId", FileAssetId),
       })),
 
     audit: ({ leadId, fileAssetId }) => ({

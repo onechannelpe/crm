@@ -11,14 +11,14 @@ import {
   createDeliveryRepository,
   type PlannedDeliveryRow,
 } from "~/server/notifications/repos/delivery-repo";
-import { asNotificationIntentId, asUserId } from "~/server/shared/ids";
+import { NotificationIntentId, UserId } from "~/server/shared/ids";
 
 const NOW = new Date(1_700_000_000_000);
 const RETRY_AT = new Date(NOW.getTime() + 5_000);
 const RECLAIM_AT = new Date(NOW.getTime() + 30_001);
 const WORKER_ID = "worker";
-const INTENT_ID = asNotificationIntentId("intent-1");
-const USER_ID = asUserId("01974fd5-f261-7a7d-93f5-2f3d0f969001");
+const INTENT_ID = NotificationIntentId.trust("intent-1");
+const USER_ID = UserId.trust("01974fd5-f261-7a7d-93f5-2f3d0f969001");
 
 function planned(
   overrides: Partial<PlannedDeliveryRow> = {},

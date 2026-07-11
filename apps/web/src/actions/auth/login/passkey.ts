@@ -12,7 +12,7 @@ import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/reque
 import { runPublicAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { fail, throwDomain } from "~/server/shared/domain-error";
-import { asAuthLoginFlowId } from "~/server/shared/ids";
+import { AuthLoginFlowId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 export async function finishPasskeyLogin(
@@ -24,13 +24,16 @@ export async function finishPasskeyLogin(
     const clientMetadata = getRequestClientMetadata();
     const requestContext = getActionRequestContext();
 
+    const parsedFlowId = AuthLoginFlowId.parse(flowId);
+    if (isErr(parsedFlowId)) throwDomain(parsedFlowId.error);
+
     const result = await finishPasskeyLoginService(
       {
         repos: runtime.auth.login.repos,
         sendPrivilegedLoginAlert: runtime.auth.login.privilegedLoginAlertSender,
       },
       {
-        flowId: asAuthLoginFlowId(flowId),
+        flowId: parsedFlowId.value,
         response,
         ipAddress: clientMetadata.ipAddress,
         userAgent: clientMetadata.userAgent,

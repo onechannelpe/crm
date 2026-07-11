@@ -4,7 +4,7 @@ import {
 } from "~/server/capacity/application/usage/ledger";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { asLeadReservationId } from "~/server/shared/ids";
+import { LeadReservationId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 import {
@@ -54,7 +54,7 @@ export async function assignContacts(
       actorUserId: command.actorUserId,
       requested: plan.value.requested,
       reserveReason: "lead_refill",
-      brand: asLeadReservationId,
+      brand: LeadReservationId.trust,
     },
     leadUsageReservationPorts,
     async () => {

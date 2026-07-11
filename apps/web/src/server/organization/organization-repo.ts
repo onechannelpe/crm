@@ -1,10 +1,9 @@
 import { personDisplayName } from "~/lib/users/display-name";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import {
-  asOrganizationPersonId,
-  type OrganizationId,
-  type OrganizationPersonId,
-  type PersonId,
+import type {
+  OrganizationId,
+  OrganizationPersonId,
+  PersonId,
 } from "~/server/shared/ids";
 
 // Single system of record for companies, natural persons, their membership,
@@ -351,7 +350,7 @@ export function createOrganizationRepo(
           .select("id")
           .where("organization_id", "=", input.organizationId)
           .execute()
-      ).map((row) => asOrganizationPersonId(row.id));
+      ).map((row) => row.id);
 
       // Close the current primary before opening the new interval: one primary
       // holder per (organization, role).

@@ -39,7 +39,7 @@ describe("notification outbox payload", () => {
 
 describe("validateNotificationIntent", () => {
   const validIntent = {
-    id: "test-1",
+    id: "test-event-1:variant-1",
     eventType: "test.event",
     audience: { kind: "user_ids", userIds: ["1"] },
     channels: ["in_app"],

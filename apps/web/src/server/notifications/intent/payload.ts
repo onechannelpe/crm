@@ -1,5 +1,7 @@
 import { isRole } from "~/lib/auth/access/rbac";
 import { isPlainRecord } from "~/lib/type-guards";
+import { NotificationIntentId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 import type {
   NotificationAudience,
@@ -67,6 +69,7 @@ function isNotificationIntent(value: unknown): value is NotificationIntent {
   if (!isPlainRecord(value)) return false;
   return (
     typeof value["id"] === "string" &&
+    !isErr(NotificationIntentId.parse(value["id"])) &&
     typeof value["eventType"] === "string" &&
     isNotificationAudience(value["audience"]) &&
     isNotificationChannels(value["channels"]) &&

@@ -1,5 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import type {
+  BranchId,
+  NotificationIntentId,
+  TeamId,
+  UserId,
+} from "~/server/shared/ids";
 
 import type { NotificationEventType } from "./categories";
 
@@ -12,7 +17,7 @@ export type NotificationAudience =
 export type NotificationChannel = "in_app" | "email" | "whatsapp";
 
 export type NotificationIntent = {
-  id: string;
+  id: NotificationIntentId;
   eventType: NotificationEventType;
   audience: NotificationAudience;
   channels: NotificationChannel[];

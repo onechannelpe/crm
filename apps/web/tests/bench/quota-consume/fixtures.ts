@@ -2,15 +2,15 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
-import { asBranchId, asUserId, type UserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 
-const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
-const ACTOR_USER_ID = asUserId(TEST_FIXTURES.users.backOne.id);
+const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
+const ACTOR_USER_ID = UserId.trust(TEST_FIXTURES.users.backOne.id);
 
 export async function seedQuotaUser(ctx: TestDbContext): Promise<UserId> {
-  const id = asUserId(randomUUIDv7());
+  const id = UserId.trust(randomUUIDv7());
 
   await ctx.db
     .insertInto("users")

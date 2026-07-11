@@ -2,18 +2,13 @@ import { makeActor, makeAppContext } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
 import { external } from "~/server/shared/domain-error";
-import {
-  asBranchId,
-  asUserId,
-  asUserInviteId,
-  type BranchId,
-} from "~/server/shared/ids";
+import { BranchId, UserId, UserInviteId } from "~/server/shared/ids";
 import { Err, Ok } from "~/server/shared/result";
 import { getInviteManagement } from "~/server/team/application/invites";
 import type { InviteManagementQueryPort } from "~/server/team/application/ports";
 
-const HR_USER_ID = asUserId("7");
-const HR_BRANCH_ID = asBranchId("3");
+const HR_USER_ID = UserId.trust("7");
+const HR_BRANCH_ID = BranchId.trust("3");
 
 function makeHrContext() {
   return makeAppContext({
@@ -39,8 +34,8 @@ describe("getInviteManagement", () => {
         inviteBranchCalls.push(branchId);
         return Ok([
           {
-            inviteId: asUserInviteId("1001"),
-            userId: asUserId("91"),
+            inviteId: UserInviteId.trust("1001"),
+            userId: UserId.trust("91"),
             email: "pending@crm.local",
             names: "Pending",
             firstSurname: "User",
@@ -49,7 +44,7 @@ describe("getInviteManagement", () => {
             teamId: null,
             expiresAt: new Date(1_700_000_060_000),
             createdAt: new Date(1_700_000_000_000),
-            createdByUserId: asUserId("7"),
+            createdByUserId: UserId.trust("7"),
             sentAt: new Date(1_700_000_000_100),
           },
         ]);

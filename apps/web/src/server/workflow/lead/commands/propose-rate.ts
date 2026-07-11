@@ -4,9 +4,8 @@ import type { ProposeRateInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import {
-  asWorkflowRateProposalId,
+  WorkflowRateProposalId,
   type WorkflowLeadId,
-  type WorkflowRateProposalId,
 } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
@@ -34,7 +33,7 @@ export async function proposeRateCommand(
     }
 
     const round = await ctx.repos.rateProposals.nextRound(state.id);
-    const proposalId = asWorkflowRateProposalId(randomUUIDv7());
+    const proposalId = WorkflowRateProposalId.trust(randomUUIDv7());
 
     const proposalPolicy = resolveRateProposalPolicy({
       branchPolicy: await ctx.repos.rateProposalPolicies.findByBranchId(

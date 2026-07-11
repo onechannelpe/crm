@@ -5,17 +5,12 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import {
-  asBranchId,
-  asOrganizationId,
-  asUserId,
-  type BranchId,
-  type IntegrationJobId,
-  type OrganizationId,
-  type UserId,
-  type WorkflowLeadId,
-  type WorkflowRateProposalId,
+import type {
+  IntegrationJobId,
+  WorkflowLeadId,
+  WorkflowRateProposalId,
 } from "~/server/shared/ids";
+import { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
 import type { TestRuntime } from "../runtime/app";
@@ -80,7 +75,7 @@ export async function seedOrganization(
   input: OrganizationSeed,
 ): Promise<SeededOrganizationRef> {
   const createdAt = input.createdAt ?? runtime.now.get();
-  const id = input.id ?? asOrganizationId(randomUUIDv7());
+  const id = input.id ?? OrganizationId.trust(randomUUIDv7());
   const key = input.key?.trim();
   if (!key) {
     throw new Error("missing_seed_organization_key");
@@ -117,7 +112,7 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       status: input.status,
       priority: input.priority,
       created_by:
-        input.createdBy ?? asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961001"),
+        input.createdBy ?? UserId.trust("01974fd5-f261-7a7d-93f5-2f3d0f961001"),
       updated_by: input.updatedBy ?? null,
       created_at: createdAt,
       updated_at: updatedAt,
@@ -188,7 +183,8 @@ export async function seedUser(runtime: TestRuntime, input: UserSeed) {
     .values({
       id: input.id,
       branch_id:
-        input.branchId ?? asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
+        input.branchId ??
+        BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
       team_id: null,
       username: input.username,
       email: input.email,
@@ -255,7 +251,9 @@ export async function seedImportJob(
       type: "import_status",
       status: "PROCESSING",
       queue_state: "processing",
-      requested_by_user_id: asUserId("01974fd5-f261-7a7d-93f5-2f3d0f961005"),
+      requested_by_user_id: UserId.trust(
+        "01974fd5-f261-7a7d-93f5-2f3d0f961005",
+      ),
       file_path: "inline",
       error_message: null,
       rows_total: null,

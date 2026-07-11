@@ -12,7 +12,7 @@ import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import { parseNotificationChannels } from "~/server/notifications/intent/payload";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { openSession } from "~/server/notifications/whatsapp-session";
-import { asEventId } from "~/server/shared/ids";
+import { EventId, NotificationIntentId } from "~/server/shared/ids";
 import { reactToFulfillmentChanges } from "~/server/workflow/effects/reactors/fulfillment-notify";
 import { reactToStageChanges } from "~/server/workflow/effects/reactors/notify";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
@@ -57,7 +57,7 @@ describe("workflow notification pipeline", () => {
 
     const committed: CommittedLeadEvent[] = [
       {
-        id: asEventId("event-ready-for-sale"),
+        id: EventId.trust("event-ready-for-sale"),
         event: {
           leadId: lead.id,
           eventType: "workflow_stage_changed",
@@ -138,7 +138,7 @@ describe("workflow notification pipeline", () => {
       runtime.ctx.db,
       [
         {
-          id: asEventId("event-payment-ready"),
+          id: EventId.trust("event-payment-ready"),
           event: {
             leadId: lead.id,
             eventType: "fulfillment_step_advanced",
@@ -171,7 +171,7 @@ describe("workflow notification pipeline", () => {
 
   it("plans an in-app-only intent without inventing external deliveries", async () => {
     const intent: NotificationIntent = {
-      id: "in-app-only",
+      id: NotificationIntentId.trust("in-app-only"),
       eventType: "lead.ready_for_quotation",
       audience: {
         kind: "branch_role",

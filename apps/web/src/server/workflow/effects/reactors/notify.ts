@@ -1,7 +1,11 @@
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import type { NotificationIntent } from "~/server/notifications/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import {
+  NotificationIntentId,
+  type BranchId,
+  type UserId,
+} from "~/server/shared/ids";
 import type { LeadHistoryEventDraftFor } from "~/server/workflow/lead/domain/history";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
@@ -29,7 +33,10 @@ export function deriveLeadStageNotifications(input: {
     if (input.branchId === null) return [];
     return [
       {
-        id: `${input.eventId}:ready_pricing`,
+        id: NotificationIntentId.derive({
+          sourceEventId: input.eventId,
+          discriminator: "ready_pricing",
+        }),
         eventType: "lead.ready_for_quotation",
         audience: {
           kind: "branch_role",
@@ -49,7 +56,10 @@ export function deriveLeadStageNotifications(input: {
   if (input.toStage === "SETUP") {
     return [
       {
-        id: `${input.eventId}:ready_setup`,
+        id: NotificationIntentId.derive({
+          sourceEventId: input.eventId,
+          discriminator: "ready_setup",
+        }),
         eventType: "lead.ready_for_sale",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
         // The in-app bell alone would miss executives who don't open the app;

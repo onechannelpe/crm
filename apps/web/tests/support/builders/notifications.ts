@@ -8,18 +8,13 @@ import type {
   NotificationAudience,
   NotificationChannel,
 } from "~/server/notifications/types";
-import {
-  asNotificationIntentId,
-  asUserId,
-  type NotificationIntentId,
-  type UserId,
-} from "~/server/shared/ids";
+import { NotificationIntentId, UserId } from "~/server/shared/ids";
 
 type IntentRow = Insertable<NotificationIntentsTable>;
 type DeliveryRow = Insertable<NotificationDeliveriesTable>;
 
 const DEFAULT_NOW = new Date(1_700_000_000_000);
-const DEFAULT_USER_ID = asUserId("notification-builder-user");
+const DEFAULT_USER_ID = UserId.trust("notification-builder-user");
 
 // Intent row with sane defaults. `audience_json`/`channels_json` are
 // stringified here, matching `enqueueNotifications`. `pg` auto-serializes plain
@@ -97,5 +92,5 @@ export function aDeliveryRow(
 }
 
 export function notificationIntentId(value: string): NotificationIntentId {
-  return asNotificationIntentId(value);
+  return NotificationIntentId.trust(value);
 }

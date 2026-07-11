@@ -10,7 +10,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { asWorkflowRateProposalId } from "~/server/shared/ids";
+import { WorkflowRateProposalId } from "~/server/shared/ids";
 
 describe("integration record export columns", () => {
   let runtime: TestRuntime;
@@ -56,7 +56,7 @@ describe("integration record export columns", () => {
     // highest-version (latest) rates. Proposals are direct-seeded because this is a
     // projection test, not a test of how proposals are created.
     await seedRateProposal(runtime, {
-      id: asWorkflowRateProposalId("quote-old"),
+      id: WorkflowRateProposalId.trust("quote-old"),
       leadId: withData.id,
       round: 1,
       proposedDebitRate: 1.0,
@@ -70,7 +70,7 @@ describe("integration record export columns", () => {
       decidedAt: new Date(1_200),
     });
     await seedRateProposal(runtime, {
-      id: asWorkflowRateProposalId("quote-latest"),
+      id: WorkflowRateProposalId.trust("quote-latest"),
       leadId: withData.id,
       round: 2,
       proposedDebitRate: 1.5,

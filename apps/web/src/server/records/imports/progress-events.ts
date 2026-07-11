@@ -10,7 +10,8 @@ import type {
   IntegrationJobsPort,
   IntegrationJobStatus,
 } from "~/server/integrations/types";
-import { asIntegrationJobId } from "~/server/shared/ids";
+import { IntegrationJobId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 function toRecordImportType(type: IntegrationJobRow["type"]): RecordImportType {
   if (type === "import_status" || type === "import_prioridad") {
@@ -24,7 +25,9 @@ export async function findRecordImportJob(
   jobs: Pick<IntegrationJobsPort, "findById">,
   jobId: string,
 ): Promise<IntegrationJobRow | null> {
-  const job = await jobs.findById(asIntegrationJobId(jobId));
+  const parsedJobId = IntegrationJobId.parse(jobId);
+  if (isErr(parsedJobId)) return null;
+  const job = await jobs.findById(parsedJobId.value);
   if (job?.type !== "import_status" && job?.type !== "import_prioridad") {
     return null;
   }

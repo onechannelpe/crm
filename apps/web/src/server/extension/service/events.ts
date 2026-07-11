@@ -1,11 +1,12 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { AppUow } from "~/server/shared/application/uow";
 import { external, fail, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
 import {
-  asContactAssignmentId,
-  asEventId,
-  asOrganizationPersonId,
+  ContactAssignmentId,
+  EventId,
+  OrganizationPersonId,
+  type BranchId,
+  type UserId,
 } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import { dateFromEpochMilliseconds, type Clock } from "~/server/shared/time";
@@ -41,13 +42,13 @@ interface EventsReadContext {
 
 function readAssignmentId(payload: ExtensionRuntimeEventEnvelope["payload"]) {
   return "assignmentId" in payload && typeof payload.assignmentId === "string"
-    ? asContactAssignmentId(payload.assignmentId)
+    ? ContactAssignmentId.trust(payload.assignmentId)
     : null;
 }
 
 function readContactId(payload: ExtensionRuntimeEventEnvelope["payload"]) {
   return "contactId" in payload && typeof payload.contactId === "string"
-    ? asOrganizationPersonId(payload.contactId)
+    ? OrganizationPersonId.trust(payload.contactId)
     : null;
 }
 
@@ -152,17 +153,17 @@ export async function ingestRuntimeEvent(
           user_id: session.user_id,
           branch_id: session.branch_id,
           assignment_id: input.event.payload.assignmentId
-            ? asContactAssignmentId(input.event.payload.assignmentId)
+            ? ContactAssignmentId.trust(input.event.payload.assignmentId)
             : null,
           contact_id: input.event.payload.contactId
-            ? asOrganizationPersonId(input.event.payload.contactId)
+            ? OrganizationPersonId.trust(input.event.payload.contactId)
             : null,
           call_session_id: input.event.payload.callSessionId,
           presence_status: input.event.payload.presenceStatus,
           presence_updated_at: dateFromEpochMilliseconds(
             input.event.payload.updatedAt,
           ),
-          source_event_id: asEventId(input.event.id),
+          source_event_id: EventId.trust(input.event.id),
           source_event_sequence: input.event.sequence,
         });
         return Ok(undefined);
@@ -179,7 +180,7 @@ export async function ingestRuntimeEvent(
           presence_updated_at: dateFromEpochMilliseconds(
             input.event.payload.at,
           ),
-          source_event_id: asEventId(input.event.id),
+          source_event_id: EventId.trust(input.event.id),
           source_event_sequence: input.event.sequence,
         });
       }

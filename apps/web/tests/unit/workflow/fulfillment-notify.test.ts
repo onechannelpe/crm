@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { FulfillmentStep } from "~/contracts/workflow/vocabulary";
 import {
-  asBranchId,
-  asFulfillmentOrderId,
-  asUserId,
-  asWorkflowLeadId,
+  BranchId,
+  FulfillmentOrderId,
+  UserId,
+  WorkflowLeadId,
 } from "~/server/shared/ids";
 import {
   deriveFulfillmentNotification,
@@ -16,19 +16,19 @@ const baseInput = {
   eventId: "evt-1",
   leadId: "lead-1",
   ruc: "20123456789",
-  executiveId: asUserId("42"),
-  branchId: asBranchId("1"),
+  executiveId: UserId.trust("42"),
+  branchId: BranchId.trust("1"),
   paymentUnits: [] as { label: string; paymentUrl: string | null }[],
 };
 
 function stepAdvanced(to: FulfillmentStep) {
   return {
     eventType: "fulfillment_step_advanced" as const,
-    leadId: asWorkflowLeadId("lead-1"),
-    actorUserId: asUserId("1"),
+    leadId: WorkflowLeadId.trust("lead-1"),
+    actorUserId: UserId.trust("1"),
     subjectUserId: null,
     payload: {
-      orderId: asFulfillmentOrderId("order-1"),
+      orderId: FulfillmentOrderId.trust("order-1"),
       from: "AWAITING_PAYMENT_LINK" as const,
       to,
       action: "upload_payment_proof" as const,

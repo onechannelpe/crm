@@ -4,7 +4,8 @@ import { executeWithUsageReservation } from "~/server/capacity/application/usage
 import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
 import { createServerInfra } from "~/server/platform/container/infra";
 import { createSearchRuntime } from "~/server/platform/container/search-runtime";
-import { asSearchReservationId, type UserId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
+import { SearchReservationId } from "~/server/shared/ids";
 import { Ok } from "~/server/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -41,7 +42,7 @@ describe("search capacity consume service benchmark", () => {
           actorUserId: userId,
           requested: 1,
           reserveReason: "direct_search",
-          brand: asSearchReservationId,
+          brand: SearchReservationId.trust,
         },
         usageReservationPorts,
         async () => Ok({ value: undefined, consumed: 1 }),

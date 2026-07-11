@@ -1,4 +1,5 @@
-import { asUserId, type UserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,
@@ -25,8 +26,8 @@ export function parseSubjectUserId(subject: string): UserId | null {
     return null;
   }
 
-  const value = subject.slice("user:".length);
-  return isUuid(value) ? asUserId(value) : null;
+  const parsed = UserId.parse(subject.slice("user:".length));
+  return isErr(parsed) ? null : parsed.value;
 }
 
 export function isExtensionHandoffClaims(

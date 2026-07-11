@@ -18,7 +18,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
 import { rejectCapacityRequest } from "~/server/capacity/application/use-cases/reject-capacity-request";
-import { asCapacityRequestId } from "~/server/shared/ids";
+import { CapacityRequestId } from "~/server/shared/ids";
 
 describe("capacity approval failures", () => {
   let ctx: TestDbContext;
@@ -40,7 +40,9 @@ describe("capacity approval failures", () => {
       makeApprovalContext(),
       makeApprovalDeps(ctx),
       {
-        requestId: asCapacityRequestId("01974fd5-f261-7a7d-93f5-2f3d0f96f001"),
+        requestId: CapacityRequestId.trust(
+          "01974fd5-f261-7a7d-93f5-2f3d0f96f001",
+        ),
         note: null,
       },
     );

@@ -3,12 +3,12 @@ import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
 import { hashInviteToken } from "~/lib/auth/invite/tokens";
-import { asBranchId, asUserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW, benchDate } from "../_shared/constants";
 
-const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.norte.id);
-const CREATED_BY_USER_ID = asUserId(TEST_FIXTURES.users.superUser.id);
+const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.norte.id);
+const CREATED_BY_USER_ID = UserId.trust(TEST_FIXTURES.users.superUser.id);
 
 export interface PendingInvite {
   token: string;
@@ -19,7 +19,7 @@ export async function seedPendingInvite(
   ctx: TestDbContext,
 ): Promise<PendingInvite> {
   const suffix = randomUUIDv7();
-  const userId = asUserId(randomUUIDv7());
+  const userId = UserId.trust(randomUUIDv7());
   const email = `bench-team-invite-${suffix}@test.local`;
 
   await ctx.db

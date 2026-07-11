@@ -3,7 +3,7 @@
 import { ROLES } from "~/lib/auth/access/rbac";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { asTeamId, asUserInviteId } from "~/server/shared/ids";
+import { TeamId, UserInviteId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, Ok } from "~/server/shared/result";
 import {
@@ -31,7 +31,7 @@ export async function createTeamInvite(
           email: r.str("email"),
           role: r.enum("role", ROLES),
           executiveCategory: r.optStr("executiveCategory"),
-          teamId: teamId ? asTeamId(teamId) : null,
+          teamId: teamId ? r.id("teamId", TeamId) : null,
           expiresAt: r.optNum("expiresAt"),
         };
       });
@@ -73,7 +73,7 @@ export async function resendTeamInvite(
 
     parse: () =>
       parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({
-        inviteId: asUserInviteId(r.str("inviteId")),
+        inviteId: r.id("inviteId", UserInviteId),
       })),
 
     audit: (command) => ({ inviteId: command.inviteId }),
@@ -103,7 +103,7 @@ export async function revokeTeamInvite(
 
     parse: () =>
       parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({
-        inviteId: asUserInviteId(r.str("inviteId")),
+        inviteId: r.id("inviteId", UserInviteId),
       })),
 
     audit: (command) => ({ inviteId: command.inviteId }),

@@ -3,7 +3,7 @@ import { randomUUIDv7 } from "bun";
 import type { CreateVenueInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
-import { asWorkflowVenueId, type WorkflowLeadId } from "~/server/shared/ids";
+import { WorkflowVenueId, type WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
@@ -47,7 +47,7 @@ export async function createVenueCommand(
       return parsedVenueFields;
     }
 
-    const venueId = asWorkflowVenueId(randomUUIDv7());
+    const venueId = WorkflowVenueId.trust(randomUUIDv7());
 
     const venueEvents = createVenue(state, {
       actor: input.actor,

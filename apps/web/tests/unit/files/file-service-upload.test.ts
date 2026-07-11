@@ -4,7 +4,7 @@ import type { InsertFileAssetInput } from "~/server/files/repo/types";
 import { storeUploadedFile } from "~/server/files/service/store-uploaded-file";
 import type { FileAsset } from "~/server/files/types";
 import type { AppContext } from "~/server/platform/action/context";
-import { asBranchId, asFileAssetId, asUserId } from "~/server/shared/ids";
+import { BranchId, FileAssetId, UserId } from "~/server/shared/ids";
 
 const NOW = new Date(1_700_000_123_456);
 const CSV_BYTES = new TextEncoder().encode("id,name\n1,test\n");
@@ -13,8 +13,8 @@ function makeContext(): AppContext {
   return {
     actor: {
       id: "sess-1",
-      userId: asUserId("user-10"),
-      branchId: asBranchId("branch-1"),
+      userId: UserId.trust("user-10"),
+      branchId: BranchId.trust("branch-1"),
       role: "back_office",
       onboardingCompleted: true,
       sessionClass: "app",
@@ -42,7 +42,7 @@ function stream(bytes = CSV_BYTES): ReadableStream<Uint8Array> {
 
 describe("storeUploadedFile", () => {
   it("stores validated bytes and persists infrastructure metadata", async () => {
-    const id = asFileAssetId("file-1");
+    const id = FileAssetId.trust("file-1");
     const inserted: InsertFileAssetInput[] = [];
     let storedKey = "";
     const asset: FileAsset = {
@@ -59,7 +59,7 @@ describe("storeUploadedFile", () => {
       scanStatus: "clean",
       scanEngine: null,
       scanReference: null,
-      createdByUserId: asUserId("user-10"),
+      createdByUserId: UserId.trust("user-10"),
       createdAt: NOW,
     };
 
@@ -100,7 +100,7 @@ describe("storeUploadedFile", () => {
       purpose: "integration_import",
       originalFilename: "import.csv",
       sizeBytes: CSV_BYTES.length,
-      createdByUserId: asUserId("user-10"),
+      createdByUserId: UserId.trust("user-10"),
       now: NOW,
     });
   });
@@ -113,7 +113,7 @@ describe("storeUploadedFile", () => {
         {
           repo: {
             assets: {
-              insert: async () => asFileAssetId("unused"),
+              insert: async () => FileAssetId.trust("unused"),
               findById: async () => null,
             },
           },

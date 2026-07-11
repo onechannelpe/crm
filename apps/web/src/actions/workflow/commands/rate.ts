@@ -5,9 +5,9 @@ import { CLOSE_REASONS, CURRENCIES } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import {
-  asWorkflowLeadId,
-  asWorkflowRateProposalId,
-  asWorkflowRateRevisionFileId,
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+  WorkflowRateRevisionFileId,
 } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
@@ -25,7 +25,7 @@ export async function requestRateProposal(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
+        leadId: r.id("leadId", WorkflowLeadId),
         proposedDebitRate: r.num("proposedDebitRate"),
         proposedCreditRate: r.num("proposedCreditRate"),
         proposedForeignRate: r.num("proposedForeignRate"),
@@ -51,8 +51,8 @@ export async function requestRateProposalEdit(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
-        proposalId: asWorkflowRateProposalId(r.str("proposalId")),
+        leadId: r.id("leadId", WorkflowLeadId),
+        proposalId: r.id("proposalId", WorkflowRateProposalId),
         proposedDebitRate: r.num("proposedDebitRate"),
         proposedCreditRate: r.num("proposedCreditRate"),
         proposedForeignRate: r.num("proposedForeignRate"),
@@ -78,8 +78,8 @@ export async function requestRateAcceptance(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
-        proposalId: asWorkflowRateProposalId(r.str("proposalId")),
+        leadId: r.id("leadId", WorkflowLeadId),
+        proposalId: r.id("proposalId", WorkflowRateProposalId),
       })),
 
     audit: ({ leadId }) => ({ leadId }),
@@ -99,7 +99,7 @@ export async function requestLeadClosure(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
+        leadId: r.id("leadId", WorkflowLeadId),
         reason: r.enum("reason", CLOSE_REASONS),
         note: r.optStr("note"),
       })),
@@ -121,15 +121,13 @@ export async function requestRateRevision(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
+        leadId: r.id("leadId", WorkflowLeadId),
         justification: r.str("justification"),
-        fileIds: r
-          .strList("fileIds", {
-            min: 1,
-            max: MAX_RATE_REVISION_FILES,
-            unique: true,
-          })
-          .map(asWorkflowRateRevisionFileId),
+        fileIds: r.idList("fileIds", WorkflowRateRevisionFileId, {
+          min: 1,
+          max: MAX_RATE_REVISION_FILES,
+          unique: true,
+        }),
       })),
 
     audit: ({ leadId }) => ({ leadId }),

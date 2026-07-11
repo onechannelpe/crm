@@ -15,13 +15,10 @@ import {
 import { randomUUIDv7 } from "bun";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
 import {
-  asWorkflowRateRevisionFileId,
-  asWorkflowRateRevisionId,
-  type UserId,
-  type WorkflowLeadId,
-  type WorkflowRateRevisionFileId,
-  type WorkflowRateRevisionId,
+  WorkflowRateRevisionFileId,
+  WorkflowRateRevisionId,
 } from "~/server/shared/ids";
 import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
@@ -109,7 +106,7 @@ describe("request rate revision command", () => {
       key: "revision-no-proposal",
       organization: { key: "revision-no-proposal" },
     });
-    const fileId = asWorkflowRateRevisionFileId(randomUUIDv7());
+    const fileId = WorkflowRateRevisionFileId.trust(randomUUIDv7());
 
     await seedRateRevisionFile(runtime, {
       fileId,
@@ -143,7 +140,7 @@ describe("request rate revision command", () => {
       leadId: lead.id,
       backOffice: actorBy("backOne"),
     });
-    const fileId = asWorkflowRateRevisionFileId(randomUUIDv7());
+    const fileId = WorkflowRateRevisionFileId.trust(randomUUIDv7());
 
     await seedRateRevisionFile(runtime, {
       fileId,
@@ -191,7 +188,7 @@ describe("request rate revision command", () => {
       leadId: lead.id,
       backOffice: actorBy("backOne"),
     });
-    const fileId = asWorkflowRateRevisionFileId(randomUUIDv7());
+    const fileId = WorkflowRateRevisionFileId.trust(randomUUIDv7());
 
     await seedRateRevisionFile(runtime, {
       fileId,
@@ -223,14 +220,14 @@ describe("request rate revision command", () => {
   it.each([
     {
       name: "uploaded by another user",
-      fileId: asWorkflowRateRevisionFileId(randomUUIDv7()),
+      fileId: WorkflowRateRevisionFileId.trust(randomUUIDv7()),
       override: () => ({
         uploadedByUserId: actorBy("execTwo").userId,
       }),
     },
     {
       name: "unknown",
-      fileId: asWorkflowRateRevisionFileId(randomUUIDv7()),
+      fileId: WorkflowRateRevisionFileId.trust(randomUUIDv7()),
       seed: false,
     },
   ])(
@@ -290,7 +287,7 @@ describe("request rate revision command", () => {
 
     // This state cannot be reached through the normal command sequence because
     // creating a revision decides the proposal, so the revision is seeded directly.
-    const revisionId = asWorkflowRateRevisionId("revision-existing");
+    const revisionId = WorkflowRateRevisionId.trust("revision-existing");
 
     await runtime.ctx.db
       .insertInto("workflow_rate_revisions")
@@ -305,7 +302,7 @@ describe("request rate revision command", () => {
       })
       .executeTakeFirstOrThrow();
 
-    const fileId = asWorkflowRateRevisionFileId(randomUUIDv7());
+    const fileId = WorkflowRateRevisionFileId.trust(randomUUIDv7());
 
     await seedRateRevisionFile(runtime, {
       fileId,

@@ -6,17 +6,12 @@ import type {
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
 import type { Role } from "~/lib/auth/access/rbac";
+import type { BranchId, FulfillmentOrderId } from "~/server/shared/ids";
 import {
-  asUserId,
-  asWorkflowLeadId,
-  asWorkflowRateProposalId,
-  asWorkflowVenueId,
-  type BranchId,
-  type FulfillmentOrderId,
-  type UserId,
-  type WorkflowLeadId,
-  type WorkflowRateProposalId,
-  type WorkflowVenueId,
+  UserId,
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+  WorkflowVenueId,
 } from "~/server/shared/ids";
 
 import { createDeterministicIdFactory } from "../_core/ids";
@@ -132,7 +127,7 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
         lineOfBusiness: input.organization?.lineOfBusiness,
       },
       lead: {
-        id: asWorkflowLeadId(`lead-${key}`),
+        id: WorkflowLeadId.trust(`lead-${key}`),
         executiveId,
         stage: stageFor(input.kind),
         status: input.status ?? null,
@@ -147,7 +142,7 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
 
     let proposalId: WorkflowRateProposalId | null = null;
     if (input.kind === "pricing" && input.proposal !== "none") {
-      proposalId = asWorkflowRateProposalId(`proposal-${key}`);
+      proposalId = WorkflowRateProposalId.trust(`proposal-${key}`);
       await seedRateProposal(runtime, {
         id: proposalId,
         leadId: seeded.leadId,
@@ -168,7 +163,7 @@ export function createLeadFixtureWriter(runtime: TestRuntime) {
       input.kind === "live" ||
       (input.kind === "setup" && input.withVenue)
     ) {
-      const venueId = asWorkflowVenueId(`venue-${key}`);
+      const venueId = WorkflowVenueId.trust(`venue-${key}`);
       venueIds.push(venueId);
       await runtime.ctx.db
         .insertInto("workflow_lead_venues")
@@ -230,7 +225,7 @@ export function createUserFixtureWriter(runtime: TestRuntime) {
     branchId?: BranchId;
   }): Promise<{ id: UserId }> {
     const label = ++generatedUserId;
-    const id = asUserId(randomUUIDv7());
+    const id = UserId.trust(randomUUIDv7());
     await seedUser(runtime, {
       id,
       username: `${input.role}.${label}`,

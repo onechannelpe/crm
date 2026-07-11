@@ -3,16 +3,16 @@ import { bench, describe } from "vitest";
 import { createAssignment } from "~/server/contact-assignments/domain/assignment";
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
 import {
-  asOrganizationId,
-  asOrganizationPersonId,
-  asUserId,
+  OrganizationId,
+  OrganizationPersonId,
+  UserId,
 } from "~/server/shared/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 
-const USER_ID = asUserId("bench-component-user");
-const CONTACT_ID = asOrganizationPersonId("bench-component-contact");
-const ORGANIZATION_ID = asOrganizationId(
+const USER_ID = UserId.trust("bench-component-user");
+const CONTACT_ID = OrganizationPersonId.trust("bench-component-contact");
+const ORGANIZATION_ID = OrganizationId.trust(
   "01974fd5-f261-7a7d-93f5-2f3d0f963001",
 );
 

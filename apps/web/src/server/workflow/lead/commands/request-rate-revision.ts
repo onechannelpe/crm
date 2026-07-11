@@ -4,7 +4,7 @@ import type { RequestRateRevisionInput } from "~/contracts/workflow/inputs";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import {
-  asWorkflowRateRevisionId,
+  WorkflowRateRevisionId,
   type WorkflowLeadId,
   type WorkflowRateRevisionFileId,
 } from "~/server/shared/ids";
@@ -91,7 +91,7 @@ export async function requestRateRevisionCommand(
       validatedFiles.push(file);
     }
 
-    const revisionId = asWorkflowRateRevisionId(randomUUIDv7());
+    const revisionId = WorkflowRateRevisionId.trust(randomUUIDv7());
     const round = existingCount + 1;
 
     const transition = requestRateRevision(state, {

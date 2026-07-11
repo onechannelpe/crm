@@ -6,7 +6,7 @@ import {
   type FieldChange,
 } from "~/contracts/events";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { asEventId, type EventId, type UserId } from "~/server/shared/ids";
+import { EventId, type UserId } from "~/server/shared/ids";
 
 export interface AuditReaderQueryFilter {
   fromInclusive: Date;
@@ -50,7 +50,7 @@ export function createEventsRepo(db: DatabaseExecutor) {
       }));
 
       await db.insertInto("events").values(rows).execute();
-      return rows.map((row) => asEventId(row.id));
+      return rows.map((row) => EventId.trust(row.id));
     },
 
     async listRecent(filter: AuditReaderQueryFilter) {

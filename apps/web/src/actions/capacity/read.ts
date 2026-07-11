@@ -9,7 +9,7 @@ import type {
 } from "~/contracts/capacity";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { asUserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function getManagedExecutivesList(): Promise<
@@ -33,7 +33,7 @@ export async function getExecutiveDetail(
 
     parse: () =>
       parseObject({ userId }, validationFail, (r) => {
-        const parsedUserId = asUserId(r.str("userId"));
+        const parsedUserId = r.id("userId", UserId);
         return { userId: parsedUserId };
       }),
 

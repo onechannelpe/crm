@@ -4,7 +4,7 @@ import type { InsertDownloadTokenInput } from "~/server/files/repo/types";
 import { issueDownloadToken } from "~/server/files/service/issue-download-token";
 import { DOWNLOAD_TOKEN_TTL_MS, hashToken } from "~/server/files/token";
 import type { AppContext } from "~/server/platform/action/context";
-import { asBranchId, asFileAssetId, asUserId } from "~/server/shared/ids";
+import { BranchId, FileAssetId, UserId } from "~/server/shared/ids";
 
 const NOW_MS = 1_700_000_000_000;
 
@@ -12,8 +12,8 @@ function makeContext(): AppContext {
   return {
     actor: {
       id: "sess-1",
-      userId: asUserId("user-10"),
-      branchId: asBranchId("branch-1"),
+      userId: UserId.trust("user-10"),
+      branchId: BranchId.trust("branch-1"),
       role: "back_office",
       onboardingCompleted: true,
       sessionClass: "app",
@@ -32,7 +32,7 @@ function makeContext(): AppContext {
 
 describe("issueDownloadToken", () => {
   it("binds a short-lived token to an already authorized file asset", async () => {
-    const fileAssetId = asFileAssetId("file-7");
+    const fileAssetId = FileAssetId.trust("file-7");
     const inserted: InsertDownloadTokenInput[] = [];
 
     const result = await issueDownloadToken(makeContext(), fileAssetId, {
@@ -51,7 +51,7 @@ describe("issueDownloadToken", () => {
     if (!result.ok) return;
     expect(inserted[0]).toMatchObject({
       fileAssetId,
-      requestedByUserId: asUserId("user-10"),
+      requestedByUserId: UserId.trust("user-10"),
       expiresAt: new Date(NOW_MS + DOWNLOAD_TOKEN_TTL_MS),
       now: new Date(NOW_MS),
     });

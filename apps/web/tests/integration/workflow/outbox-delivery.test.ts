@@ -11,7 +11,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { asNotificationIntentId } from "~/server/shared/ids";
+import { NotificationIntentId } from "~/server/shared/ids";
 
 describe("outbox delivery", () => {
   let runtime: TestRuntime;
@@ -33,7 +33,7 @@ describe("outbox delivery", () => {
     await runtime.ctx.db
       .insertInto("notification_intents")
       .values({
-        id: asNotificationIntentId("test-malformed-channels"),
+        id: NotificationIntentId.trust("test-malformed-channels"),
         event_type: "test.malformed",
         audience_json: {
           kind: "user_ids",
@@ -61,7 +61,7 @@ describe("outbox delivery", () => {
     const failed = await runtime.ctx.db
       .selectFrom("notification_intents")
       .select(["queue_state", "error", "expanded_at"])
-      .where("id", "=", asNotificationIntentId("test-malformed-channels"))
+      .where("id", "=", NotificationIntentId.trust("test-malformed-channels"))
       .executeTakeFirstOrThrow();
 
     expect(failed.queue_state).toBe("failed");

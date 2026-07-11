@@ -13,7 +13,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { asWorkflowVenueId } from "~/server/shared/ids";
+import { WorkflowVenueId } from "~/server/shared/ids";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 import { registerLead } from "~/server/workflow/lead/commands/register-lead";
@@ -136,7 +136,7 @@ describe("lead lifecycle journey", () => {
         {
           actor: executive,
           leadId: lead.id,
-          venueId: asWorkflowVenueId(setup.venues[0].id),
+          venueId: WorkflowVenueId.trust(setup.venues[0].id),
           solesAccount: {
             currency: "PEN",
             banco: "BCP",

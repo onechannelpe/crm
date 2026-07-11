@@ -1,5 +1,5 @@
 import type { DomainError } from "~/server/shared/domain-error";
-import { asWorkflowVenueId } from "~/server/shared/ids";
+import { WorkflowVenueId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 
@@ -84,7 +84,7 @@ export function toHistoryEntry(
       return Ok({
         ...toHistoryEntryBase(row),
         eventType: "venue_accounts_added",
-        payload: { venueId: asWorkflowVenueId(venueId.value) },
+        payload: { venueId: WorkflowVenueId.trust(venueId.value) },
       });
     }
     case "fulfillment_started":

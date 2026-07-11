@@ -1,5 +1,5 @@
 import { hashPassword } from "~/lib/auth/password/password";
-import { asBranchId, asUserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import { type TestIdentity } from "../../identities/catalog";
 import type { BrowserDbRuntime } from "../runtime";
@@ -13,16 +13,16 @@ const BROWSER_TEST_PASSWORD = "placeholder";
 
 const BROWSER_IDENTITIES = {
   passkeyUser: {
-    userId: asUserId("browser-passkey-user"),
+    userId: UserId.trust("browser-passkey-user"),
     username: "valeria.paredes",
-    branchId: asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
+    branchId: BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     role: "admin",
     password: BROWSER_TEST_PASSWORD,
   },
   strongAuthUser: {
-    userId: asUserId("browser-strong-auth-user"),
+    userId: UserId.trust("browser-strong-auth-user"),
     username: "mario.aguirre",
-    branchId: asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
+    branchId: BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     role: "sales_manager",
     password: BROWSER_TEST_PASSWORD,
   },
@@ -118,7 +118,8 @@ export async function ensureBrowserUser(
   const passwordHash = await hashPassword(BROWSER_TEST_PASSWORD);
   const userId = await runtime.repos.users.create({
     branch_id:
-      options.branchId ?? asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
+      options.branchId ??
+      BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     team_id: null,
     username,
     email,
@@ -141,7 +142,8 @@ export async function ensureBrowserUser(
     username,
     email,
     branchId:
-      options.branchId ?? asBranchId("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
+      options.branchId ??
+      BranchId.trust("01974fd5-f261-7a7d-93f5-2f3d0f960001"),
     role: options.role,
     password: BROWSER_TEST_PASSWORD,
   };

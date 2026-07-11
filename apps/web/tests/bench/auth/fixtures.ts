@@ -4,12 +4,12 @@ import { randomUUIDv7 } from "bun";
 
 import { hashAuthKey } from "~/lib/auth/password/key-hash";
 import { hashPassword } from "~/lib/auth/password/password";
-import { asBranchId, asUserId, type UserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 
 export const LOGIN_PASSWORD = "Secret123!";
-const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
+const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
 
 export interface LoginFixture {
   userId: UserId;
@@ -21,7 +21,7 @@ export async function seedAuthLoginUser(
   ctx: TestDbContext,
 ): Promise<LoginFixture> {
   const passwordHash = await hashPassword(LOGIN_PASSWORD);
-  const userId = asUserId(randomUUIDv7());
+  const userId = UserId.trust(randomUUIDv7());
   const username = "bench.auth";
   const ipAddress = "198.51.100.10";
 

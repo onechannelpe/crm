@@ -6,9 +6,9 @@ import type {
 } from "~/server/notifications/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import {
-  asFulfillmentOrderId,
+  FulfillmentOrderId,
+  NotificationIntentId,
   type BranchId,
-  type FulfillmentOrderId,
   type UserId,
 } from "~/server/shared/ids";
 import {
@@ -143,7 +143,10 @@ export function deriveFulfillmentNotification(input: {
   if (input.event.eventType === "fulfillment_completed") {
     return [
       {
-        id: `${input.eventId}:fulfillment_completed`,
+        id: NotificationIntentId.derive({
+          sourceEventId: input.eventId,
+          discriminator: "fulfillment_completed",
+        }),
         eventType: "lead.fulfillment_completed",
         audience: { kind: "user_ids", userIds: [input.executiveId] },
         // Terminal funnel moment: whatsapp confirms the sale without requiring
@@ -163,7 +166,10 @@ export function deriveFulfillmentNotification(input: {
       const body = formatPaymentReadyBody(input.ruc, input.paymentUnits);
       return [
         {
-          id: `${input.eventId}:${step}`,
+          id: NotificationIntentId.derive({
+            sourceEventId: input.eventId,
+            discriminator: step,
+          }),
           eventType: "lead.fulfillment_handoff",
           audience: { kind: "user_ids", userIds: [input.executiveId] },
           channels: ["in_app", "whatsapp"],
@@ -184,7 +190,10 @@ export function deriveFulfillmentNotification(input: {
     if (audience === null) return [];
     return [
       {
-        id: `${input.eventId}:${target}:rejected`,
+        id: NotificationIntentId.derive({
+          sourceEventId: input.eventId,
+          discriminator: `${target}:rejected`,
+        }),
         eventType: "lead.fulfillment_handoff",
         audience,
         channels: ["in_app"],
@@ -207,7 +216,10 @@ export function deriveFulfillmentNotification(input: {
 
   return [
     {
-      id: `${input.eventId}:${step}`,
+      id: NotificationIntentId.derive({
+        sourceEventId: input.eventId,
+        discriminator: step,
+      }),
       eventType: "lead.fulfillment_handoff",
       audience,
       channels: ["in_app"],
@@ -255,7 +267,7 @@ export async function reactToFulfillmentChanges(
             ev.event.eventType === "fulfillment_step_advanced" &&
             ev.event.payload.to === "AWAITING_PAYMENT",
         )
-        .map((ev) => asFulfillmentOrderId(ev.event.payload.orderId)),
+        .map((ev) => FulfillmentOrderId.trust(ev.event.payload.orderId)),
     ),
   ];
   const paymentUnitsByOrderId = new Map<
@@ -285,7 +297,7 @@ export async function reactToFulfillmentChanges(
       event.eventType === "fulfillment_step_advanced" &&
       event.payload.to === "AWAITING_PAYMENT"
         ? (paymentUnitsByOrderId.get(
-            asFulfillmentOrderId(event.payload.orderId),
+            FulfillmentOrderId.trust(event.payload.orderId),
           ) ?? [])
         : [];
 

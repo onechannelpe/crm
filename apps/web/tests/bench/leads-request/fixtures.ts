@@ -12,18 +12,13 @@ import type {
   RecordCandidate,
   SearchResult,
 } from "~/server/shared/engine/types";
-import {
-  asBranchId,
-  asUserId,
-  type BranchId,
-  type UserId,
-} from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
 
-const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
-const ACTOR_USER_ID = asUserId(TEST_FIXTURES.users.backOne.id);
+const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
+const ACTOR_USER_ID = UserId.trust(TEST_FIXTURES.users.backOne.id);
 
 export interface LeadsBench {
   branchId: BranchId;
@@ -108,7 +103,7 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
   async function seedUnit(): Promise<UserId> {
     const index = seq;
     seq += 1;
-    const userId = asUserId(randomUUIDv7());
+    const userId = UserId.trust(randomUUIDv7());
 
     await ctx.db
       .insertInto("users")

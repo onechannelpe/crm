@@ -7,7 +7,7 @@ import type { NotificationAudience } from "~/server/notifications/types";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
-import { asTeamId, asUserId } from "~/server/shared/ids";
+import { NotificationIntentId, TeamId, UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
@@ -18,19 +18,21 @@ function resolveAudience(
   ref: string,
 ): Result<NotificationAudience, DomainError> {
   if (audienceType === "user_ids") {
-    if (ref.trim().length === 0) {
+    const parsed = UserId.parse(ref.trim());
+    if (isErr(parsed)) {
       return Err(invalid({ code: "invalid_user_audience" }));
     }
 
-    return Ok({ kind: "user_ids", userIds: [asUserId(ref)] });
+    return Ok({ kind: "user_ids", userIds: [parsed.value] });
   }
 
   if (audienceType === "team") {
-    if (ref.trim().length === 0) {
+    const parsed = TeamId.parse(ref.trim());
+    if (isErr(parsed)) {
       return Err(invalid({ code: "invalid_team_audience" }));
     }
 
-    return Ok({ kind: "team_id", teamId: asTeamId(ref) });
+    return Ok({ kind: "team_id", teamId: parsed.value });
   }
 
   if (!isRole(ref)) {
@@ -84,7 +86,9 @@ export async function sendBroadcastNotification(
       await notifications.enqueue(
         [
           {
-            id: `broadcast:${actor.userId}:${randomUUIDv7()}`,
+            id: NotificationIntentId.trust(
+              `broadcast:${actor.userId}:${randomUUIDv7()}`,
+            ),
             eventType: "broadcast.general",
             audience: input.audience,
             channels: ["in_app", "email", "whatsapp"],

@@ -1,6 +1,7 @@
 import { createLogger } from "~/lib/observability/logger";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import type { NotificationIntent } from "~/server/notifications/types";
+import { NotificationIntentId } from "~/server/shared/ids";
 
 import type {
   PrivilegedLoginAlertPayload,
@@ -27,7 +28,9 @@ export function createPrivilegedLoginAlertSender(
       await notifications.enqueue(
         [
           {
-            id: `security:login:${params.userId}:${params.occurredAt.toISOString()}`,
+            id: NotificationIntentId.trust(
+              `security:login:${params.userId}:${params.occurredAt.toISOString()}`,
+            ),
             eventType: "security.privileged_login",
             audience: { kind: "user_ids", userIds: [params.userId] },
             channels: ["in_app", "email", "whatsapp"],

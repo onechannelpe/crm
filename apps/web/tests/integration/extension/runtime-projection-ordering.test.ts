@@ -8,7 +8,7 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { asEventId } from "~/server/shared/ids";
+import { EventId } from "~/server/shared/ids";
 
 describe("extension runtime projection ordering", () => {
   let ctx: TestDbContext;
@@ -39,7 +39,7 @@ describe("extension runtime projection ordering", () => {
       call_session_id: "call-new",
       presence_status: "active",
       presence_updated_at: newerAt,
-      source_event_id: asEventId("evt-new"),
+      source_event_id: EventId.trust("evt-new"),
       source_event_sequence: 2,
     });
 
@@ -51,7 +51,7 @@ describe("extension runtime projection ordering", () => {
       call_session_id: "call-old",
       presence_status: "dialing",
       presence_updated_at: olderAt,
-      source_event_id: asEventId("evt-old"),
+      source_event_id: EventId.trust("evt-old"),
       source_event_sequence: 1,
     });
 
@@ -77,7 +77,7 @@ describe("extension runtime projection ordering", () => {
       call_session_id: "call-low",
       presence_status: "dialing",
       presence_updated_at: updatedAt,
-      source_event_id: asEventId("evt-low"),
+      source_event_id: EventId.trust("evt-low"),
       source_event_sequence: 1,
     });
 
@@ -89,7 +89,7 @@ describe("extension runtime projection ordering", () => {
       call_session_id: "call-high",
       presence_status: "active",
       presence_updated_at: updatedAt,
-      source_event_id: asEventId("evt-high"),
+      source_event_id: EventId.trust("evt-high"),
       source_event_sequence: 2,
     });
 
@@ -119,7 +119,7 @@ describe("extension runtime projection ordering", () => {
         presence_updated_at: new Date(fixedNowMs - 5 * 60_000),
         sync_health: "ok",
         sync_updated_at: new Date(fixedNowMs - 30_000),
-        source_event_id: asEventId("heartbeat"),
+        source_event_id: EventId.trust("heartbeat"),
         source_event_sequence: 7,
       })
       .execute();
@@ -153,7 +153,7 @@ describe("extension runtime projection ordering", () => {
         presence_updated_at: new Date(fixedNowMs - 30_000),
         sync_health: "ok",
         sync_updated_at: new Date(fixedNowMs - 5 * 60_000),
-        source_event_id: asEventId("heartbeat-old"),
+        source_event_id: EventId.trust("heartbeat-old"),
         source_event_sequence: 6,
       })
       .execute();

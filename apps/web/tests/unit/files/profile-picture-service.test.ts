@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { BlobStore } from "~/server/shared/blob-store";
-import { asUserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 import {
   createProfilePictureService,
   type AvatarUsersRepository,
@@ -50,7 +50,7 @@ function setup() {
 
 function makeAvatar(
   overrides: Partial<{
-    id: ReturnType<typeof asUserId>;
+    id: UserId;
     avatar_storage_key: string | null;
     avatar_mime_type: string | null;
     avatar_updated_at: Date | null;
@@ -58,7 +58,7 @@ function makeAvatar(
   }> = {},
 ) {
   return {
-    id: asUserId("10"),
+    id: UserId.trust("10"),
     avatar_storage_key: "10/old.png",
     avatar_mime_type: "image/png",
     avatar_updated_at: new Date(),
@@ -82,7 +82,7 @@ describe("profile picture service", () => {
     const file = new File([new Uint8Array([1, 2, 3])], "avatar.png", {
       type: "image/png",
     });
-    const result = await service.upload(asUserId("10"), file);
+    const result = await service.upload(UserId.trust("10"), file);
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("Expected success");
@@ -99,7 +99,7 @@ describe("profile picture service", () => {
     clearAvatar.mockResolvedValue(undefined);
     remove.mockRejectedValue(new Error("delete failed"));
 
-    const result = await service.remove(asUserId("10"));
+    const result = await service.remove(UserId.trust("10"));
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("Expected success");
@@ -120,7 +120,7 @@ describe("profile picture service", () => {
     const file = new File([new Uint8Array([1])], "avatar.png", {
       type: "image/png",
     });
-    const result = await service.upload(asUserId("10"), file);
+    const result = await service.upload(UserId.trust("10"), file);
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");
@@ -142,8 +142,8 @@ describe("profile picture service", () => {
       type: "image/png",
     });
     const [uploadResult, removeResult] = await Promise.all([
-      service.upload(asUserId("99"), file),
-      service.remove(asUserId("99")),
+      service.upload(UserId.trust("99"), file),
+      service.remove(UserId.trust("99")),
     ]);
 
     expect(uploadResult.ok).toBe(false);
@@ -162,7 +162,7 @@ describe("profile picture service", () => {
     const file = new File([new Uint8Array([1])], "avatar.webp", {
       type: "image/webp",
     });
-    const result = await service.upload(asUserId("1"), file);
+    const result = await service.upload(UserId.trust("1"), file);
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");
     const error = result.error;
@@ -172,7 +172,7 @@ describe("profile picture service", () => {
   it("rejects empty file", async () => {
     const { service } = setup();
     const file = new File([], "avatar.png", { type: "image/png" });
-    const result = await service.upload(asUserId("1"), file);
+    const result = await service.upload(UserId.trust("1"), file);
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");
     const error = result.error;
@@ -186,7 +186,7 @@ describe("profile picture service", () => {
       "avatar.png",
       { type: "image/png" },
     );
-    const result = await service.upload(asUserId("1"), file);
+    const result = await service.upload(UserId.trust("1"), file);
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");
     const error = result.error;
@@ -203,7 +203,7 @@ describe("profile picture service", () => {
         avatar_version: 0,
       }),
     );
-    const result = await service.get(asUserId("2"));
+    const result = await service.get(UserId.trust("2"));
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");
     const error = result.error;
@@ -214,13 +214,13 @@ describe("profile picture service", () => {
     const { service, findAvatarMetaById, getBytes } = setup();
     findAvatarMetaById.mockResolvedValue(
       makeAvatar({
-        id: asUserId("2"),
+        id: UserId.trust("2"),
         avatar_storage_key: "2/avatar.png",
         avatar_version: 6,
       }),
     );
     getBytes.mockRejectedValue(new Error("blob read failed"));
-    const result = await service.get(asUserId("2"));
+    const result = await service.get(UserId.trust("2"));
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("Expected failure");
     const error = result.error;

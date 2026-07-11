@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createObservabilityService } from "~/server/observability/service";
-import { asUserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 function createUnexpectedRepos() {
@@ -95,7 +95,7 @@ describe("observability service snapshots", () => {
               route_path: "/team/invite",
               http_method: "POST",
               action_name: "team.invite.create",
-              actor_user_id: asUserId("5"),
+              actor_user_id: UserId.trust("5"),
               actor_role: "superuser",
               status: "error",
               duration_ms: 15,
@@ -141,7 +141,7 @@ describe("observability service snapshots", () => {
           actionName: "team.invite.create",
           status: "error",
           durationMs: 15,
-          actorUserId: asUserId("5"),
+          actorUserId: UserId.trust("5"),
           actorRole: "superuser",
           routePath: "/team/invite",
           errorCode: "validation_failed",

@@ -7,10 +7,9 @@ import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { DomainError } from "~/server/shared/domain-error";
 import {
-  asWorkflowVenueId,
+  WorkflowVenueId,
   type UserId,
   type WorkflowLeadId,
-  type WorkflowVenueId,
 } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 
@@ -152,7 +151,7 @@ async function listAccountsByVenueIds(
 export function createLeadVenueRepo(db: DatabaseExecutor) {
   return {
     async insert(values: LeadVenueInsert): Promise<WorkflowVenueId> {
-      const id = asWorkflowVenueId(randomUUIDv7());
+      const id = WorkflowVenueId.trust(randomUUIDv7());
       await db
         .insertInto("workflow_lead_venues")
         .values({

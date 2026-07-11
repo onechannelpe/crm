@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { asBranchId, asUserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 import { deriveLeadStageNotifications } from "~/server/workflow/effects/reactors/notify";
 
 const baseInput = {
   eventId: "evt-1",
   leadId: "lead-1",
   ruc: "20123456789",
-  executiveId: asUserId("42"),
-  branchId: asBranchId("1"),
+  executiveId: UserId.trust("42"),
+  branchId: BranchId.trust("1"),
 };
 
 describe("deriveLeadStageNotifications", () => {

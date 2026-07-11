@@ -3,13 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 import { createIntentExpander } from "~/server/notifications/expansion/expand-intent";
 import type { RecipientPlan } from "~/server/notifications/expansion/plan-recipients";
 import type { IntentJob } from "~/server/notifications/repos/intent-repo";
-import { asNotificationIntentId, asUserId } from "~/server/shared/ids";
+import { NotificationIntentId, UserId } from "~/server/shared/ids";
 
 const NOW = new Date(5_000);
 
 function intentJob(overrides: Partial<IntentJob> = {}): IntentJob {
   return {
-    id: asNotificationIntentId("intent-1"),
+    id: NotificationIntentId.trust("intent-1"),
     attempt_count: 1,
     max_attempts: 5,
     event_type: "lead.ready_for_sale",
@@ -41,10 +41,10 @@ function createExpander(plan: RecipientPlan) {
 describe("createIntentExpander", () => {
   it("writes in-app rows and delivery rows for the planned recipients", async () => {
     const { expandIntent, createMany, insertPlanned } = createExpander({
-      inAppRecipients: [asUserId("1"), asUserId("2")],
+      inAppRecipients: [UserId.trust("1"), UserId.trust("2")],
       externalDeliveries: [
         {
-          userId: asUserId("1"),
+          userId: UserId.trust("1"),
           channel: "whatsapp",
           recipientAddress: "51911000001",
         },
@@ -56,23 +56,23 @@ describe("createIntentExpander", () => {
     expect(outcome).toEqual({ kind: "expanded", deliveriesPlanned: 1 });
     expect(createMany).toHaveBeenCalledWith([
       expect.objectContaining({
-        user_id: asUserId("1"),
-        source_event_id: asNotificationIntentId("intent-1"),
+        user_id: UserId.trust("1"),
+        source_event_id: NotificationIntentId.trust("intent-1"),
         event_type: "lead.ready_for_sale",
         title: "Title",
         action_url: "/records/1",
         created_at: NOW,
       }),
       expect.objectContaining({
-        user_id: asUserId("2"),
-        source_event_id: asNotificationIntentId("intent-1"),
+        user_id: UserId.trust("2"),
+        source_event_id: NotificationIntentId.trust("intent-1"),
       }),
     ]);
     expect(insertPlanned).toHaveBeenCalledWith(
       [
         expect.objectContaining({
-          intent_id: asNotificationIntentId("intent-1"),
-          user_id: asUserId("1"),
+          intent_id: NotificationIntentId.trust("intent-1"),
+          user_id: UserId.trust("1"),
           channel: "whatsapp",
           recipient_address: "51911000001",
         }),
@@ -83,7 +83,7 @@ describe("createIntentExpander", () => {
 
   it("writes in-app rows even when no external deliveries are planned", async () => {
     const { expandIntent, createMany, insertPlanned } = createExpander({
-      inAppRecipients: [asUserId("1")],
+      inAppRecipients: [UserId.trust("1")],
       externalDeliveries: [],
     });
 
@@ -99,7 +99,7 @@ describe("createIntentExpander", () => {
 
   it("returns invalid for a malformed payload before any write", async () => {
     const { expandIntent, createMany, insertPlanned } = createExpander({
-      inAppRecipients: [asUserId("1")],
+      inAppRecipients: [UserId.trust("1")],
       externalDeliveries: [],
     });
 

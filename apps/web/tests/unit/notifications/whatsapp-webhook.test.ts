@@ -5,7 +5,7 @@ import {
   type WhatsAppInboundPorts,
 } from "~/server/notifications/whatsapp-inbound/handle-inbound-message";
 import { parseKapsoInboundMessage } from "~/server/notifications/whatsapp-inbound/kapso-payload";
-import { asUserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 
 const NOW = new Date(1_700_000_000_000);
 
@@ -27,7 +27,7 @@ function kapsoInbound(input: {
 function createPorts(
   claim:
     | {
-        userId: ReturnType<typeof asUserId>;
+        userId: UserId;
         address: string;
         verified: boolean;
       }
@@ -111,7 +111,7 @@ describe("handleWhatsAppInboundMessage", () => {
 
   it("verifies a claimed address, opens its session, and replies", async () => {
     const runtime = createPorts({
-      userId: asUserId("7"),
+      userId: UserId.trust("7"),
       address: "911000007",
       verified: false,
     });
@@ -119,17 +119,17 @@ describe("handleWhatsAppInboundMessage", () => {
     await handleWhatsAppInboundMessage(message, NOW, runtime.ports);
 
     expect(runtime.markVerified).toHaveBeenCalledWith({
-      userId: asUserId("7"),
+      userId: UserId.trust("7"),
       address: "911000007",
       now: NOW,
     });
-    expect(runtime.open).toHaveBeenCalledWith(asUserId("7"), NOW);
+    expect(runtime.open).toHaveBeenCalledWith(UserId.trust("7"), NOW);
     expect(runtime.sendVerificationReply).toHaveBeenCalledWith("+51911000007");
   });
 
   it("keeps the session alive for an already verified sender", async () => {
     const runtime = createPorts({
-      userId: asUserId("7"),
+      userId: UserId.trust("7"),
       address: "911000007",
       verified: true,
     });
@@ -140,7 +140,7 @@ describe("handleWhatsAppInboundMessage", () => {
       runtime.ports,
     );
 
-    expect(runtime.open).toHaveBeenCalledWith(asUserId("7"), NOW);
+    expect(runtime.open).toHaveBeenCalledWith(UserId.trust("7"), NOW);
     expect(runtime.markVerified).not.toHaveBeenCalled();
     expect(runtime.sendVerificationReply).not.toHaveBeenCalled();
   });
@@ -157,7 +157,7 @@ describe("handleWhatsAppInboundMessage", () => {
 
   it("does not fail verified ownership when the optional reply fails", async () => {
     const runtime = createPorts({
-      userId: asUserId("7"),
+      userId: UserId.trust("7"),
       address: "911000007",
       verified: false,
     });
@@ -180,14 +180,14 @@ describe("handleWhatsAppInboundMessage", () => {
 
   it("mutes whatsapp and replies on STOP, even for an unverified sender", async () => {
     const runtime = createPorts({
-      userId: asUserId("7"),
+      userId: UserId.trust("7"),
       address: "911000007",
       verified: false,
     });
 
     await handleWhatsAppInboundMessage(stopMessage, NOW, runtime.ports);
 
-    expect(runtime.muteWhatsApp).toHaveBeenCalledWith(asUserId("7"), NOW);
+    expect(runtime.muteWhatsApp).toHaveBeenCalledWith(UserId.trust("7"), NOW);
     expect(runtime.sendOptOutReply).toHaveBeenCalledWith("+51911000007");
     // STOP short-circuits before any verification or session work.
     expect(runtime.markVerified).not.toHaveBeenCalled();
@@ -196,7 +196,7 @@ describe("handleWhatsAppInboundMessage", () => {
 
   it("still records the opt-out when the reply fails", async () => {
     const runtime = createPorts({
-      userId: asUserId("7"),
+      userId: UserId.trust("7"),
       address: "911000007",
       verified: true,
     });

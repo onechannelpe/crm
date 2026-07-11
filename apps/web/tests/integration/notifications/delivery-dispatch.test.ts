@@ -14,7 +14,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { NotificationIntent } from "~/server/notifications/types";
 import { openSession } from "~/server/notifications/whatsapp-session";
-import { asNotificationIntentId, type UserId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
+import { NotificationIntentId } from "~/server/shared/ids";
 
 const NOW_MS = 1_700_000_000_000;
 const NOW = new Date(NOW_MS);
@@ -59,7 +60,7 @@ describe("notification delivery dispatch", () => {
 
   function intent(overrides: Partial<NotificationIntent>): NotificationIntent {
     return {
-      id: "intent-1",
+      id: NotificationIntentId.trust("intent-1"),
       eventType: "lead.ready_for_sale",
       audience: {
         kind: "user_ids",
@@ -195,7 +196,7 @@ describe("notification delivery dispatch", () => {
       .insertInto("notification_deliveries")
       .values(
         aDeliveryRow({
-          intent_id: asNotificationIntentId("ceiling"),
+          intent_id: NotificationIntentId.trust("ceiling"),
           user_id: execOne.id,
           channel: "whatsapp",
           recipient_address: "51911000001",
@@ -246,7 +247,7 @@ describe("notification delivery dispatch", () => {
         lease_until: null,
         available_at: runtime.now.get(),
       })
-      .where("id", "=", asNotificationIntentId("intent-1"))
+      .where("id", "=", NotificationIntentId.trust("intent-1"))
       .execute();
     await notifications.drain();
 

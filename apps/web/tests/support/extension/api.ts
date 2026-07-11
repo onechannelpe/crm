@@ -1,11 +1,10 @@
 import { createExtensionService } from "~/server/extension/service";
-import {
-  asContactAssignmentId,
-  type BranchId,
-  type ContactAssignmentId,
-  type OrganizationPersonId,
-  type UserId,
+import type {
+  BranchId,
+  OrganizationPersonId,
+  UserId,
 } from "~/server/shared/ids";
+import { ContactAssignmentId } from "~/server/shared/ids";
 import { Err, type Result } from "~/server/shared/result";
 
 import { TEST_FIXTURES, type TestDbContext } from "../runtime/db";
@@ -83,7 +82,7 @@ export function createExtensionScenario(
       input: { userId?: UserId; contactId?: OrganizationPersonId } = {},
     ): Promise<ContactAssignmentId> {
       const currentTime = now();
-      const assignmentId = asContactAssignmentId(crypto.randomUUID());
+      const assignmentId = ContactAssignmentId.trust(crypto.randomUUID());
       await ctx.db
         .insertInto("contact_assignments")
         .values({

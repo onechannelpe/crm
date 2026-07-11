@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
-import { asAuthLoginFlowId } from "~/server/shared/ids";
+import { AuthLoginFlowId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 describe("privileged password login", () => {
@@ -91,7 +91,7 @@ describe("privileged password login", () => {
     }
 
     const flow = await getLoginFlowState(
-      asAuthLoginFlowId(result.value.flow.id),
+      AuthLoginFlowId.trust(result.value.flow.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
     );
@@ -116,7 +116,7 @@ describe("privileged password login", () => {
       throw new Error("expected totp verification step");
     }
 
-    const flowId = asAuthLoginFlowId(passwordResult.value.flow.id);
+    const flowId = AuthLoginFlowId.trust(passwordResult.value.flow.id);
     const result = await scenario.loginTotp(flowId, code, requestMeta);
     expect(isErr(result)).toBe(false);
     if (isErr(result)) throw new Error("expected successful totp login");
@@ -145,7 +145,7 @@ describe("privileged password login", () => {
     }
 
     const result = await scenario.loginTotp(
-      asAuthLoginFlowId(passwordResult.value.flow.id),
+      AuthLoginFlowId.trust(passwordResult.value.flow.id),
       "000000",
       requestMeta,
     );

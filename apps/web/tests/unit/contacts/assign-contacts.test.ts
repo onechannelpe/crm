@@ -20,21 +20,17 @@ import type {
 import { external, type DomainError } from "~/server/shared/domain-error";
 import { type RecordCandidate } from "~/server/shared/engine/record-contract";
 import {
-  asBranchId,
-  asOrganizationId,
-  asOrganizationPersonId,
-  asPersonId,
-  asUserId,
-  type BranchId,
-  type OrganizationId,
-  type OrganizationPersonId,
-  type UserId,
+  BranchId,
+  OrganizationId,
+  OrganizationPersonId,
+  PersonId,
+  UserId,
 } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
-const USER_ID = asUserId("1");
-const BRANCH_ID: BranchId = asBranchId("1");
-const ORG_ID: OrganizationId = asOrganizationId(
+const USER_ID = UserId.trust("1");
+const BRANCH_ID: BranchId = BranchId.trust("1");
+const ORG_ID: OrganizationId = OrganizationId.trust(
   "01974fd5-f261-7a7d-93f5-2f3d0f963001",
 );
 const EXHAUSTED_ACTIVE_ASSIGNMENTS = 9_999;
@@ -93,12 +89,12 @@ function makeRepos(activeAssignments = 0) {
           ? Arg
           : never,
       ): Promise<Membership> => {
-        const id = asOrganizationPersonId(`contact-${nextContactId++}`);
+        const id = OrganizationPersonId.trust(`contact-${nextContactId++}`);
         return {
           id,
           organizationId: input.organizationId,
           person: {
-            id: asPersonId(`person-${input.person.dni}`),
+            id: PersonId.trust(`person-${input.person.dni}`),
             dni: input.person.dni,
             names: input.person.names,
             firstSurname: input.person.firstSurname,
@@ -165,7 +161,7 @@ describe("assignContacts", () => {
     // the future, so the writer filters it out and the count of assigned is
     // strictly less than the count of requested.
     let cadenceCallCount = 0;
-    const cooldownMembership = asOrganizationPersonId("contact-3");
+    const cooldownMembership = OrganizationPersonId.trust("contact-3");
     repos.cadence.findMany = async (ids: OrganizationPersonId[]) => {
       cadenceCallCount++;
       const map = new Map<OrganizationPersonId, CadenceSnapshot>();

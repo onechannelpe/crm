@@ -7,12 +7,16 @@ import { logoutUser } from "~/server/auth/flows/logout-user";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { asAuthLoginFlowId } from "~/server/shared/ids";
+import { AuthLoginFlowId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 export async function getLoginFlow(flowId: string) {
+  const parsedFlowId = AuthLoginFlowId.parse(flowId);
+  if (isErr(parsedFlowId)) return null;
+
   const repos = getServerRuntime().auth.login.repos;
   return getLoginFlowState(
-    asAuthLoginFlowId(flowId),
+    parsedFlowId.value,
     repos,
     createRequestPasskeyProvider(repos),
   );

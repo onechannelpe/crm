@@ -2,7 +2,7 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
-import { asBranchId, asUserId, type UserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW, benchDate } from "../_shared/constants";
 
@@ -13,10 +13,10 @@ import { BENCH_NOW, benchDate } from "../_shared/constants";
 // itself). One user's worth is the whole working set.
 export const SESSIONS_PER_USER = 800;
 
-const BRANCH_ID = asBranchId(TEST_FIXTURES.branches.lima.id);
+const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
 
 export async function seedBenchUser(ctx: TestDbContext): Promise<UserId> {
-  const id = asUserId(randomUUIDv7());
+  const id = UserId.trust(randomUUIDv7());
   await ctx.db
     .insertInto("users")
     .values({

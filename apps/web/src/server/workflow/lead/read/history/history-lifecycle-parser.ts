@@ -1,5 +1,5 @@
 import type { DomainError } from "~/server/shared/domain-error";
-import { asUserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 
@@ -187,7 +187,10 @@ export function toAssignmentEntry(
   return Ok({
     ...toHistoryEntryBase(row),
     eventType: "lead_assigned",
-    payload: { executiveId: asUserId(executiveId.value), reason: reason.value },
+    payload: {
+      executiveId: UserId.trust(executiveId.value),
+      reason: reason.value,
+    },
   });
 }
 
@@ -208,8 +211,8 @@ export function toReassignmentEntry(
     ...toHistoryEntryBase(row),
     eventType: "lead_reassigned",
     payload: {
-      fromExecutiveId: asUserId(fromExecutiveId.value),
-      toExecutiveId: asUserId(toExecutiveId.value),
+      fromExecutiveId: UserId.trust(fromExecutiveId.value),
+      toExecutiveId: UserId.trust(toExecutiveId.value),
       reason: reason.value,
     },
   });

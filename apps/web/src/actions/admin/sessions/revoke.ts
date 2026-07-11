@@ -5,7 +5,7 @@ import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/
 import { revokeUserSession as revokeUserSessionService } from "~/server/auth/flows/revoke-user-session";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { asUserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function revokeUserSession(
@@ -23,7 +23,7 @@ export async function revokeUserSession(
         validationFail,
         (r) => ({
           sessionId: r.str("sessionId"),
-          targetUserId: asUserId(r.str("targetUserId")),
+          targetUserId: r.id("targetUserId", UserId),
         }),
       ),
 
@@ -48,7 +48,7 @@ export async function revokeAllUserSessions(
 
     parse: () =>
       parseObject({ targetUserId: rawTargetUserId }, validationFail, (r) => ({
-        targetUserId: asUserId(r.str("targetUserId")),
+        targetUserId: r.id("targetUserId", UserId),
       })),
 
     audit: (command) => ({ targetUserId: command.targetUserId }),

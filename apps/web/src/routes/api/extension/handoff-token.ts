@@ -2,7 +2,7 @@ import { authorizeRoutePermission } from "~/lib/auth/access/route-access";
 import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contracts";
 import { getServerRuntime } from "~/server/platform/container";
 import { toWire } from "~/server/shared/domain-error";
-import { asContactAssignmentId } from "~/server/shared/ids";
+import { ContactAssignmentId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 import type { ApiRequestEvent } from "../request-event";
@@ -21,6 +21,14 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
     );
   }
 
+  const assignmentId = ContactAssignmentId.parse(body.assignmentId);
+  if (isErr(assignmentId)) {
+    return Response.json(
+      { error: "Invalid handoff token request" },
+      { status: 400 },
+    );
+  }
+
   const auth = await authorizeRoutePermission("lead:work");
   if (isErr(auth)) return auth.error;
   const session = auth.value;
@@ -31,7 +39,7 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
       userId: session.userId,
       authSessionId: session.id,
       branchId: session.branchId,
-      assignmentId: asContactAssignmentId(body.assignmentId),
+      assignmentId: assignmentId.value,
       origin,
     });
 

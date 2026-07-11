@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { createPasskeyLoginStartAuthService } from "~/server/auth/factors/passkey/service";
-import { asAuthLoginFlowId } from "~/server/shared/ids";
+import { AuthLoginFlowId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
 describe("login flow service", () => {
@@ -61,7 +61,7 @@ describe("login flow service", () => {
     }
 
     const user = scenario.identity("superuser");
-    const flowId = asAuthLoginFlowId(passwordResult.value.flow.id);
+    const flowId = AuthLoginFlowId.trust(passwordResult.value.flow.id);
     const stored = await scenario.ctx.repos.loginFlows.findById(flowId);
     expect(stored?.state).toBe("totp");
     expect(stored?.user_id).toBe(user.userId);
@@ -95,7 +95,7 @@ describe("login flow service", () => {
     if (isErr(result)) throw new Error("expected passkey flow");
 
     const flow = await getLoginFlowState(
-      asAuthLoginFlowId(result.value.id),
+      AuthLoginFlowId.trust(result.value.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
     );

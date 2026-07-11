@@ -6,11 +6,10 @@ import { runAction, runActionResult } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
 import {
-  asFileAssetId,
-  asWorkflowLeadId,
-  asWorkflowRateRevisionFileId,
+  FileAssetId,
+  WorkflowLeadId,
+  WorkflowRateRevisionFileId,
 } from "~/server/shared/ids";
-import type { WorkflowLeadId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -32,7 +31,7 @@ function parseLeadUpload(formData: unknown): Result<LeadUpload, DomainError> {
     { leadId: formData.get("leadId") },
     validationFail,
     (r) => ({
-      leadId: asWorkflowLeadId(r.str("leadId")),
+      leadId: r.id("leadId", WorkflowLeadId),
     }),
   );
 
@@ -63,7 +62,7 @@ export async function listLeadSaleProofFiles(rawLeadId: string) {
 
     parse: () =>
       parseObject({ leadId: rawLeadId }, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
+        leadId: r.id("leadId", WorkflowLeadId),
       })),
 
     audit: ({ leadId }) => ({ leadId }),
@@ -122,8 +121,8 @@ export async function requestLeadSaleProofDownloadToken(input: {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
-        fileAssetId: asFileAssetId(r.str("fileId")),
+        leadId: r.id("leadId", WorkflowLeadId),
+        fileAssetId: r.id("fileId", FileAssetId),
       })),
 
     audit: ({ leadId, fileAssetId }) => ({
@@ -174,8 +173,8 @@ export async function requestRateRevisionFileDownloadToken(input: {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        leadId: asWorkflowLeadId(r.str("leadId")),
-        fileId: asWorkflowRateRevisionFileId(r.str("fileId")),
+        leadId: r.id("leadId", WorkflowLeadId),
+        fileId: r.id("fileId", WorkflowRateRevisionFileId),
       })),
 
     audit: ({ leadId, fileId }) => ({

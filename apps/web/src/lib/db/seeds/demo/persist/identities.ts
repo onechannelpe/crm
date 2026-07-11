@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
 import { hashPassword } from "~/lib/auth/password/password";
-import { asUserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
 import { resolveSeedPassword } from "../../shared/seed-password";
@@ -541,7 +541,7 @@ function seedUuid(value: number): string {
 }
 
 function seedUserId(value: number) {
-  return asUserId(seedUuid(value));
+  return UserId.trust(seedUuid(value));
 }
 
 const oneMinute = 60 * 1000;

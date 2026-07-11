@@ -7,11 +7,11 @@ import {
 } from "~/contracts/workflow/limits";
 import { hydrateRuc } from "~/server/shared/document";
 import {
-  asOrganizationId,
-  asUserId,
-  asWorkflowLeadId,
-  asWorkflowRateRevisionFileId,
-  asWorkflowRateRevisionId,
+  OrganizationId,
+  UserId,
+  WorkflowLeadId,
+  WorkflowRateRevisionFileId,
+  WorkflowRateRevisionId,
 } from "~/server/shared/ids";
 import {
   closeLead,
@@ -29,15 +29,15 @@ import { rejectRuleForStep } from "~/server/workflow/lead/fulfillment/steps";
 
 function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
   return {
-    id: asWorkflowLeadId("lead-1"),
-    organizationId: asOrganizationId("org-1"),
+    id: WorkflowLeadId.trust("lead-1"),
+    organizationId: OrganizationId.trust("org-1"),
     ruc: hydrateRuc("20600000001"),
     legalName: null,
     address: null,
     district: null,
     department: null,
-    executiveId: asUserId("1"),
-    createdBy: asUserId("1"),
+    executiveId: UserId.trust("1"),
+    createdBy: UserId.trust("1"),
     updatedBy: null,
     stage: "PRICING",
     status: null,
@@ -53,12 +53,12 @@ function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
 
 describe("lead action policy", () => {
   it("blocks non-owners from owner-only pricing actions", () => {
-    const lead = { executiveId: asUserId("1"), stage: "PRICING" as const };
+    const lead = { executiveId: UserId.trust("1"), stage: "PRICING" as const };
 
     expect(
       authorizeLeadAction(
         "request-rate-revision",
-        { userId: asUserId("2"), role: "executive" },
+        { userId: UserId.trust("2"), role: "executive" },
         lead,
       ).ok,
     ).toBe(false);
@@ -66,19 +66,19 @@ describe("lead action policy", () => {
     expect(
       authorizeLeadAction(
         "accept-rate",
-        { userId: asUserId("2"), role: "executive" },
+        { userId: UserId.trust("2"), role: "executive" },
         lead,
       ).ok,
     ).toBe(false);
   });
 
   it("lets back office propose rates but not decide executive-only actions", () => {
-    const lead = { executiveId: asUserId("1"), stage: "PRICING" as const };
+    const lead = { executiveId: UserId.trust("1"), stage: "PRICING" as const };
 
     expect(
       authorizeLeadAction(
         "propose-rate",
-        { userId: asUserId("2"), role: "back_office" },
+        { userId: UserId.trust("2"), role: "back_office" },
         lead,
       ).ok,
     ).toBe(true);
@@ -86,7 +86,7 @@ describe("lead action policy", () => {
     expect(
       authorizeLeadAction(
         "request-rate-revision",
-        { userId: asUserId("2"), role: "back_office" },
+        { userId: UserId.trust("2"), role: "back_office" },
         lead,
       ).ok,
     ).toBe(false);
@@ -96,16 +96,16 @@ describe("lead action policy", () => {
     expect(
       authorizeLeadAction(
         "delete",
-        { userId: asUserId("1"), role: "executive" },
-        { executiveId: asUserId("1"), stage: "PRICING" },
+        { userId: UserId.trust("1"), role: "executive" },
+        { executiveId: UserId.trust("1"), stage: "PRICING" },
       ).ok,
     ).toBe(false);
 
     expect(
       authorizeLeadAction(
         "delete",
-        { userId: asUserId("2"), role: "sales_manager" },
-        { executiveId: asUserId("1"), stage: "PRICING" },
+        { userId: UserId.trust("2"), role: "sales_manager" },
+        { executiveId: UserId.trust("1"), stage: "PRICING" },
       ).ok,
     ).toBe(true);
   });
@@ -114,11 +114,11 @@ describe("lead action policy", () => {
     expect(
       expectErr(
         requestRateRevision(makeLeadState(), {
-          actor: { userId: asUserId("1"), role: "executive" },
-          revisionId: asWorkflowRateRevisionId("revision-1"),
+          actor: { userId: UserId.trust("1"), role: "executive" },
+          revisionId: WorkflowRateRevisionId.trust("revision-1"),
           round: MAX_RATE_REVISION_ROUNDS + 1,
           justification: "Need better rate",
-          fileIds: [asWorkflowRateRevisionFileId("file-1")],
+          fileIds: [WorkflowRateRevisionFileId.trust("file-1")],
           reservationExpiresAt: new Date(200),
           now: new Date(100),
         }),
@@ -128,8 +128,8 @@ describe("lead action policy", () => {
     expect(
       expectErr(
         requestRateRevision(makeLeadState(), {
-          actor: { userId: asUserId("1"), role: "executive" },
-          revisionId: asWorkflowRateRevisionId("revision-1"),
+          actor: { userId: UserId.trust("1"), role: "executive" },
+          revisionId: WorkflowRateRevisionId.trust("revision-1"),
           round: 1,
           justification: "Need better rate",
           fileIds: [],
@@ -142,13 +142,13 @@ describe("lead action policy", () => {
     expect(
       expectErr(
         requestRateRevision(makeLeadState(), {
-          actor: { userId: asUserId("1"), role: "executive" },
-          revisionId: asWorkflowRateRevisionId("revision-1"),
+          actor: { userId: UserId.trust("1"), role: "executive" },
+          revisionId: WorkflowRateRevisionId.trust("revision-1"),
           round: 1,
           justification: "Need better rate",
           fileIds: Array.from(
             { length: MAX_RATE_REVISION_FILES + 1 },
-            (_, index) => asWorkflowRateRevisionFileId(`file-${index}`),
+            (_, index) => WorkflowRateRevisionFileId.trust(`file-${index}`),
           ),
           reservationExpiresAt: new Date(200),
           now: new Date(100),
@@ -159,13 +159,13 @@ describe("lead action policy", () => {
     expect(
       expectErr(
         requestRateRevision(makeLeadState(), {
-          actor: { userId: asUserId("1"), role: "executive" },
-          revisionId: asWorkflowRateRevisionId("revision-1"),
+          actor: { userId: UserId.trust("1"), role: "executive" },
+          revisionId: WorkflowRateRevisionId.trust("revision-1"),
           round: 1,
           justification: "Need better rate",
           fileIds: [
-            asWorkflowRateRevisionFileId("file-1"),
-            asWorkflowRateRevisionFileId("file-1"),
+            WorkflowRateRevisionFileId.trust("file-1"),
+            WorkflowRateRevisionFileId.trust("file-1"),
           ],
           reservationExpiresAt: new Date(200),
           now: new Date(100),
@@ -176,7 +176,7 @@ describe("lead action policy", () => {
 
   it("offers close as a third pricing outcome to the owning executive, even before a proposal", () => {
     const actions = resolveAvailableActions(
-      { userId: asUserId("1"), role: "executive" },
+      { userId: UserId.trust("1"), role: "executive" },
       makeLeadState(),
       {
         hasActivePendingProposal: false,
@@ -189,7 +189,7 @@ describe("lead action policy", () => {
     // Back office never closes; it only proposes.
     expect(
       resolveAvailableActions(
-        { userId: asUserId("2"), role: "back_office" },
+        { userId: UserId.trust("2"), role: "back_office" },
         makeLeadState(),
         {
           hasActivePendingProposal: true,
@@ -202,7 +202,7 @@ describe("lead action policy", () => {
 
   it("closes a pricing lead as lost and transitions to CLOSED_LOST", () => {
     const result = closeLead(makeLeadState(), {
-      actor: { userId: asUserId("1"), role: "executive" },
+      actor: { userId: UserId.trust("1"), role: "executive" },
       reason: "RATE",
       note: "Cliente no acepta la tasa",
       now: new Date(200),
@@ -220,7 +220,7 @@ describe("lead action policy", () => {
     expect(
       expectErr(
         closeLead(makeLeadState({ stage: "SETUP" }), {
-          actor: { userId: asUserId("1"), role: "executive" },
+          actor: { userId: UserId.trust("1"), role: "executive" },
           reason: "RATE",
           note: null,
           now: new Date(200),
@@ -230,7 +230,7 @@ describe("lead action policy", () => {
 
     expect(
       closeLead(makeLeadState(), {
-        actor: { userId: asUserId("2"), role: "back_office" },
+        actor: { userId: UserId.trust("2"), role: "back_office" },
         reason: "RATE",
         note: null,
         now: new Date(200),
@@ -240,12 +240,15 @@ describe("lead action policy", () => {
 
   it("routes the transactions report to the owning executive and lets back office bounce it back", () => {
     const reportStep = "AWAITING_TRANSACTIONS_REPORT" as const;
-    const state = { executiveId: asUserId("1"), stage: "FULFILLMENT" as const };
+    const state = {
+      executiveId: UserId.trust("1"),
+      stage: "FULFILLMENT" as const,
+    };
 
     expect(
       authorizeFulfillmentStep(
         reportStep,
-        { userId: asUserId("1"), role: "executive" },
+        { userId: UserId.trust("1"), role: "executive" },
         state,
       ).ok,
     ).toBe(true);
@@ -253,7 +256,7 @@ describe("lead action policy", () => {
     expect(
       authorizeFulfillmentStep(
         reportStep,
-        { userId: asUserId("2"), role: "executive" },
+        { userId: UserId.trust("2"), role: "executive" },
         state,
       ).ok,
     ).toBe(false);
@@ -265,7 +268,7 @@ describe("lead action policy", () => {
 
   it("qualifies a lead into pricing and records status, priority, and stage", () => {
     const result = qualifyLead(makeLeadState({ stage: "QUALIFYING" }), {
-      actor: { userId: asUserId("2"), role: "back_office" },
+      actor: { userId: UserId.trust("2"), role: "back_office" },
       status: "DISPONIBLE",
       priority: "P1",
       reason: "Disponible para cotizar",
@@ -287,7 +290,7 @@ describe("lead action policy", () => {
 
   it("routes a carterizado qualification to DISQUALIFIED", () => {
     const result = qualifyLead(makeLeadState({ stage: "QUALIFYING" }), {
-      actor: { userId: asUserId("2"), role: "back_office" },
+      actor: { userId: UserId.trust("2"), role: "back_office" },
       status: "CARTERIZADO",
       priority: "P2",
       reason: "Ya carterizado por otro canal",
@@ -303,7 +306,7 @@ describe("lead action policy", () => {
     expect(
       expectErr(
         qualifyLead(makeLeadState({ stage: "PRICING" }), {
-          actor: { userId: asUserId("2"), role: "back_office" },
+          actor: { userId: UserId.trust("2"), role: "back_office" },
           status: "DISPONIBLE",
           priority: "P1",
           reason: "Ya no aplica",
@@ -315,7 +318,7 @@ describe("lead action policy", () => {
 
   it("restarts an expired quotation back into pricing for owner and back office", () => {
     const owner = restartQuotation(makeLeadState({ stage: "EXPIRED" }), {
-      actor: { userId: asUserId("1"), role: "executive" },
+      actor: { userId: UserId.trust("1"), role: "executive" },
       now: new Date(200),
     });
     expect(owner.ok).toBe(true);
@@ -325,7 +328,7 @@ describe("lead action policy", () => {
     // Back office does not own the lead but carries lead:view:all.
     expect(
       restartQuotation(makeLeadState({ stage: "EXPIRED" }), {
-        actor: { userId: asUserId("2"), role: "back_office" },
+        actor: { userId: UserId.trust("2"), role: "back_office" },
         now: new Date(200),
       }).ok,
     ).toBe(true);
@@ -334,7 +337,7 @@ describe("lead action policy", () => {
     expect(
       expectErr(
         restartQuotation(makeLeadState({ stage: "PRICING" }), {
-          actor: { userId: asUserId("1"), role: "executive" },
+          actor: { userId: UserId.trust("1"), role: "executive" },
           now: new Date(200),
         }),
       ).code,
@@ -351,7 +354,7 @@ describe("lead action policy", () => {
     // Back office qualifies while the lead is QUALIFYING.
     expect(
       resolveAvailableActions(
-        { userId: asUserId("2"), role: "back_office" },
+        { userId: UserId.trust("2"), role: "back_office" },
         makeLeadState({ stage: "QUALIFYING" }),
         meta,
       ),
@@ -360,7 +363,7 @@ describe("lead action policy", () => {
     // The owning executive can correct their commercial input while pricing.
     expect(
       resolveAvailableActions(
-        { userId: asUserId("1"), role: "executive" },
+        { userId: UserId.trust("1"), role: "executive" },
         makeLeadState({ stage: "PRICING" }),
         meta,
       ),
@@ -369,7 +372,7 @@ describe("lead action policy", () => {
     // A different executive holds the capability but does not own the lead.
     expect(
       resolveAvailableActions(
-        { userId: asUserId("9"), role: "executive" },
+        { userId: UserId.trust("9"), role: "executive" },
         makeLeadState({ stage: "PRICING" }),
         meta,
       ),
@@ -378,7 +381,7 @@ describe("lead action policy", () => {
     // Restart is offered once the reservation lapsed and the lead is EXPIRED.
     expect(
       resolveAvailableActions(
-        { userId: asUserId("1"), role: "executive" },
+        { userId: UserId.trust("1"), role: "executive" },
         makeLeadState({ stage: "EXPIRED" }),
         meta,
       ),
@@ -388,7 +391,7 @@ describe("lead action policy", () => {
   it("surfaces pricing actions from proposal state", () => {
     expect(
       resolveAvailableActions(
-        { userId: asUserId("2"), role: "back_office" },
+        { userId: UserId.trust("2"), role: "back_office" },
         makeLeadState(),
         {
           hasActivePendingProposal: false,
@@ -399,7 +402,7 @@ describe("lead action policy", () => {
     ).toContain("propose-rate");
 
     const executiveActions = resolveAvailableActions(
-      { userId: asUserId("1"), role: "executive" },
+      { userId: UserId.trust("1"), role: "executive" },
       makeLeadState(),
       {
         hasActivePendingProposal: true,
@@ -412,7 +415,7 @@ describe("lead action policy", () => {
 
     expect(
       resolveAvailableActions(
-        { userId: asUserId("1"), role: "executive" },
+        { userId: UserId.trust("1"), role: "executive" },
         makeLeadState(),
         {
           hasActivePendingProposal: true,

@@ -13,7 +13,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { asWorkflowVenueId } from "~/server/shared/ids";
+import { WorkflowVenueId } from "~/server/shared/ids";
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
@@ -181,7 +181,7 @@ describe("lead detail setup pipeline", () => {
         {
           actor,
           leadId: lead.id,
-          venueId: asWorkflowVenueId(withVenue.venues[0].id),
+          venueId: WorkflowVenueId.trust(withVenue.venues[0].id),
           solesAccount: {
             currency: "PEN",
             banco: "BCP",

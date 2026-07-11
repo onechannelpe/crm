@@ -6,7 +6,7 @@ import {
 } from "~/server/capacity/application/usage/ledger";
 import { type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
-import { asSearchReservationId, type UserId } from "~/server/shared/ids";
+import { SearchReservationId, type UserId } from "~/server/shared/ids";
 import { isErr, Ok, type Result } from "~/server/shared/result";
 
 export interface RunDirectSearchCommand {
@@ -27,7 +27,7 @@ export async function runDirectSearch(
       actorUserId: command.actorUserId,
       requested: 1,
       reserveReason: "direct_search",
-      brand: asSearchReservationId,
+      brand: SearchReservationId.trust,
     },
     usageReservationPorts,
     async () => {

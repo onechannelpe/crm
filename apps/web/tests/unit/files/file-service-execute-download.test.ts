@@ -2,14 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { executeDownload } from "~/server/files/service/execute-download";
 import type { FileAsset } from "~/server/files/types";
-import {
-  asFileAssetId,
-  asFileDownloadTokenId,
-  asUserId,
-} from "~/server/shared/ids";
+import { FileAssetId, FileDownloadTokenId, UserId } from "~/server/shared/ids";
 
 const fileAsset: FileAsset = {
-  id: asFileAssetId("file-20"),
+  id: FileAssetId.trust("file-20"),
   storageKey: "records_export/2026/07/export.csv",
   purpose: "records_export",
   originalFilename: "export.csv",
@@ -22,7 +18,7 @@ const fileAsset: FileAsset = {
   scanStatus: "clean",
   scanEngine: null,
   scanReference: null,
-  createdByUserId: asUserId("user-7"),
+  createdByUserId: UserId.trust("user-7"),
   createdAt: new Date(1),
 };
 
@@ -34,9 +30,9 @@ describe("executeDownload", () => {
         repo: {
           tokens: {
             findByHash: async () => ({
-              id: asFileDownloadTokenId("token-1"),
+              id: FileDownloadTokenId.trust("token-1"),
               fileAssetId: fileAsset.id,
-              requestedByUserId: asUserId("user-7"),
+              requestedByUserId: UserId.trust("user-7"),
               expiresAt: new Date(2_000_000_000_000),
               usedAt: null,
             }),

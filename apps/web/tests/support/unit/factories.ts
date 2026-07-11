@@ -1,7 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import type { AppContext } from "~/server/platform/action/context";
-import { asBranchId, asUserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 export function makeAuthSession(
   overrides: Partial<AuthSession> = {},
@@ -10,8 +10,8 @@ export function makeAuthSession(
 
   return {
     id: "test-session-id",
-    userId: asUserId("unit-user"),
-    branchId: asBranchId("unit-branch"),
+    userId: UserId.trust("unit-user"),
+    branchId: BranchId.trust("unit-branch"),
     role: "executive" as Role,
     onboardingCompleted,
     sessionClass: onboardingCompleted ? "app" : "pre_auth",

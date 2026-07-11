@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getWorkspaceLabel } from "~/lib/auth/access/workspace-label";
-import { asBranchId, asTeamId, asUserId } from "~/server/shared/ids";
+import { BranchId, TeamId, UserId } from "~/server/shared/ids";
 
 describe("workspace label policy", () => {
   it("renders executive label with supervisor first name", () => {
@@ -9,9 +9,9 @@ describe("workspace label policy", () => {
       role: "executive",
       names: "Ana",
       scopeType: "team",
-      team: { id: asTeamId("1"), name: "Alpha" },
-      supervisor: { id: asUserId("2"), names: "Diego" },
-      branch: { id: asBranchId("1"), name: "Lima" },
+      team: { id: TeamId.trust("1"), name: "Alpha" },
+      supervisor: { id: UserId.trust("2"), names: "Diego" },
+      branch: { id: BranchId.trust("1"), name: "Lima" },
     });
 
     expect(label).toBe("Equipo de Diego");
@@ -22,9 +22,9 @@ describe("workspace label policy", () => {
       role: "supervisor",
       names: "Diego",
       scopeType: "team",
-      team: { id: asTeamId("1"), name: "Alpha" },
+      team: { id: TeamId.trust("1"), name: "Alpha" },
       supervisor: null,
-      branch: { id: asBranchId("1"), name: "Lima" },
+      branch: { id: BranchId.trust("1"), name: "Lima" },
     });
 
     expect(label).toBe("Equipo Alpha");
@@ -37,7 +37,7 @@ describe("workspace label policy", () => {
       scopeType: "branch",
       team: null,
       supervisor: null,
-      branch: { id: asBranchId("1"), name: "Lima" },
+      branch: { id: BranchId.trust("1"), name: "Lima" },
     });
 
     expect(label).toBe("Sucursal Lima");

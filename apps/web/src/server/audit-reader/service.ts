@@ -4,7 +4,7 @@ import type {
 } from "~/contracts/audit-reader/snapshot";
 import { parseFieldChanges } from "~/contracts/events";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
-import { asUserId, type UserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 import {
   parsePositiveIntegerAtMost,
   trimOrUndefined,
@@ -40,16 +40,16 @@ function parseLimit(value: number): Result<number, DomainError> {
 }
 
 function parseActorUserId(value: string): Result<UserId, DomainError> {
-  const trimmed = value.trim();
-  if (!trimmed) {
+  const parsed = UserId.parse(value.trim());
+  if (isErr(parsed)) {
     return Err(
       invalid({
         code: "invalid_actor_user_id",
-        details: { field: "actor_user_id", rule: "non_empty_string" },
+        details: { field: "actor_user_id", rule: "uuid" },
       }),
     );
   }
-  return Ok(asUserId(trimmed));
+  return parsed;
 }
 
 export function createAuditReaderService(deps: AuditReaderDeps) {

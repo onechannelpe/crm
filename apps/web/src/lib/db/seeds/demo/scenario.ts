@@ -1,7 +1,9 @@
-import { asUserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 
 function seedUserId(value: number) {
-  return asUserId(`00000000-0000-0000-0000-${String(value).padStart(12, "0")}`);
+  return UserId.trust(
+    `00000000-0000-0000-0000-${String(value).padStart(12, "0")}`,
+  );
 }
 
 export const SUP1 = seedUserId(2);

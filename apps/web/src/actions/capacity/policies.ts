@@ -2,7 +2,7 @@
 
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { asBranchId, asTeamId, asUserId } from "~/server/shared/ids";
+import { BranchId, TeamId, UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 
 const SCOPE_TYPES = ["branch", "team"] as const;
@@ -14,7 +14,7 @@ export async function updateSearchPolicyOverride(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        userId: asUserId(r.str("userId")),
+        userId: r.id("userId", UserId),
         monthlyLimit: r.posInt("monthlySearchLimit"),
         expiresAt: r.optNum("expiresAt"),
       })),
@@ -36,7 +36,7 @@ export async function updateLeadPolicyOverride(input: unknown) {
 
     parse: () =>
       parseObject(input, validationFail, (r) => ({
-        userId: asUserId(r.str("userId")),
+        userId: r.id("userId", UserId),
         bufferTarget: r.posInt("activeBufferTarget"),
         dailyLimit: r.posInt("dailyRefillLimit"),
         expiresAt: r.optNum("expiresAt"),
@@ -61,10 +61,9 @@ export async function updateSearchPolicyDefault(input: unknown) {
       parseObject(input, validationFail, (r) => ({
         scope: (() => {
           const kind = r.enum("scopeType", SCOPE_TYPES);
-          const scopeId = r.str("scopeId");
           return kind === "branch"
-            ? { kind, scopeId: asBranchId(scopeId) }
-            : { kind, scopeId: asTeamId(scopeId) };
+            ? { kind, scopeId: r.id("scopeId", BranchId) }
+            : { kind, scopeId: r.id("scopeId", TeamId) };
         })(),
         monthlyLimit: r.posInt("monthlySearchLimit"),
       })),
@@ -91,10 +90,9 @@ export async function updateLeadPolicyDefault(input: unknown) {
       parseObject(input, validationFail, (r) => ({
         scope: (() => {
           const kind = r.enum("scopeType", SCOPE_TYPES);
-          const scopeId = r.str("scopeId");
           return kind === "branch"
-            ? { kind, scopeId: asBranchId(scopeId) }
-            : { kind, scopeId: asTeamId(scopeId) };
+            ? { kind, scopeId: r.id("scopeId", BranchId) }
+            : { kind, scopeId: r.id("scopeId", TeamId) };
         })(),
         bufferTarget: r.posInt("activeBufferTarget"),
         dailyLimit: r.posInt("dailyRefillLimit"),

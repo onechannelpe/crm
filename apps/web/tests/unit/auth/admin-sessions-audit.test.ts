@@ -4,18 +4,18 @@ import { describe, expect, it } from "vitest";
 import type { AdminSessionRevocationPort } from "~/server/auth/application/ports";
 import { revokeAllUserSessions } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession } from "~/server/auth/flows/revoke-user-session";
-import { asUserId } from "~/server/shared/ids";
+import { UserId } from "~/server/shared/ids";
 
 type AppendedEvent = {
   type: string;
   entityType: string;
   entityId: string;
-  actorUserId: ReturnType<typeof asUserId>;
+  actorUserId: UserId;
   payload?: unknown;
   occurredAt: Date;
 };
 
-const ACTOR_USER_ID = asUserId("9001");
+const ACTOR_USER_ID = UserId.trust("9001");
 const NOW_MS = 1_700_000_100_000;
 const NOW = new Date(NOW_MS);
 
@@ -36,17 +36,17 @@ function makeTestContext() {
 function makeDeps() {
   const events: AppendedEvent[] = [];
   const invalidatedSessions: string[] = [];
-  const invalidatedUsers: ReturnType<typeof asUserId>[] = [];
+  const invalidatedUsers: UserId[] = [];
   const authSessionRevocations: Array<{
     sessionId: string;
     now: Date;
   }> = [];
   const userRevocations: Array<{
-    userId: ReturnType<typeof asUserId>;
+    userId: UserId;
     now: Date;
   }> = [];
   const syncUpdates: Array<{
-    userId: ReturnType<typeof asUserId>;
+    userId: UserId;
     syncHealth: "ok" | "stale" | "reauth_required";
     syncUpdatedAt: Date;
   }> = [];
@@ -56,7 +56,7 @@ function makeDeps() {
       revokeSession: async (sessionId: string) => {
         invalidatedSessions.push(sessionId);
       },
-      revokeUserSessions: async (userId: ReturnType<typeof asUserId>) => {
+      revokeUserSessions: async (userId: UserId) => {
         invalidatedUsers.push(userId);
       },
       revokeInstallationSessionsByAuthSession: async (
@@ -65,10 +65,7 @@ function makeDeps() {
       ) => {
         authSessionRevocations.push({ sessionId, now });
       },
-      revokeInstallationSessionsByUser: async (
-        userId: ReturnType<typeof asUserId>,
-        now: Date,
-      ) => {
+      revokeInstallationSessionsByUser: async (userId: UserId, now: Date) => {
         userRevocations.push({ userId, now });
       },
       updateExecutiveSyncHealth: async (payload) => {
@@ -90,7 +87,7 @@ function makeDeps() {
 describe("admin session revocation", () => {
   it("revokes one session and appends an event for the target user", async () => {
     const harness = makeDeps();
-    const targetUserId = asUserId("42");
+    const targetUserId = UserId.trust("42");
 
     const result = await revokeUserSession(makeTestContext(), harness.port, {
       sessionId: "session-abc",
@@ -126,7 +123,7 @@ describe("admin session revocation", () => {
 
   it("revokes all user sessions and appends a single event", async () => {
     const harness = makeDeps();
-    const targetUserId = asUserId("77");
+    const targetUserId = UserId.trust("77");
 
     const result = await revokeAllUserSessions(
       makeTestContext(),
