@@ -1,8 +1,4 @@
-import {
-  createAsync,
-  type RouteDefinition,
-  useSearchParams,
-} from "@solidjs/router";
+import { type RouteDefinition, useSearchParams } from "@solidjs/router";
 import { createMemo } from "solid-js";
 
 import type {
@@ -22,7 +18,6 @@ export const route = {
 export default function SettingsEventLogsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const input = createMemo(() => eventLogInputFromQuery(searchParams));
-  const firstPage = createAsync(() => eventLogsQuery(input()));
 
   const onTableChange = (table: EventLogTable) => {
     setSearchParams({
@@ -50,7 +45,6 @@ export default function SettingsEventLogsPage() {
   return (
     <SettingsLogs
       input={input}
-      firstPage={firstPage}
       onTableChange={onTableChange}
       onFiltersChange={onFiltersChange}
     />

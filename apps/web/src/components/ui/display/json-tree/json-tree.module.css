@@ -63,7 +63,7 @@
   line-height: 1;
 }
 
-.value[role="button"] {
+.value:is(button) {
   cursor: pointer;
 }
 

@@ -1,17 +1,26 @@
-import { createEffect, createSignal, onCleanup, type Accessor } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  on,
+  onCleanup,
+  type Accessor,
+} from "solid-js";
 
 import { createEventSourceStream } from "./event-source-stream";
 
 export function useEventSourceRecords<T>(
   url: Accessor<string | null>,
   parse: (raw: string) => T | null,
-  options?: { limit?: number },
+  options?: { limit?: number; resetKey?: Accessor<unknown> },
 ): Accessor<T[]> {
   const [records, setRecords] = createSignal<T[]>([]);
 
+  if (options?.resetKey) {
+    createEffect(on(options.resetKey, () => setRecords([])));
+  }
+
   createEffect(() => {
     const currentUrl = url();
-    setRecords([]);
 
     if (currentUrl === null || typeof window === "undefined") return;
 

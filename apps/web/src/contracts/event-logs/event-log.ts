@@ -1,4 +1,4 @@
-import type { FieldChange } from "~/contracts/events";
+import { isFieldChange, type FieldChange } from "~/contracts/events";
 import type { Json } from "~/contracts/json";
 
 export const EVENT_LOG_TABLES = [
@@ -80,6 +80,14 @@ export interface EventLogCursor {
   id: string;
 }
 
+export type EventLogParseError = {
+  message: string;
+};
+
+export type EventLogParseResult =
+  | { ok: true; value: EventLogRecord }
+  | { ok: false; error: EventLogParseError };
+
 export function isEventLogTable(value: string): value is EventLogTable {
   return EVENT_LOG_TABLES.some((table) => table === value);
 }
@@ -110,16 +118,6 @@ function isJsonObject(value: unknown): value is JsonObject {
   return isObject(value) && Object.values(value).every(isJson);
 }
 
-function isFieldChange(value: unknown): value is FieldChange {
-  if (!isObject(value) || typeof value.field !== "string") return false;
-  const isValue = (candidate: unknown) =>
-    candidate === null ||
-    typeof candidate === "string" ||
-    typeof candidate === "number" ||
-    typeof candidate === "boolean";
-  return isValue(value.from) && isValue(value.to);
-}
-
 function hasBaseRecord(
   value: Record<string, unknown>,
 ): value is Record<string, unknown> & EventLogRecordBase {
@@ -136,12 +134,18 @@ function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === "string";
 }
 
-export function parseEventLogRecord(value: unknown): EventLogRecord | null {
-  if (!isObject(value) || !hasBaseRecord(value)) return null;
+function parseError(message: string): EventLogParseResult {
+  return { ok: false, error: { message } };
+}
+
+export function parseEventLogRecord(value: unknown): EventLogParseResult {
+  if (!isObject(value) || !hasBaseRecord(value)) {
+    return parseError("Event log record has an invalid base shape");
+  }
 
   if (value.table === "DOMAIN_EVENT") {
     if (!isNullableString(value.actorUserId) || !isObject(value.entity)) {
-      return null;
+      return parseError("Domain event has an invalid actor or entity");
     }
     if (
       typeof value.entity.type !== "string" ||
@@ -149,17 +153,20 @@ export function parseEventLogRecord(value: unknown): EventLogRecord | null {
       !Array.isArray(value.changes) ||
       !value.changes.every(isFieldChange)
     ) {
-      return null;
+      return parseError("Domain event has invalid entity fields or changes");
     }
     return {
-      id: value.id,
-      table: value.table,
-      event: value.event,
-      timestamp: value.timestamp,
-      properties: value.properties,
-      actorUserId: value.actorUserId,
-      entity: { type: value.entity.type, id: value.entity.id },
-      changes: value.changes,
+      ok: true,
+      value: {
+        id: value.id,
+        table: value.table,
+        event: value.event,
+        timestamp: value.timestamp,
+        properties: value.properties,
+        actorUserId: value.actorUserId,
+        entity: { type: value.entity.type, id: value.entity.id },
+        changes: value.changes,
+      },
     };
   }
 
@@ -171,45 +178,53 @@ export function parseEventLogRecord(value: unknown): EventLogRecord | null {
       typeof value.durationMs !== "number" ||
       !Number.isFinite(value.durationMs)
     ) {
-      return null;
+      return parseError("Action event has invalid action metadata");
     }
     return {
-      id: value.id,
-      table: value.table,
-      event: value.event,
-      timestamp: value.timestamp,
-      properties: value.properties,
-      actorUserId: value.actorUserId,
-      status: value.status,
-      durationMs: value.durationMs,
+      ok: true,
+      value: {
+        id: value.id,
+        table: value.table,
+        event: value.event,
+        timestamp: value.timestamp,
+        properties: value.properties,
+        actorUserId: value.actorUserId,
+        status: value.status,
+        durationMs: value.durationMs,
+      },
     };
   }
 
-  if (value.table !== "AUTH_EVENT") return null;
+  if (value.table !== "AUTH_EVENT") {
+    return parseError("Event log record has an unknown table");
+  }
   if (
     !isNullableString(value.screen) ||
     !isNullableString(value.method) ||
     typeof value.outcome !== "string"
   ) {
-    return null;
+    return parseError("Authentication event has invalid metadata");
   }
   return {
-    id: value.id,
-    table: value.table,
-    event: value.event,
-    timestamp: value.timestamp,
-    properties: value.properties,
-    screen: value.screen,
-    method: value.method,
-    outcome: value.outcome,
+    ok: true,
+    value: {
+      id: value.id,
+      table: value.table,
+      event: value.event,
+      timestamp: value.timestamp,
+      properties: value.properties,
+      screen: value.screen,
+      method: value.method,
+      outcome: value.outcome,
+    },
   };
 }
 
-export function parseEventLogRecordText(raw: string): EventLogRecord | null {
+export function parseEventLogRecordText(raw: string): EventLogParseResult {
   try {
     return parseEventLogRecord(JSON.parse(raw));
   } catch {
-    return null;
+    return parseError("Event log payload is not valid JSON");
   }
 }
 

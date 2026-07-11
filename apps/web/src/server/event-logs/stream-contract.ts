@@ -22,4 +22,7 @@ export function serializeEventLogStreamPayload(
   return text;
 }
 
-export const parseEventLogStreamPayload = parseEventLogRecordText;
+export function parseEventLogStreamPayload(raw: string): EventLogRecord | null {
+  const result = parseEventLogRecordText(raw);
+  return result.ok ? result.value : null;
+}

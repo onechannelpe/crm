@@ -10,6 +10,28 @@ export type FieldChange = {
   to: FieldChangeValue;
 };
 
+export function isFieldChangeValue(value: unknown): value is FieldChangeValue {
+  return (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  );
+}
+
+export function isFieldChange(value: unknown): value is FieldChange {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "field" in value &&
+    typeof value.field === "string" &&
+    "from" in value &&
+    isFieldChangeValue(value.from) &&
+    "to" in value &&
+    isFieldChangeValue(value.to)
+  );
+}
+
 const FIELD_LABELS: Record<string, string> = {
   paybackPricing: "Payback",
   proposedDebitRate: "T. débito",
@@ -71,16 +93,6 @@ export function summarizeFieldChanges(changes: FieldChange[]): string {
         `${FIELD_LABELS[change.field] ?? change.field}: ${formatChangeValue(change.from)} → ${formatChangeValue(change.to)}`,
     )
     .join(", ");
-}
-
-function isFieldChange(value: unknown): value is FieldChange {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "field" in value &&
-    "from" in value &&
-    "to" in value
-  );
 }
 
 export function serializeFieldChanges(

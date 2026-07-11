@@ -1,8 +1,11 @@
 import {
   createContext,
+  createMemo,
   createSignal,
   For,
+  Match,
   Show,
+  Switch,
   useContext,
   type Component,
 } from "solid-js";
@@ -20,14 +23,21 @@ import type { Json } from "~/contracts/json";
 import styles from "./json-tree.module.css";
 
 type IconComponent = Component<{ size?: number; color?: string }>;
-type JsonObject = { [key: string]: Json };
 type ShouldExpand = (params: { keyPath: string; depth: number }) => boolean;
+type Entry = { id: string; value: Json };
+type JsonNodeModel =
+  | { kind: "null" }
+  | { kind: "string"; value: string }
+  | { kind: "number"; value: number }
+  | { kind: "boolean"; value: boolean }
+  | { kind: "array"; entries: Entry[] }
+  | { kind: "object"; entries: Entry[] };
 type JsonTreeConfig = {
-  shouldExpandNodeInitially: ShouldExpand;
-  emptyArrayLabel: string;
-  emptyObjectLabel: string;
-  emptyStringLabel: string;
-  onNodeValueClick?: (valueAsString: string) => void;
+  readonly shouldExpandNodeInitially: ShouldExpand;
+  readonly emptyArrayLabel: string;
+  readonly emptyObjectLabel: string;
+  readonly emptyStringLabel: string;
+  readonly onNodeValueClick: ((valueAsString: string) => void) | undefined;
 };
 
 const JsonTreeConfigContext = createContext<JsonTreeConfig>();
@@ -38,12 +48,24 @@ function useConfig(): JsonTreeConfig {
   return config;
 }
 
-function isJsonArray(value: Json): value is Json[] {
-  return Array.isArray(value);
-}
-
-function isJsonObject(value: Json): value is JsonObject {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+function toNodeModel(value: Json): JsonNodeModel {
+  if (value === null) return { kind: "null" };
+  if (typeof value === "string") return { kind: "string", value };
+  if (typeof value === "number") return { kind: "number", value };
+  if (typeof value === "boolean") return { kind: "boolean", value };
+  if (Array.isArray(value)) {
+    return {
+      kind: "array",
+      entries: value.map((entry, index) => ({
+        id: String(index),
+        value: entry,
+      })),
+    };
+  }
+  return {
+    kind: "object",
+    entries: Object.entries(value).map(([id, entry]) => ({ id, value: entry })),
+  };
 }
 
 function NodeLabel(props: { label: string; icon: IconComponent }) {
@@ -90,8 +112,6 @@ function ValueNode(props: {
   );
 }
 
-type Entry = { id: string; value: Json };
-
 function NestedNode(props: {
   label?: string;
   icon: IconComponent;
@@ -134,28 +154,36 @@ function NestedNode(props: {
     </ul>
   );
 
-  if (props.label === undefined)
-    return <li class={styles.container}>{children}</li>;
   return (
-    <li class={styles.container}>
-      <div class={styles.labelRow}>
-        <button
-          type="button"
-          class={styles.arrowButton}
-          onClick={() => setIsOpen((open) => !open)}
-          aria-label={isOpen() ? "Contraer" : "Expandir"}
-        >
-          <span class={styles.chevron} data-open={isOpen() ? "" : undefined}>
-            <ChevronDown size={16} />
-          </span>
-        </button>
-        <NodeLabel label={props.label} icon={props.icon} />
-        <span class={styles.elementsCount}>
-          {props.count(props.entries.length)}
-        </span>
-      </div>
-      <Show when={isOpen()}>{children}</Show>
-    </li>
+    <Show
+      when={props.label}
+      fallback={<li class={styles.container}>{children}</li>}
+    >
+      {(label) => (
+        <li class={styles.container}>
+          <div class={styles.labelRow}>
+            <button
+              type="button"
+              class={styles.arrowButton}
+              onClick={() => setIsOpen((open) => !open)}
+              aria-label={isOpen() ? "Contraer" : "Expandir"}
+            >
+              <span
+                class={styles.chevron}
+                data-open={isOpen() ? "" : undefined}
+              >
+                <ChevronDown size={16} />
+              </span>
+            </button>
+            <NodeLabel label={label()} icon={props.icon} />
+            <span class={styles.elementsCount}>
+              {props.count(props.entries.length)}
+            </span>
+          </div>
+          <Show when={isOpen()}>{children}</Show>
+        </li>
+      )}
+    </Show>
   );
 }
 
@@ -166,68 +194,80 @@ function JsonNode(props: {
   keyPath: string;
 }) {
   const config = useConfig();
-  const value = props.value;
-  if (value === null)
-    return (
-      <ValueNode label={props.label} icon={CircleAlert} valueAsString="null" />
-    );
-  if (typeof value === "string")
-    return (
-      <ValueNode
-        label={props.label}
-        icon={MessageSquare}
-        valueAsString={value === "" ? config.emptyStringLabel : value}
-      />
-    );
-  if (typeof value === "number")
-    return (
-      <ValueNode
-        label={props.label}
-        icon={Point}
-        valueAsString={String(value)}
-      />
-    );
-  if (typeof value === "boolean")
-    return (
-      <ValueNode
-        label={props.label}
-        icon={Checkbox}
-        valueAsString={String(value)}
-      />
-    );
-  if (isJsonArray(value)) {
-    return (
-      <NestedNode
-        label={props.label}
-        icon={List}
-        entries={value.map((entry, index) => ({
-          id: String(index),
-          value: entry,
-        }))}
-        count={(count) => `[${count}]`}
-        emptyText={config.emptyArrayLabel}
-        depth={props.depth}
-        keyPath={props.keyPath}
-      />
-    );
-  }
-  if (isJsonObject(value)) {
-    return (
-      <NestedNode
-        label={props.label}
-        icon={Package}
-        entries={Object.entries(value).map(([id, entry]) => ({
-          id,
-          value: entry,
-        }))}
-        count={(count) => `{${count}}`}
-        emptyText={config.emptyObjectLabel}
-        depth={props.depth}
-        keyPath={props.keyPath}
-      />
-    );
-  }
-  return null;
+  const node = createMemo(() => toNodeModel(props.value));
+  const nodeOfKind = <TKind extends JsonNodeModel["kind"]>(kind: TKind) => {
+    const current = node();
+    return current.kind === kind
+      ? (current as Extract<JsonNodeModel, { kind: TKind }>)
+      : undefined;
+  };
+
+  return (
+    <Switch>
+      <Match when={nodeOfKind("null")}>
+        <ValueNode
+          label={props.label}
+          icon={CircleAlert}
+          valueAsString="null"
+        />
+      </Match>
+      <Match when={nodeOfKind("string")} keyed>
+        {(current) => (
+          <ValueNode
+            label={props.label}
+            icon={MessageSquare}
+            valueAsString={
+              current.value === "" ? config.emptyStringLabel : current.value
+            }
+          />
+        )}
+      </Match>
+      <Match when={nodeOfKind("number")} keyed>
+        {(current) => (
+          <ValueNode
+            label={props.label}
+            icon={Point}
+            valueAsString={String(current.value)}
+          />
+        )}
+      </Match>
+      <Match when={nodeOfKind("boolean")} keyed>
+        {(current) => (
+          <ValueNode
+            label={props.label}
+            icon={Checkbox}
+            valueAsString={String(current.value)}
+          />
+        )}
+      </Match>
+      <Match when={nodeOfKind("array")} keyed>
+        {(current) => (
+          <NestedNode
+            label={props.label}
+            icon={List}
+            entries={current.entries}
+            count={(count) => `[${count}]`}
+            emptyText={config.emptyArrayLabel}
+            depth={props.depth}
+            keyPath={props.keyPath}
+          />
+        )}
+      </Match>
+      <Match when={nodeOfKind("object")} keyed>
+        {(current) => (
+          <NestedNode
+            label={props.label}
+            icon={Package}
+            entries={current.entries}
+            count={(count) => `{${count}}`}
+            emptyText={config.emptyObjectLabel}
+            depth={props.depth}
+            keyPath={props.keyPath}
+          />
+        )}
+      </Match>
+    </Switch>
+  );
 }
 
 export function JsonTree(props: {
@@ -239,12 +279,23 @@ export function JsonTree(props: {
   onNodeValueClick?: (valueAsString: string) => void;
 }) {
   const config: JsonTreeConfig = {
-    shouldExpandNodeInitially: props.shouldExpandNodeInitially,
-    emptyArrayLabel: props.emptyArrayLabel,
-    emptyObjectLabel: props.emptyObjectLabel,
-    emptyStringLabel: props.emptyStringLabel,
-    onNodeValueClick: props.onNodeValueClick,
+    get shouldExpandNodeInitially() {
+      return props.shouldExpandNodeInitially;
+    },
+    get emptyArrayLabel() {
+      return props.emptyArrayLabel;
+    },
+    get emptyObjectLabel() {
+      return props.emptyObjectLabel;
+    },
+    get emptyStringLabel() {
+      return props.emptyStringLabel;
+    },
+    get onNodeValueClick() {
+      return props.onNodeValueClick;
+    },
   };
+
   return (
     <JsonTreeConfigContext.Provider value={config}>
       <ul class={styles.list}>
