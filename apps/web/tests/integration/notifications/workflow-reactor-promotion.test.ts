@@ -171,7 +171,10 @@ describe("workflow notification pipeline", () => {
 
   it("plans an in-app-only intent without inventing external deliveries", async () => {
     const intent: NotificationIntent = {
-      id: NotificationIntentId.trust("in-app-only"),
+      id: NotificationIntentId.derive({
+        sourceEventId: "event-in-app-only",
+        discriminator: "in-app-only",
+      }),
       eventType: "lead.ready_for_quotation",
       audience: {
         kind: "branch_role",
@@ -201,7 +204,7 @@ describe("workflow notification pipeline", () => {
       {
         user_id: actorBy("backOne").userId,
         event_type: "lead.ready_for_quotation",
-        intent_id: "in-app-only",
+        intent_id: "event-in-app-only:in-app-only",
       },
     ]);
     expect(await reader.deliveries()).toEqual([]);

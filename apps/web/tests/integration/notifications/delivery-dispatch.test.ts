@@ -60,7 +60,10 @@ describe("notification delivery dispatch", () => {
 
   function intent(overrides: Partial<NotificationIntent>): NotificationIntent {
     return {
-      id: NotificationIntentId.trust("intent-1"),
+      id: NotificationIntentId.derive({
+        sourceEventId: "event-intent-1",
+        discriminator: "intent-1",
+      }),
       eventType: "lead.ready_for_sale",
       audience: {
         kind: "user_ids",
@@ -247,7 +250,14 @@ describe("notification delivery dispatch", () => {
         lease_until: null,
         available_at: runtime.now.get(),
       })
-      .where("id", "=", NotificationIntentId.trust("intent-1"))
+      .where(
+        "id",
+        "=",
+        NotificationIntentId.derive({
+          sourceEventId: "event-intent-1",
+          discriminator: "intent-1",
+        }),
+      )
       .execute();
     await notifications.drain();
 
