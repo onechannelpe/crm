@@ -13,7 +13,6 @@ export function buildView(input: {
     requirements: input.requirements,
     userPhone: input.userPhone,
   });
-  const state = resolveViewState(facts, input.requestedStep);
 
-  return { state };
+  return resolveViewState(facts, input.requestedStep);
 }

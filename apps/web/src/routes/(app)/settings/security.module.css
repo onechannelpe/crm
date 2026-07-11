@@ -56,7 +56,7 @@
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: color-mix(in oklab, var(--panel-bg) 96%, white 4%);
+  background: color-mix(in oklab, var(--surface) 96%, white 4%);
 }
 
 .qrImage {

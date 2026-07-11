@@ -296,8 +296,8 @@ export function createDataGridInteraction<T extends { id: string }>(options: {
       options.selection?.clear();
     },
     hasFocusedCell: createMemo(() => focusedCell() !== undefined),
-    // Plain derived accessor (not a memo): a trivial boolean that must read
-    // current even outside a reactive scope, e.g. imperative checks and tests.
+    // Plain accessor (not a memo): imperative checks must observe the current
+    // value rather than a memoized snapshot.
     hasEditingCell: () => editingCell() !== undefined,
     isCellEditing(rowId: string, columnIndex: number) {
       const cell = editingCell();

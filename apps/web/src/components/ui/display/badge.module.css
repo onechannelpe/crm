@@ -1,7 +1,7 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  border-radius: var(--panel-radius);
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   padding: 2px 8px;
   font-size: var(--font-size-label);

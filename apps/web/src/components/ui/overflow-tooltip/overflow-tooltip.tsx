@@ -14,11 +14,6 @@ interface OverflowingTextProps {
   style?: JSX.CSSProperties;
 }
 
-/**
- * Renders text with CSS ellipsis truncation.
- * When the text is actually clipped, shows a styled tooltip on hover
- * instead of the browser-native title attribute.
- */
 export function OverflowingText(props: OverflowingTextProps) {
   const [textEl, setTextEl] = createSignal<HTMLSpanElement | null>(null);
   const [isOverflowing, setIsOverflowing] = createSignal(false);
@@ -57,7 +52,6 @@ export function OverflowingText(props: OverflowingTextProps) {
   );
 }
 
-/** Convenience wrapper for a block of children that shows a tooltip string. */
 export function WithTooltip(
   props: ParentProps<{ tooltip: string; disabled?: boolean }>,
 ) {

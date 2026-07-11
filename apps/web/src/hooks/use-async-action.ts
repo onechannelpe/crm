@@ -1,10 +1,7 @@
 import { createSignal } from "solid-js";
 
-/**
- * Wraps a prop-injected async callback with a pending signal.
- * Use this for component-local async callbacks (not SolidStart `action()`s).
- * For server actions, use `useSubmission()` instead.
- */
+// useSubmission from @solidjs/router owns pending state for SolidStart actions;
+// this hook is for client-side promise functions only.
 export function useAsyncAction<TArgs extends unknown[]>(
   fn: (...args: TArgs) => Promise<void>,
 ): [execute: (...args: TArgs) => Promise<void>, isPending: () => boolean] {

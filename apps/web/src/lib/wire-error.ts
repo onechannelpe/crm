@@ -23,7 +23,8 @@ export type WireError = WireErrorBase &
 
 const FALLBACK_MESSAGE = "Ocurrió un error inesperado.";
 
-// Seroval serializes Error own properties, so wire survives the server-action boundary.
+// wire is an own property, so it survives Seroval's Error serialization across
+// the server-action boundary.
 export class ActionError extends Error {
   readonly wire: WireError;
 

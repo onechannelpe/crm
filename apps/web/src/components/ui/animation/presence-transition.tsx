@@ -20,7 +20,6 @@ interface PresenceTransitionProps {
   children: JSX.Element;
 }
 
-// Fades children in on mount and out before unmounting.
 export function PresenceTransition(props: PresenceTransitionProps) {
   const [mounted, setMounted] = createSignal(props.show);
   let el: HTMLDivElement | undefined;
@@ -34,8 +33,7 @@ export function PresenceTransition(props: PresenceTransitionProps) {
 
       if (prefersReducedMotion()) return;
 
-      // After mount, el ref is set
-      // rAF ensures paint before animating
+      // rAF ensures paint before animating (the el ref is set on mount).
       requestAnimationFrame(() => {
         if (!el) return;
         anim?.cancel();

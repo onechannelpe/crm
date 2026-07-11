@@ -28,7 +28,6 @@
   color: var(--foreground-tertiary);
 }
 
-/* size variants */
 .sizeXs {
   height: 20px;
   padding-inline: var(--spacing-1);
@@ -49,14 +48,12 @@
   padding-inline: var(--spacing-2);
 }
 
-/* inherit font from parent (e.g. topbar title slot) */
 .inheritFont {
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
 }
 
-/* error state */
 .inputError {
   border-color: var(--destructive);
 }

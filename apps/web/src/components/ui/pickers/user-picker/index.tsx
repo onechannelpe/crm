@@ -7,14 +7,14 @@ import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-l
 import styles from "./styles.module.css";
 
 export type UserPickerOption = {
-  id: number;
+  id: string;
   fullName: string;
 };
 
 export interface UserPickerProps {
-  currentUserId: number;
+  currentUserId: string;
   fetchUsers: (search: string) => Promise<UserPickerOption[]>;
-  onSelect: (id: number) => Promise<void>;
+  onSelect: (id: string) => Promise<void>;
   onClose: () => void;
 }
 
@@ -44,7 +44,7 @@ export function UserPicker(props: UserPickerProps) {
     getContainer: () => containerRef,
   });
 
-  async function handleSelect(userId: number) {
+  async function handleSelect(userId: string) {
     if (userId === props.currentUserId) {
       props.onClose();
       return;

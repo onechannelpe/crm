@@ -4,26 +4,15 @@ interface SpringParallaxProps {
   children: JSX.Element;
   class?: string;
   style?: JSX.CSSProperties;
-  /** Max translation in px (applied symmetrically from center). Default: 2 */
   range?: number;
-  /** Spring stiffness. Default: 100 (matches motion/framer-motion default) */
   stiffness?: number;
-  /** Spring damping. Default: 10 (matches motion/framer-motion default) */
   damping?: number;
-  /** Spring mass. Default: 1 */
   mass?: number;
 }
 
-/**
- * AnimatedPlaceholder:
- *
- *   - Tracking: direct linear remap of mouse → translate, no easing.
- *   - Leave: analytical underdamped spring ease-back to center.
- *
- * Closed-form underdamped solution:
- *   x(t) = e^(-ζω₀t) · [A·sin(ωd·t) + x₀·cos(ωd·t)]
- * where ωd = ω₀·√(1−ζ²), A = (v₀ + ζω₀x₀)/ωd
- */
+// Leave uses an underdamped spring so the element returns to center without a
+// CSS easing curve:
+// >>  x(t) = exp(-zeta * omega0 * t) * (A * sin(omegaD * t) + x0 * cos(omegaD * t))
 export function SpringParallax(props: SpringParallaxProps) {
   let containerRef: HTMLDivElement | null = null;
   let rafId: number | undefined;
@@ -38,7 +27,6 @@ export function SpringParallax(props: SpringParallaxProps) {
     const mass = props.mass ?? 1;
     const el = containerRef;
 
-    // Pre-computed spring constants
     const omega0 = Math.sqrt(stiffness / mass); // undamped angular freq (rad/s)
     const zeta = damping / (2 * Math.sqrt(stiffness * mass)); // damping ratio
     const omegaD = omega0 * Math.sqrt(1 - zeta * zeta); // damped angular freq
@@ -63,16 +51,14 @@ export function SpringParallax(props: SpringParallaxProps) {
     };
 
     const onMouseLeave = () => {
-      // Capture spring origin at the moment the cursor leaves
       const x0 = currentX;
       const y0 = currentY;
-      // Initial velocity is 0 — tracking was instantaneous (direct set)
+      // Initial velocity is 0; tracking was instantaneous (direct set).
       const Ax = (zeta * omega0 * x0) / omegaD;
       const Ay = (zeta * omega0 * y0) / omegaD;
       const startMs = performance.now();
 
       const animate = (now: DOMHighResTimeStamp) => {
-        // t in seconds
         const t = (now - startMs) / 1000;
         const envelope = Math.exp(-zeta * omega0 * t);
         const sin = Math.sin(omegaD * t);

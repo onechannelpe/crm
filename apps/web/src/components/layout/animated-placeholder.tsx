@@ -47,13 +47,8 @@ interface AnimatedPlaceholderProps {
   type: AnimatedPlaceholderType;
 }
 
-/**
- * Two-layer illustration: static background + spring-parallax foreground.
- *
- * Dark-mode images are swapped by observing the `data-theme` attribute on
- * `<html>` rather than `prefers-color-scheme`, since the app manages its own
- * theme via that attribute.
- */
+// Dark-mode images follow the app-managed `data-theme` attribute rather than
+// `prefers-color-scheme`.
 export function AnimatedPlaceholder(props: AnimatedPlaceholderProps) {
   const isError = () => props.type === "error404" || props.type === "error500";
 
@@ -78,7 +73,6 @@ export function AnimatedPlaceholder(props: AnimatedPlaceholderProps) {
 
   return (
     <div class={styles.container}>
-      {/* Background layer (static) */}
       <img
         src={bg()}
         alt=""
@@ -86,7 +80,6 @@ export function AnimatedPlaceholder(props: AnimatedPlaceholderProps) {
         aria-hidden="true"
       />
 
-      {/* Foreground layer (parallax) */}
       <SpringParallax class={styles.parallaxLayer}>
         <div class={styles.fgWrapper}>
           <img

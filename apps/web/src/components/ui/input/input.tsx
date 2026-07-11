@@ -85,7 +85,6 @@ export function Input(props: InputProps) {
             onClick={() => setShowPassword((v) => !v)}
           >
             {showPassword() ? (
-              // eye-off icon
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -103,7 +102,6 @@ export function Input(props: InputProps) {
                 <line x1="1" y1="1" x2="23" y2="23" />
               </svg>
             ) : (
-              // eye icon
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"

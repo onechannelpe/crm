@@ -113,14 +113,14 @@ function OnboardingContent() {
   createEffect(() => {
     const next = view();
     if (!next) return;
-    if (next.state.step === "done") {
+    if (next.step === "done") {
       navigate(requirements()?.nextRoute ?? "/");
     }
   });
 
   createEffect(() => {
     const next = view();
-    if (!next || next.state.step !== "totp-step") {
+    if (!next || next.step !== "totp-step") {
       setTotpStartAttempted(false);
       setTotpEnrollment(null);
     }
@@ -128,7 +128,7 @@ function OnboardingContent() {
 
   createEffect(() => {
     const next = view();
-    if (!next || next.state.step !== "totp-step") {
+    if (!next || next.step !== "totp-step") {
       return;
     }
     if (totpEnrollment() || totpLoading() || totpStartAttempted()) {
@@ -225,7 +225,7 @@ function OnboardingContent() {
   const title = createMemo(() => {
     const next = view();
     if (!next) return "Onboarding";
-    switch (next.state.step) {
+    switch (next.step) {
       case "profile":
         return "Perfil";
       case "security-choice":
@@ -252,11 +252,11 @@ function OnboardingContent() {
     <Show when={resolved()} keyed>
       {(state) => (
         <AuthFlowShell
-          topBar={<OnboardingProgress step={state.next.state.step} />}
+          topBar={<OnboardingProgress step={state.next.step} />}
           title={title()}
           footer={
             <div class={styles.footerActions}>
-              <Show when={state.next.state.step === "profile"}>
+              <Show when={state.next.step === "profile"}>
                 <Button
                   type="button"
                   loading={submitting()}
@@ -267,8 +267,8 @@ function OnboardingContent() {
               </Show>
               <Show
                 when={
-                  state.next.state.step === "security-choice" &&
-                  state.next.state.canFinishWithoutSecurity
+                  state.next.step === "security-choice" &&
+                  state.next.canFinishWithoutSecurity
                 }
               >
                 <Button
@@ -281,8 +281,7 @@ function OnboardingContent() {
               </Show>
               <Show
                 when={
-                  state.next.state.step === "totp-step" &&
-                  recoveryCodes().length > 0
+                  state.next.step === "totp-step" && recoveryCodes().length > 0
                 }
               >
                 <Button
@@ -296,7 +295,7 @@ function OnboardingContent() {
             </div>
           }
         >
-          <Show when={state.next.state.step === "profile"}>
+          <Show when={state.next.step === "profile"}>
             <EnterTransition>
               <OnboardingProfileStep
                 email={state.current.email}
@@ -308,19 +307,19 @@ function OnboardingContent() {
             </EnterTransition>
           </Show>
 
-          <Show when={state.next.state.step === "security-choice"}>
+          <Show when={state.next.step === "security-choice"}>
             <EnterTransition>
               <OnboardingSecurityStep
                 hasPasskey={state.current.hasPasskey}
                 totpEnabled={state.current.totpEnabled}
-                securityRequired={state.next.state.securityRequired}
+                securityRequired={state.next.securityRequired}
                 onSelectPasskey={() => handleChooseSecurity("passkey-step")}
                 onSelectTotp={() => handleChooseSecurity("totp-step")}
               />
             </EnterTransition>
           </Show>
 
-          <Show when={state.next.state.step === "passkey-step"}>
+          <Show when={state.next.step === "passkey-step"}>
             <EnterTransition>
               <div class={styles.passkeyEnrollStep}>
                 <Show when={passkeyPhase() === "device"}>
@@ -343,7 +342,7 @@ function OnboardingContent() {
             </EnterTransition>
           </Show>
 
-          <Show when={state.next.state.step === "totp-step"}>
+          <Show when={state.next.step === "totp-step"}>
             <EnterTransition>
               <div class={styles.totpStack}>
                 <Show
@@ -404,7 +403,7 @@ function OnboardingContent() {
             </EnterTransition>
           </Show>
 
-          <Show when={state.next.state.step === "pending-step"}>
+          <Show when={state.next.step === "pending-step"}>
             <div class={styles.pendingCreationLoader}>
               <p class={styles.pendingCreationLabel}>
                 Procesando tu configuración...

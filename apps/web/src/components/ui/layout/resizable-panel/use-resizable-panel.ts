@@ -20,9 +20,7 @@ type UseResizablePanelProps = {
   dragThresholdPx?: number;
 };
 
-type UseResizablePanelReturn = {
-  onPointerDown: (event: PointerEvent) => void;
-};
+type PointerDownHandler = (event: PointerEvent) => void;
 
 function clampWidth(width: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, width));
@@ -30,13 +28,11 @@ function clampWidth(width: number, min: number, max: number): number {
 
 export function useResizablePanel(
   props: UseResizablePanelProps,
-): UseResizablePanelReturn {
+): PointerDownHandler {
   const canUseDom = !isServer && typeof document !== "undefined";
 
   if (!canUseDom) {
-    return {
-      onPointerDown: () => {},
-    };
+    return () => {};
   }
 
   let startX = 0;
@@ -128,5 +124,5 @@ export function useResizablePanel(
     document.removeEventListener("pointerup", handlePointerUp);
   });
 
-  return { onPointerDown };
+  return onPointerDown;
 }

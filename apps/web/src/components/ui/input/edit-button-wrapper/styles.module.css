@@ -15,6 +15,14 @@
   pointer-events: auto;
 }
 
+@media (hover: none) {
+  .wrapper {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wrapper {
     transition: none;
