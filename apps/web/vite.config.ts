@@ -4,7 +4,7 @@ import { responsiveImagesPlugin } from "@crm/images/vite";
 import mdx from "@mdx-js/rollup";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { solidStart } from "@solidjs/start/config";
-import { nitroV2Plugin } from "@solidjs/vite-plugin-nitro-2";
+import { nitro } from "nitro/vite";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { visualizer } from "rollup-plugin-visualizer";
@@ -34,14 +34,12 @@ export default defineConfig({
       middleware: "./src/middleware.ts",
       extensions: ["md", "mdx"],
     }),
-    nitroV2Plugin({
+    nitro({
       alias: {
         "~": resolve(process.cwd(), "src"),
       },
-      esbuild: {
-        options: {
-          target: "esnext",
-        },
+      rollupConfig: {
+        external: [/^@node-rs\/argon2/],
       },
       prerender: {
         autoSubfolderIndex: true,
