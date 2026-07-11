@@ -8,7 +8,7 @@ import {
   type BranchId,
   type UserId,
 } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 import { dateFromEpochMilliseconds, type Clock } from "~/server/shared/time";
 
 import {
@@ -40,16 +40,25 @@ interface EventsReadContext {
   now: Clock;
 }
 
-function readAssignmentId(payload: ExtensionRuntimeEventEnvelope["payload"]) {
-  return "assignmentId" in payload && typeof payload.assignmentId === "string"
-    ? ContactAssignmentId.trust(payload.assignmentId)
-    : null;
+function readAssignmentId(
+  payload: ExtensionRuntimeEventEnvelope["payload"],
+): Result<ContactAssignmentId | null, DomainError> {
+  if (
+    !("assignmentId" in payload) ||
+    typeof payload.assignmentId !== "string"
+  ) {
+    return Ok(null);
+  }
+  return ContactAssignmentId.parse(payload.assignmentId);
 }
 
-function readContactId(payload: ExtensionRuntimeEventEnvelope["payload"]) {
-  return "contactId" in payload && typeof payload.contactId === "string"
-    ? OrganizationPersonId.trust(payload.contactId)
-    : null;
+function readContactId(
+  payload: ExtensionRuntimeEventEnvelope["payload"],
+): Result<OrganizationPersonId | null, DomainError> {
+  if (!("contactId" in payload) || typeof payload.contactId !== "string") {
+    return Ok(null);
+  }
+  return OrganizationPersonId.parse(payload.contactId);
 }
 
 export async function ingestRuntimeEvent(
@@ -71,9 +80,17 @@ export async function ingestRuntimeEvent(
       return Err(fail("extension_session_invalid"));
     }
 
-    const payloadText = JSON.stringify(input.event.payload);
     const eventAssignmentId = readAssignmentId(input.event.payload);
+    if (isErr(eventAssignmentId)) {
+      return eventAssignmentId;
+    }
+
     const eventContactId = readContactId(input.event.payload);
+    if (isErr(eventContactId)) {
+      return eventContactId;
+    }
+
+    const payloadText = JSON.stringify(input.event.payload);
     const eventSessionId =
       "sessionId" in input.event.payload &&
       typeof input.event.payload.sessionId === "string"
@@ -128,8 +145,8 @@ export async function ingestRuntimeEvent(
           sequence: input.event.sequence,
           user_id: session.user_id,
           branch_id: session.branch_id,
-          assignment_id: eventAssignmentId,
-          contact_id: eventContactId,
+          assignment_id: eventAssignmentId.value,
+          contact_id: eventContactId.value,
           call_session_id: eventSessionId,
           type: input.event.type,
           payload_json: payloadText,
@@ -152,12 +169,8 @@ export async function ingestRuntimeEvent(
         await txRepos.extensionRuntime.upsertExecutivePresence({
           user_id: session.user_id,
           branch_id: session.branch_id,
-          assignment_id: input.event.payload.assignmentId
-            ? ContactAssignmentId.trust(input.event.payload.assignmentId)
-            : null,
-          contact_id: input.event.payload.contactId
-            ? OrganizationPersonId.trust(input.event.payload.contactId)
-            : null,
+          assignment_id: eventAssignmentId.value,
+          contact_id: eventContactId.value,
           call_session_id: input.event.payload.callSessionId,
           presence_status: input.event.payload.presenceStatus,
           presence_updated_at: dateFromEpochMilliseconds(
@@ -173,8 +186,8 @@ export async function ingestRuntimeEvent(
         await txRepos.extensionRuntime.upsertExecutivePresence({
           user_id: session.user_id,
           branch_id: session.branch_id,
-          assignment_id: eventAssignmentId,
-          contact_id: eventContactId,
+          assignment_id: eventAssignmentId.value,
+          contact_id: eventContactId.value,
           call_session_id: eventSessionId,
           presence_status: mapLifecycleStatus(input.event),
           presence_updated_at: dateFromEpochMilliseconds(

@@ -4,7 +4,8 @@ import {
   invalid,
   type DomainError,
 } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { InstallationId } from "~/server/shared/ids";
+import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 import type { Clock } from "~/server/shared/time";
 
 import type { RefreshExtensionSessionResponse } from "../contracts";
@@ -18,7 +19,6 @@ import {
 import {
   isCryptoMisconfiguration,
   isInvalidExtensionToken,
-  isUuid,
 } from "./validators";
 
 interface SessionMethodContext {
@@ -36,7 +36,8 @@ export async function refreshInstallationSession(
   const { repos, now } = context;
 
   try {
-    if (!isUuid(input.installationId)) {
+    const installationId = InstallationId.parse(input.installationId);
+    if (isErr(installationId)) {
       return Err(invalid({ code: "installation_invalid" }));
     }
 
@@ -45,7 +46,7 @@ export async function refreshInstallationSession(
     const session =
       await repos.extensionRuntime.findRefreshableInstallationSession(
         refreshTokenHash,
-        input.installationId,
+        installationId.value,
         currentTime,
       );
     if (!session) {

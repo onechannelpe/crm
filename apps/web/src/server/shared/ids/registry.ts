@@ -83,6 +83,9 @@ export const AuthLoginFlowId = uuidId("AuthLoginFlowId");
 export type WebauthnChallengeId = BrandedId<"WebauthnChallengeId">;
 export const WebauthnChallengeId = uuidId("WebauthnChallengeId");
 
+export type InstallationId = BrandedId<"InstallationId">;
+export const InstallationId = uuidId("InstallationId");
+
 // Deterministic idempotency key derived from (sourceEventId, discriminator).
 // Not UUID-backed: constructed via NotificationIntentId.derive(...).
 export type NotificationIntentId = BrandedId<"NotificationIntentId">;

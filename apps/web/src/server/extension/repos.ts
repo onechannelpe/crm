@@ -6,6 +6,7 @@ import type {
   BranchId,
   ContactAssignmentId,
   EventId,
+  InstallationId,
   OrganizationPersonId,
   UserId,
 } from "~/server/shared/ids";
@@ -66,7 +67,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
 
     consumeHandoff(values: {
       jti: string;
-      installation_id: string;
+      installation_id: InstallationId;
       installation_session_jti: string;
       consumed_at: Date;
     }) {
@@ -87,7 +88,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
       user_id: UserId;
       branch_id: BranchId;
       auth_session_id: string;
-      installation_id: string;
+      installation_id: InstallationId;
       refresh_token_hash: string;
       issued_at: Date;
       expires_at: Date;
@@ -105,7 +106,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
 
     findActiveInstallationSession(
       auth_session_id: string,
-      installation_id: string,
+      installation_id: InstallationId,
       now: Date,
     ) {
       return db
@@ -130,7 +131,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
 
     findRefreshableInstallationSession(
       refresh_token_hash: string,
-      installation_id: string,
+      installation_id: InstallationId,
       now: Date,
     ) {
       return db

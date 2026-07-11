@@ -13,7 +13,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("contact_assignments.id"),
     )
     .addColumn("origin", "text", (col) => col.notNull())
-    .addColumn("installation_id", "text")
+    .addColumn("installation_id", "uuid")
     .addColumn("installation_session_jti", "text")
     .addColumn("issued_at", "timestamptz", (col) => col.notNull())
     .addColumn("expires_at", "timestamptz", (col) => col.notNull())
@@ -34,7 +34,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       col.notNull().references("branches.id"),
     )
     .addColumn("auth_session_id", "text", (col) => col.notNull())
-    .addColumn("installation_id", "text", (col) => col.notNull())
+    .addColumn("installation_id", "uuid", (col) => col.notNull())
     .addColumn("refresh_token_hash", "text", (col) => col.notNull().unique())
     .addColumn("issued_at", "timestamptz", (col) => col.notNull())
     .addColumn("expires_at", "timestamptz", (col) => col.notNull())

@@ -6,12 +6,13 @@ import {
   invalid,
   type DomainError,
 } from "~/server/shared/domain-error";
+import { InstallationId } from "~/server/shared/ids";
 import type {
   BranchId,
   ContactAssignmentId,
   UserId,
 } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 import {
   addMilliseconds,
   epochMilliseconds,
@@ -39,7 +40,6 @@ import {
   isExtensionHandoffClaims,
   isInvalidExtensionToken,
   isTokenExpired,
-  isUuid,
   parseSubjectUserId,
 } from "./validators";
 
@@ -178,7 +178,8 @@ export async function claimInstallationSession(
 ): Promise<Result<ClaimExtensionSessionResponse, DomainError>> {
   const { now, uow } = context;
 
-  if (!isUuid(input.installationId)) {
+  const installationId = InstallationId.parse(input.installationId);
+  if (isErr(installationId)) {
     return Err(invalid({ code: "installation_invalid" }));
   }
 
@@ -231,7 +232,7 @@ export async function claimInstallationSession(
 
       if (handoff.consumed_at !== null) {
         if (
-          handoff.installation_id !== input.installationId ||
+          handoff.installation_id !== installationId.value ||
           !handoff.installation_session_jti
         ) {
           return Err(fail("handoff_claimed_by_other_installation"));
@@ -252,14 +253,14 @@ export async function claimInstallationSession(
         const reusableSession =
           await txRepos.extensionRuntime.findActiveInstallationSession(
             handoff.auth_session_id,
-            input.installationId,
+            installationId.value,
             claimedAt,
           );
         const sessionJti = reusableSession?.jti ?? crypto.randomUUID();
 
         const consumeResult = await txRepos.extensionRuntime.consumeHandoff({
           jti: handoff.jti,
-          installation_id: input.installationId,
+          installation_id: installationId.value,
           installation_session_jti: sessionJti,
           consumed_at: claimedAt,
         });
@@ -271,7 +272,7 @@ export async function claimInstallationSession(
 
           if (
             !racedHandoff ||
-            racedHandoff.installation_id !== input.installationId ||
+            racedHandoff.installation_id !== installationId.value ||
             !racedHandoff.installation_session_jti
           ) {
             return Err(fail("handoff_claimed_by_other_installation"));
@@ -296,7 +297,7 @@ export async function claimInstallationSession(
             user_id: handoff.user_id,
             branch_id: handoff.branch_id,
             auth_session_id: handoff.auth_session_id,
-            installation_id: input.installationId,
+            installation_id: installationId.value,
             refresh_token_hash: "",
             issued_at: claimedAt,
             expires_at: installationSessionExpiresAt(claimedAt),

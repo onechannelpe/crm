@@ -1,4 +1,5 @@
 import { isPlainRecord } from "~/lib/type-guards";
+import type { InstallationId } from "~/server/shared/ids";
 
 export const EXTENSION_HANDOFF_TOKEN_ISSUER = "web" as const;
 export const EXTENSION_HANDOFF_TOKEN_AUDIENCE = "crm-extension" as const;
@@ -57,7 +58,7 @@ export interface ExtensionInstallationSessionClaims {
   sub: `user:${string}`;
   authSessionId: string;
   branchId: string;
-  installationId: string;
+  installationId: InstallationId;
   jti: string;
   iat: number;
   exp: number;

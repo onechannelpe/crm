@@ -24,18 +24,6 @@ function brandCast<Name extends string>(value: string): BrandedId<Name> {
   return value as BrandedId<Name>;
 }
 
-function trustValue<Name extends string>(
-  name: Name,
-  value: string,
-): BrandedId<Name> {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    // Trusted paths vouch for the value; a violation is an internal bug, so
-    // fail fast rather than brand an empty string.
-    throw new Error(`${name} must be a non-empty string`);
-  }
-  return brandCast<Name>(value);
-}
-
 export function uuidId<Name extends string>(name: Name) {
   const code = `invalid_${snake(name)}`;
   return {
@@ -46,7 +34,7 @@ export function uuidId<Name extends string>(name: Name) {
       }
       return Ok(brandCast<Name>(value));
     },
-    trust: (value: string) => trustValue(name, value),
+    trust: (value: string) => brandCast<Name>(value),
   } satisfies IdCodec<BrandedId<Name>>;
 }
 
@@ -65,7 +53,7 @@ export function derivedKey<Name extends string>(name: Name) {
       }
       return Ok(brandCast<Name>(value));
     },
-    trust: (value: string) => trustValue(name, value),
+    trust: (value: string) => brandCast<Name>(value),
     derive: (parts: DerivedKeyParts) =>
       brandCast<Name>(`${parts.sourceEventId}:${parts.discriminator}`),
   } satisfies IdCodec<BrandedId<Name>> & {

@@ -4,6 +4,7 @@ import type {
   ContactAssignmentId,
   EventId,
   IdColumn,
+  InstallationId,
   NullableIdColumn,
   OrganizationPersonId,
   UserId,
@@ -16,7 +17,7 @@ export interface ExtensionHandoffsTable {
   auth_session_id: string;
   assignment_id: IdColumn<ContactAssignmentId>;
   origin: string;
-  installation_id: string | null;
+  installation_id: NullableIdColumn<InstallationId>;
   installation_session_jti: string | null;
   issued_at: Date;
   expires_at: Date;
@@ -28,7 +29,7 @@ export interface ExtensionInstallationSessionsTable {
   user_id: IdColumn<UserId>;
   branch_id: IdColumn<BranchId>;
   auth_session_id: string;
-  installation_id: string;
+  installation_id: IdColumn<InstallationId>;
   refresh_token_hash: string;
   issued_at: Date;
   expires_at: Date;
