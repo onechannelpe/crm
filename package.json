@@ -29,6 +29,7 @@
     "check:search-contract": "bun run tools/codegen/bin/check-search-contract.ts",
     "check:engine": "cargo xtask-check",
     "check:web": "bun run --cwd apps/web check",
+    "check:types": "bun run --cwd apps/web check:types",
     "check:lint": "bun run --parallel check:lint:web check:lint:packages",
     "check:lint:web": "oxlint -c apps/web/.oxlintrc.json --type-aware --tsconfig apps/web/tsconfig.json --deny-warnings apps/web/src apps/web/tests",
     "check:lint:packages": "oxlint -c .oxlintrc.json --deny-warnings packages tools",
