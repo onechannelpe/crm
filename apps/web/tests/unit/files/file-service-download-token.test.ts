@@ -1,17 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import type { DownloadTokenDeps } from "~/server/files/service/contracts";
-import { requestDownloadToken } from "~/server/files/service/request-download-token";
-import type { FileAsset, WorkflowArtifact } from "~/server/files/types";
+import type { InsertDownloadTokenInput } from "~/server/files/repo/types";
+import { issueDownloadToken } from "~/server/files/service/issue-download-token";
+import { DOWNLOAD_TOKEN_TTL_MS, hashToken } from "~/server/files/token";
 import type { AppContext } from "~/server/platform/action/context";
-import { isErr } from "~/server/shared/result";
+import { BranchId, FileAssetId, UserId } from "~/server/shared/ids";
 
-function makeContext(overrides?: Partial<AppContext>): AppContext {
+const NOW_MS = 1_700_000_000_000;
+
+function makeContext(): AppContext {
   return {
     actor: {
       id: "sess-1",
-      userId: 10,
-      branchId: 1,
+      userId: UserId.trust("user-10"),
+      branchId: BranchId.trust("branch-1"),
       role: "back_office",
       onboardingCompleted: true,
       sessionClass: "app",
@@ -24,164 +26,35 @@ function makeContext(overrides?: Partial<AppContext>): AppContext {
     ipAddress: "127.0.0.1",
     userAgent: "vitest",
     publicOrigin: "http://localhost:3000",
-    now: () => 1_700_000_000_000,
-    ...overrides,
+    now: () => new Date(NOW_MS),
   };
 }
 
-function makeArtifact(overrides?: Partial<WorkflowArtifact>): WorkflowArtifact {
-  return {
-    id: "artifact-42",
-    artifactType: "records_export",
-    direction: "download",
-    executionMode: "sync",
-    status: "ready",
-    requestedByUserId: 10,
-    scopeBranchId: 1,
-    scopeTeamId: null,
-    policySnapshotJson: "{}",
-    workflowContextJson: "{}",
-    errorCode: null,
-    errorMessage: null,
-    expiresAt: null,
-    createdAt: 1,
-    updatedAt: 1,
-    ...overrides,
-  };
-}
+describe("issueDownloadToken", () => {
+  it("binds a short-lived token to an already authorized file asset", async () => {
+    const fileAssetId = FileAssetId.trust("file-7");
+    const inserted: InsertDownloadTokenInput[] = [];
 
-function makeFileAsset(overrides?: Partial<FileAsset>): FileAsset {
-  return {
-    id: 7,
-    storageKey: "files/records-export-42.csv",
-    originalFilename: "leads.csv",
-    safeDisplayFilename: "leads.csv",
-    detectedMime: "text/csv",
-    extension: "csv",
-    sizeBytes: 12,
-    sha256Hex: "hash",
-    signatureKind: "csv",
-    scanStatus: "clean",
-    scanEngine: null,
-    scanReference: null,
-    createdAt: 1,
-    ...overrides,
-  };
-}
-
-function createDownloadTokenDeps(input: {
-  artifact: WorkflowArtifact;
-  fileAsset?: FileAsset | null;
-  onInsertToken?: () => void;
-}): DownloadTokenDeps {
-  return {
-    repo: {
-      artifacts: {
-        findById: async (artifactId) => {
-          if (artifactId !== input.artifact.id) {
-            return null;
-          }
-          return input.artifact;
+    const result = await issueDownloadToken(makeContext(), fileAssetId, {
+      repo: {
+        tokens: {
+          insert: async (input) => {
+            inserted.push(input);
+          },
+          findByHash: async () => null,
+          markUsed: async () => false,
         },
-        findFileAssetForArtifact: async () => input.fileAsset ?? null,
-        insert: async () => "unused",
-        updateStatus: async () => {},
-        insertFileBinding: async () => {},
-        list: async () => [],
-      },
-      tokens: {
-        insert: async () => {
-          input.onInsertToken?.();
-        },
-        findByHash: async () => null,
-        markUsed: async () => false,
-      },
-      events: {
-        insert: async () => {},
-        list: async () => [],
-      },
-    },
-  };
-}
-
-describe("requestDownloadToken", () => {
-  it("rejects token issuance when artifact is not ready", async () => {
-    let tokenInsertCount = 0;
-    const deps = createDownloadTokenDeps({
-      artifact: makeArtifact({ status: "processing" }),
-      fileAsset: makeFileAsset(),
-      onInsertToken: () => {
-        tokenInsertCount += 1;
       },
     });
 
-    const result = await requestDownloadToken(
-      makeContext(),
-      "artifact-42",
-      deps,
-    );
-
-    expect(isErr(result)).toBe(true);
-    expect(isErr(result) && result.error.code).toBe(
-      "artifact_not_downloadable",
-    );
-    expect(tokenInsertCount).toBe(0);
-  });
-
-  it("issues token for ready artifact", async () => {
-    let tokenInsertCount = 0;
-    const deps = createDownloadTokenDeps({
-      artifact: makeArtifact({ status: "ready" }),
-      fileAsset: makeFileAsset(),
-      onInsertToken: () => {
-        tokenInsertCount += 1;
-      },
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(inserted[0]).toMatchObject({
+      fileAssetId,
+      requestedByUserId: UserId.trust("user-10"),
+      expiresAt: new Date(NOW_MS + DOWNLOAD_TOKEN_TTL_MS),
+      now: new Date(NOW_MS),
     });
-
-    const result = await requestDownloadToken(
-      makeContext(),
-      "artifact-42",
-      deps,
-    );
-
-    expect(isErr(result)).toBe(false);
-    expect(!isErr(result) && result.value.token.length > 10).toBe(true);
-    expect(tokenInsertCount).toBe(1);
-  });
-
-  it("rejects token issuance when artifact file is missing", async () => {
-    const deps = createDownloadTokenDeps({
-      artifact: makeArtifact({ status: "ready" }),
-      fileAsset: null,
-    });
-
-    const result = await requestDownloadToken(
-      makeContext(),
-      "artifact-42",
-      deps,
-    );
-
-    expect(isErr(result)).toBe(true);
-    expect(isErr(result) && result.error.code).toBe("artifact_file_not_found");
-  });
-
-  it("rejects token issuance for null-scope artifact when actor is not owner", async () => {
-    const deps = createDownloadTokenDeps({
-      artifact: makeArtifact({
-        status: "ready",
-        scopeBranchId: null,
-        requestedByUserId: 999,
-      }),
-      fileAsset: makeFileAsset(),
-    });
-
-    const result = await requestDownloadToken(
-      makeContext(),
-      "artifact-42",
-      deps,
-    );
-
-    expect(isErr(result)).toBe(true);
-    expect(isErr(result) && result.error.code).toBe("artifact_read_not_owner");
+    expect(inserted[0]?.tokenHash).toBe(hashToken(result.value.token));
   });
 });

@@ -1,27 +1,16 @@
 import type {
-  ArtifactDirection,
-  ArtifactExecutionMode,
-  ArtifactStatus,
-  ArtifactType,
-  ScanStatus,
-} from "../types";
+  FileAssetId,
+  UserId,
+  WorkflowLeadId,
+  WorkflowRateRevisionFileId,
+  WorkflowRateRevisionId,
+} from "~/server/shared/ids";
 
-export interface InsertArtifactInput {
-  artifactType: ArtifactType;
-  direction: ArtifactDirection;
-  executionMode: ArtifactExecutionMode;
-  status: ArtifactStatus;
-  requestedByUserId: number;
-  scopeBranchId: number | null;
-  scopeTeamId: number | null;
-  policySnapshotJson: string;
-  workflowContextJson: string;
-  expiresAt: number | null;
-  now: number;
-}
+import type { FilePurpose, ScanStatus } from "../types";
 
 export interface InsertFileAssetInput {
   storageKey: string;
+  purpose: FilePurpose;
   originalFilename: string;
   safeDisplayFilename: string;
   detectedMime: string;
@@ -30,53 +19,36 @@ export interface InsertFileAssetInput {
   sha256Hex: string;
   signatureKind: string | null;
   scanStatus: ScanStatus;
-  now: number;
-}
-
-export interface InsertEventInput {
-  artifactId: string;
-  eventType: string;
-  actorUserId: number | null;
-  actorRole: string | null;
-  requestId: string | null;
-  traceId: string | null;
-  ipHash: string | null;
-  userAgent: string | null;
-  details: Record<string, unknown>;
-  now: number;
+  createdByUserId: UserId;
+  now: Date;
 }
 
 export interface InsertDownloadTokenInput {
-  artifactId: string;
-  fileAssetId: number;
+  fileAssetId: FileAssetId;
   tokenHash: string;
-  requestedByUserId: number;
-  expiresAt: number;
-  now: number;
+  requestedByUserId: UserId;
+  expiresAt: Date;
+  now: Date;
 }
 
 export interface SaleProofFileRecord {
-  id: number;
-  leadId: string;
-  artifactId: string;
-  fileAssetId: number;
-  uploadedByUserId: number;
-  createdAt: number;
-  artifactStatus: ArtifactStatus;
+  id: string;
+  leadId: WorkflowLeadId;
+  fileAssetId: FileAssetId;
+  uploadedByUserId: UserId;
+  createdAt: Date;
   safeDisplayFilename: string;
   detectedMime: string;
   sizeBytes: number;
 }
 
 export interface RateRevisionFileRecord {
-  id: number;
-  leadId: string;
-  revisionId: string;
-  artifactId: string;
-  fileAssetId: number;
-  uploadedByUserId: number;
-  createdAt: number;
-  artifactStatus: ArtifactStatus;
+  id: WorkflowRateRevisionFileId;
+  leadId: WorkflowLeadId;
+  revisionId: WorkflowRateRevisionId | null;
+  fileAssetId: FileAssetId;
+  uploadedByUserId: UserId;
+  createdAt: Date;
   safeDisplayFilename: string;
   detectedMime: string;
   sizeBytes: number;

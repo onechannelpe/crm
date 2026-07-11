@@ -54,9 +54,8 @@ function isValidationAvatarError(
   return exhaustiveCheck;
 }
 
-// Maps the storage service's own error code union onto the domain error
-// channel: caller-fixable codes become validation, infrastructure outages
-// become external (reported, generic message to the client).
+// Codes the caller can fix (file shape, size, mime) become validation; the
+// rest is reported upstream with a generic client message.
 function toAvatarDomainError(code: AvatarDomainErrorCode): DomainError {
   if (isValidationAvatarError(code)) {
     return invalid({ code });

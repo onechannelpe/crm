@@ -9,7 +9,7 @@ import styles from "./files.module.css";
 type AttachmentActionsMenuProps = {
   file: LeadSaleProofFileView;
   onPreview?: (file: LeadSaleProofFileView) => Promise<void> | void;
-  onDownload: (artifactId: string) => Promise<void> | void;
+  onDownload: (fileId: string) => Promise<void> | void;
 };
 
 export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
@@ -107,7 +107,7 @@ export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
               role="menuitem"
               disabled={props.file.status !== "ready"}
               onClick={() => {
-                void props.onDownload(props.file.artifactId);
+                void props.onDownload(props.file.fileId);
                 setIsOpen(false);
               }}
             >

@@ -1,13 +1,18 @@
 import { createSignal, For, Show } from "solid-js";
 
+import { requestFulfillmentDownloadToken } from "~/actions/workflow/commands/fulfillment";
 import {
   requestLeadSaleProofDownloadToken,
   requestRateRevisionFileDownloadToken,
 } from "~/actions/workflow/files";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
+import { describeDocKind } from "~/contracts/workflow/fulfillment-labels";
 import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
-import { type LeadDetailRateRevisionView } from "~/contracts/workflow/views";
+import type {
+  LeadDetailFulfillmentView,
+  LeadDetailRateRevisionView,
+} from "~/contracts/workflow/views";
 import {
   ActivitySection,
   ActivityListCard,
@@ -20,7 +25,7 @@ import {
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import { AttachmentList } from "./attachment-list";
-import { PreviewModal } from "./preview-modal";
+import { PreviewModal, type PreviewModalState } from "./preview-modal";
 import { useAttachments } from "./use-attachments";
 import { useUploadAttachmentFile } from "./use-upload-attachment-file";
 
@@ -30,6 +35,7 @@ type FilesCardProps = {
   leadId: string;
   canUpload: boolean;
   rateRevisions?: LeadDetailRateRevisionView[];
+  fulfillment?: LeadDetailFulfillmentView | null;
 };
 
 function hasDraggedFiles(event: DragEvent): boolean {
@@ -41,10 +47,8 @@ export function FilesCard(props: FilesCardProps) {
     string | null
   >(null);
   const [isDraggingFile, setIsDraggingFile] = createSignal(false);
-  const [previewState, setPreviewState] = createSignal<{
-    file: LeadSaleProofFileView;
-    previewUrl: string;
-  } | null>(null);
+  const [previewState, setPreviewState] =
+    createSignal<PreviewModalState | null>(null);
   const [fileInputRef, setFileInputRef] = createSignal<HTMLInputElement>();
 
   let dragEnterCount = 0;
@@ -60,6 +64,7 @@ export function FilesCard(props: FilesCardProps) {
       (count, revision) => count + revision.files.length,
       0,
     );
+  const fulfillmentDocuments = () => props.fulfillment?.documents ?? [];
 
   async function uploadFiles(files: File[]) {
     if (!props.canUpload || files.length === 0) {
@@ -80,13 +85,13 @@ export function FilesCard(props: FilesCardProps) {
     }
   }
 
-  async function handleDownload(artifactId: string) {
+  async function handleDownload(fileId: string) {
     setFileActionErrorMessage(null);
 
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
-        artifactId,
+        fileId,
       });
 
       window.location.href = `/api/files/download/${token.token}`;
@@ -105,12 +110,18 @@ export function FilesCard(props: FilesCardProps) {
     try {
       const token = await requestLeadSaleProofDownloadToken({
         leadId: props.leadId,
-        artifactId: file.artifactId,
+        fileId: file.fileId,
       });
 
       setPreviewState({
-        file,
+        file: {
+          previewId: `sale-proof-${file.id}`,
+          fileId: file.fileId,
+          filename: file.filename,
+          detectedMime: file.detectedMime,
+        },
         previewUrl: `/api/files/download/${token.token}?inline=1`,
+        onDownload: () => handleDownload(file.fileId),
       });
     } catch (caught) {
       setFileActionErrorMessage(
@@ -121,18 +132,97 @@ export function FilesCard(props: FilesCardProps) {
     }
   }
 
-  async function handleRevisionDownload(leadId: string, artifactId: string) {
+  async function handleRevisionDownload(leadId: string, fileId: string) {
     setFileActionErrorMessage(null);
 
     const result = await requestRateRevisionFileDownloadToken({
       leadId,
-      artifactId,
+      fileId,
     });
 
     if (result.ok) {
       window.location.href = `/api/files/download/${result.value.token}`;
     } else {
       setFileActionErrorMessage(actionErrorMessage(result.error));
+    }
+  }
+
+  async function handleRevisionPreview(file: {
+    fileId: string;
+    filename: string;
+    detectedMime: string;
+  }) {
+    setFileActionErrorMessage(null);
+
+    const result = await requestRateRevisionFileDownloadToken({
+      leadId: props.leadId,
+      fileId: file.fileId,
+    });
+
+    if (result.ok) {
+      setPreviewState({
+        file: {
+          previewId: `rate-revision-${file.fileId}`,
+          fileId: file.fileId,
+          filename: file.filename,
+          detectedMime: file.detectedMime,
+        },
+        previewUrl: `/api/files/download/${result.value.token}?inline=1`,
+        onDownload: () => handleRevisionDownload(props.leadId, file.fileId),
+      });
+    } else {
+      setFileActionErrorMessage(actionErrorMessage(result.error));
+    }
+  }
+
+  async function handleFulfillmentDownload(fileId: string) {
+    setFileActionErrorMessage(null);
+
+    try {
+      const token = await requestFulfillmentDownloadToken({
+        leadId: props.leadId,
+        fileId,
+      });
+
+      window.location.href = `/api/files/download/${token.token}`;
+    } catch (caught) {
+      setFileActionErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo descargar el archivo",
+      );
+    }
+  }
+
+  async function handleFulfillmentPreview(document: {
+    fileId: string;
+    filename: string;
+    detectedMime: string;
+  }) {
+    setFileActionErrorMessage(null);
+
+    try {
+      const token = await requestFulfillmentDownloadToken({
+        leadId: props.leadId,
+        fileId: document.fileId,
+      });
+
+      setPreviewState({
+        file: {
+          previewId: `fulfillment-${document.fileId}`,
+          fileId: document.fileId,
+          filename: document.filename,
+          detectedMime: document.detectedMime,
+        },
+        previewUrl: `/api/files/download/${token.token}?inline=1`,
+        onDownload: () => handleFulfillmentDownload(document.fileId),
+      });
+    } catch (caught) {
+      setFileActionErrorMessage(
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo abrir la vista previa",
+      );
     }
   }
 
@@ -150,10 +240,11 @@ export function FilesCard(props: FilesCardProps) {
                   {(file) => (
                     <ActivityListRow
                       onClick={() =>
-                        void handleRevisionDownload(
-                          props.leadId,
-                          file.artifactId,
-                        )
+                        void handleRevisionPreview({
+                          fileId: file.fileId,
+                          filename: file.filename,
+                          detectedMime: file.detectedMime,
+                        })
                       }
                     >
                       <ActivityRowBody>
@@ -165,6 +256,33 @@ export function FilesCard(props: FilesCardProps) {
                     </ActivityListRow>
                   )}
                 </For>
+              )}
+            </For>
+          </ActivityListCard>
+        </ActivitySection>
+      </Show>
+
+      <Show when={fulfillmentDocuments().length > 0}>
+        <ActivitySection title="Entrega" count={fulfillmentDocuments().length}>
+          <ActivityListCard>
+            <For each={fulfillmentDocuments()}>
+              {(document) => (
+                <ActivityListRow
+                  onClick={() =>
+                    void handleFulfillmentPreview({
+                      fileId: document.fileId,
+                      filename: document.filename,
+                      detectedMime: document.detectedMime,
+                    })
+                  }
+                >
+                  <ActivityRowBody>
+                    <ActivityRowTitle>{document.filename}</ActivityRowTitle>
+                    <ActivityRowMeta>
+                      {describeDocKind(document.docKind)}
+                    </ActivityRowMeta>
+                  </ActivityRowBody>
+                </ActivityListRow>
               )}
             </For>
           </ActivityListCard>
@@ -254,7 +372,6 @@ export function FilesCard(props: FilesCardProps) {
       <PreviewModal
         state={previewState()}
         onClose={() => setPreviewState(null)}
-        onDownload={handleDownload}
       />
     </ActivityTabContainer>
   );

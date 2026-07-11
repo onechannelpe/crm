@@ -1,53 +1,24 @@
-const ARTIFACT_TYPES = [
+import type { FileAssetId, UserId } from "~/server/shared/ids";
+
+export const FILE_PURPOSES = [
   "records_export",
   "integration_import",
   "sale_proof",
   "rate_revision_file",
+  "transactions_report",
+  "addendum_unsigned",
+  "addendum_signed_photo",
+  "addendum_signed_pdf",
+  "payment_proof",
 ] as const;
-export type ArtifactType = (typeof ARTIFACT_TYPES)[number];
-
-const EXECUTION_MODES = ["sync", "async"] as const;
-export type ArtifactExecutionMode = (typeof EXECUTION_MODES)[number];
-
-export type ArtifactDirection = "upload" | "download" | "bidirectional";
-
-export type ArtifactStatus =
-  | "requested"
-  | "receiving"
-  | "validating"
-  | "scanning"
-  | "ready"
-  | "processing"
-  | "completed"
-  | "failed"
-  | "expired"
-  | "revoked";
+export type FilePurpose = (typeof FILE_PURPOSES)[number];
 
 export type ScanStatus = "pending" | "clean" | "infected" | "error";
 
-export type BindingRole = "source_upload" | "export_output" | "derived_output";
-
-export interface WorkflowArtifact {
-  id: string;
-  artifactType: ArtifactType;
-  direction: ArtifactDirection;
-  executionMode: ArtifactExecutionMode;
-  status: ArtifactStatus;
-  requestedByUserId: number;
-  scopeBranchId: number | null;
-  scopeTeamId: number | null;
-  policySnapshotJson: string;
-  workflowContextJson: string;
-  errorCode: string | null;
-  errorMessage: string | null;
-  expiresAt: number | null;
-  createdAt: number;
-  updatedAt: number;
-}
-
 export interface FileAsset {
-  id: number;
+  id: FileAssetId;
   storageKey: string;
+  purpose: FilePurpose;
   originalFilename: string;
   safeDisplayFilename: string;
   detectedMime: string;
@@ -58,16 +29,11 @@ export interface FileAsset {
   scanStatus: ScanStatus;
   scanEngine: string | null;
   scanReference: string | null;
-  createdAt: number;
-}
-
-export interface ArtifactWithAsset {
-  artifact: WorkflowArtifact;
-  fileAsset: FileAsset | null;
+  createdByUserId: UserId;
+  createdAt: Date;
 }
 
 export interface DownloadReady {
-  artifact: WorkflowArtifact;
   fileAsset: FileAsset;
   body: ArrayBuffer;
 }

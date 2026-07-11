@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { FileAssetId } from "~/server/shared/ids";
 
 import { rowToFileAsset } from "./mappers";
 import type { InsertFileAssetInput } from "./types";
@@ -14,6 +15,7 @@ export function createAssetsRepo(db: DB) {
         .insertInto("file_assets")
         .values({
           storage_key: input.storageKey,
+          purpose: input.purpose,
           original_filename: input.originalFilename,
           safe_display_filename: input.safeDisplayFilename,
           detected_mime: input.detectedMime,
@@ -24,13 +26,15 @@ export function createAssetsRepo(db: DB) {
           scan_status: input.scanStatus,
           scan_engine: null,
           scan_reference: null,
+          created_by_user_id: input.createdByUserId,
           created_at: input.now,
         })
+        .returning("id")
         .executeTakeFirstOrThrow();
-      return Number(result.insertId);
+      return result.id;
     },
 
-    async findById(id: number) {
+    async findById(id: FileAssetId) {
       const row = await db
         .selectFrom("file_assets")
         .selectAll()

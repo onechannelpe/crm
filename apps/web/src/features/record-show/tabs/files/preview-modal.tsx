@@ -3,21 +3,27 @@ import { Portal } from "solid-js/web";
 
 import { PresenceTransition } from "~/components/ui/animation/presence-transition";
 import { Button } from "~/components/ui/input/button";
-import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
 
 import { getFileCategoryFromMime } from "./file-category";
 
 import styles from "./files.module.css";
 
-type PreviewModalState = {
-  file: LeadSaleProofFileView;
+export type PreviewFile = {
+  previewId: string;
+  fileId: string;
+  filename: string;
+  detectedMime: string;
+};
+
+export type PreviewModalState = {
+  file: PreviewFile;
   previewUrl: string;
+  onDownload: () => Promise<void> | void;
 };
 
 type PreviewModalProps = {
   state: PreviewModalState | null;
   onClose: () => void;
-  onDownload: (artifactId: string) => Promise<void> | void;
 };
 
 export function PreviewModal(props: PreviewModalProps) {
@@ -55,11 +61,11 @@ export function PreviewModal(props: PreviewModalProps) {
                 open
                 class={styles.previewDialog}
                 aria-modal="true"
-                aria-labelledby={`preview-title-${state().file.id}`}
+                aria-labelledby={`preview-title-${state().file.previewId}`}
               >
                 <header class={styles.previewHeader}>
                   <h3
-                    id={`preview-title-${state().file.id}`}
+                    id={`preview-title-${state().file.previewId}`}
                     class={styles.previewTitle}
                   >
                     {state().file.filename}
@@ -69,9 +75,7 @@ export function PreviewModal(props: PreviewModalProps) {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() =>
-                        void props.onDownload(state().file.artifactId)
-                      }
+                      onClick={() => void state().onDownload()}
                     >
                       Descargar
                     </Button>
@@ -114,9 +118,7 @@ export function PreviewModal(props: PreviewModalProps) {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() =>
-                            void props.onDownload(state().file.artifactId)
-                          }
+                          onClick={() => void state().onDownload()}
                         >
                           Descargar archivo
                         </Button>

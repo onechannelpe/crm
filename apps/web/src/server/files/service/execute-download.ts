@@ -8,7 +8,7 @@ import type { ExecuteDownloadDeps } from "./contracts";
 export async function executeDownload(
   tokenRaw: string,
   deps: ExecuteDownloadDeps,
-  now: number,
+  now: Date,
 ): Promise<Result<DownloadReady, DomainError>> {
   const { repo, storage } = deps;
   const tokenHash = hashToken(tokenRaw);
@@ -24,11 +24,6 @@ export async function executeDownload(
 
   if (tokenRow.expiresAt < now) {
     return Err(fail("token_expired"));
-  }
-
-  const artifact = await repo.artifacts.findById(tokenRow.artifactId);
-  if (!artifact) {
-    return Err(fail("artifact_not_found"));
   }
 
   const fileAsset = await repo.assets.findById(tokenRow.fileAssetId);
@@ -48,20 +43,7 @@ export async function executeDownload(
     return Err(fail("token_already_used"));
   }
 
-  await repo.events.insert({
-    artifactId: artifact.id,
-    eventType: "artifact.downloaded",
-    actorUserId: tokenRow.requestedByUserId,
-    actorRole: null,
-    requestId: null,
-    traceId: null,
-    ipHash: null,
-    userAgent: null,
-    details: { fileAssetId: fileAsset.id, tokenHash },
-    now,
-  });
-
   const body = new ArrayBuffer(bytes.byteLength);
   new Uint8Array(body).set(bytes);
-  return Ok({ artifact, fileAsset, body });
+  return Ok({ fileAsset, body });
 }

@@ -29,6 +29,7 @@ export function FilesTab(props: { context: RecordContext }) {
           leadId={data.lead.id}
           canUpload={data.lead.stage === "LIVE"}
           rateRevisions={data.rateRevisions}
+          fulfillment={data.fulfillment}
         />
       )}
     </Show>
