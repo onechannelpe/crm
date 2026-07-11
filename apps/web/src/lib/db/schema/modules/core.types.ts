@@ -1,58 +1,36 @@
 import type { Generated } from "kysely";
 
+import type {
+  BranchId,
+  GeneratedId,
+  IdColumn,
+  TeamId,
+  UserId,
+} from "~/server/shared/ids";
+
 export interface BranchesTable {
-  id: Generated<number>;
+  id: GeneratedId<BranchId>;
   name: string;
-  created_at: number;
+  created_at: Date;
 }
 
 export interface TeamsTable {
-  id: Generated<number>;
-  branch_id: number;
+  id: GeneratedId<TeamId>;
+  branch_id: IdColumn<BranchId>;
   name: string;
-  created_at: number;
+  created_at: Date;
 }
 
 export interface BranchSupervisorsTable {
-  id: Generated<number>;
-  branch_id: number;
-  user_id: number;
-  created_at: number;
+  id: Generated<string>;
+  branch_id: IdColumn<BranchId>;
+  user_id: IdColumn<UserId>;
+  created_at: Date;
 }
 
 export interface BackOfficeAssignmentsTable {
-  id: Generated<number>;
-  back_office_user_id: number;
-  team_id: number;
-  assigned_at: number;
-}
-
-export interface PeopleTable {
-  id: Generated<number>;
-  dni: string;
-  full_name: string;
-  email: string | null;
-  created_at: number;
-  updated_at: number;
-}
-
-export interface OrganizationsTable {
-  id: string;
-  ruc: string;
-  legal_name: string | null;
-  giro_negocio: string | null;
-  address: string | null;
-  district: string | null;
-  province: string | null;
-  department: string | null;
-  phone: string | null;
-  email: string | null;
-  created_at: number;
-}
-
-export interface OrganizationBranchLocksTable {
-  organization_id: string;
-  branch_id: number;
-  locked_at: number;
-  locked_by_user_id: number;
+  id: Generated<string>;
+  back_office_user_id: IdColumn<UserId>;
+  team_id: IdColumn<TeamId>;
+  assigned_at: Date;
 }

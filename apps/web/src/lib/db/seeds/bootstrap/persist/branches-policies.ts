@@ -1,14 +1,17 @@
+import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "../../../types";
 
+export const INFINITY_BRANCH_ID = randomUUIDv7();
+
 export async function persistBranchesAndPolicies(
   db: Kysely<Database>,
-  now: number,
+  now: Date,
 ): Promise<void> {
   await db
     .insertInto("branches")
-    .values([{ id: 4, name: "Infinity", created_at: now }])
+    .values([{ id: INFINITY_BRANCH_ID, name: "Infinity", created_at: now }])
     .onConflict((oc) => oc.doNothing())
     .execute();
 
@@ -17,7 +20,7 @@ export async function persistBranchesAndPolicies(
     .values([
       {
         scope_type: "branch",
-        scope_id: 4,
+        scope_id: INFINITY_BRANCH_ID,
         period_type: "month",
         search_limit: 500,
         created_at: now,
@@ -32,7 +35,7 @@ export async function persistBranchesAndPolicies(
     .values([
       {
         scope_type: "branch",
-        scope_id: 4,
+        scope_id: INFINITY_BRANCH_ID,
         active_buffer_target: 20,
         daily_refill_limit: 50,
         created_at: now,

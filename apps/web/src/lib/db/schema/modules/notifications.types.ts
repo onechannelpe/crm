@@ -1,75 +1,141 @@
 import type { Generated } from "kysely";
 
+import type { Json } from "~/contracts/json";
+import type {
+  AppNotificationId,
+  GeneratedId,
+  IdColumn,
+  NotificationDeliveryId,
+  NotificationIntentId,
+  UserId,
+} from "~/server/shared/ids";
+
 export interface UserChannelAddressesTable {
-  id: Generated<number>;
-  user_id: number;
+  id: Generated<string>;
+  user_id: IdColumn<UserId>;
   channel: "email" | "whatsapp";
   address: string;
-  is_verified: number;
-  verified_at: number | null;
-  created_at: number;
-  updated_at: number;
+  is_verified: boolean;
+  verified_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface WhatsAppSessionsTable {
-  id: Generated<number>;
-  user_id: number;
-  expires_at: number;
+  id: Generated<string>;
+  user_id: IdColumn<UserId>;
+  expires_at: Date;
 }
 
-export interface NotificationPreferencesTable {
-  id: Generated<number>;
-  user_id: number;
-  event_type: string;
+export interface NotificationOptOutsTable {
+  id: Generated<string>;
+  user_id: IdColumn<UserId>;
+  category: string;
   channel: "email" | "whatsapp";
-  is_enabled: number;
-  created_at: number;
-  updated_at: number;
+  created_at: Date;
 }
 
 export interface NotificationDeliveriesTable {
-  id: Generated<number>;
-  intent_id: string;
-  recipient_channel: "email" | "whatsapp";
+  id: GeneratedId<NotificationDeliveryId>;
+  intent_id: IdColumn<NotificationIntentId>;
+  user_id: IdColumn<UserId>;
+  channel: "email" | "whatsapp";
   recipient_address: string;
+  title: string;
+  body_text: string;
+  action_url: string | null;
+  queue_state: "pending" | "processing" | "done" | "failed";
+  attempt_count: number;
+  max_attempts: number;
+  available_at: Date;
+  lease_owner: string | null;
+  lease_until: Date | null;
   provider: "resend" | "whatsapp_cloud" | "kapso" | null;
   provider_message_id: string | null;
-  status: "sent" | "failed";
   error_code: string | null;
   error_message: string | null;
-  latency_ms: number | null;
-  created_at: number;
+  created_at: Date;
+  sent_at: Date | null;
 }
 
 export interface AppNotificationsTable {
-  id: Generated<number>;
-  user_id: number;
-  source_event_id: string;
+  id: GeneratedId<AppNotificationId>;
+  user_id: IdColumn<UserId>;
+  intent_id: IdColumn<NotificationIntentId>;
   event_type: string;
   priority: "high" | "normal" | "low";
   title: string;
   body_text: string;
   action_url: string | null;
-  metadata_json: string | null;
-  created_at: number;
-  read_at: number | null;
+  metadata_json: Json | null;
+  created_at: Date;
+  read_at: Date | null;
 }
 
-export interface NotificationOutboxTable {
-  id: string;
+export interface NotificationIntentsTable {
+  id: IdColumn<NotificationIntentId>;
   event_type: string;
-  audience_json: string;
-  channels_json: string;
+  audience_json: Json;
+  channels_json: Json;
   title: string;
   body_text: string;
   action_url: string | null;
   priority: "high" | "normal" | "low";
-  status: "pending" | "processing" | "done" | "failed";
+  queue_state: "pending" | "processing" | "done" | "failed";
   attempt_count: number;
-  available_at: number;
+  max_attempts: number;
+  available_at: Date;
   lease_owner: string | null;
-  lease_until: number | null;
+  lease_until: Date | null;
   error: string | null;
-  created_at: number;
-  processed_at: number | null;
+  created_at: Date;
+  expanded_at: Date | null;
+}
+
+export interface KapsoWebhookDeliveriesTable {
+  idempotency_key: string;
+  event_type: string;
+  payload_version: string;
+  is_batch: boolean;
+  payload_json: Json;
+  received_at: Date;
+}
+
+export interface WhatsAppInboundEventsTable {
+  id: string;
+  delivery_key: string;
+  conversation_id: string;
+  phone_number_id: string;
+  sender_address: string;
+  body: string | null;
+  provider_timestamp: Date;
+  payload_json: Json;
+  queue_state: "pending" | "processing" | "done" | "failed";
+  attempt_count: number;
+  max_attempts: number;
+  available_at: Date;
+  lease_owner: string | null;
+  lease_until: Date | null;
+  outcome: string | null;
+  error: string | null;
+  received_at: Date;
+  processed_at: Date | null;
+}
+
+export interface OutboundWhatsAppMessagesTable {
+  id: string;
+  recipient_address: string;
+  body_text: string;
+  queue_state: "pending" | "processing" | "done" | "failed";
+  attempt_count: number;
+  max_attempts: number;
+  available_at: Date;
+  lease_owner: string | null;
+  lease_until: Date | null;
+  provider: "whatsapp_cloud" | "kapso" | null;
+  provider_message_id: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  created_at: Date;
+  sent_at: Date | null;
 }

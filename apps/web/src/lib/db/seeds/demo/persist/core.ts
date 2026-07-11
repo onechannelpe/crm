@@ -3,13 +3,13 @@ import type { Kysely } from "kysely";
 import type { Database } from "../../../types";
 import type { CompiledWorkflowScenario } from "../compiler";
 import type { LeadSeedKey } from "../scenario";
+import { persistCompanyRegistryRecords } from "./company-registry-records";
 import {
   persistWorkflowHistoryEvents,
-  type WorkflowArtifactIds,
+  type WorkflowCommercialIds,
   type WorkflowLeadIds,
 } from "./history-events";
 import { persistOrganizations } from "./organizations";
-import { persistSearchOverlays } from "./search-overlays";
 import { persistWorkflowCommercialData } from "./workflow-commercial";
 import { persistWorkflowLeadsAndAssignments } from "./workflow-leads";
 
@@ -22,11 +22,11 @@ export async function persistWorkflowSample(
   const overlayTtl = compiled.overlayTtlMs;
 
   const leadIds = buildLeadIds(compiled);
-  const artifacts = buildWorkflowArtifactIds();
+  const commercialIds = buildWorkflowCommercialIds();
   const organizations = await persistOrganizations(
     db,
     compiled.organizationKeys,
-    now,
+    new Date(now),
   );
 
   await persistWorkflowLeadsAndAssignments(
@@ -36,11 +36,16 @@ export async function persistWorkflowSample(
     organizations.getOrganizationId,
     leadIds,
   );
-  await persistSearchOverlays(db, now, day, overlayTtl);
-  await persistWorkflowCommercialData(db, now, day, leadIds, artifacts, (key) =>
-    organizations.getOrganizationId(key),
+  await persistCompanyRegistryRecords(db, now, day, overlayTtl);
+  await persistWorkflowCommercialData(
+    db,
+    now,
+    day,
+    leadIds,
+    commercialIds,
+    (key) => organizations.getOrganizationId(key),
   );
-  await persistWorkflowHistoryEvents(db, now, day, leadIds, artifacts);
+  await persistWorkflowHistoryEvents(db, now, day, leadIds, commercialIds);
 }
 
 function buildLeadIds(compiled: CompiledWorkflowScenario): WorkflowLeadIds {
@@ -63,7 +68,7 @@ function buildLeadIds(compiled: CompiledWorkflowScenario): WorkflowLeadIds {
   };
 }
 
-function buildWorkflowArtifactIds(): WorkflowArtifactIds {
+function buildWorkflowCommercialIds(): WorkflowCommercialIds {
   return {
     qidQuoted: "demo-workflow-quotation-quoted",
     qidForSale: "demo-workflow-quotation-for-sale",

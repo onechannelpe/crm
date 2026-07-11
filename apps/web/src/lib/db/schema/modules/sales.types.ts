@@ -5,10 +5,16 @@ import type {
   AccountTypeKind,
   CollectionMode,
 } from "~/contracts/workflow/vocabulary";
+import type {
+  IdColumn,
+  UserId,
+  WorkflowLeadId,
+  WorkflowVenueId,
+} from "~/server/shared/ids";
 
 export interface WorkflowLeadVenuesTable {
-  id: Generated<string>;
-  lead_id: string;
+  id: IdColumn<WorkflowVenueId>;
+  lead_id: IdColumn<WorkflowLeadId>;
   trade_name: string;
   pos_quantity: number;
   link_url: string | null;
@@ -19,19 +25,19 @@ export interface WorkflowLeadVenuesTable {
   district: string;
   province: string;
   department: string;
-  created_at: number;
-  created_by: number;
+  created_at: Date;
+  created_by: IdColumn<UserId>;
 }
 
 export interface WorkflowLeadVenueAccountsTable {
   id: Generated<string>;
-  venue_id: string;
+  venue_id: IdColumn<WorkflowVenueId>;
   currency: "PEN" | "USD";
   bank: SettlementBank;
   account_type: AccountTypeKind;
   account_number: string;
   cci: string | null;
-  is_settlement: 0 | 1;
+  is_settlement: boolean;
 }
 
 export interface WorkflowCurrencyKindsTable {

@@ -1,5 +1,16 @@
 import type { Generated } from "kysely";
 
+import type {
+  AuthLoginFlowId,
+  BranchId,
+  GeneratedId,
+  IdColumn,
+  NullableIdColumn,
+  UserId,
+  UserInviteId,
+  WebauthnChallengeId,
+} from "~/server/shared/ids";
+
 import type { Role } from "./identity.types";
 
 export type AuthFunnelSourceValue = "client" | "server";
@@ -32,114 +43,114 @@ export type AuthFunnelOutcomeValue =
   | "passkey_required";
 
 export interface LoginFlowsTable {
-  id: Generated<number>;
+  id: GeneratedId<AuthLoginFlowId>;
   identifier: string;
   primary_auth_method: AuthMethodValue;
-  user_id: number | null;
-  challenge_id: number | null;
+  user_id: NullableIdColumn<UserId>;
+  challenge_id: NullableIdColumn<WebauthnChallengeId>;
   state: "totp" | "passkey";
-  expires_at: number;
-  created_at: number;
-  updated_at: number;
+  expires_at: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface PasskeysTable {
   id: string;
-  user_id: number;
+  user_id: IdColumn<UserId>;
   public_key: string;
   counter: number;
   transports: string | null;
-  created_at: number;
-  last_used_at: number | null;
+  created_at: Date;
+  last_used_at: Date | null;
 }
 
 export interface WebauthnChallengesTable {
-  id: Generated<number>;
-  user_id: number | null;
+  id: GeneratedId<WebauthnChallengeId>;
+  user_id: NullableIdColumn<UserId>;
   type: string;
   challenge: string;
-  expires_at: number;
-  created_at: number;
+  expires_at: Date;
+  created_at: Date;
 }
 
 export interface UserOAuthAccountsTable {
-  id: Generated<number>;
-  user_id: number;
+  id: Generated<string>;
+  user_id: IdColumn<UserId>;
   provider: string;
   provider_user_id: string;
   email: string;
-  created_at: number;
+  created_at: Date;
 }
 
 export interface PasswordResetTokensTable {
-  id: Generated<number>;
-  user_id: number;
+  id: Generated<string>;
+  user_id: IdColumn<UserId>;
   token_hash: string;
-  expires_at: number;
-  used_at: number | null;
-  created_at: number;
+  expires_at: Date;
+  used_at: Date | null;
+  created_at: Date;
 }
 
 export interface UserSessionsTable {
   id: string;
-  user_id: number;
-  branch_id: number;
+  user_id: IdColumn<UserId>;
+  branch_id: IdColumn<BranchId>;
   role: Role;
   session_class: "pre_auth" | "app";
   primary_auth_method: AuthMethodValue;
   strong_auth_method: "totp" | "passkey" | "federated" | null;
-  strong_auth_at: number | null;
+  strong_auth_at: Date | null;
   ip_address: string | null;
   user_agent: string | null;
-  created_at: number;
-  last_activity: number;
-  expires_at: number;
+  created_at: Date;
+  last_activity: Date;
+  expires_at: Date;
 }
 
 export interface RequestSessionsTable {
   id: string;
   csrf_token: string;
-  created_at: number;
-  last_activity: number;
-  expires_at: number;
+  created_at: Date;
+  last_activity: Date;
+  expires_at: Date;
 }
 
 export interface UserTotpFactorsTable {
-  id: Generated<number>;
-  user_id: number;
+  id: Generated<string>;
+  user_id: IdColumn<UserId>;
   secret_encrypted: string;
-  is_enabled: number;
-  created_at: number;
-  updated_at: number;
-  enabled_at: number | null;
+  is_enabled: boolean;
+  created_at: Date;
+  updated_at: Date;
+  enabled_at: Date | null;
 }
 
 export interface UserTotpRecoveryCodesTable {
-  id: Generated<number>;
-  user_id: number;
+  id: Generated<string>;
+  user_id: IdColumn<UserId>;
   code_hash: string;
-  used_at: number | null;
-  created_at: number;
+  used_at: Date | null;
+  created_at: Date;
 }
 
 export interface UserInvitesTable {
-  id: Generated<number>;
-  user_id: number;
-  branch_id: number;
+  id: GeneratedId<UserInviteId>;
+  user_id: IdColumn<UserId>;
+  branch_id: IdColumn<BranchId>;
   email: string;
   role: Role;
   token_hash: string;
   status: "pending" | "accepted" | "revoked" | "expired";
-  expires_at: number;
-  created_by_user_id: number;
-  accepted_at: number | null;
-  revoked_at: number | null;
-  created_at: number;
-  sent_at: number | null;
+  expires_at: Date;
+  created_by_user_id: IdColumn<UserId>;
+  accepted_at: Date | null;
+  revoked_at: Date | null;
+  created_at: Date;
+  sent_at: Date | null;
 }
 
 export interface AuthFunnelEventsTable {
-  id: Generated<number>;
+  id: Generated<string>;
   trace_id: string;
   request_id: string;
   route_path: string | null;
@@ -149,5 +160,5 @@ export interface AuthFunnelEventsTable {
   method: AuthFunnelMethodValue | null;
   outcome: AuthFunnelOutcomeValue;
   code: string | null;
-  created_at: number;
+  created_at: Date;
 }

@@ -1,5 +1,9 @@
+import { databaseConfig } from "~/lib/env";
+
 import { createDb } from "./client";
 
-const dbUrl = process.env.WEB_DB_URL ?? "http://127.0.0.1:8080";
+// LISTEN/NOTIFY uses dedicated pg connections that cannot share the Kysely
+// client, so database infrastructure needs both the raw URL and `db`.
+export const dbUrl = databaseConfig().url;
 
 export const db = createDb(dbUrl);

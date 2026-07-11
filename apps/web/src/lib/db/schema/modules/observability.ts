@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // entity_id is text so one append-only table can key numeric ids and UUIDs.
@@ -6,17 +6,15 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   // heterogeneous per-type event data.
   await db.schema
     .createTable("events")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("entity_type", "varchar(40)", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey())
+    .addColumn("entity_type", "text", (col) => col.notNull())
     .addColumn("entity_id", "text", (col) => col.notNull())
-    .addColumn("type", "varchar(64)", (col) => col.notNull())
-    .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
-    .addColumn("subject_user_id", "integer", (col) =>
-      col.references("users.id"),
-    )
-    .addColumn("payload_json", "text")
-    .addColumn("changes_json", "text")
-    .addColumn("occurred_at", "integer", (col) => col.notNull())
+    .addColumn("type", "text", (col) => col.notNull())
+    .addColumn("actor_user_id", "uuid", (col) => col.references("users.id"))
+    .addColumn("subject_user_id", "uuid", (col) => col.references("users.id"))
+    .addColumn("payload_json", "jsonb")
+    .addColumn("changes_json", "jsonb")
+    .addColumn("occurred_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -45,15 +43,17 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("audit_action_policies")
-    .addColumn("action", "varchar(120)", (col) => col.primaryKey())
-    .addColumn("risk_level", "varchar(10)", (col) => col.notNull())
-    .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
-    .addColumn("is_protected", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("updated_by_user_id", "integer", (col) =>
+    .addColumn("action", "text", (col) => col.primaryKey())
+    .addColumn("risk_level", "text", (col) => col.notNull())
+    .addColumn("is_active", "boolean", (col) => col.notNull().defaultTo(true))
+    .addColumn("is_protected", "boolean", (col) =>
+      col.notNull().defaultTo(false),
+    )
+    .addColumn("updated_by_user_id", "uuid", (col) =>
       col.references("users.id"),
     )
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("updated_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -64,22 +64,24 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("action_observations")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("trace_id", "varchar(64)", (col) => col.notNull())
-    .addColumn("request_id", "varchar(64)", (col) => col.notNull())
-    .addColumn("route_path", "varchar(255)")
-    .addColumn("http_method", "varchar(10)")
-    .addColumn("action_name", "varchar(120)", (col) => col.notNull())
-    .addColumn("actor_user_id", "integer", (col) => col.references("users.id"))
-    .addColumn("actor_role", "varchar(50)")
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("trace_id", "text", (col) => col.notNull())
+    .addColumn("request_id", "text", (col) => col.notNull())
+    .addColumn("route_path", "text")
+    .addColumn("http_method", "text")
+    .addColumn("action_name", "text", (col) => col.notNull())
+    .addColumn("actor_user_id", "uuid", (col) => col.references("users.id"))
+    .addColumn("actor_role", "text")
+    .addColumn("status", "text", (col) => col.notNull())
     .addColumn("duration_ms", "integer", (col) => col.notNull())
-    .addColumn("error_code", "varchar(120)")
-    .addColumn("error_category", "varchar(40)", (col) => col.notNull())
-    .addColumn("public_error", "varchar(120)")
-    .addColumn("is_sensitive", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("error_code", "text")
+    .addColumn("error_category", "text", (col) => col.notNull())
+    .addColumn("public_error", "text")
+    .addColumn("is_sensitive", "boolean", (col) =>
+      col.notNull().defaultTo(false),
+    )
     .addColumn("input_summary", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -108,31 +110,29 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("agent_status_logs")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("latitude", "real", (col) => col.notNull())
-    .addColumn("longitude", "real", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
+    .addColumn("status", "text", (col) => col.notNull())
+    .addColumn("latitude", "double precision", (col) => col.notNull())
+    .addColumn("longitude", "double precision", (col) => col.notNull())
     .addColumn("comment", "text")
-    .addColumn("started_at", "integer", (col) => col.notNull())
-    .addColumn("ended_at", "integer")
+    .addColumn("started_at", "timestamptz", (col) => col.notNull())
+    .addColumn("ended_at", "timestamptz")
     .execute();
 
   await db.schema
     .createTable("auth_funnel_events")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("trace_id", "varchar(64)", (col) => col.notNull())
-    .addColumn("request_id", "varchar(64)", (col) => col.notNull())
-    .addColumn("route_path", "varchar(255)")
-    .addColumn("source", "varchar(16)", (col) => col.notNull())
-    .addColumn("event_name", "varchar(64)", (col) => col.notNull())
-    .addColumn("screen", "varchar(64)")
-    .addColumn("method", "varchar(32)")
-    .addColumn("outcome", "varchar(32)", (col) => col.notNull())
-    .addColumn("code", "varchar(64)")
-    .addColumn("created_at", "integer", (col) => col.notNull())
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("trace_id", "text", (col) => col.notNull())
+    .addColumn("request_id", "text", (col) => col.notNull())
+    .addColumn("route_path", "text")
+    .addColumn("source", "text", (col) => col.notNull())
+    .addColumn("event_name", "text", (col) => col.notNull())
+    .addColumn("screen", "text")
+    .addColumn("method", "text")
+    .addColumn("outcome", "text", (col) => col.notNull())
+    .addColumn("code", "text")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -157,75 +157,5 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createIndex("idx_auth_funnel_events_method_created")
     .on("auth_funnel_events")
     .columns(["method", "created_at"])
-    .execute();
-
-  await db.schema
-    .createTable("report_export_jobs")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("requested_by_user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("branch_id", "integer", (col) =>
-      col.notNull().references("branches.id"),
-    )
-    .addColumn("format", "varchar(10)", (col) => col.notNull())
-    .addColumn("filters_json", "text", (col) => col.notNull())
-    .addColumn("status", "varchar(20)", (col) => col.notNull())
-    .addColumn("rows_count", "integer")
-    .addColumn("file_storage_key", "varchar(255)")
-    .addColumn("file_sha256", "varchar(64)")
-    .addColumn("error_message", "text")
-    .addColumn("requested_at", "integer", (col) => col.notNull())
-    .addColumn("completed_at", "integer")
-    .addColumn("expires_at", "integer")
-    .addColumn("lease_owner", "varchar(64)")
-    .addColumn("lease_until", "integer")
-    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "integer")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_report_export_jobs_requester_time")
-    .on("report_export_jobs")
-    .columns(["requested_by_user_id", "requested_at"])
-    .execute();
-
-  await db.schema
-    .createIndex("idx_report_export_jobs_status_lease_time")
-    .on("report_export_jobs")
-    .columns(["status", "available_at", "lease_until", "requested_at"])
-    .execute();
-
-  await db.schema
-    .createIndex("idx_report_export_jobs_branch_time")
-    .on("report_export_jobs")
-    .columns(["branch_id", "requested_at"])
-    .execute();
-
-  await db.schema
-    .createIndex("idx_report_export_jobs_expires_time")
-    .on("report_export_jobs")
-    .columns(["status", "expires_at"])
-    .execute();
-
-  await db.schema
-    .createTable("report_export_downloads")
-    .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
-    .addColumn("export_job_id", "integer", (col) =>
-      col.notNull().references("report_export_jobs.id").onDelete("cascade"),
-    )
-    .addColumn("downloaded_by_user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("downloaded_at", "integer", (col) => col.notNull())
-    .addColumn("ip_hash", "varchar(64)")
-    .addColumn("user_agent_hash", "varchar(64)")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_report_export_downloads_job_time")
-    .on("report_export_downloads")
-    .columns(["export_job_id", "downloaded_at"])
     .execute();
 }

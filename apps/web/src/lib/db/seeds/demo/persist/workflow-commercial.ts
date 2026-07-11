@@ -3,19 +3,19 @@ import type { Kysely } from "kysely";
 import type { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
-import { BO1, EXEC_DANIELA, type OrganizationSeedKey } from "../scenario";
-import type { WorkflowArtifactIds, WorkflowLeadIds } from "./history-events";
+import { BACK_OFFICE, EXECUTIVES, type OrganizationSeedKey } from "../scenario";
+import type { WorkflowCommercialIds, WorkflowLeadIds } from "./history-events";
 
 export async function persistWorkflowCommercialData(
   db: Kysely<Database>,
   now: number,
   day: number,
   leadIds: WorkflowLeadIds,
-  artifacts: WorkflowArtifactIds,
+  commercialIds: WorkflowCommercialIds,
   getOrganizationId: (key: OrganizationSeedKey) => OrganizationId,
 ): Promise<void> {
   const { idQuoted, idForSale, idConverted } = leadIds;
-  const { qidQuoted, qidForSale, qidConverted, vidConverted } = artifacts;
+  const { qidQuoted, qidForSale, qidConverted, vidConverted } = commercialIds;
   await db
     .insertInto("workflow_rate_proposals")
     .values([
@@ -29,8 +29,8 @@ export async function persistWorkflowCommercialData(
         proposed_foreign_rate: 1.7,
         fee: 18.0,
         currency: "PEN",
-        proposed_by: BO1,
-        proposed_at: now - 10 * day,
+        proposed_by: BACK_OFFICE.JOSEFINA,
+        proposed_at: new Date(now - 10 * day),
         outcome: "pending",
         decided_at: null,
       },
@@ -44,10 +44,10 @@ export async function persistWorkflowCommercialData(
         proposed_foreign_rate: 1.6,
         fee: 20.0,
         currency: "PEN",
-        proposed_by: BO1,
-        proposed_at: now - 18 * day,
+        proposed_by: BACK_OFFICE.JOSEFINA,
+        proposed_at: new Date(now - 18 * day),
         outcome: "accepted",
-        decided_at: now - 16 * day,
+        decided_at: new Date(now - 16 * day),
       },
       {
         id: qidConverted,
@@ -59,10 +59,10 @@ export async function persistWorkflowCommercialData(
         proposed_foreign_rate: 1.8,
         fee: 15.0,
         currency: "PEN",
-        proposed_by: BO1,
-        proposed_at: now - 27 * day,
+        proposed_by: BACK_OFFICE.JOSEFINA,
+        proposed_at: new Date(now - 27 * day),
         outcome: "accepted",
-        decided_at: now - 25 * day,
+        decided_at: new Date(now - 25 * day),
       },
     ])
     .onConflict((oc) =>
@@ -99,8 +99,8 @@ export async function persistWorkflowCommercialData(
         district: "MIRAFLORES",
         province: "LIMA",
         department: "LIMA",
-        created_at: now - 22 * day,
-        created_by: EXEC_DANIELA,
+        created_at: new Date(now - 22 * day),
+        created_by: EXECUTIVES.CLAUDIA,
       },
     ])
     .onConflict((oc) =>
@@ -133,7 +133,7 @@ export async function persistWorkflowCommercialData(
         account_type: "CORRIENTE",
         account_number: "194-12345678-0-21",
         cci: null,
-        is_settlement: 1,
+        is_settlement: true,
       },
       {
         id: "demo-workflow-venue-account-usd",
@@ -143,7 +143,7 @@ export async function persistWorkflowCommercialData(
         account_type: "AHORROS",
         account_number: "0011-0245-9988776655",
         cci: "01124500998877665522",
-        is_settlement: 0,
+        is_settlement: false,
       },
     ])
     .onConflict((oc) =>
@@ -169,8 +169,8 @@ export async function persistWorkflowCommercialData(
         online_scope: "none",
         online_url: null,
         online_collection_mode: null,
-        updated_at: now - 28 * day,
-        updated_by: EXEC_DANIELA,
+        updated_at: new Date(now - 28 * day),
+        updated_by: EXECUTIVES.CLAUDIA,
       },
     ])
     .onConflict((oc) =>
@@ -192,16 +192,20 @@ export async function persistWorkflowCommercialData(
     .insertInto("people")
     .values({
       dni: "42715983",
-      full_name: "Daniel Gutierrez Paredes",
+      names: "Daniel",
+      first_surname: "Gutierrez",
+      second_surname: "Paredes",
       email: "daniel.gutierrez@andes.pe",
-      created_at: now - 29 * day,
-      updated_at: now - 29 * day,
+      created_at: new Date(now - 29 * day),
+      updated_at: new Date(now - 29 * day),
     })
     .onConflict((oc) =>
       oc.column("dni").doUpdateSet({
-        full_name: "Daniel Gutierrez Paredes",
+        names: "Daniel",
+        first_surname: "Gutierrez",
+        second_surname: "Paredes",
         email: "daniel.gutierrez@andes.pe",
-        updated_at: now - 29 * day,
+        updated_at: new Date(now - 29 * day),
       }),
     )
     .execute();
@@ -213,7 +217,7 @@ export async function persistWorkflowCommercialData(
 
   await db
     .updateTable("organizations")
-    .set({ giro_negocio: "Construccion de edificios residenciales" })
+    .set({ line_of_business: "Construccion de edificios residenciales" })
     .where("id", "=", convertedOrgId)
     .execute();
 
@@ -222,24 +226,14 @@ export async function persistWorkflowCommercialData(
     .values({
       person_id: legalRepPerson.id,
       organization_id: convertedOrgId,
-      dni: "42715983",
-      nombres: "Daniel",
-      apellido_paterno: "Gutierrez",
-      apellido_materno: "Paredes",
-      telefono: "987654321",
+      phone: "987654321",
       email: "daniel.gutierrez@andes.pe",
-      last_contacted_at: null,
-      last_contacted_by_user_id: null,
-      cooldown_until: null,
-      created_at: now - 29 * day,
-      updated_at: now - 29 * day,
+      created_at: new Date(now - 29 * day),
+      updated_at: new Date(now - 29 * day),
     })
     .onConflict((oc) =>
-      oc.columns(["organization_id", "dni"]).doUpdateSet((eb) => ({
-        nombres: eb.ref("excluded.nombres"),
-        apellido_paterno: eb.ref("excluded.apellido_paterno"),
-        apellido_materno: eb.ref("excluded.apellido_materno"),
-        telefono: eb.ref("excluded.telefono"),
+      oc.columns(["organization_id", "person_id"]).doUpdateSet((eb) => ({
+        phone: eb.ref("excluded.phone"),
         email: eb.ref("excluded.email"),
         updated_at: eb.ref("excluded.updated_at"),
       })),
@@ -248,9 +242,10 @@ export async function persistWorkflowCommercialData(
 
   const legalRep = await db
     .selectFrom("organization_people")
-    .select("id")
-    .where("organization_id", "=", convertedOrgId)
-    .where("dni", "=", "42715983")
+    .innerJoin("people", "people.id", "organization_people.person_id")
+    .select("organization_people.id as id")
+    .where("organization_people.organization_id", "=", convertedOrgId)
+    .where("people.dni", "=", "42715983")
     .executeTakeFirstOrThrow();
 
   const existingLegalRepRole = await db
@@ -266,8 +261,8 @@ export async function persistWorkflowCommercialData(
       .values({
         organization_person_id: legalRep.id,
         role: "LEGAL_REPRESENTATIVE",
-        is_primary: 1,
-        effective_from: now - 29 * day,
+        is_primary: true,
+        effective_from: new Date(now - 29 * day),
         effective_to: null,
       })
       .execute();

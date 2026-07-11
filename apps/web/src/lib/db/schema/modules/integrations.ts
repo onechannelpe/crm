@@ -1,25 +1,25 @@
-import type { Kysely } from "kysely";
+import { sql, type Kysely } from "kysely";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_integration_import_rows")
-    .addColumn("id", "text", (col) => col.primaryKey())
-    .addColumn("integration_job_id", "text", (col) =>
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("integration_job_id", "uuid", (col) =>
       col
         .notNull()
         .references("workflow_integration_jobs.id")
         .onDelete("cascade"),
     )
     .addColumn("row_number", "integer", (col) => col.notNull())
-    .addColumn("type", "varchar(30)", (col) => col.notNull())
-    .addColumn("ruc", "varchar(20)", (col) => col.notNull())
-    .addColumn("status_value", "varchar(40)")
-    .addColumn("prioridad_value", "varchar(40)")
-    .addColumn("state", "varchar(20)", (col) => col.notNull())
+    .addColumn("type", "text", (col) => col.notNull())
+    .addColumn("ruc", "text", (col) => col.notNull())
+    .addColumn("status_value", "text")
+    .addColumn("prioridad_value", "text")
+    .addColumn("state", "text", (col) => col.notNull())
     .addColumn("lead_id", "text", (col) => col.references("workflow_leads.id"))
     .addColumn("failure_reason", "text")
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("applied_at", "integer")
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("applied_at", "timestamptz")
     .execute();
 
   await db.schema

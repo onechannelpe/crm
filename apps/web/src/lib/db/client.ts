@@ -1,38 +1,52 @@
-import { createClient } from "@libsql/client";
-import { Kysely } from "kysely";
+import { Kysely, PostgresDialect } from "kysely";
+import { Pool, TypeOverrides, types } from "pg";
 
 import { createLogger } from "~/lib/observability/logger";
 
-import { LibSQLDialect } from "./libsql-dialect";
 import type { Database as DatabaseSchema } from "./types";
 
 const logger = createLogger("db-client");
 
-function normalizeDbUrl(input: string): string {
-  if (input === ":memory:") {
-    return input;
-  }
-  if (
-    input.startsWith("http://") ||
-    input.startsWith("https://") ||
-    input.startsWith("libsql://") ||
-    input.startsWith("file:")
-  ) {
-    return input;
-  }
-  return `file:${input}`;
+function createPoolTypes(): TypeOverrides {
+  const poolTypes = new TypeOverrides();
+
+  // node-postgres returns `numeric` as string to preserve arbitrary precision.
+  // This pool accepts JS floating-point precision for all `numeric` values.
+  poolTypes.setTypeParser(types.builtins.NUMERIC, Number.parseFloat);
+
+  // node-postgres returns `int8` as string because it can exceed
+  // Number.MAX_SAFE_INTEGER. All `int8` values returned through this pool
+  // must remain within that limit.
+  poolTypes.setTypeParser(types.builtins.INT8, Number.parseInt);
+
+  return poolTypes;
 }
 
-export function createDb(dbUrl: string): Kysely<DatabaseSchema> {
-  const normalizedUrl = normalizeDbUrl(dbUrl);
-  logger.info("db_initialization_started", { url: normalizedUrl });
+function connectionTarget(connectionString: string) {
+  try {
+    const url = new URL(connectionString);
+    return {
+      protocol: url.protocol.replace(":", ""),
+      host: url.hostname,
+      port: url.port || null,
+      database: url.pathname.replace(/^\//, "") || null,
+    };
+  } catch {
+    return {
+      protocol: "unknown",
+      host: "unparseable",
+      port: null,
+      database: null,
+    };
+  }
+}
 
-  const client = createClient({
-    url: normalizedUrl,
-    intMode: "number",
-  });
+export function createDb(connectionString: string): Kysely<DatabaseSchema> {
+  logger.info("db_initialization_started", connectionTarget(connectionString));
+
+  const pool = new Pool({ connectionString, types: createPoolTypes() });
 
   return new Kysely<DatabaseSchema>({
-    dialect: new LibSQLDialect(client),
+    dialect: new PostgresDialect({ pool }),
   });
 }

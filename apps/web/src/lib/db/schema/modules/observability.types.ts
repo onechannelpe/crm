@@ -1,15 +1,17 @@
 import type { Generated } from "kysely";
 
+import type { IdColumn, NullableIdColumn, UserId } from "~/server/shared/ids";
+
 import type { Role } from "./identity.types";
 
 export interface ActionObservationsTable {
-  id: Generated<number>;
+  id: Generated<string>;
   trace_id: string;
   request_id: string;
   route_path: string | null;
   http_method: string | null;
   action_name: string;
-  actor_user_id: number | null;
+  actor_user_id: NullableIdColumn<UserId>;
   actor_role: Role | null;
   status: "ok" | "error";
   duration_ms: number;
@@ -23,14 +25,14 @@ export interface ActionObservationsTable {
     | "rate_limit"
     | "internal";
   public_error: string | null;
-  is_sensitive: number;
+  is_sensitive: boolean;
   input_summary: string | null;
-  created_at: number;
+  created_at: Date;
 }
 
 export interface AgentStatusLogsTable {
-  id: Generated<number>;
-  user_id: number;
+  id: Generated<string>;
+  user_id: IdColumn<UserId>;
   status:
     | "available"
     | "feedback"
@@ -41,36 +43,36 @@ export interface AgentStatusLogsTable {
   latitude: number;
   longitude: number;
   comment: string | null;
-  started_at: number;
-  ended_at: number | null;
+  started_at: Date;
+  ended_at: Date | null;
 }
 
 export interface ActionRateLimitCountersTable {
-  id: Generated<number>;
+  id: Generated<string>;
   key_hash: string;
-  window_started_at: number;
+  window_started_at: Date;
   request_count: number;
-  updated_at: number;
+  updated_at: Date;
 }
 
 export interface AuthThrottleCountersTable {
-  id: Generated<number>;
+  id: Generated<string>;
   scope: "ip" | "account" | "ip_account";
   key_hash: string;
-  window_started_at: number;
+  window_started_at: Date;
   failure_count: number;
-  blocked_until: number | null;
-  updated_at: number;
+  blocked_until: Date | null;
+  updated_at: Date;
 }
 
 export interface AuthEventsTable {
-  id: Generated<number>;
-  user_id: number | null;
+  id: Generated<string>;
+  user_id: NullableIdColumn<UserId>;
   method: "password" | "passkey" | "totp";
   stage: "login" | "challenge" | "verify" | "recovery";
   outcome: "success" | "failure" | "throttled";
   reason: string | null;
   identifier_hash: string;
   ip_hash: string;
-  created_at: number;
+  created_at: Date;
 }

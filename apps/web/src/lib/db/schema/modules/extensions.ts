@@ -3,23 +3,21 @@ import type { Kysely } from "kysely";
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("extension_handoffs")
-    .addColumn("jti", "varchar(96)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("jti", "text", (col) => col.primaryKey())
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
+    .addColumn("branch_id", "uuid", (col) =>
       col.notNull().references("branches.id"),
     )
-    .addColumn("auth_session_id", "varchar(255)", (col) => col.notNull())
-    .addColumn("assignment_id", "integer", (col) =>
-      col.notNull().references("lead_assignments.id"),
+    .addColumn("auth_session_id", "text", (col) => col.notNull())
+    .addColumn("assignment_id", "uuid", (col) =>
+      col.notNull().references("contact_assignments.id"),
     )
-    .addColumn("origin", "varchar(255)", (col) => col.notNull())
-    .addColumn("installation_id", "varchar(36)")
-    .addColumn("installation_session_jti", "varchar(96)")
-    .addColumn("issued_at", "integer", (col) => col.notNull())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
-    .addColumn("consumed_at", "integer")
+    .addColumn("origin", "text", (col) => col.notNull())
+    .addColumn("installation_id", "uuid")
+    .addColumn("installation_session_jti", "text")
+    .addColumn("issued_at", "timestamptz", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
+    .addColumn("consumed_at", "timestamptz")
     .execute();
 
   await db.schema
@@ -30,23 +28,19 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("extension_installation_sessions")
-    .addColumn("jti", "varchar(96)", (col) => col.primaryKey())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("jti", "text", (col) => col.primaryKey())
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
+    .addColumn("branch_id", "uuid", (col) =>
       col.notNull().references("branches.id"),
     )
-    .addColumn("auth_session_id", "varchar(255)", (col) => col.notNull())
-    .addColumn("installation_id", "varchar(36)", (col) => col.notNull())
-    .addColumn("refresh_token_hash", "varchar(255)", (col) =>
-      col.notNull().unique(),
-    )
-    .addColumn("issued_at", "integer", (col) => col.notNull())
-    .addColumn("expires_at", "integer", (col) => col.notNull())
-    .addColumn("revoked_at", "integer")
-    .addColumn("last_seen_at", "integer")
-    .addColumn("refreshed_at", "integer")
+    .addColumn("auth_session_id", "text", (col) => col.notNull())
+    .addColumn("installation_id", "uuid", (col) => col.notNull())
+    .addColumn("refresh_token_hash", "text", (col) => col.notNull().unique())
+    .addColumn("issued_at", "timestamptz", (col) => col.notNull())
+    .addColumn("expires_at", "timestamptz", (col) => col.notNull())
+    .addColumn("revoked_at", "timestamptz")
+    .addColumn("last_seen_at", "timestamptz")
+    .addColumn("refreshed_at", "timestamptz")
     .execute();
 
   await db.schema
@@ -57,25 +51,23 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("extension_runtime_events")
-    .addColumn("id", "varchar(96)", (col) => col.primaryKey())
+    .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("sequence", "integer", (col) => col.notNull())
-    .addColumn("user_id", "integer", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("user_id", "uuid", (col) => col.notNull().references("users.id"))
+    .addColumn("branch_id", "uuid", (col) =>
       col.notNull().references("branches.id"),
     )
-    .addColumn("assignment_id", "integer", (col) =>
-      col.references("lead_assignments.id"),
+    .addColumn("assignment_id", "uuid", (col) =>
+      col.references("contact_assignments.id"),
     )
-    .addColumn("contact_id", "integer", (col) =>
+    .addColumn("contact_id", "uuid", (col) =>
       col.references("organization_people.id"),
     )
-    .addColumn("call_session_id", "varchar(255)")
-    .addColumn("type", "varchar(32)", (col) => col.notNull())
-    .addColumn("payload_json", "text", (col) => col.notNull())
-    .addColumn("created_at", "integer", (col) => col.notNull())
-    .addColumn("received_at", "integer", (col) => col.notNull())
+    .addColumn("call_session_id", "text")
+    .addColumn("type", "text", (col) => col.notNull())
+    .addColumn("payload_json", "jsonb", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("received_at", "timestamptz", (col) => col.notNull())
     .execute();
 
   await db.schema
@@ -92,24 +84,24 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("extension_executive_statuses")
-    .addColumn("user_id", "integer", (col) =>
+    .addColumn("user_id", "uuid", (col) =>
       col.primaryKey().references("users.id"),
     )
-    .addColumn("branch_id", "integer", (col) =>
+    .addColumn("branch_id", "uuid", (col) =>
       col.notNull().references("branches.id"),
     )
-    .addColumn("assignment_id", "integer", (col) =>
-      col.references("lead_assignments.id"),
+    .addColumn("assignment_id", "uuid", (col) =>
+      col.references("contact_assignments.id"),
     )
-    .addColumn("contact_id", "integer", (col) =>
+    .addColumn("contact_id", "uuid", (col) =>
       col.references("organization_people.id"),
     )
-    .addColumn("call_session_id", "varchar(255)")
-    .addColumn("presence_status", "varchar(20)")
-    .addColumn("presence_updated_at", "integer")
-    .addColumn("sync_health", "varchar(20)", (col) => col.notNull())
-    .addColumn("sync_updated_at", "integer")
-    .addColumn("source_event_id", "varchar(96)")
+    .addColumn("call_session_id", "text")
+    .addColumn("presence_status", "text")
+    .addColumn("presence_updated_at", "timestamptz")
+    .addColumn("sync_health", "text", (col) => col.notNull())
+    .addColumn("sync_updated_at", "timestamptz")
+    .addColumn("source_event_id", "text")
     .addColumn("source_event_sequence", "integer")
     .execute();
 

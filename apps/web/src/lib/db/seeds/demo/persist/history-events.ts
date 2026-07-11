@@ -2,19 +2,7 @@ import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "../../../types";
-import {
-  BO1,
-  BO2,
-  EXEC_ANDREA,
-  EXEC_CAMILA,
-  EXEC_DANIELA,
-  EXEC_GABRIEL,
-  EXEC_PATRICIA,
-  EXEC_RENATO,
-  EXEC_ROBERTO,
-  SUP1,
-  SUP2,
-} from "../scenario";
+import { BACK_OFFICE, EXECUTIVES, SUPERVISORS } from "../scenario";
 
 export type WorkflowLeadIds = {
   idPending: string;
@@ -26,7 +14,7 @@ export type WorkflowLeadIds = {
   idRejected: string;
 };
 
-export type WorkflowArtifactIds = {
+export type WorkflowCommercialIds = {
   qidQuoted: string;
   qidForSale: string;
   qidConverted: string;
@@ -38,7 +26,7 @@ export async function persistWorkflowHistoryEvents(
   now: number,
   day: number,
   leadIds: WorkflowLeadIds,
-  artifacts: WorkflowArtifactIds,
+  commercialIds: WorkflowCommercialIds,
 ): Promise<void> {
   const {
     idPending,
@@ -49,7 +37,7 @@ export async function persistWorkflowHistoryEvents(
     idConverted,
     idRejected,
   } = leadIds;
-  const { qidQuoted, qidForSale, qidConverted, vidConverted } = artifacts;
+  const { qidQuoted, qidForSale, qidConverted, vidConverted } = commercialIds;
   await db
     .deleteFrom("events")
     .where("entity_type", "=", "lead")
@@ -68,7 +56,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idPending,
       event_type: "lead_registered",
-      actor_user_id: SUP1,
+      actor_user_id: SUPERVISORS.DIEGO,
       subject_user_id: null,
       payload_json: JSON.stringify({
         ruc: "20103615080",
@@ -80,9 +68,9 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idPending,
       event_type: "lead_assigned",
-      actor_user_id: SUP1,
-      subject_user_id: EXEC_CAMILA,
-      payload_json: JSON.stringify({ executiveId: EXEC_CAMILA }),
+      actor_user_id: SUPERVISORS.DIEGO,
+      subject_user_id: EXECUTIVES.CAMILA,
+      payload_json: JSON.stringify({ executiveId: EXECUTIVES.CAMILA }),
       occurred_at: now - day + 1_000,
     },
 
@@ -90,7 +78,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idNeeds,
       event_type: "lead_registered",
-      actor_user_id: SUP1,
+      actor_user_id: SUPERVISORS.DIEGO,
       subject_user_id: null,
       payload_json: JSON.stringify({
         ruc: "20103176060",
@@ -102,16 +90,16 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idNeeds,
       event_type: "lead_assigned",
-      actor_user_id: SUP1,
-      subject_user_id: EXEC_PATRICIA,
-      payload_json: JSON.stringify({ executiveId: EXEC_PATRICIA }),
+      actor_user_id: SUPERVISORS.DIEGO,
+      subject_user_id: EXECUTIVES.MATIAS,
+      payload_json: JSON.stringify({ executiveId: EXECUTIVES.MATIAS }),
       occurred_at: now - 4 * day + 1_000,
     },
     {
       id: randomUUIDv7(),
       lead_id: idNeeds,
       event_type: "lead_reviewed",
-      actor_user_id: BO1,
+      actor_user_id: BACK_OFFICE.JOSEFINA,
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
@@ -139,7 +127,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idReady,
       event_type: "lead_registered",
-      actor_user_id: SUP1,
+      actor_user_id: SUPERVISORS.DIEGO,
       subject_user_id: null,
       payload_json: JSON.stringify({
         ruc: "20538856674",
@@ -151,16 +139,16 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idReady,
       event_type: "lead_assigned",
-      actor_user_id: SUP1,
-      subject_user_id: EXEC_ROBERTO,
-      payload_json: JSON.stringify({ executiveId: EXEC_ROBERTO }),
+      actor_user_id: SUPERVISORS.DIEGO,
+      subject_user_id: EXECUTIVES.LUCIA,
+      payload_json: JSON.stringify({ executiveId: EXECUTIVES.LUCIA }),
       occurred_at: now - 7 * day + 1_000,
     },
     {
       id: randomUUIDv7(),
       lead_id: idReady,
       event_type: "lead_reviewed",
-      actor_user_id: BO1,
+      actor_user_id: BACK_OFFICE.JOSEFINA,
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
@@ -188,7 +176,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idQuoted,
       event_type: "lead_registered",
-      actor_user_id: SUP2,
+      actor_user_id: SUPERVISORS.NICOLAS,
       subject_user_id: null,
       payload_json: JSON.stringify({
         ruc: "20542245671",
@@ -200,16 +188,16 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idQuoted,
       event_type: "lead_assigned",
-      actor_user_id: SUP2,
-      subject_user_id: EXEC_ANDREA,
-      payload_json: JSON.stringify({ executiveId: EXEC_ANDREA }),
+      actor_user_id: SUPERVISORS.NICOLAS,
+      subject_user_id: EXECUTIVES.SOFIA,
+      payload_json: JSON.stringify({ executiveId: EXECUTIVES.SOFIA }),
       occurred_at: now - 14 * day + 1_000,
     },
     {
       id: randomUUIDv7(),
       lead_id: idQuoted,
       event_type: "lead_reviewed",
-      actor_user_id: BO2,
+      actor_user_id: BACK_OFFICE.GABRIEL,
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
@@ -236,7 +224,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idQuoted,
       event_type: "rate_proposed",
-      actor_user_id: BO2,
+      actor_user_id: BACK_OFFICE.GABRIEL,
       subject_user_id: null,
       payload_json: JSON.stringify({
         proposalId: qidQuoted,
@@ -250,7 +238,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idForSale,
       event_type: "lead_registered",
-      actor_user_id: SUP1,
+      actor_user_id: SUPERVISORS.DIEGO,
       subject_user_id: null,
       payload_json: JSON.stringify({
         ruc: "20394809218",
@@ -262,16 +250,16 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idForSale,
       event_type: "lead_assigned",
-      actor_user_id: SUP1,
-      subject_user_id: EXEC_RENATO,
-      payload_json: JSON.stringify({ executiveId: EXEC_RENATO }),
+      actor_user_id: SUPERVISORS.DIEGO,
+      subject_user_id: EXECUTIVES.FERNANDA,
+      payload_json: JSON.stringify({ executiveId: EXECUTIVES.FERNANDA }),
       occurred_at: now - 21 * day + 1_000,
     },
     {
       id: randomUUIDv7(),
       lead_id: idForSale,
       event_type: "lead_reviewed",
-      actor_user_id: BO1,
+      actor_user_id: BACK_OFFICE.JOSEFINA,
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
@@ -298,7 +286,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idForSale,
       event_type: "rate_proposed",
-      actor_user_id: BO1,
+      actor_user_id: BACK_OFFICE.JOSEFINA,
       subject_user_id: null,
       payload_json: JSON.stringify({
         proposalId: qidForSale,
@@ -311,7 +299,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idForSale,
       event_type: "rate_accepted",
-      actor_user_id: EXEC_RENATO,
+      actor_user_id: EXECUTIVES.FERNANDA,
       subject_user_id: null,
       payload_json: JSON.stringify({ proposalId: qidForSale }),
       occurred_at: now - 16 * day,
@@ -333,7 +321,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idConverted,
       event_type: "lead_registered",
-      actor_user_id: SUP1,
+      actor_user_id: SUPERVISORS.DIEGO,
       subject_user_id: null,
       payload_json: JSON.stringify({
         ruc: "20219523468",
@@ -345,16 +333,16 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idConverted,
       event_type: "lead_assigned",
-      actor_user_id: SUP1,
-      subject_user_id: EXEC_DANIELA,
-      payload_json: JSON.stringify({ executiveId: EXEC_DANIELA }),
+      actor_user_id: SUPERVISORS.DIEGO,
+      subject_user_id: EXECUTIVES.CLAUDIA,
+      payload_json: JSON.stringify({ executiveId: EXECUTIVES.CLAUDIA }),
       occurred_at: now - 30 * day + 1_000,
     },
     {
       id: randomUUIDv7(),
       lead_id: idConverted,
       event_type: "lead_reviewed",
-      actor_user_id: BO1,
+      actor_user_id: BACK_OFFICE.JOSEFINA,
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "DISPONIBLE",
@@ -381,7 +369,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idConverted,
       event_type: "rate_proposed",
-      actor_user_id: BO1,
+      actor_user_id: BACK_OFFICE.JOSEFINA,
       subject_user_id: null,
       payload_json: JSON.stringify({
         proposalId: qidConverted,
@@ -394,7 +382,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idConverted,
       event_type: "rate_accepted",
-      actor_user_id: EXEC_DANIELA,
+      actor_user_id: EXECUTIVES.CLAUDIA,
       subject_user_id: null,
       payload_json: JSON.stringify({ proposalId: qidConverted }),
       occurred_at: now - 25 * day,
@@ -415,7 +403,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idConverted,
       event_type: "venue_added",
-      actor_user_id: EXEC_DANIELA,
+      actor_user_id: EXECUTIVES.CLAUDIA,
       subject_user_id: null,
       payload_json: JSON.stringify({
         venueId: vidConverted,
@@ -427,7 +415,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idConverted,
       event_type: "venue_accounts_added",
-      actor_user_id: EXEC_DANIELA,
+      actor_user_id: EXECUTIVES.CLAUDIA,
       subject_user_id: null,
       payload_json: JSON.stringify({ venueId: vidConverted }),
       occurred_at: now - 20 * day,
@@ -449,7 +437,7 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idRejected,
       event_type: "lead_registered",
-      actor_user_id: SUP2,
+      actor_user_id: SUPERVISORS.NICOLAS,
       subject_user_id: null,
       payload_json: JSON.stringify({
         ruc: "20353745400",
@@ -461,16 +449,16 @@ export async function persistWorkflowHistoryEvents(
       id: randomUUIDv7(),
       lead_id: idRejected,
       event_type: "lead_assigned",
-      actor_user_id: SUP2,
-      subject_user_id: EXEC_GABRIEL,
-      payload_json: JSON.stringify({ executiveId: EXEC_GABRIEL }),
+      actor_user_id: SUPERVISORS.NICOLAS,
+      subject_user_id: EXECUTIVES.PABLO,
+      payload_json: JSON.stringify({ executiveId: EXECUTIVES.PABLO }),
       occurred_at: now - 3 * day + 1_000,
     },
     {
       id: randomUUIDv7(),
       lead_id: idRejected,
       event_type: "lead_reviewed",
-      actor_user_id: BO2,
+      actor_user_id: BACK_OFFICE.GABRIEL,
       subject_user_id: null,
       payload_json: JSON.stringify({
         status: "CARTERIZADO",
@@ -507,7 +495,7 @@ export async function persistWorkflowHistoryEvents(
         subject_user_id: event.subject_user_id,
         payload_json: event.payload_json,
         changes_json: null,
-        occurred_at: event.occurred_at,
+        occurred_at: new Date(event.occurred_at),
       })),
     )
     .execute();

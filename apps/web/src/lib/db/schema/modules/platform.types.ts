@@ -1,53 +1,29 @@
-import type { Generated } from "kysely";
+import type { Json } from "~/contracts/json";
+import type {
+  EventId,
+  IdColumn,
+  NullableIdColumn,
+  UserId,
+} from "~/server/shared/ids";
 
 export interface EventsTable {
-  id: string;
+  id: IdColumn<EventId>;
   entity_type: string;
   entity_id: string;
   type: string;
-  actor_user_id: number | null;
-  subject_user_id: number | null;
-  payload_json: string | null;
-  changes_json: string | null;
-  occurred_at: number;
+  actor_user_id: NullableIdColumn<UserId>;
+  subject_user_id: NullableIdColumn<UserId>;
+  payload_json: Json | null;
+  changes_json: Json | null;
+  occurred_at: Date;
 }
 
 export interface AuditActionPoliciesTable {
   action: string;
   risk_level: "high" | "medium" | "low";
-  is_active: number;
-  is_protected: number;
-  updated_by_user_id: number | null;
-  created_at: number;
-  updated_at: number;
-}
-
-export interface ReportExportJobsTable {
-  id: Generated<number>;
-  requested_by_user_id: number;
-  branch_id: number;
-  format: "csv" | "xlsx";
-  filters_json: string;
-  status: "queued" | "running" | "completed" | "failed" | "expired";
-  rows_count: number | null;
-  file_storage_key: string | null;
-  file_sha256: string | null;
-  error_message: string | null;
-  requested_at: number;
-  completed_at: number | null;
-  expires_at: number | null;
-  lease_owner: string | null;
-  lease_until: number | null;
-  attempt_count: number;
-  max_attempts: number;
-  available_at: number | null;
-}
-
-export interface ReportExportDownloadsTable {
-  id: Generated<number>;
-  export_job_id: number;
-  downloaded_by_user_id: number;
-  downloaded_at: number;
-  ip_hash: string | null;
-  user_agent_hash: string | null;
+  is_active: boolean;
+  is_protected: boolean;
+  updated_by_user_id: NullableIdColumn<UserId>;
+  created_at: Date;
+  updated_at: Date;
 }
