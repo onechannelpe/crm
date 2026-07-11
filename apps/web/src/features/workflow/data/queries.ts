@@ -2,8 +2,10 @@ import { query } from "@solidjs/router";
 
 import {
   queryAssignableExecutives,
+  queryFulfillmentQueue,
   queryLeadDetail,
   queryLeadList,
+  queryPendingQuotationCount,
 } from "~/actions/workflow/queries/records";
 import {
   type ListAssignableExecutivesInput,
@@ -11,8 +13,10 @@ import {
 } from "~/contracts/workflow/inputs";
 import {
   type AssignableExecutiveView,
+  type FulfillmentQueueView,
   type LeadDetailView,
   type LeadListView,
+  type PendingQuotationCountView,
 } from "~/contracts/workflow/views";
 
 function normalizeLeadListFilters(
@@ -48,4 +52,14 @@ export const assignableExecutivesQuery = query(
   (input: ListAssignableExecutivesInput): Promise<AssignableExecutiveView[]> =>
     queryAssignableExecutives(input),
   "workflow.assignableExecutives",
+);
+
+export const fulfillmentQueueQuery = query(
+  (): Promise<FulfillmentQueueView> => queryFulfillmentQueue(),
+  "workflow.fulfillmentQueue",
+);
+
+export const pendingQuotationCountQuery = query(
+  (): Promise<PendingQuotationCountView> => queryPendingQuotationCount(),
+  "workflow.pendingQuotationCount",
 );

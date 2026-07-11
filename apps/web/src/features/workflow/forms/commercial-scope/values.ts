@@ -18,7 +18,7 @@ export type CommercialScopeFormValues = {
   currentCreditRate: string;
   gpv: string;
   ticket: string;
-  giroNegocio: string;
+  lineOfBusiness: string;
   settlementBank: SettlementBank | "";
   posCount: string;
 };
@@ -29,7 +29,7 @@ export const EMPTY_COMMERCIAL_SCOPE_VALUES: CommercialScopeFormValues = {
   currentCreditRate: "",
   gpv: "",
   ticket: "",
-  giroNegocio: "",
+  lineOfBusiness: "",
   settlementBank: "",
   posCount: "",
 };
@@ -54,7 +54,7 @@ function validateCommercialScope(
     return "Tasa crédito actual es requerida";
   if (!isNonNegativeNumber(values.gpv)) return "GPV es requerido";
   if (!isNonNegativeNumber(values.ticket)) return "Ticket es requerido";
-  if (!values.giroNegocio.trim()) return "Giro de negocio es requerido";
+  if (!values.lineOfBusiness.trim()) return "Giro de negocio es requerido";
   if (!values.settlementBank) return "Banco de abono es requerido";
   if (!isPositiveInteger(values.posCount))
     return "Cantidad de POS debe ser un entero mayor a 0";
@@ -82,7 +82,7 @@ export function toCommercialScopePayload(
       currentCreditRate: Number(values.currentCreditRate),
       gpv: Number(values.gpv),
       ticket: Number(values.ticket),
-      giroNegocio: values.giroNegocio.trim(),
+      lineOfBusiness: values.lineOfBusiness.trim(),
       settlementBank: bank,
       posCount: Number(values.posCount),
     },

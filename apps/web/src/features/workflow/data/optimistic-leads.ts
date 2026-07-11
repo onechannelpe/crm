@@ -14,9 +14,9 @@ export function createOptimisticLeadRow(input: {
   ruc: string;
   legalName: string | null;
   address: string | null;
-  executiveId: number;
+  executiveId: string;
   executiveName: string;
-  createdBy: number;
+  createdBy: string;
   createdByName: string;
   now?: number;
 }): OptimisticLeadRow {
@@ -41,7 +41,7 @@ export function createOptimisticLeadRow(input: {
   };
 }
 
-/** Reactive read for source() and other tracking contexts. */
+// Reactive read for source() and other tracking contexts.
 export function getOptimisticLeadRows(key: string): OptimisticLeadRow[] {
   return state[key] ?? [];
 }

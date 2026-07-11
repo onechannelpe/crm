@@ -9,8 +9,6 @@ export type CommercialScopeBinding = {
   ) => void;
 };
 
-// Draft records are not LeadDetailView values. They carry the in-progress
-// preview and submit affordances needed before a persisted lead exists.
 export type LeadRecordContext = {
   kind: "lead";
   data: LeadDetailView;
@@ -19,7 +17,6 @@ export type LeadRecordContext = {
 export type DraftRecordContext = {
   kind: "draft";
   ruc: string;
-  // Enrichment owns organization identity; draft forms display but never submit it.
   legalName: string | null;
   address: string | null;
   engineStatus: string;

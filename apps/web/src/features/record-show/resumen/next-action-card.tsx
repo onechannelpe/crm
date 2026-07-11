@@ -5,8 +5,12 @@ import Point from "~/components/icons/point";
 import { Button } from "~/components/ui/input/button";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
+import { FulfillmentPanel } from "~/features/workflow/detail/forms/fulfillment/fulfillment-panel";
 import { ProposeRateSection } from "~/features/workflow/detail/forms/pricing/propose-rate";
 import { RateProposalSection } from "~/features/workflow/detail/forms/pricing/rate-proposal";
+import { ExpiredPanel } from "~/features/workflow/detail/forms/review/expired-panel";
+import { QualifyForm } from "~/features/workflow/detail/forms/review/qualify-form";
+import { formatDateTime } from "~/lib/utils";
 
 import {
   resolveNextAction,
@@ -28,6 +32,18 @@ function asRateDecision(
   return action.kind === "decide-rate" ? action : null;
 }
 
+function asExpired(
+  action: NextAction,
+): Extract<NextAction, { kind: "expired" }> | null {
+  return action.kind === "expired" ? action : null;
+}
+
+function asDisqualified(
+  action: NextAction,
+): Extract<NextAction, { kind: "disqualified" }> | null {
+  return action.kind === "disqualified" ? action : null;
+}
+
 export function NextActionCard(props: {
   data: LeadDetailView;
   onNavigate: (id: RecordTabId) => void;
@@ -44,6 +60,10 @@ export function NextActionCard(props: {
             <p class={styles.messageBody}>{message().message}</p>
           </div>
         )}
+      </Match>
+
+      <Match when={action().kind === "qualify"}>
+        <QualifyForm leadId={props.data.lead.id} />
       </Match>
 
       <Match when={action().kind === "propose-rate"}>
@@ -67,6 +87,10 @@ export function NextActionCard(props: {
             canEdit={props.data.availableActions.includes("edit-rate-proposal")}
           />
         )}
+      </Match>
+
+      <Match when={action().kind === "fulfillment"}>
+        <FulfillmentPanel data={props.data} />
       </Match>
 
       <Match when={action().kind === "setup-checklist"}>
@@ -93,6 +117,49 @@ export function NextActionCard(props: {
             Ir a afiliación
           </Button>
         </div>
+      </Match>
+
+      <Match when={asExpired(action())}>
+        {(expired) => (
+          <ExpiredPanel
+            leadId={props.data.lead.id}
+            canRestart={expired().canRestart}
+          />
+        )}
+      </Match>
+
+      <Match when={asDisqualified(action())}>
+        {(disqualified) => (
+          <div class={styles.messageCard} data-tone="terminal">
+            <p class={styles.messageTitle}>Descalificado</p>
+            <p class={styles.messageBody}>
+              Este cliente no continúa en el flujo.
+            </p>
+            <Show
+              when={disqualified().disqualification}
+              fallback={
+                <p class={styles.receiptNote}>Sin motivo registrado.</p>
+              }
+            >
+              {(info) => (
+                <dl class={styles.receipt}>
+                  <div class={styles.receiptRow}>
+                    <dt>Motivo</dt>
+                    <dd>{info().reason}</dd>
+                  </div>
+                  <div class={styles.receiptRow}>
+                    <dt>Registrado por</dt>
+                    <dd>{info().byName}</dd>
+                  </div>
+                  <div class={styles.receiptRow}>
+                    <dt>Fecha</dt>
+                    <dd>{formatDateTime(info().at)}</dd>
+                  </div>
+                </dl>
+              )}
+            </Show>
+          </div>
+        )}
       </Match>
     </Switch>
   );

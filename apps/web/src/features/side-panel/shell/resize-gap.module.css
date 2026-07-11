@@ -1,13 +1,38 @@
 .gap {
-  cursor: col-resize;
   border: 0;
   flex-shrink: 0;
   height: 100%;
   margin: 0;
-  transition: width 0.15s ease;
+  overflow: visible;
+  position: relative;
+  width: 0;
+}
+
+.gap::before {
+  content: "";
+  cursor: col-resize;
+  height: 100%;
+  left: -4px;
+  position: absolute;
+  top: 0;
   width: 8px;
 }
 
+.gap::after {
+  background: transparent;
+  content: "";
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  transition: background var(--motion-fast) var(--ease-standard);
+  width: 1px;
+}
+
+.gap:hover::after {
+  background: var(--t-border-color-strong);
+}
+
 .gapClosed {
-  width: 0;
+  display: none;
 }

@@ -1,0 +1,29 @@
+.select {
+  background-color: var(--background-transparent-lighter);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  height: 24px;
+  outline: none;
+  width: 100%;
+}
+
+.select:focus {
+  border-color: var(--color-blue);
+}
+
+.warning {
+  color: var(--warning);
+  font-size: var(--font-size-sm);
+  margin: var(--spacing-2) 0 0;
+}
+
+.error {
+  color: var(--destructive);
+  font-size: var(--font-size-sm);
+  padding-top: var(--spacing-2);
+  text-align: right;
+}

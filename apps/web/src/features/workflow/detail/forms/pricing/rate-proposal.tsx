@@ -49,7 +49,7 @@ import { revalidateWorkflowLead } from "../../../data/revalidate-workflow";
 import styles from "../quoted.module.css";
 
 type StagedFile = {
-  artifactId: string;
+  fileId: string;
   filename: string;
   sizeBytes: number;
 };
@@ -176,8 +176,9 @@ export function RateProposalSection(props: RateProposalSectionProps) {
       const results = await Promise.all(
         files.map((file) => {
           const formData = new FormData();
+          formData.set("leadId", props.leadId);
           formData.set("file", file);
-          return uploadLeadRateRevisionFile(props.leadId, formData);
+          return uploadLeadRateRevisionFile(formData);
         }),
       );
 
@@ -187,7 +188,7 @@ export function RateProposalSection(props: RateProposalSectionProps) {
       results.forEach((result) => {
         if (result.ok) {
           successes.push({
-            artifactId: result.value.artifactId,
+            fileId: result.value.fileId,
             filename: result.value.filename,
             sizeBytes: result.value.sizeBytes,
           });
@@ -214,8 +215,8 @@ export function RateProposalSection(props: RateProposalSectionProps) {
     }
   }
 
-  function removeStagedFile(artifactId: string) {
-    setStagedFiles((prev) => prev.filter((f) => f.artifactId !== artifactId));
+  function removeStagedFile(fileId: string) {
+    setStagedFiles((prev) => prev.filter((f) => f.fileId !== fileId));
   }
 
   async function handleSubmitRevision(e: SubmitEvent) {
@@ -235,7 +236,7 @@ export function RateProposalSection(props: RateProposalSectionProps) {
       await requestRevision({
         leadId: props.leadId,
         justification: justification().trim(),
-        artifactIds: stagedFiles().map((f) => f.artifactId),
+        fileIds: stagedFiles().map((f) => f.fileId),
       });
       await revalidateWorkflowLead(props.leadId);
     } catch (caught) {
@@ -336,7 +337,11 @@ export function RateProposalSection(props: RateProposalSectionProps) {
           </Show>
         </FieldTable>
 
-        <Show when={!showRevisionForm()}>
+        <Show
+          when={
+            !showRevisionForm() && (props.canAccept || props.canRequestRevision)
+          }
+        >
           <RecordDetailSectionActions stack>
             <Show when={props.canAccept}>
               <Button
@@ -419,7 +424,7 @@ export function RateProposalSection(props: RateProposalSectionProps) {
                           <button
                             type="button"
                             class={styles.removeFileButton}
-                            onClick={() => removeStagedFile(file.artifactId)}
+                            onClick={() => removeStagedFile(file.fileId)}
                           >
                             <Trash size={14} />
                           </button>

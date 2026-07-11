@@ -29,6 +29,8 @@ import {
 import { CommercialScopeFields } from "~/features/workflow/forms/commercial-scope/fields";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
 
+import { CommercialScopeGroup } from "./commercial-scope-group";
+
 type FieldIcon = (props: { size?: number }) => JSX.Element;
 
 function FieldsSectionFrame(props: { children: JSX.Element }) {
@@ -126,6 +128,7 @@ export function DetailFieldsSection(props: { data: LeadDetailView }) {
         <RecordDetailSectionTitle text="Campos" />
       </RecordDetailSectionHeader>
       <RecordDetailSectionBody>
+        <CommercialScopeGroup data={props.data} />
         <For each={LEAD_DETAIL_FIELD_GROUPS}>
           {(group) => <FieldGroupSection group={group} data={props.data} />}
         </For>

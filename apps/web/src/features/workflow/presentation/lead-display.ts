@@ -8,8 +8,10 @@ const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
   DISQUALIFIED: "Descalificado",
   PRICING: "Definición de tarifa",
   SETUP: "Afiliación",
+  FULFILLMENT: "Entrega",
   LIVE: "Activo",
   EXPIRED: "Vencido",
+  CLOSED_LOST: "Cerrado",
 };
 
 const LEAD_NEXT_STEP_LABELS: Record<LeadNextStep, string> = {
@@ -18,6 +20,7 @@ const LEAD_NEXT_STEP_LABELS: Record<LeadNextStep, string> = {
   ACCEPT_RATE: "Confirmar tarifa con el cliente",
   DEFINE_DIGITAL_POLICY: "Definir política digital",
   REGISTER_VENUE_ACCOUNTS: "Registrar cuentas de sedes",
+  COMPLETE_FULFILLMENT: "Completar entrega y registro de venta",
 };
 
 export function leadStageLabel(stage: LeadStage): string {

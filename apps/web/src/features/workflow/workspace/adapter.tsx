@@ -8,9 +8,11 @@ import {
 } from "solid-js";
 
 import { requestWorkflowLeadsExportDownloadToken } from "~/actions/workflow/files";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import type { LeadListRowView, LeadListView } from "~/contracts/workflow/views";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type {
@@ -19,7 +21,10 @@ import type {
 } from "~/features/record-index/model/adapter";
 import { mergeLeadRows } from "~/features/workflow/data/merge-lead-rows";
 import { getOptimisticLeadRows } from "~/features/workflow/data/optimistic-leads";
-import { leadListQuery } from "~/features/workflow/data/queries";
+import {
+  leadListQuery,
+  pendingQuotationCountQuery,
+} from "~/features/workflow/data/queries";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { downloadWithToken } from "~/lib/files/client";
 
@@ -153,7 +158,26 @@ export function LeadsWorkspace() {
   };
 
   const { rowOpen } = useOpenLeadRecord();
-  const createAction = useCreateLeadRecordAction();
+  const { enqueueWarningSnackBar } = useSnackBar();
+
+  const canRegister = hasPermission(user.role, "lead:register");
+  const pendingQuotations = createAsync(
+    () =>
+      canRegister
+        ? pendingQuotationCountQuery()
+        : Promise.resolve({ count: 0, limit: MAX_PENDING_QUOTATION_DECISIONS }),
+    { initialValue: { count: 0, limit: MAX_PENDING_QUOTATION_DECISIONS } },
+  );
+  const isRegistrationBlocked = () =>
+    pendingQuotations().count >= pendingQuotations().limit;
+
+  const createAction = useCreateLeadRecordAction({
+    isBlocked: isRegistrationBlocked,
+    onBlocked: () =>
+      enqueueWarningSnackBar(
+        `Tienes ${pendingQuotations().count} cotizaciones pendientes de decisión. Acéptalas, solicita revisión o ciérralas para registrar nuevos clientes.`,
+      ),
+  });
   const recordImport = useRecordsImport();
   const canManageIntegrations = hasPermission(user.role, "integration:manage");
 
@@ -186,9 +210,7 @@ export function LeadsWorkspace() {
       title: "No hay clientes",
       description: "No existen resultados para esta vista.",
     },
-    createAction: hasPermission(user.role, "lead:register")
-      ? createAction
-      : undefined,
+    createAction: canRegister ? createAction : undefined,
     views: {
       catalog: { available, defaultId: defaultViewId },
       value: { value: activeId, set: setActiveId },

@@ -12,7 +12,7 @@ import {
 
 export interface ExecutivePickerProps {
   leadId: string;
-  currentUserId: number;
+  currentUserId: string;
   onSelect: () => void;
   onClose: () => void;
 }
@@ -20,7 +20,7 @@ export interface ExecutivePickerProps {
 export function ExecutivePicker(props: ExecutivePickerProps) {
   const reassign = useAction(reassignLeadMutation);
 
-  async function handleSelect(executiveId: number) {
+  async function handleSelect(executiveId: string) {
     try {
       await reassign({ leadId: props.leadId, newExecutiveId: executiveId });
       // Reassigning changes ownership, which affects "mine" list filters, so the

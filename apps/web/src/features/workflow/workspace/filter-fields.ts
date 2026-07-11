@@ -16,6 +16,7 @@ const LEAD_STAGE_FILTER_OPTIONS = [
   { value: "stage:SETUP", label: leadStageLabel("SETUP") },
   { value: "stage:LIVE", label: leadStageLabel("LIVE") },
   { value: "stage:DISQUALIFIED", label: leadStageLabel("DISQUALIFIED") },
+  { value: "stage:CLOSED_LOST", label: leadStageLabel("CLOSED_LOST") },
 ] as const;
 
 const LEAD_STATUS_FILTER_OPTIONS = [

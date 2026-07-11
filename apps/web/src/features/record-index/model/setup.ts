@@ -12,8 +12,6 @@ export type RecordIndexSetupColumn = {
   label: string;
 };
 
-// Setup contains static view-bar configuration. Adapter controls carry live
-// values through RecordIndexModel.
 export type RecordIndexSetup = {
   id: string;
   title: Accessor<string>;

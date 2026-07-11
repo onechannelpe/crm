@@ -105,7 +105,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
 
   return (
     <div class={styles.tabs} ref={setContainerRef}>
-      {/* Off-screen: render all tabs to measure their natural widths */}
+      {/* Hidden measurement row gives ResizeObserver each tab's natural width. */}
       <div class={styles.hiddenMeasure}>
         <For each={props.tabs}>
           {(tab) => {
