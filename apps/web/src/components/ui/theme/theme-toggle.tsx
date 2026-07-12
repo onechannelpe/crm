@@ -1,22 +1,10 @@
-import { createSignal, onMount } from "solid-js";
-
-import {
-  applyThemeMode,
-  getThemeMode,
-  saveThemeMode,
-  type ThemeMode,
-} from "./theme-mode";
+import { useThemeMode } from "./use-theme-mode";
 
 export function ThemeToggle(props: { class?: string }) {
-  const [theme, setTheme] = createSignal<ThemeMode>("light");
-
-  onMount(() => setTheme(getThemeMode()));
+  const { theme, setTheme } = useThemeMode();
 
   const toggle = () => {
-    const next = theme() === "light" ? "dark" : "light";
-    setTheme(next);
-    applyThemeMode(next);
-    saveThemeMode(next);
+    setTheme(theme() === "light" ? "dark" : "light");
   };
 
   return (

@@ -9,7 +9,6 @@ export type AppPath =
   | "/settings/quotation-policies"
   | "/settings/event-logs"
   | "/monitoring"
-  | "/settings/catalog"
   | "/settings/members"
   | "/team"
   | "/team/requests"
@@ -20,6 +19,7 @@ export type AppPath =
   | "/dashboard"
   | "/schedule"
   | "/settings/profile"
+  | "/settings/appearance"
   | "/settings/notifications"
   | "/me/capacity";
 
@@ -42,7 +42,6 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/settings/quotation-policies": { permission: "quotation:policy:manage" },
   "/settings/event-logs": { permission: "audit:read" },
   "/monitoring": { permission: "admin:read" },
-  "/settings/catalog": { permission: "admin:manage" },
   "/settings/members": { permission: "team:read" },
   "/team": { permission: "team:read", landingPriority: 6 },
   "/team/requests": { permission: "capacity:approve", landingPriority: 7 },
@@ -53,6 +52,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/dashboard": { permission: "lead:work", landingPriority: 1 },
   "/schedule": {},
   "/settings/profile": {},
+  "/settings/appearance": {},
   "/settings/notifications": {},
   "/me/capacity": { permission: "capacity:read:self" },
 };

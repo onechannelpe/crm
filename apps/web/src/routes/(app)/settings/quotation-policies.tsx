@@ -1,7 +1,7 @@
 import { createAsync, useAction } from "@solidjs/router";
-import { Show, createEffect, createSignal } from "solid-js";
+import { Show, createEffect, createSignal, createUniqueId } from "solid-js";
 
-import { AppPage } from "~/components/layout/page";
+import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { updateRateProposalPolicyMutation } from "~/lib/mutations/workflow-settings";
@@ -9,11 +9,14 @@ import { rateProposalPolicyQuery } from "~/lib/queries/workflow-settings";
 import { formatDateTime } from "~/lib/utils";
 import { actionErrorMessage } from "~/lib/wire-error";
 
+import styles from "./settings-page.module.css";
+
 export default function QuotationPoliciesPage() {
   const policy = createAsync(() => rateProposalPolicyQuery(), {
     initialValue: null,
   });
   const updatePolicy = useAction(updateRateProposalPolicyMutation);
+  const formId = createUniqueId();
 
   const [validityDays, setValidityDays] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
@@ -44,47 +47,56 @@ export default function QuotationPoliciesPage() {
   }
 
   return (
-    <AppPage width="narrow" class="space-y-6">
-      <div>
-        <h2 class="text-2xl font-semibold">Politicas de cotizacion</h2>
-        <p class="text-sm text-muted-foreground">
-          Define cuantos dias puede aceptar el ejecutivo una tarifa propuesta.
-        </p>
-      </div>
-
-      <Show when={policy()} keyed>
-        {(snapshot) => (
+    <Show when={policy()} keyed>
+      {(snapshot) => (
+        <SettingsSection
+          title="Vigencia de propuestas"
+          description="Cuántos días puede el ejecutivo aceptar una tarifa propuesta."
+          actions={
+            <Button
+              type="submit"
+              form={formId}
+              size="sm"
+              variant="secondary"
+              loading={submitting()}
+            >
+              Guardar
+            </Button>
+          }
+        >
           <form
-            class="space-y-4 rounded border p-4"
-            onSubmit={(e) => void handleSubmit(e)}
+            id={formId}
+            class={styles.stack}
+            onSubmit={(event) => void handleSubmit(event)}
           >
-            <Input
-              type="number"
-              min="1"
-              max="90"
-              step="1"
-              label="Vigencia de propuesta (dias)"
-              value={validityDays()}
-              onInput={(event) => setValidityDays(event.currentTarget.value)}
-              required
-            />
-            <p class="text-sm text-muted-foreground">
-              Default del sistema: {snapshot.defaultValidityDays} dias.
+            <div class={styles.formGrid}>
+              <Input
+                type="number"
+                min="1"
+                max="90"
+                step="1"
+                label="Vigencia de propuesta (días)"
+                value={validityDays()}
+                onInput={(event) => setValidityDays(event.currentTarget.value)}
+                required
+              />
+            </div>
+
+            <p class={styles.helperText}>
+              Default del sistema: {snapshot.defaultValidityDays} días.
               <Show when={snapshot.updatedAt}>
                 {(updatedAt) => (
-                  <> Ultima actualizacion: {formatDateTime(updatedAt())}.</>
+                  <> Última actualización: {formatDateTime(updatedAt())}.</>
                 )}
               </Show>
             </p>
+
             <Show when={policySaveErrorMessage()}>
-              {(message) => <p class="text-sm text-destructive">{message()}</p>}
+              {(message) => <p class={styles.errorText}>{message()}</p>}
             </Show>
-            <Button type="submit" loading={submitting()}>
-              Guardar politica
-            </Button>
           </form>
-        )}
-      </Show>
-    </AppPage>
+        </SettingsSection>
+      )}
+    </Show>
   );
 }

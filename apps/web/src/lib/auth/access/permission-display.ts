@@ -250,6 +250,9 @@ export interface PermissionSection {
   permissions: PermissionRow[];
 }
 
+// Object.entries widens keys to string; the runtime keys are exactly the
+// Record's Permission keys, so this narrowing is sound.
+// oxlint-disable-next-line typescript/no-unsafe-type-assertion
 const CATALOG_ENTRIES = Object.entries(PERMISSION_CATALOG) as Array<
   [Permission, PermissionMeta]
 >;

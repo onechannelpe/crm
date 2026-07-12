@@ -1,0 +1,75 @@
+import { For, Show } from "solid-js";
+
+import Check from "~/components/icons/check";
+import { SettingsSection } from "~/components/settings/SettingsSection";
+import { Input } from "~/components/ui/input/input";
+import type { ThemeMode } from "~/components/ui/theme/theme-mode";
+import { useThemeMode } from "~/components/ui/theme/use-theme-mode";
+import { cn } from "~/lib/utils";
+
+import styles from "./settings-page.module.css";
+
+const THEME_OPTIONS: ReadonlyArray<{ value: ThemeMode; label: string }> = [
+  { value: "light", label: "Claro" },
+  { value: "dark", label: "Oscuro" },
+];
+
+export default function AppearanceSettingsPage() {
+  const { theme, setTheme } = useThemeMode();
+
+  return (
+    <>
+      <SettingsSection
+        title="Tema"
+        description="Elige cómo se ve la aplicación. El cambio se aplica al instante."
+      >
+        <div class={styles.themeGrid}>
+          <For each={THEME_OPTIONS}>
+            {(option) => (
+              <button
+                type="button"
+                class={cn(
+                  styles.themeCard,
+                  theme() === option.value && styles.themeCardActive,
+                )}
+                aria-pressed={theme() === option.value}
+                onClick={() => setTheme(option.value)}
+              >
+                <span
+                  class={styles.themePreview}
+                  data-variant={option.value}
+                  aria-hidden="true"
+                >
+                  <span class={styles.themeBar} data-tone="strong" />
+                  <span class={styles.themeBar} data-tone="soft" />
+                  <span class={styles.themeBar} data-tone="soft" />
+                </span>
+                <span class={styles.themeCardLabel}>
+                  {option.label}
+                  <Show when={theme() === option.value}>
+                    <Check size={16} class={styles.themeCardCheck} />
+                  </Show>
+                </span>
+              </button>
+            )}
+          </For>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Idioma y región"
+        description="El idioma en el que opera el sistema."
+      >
+        <div class={styles.stack}>
+          <div class={styles.formGrid}>
+            <Input label="Idioma" value="Español (Perú)" disabled />
+          </div>
+          <p class={styles.helperText}>
+            El sistema opera en español (Perú). Otros idiomas aún no están
+            disponibles.
+          </p>
+        </div>
+      </SettingsSection>
+    </>
+  );
+}

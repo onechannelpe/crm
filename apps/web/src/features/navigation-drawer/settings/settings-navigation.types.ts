@@ -25,5 +25,4 @@ export interface SettingsNavSection {
   id: SettingsNavSectionId;
   label: string;
   items: SettingsNavItem[];
-  isAdvanced?: boolean;
 }

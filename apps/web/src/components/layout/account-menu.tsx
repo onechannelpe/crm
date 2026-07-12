@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import { Show, createSignal, onMount } from "solid-js";
+import { Show, createSignal } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 import LogOut from "~/components/icons/log-out";
@@ -7,12 +7,7 @@ import Settings from "~/components/icons/settings";
 import UserRound from "~/components/icons/user-round";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { Avatar } from "~/components/ui/display/avatar";
-import {
-  applyThemeMode,
-  getThemeMode,
-  saveThemeMode,
-  type ThemeMode,
-} from "~/components/ui/theme/theme-mode";
+import { useThemeMode } from "~/components/ui/theme/use-theme-mode";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { cn } from "~/lib/utils";
 
@@ -28,7 +23,7 @@ interface AccountMenuProps {
 
 export function AccountMenu(props: AccountMenuProps) {
   const [open, setOpen] = createSignal(false);
-  const [theme, setTheme] = createSignal<ThemeMode>("light");
+  const { theme, setTheme } = useThemeMode();
   const navigate = useNavigate();
   let containerRef: HTMLDivElement | undefined;
 
@@ -38,13 +33,8 @@ export function AccountMenu(props: AccountMenuProps) {
     getContainer: () => containerRef,
   });
 
-  onMount(() => setTheme(getThemeMode()));
-
   const toggleTheme = () => {
-    const nextTheme = theme() === "light" ? "dark" : "light";
-    setTheme(nextTheme);
-    applyThemeMode(nextTheme);
-    saveThemeMode(nextTheme);
+    setTheme(theme() === "light" ? "dark" : "light");
   };
 
   return (

@@ -9,6 +9,138 @@
   padding-top: 12px;
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.numberGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.teamList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.teamCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.teamCardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teamName {
+  font-weight: var(--font-weight-medium);
+}
+
+.teamMeta {
+  font-size: var(--font-size-caption);
+  color: var(--muted-foreground);
+}
+
+/* Appearance: theme picker cards */
+.themeGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.themeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.1s ease;
+}
+
+.themeCard:hover {
+  border-color: var(--border-medium);
+}
+
+.themeCardActive {
+  border-color: var(--color-blue);
+}
+
+.themePreview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 72px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.themePreview[data-variant="light"] {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+}
+
+.themePreview[data-variant="dark"] {
+  background: #18181b;
+  border: 1px solid #333338;
+}
+
+.themeBar {
+  height: 8px;
+  border-radius: 999px;
+}
+
+.themeBar[data-tone="strong"] {
+  width: 60%;
+}
+
+.themeBar[data-tone="soft"] {
+  width: 85%;
+}
+
+.themePreview[data-variant="light"] .themeBar[data-tone="strong"] {
+  background: #c7c7cc;
+}
+
+.themePreview[data-variant="light"] .themeBar[data-tone="soft"] {
+  background: #ececf0;
+}
+
+.themePreview[data-variant="dark"] .themeBar[data-tone="strong"] {
+  background: #52525b;
+}
+
+.themePreview[data-variant="dark"] .themeBar[data-tone="soft"] {
+  background: #2f2f35;
+}
+
+.themeCardLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground);
+}
+
+.themeCardCheck {
+  color: var(--color-blue);
+}
+
 .strong {
   font-weight: var(--font-weight-medium);
 }
