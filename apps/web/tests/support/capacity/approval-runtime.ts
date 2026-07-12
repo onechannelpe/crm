@@ -63,6 +63,7 @@ export function makeApprovalContext(
       primaryAuthMethod: "password",
       strongAuthMethod: null,
       strongAuthAt: null,
+      impersonatorUserId: null,
     },
     requestId: "req-test",
     traceId: "trace-test",

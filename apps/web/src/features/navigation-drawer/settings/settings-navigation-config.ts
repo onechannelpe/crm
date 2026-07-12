@@ -6,6 +6,7 @@ import Package from "~/components/icons/package";
 import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
 import UserIcon from "~/components/icons/user";
+import UserRound from "~/components/icons/user-round";
 import { canAccessPath, type Role } from "~/lib/auth/access/route-policy";
 
 import type { SettingsNavSection } from "./settings-navigation.types";
@@ -76,6 +77,15 @@ export function createSettingsNavigationSections(
       id: "administration",
       label: "Administración",
       items: [
+        {
+          id: "members",
+          label: "Miembros",
+          href: "/settings/members",
+          icon: UserRound,
+          section: "administration",
+          matchSubPages: true,
+          isHidden: !canAccessPath(options.role, "/settings/members"),
+        },
         {
           id: "login-protection",
           label: "Proteccion de inicio de sesion",

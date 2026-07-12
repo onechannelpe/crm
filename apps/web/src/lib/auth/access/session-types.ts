@@ -17,4 +17,7 @@ export interface AuthSession {
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: Date | null;
+  // The administrator's user id when this session is an active impersonation,
+  // otherwise null.
+  impersonatorUserId: UserId | null;
 }

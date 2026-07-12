@@ -12,11 +12,18 @@ import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo
 import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-context";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
+import {
+  startImpersonation,
+  stopImpersonation,
+} from "~/server/auth/session/impersonation";
 import { createSessionService } from "~/server/auth/session/session.service";
 import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { NotificationIntent } from "~/server/notifications/types";
+import type { AppContext } from "~/server/platform/action/context";
+import type { UserId } from "~/server/shared/ids";
 import { createEventsRepo } from "~/server/shared/repos-events";
+import { createUsersRepo } from "~/server/users/repos-users";
 
 import type { ServerInfra } from "./infra";
 
@@ -42,9 +49,20 @@ export function createAuthRuntime(
   const onboarding = createAuthOnboardingContext(infra.db);
   const inviteService = createInviteServiceForExecutor(infra.db);
 
+  const impersonationDeps = {
+    sessions: sessionService,
+    users: createUsersRepo(infra.db),
+    events: createEventsRepo(infra.db),
+  };
+
   return {
     authThrottleService,
     sessionService,
+    impersonation: {
+      start: (ctx: AppContext, command: { userId: UserId }) =>
+        startImpersonation(ctx, impersonationDeps, command),
+      stop: (ctx: AppContext) => stopImpersonation(ctx, impersonationDeps),
+    },
     login: createAuthLoginContext(infra.db, {
       enqueue: (intents, now) => notifications.enqueue(intents, now),
     }),

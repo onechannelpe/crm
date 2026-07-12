@@ -21,6 +21,7 @@ type PersistedSessionSource = Pick<
   | "primary_auth_method"
   | "strong_auth_method"
   | "strong_auth_at"
+  | "impersonator_user_id"
 >;
 
 export interface SessionIdentity {
@@ -55,5 +56,6 @@ export function mapUserSessionRowToAuthSession(
     primaryAuthMethod: session.primary_auth_method,
     strongAuthMethod: session.strong_auth_method,
     strongAuthAt: session.strong_auth_at,
+    impersonatorUserId: session.impersonator_user_id,
   };
 }

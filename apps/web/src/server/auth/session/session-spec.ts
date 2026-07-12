@@ -32,6 +32,9 @@ export interface SessionSpec {
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: Date | null;
+  // Set only when an administrator establishes this session to impersonate the
+  // session owner; carries the administrator's user id.
+  impersonatorUserId?: UserId | null;
   auditAction?: "login" | "login_passkey";
 }
 
@@ -56,6 +59,7 @@ export interface SessionRepositoryPort {
     primary_auth_method: PrimaryAuthMethod;
     strong_auth_method: StrongAuthMethod | null;
     strong_auth_at: Date | null;
+    impersonator_user_id: UserId | null;
     ip_address: string | null;
     user_agent: string | null;
     created_at: Date;

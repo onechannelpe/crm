@@ -10,7 +10,7 @@ const MIME_TO_EXTENSION: Record<string, string> = {
   "image/png": "png",
   "image/gif": "gif",
 };
-const logger = createLogger("profile-picture-service");
+const logger = createLogger("avatar-service");
 
 export type AvatarDomainErrorCode =
   | "invalid_file"
@@ -41,7 +41,7 @@ export interface AvatarMetaRow {
   avatar_version: number;
 }
 
-export interface ProfilePictureService {
+export interface AvatarService {
   upload(
     userId: UserId,
     file: File,
@@ -87,10 +87,10 @@ function validateFile(file: File): Result<void, AvatarDomainError> {
   return Ok(undefined);
 }
 
-export function createProfilePictureService(
+export function createAvatarService(
   repos: { users: AvatarUsersRepository },
   blobStore: BlobStore,
-): ProfilePictureService {
+): AvatarService {
   return {
     async upload(userId: UserId, file: File) {
       const validation = validateFile(file);

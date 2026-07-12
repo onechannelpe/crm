@@ -110,7 +110,7 @@ export default function TeamPage() {
   });
   const isLoading = () => executives() === undefined;
   const rowOpen = createRouteRowOpen<ManagedExecutiveGridRow>((executive) => {
-    navigate(`/team/members/${executive.executiveId}/capacity`);
+    navigate(`/settings/members/${executive.executiveId}?tab=capacity`);
   });
 
   return (

@@ -15,6 +15,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("session_class", "text", (col) => col.notNull())
     .addColumn("primary_auth_method", "text", (col) => col.notNull())
     .addColumn("strong_auth_method", "text")
+    .addColumn("impersonator_user_id", "uuid", (col) =>
+      col.references("users.id").onDelete("cascade"),
+    )
     .addColumn("strong_auth_at", "timestamptz")
     .addColumn("ip_address", "text")
     .addColumn("user_agent", "text")

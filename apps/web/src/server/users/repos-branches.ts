@@ -18,3 +18,5 @@ export function createBranchesRepo(db: Kysely<Database>) {
     },
   };
 }
+
+export type BranchesRepo = ReturnType<typeof createBranchesRepo>;

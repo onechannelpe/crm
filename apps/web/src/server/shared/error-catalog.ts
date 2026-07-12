@@ -239,6 +239,27 @@ export const ERROR_CATALOG = {
     kind: "forbidden",
     message: "No puedes gestionar este ejecutivo.",
   },
+  cannot_manage_member: {
+    kind: "forbidden",
+    message: "No puedes gestionar a este usuario.",
+  },
+  cannot_manage_self: {
+    kind: "forbidden",
+    message: "No puedes aplicar esta acción sobre tu propia cuenta.",
+  },
+  cannot_impersonate: {
+    kind: "forbidden",
+    message: "No puedes suplantar a este usuario.",
+  },
+  member_has_active_leads: {
+    kind: "conflict",
+    message:
+      "El usuario tiene clientes activos asignados. Reasigna sus clientes antes de eliminarlo.",
+  },
+  not_impersonating: {
+    kind: "conflict",
+    message: "No hay una sesión de suplantación activa.",
+  },
   extension_session_invalid: {
     kind: "forbidden",
     message: "La sesión de la extensión es inválida o expiró.",

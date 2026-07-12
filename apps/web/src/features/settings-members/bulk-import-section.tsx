@@ -4,18 +4,16 @@ import { For, Show, createEffect, createSignal, on } from "solid-js";
 import { applyBulkImport, previewBulkCsv } from "~/actions/team/bulk-import";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
-import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
+import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";
 import { Select } from "~/components/ui/input/select";
 import {
   Table,
-  TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
-} from "~/components/ui/layout/table";
+} from "~/components/ui/layout/table-grid/table-grid";
 import type {
   BulkApplyResult,
   BulkPreviewResult,
@@ -25,7 +23,10 @@ import { APP_LOCALE } from "~/lib/locale";
 import { bulkImportSetupQuery } from "~/lib/queries/team";
 import { actionErrorMessage } from "~/lib/wire-error";
 
-import styles from "../team-page.module.css";
+import styles from "./settings-members.module.css";
+
+const ERROR_COLUMNS = "64px 1fr";
+const PREVIEW_COLUMNS = "1.2fr 1fr 1.6fr 1fr 1fr";
 
 export function BulkImportSection() {
   const bulkImportSetup = createAsync(() => bulkImportSetupQuery());
@@ -83,11 +84,10 @@ export function BulkImportSection() {
   return (
     <Show when={bulkImportSetup()} keyed>
       {(im) => (
-        <AppPageSection>
-          <AppPageSectionTitle
-            title="Importar desde CSV"
-            description={`Carga un archivo CSV con columnas: FIRST_SURNAME, SECOND_SURNAME, NAMES, EMAIL, DATE_EXPIRY (opcional), EXECUTIVE_CATEGORY (requerido para ejecutivos: elite o corporativa).`}
-          />
+        <SettingsSection
+          title="Importar desde CSV"
+          description="Carga un archivo CSV con columnas: FIRST_SURNAME, SECOND_SURNAME, NAMES, EMAIL, DATE_EXPIRY (opcional), EXECUTIVE_CATEGORY (requerido para ejecutivos: elite o corporativa)."
+        >
           <div class={styles.inviteForm}>
             <FileInput
               label="Archivo CSV"
@@ -128,28 +128,24 @@ export function BulkImportSection() {
             {(p) => (
               <>
                 <Show when={p().parsed.errors.length > 0}>
-                  <div class={styles.tableCompact}>
-                    <p>
+                  <div class={styles.importBlock}>
+                    <p class={styles.importNote}>
                       {p().parsed.errors.length} fila(s) con errores (serán
                       omitidas):
                     </p>
                     <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Fila</TableHead>
-                          <TableHead>Error</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <For each={p().parsed.errors}>
-                          {(err) => (
-                            <TableRow>
-                              <TableCell>{err.row}</TableCell>
-                              <TableCell>{err.message}</TableCell>
-                            </TableRow>
-                          )}
-                        </For>
-                      </TableBody>
+                      <TableRow gridTemplateColumns={ERROR_COLUMNS}>
+                        <TableHeader>Fila</TableHeader>
+                        <TableHeader>Error</TableHeader>
+                      </TableRow>
+                      <For each={p().parsed.errors}>
+                        {(err) => (
+                          <TableRow gridTemplateColumns={ERROR_COLUMNS}>
+                            <TableCell>{err.row}</TableCell>
+                            <TableCell ellipsis>{err.message}</TableCell>
+                          </TableRow>
+                        )}
+                      </For>
                     </Table>
                   </div>
                 </Show>
@@ -163,25 +159,23 @@ export function BulkImportSection() {
                     />
                   }
                 >
-                  <Table class={styles.tableCompact}>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Apellidos</TableHead>
-                        <TableHead>Nombres</TableHead>
-                        <TableHead>Correo</TableHead>
-                        <TableHead>Vencimiento</TableHead>
-                        <TableHead>Categoria</TableHead>
+                  <div class={styles.importBlock}>
+                    <Table>
+                      <TableRow gridTemplateColumns={PREVIEW_COLUMNS}>
+                        <TableHeader>Apellidos</TableHeader>
+                        <TableHeader>Nombres</TableHeader>
+                        <TableHeader>Correo</TableHeader>
+                        <TableHeader>Vencimiento</TableHeader>
+                        <TableHeader>Categoría</TableHeader>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
                       <For each={p().parsed.valid}>
                         {(row) => (
-                          <TableRow>
-                            <TableCell>
+                          <TableRow gridTemplateColumns={PREVIEW_COLUMNS}>
+                            <TableCell ellipsis>
                               {row.firstSurname} {row.secondSurname}
                             </TableCell>
-                            <TableCell>{row.names}</TableCell>
-                            <TableCell>{row.email}</TableCell>
+                            <TableCell ellipsis>{row.names}</TableCell>
+                            <TableCell ellipsis>{row.email}</TableCell>
                             <TableCell>
                               {row.expiresAt
                                 ? new Date(row.expiresAt).toLocaleDateString(
@@ -200,20 +194,20 @@ export function BulkImportSection() {
                           </TableRow>
                         )}
                       </For>
-                    </TableBody>
-                  </Table>
-                  <div class={styles.inviteActions}>
-                    <Button
-                      type="button"
-                      disabled={isImporting()}
-                      onClick={() => {
-                        void handleImport();
-                      }}
-                    >
-                      {isImporting()
-                        ? "Importando..."
-                        : `Crear ${p().parsed.valid.length} usuario(s)`}
-                    </Button>
+                    </Table>
+                    <div class={styles.inviteActions}>
+                      <Button
+                        type="button"
+                        disabled={isImporting()}
+                        onClick={() => {
+                          void handleImport();
+                        }}
+                      >
+                        {isImporting()
+                          ? "Importando..."
+                          : `Crear ${p().parsed.valid.length} usuario(s)`}
+                      </Button>
+                    </div>
                   </div>
                 </Show>
               </>
@@ -222,33 +216,29 @@ export function BulkImportSection() {
 
           <Show when={result()}>
             {(r) => (
-              <div class={styles.tableCompact}>
-                <p>
+              <div class={styles.importBlock}>
+                <p class={styles.importNote}>
                   Importación completada: {r().created} creado(s), {r().skipped}{" "}
                   omitido(s).
                 </p>
                 <Show when={r().rowErrors.length > 0}>
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Error</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <For each={r().rowErrors}>
-                        {(err) => (
-                          <TableRow>
-                            <TableCell>{err}</TableCell>
-                          </TableRow>
-                        )}
-                      </For>
-                    </TableBody>
+                    <TableRow>
+                      <TableHeader>Error</TableHeader>
+                    </TableRow>
+                    <For each={r().rowErrors}>
+                      {(err) => (
+                        <TableRow>
+                          <TableCell ellipsis>{err}</TableCell>
+                        </TableRow>
+                      )}
+                    </For>
                   </Table>
                 </Show>
               </div>
             )}
           </Show>
-        </AppPageSection>
+        </SettingsSection>
       )}
     </Show>
   );

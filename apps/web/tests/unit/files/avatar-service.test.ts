@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import type { BlobStore } from "~/server/shared/blob-store";
 import { UserId } from "~/server/shared/ids";
 import {
-  createProfilePictureService,
+  createAvatarService,
   type AvatarUsersRepository,
-} from "~/server/users/profile-picture-service";
+} from "~/server/users/avatar-service";
 
 type FindAvatarMetaById = AvatarUsersRepository["findAvatarMetaById"];
 type UpdateAvatar = AvatarUsersRepository["updateAvatar"];
@@ -35,7 +35,7 @@ function setup() {
     // with the real interface as it evolves.
     putFromWebStream: vi.fn<BlobStore["putFromWebStream"]>(),
   };
-  const service = createProfilePictureService({ users }, blobStore);
+  const service = createAvatarService({ users }, blobStore);
 
   return {
     service,

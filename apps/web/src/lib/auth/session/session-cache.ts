@@ -16,6 +16,7 @@ interface CachedSession {
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: Date | null;
+  impersonatorUserId: UserId | null;
   expiresAt: Date;
   cachedUntil: number;
 }

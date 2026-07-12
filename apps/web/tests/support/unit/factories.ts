@@ -19,6 +19,7 @@ export function makeAuthSession(
     strongAuthMethod: null,
     strongAuthAt: null,
     ...overrides,
+    impersonatorUserId: overrides.impersonatorUserId ?? null,
   };
 }
 

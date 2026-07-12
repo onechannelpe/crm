@@ -19,7 +19,7 @@ function resolvePermission(pathname: string): Permission | null {
 
   if (isAppPath(pathname)) return ROUTE_MANIFEST[pathname].permission ?? null;
 
-  // Prefix fallback: /team/invite/foo inherits /team/invite's permission.
+  // Prefix fallback: /settings/members/foo inherits /settings/members' permission.
   const prefix = Object.keys(ROUTE_MANIFEST)
     .filter(isAppPath)
     .filter((p) => pathname.startsWith(`${p}/`))

@@ -52,10 +52,6 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     match: /^\/records\/[^/]+$/,
     header: { label: "Registros", icon: "leads" },
   },
-  {
-    match: /^\/team\/members\/[^/]+\/capacity$/,
-    header: { label: "Capacidad del ejecutivo", icon: "team" },
-  },
   { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
   { match: "/records", header: { label: "Registros", icon: "leads" } },
@@ -72,15 +68,10 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     match: "/fulfillment",
     header: { label: "Entregas", icon: "inventory" },
   },
-  { match: "/team", header: { label: "Equipo", icon: "team" } },
+  { match: "/team", header: { label: "Capacidad del equipo", icon: "team" } },
   {
     match: "/team/requests",
     header: { label: "Solicitudes", icon: "team" },
-  },
-  { match: "/team/invite", header: { label: "Invitaciones", icon: "team" } },
-  {
-    match: "/team/import",
-    header: { label: "Importar miembros", icon: "team" },
   },
   { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
@@ -188,10 +179,8 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     order: 5,
     group: "Operaciones",
     children: [
-      { href: "/team", label: "Miembros", order: 1 },
+      { href: "/team", label: "Capacidad", order: 1 },
       { href: "/team/requests", label: "Solicitudes", order: 2 },
-      { href: "/team/invite", label: "Invitaciones", order: 3 },
-      { href: "/team/import", label: "Importar", order: 4 },
     ],
   },
   {

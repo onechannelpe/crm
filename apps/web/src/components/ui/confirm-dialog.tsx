@@ -14,6 +14,7 @@ interface ConfirmDialogProps {
   cancelLabel?: string;
   variant?: "primary" | "outline" | "ghost" | "destructive";
   loading?: boolean;
+  confirmDisabled?: boolean;
   onConfirm: () => void;
   onClose: () => void;
   children?: JSX.Element;
@@ -60,6 +61,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
                 variant={props.variant ?? "primary"}
                 size="lg"
                 loading={props.loading}
+                disabled={props.confirmDisabled}
                 onClick={props.onConfirm}
               >
                 {props.confirmLabel}

@@ -72,5 +72,6 @@ export async function getCurrentUser(
     team: workspace.team,
     supervisor: workspace.supervisor,
     branch: workspace.branch,
+    impersonating: ctx.actor.impersonatorUserId !== null,
   });
 }

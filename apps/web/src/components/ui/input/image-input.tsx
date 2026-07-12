@@ -3,21 +3,25 @@ import { Show } from "solid-js";
 import { Avatar } from "~/components/ui/display/avatar";
 import { Button } from "~/components/ui/input/button";
 
-import styles from "./profile-image-input.module.css";
+import styles from "./image-input.module.css";
 
-interface ProfileImageInputProps {
+interface ImageInputProps {
   pictureUrl: string | null;
   initials: string;
   uploading: boolean;
   errorMessage?: string | null;
+  disabled?: boolean;
   onUpload: (file: File) => Promise<void>;
   onRemove: () => Promise<void>;
 }
 
-export function ProfileImageInput(props: ProfileImageInputProps) {
+export function ImageInput(props: ImageInputProps) {
   let inputRef: HTMLInputElement | null = null;
 
+  const isBusy = () => props.uploading || (props.disabled ?? false);
+
   const openFilePicker = () => {
+    if (props.disabled) return;
     inputRef?.click();
   };
 
@@ -42,7 +46,7 @@ export function ProfileImageInput(props: ProfileImageInputProps) {
         type="button"
         class={styles.preview}
         onClick={openFilePicker}
-        disabled={props.uploading}
+        disabled={isBusy()}
       >
         <Avatar
           imageUrl={props.pictureUrl}
@@ -72,7 +76,7 @@ export function ProfileImageInput(props: ProfileImageInputProps) {
             size="sm"
             onClick={openFilePicker}
             loading={props.uploading}
-            disabled={props.uploading}
+            disabled={isBusy()}
           >
             Subir
           </Button>
@@ -83,14 +87,14 @@ export function ProfileImageInput(props: ProfileImageInputProps) {
               onClick={() => {
                 void props.onRemove();
               }}
-              disabled={props.uploading}
+              disabled={isBusy()}
             >
               Eliminar foto
             </button>
           </Show>
         </div>
         <p class={styles.helpText}>
-          Admitimos imágenes en formato PNG, JPEG y GIF de hasta 5 MB.
+          Admitimos imágenes en formato PNG, JPEG y GIF de hasta 10 MB.
         </p>
         <Show when={props.errorMessage}>
           {(message) => <p class={styles.errorText}>{message()}</p>}

@@ -1,0 +1,203 @@
+.tabs {
+  margin-top: 8px;
+}
+
+.tabPane {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inviteForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.inviteActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.roleCount {
+  color: var(--foreground-tertiary);
+}
+
+.permGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.permSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--foreground);
+}
+
+.permGroupIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--muted-foreground);
+}
+
+.permRows {
+  display: flex;
+  flex-direction: column;
+}
+
+.permRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.permRow:last-child {
+  border-bottom: none;
+}
+
+.permText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.permName {
+  font-weight: var(--font-weight-medium);
+}
+
+.permDesc {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detailHeaderText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detailAvatar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.detailName {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.detailEmail {
+  color: var(--muted-foreground);
+  font-size: var(--font-size-sm);
+}
+
+.headerBadges {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.adminActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dangerAction.dangerAction {
+  color: var(--destructive);
+}
+
+.modalField {
+  margin-top: 12px;
+}
+
+/* Team roster: identity + email + status + chevron. */
+.rosterSearch {
+  padding-bottom: var(--spacing-2);
+}
+
+.rosterAvatar {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-right: var(--spacing-2);
+}
+
+.rosterName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rosterChevron {
+  color: var(--foreground-secondary);
+}
+
+.rosterEmpty {
+  color: var(--foreground-tertiary);
+}
+
+/* Pending invites grid table. */
+.invitesTable {
+  margin-top: 8px;
+}
+
+.inviteMailIcon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-right: var(--spacing-2);
+  color: var(--foreground-secondary);
+}
+
+/* CSV import preview/result blocks. */
+.importBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.importNote {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--foreground-tertiary);
+}
+
+@media (max-width: 768px) {
+  .inviteForm {
+    grid-template-columns: 1fr;
+  }
+}

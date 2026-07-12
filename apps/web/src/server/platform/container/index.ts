@@ -8,6 +8,7 @@ import { createDefaultEngineClient } from "~/server/shared/engine/client";
 
 import { createAdminRuntime } from "./admin-runtime";
 import { createAuthRuntime } from "./auth-runtime";
+import { createAvatarRuntime } from "./avatar-runtime";
 import { createCapacityRuntime } from "./capacity-runtime";
 import { createClientSearchRuntime } from "./client-search-runtime";
 import { createContactAssignmentsRuntime } from "./contact-assignments-runtime";
@@ -18,7 +19,6 @@ import { createServerInfra } from "./infra";
 import { createIntegrationsRuntime } from "./integrations-runtime";
 import { createNotificationsRuntime } from "./notifications-runtime";
 import { createObservabilityRuntime } from "./observability-runtime";
-import { createProfilePictureRuntime } from "./profile-picture-runtime";
 import { createSearchRuntime } from "./search-runtime";
 import { createSecurityRuntime } from "./security-runtime";
 import { createTeamRuntime } from "./team-runtime";
@@ -53,13 +53,13 @@ function createServerRuntime() {
   const integrations = memo(() => createIntegrationsRuntime(infra));
   const observability = memo(() => createObservabilityRuntime(infra));
   const workflow = memo(() => createWorkflowRuntime(infra, engine(), files()));
-  const profilePicture = memo(() =>
-    createProfilePictureRuntime(infra, uploadsConfig()),
-  );
+  const avatar = memo(() => createAvatarRuntime(infra, uploadsConfig()));
   const security = memo(() => createSecurityRuntime(infra));
   const search = memo(() => createSearchRuntime(infra));
   const team = memo(() => createTeamRuntime(infra));
-  const users = memo(() => createUsersRuntime(infra));
+  const users = memo(() =>
+    createUsersRuntime(infra, auth().sessionService, avatar().avatarService),
+  );
 
   return {
     infra,
@@ -102,8 +102,8 @@ function createServerRuntime() {
     get workflow() {
       return workflow();
     },
-    get profilePicture() {
-      return profilePicture();
+    get avatar() {
+      return avatar();
     },
     get security() {
       return security();

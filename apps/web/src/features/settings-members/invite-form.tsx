@@ -2,7 +2,6 @@ import { useAction, useSubmission } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
-import { AppPageSection, AppPageSectionTitle } from "~/components/layout/page";
 import { DatePicker } from "~/components/ui/date-picker/date-picker-field";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -20,7 +19,7 @@ import {
   parseInviteExpiryDate,
 } from "./team-invite-expiry";
 
-import styles from "../team-page.module.css";
+import styles from "./settings-members.module.css";
 
 export function InviteForm(props: { setup: InviteManagement }) {
   const createInvite = useAction(createTeamInviteMutation);
@@ -107,110 +106,103 @@ export function InviteForm(props: { setup: InviteManagement }) {
   }
 
   return (
-    <AppPageSection>
-      <AppPageSectionTitle
-        title="Invitar por correo"
-        description="Envía una invitación por correo a nuevos miembros del equipo."
+    <form
+      class={styles.inviteForm}
+      onSubmit={(event) => void handleSubmit(event)}
+    >
+      <Input
+        label="Nombres"
+        value={names()}
+        onInput={(event) => setNames(event.currentTarget.value)}
+        required
       />
 
-      <form
-        class={styles.inviteForm}
-        onSubmit={(event) => void handleSubmit(event)}
+      <Input
+        label="Primer apellido"
+        value={firstSurname()}
+        onInput={(event) => setFirstSurname(event.currentTarget.value)}
+        required
+      />
+
+      <Input
+        label="Segundo apellido"
+        value={secondSurname()}
+        onInput={(event) => setSecondSurname(event.currentTarget.value)}
+        required
+      />
+
+      <Input
+        type="email"
+        label="Correo corporativo"
+        value={email()}
+        onInput={(event) => setEmail(event.currentTarget.value)}
+        required
+      />
+
+      <Select
+        label="Rol"
+        value={role()}
+        onInput={(event) => {
+          setRole(event.currentTarget.value);
+          setExecutiveCategory("");
+        }}
       >
-        <Input
-          label="Nombres"
-          value={names()}
-          onInput={(event) => setNames(event.currentTarget.value)}
-          required
-        />
+        <For each={props.setup.assignableRoles}>
+          {(option) => <option value={option.value}>{option.label}</option>}
+        </For>
+      </Select>
 
-        <Input
-          label="Primer apellido"
-          value={firstSurname()}
-          onInput={(event) => setFirstSurname(event.currentTarget.value)}
-          required
-        />
-
-        <Input
-          label="Segundo apellido"
-          value={secondSurname()}
-          onInput={(event) => setSecondSurname(event.currentTarget.value)}
-          required
-        />
-
-        <Input
-          type="email"
-          label="Correo corporativo"
-          value={email()}
-          onInput={(event) => setEmail(event.currentTarget.value)}
-          required
-        />
-
+      <Show when={role() === "executive"}>
         <Select
-          label="Rol"
-          value={role()}
-          onInput={(event) => {
-            setRole(event.currentTarget.value);
-            setExecutiveCategory("");
-          }}
+          label="Categoría"
+          value={executiveCategory()}
+          onInput={(event) => setExecutiveCategory(event.currentTarget.value)}
+          required
         >
-          <For each={props.setup.assignableRoles}>
-            {(option) => <option value={option.value}>{option.label}</option>}
-          </For>
+          <option value="">Seleccionar categoría...</option>
+          <option value="elite">Elite</option>
+          <option value="corporativa">Corporativa</option>
         </Select>
+      </Show>
 
-        <Show when={role() === "executive"}>
-          <Select
-            label="Categoría"
-            value={executiveCategory()}
-            onInput={(event) => setExecutiveCategory(event.currentTarget.value)}
-            required
-          >
-            <option value="">Seleccionar categoría...</option>
-            <option value="elite">Elite</option>
-            <option value="corporativa">Corporativa</option>
-          </Select>
-        </Show>
+      <Select
+        label="Equipo (opcional)"
+        value={teamId()}
+        onInput={(event) => setTeamId(event.currentTarget.value)}
+      >
+        <option value="">Sin equipo</option>
+        <For each={props.setup.teams}>
+          {(team) => <option value={team.id}>{team.name}</option>}
+        </For>
+      </Select>
 
-        <Select
-          label="Equipo (opcional)"
-          value={teamId()}
-          onInput={(event) => setTeamId(event.currentTarget.value)}
+      <DatePicker
+        label="Fecha de vencimiento (opcional)"
+        value={expiresAt()}
+        min={getMinInviteExpiryDate()}
+        description={INVITE_EXPIRY_HELPER_TEXT}
+        error={expiresAtErrorMessage()}
+        onInput={(nextValue) => {
+          setExpiresAt(nextValue);
+          setExpiresAtErrorMessage(getInviteExpiryFieldError(nextValue));
+        }}
+      />
+
+      <div class={styles.inviteActions}>
+        <Button
+          type="submit"
+          loading={submission.pending}
+          disabled={
+            submission.pending ||
+            !role() ||
+            (role() === "executive" && !executiveCategory()) ||
+            expiresAtErrorMessage() !== undefined
+          }
         >
-          <option value="">Sin equipo</option>
-          <For each={props.setup.teams}>
-            {(team) => <option value={team.id}>{team.name}</option>}
-          </For>
-        </Select>
-
-        <DatePicker
-          label="Fecha de vencimiento (opcional)"
-          value={expiresAt()}
-          min={getMinInviteExpiryDate()}
-          description={INVITE_EXPIRY_HELPER_TEXT}
-          error={expiresAtErrorMessage()}
-          onInput={(nextValue) => {
-            setExpiresAt(nextValue);
-            setExpiresAtErrorMessage(getInviteExpiryFieldError(nextValue));
-          }}
-        />
-
-        <div class={styles.inviteActions}>
-          <Button
-            type="submit"
-            loading={submission.pending}
-            disabled={
-              submission.pending ||
-              !role() ||
-              (role() === "executive" && !executiveCategory()) ||
-              expiresAtErrorMessage() !== undefined
-            }
-          >
-            Enviar invitación
-          </Button>
-        </div>
-      </form>
-    </AppPageSection>
+          Enviar invitación
+        </Button>
+      </div>
+    </form>
   );
 }
 

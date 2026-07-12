@@ -10,10 +10,9 @@ export type AppPath =
   | "/settings/event-logs"
   | "/monitoring"
   | "/settings/catalog"
+  | "/settings/members"
   | "/team"
   | "/team/requests"
-  | "/team/invite"
-  | "/team/import"
   | "/inventory"
   | "/records"
   | "/fulfillment"
@@ -44,10 +43,9 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/settings/event-logs": { permission: "audit:read" },
   "/monitoring": { permission: "admin:read" },
   "/settings/catalog": { permission: "admin:manage" },
+  "/settings/members": { permission: "team:read" },
   "/team": { permission: "team:read", landingPriority: 6 },
   "/team/requests": { permission: "capacity:approve", landingPriority: 7 },
-  "/team/invite": { permission: "team:manage" },
-  "/team/import": { permission: "team:manage" },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
   "/records": {},
   "/fulfillment": { permission: "fulfillment:manage" },
@@ -62,7 +60,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
   { pattern: /^\/records\/[^/]+$/ },
   {
-    pattern: /^\/team\/members\/[^/]+\/capacity$/,
-    permission: "capacity:manage",
+    pattern: /^\/settings\/members\/[^/]+$/,
+    permission: "team:read",
   },
 ];
