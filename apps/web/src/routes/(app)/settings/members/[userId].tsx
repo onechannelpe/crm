@@ -8,7 +8,6 @@ import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { Avatar } from "~/components/ui/display/avatar";
 import { Badge } from "~/components/ui/display/badge";
-import type { MemberDetail } from "~/contracts/members";
 import { MemberAdminActions } from "~/features/settings-members/member-admin-actions";
 import { MemberCapacityTab } from "~/features/settings-members/member-capacity-tab";
 import { MemberInfoTab } from "~/features/settings-members/member-info-tab";
@@ -59,53 +58,61 @@ export default function SettingsMemberDetailPage() {
   });
 
   return (
-    <Show when={detail()} keyed>
-      {(record: MemberDetail) => (
-        <>
-          <header class={styles.detailHeader}>
-            <Avatar
-              class={styles.detailAvatar}
-              imageUrl={record.avatarUrl}
-              fallback={getUserInitials(shortName(record))}
-            />
-            <div class={styles.detailHeaderText}>
-              <span class={styles.detailName}>{shortName(record)}</span>
-              <span class={styles.detailEmail}>{record.email}</span>
-              <div class={styles.headerBadges}>
-                <Badge variant={getRoleBadgeVariant(record.role)}>
-                  {getRoleLabel(record.role)}
-                </Badge>
-                <Show
-                  when={record.isActive}
-                  fallback={<Badge variant="secondary">Inactivo</Badge>}
-                >
-                  <Badge variant="success">Activo</Badge>
-                </Show>
+    // Outer Show gates on the record being present and hands down a live
+    // accessor (header/badges track revalidation). Inner keyed Show remounts
+    // the tabs only when the member id changes, reseeding their drafts on
+    // navigation without clobbering them on same-member revalidation.
+    <Show when={detail()}>
+      {(record) => (
+        <Show when={record().id} keyed>
+          {(memberId) => (
+            <>
+              <header class={styles.detailHeader}>
+                <Avatar
+                  class={styles.detailAvatar}
+                  imageUrl={record().avatarUrl}
+                  fallback={getUserInitials(shortName(record()))}
+                />
+                <div class={styles.detailHeaderText}>
+                  <span class={styles.detailName}>{shortName(record())}</span>
+                  <span class={styles.detailEmail}>{record().email}</span>
+                  <div class={styles.headerBadges}>
+                    <Badge variant={getRoleBadgeVariant(record().role)}>
+                      {getRoleLabel(record().role)}
+                    </Badge>
+                    <Show
+                      when={record().isActive}
+                      fallback={<Badge variant="secondary">Inactivo</Badge>}
+                    >
+                      <Badge variant="success">Activo</Badge>
+                    </Show>
+                  </div>
+                </div>
+              </header>
+
+              <TabStrip
+                tabs={tabs()}
+                activeTab={activeTab()}
+                onTabSelect={(id) => setSearch({ tab: id })}
+              />
+
+              <div class={styles.tabPane}>
+                <Switch>
+                  <Match when={activeTab() === "info"}>
+                    <MemberInfoTab detail={record()} />
+                    <MemberAdminActions detail={record()} />
+                  </Match>
+                  <Match when={activeTab() === "permissions"}>
+                    <MemberPermissionsTab detail={record()} />
+                  </Match>
+                  <Match when={activeTab() === "capacity"}>
+                    <MemberCapacityTab userId={memberId} />
+                  </Match>
+                </Switch>
               </div>
-            </div>
-          </header>
-
-          <TabStrip
-            tabs={tabs()}
-            activeTab={activeTab()}
-            onTabSelect={(id) => setSearch({ tab: id })}
-          />
-
-          <div class={styles.tabPane}>
-            <Switch>
-              <Match when={activeTab() === "info"}>
-                <MemberInfoTab detail={record} />
-                <MemberAdminActions detail={record} />
-              </Match>
-              <Match when={activeTab() === "permissions"}>
-                <MemberPermissionsTab detail={record} />
-              </Match>
-              <Match when={activeTab() === "capacity"}>
-                <MemberCapacityTab userId={record.id} />
-              </Match>
-            </Switch>
-          </div>
-        </>
+            </>
+          )}
+        </Show>
       )}
     </Show>
   );

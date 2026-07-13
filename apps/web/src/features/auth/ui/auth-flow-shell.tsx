@@ -1,8 +1,7 @@
 import { ResponsiveImage } from "@crm/images";
-import { onMount, type JSX } from "solid-js";
+import { type JSX } from "solid-js";
 
 import logo from "~/assets/images/logo/logo.webp?responsive";
-import { initializeThemeMode } from "~/components/ui/theme/theme-mode";
 
 import styles from "./auth-flow-shell.module.css";
 
@@ -15,10 +14,6 @@ interface AuthFlowShellProps {
 }
 
 export function AuthFlowShell(props: AuthFlowShellProps) {
-  onMount(() => {
-    initializeThemeMode();
-  });
-
   return (
     <div class={styles.shell}>
       <section class={styles.surface}>

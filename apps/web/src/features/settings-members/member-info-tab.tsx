@@ -1,5 +1,6 @@
 import { useAction } from "@solidjs/router";
-import { createEffect, createSignal, For, on, onCleanup, Show } from "solid-js";
+import { For, Show, onCleanup } from "solid-js";
+import { createStore } from "solid-js/store";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { SettingsSection } from "~/components/settings/SettingsSection";
@@ -27,41 +28,19 @@ function toDateInputValue(epochMs: number | null): string {
 }
 
 export function MemberInfoTab(props: { detail: MemberDetail }) {
+  const initialDetail = props.detail;
   const updateProfile = useAction(updateMemberProfileMutation);
   const updateExpiry = useAction(updateMemberExpiryMutation);
   const { enqueueErrorSnackBar } = useSnackBar();
 
-  const [names, setNames] = createSignal(props.detail.names);
-  const [firstSurname, setFirstSurname] = createSignal(
-    props.detail.firstSurname,
-  );
-  const [secondSurname, setSecondSurname] = createSignal(
-    props.detail.secondSurname,
-  );
-  const [teamId, setTeamId] = createSignal(props.detail.teamId ?? "");
-  const [category, setCategory] = createSignal(
-    props.detail.executiveCategory ?? "",
-  );
-  const [expiresAt, setExpiresAt] = createSignal(
-    toDateInputValue(props.detail.expiresAt),
-  );
-
-  // Re-seed the fields when the underlying record changes (after a save
-  // revalidates the detail query).
-  createEffect(
-    on(
-      () => props.detail,
-      (detail) => {
-        setNames(detail.names);
-        setFirstSurname(detail.firstSurname);
-        setSecondSurname(detail.secondSurname);
-        setTeamId(detail.teamId ?? "");
-        setCategory(detail.executiveCategory ?? "");
-        setExpiresAt(toDateInputValue(detail.expiresAt));
-      },
-      { defer: true },
-    ),
-  );
+  const [draft, setDraft] = createStore({
+    names: initialDetail.names,
+    firstSurname: initialDetail.firstSurname,
+    secondSurname: initialDetail.secondSurname,
+    teamId: initialDetail.teamId ?? "",
+    category: initialDetail.executiveCategory ?? "",
+    expiresAt: toDateInputValue(initialDetail.expiresAt),
+  });
 
   const disabled = () => !props.detail.canManage;
 
@@ -69,17 +48,21 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
   onCleanup(() => clearTimeout(profileTimer));
 
   async function saveProfile() {
-    if (!names().trim() || !firstSurname().trim() || !secondSurname().trim()) {
+    if (
+      !draft.names.trim() ||
+      !draft.firstSurname.trim() ||
+      !draft.secondSurname.trim()
+    ) {
       return;
     }
     try {
       await updateProfile({
         userId: props.detail.id,
-        names: names(),
-        firstSurname: firstSurname(),
-        secondSurname: secondSurname(),
-        teamId: teamId() || null,
-        executiveCategory: category() || null,
+        names: draft.names,
+        firstSurname: draft.firstSurname,
+        secondSurname: draft.secondSurname,
+        teamId: draft.teamId || null,
+        executiveCategory: draft.category || null,
       });
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
@@ -117,9 +100,9 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
         <div class={styles.formGrid}>
           <Input
             label="Nombres"
-            value={names()}
+            value={draft.names}
             onInput={(event) => {
-              setNames(event.currentTarget.value);
+              setDraft("names", event.currentTarget.value);
               scheduleProfileSave();
             }}
             disabled={disabled()}
@@ -127,9 +110,9 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
           />
           <Input
             label="Primer apellido"
-            value={firstSurname()}
+            value={draft.firstSurname}
             onInput={(event) => {
-              setFirstSurname(event.currentTarget.value);
+              setDraft("firstSurname", event.currentTarget.value);
               scheduleProfileSave();
             }}
             disabled={disabled()}
@@ -137,9 +120,9 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
           />
           <Input
             label="Segundo apellido"
-            value={secondSurname()}
+            value={draft.secondSurname}
             onInput={(event) => {
-              setSecondSurname(event.currentTarget.value);
+              setDraft("secondSurname", event.currentTarget.value);
               scheduleProfileSave();
             }}
             disabled={disabled()}
@@ -147,9 +130,9 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
           />
           <Select
             label="Equipo"
-            value={teamId()}
+            value={draft.teamId}
             onInput={(event) => {
-              setTeamId(event.currentTarget.value);
+              setDraft("teamId", event.currentTarget.value);
               saveProfileNow();
             }}
             disabled={disabled()}
@@ -162,9 +145,9 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
           <Show when={props.detail.role === "executive"}>
             <Select
               label="Categoría"
-              value={category()}
+              value={draft.category}
               onInput={(event) => {
-                setCategory(event.currentTarget.value);
+                setDraft("category", event.currentTarget.value);
                 saveProfileNow();
               }}
               disabled={disabled()}
@@ -188,10 +171,10 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
       >
         <DatePicker
           label="Fecha de vencimiento"
-          value={expiresAt()}
+          value={draft.expiresAt}
           disabled={disabled()}
           onInput={(value) => {
-            setExpiresAt(value);
+            setDraft("expiresAt", value);
             void saveExpiry(value);
           }}
         />

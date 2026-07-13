@@ -1,4 +1,4 @@
-import { useAction } from "@solidjs/router";
+import { useAction, useSubmission } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
@@ -17,6 +17,7 @@ import styles from "./settings-members.module.css";
 
 export function MemberPermissionsTab(props: { detail: MemberDetail }) {
   const changeRole = useAction(changeMemberRoleMutation);
+  const submission = useSubmission(changeMemberRoleMutation);
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
 
   // Selecting a role stages it; the change only commits once confirmed, so the
@@ -25,7 +26,6 @@ export function MemberPermissionsTab(props: { detail: MemberDetail }) {
   const [pendingCategory, setPendingCategory] = createSignal(
     props.detail.executiveCategory ?? "",
   );
-  const [saving, setSaving] = createSignal(false);
 
   const displayRole = () => pendingRole() ?? props.detail.role;
   // Promoting to executive requires a category before the change can commit.
@@ -44,7 +44,6 @@ export function MemberPermissionsTab(props: { detail: MemberDetail }) {
   async function confirmRoleChange() {
     const role = pendingRole();
     if (!role) return;
-    setSaving(true);
     try {
       const { message } = await changeRole({
         userId: props.detail.id,
@@ -55,8 +54,6 @@ export function MemberPermissionsTab(props: { detail: MemberDetail }) {
       setPendingRole(null);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -86,7 +83,7 @@ export function MemberPermissionsTab(props: { detail: MemberDetail }) {
           )} a ${getRoleLabel(displayRole())}?`}
           confirmLabel="Actualizar rol"
           confirmDisabled={confirmDisabled()}
-          loading={saving()}
+          loading={submission.pending}
           onConfirm={() => void confirmRoleChange()}
           onClose={() => setPendingRole(null)}
         >

@@ -26,9 +26,3 @@ export function saveThemeMode(theme: ThemeMode): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(THEME_STORAGE_KEY, theme);
 }
-
-export function initializeThemeMode(): ThemeMode {
-  const theme = getThemeMode();
-  applyThemeMode(theme);
-  return theme;
-}

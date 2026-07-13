@@ -1,233 +1,285 @@
-import { createAsync, useAction } from "@solidjs/router";
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createAsync, useAction, useSubmission } from "@solidjs/router";
+import { For, Show, createSignal, type Accessor } from "solid-js";
+import { createStore } from "solid-js/store";
 
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
+import {
+  CapacityLimitFields,
+  type CapacityLimitsDraft,
+} from "~/components/settings/capacity-limit-fields";
+import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import type { ExecutiveCapacityDetailView } from "~/contracts/capacity";
 import {
   grantMoreLeadRefillMutation,
   grantMoreSearchesMutation,
-  updateLeadPolicyOverrideMutation,
-  updateSearchPolicyOverrideMutation,
+  updateExecutivePolicyOverrideMutation,
 } from "~/lib/mutations/capacity";
 import { executiveCapacityDetailQuery } from "~/lib/queries/capacity";
+import { actionErrorMessage } from "~/lib/wire-error";
+
+import styles from "./settings-members.module.css";
 
 export function MemberCapacityTab(props: { userId: string }) {
   const detail = createAsync(() => executiveCapacityDetailQuery(props.userId), {
     initialValue: null,
   });
-  const grantSearches = useAction(grantMoreSearchesMutation);
-  const grantRefill = useAction(grantMoreLeadRefillMutation);
-  const updateSearchOverride = useAction(updateSearchPolicyOverrideMutation);
-  const updateLeadOverride = useAction(updateLeadPolicyOverrideMutation);
-  const [searchGrant, setSearchGrant] = createSignal("25");
-  const [leadGrant, setLeadGrant] = createSignal("10");
-  const [searchLimit, setSearchLimit] = createSignal("250");
-  const [bufferTarget, setBufferTarget] = createSignal("10");
-  const [dailyRefillLimit, setDailyRefillLimit] = createSignal("25");
-
-  createEffect(() => {
-    const snapshot = detail();
-    if (!snapshot) return;
-    setSearchLimit(String(snapshot.searchStatus.policy.monthlyLimit));
-    setBufferTarget(String(snapshot.leadStatus.policy.bufferTarget));
-    setDailyRefillLimit(String(snapshot.leadStatus.policy.dailyLimit));
-  });
 
   return (
     <Show
       when={detail()}
-      keyed
       fallback={
-        <p class="text-sm text-muted-foreground">
-          Este usuario no gestiona capacidad.
-        </p>
+        <p class={styles.rosterEmpty}>Este usuario no gestiona capacidad.</p>
       }
     >
-      {(snapshot) => (
-        <div class="space-y-8">
-          <section class="space-y-3">
-            <h3 class="text-lg font-medium">Política efectiva</h3>
-            <div class="grid gap-4 md:grid-cols-2">
-              <div class="rounded border p-4">
-                <p class="font-medium">Búsquedas</p>
-                <p>{snapshot.searchStatus.policy.monthlyLimit} por mes</p>
-                <p class="text-sm text-muted-foreground">
-                  Fuente: {snapshot.searchStatus.policy.source}
-                </p>
-              </div>
-              <div class="rounded border p-4">
-                <p class="font-medium">Leads</p>
-                <p>
-                  Buffer {snapshot.leadStatus.policy.bufferTarget} · Refill
-                  diario {snapshot.leadStatus.policy.dailyLimit}
-                </p>
-                <p class="text-sm text-muted-foreground">
-                  Fuente: {snapshot.leadStatus.policy.source}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section class="space-y-3">
-            <h3 class="text-lg font-medium">Estado actual</h3>
-            <div class="grid gap-4 md:grid-cols-2">
-              <div class="rounded border p-4">
-                <p class="font-medium">Búsquedas del mes</p>
-                <p>
-                  {snapshot.searchStatus.committed}/
-                  {snapshot.searchStatus.policy.monthlyLimit +
-                    snapshot.searchStatus.granted}
-                </p>
-                <p class="text-sm text-muted-foreground">
-                  {snapshot.searchStatus.remaining} restantes
-                </p>
-              </div>
-              <div class="rounded border p-4">
-                <p class="font-medium">Capacidad de leads</p>
-                <p>
-                  {snapshot.leadStatus.activeAssignments}/
-                  {snapshot.leadStatus.policy.bufferTarget} activos
-                </p>
-                <p class="text-sm text-muted-foreground">
-                  {snapshot.leadStatus.remaining} refills disponibles hoy
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section class="grid gap-6 md:grid-cols-2">
-            <form
-              class="space-y-3 rounded border p-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void grantSearches(
-                  snapshot.executive.id,
-                  Number(searchGrant()),
-                  "Ajuste manual",
-                );
-              }}
-            >
-              <h3 class="text-lg font-medium">Otorgar más búsquedas</h3>
-              <Input
-                type="number"
-                label="Cantidad extra"
-                value={searchGrant()}
-                onInput={(event) => setSearchGrant(event.currentTarget.value)}
-                required
-              />
-              <Button type="submit">Otorgar</Button>
-            </form>
-
-            <form
-              class="space-y-3 rounded border p-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void grantRefill(
-                  snapshot.executive.id,
-                  Number(leadGrant()),
-                  "Ajuste manual",
-                );
-              }}
-            >
-              <h3 class="text-lg font-medium">Otorgar más refills</h3>
-              <Input
-                type="number"
-                label="Cantidad extra"
-                value={leadGrant()}
-                onInput={(event) => setLeadGrant(event.currentTarget.value)}
-                required
-              />
-              <Button type="submit">Otorgar</Button>
-            </form>
-          </section>
-
-          <section class="grid gap-6 md:grid-cols-2">
-            <form
-              class="space-y-3 rounded border p-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void updateSearchOverride({
-                  userId: snapshot.executive.id,
-                  monthlySearchLimit: Number(searchLimit()),
-                  expiresAt: null,
-                });
-              }}
-            >
-              <h3 class="text-lg font-medium">Override de búsquedas</h3>
-              <Input
-                type="number"
-                label="Límite mensual"
-                value={searchLimit()}
-                onInput={(event) => setSearchLimit(event.currentTarget.value)}
-                required
-              />
-              <Button type="submit">Guardar override</Button>
-            </form>
-
-            <form
-              class="space-y-3 rounded border p-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void updateLeadOverride({
-                  userId: snapshot.executive.id,
-                  activeBufferTarget: Number(bufferTarget()),
-                  dailyRefillLimit: Number(dailyRefillLimit()),
-                  expiresAt: null,
-                });
-              }}
-            >
-              <h3 class="text-lg font-medium">Override de leads</h3>
-              <Input
-                type="number"
-                label="Buffer activo"
-                value={bufferTarget()}
-                onInput={(event) => setBufferTarget(event.currentTarget.value)}
-                required
-              />
-              <Input
-                type="number"
-                label="Refill diario"
-                value={dailyRefillLimit()}
-                onInput={(event) =>
-                  setDailyRefillLimit(event.currentTarget.value)
-                }
-                required
-              />
-              <Button type="submit">Guardar override</Button>
-            </form>
-          </section>
-
-          <section class="space-y-3">
-            <h3 class="text-lg font-medium">Historial de solicitudes</h3>
-            <Show
-              when={snapshot.requests.length > 0}
-              fallback={
-                <p class="text-sm text-muted-foreground">
-                  Sin solicitudes registradas.
-                </p>
-              }
-            >
-              <div class="space-y-2">
-                <For each={snapshot.requests}>
-                  {(request) => (
-                    <div class="rounded border p-3">
-                      <div class="font-medium">
-                        {request.kind === "search_extra"
-                          ? "Más búsquedas"
-                          : "Más refills"}{" "}
-                        {request.requestedAmount}
-                      </div>
-                      <div class="text-sm text-muted-foreground">
-                        {request.status} · {request.reason}
-                      </div>
-                    </div>
-                  )}
-                </For>
-              </div>
-            </Show>
-          </section>
-        </div>
-      )}
+      {(snapshot) => <MemberCapacityEditor detail={snapshot} />}
     </Show>
+  );
+}
+
+function MemberCapacityEditor(props: {
+  detail: Accessor<ExecutiveCapacityDetailView>;
+}) {
+  const initialDetail = props.detail();
+  const grantSearches = useAction(grantMoreSearchesMutation);
+  const grantRefill = useAction(grantMoreLeadRefillMutation);
+  const saveOverrideAction = useAction(updateExecutivePolicyOverrideMutation);
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
+
+  const executiveId = () => props.detail().executive.id;
+  const searchGrantSubmission = useSubmission(
+    grantMoreSearchesMutation,
+    (input) => input[0] === executiveId(),
+  );
+  const refillGrantSubmission = useSubmission(
+    grantMoreLeadRefillMutation,
+    (input) => input[0] === executiveId(),
+  );
+  const overrideSubmission = useSubmission(
+    updateExecutivePolicyOverrideMutation,
+    (input) => input[0].userId === executiveId(),
+  );
+
+  const [searchGrant, setSearchGrant] = createSignal("25");
+  const [leadGrant, setLeadGrant] = createSignal("10");
+
+  const [override, setOverride] = createStore<CapacityLimitsDraft>({
+    searchLimit: String(initialDetail.searchStatus.policy.monthlyLimit),
+    bufferTarget: String(initialDetail.leadStatus.policy.bufferTarget),
+    dailyRefillLimit: String(initialDetail.leadStatus.policy.dailyLimit),
+  });
+
+  async function handleGrantSearches() {
+    try {
+      await grantSearches(
+        executiveId(),
+        Number(searchGrant()),
+        "Ajuste manual",
+      );
+      enqueueSuccessSnackBar("Búsquedas otorgadas");
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    }
+  }
+
+  async function handleGrantRefill() {
+    try {
+      await grantRefill(executiveId(), Number(leadGrant()), "Ajuste manual");
+      enqueueSuccessSnackBar("Refills otorgados");
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    }
+  }
+
+  async function saveOverride() {
+    try {
+      await saveOverrideAction({
+        userId: executiveId(),
+        monthlySearchLimit: Number(override.searchLimit),
+        activeBufferTarget: Number(override.bufferTarget),
+        dailyRefillLimit: Number(override.dailyRefillLimit),
+        expiresAt: null,
+      });
+      enqueueSuccessSnackBar("Override actualizado");
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    }
+  }
+
+  return (
+    <>
+      <SettingsSection
+        title="Política efectiva"
+        description="Los límites que rigen hoy para este usuario y de dónde provienen."
+      >
+        <div class={styles.capacityCards}>
+          <div class={styles.capacityCard}>
+            <span class={styles.capacityCardLabel}>Búsquedas</span>
+            <span class={styles.capacityCardValue}>
+              {props.detail().searchStatus.policy.monthlyLimit} por mes
+            </span>
+            <span class={styles.capacityCardMeta}>
+              Fuente: {props.detail().searchStatus.policy.source}
+            </span>
+          </div>
+          <div class={styles.capacityCard}>
+            <span class={styles.capacityCardLabel}>Leads</span>
+            <span class={styles.capacityCardValue}>
+              Buffer {props.detail().leadStatus.policy.bufferTarget} · Refill{" "}
+              {props.detail().leadStatus.policy.dailyLimit}
+            </span>
+            <span class={styles.capacityCardMeta}>
+              Fuente: {props.detail().leadStatus.policy.source}
+            </span>
+          </div>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Estado actual"
+        description="Consumo del periodo en curso."
+      >
+        <div class={styles.capacityCards}>
+          <div class={styles.capacityCard}>
+            <span class={styles.capacityCardLabel}>Búsquedas del mes</span>
+            <span class={styles.capacityCardValue}>
+              {props.detail().searchStatus.committed}/
+              {props.detail().searchStatus.policy.monthlyLimit +
+                props.detail().searchStatus.granted}
+            </span>
+            <span class={styles.capacityCardMeta}>
+              {props.detail().searchStatus.remaining} restantes
+            </span>
+          </div>
+          <div class={styles.capacityCard}>
+            <span class={styles.capacityCardLabel}>Capacidad de leads</span>
+            <span class={styles.capacityCardValue}>
+              {props.detail().leadStatus.activeAssignments}/
+              {props.detail().leadStatus.policy.bufferTarget} activos
+            </span>
+            <span class={styles.capacityCardMeta}>
+              {props.detail().leadStatus.remaining} refills disponibles hoy
+            </span>
+          </div>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Otorgar capacidad"
+        description="Concede búsquedas o refills adicionales de forma puntual."
+      >
+        <div class={styles.capacityGrantGrid}>
+          <form
+            class={styles.capacityForm}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleGrantSearches();
+            }}
+          >
+            <span class={styles.capacityCardLabel}>Búsquedas extra</span>
+            <Input
+              type="number"
+              label="Cantidad"
+              value={searchGrant()}
+              onInput={(event) => setSearchGrant(event.currentTarget.value)}
+              required
+            />
+            <div class={styles.capacityActions}>
+              <Button
+                type="submit"
+                size="sm"
+                variant="secondary"
+                loading={searchGrantSubmission.pending}
+              >
+                Otorgar
+              </Button>
+            </div>
+          </form>
+
+          <form
+            class={styles.capacityForm}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleGrantRefill();
+            }}
+          >
+            <span class={styles.capacityCardLabel}>Refills extra</span>
+            <Input
+              type="number"
+              label="Cantidad"
+              value={leadGrant()}
+              onInput={(event) => setLeadGrant(event.currentTarget.value)}
+              required
+            />
+            <div class={styles.capacityActions}>
+              <Button
+                type="submit"
+                size="sm"
+                variant="secondary"
+                loading={refillGrantSubmission.pending}
+              >
+                Otorgar
+              </Button>
+            </div>
+          </form>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Override de política"
+        description="Fija límites propios para este usuario, por encima del default de su equipo."
+      >
+        <form
+          class={styles.capacityForm}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveOverride();
+          }}
+        >
+          <CapacityLimitFields
+            draft={override}
+            setValue={(key, value) => setOverride(key, value)}
+          />
+          <div class={styles.capacityActions}>
+            <Button
+              type="submit"
+              size="sm"
+              variant="secondary"
+              loading={overrideSubmission.pending}
+            >
+              Guardar override
+            </Button>
+          </div>
+        </form>
+      </SettingsSection>
+
+      <SettingsSection title="Historial de solicitudes">
+        <Show
+          when={props.detail().requests.length > 0}
+          fallback={
+            <p class={styles.rosterEmpty}>Sin solicitudes registradas.</p>
+          }
+        >
+          <div class={styles.requestList}>
+            <For each={props.detail().requests}>
+              {(request) => (
+                <div class={styles.requestItem}>
+                  <span class={styles.requestTitle}>
+                    {request.kind === "search_extra"
+                      ? "Más búsquedas"
+                      : "Más refills"}{" "}
+                    · {request.requestedAmount}
+                  </span>
+                  <span class={styles.requestMeta}>
+                    {request.status} · {request.reason}
+                  </span>
+                </div>
+              )}
+            </For>
+          </div>
+        </Show>
+      </SettingsSection>
+    </>
   );
 }

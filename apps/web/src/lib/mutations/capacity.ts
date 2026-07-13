@@ -7,10 +7,8 @@ import {
   rejectCapacity,
 } from "~/actions/capacity/approvals";
 import {
-  updateLeadPolicyOverride,
-  updateLeadPolicyDefault,
-  updateSearchPolicyOverride,
-  updateSearchPolicyDefault,
+  updateExecutivePolicyOverride,
+  updateScopePolicy,
 } from "~/actions/capacity/policies";
 import {
   requestMoreLeadRefill,
@@ -111,13 +109,15 @@ export const grantMoreLeadRefillMutation = action(
   "grantMoreLeadRefill",
 );
 
-export const updateSearchPolicyOverrideMutation = action(
+export const updateExecutivePolicyOverrideMutation = action(
   async (input: {
     userId: string;
     monthlySearchLimit: number;
+    activeBufferTarget: number;
+    dailyRefillLimit: number;
     expiresAt: number | null;
   }) => {
-    const result = await updateSearchPolicyOverride(input);
+    const result = await updateExecutivePolicyOverride(input);
     return json(result, {
       revalidate: [
         managedExecutivesQuery.key,
@@ -125,52 +125,21 @@ export const updateSearchPolicyOverrideMutation = action(
       ],
     });
   },
-  "updateSearchPolicyOverride",
+  "updateExecutivePolicyOverride",
 );
 
-export const updateLeadPolicyOverrideMutation = action(
-  async (input: {
-    userId: string;
-    activeBufferTarget: number;
-    dailyRefillLimit: number;
-    expiresAt: number | null;
-  }) => {
-    const result = await updateLeadPolicyOverride(input);
-    return json(result, {
-      revalidate: [
-        managedExecutivesQuery.key,
-        executiveCapacityDetailQuery.key,
-      ],
-    });
-  },
-  "updateLeadPolicyOverride",
-);
-
-export const updateSearchScopeDefaultMutation = action(
+export const updateScopePolicyMutation = action(
   async (input: {
     scopeType: "branch" | "team";
     scopeId: string;
     monthlySearchLimit: number;
-  }) => {
-    const result = await updateSearchPolicyDefault(input);
-    return json(result, {
-      revalidate: [capacityPolicyDefaultsQuery.key, managedExecutivesQuery.key],
-    });
-  },
-  "updateSearchScopeDefault",
-);
-
-export const updateLeadScopeDefaultMutation = action(
-  async (input: {
-    scopeType: "branch" | "team";
-    scopeId: string;
     activeBufferTarget: number;
     dailyRefillLimit: number;
   }) => {
-    const result = await updateLeadPolicyDefault(input);
+    const result = await updateScopePolicy(input);
     return json(result, {
       revalidate: [capacityPolicyDefaultsQuery.key, managedExecutivesQuery.key],
     });
   },
-  "updateLeadScopeDefault",
+  "updateScopePolicy",
 );

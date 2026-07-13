@@ -39,10 +39,10 @@ export function BulkImportSection() {
   const { enqueueErrorSnackBar } = useSnackBar();
 
   createEffect(
-    on(bulkImportSetup, (im) => {
-      if (!im) return;
-      if (!im.assignableRoles.some((o) => o.value === role())) {
-        setRole(im.assignableRoles[0]?.value ?? "");
+    on(bulkImportSetup, (setup) => {
+      if (!setup) return;
+      if (!setup.assignableRoles.some((option) => option.value === role())) {
+        setRole(setup.assignableRoles[0]?.value ?? "");
       }
     }),
   );
@@ -83,7 +83,7 @@ export function BulkImportSection() {
 
   return (
     <Show when={bulkImportSetup()} keyed>
-      {(im) => (
+      {(setup) => (
         <SettingsSection
           title="Importar desde CSV"
           description="Carga un archivo CSV con columnas: FIRST_SURNAME, SECOND_SURNAME, NAMES, EMAIL, DATE_EXPIRY (opcional), EXECUTIVE_CATEGORY (requerido para ejecutivos: elite o corporativa)."
@@ -103,7 +103,7 @@ export function BulkImportSection() {
               value={role()}
               onInput={(event) => setRole(event.currentTarget.value)}
             >
-              <For each={im.assignableRoles}>
+              <For each={setup.assignableRoles}>
                 {(option) => (
                   <option value={option.value}>{option.label}</option>
                 )}
@@ -125,24 +125,24 @@ export function BulkImportSection() {
           </div>
 
           <Show when={preview()}>
-            {(p) => (
+            {(previewData) => (
               <>
-                <Show when={p().parsed.errors.length > 0}>
+                <Show when={previewData().parsed.errors.length > 0}>
                   <div class={styles.importBlock}>
                     <p class={styles.importNote}>
-                      {p().parsed.errors.length} fila(s) con errores (serán
-                      omitidas):
+                      {previewData().parsed.errors.length} fila(s) con errores
+                      (serán omitidas):
                     </p>
                     <Table>
                       <TableRow gridTemplateColumns={ERROR_COLUMNS}>
                         <TableHeader>Fila</TableHeader>
                         <TableHeader>Error</TableHeader>
                       </TableRow>
-                      <For each={p().parsed.errors}>
-                        {(err) => (
+                      <For each={previewData().parsed.errors}>
+                        {(rowError) => (
                           <TableRow gridTemplateColumns={ERROR_COLUMNS}>
-                            <TableCell>{err.row}</TableCell>
-                            <TableCell ellipsis>{err.message}</TableCell>
+                            <TableCell>{rowError.row}</TableCell>
+                            <TableCell ellipsis>{rowError.message}</TableCell>
                           </TableRow>
                         )}
                       </For>
@@ -151,7 +151,7 @@ export function BulkImportSection() {
                 </Show>
 
                 <Show
-                  when={p().parsed.valid.length > 0}
+                  when={previewData().parsed.valid.length > 0}
                   fallback={
                     <EmptyState
                       title="Sin filas válidas"
@@ -168,7 +168,7 @@ export function BulkImportSection() {
                         <TableHeader>Vencimiento</TableHeader>
                         <TableHeader>Categoría</TableHeader>
                       </TableRow>
-                      <For each={p().parsed.valid}>
+                      <For each={previewData().parsed.valid}>
                         {(row) => (
                           <TableRow gridTemplateColumns={PREVIEW_COLUMNS}>
                             <TableCell ellipsis>
@@ -205,7 +205,7 @@ export function BulkImportSection() {
                       >
                         {isImporting()
                           ? "Importando..."
-                          : `Crear ${p().parsed.valid.length} usuario(s)`}
+                          : `Crear ${previewData().parsed.valid.length} usuario(s)`}
                       </Button>
                     </div>
                   </div>
@@ -215,21 +215,21 @@ export function BulkImportSection() {
           </Show>
 
           <Show when={result()}>
-            {(r) => (
+            {(importResult) => (
               <div class={styles.importBlock}>
                 <p class={styles.importNote}>
-                  Importación completada: {r().created} creado(s), {r().skipped}{" "}
-                  omitido(s).
+                  Importación completada: {importResult().created} creado(s),{" "}
+                  {importResult().skipped} omitido(s).
                 </p>
-                <Show when={r().rowErrors.length > 0}>
+                <Show when={importResult().rowErrors.length > 0}>
                   <Table>
                     <TableRow>
                       <TableHeader>Error</TableHeader>
                     </TableRow>
-                    <For each={r().rowErrors}>
-                      {(err) => (
+                    <For each={importResult().rowErrors}>
+                      {(rowError) => (
                         <TableRow>
-                          <TableCell ellipsis>{err}</TableCell>
+                          <TableCell ellipsis>{rowError}</TableCell>
                         </TableRow>
                       )}
                     </For>

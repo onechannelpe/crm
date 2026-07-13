@@ -196,6 +196,78 @@
   color: var(--foreground-tertiary);
 }
 
+.capacityCards {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.capacityCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.capacityCardLabel {
+  font-weight: var(--font-weight-medium);
+}
+
+.capacityCardValue {
+  font-size: var(--font-size-lg);
+}
+
+.capacityCardMeta {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
+.capacityGrantGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.capacityForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.capacityActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.requestList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requestItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.requestTitle {
+  font-weight: var(--font-weight-medium);
+}
+
+.requestMeta {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
 @media (max-width: 768px) {
   .inviteForm {
     grid-template-columns: 1fr;

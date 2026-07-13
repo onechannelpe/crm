@@ -3,8 +3,8 @@ import { For, Show } from "solid-js";
 import Check from "~/components/icons/check";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Input } from "~/components/ui/input/input";
+import { useTheme } from "~/components/ui/theme/theme-context";
 import type { ThemeMode } from "~/components/ui/theme/theme-mode";
-import { useThemeMode } from "~/components/ui/theme/use-theme-mode";
 import { cn } from "~/lib/utils";
 
 import styles from "./settings-page.module.css";
@@ -15,7 +15,7 @@ const THEME_OPTIONS: ReadonlyArray<{ value: ThemeMode; label: string }> = [
 ];
 
 export default function AppearanceSettingsPage() {
-  const { theme, setTheme } = useThemeMode();
+  const { theme, setTheme } = useTheme();
 
   return (
     <>

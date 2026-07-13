@@ -46,6 +46,7 @@
     "@sentry/bun": "^10.59.0",
     "@sentry/solid": "^10.59.0",
     "@simplewebauthn/server": "^13.3.1",
+    "@solid-primitives/keyed": "^1.5.1",
     "@solid-primitives/resize-observer": "^2.1.5",
     "@solidjs/router": "^0.16.1",
     "@solidjs/start": "2.0.0-alpha.3",
