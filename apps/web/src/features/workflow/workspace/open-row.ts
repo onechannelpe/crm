@@ -3,7 +3,7 @@ import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-
 import { createLeadRecordDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 
 export function useOpenLeadRecord() {
-  const rowOpen = useSidePanelRowOpen<
+  return useSidePanelRowOpen<
     Pick<LeadListRowView, "id" | "ruc" | "legalName" | "address">
   >((lead) =>
     createLeadRecordDetailSidePanelPage({
@@ -12,8 +12,4 @@ export function useOpenLeadRecord() {
       subtitle: [lead.ruc, lead.address].filter(Boolean).join(" · "),
     }),
   );
-
-  return {
-    rowOpen,
-  };
 }

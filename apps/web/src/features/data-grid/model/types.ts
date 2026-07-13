@@ -1,7 +1,5 @@
 import type { Component, JSX } from "solid-js";
 
-import type { DataGridReorderConfig } from "../dnd/types";
-
 type DataGridIconProps = {
   size?: number | string;
 };
@@ -18,7 +16,7 @@ export type DataGridColumnEdit<T> = {
 export type DataGridColumn<T> = {
   key: string;
   label: string;
-  icon: DataGridIcon;
+  icon?: DataGridIcon;
   width?: number;
   minWidth?: number;
   maxWidth?: number;
@@ -34,6 +32,10 @@ export type DataGridActionRowConfig = {
   onClick: () => void;
 };
 
-export type DataGridFeatures<T> = {
-  reorder?: DataGridReorderConfig<T>;
+export type DataGridRowOpenIndicator = "panel" | "route";
+
+export type DataGridLoadMore = {
+  hasMore: boolean;
+  loading: boolean;
+  onLoadMore: () => void | Promise<void>;
 };

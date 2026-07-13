@@ -1,30 +1,24 @@
-import { createContext, type JSX, useContext } from "solid-js";
+import { createContext, type ParentProps, useContext } from "solid-js";
 
-import type { DataGridInteractionModel } from "../hooks/use-instance";
+import type { DataGridController } from "../hooks/create-controller";
 
-const DataGridInstanceContext = createContext<
-  DataGridInteractionModel | undefined
->(undefined);
+const DataGridContext = createContext<DataGridController>();
 
-export function DataGridInstanceProvider(props: {
-  value: DataGridInteractionModel;
-  children: JSX.Element;
-}) {
+export function DataGridProvider(
+  props: ParentProps<{ value: DataGridController }>,
+) {
   return (
-    <DataGridInstanceContext.Provider value={props.value}>
+    <DataGridContext.Provider value={props.value}>
       {props.children}
-    </DataGridInstanceContext.Provider>
+    </DataGridContext.Provider>
   );
 }
 
-export function useDataGridInstance() {
-  const instance = useContext(DataGridInstanceContext);
-
-  if (!instance) {
-    throw new Error(
-      "useDataGridInstance must be used within DataGridInstanceProvider",
-    );
+export function useDataGrid() {
+  const grid = useContext(DataGridContext);
+  if (!grid) {
+    throw new Error("useDataGrid must be used within DataGridProvider");
   }
 
-  return instance;
+  return grid;
 }

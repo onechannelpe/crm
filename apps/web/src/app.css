@@ -118,6 +118,7 @@
   --background-transparent-lighter: var(--bg-translucent-subtle);
   --background-transparent-light: color(display-p3 1 1 1 / 0.5);
   --background-transparent-medium: var(--bg-translucent-medium);
+  --background-transparent-blue: color(display-p3 0.008 0.239 0.886 / 0.067);
 
   --t-spacing-0: 0px;
   --t-spacing-1: var(--spacing-1);
@@ -150,9 +151,11 @@
   --t-font-weight-semi-bold: 600;
   --t-font-family: var(--font-sans);
 
-  --color-blue: color(display-p3 0.306 0.506 0.957);
+  --color-white: color(display-p3 1 1 1);
+  --color-blue: color(display-p3 0.276 0.384 0.837);
   --color-blue-5: color(display-p3 0.831 0.87 1);
   --color-blue-6: color(display-p3 0.767 0.814 0.995);
+  --color-blue-7: color(display-p3 0.685 0.74 0.957);
   --color-blue-11: color(display-p3 0.256 0.354 0.755);
   --color-purple-5: color(display-p3 0.904 0.837 0.966);
   --color-purple-6: color(display-p3 0.86 0.774 0.942);
@@ -213,6 +216,7 @@
 
   --accent: color(display-p3 0.976 0.976 0.976);
   --accent-foreground: color(display-p3 0.2 0.2 0.2);
+  --accent-quaternary: color(display-p3 0.971 0.977 0.998);
 
   --destructive: color(display-p3 0.75 0.2 0.2);
   --destructive-foreground: color(display-p3 1 1 1);
@@ -303,10 +307,13 @@
 
   --accent: color(display-p3 0.114 0.114 0.114);
   --accent-foreground: color(display-p3 0.922 0.922 0.922);
+  --accent-quaternary: color(display-p3 0.081 0.089 0.144);
 
   --color-blue-5: color(display-p3 0.163 0.22 0.439);
   --color-blue-6: color(display-p3 0.203 0.262 0.5);
+  --color-blue-7: color(display-p3 0.245 0.309 0.575);
   --color-blue-11: color(display-p3 0.63 0.69 1);
+  --background-transparent-blue: color(display-p3 0.243 0.404 1 / 0.223);
   --color-purple-5: color(display-p3 0.264 0.167 0.349);
   --color-purple-6: color(display-p3 0.311 0.208 0.406);
   --color-purple-11: color(display-p3 0.8 0.62 1);

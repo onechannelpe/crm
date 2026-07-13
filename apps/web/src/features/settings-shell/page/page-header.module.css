@@ -1,17 +1,15 @@
 .topBar {
   align-items: center;
-  background-image: var(--background-noisy);
+  background-color: var(--secondary);
+  border-bottom: 1px solid var(--border-medium);
+  box-sizing: border-box;
   color: var(--foreground);
   display: flex;
   flex-direction: row;
-  font-size: var(--font-size-heading-sm);
   gap: var(--spacing-2);
   justify-content: space-between;
-  min-height: 32px;
-  padding-bottom: var(--spacing-3);
-  padding-left: 0;
-  padding-right: var(--spacing-3);
-  padding-top: var(--spacing-3);
+  min-height: 48px;
+  padding: 0 var(--spacing-3);
 }
 
 .left {
@@ -46,7 +44,7 @@
   align-items: center;
   display: flex;
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
   margin-right: var(--spacing-1);
   min-width: 0;
   overflow: hidden;
@@ -62,10 +60,6 @@
 }
 
 @media (max-width: 768px) {
-  .topBar {
-    padding-left: var(--spacing-3);
-  }
-
   .left {
     padding-left: var(--spacing-1);
   }

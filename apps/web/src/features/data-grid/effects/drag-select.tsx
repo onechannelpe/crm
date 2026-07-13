@@ -1,8 +1,7 @@
 import { createSignal, onCleanup, onMount, Show } from "solid-js";
 import { Portal } from "solid-js/web";
 
-import { useDataGridInstance } from "../context/instance-context";
-import { useDataGridTable } from "../context/table-context";
+import { useDataGrid } from "../context/instance-context";
 import {
   autoScrollContainer,
   createSelectionBox,
@@ -10,119 +9,136 @@ import {
   getSelectableRowIdsInBox,
 } from "../dnd/geometry";
 import type { DataGridPoint, DataGridSelectionBox } from "../dnd/types";
+import type { DataGridSelectionController } from "../model/selection";
 
-import styles from "../styles/data-grid.module.css";
+import styles from "../styles/table.module.css";
 
 const DRAG_SELECTION_THRESHOLD = 6;
 
-export function DataGridDragSelectEffect() {
-  const interaction = useDataGridInstance();
-  const table = useDataGridTable();
+export function DataGridDragSelectEffect(props: {
+  selection: DataGridSelectionController;
+}) {
+  const grid = useDataGrid();
   const [selectionBox, setSelectionBox] = createSignal<
     DataGridSelectionBox | undefined
   >();
+  const selectionController = props.selection;
 
   onMount(() => {
+    const scrollWrapper = grid.getScrollWrapper();
+    if (!scrollWrapper) {
+      return;
+    }
+    const scrollContainer = scrollWrapper;
+
     let pointerId: number | undefined;
     let startPoint: DataGridPoint | undefined;
+    let latestClientPoint: DataGridPoint | undefined;
     let selecting = false;
+    let animationFrame: number | undefined;
+
+    function stopAnimationFrame() {
+      if (animationFrame !== undefined) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = undefined;
+      }
+    }
 
     function reset() {
+      if (
+        pointerId !== undefined &&
+        scrollContainer.hasPointerCapture(pointerId)
+      ) {
+        scrollContainer.releasePointerCapture(pointerId);
+      }
+
+      stopAnimationFrame();
       pointerId = undefined;
       startPoint = undefined;
+      latestClientPoint = undefined;
       selecting = false;
       setSelectionBox(undefined);
     }
 
-    function handleSelectionBox(nextSelectionBox: DataGridSelectionBox) {
-      const scrollWrapper = table.getScrollWrapper();
-      if (!scrollWrapper || !interaction.setSelected) {
+    function updateSelection() {
+      animationFrame = undefined;
+      if (!selecting || !startPoint || !latestClientPoint) {
         return;
       }
 
-      const selectedRowIds = new Set(
-        getSelectableRowIdsInBox(scrollWrapper, nextSelectionBox),
+      autoScrollContainer(scrollContainer, latestClientPoint.y);
+      const nextPoint = getPointRelativeToContainer(
+        scrollContainer,
+        latestClientPoint.x,
+        latestClientPoint.y,
       );
+      const nextSelectionBox = createSelectionBox(startPoint, nextPoint);
 
-      for (const rowElement of scrollWrapper.querySelectorAll<HTMLElement>(
-        "[data-selectable-id]",
-      )) {
-        const rowId = rowElement.dataset.selectableId;
-        if (!rowId) {
-          continue;
-        }
-
-        interaction.setSelected(rowId, selectedRowIds.has(rowId));
-      }
+      setSelectionBox(nextSelectionBox);
+      selectionController.replace(
+        getSelectableRowIdsInBox(scrollContainer, nextSelectionBox),
+      );
+      animationFrame = requestAnimationFrame(updateSelection);
     }
 
     function handlePointerDown(event: PointerEvent) {
-      if (!interaction.setSelected || event.button !== 0) {
+      if (event.button !== 0) {
         return;
       }
 
       const target = event.target;
-      if (!(target instanceof HTMLElement)) {
-        return;
-      }
-
-      const scrollWrapper = table.getScrollWrapper();
-      if (!scrollWrapper || !scrollWrapper.contains(target)) {
-        return;
-      }
-
-      if (target.closest("[data-select-disable='true']")) {
+      if (
+        !(target instanceof HTMLElement) ||
+        !scrollContainer.contains(target) ||
+        target.closest(
+          "[data-select-disable='true'], [contenteditable='true'], a, button, input, select, textarea",
+        )
+      ) {
         return;
       }
 
       pointerId = event.pointerId;
+      latestClientPoint = { x: event.clientX, y: event.clientY };
       startPoint = getPointRelativeToContainer(
-        scrollWrapper,
+        scrollContainer,
         event.clientX,
         event.clientY,
       );
+      scrollContainer.setPointerCapture(event.pointerId);
     }
 
     function handlePointerMove(event: PointerEvent) {
       if (
         pointerId === undefined ||
         event.pointerId !== pointerId ||
-        !interaction.setSelected ||
         !startPoint
       ) {
         return;
       }
 
-      const scrollWrapper = table.getScrollWrapper();
-      if (!scrollWrapper) {
+      latestClientPoint = { x: event.clientX, y: event.clientY };
+      if (selecting) {
+        event.preventDefault();
         return;
       }
 
-      autoScrollContainer(scrollWrapper, event.clientY);
-
       const nextPoint = getPointRelativeToContainer(
-        scrollWrapper,
+        scrollContainer,
         event.clientX,
         event.clientY,
       );
-      const nextSelectionBox = createSelectionBox(startPoint, nextPoint);
-
-      if (!selecting) {
-        const distance = Math.max(
-          Math.abs(nextPoint.x - startPoint.x),
-          Math.abs(nextPoint.y - startPoint.y),
-        );
-        if (distance < DRAG_SELECTION_THRESHOLD) {
-          return;
-        }
-
-        selecting = true;
-        interaction.clearSelection();
-        interaction.markRowOpenSuppressed();
+      const distance = Math.max(
+        Math.abs(nextPoint.x - startPoint.x),
+        Math.abs(nextPoint.y - startPoint.y),
+      );
+      if (distance < DRAG_SELECTION_THRESHOLD) {
+        return;
       }
 
-      setSelectionBox(nextSelectionBox);
-      handleSelectionBox(nextSelectionBox);
+      selecting = true;
+      selectionController.clear();
+      grid.activation.suppress();
+      animationFrame = requestAnimationFrame(updateSelection);
     }
 
     function handlePointerUp(event: PointerEvent) {
@@ -130,25 +146,37 @@ export function DataGridDragSelectEffect() {
         return;
       }
 
-      if (selecting) {
-        setTimeout(() => interaction.clearPendingRowOpenSuppression(), 0);
-      }
+      const wasSelecting = selecting;
       reset();
+      if (wasSelecting) {
+        setTimeout(() => grid.activation.clearSuppression(), 0);
+      }
     }
 
-    const scrollWrapper = table.getScrollWrapper();
-    scrollWrapper?.addEventListener("pointerdown", handlePointerDown);
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
+    function handlePointerCancel(event: PointerEvent) {
+      if (pointerId === undefined || event.pointerId !== pointerId) {
+        return;
+      }
+
+      reset();
+      grid.activation.clearSuppression();
+    }
+
+    scrollContainer.addEventListener("pointerdown", handlePointerDown);
+    scrollContainer.addEventListener("pointermove", handlePointerMove);
+    scrollContainer.addEventListener("pointerup", handlePointerUp);
+    scrollContainer.addEventListener("pointercancel", handlePointerCancel);
 
     onCleanup(() => {
-      scrollWrapper?.removeEventListener("pointerdown", handlePointerDown);
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
+      reset();
+      scrollContainer.removeEventListener("pointerdown", handlePointerDown);
+      scrollContainer.removeEventListener("pointermove", handlePointerMove);
+      scrollContainer.removeEventListener("pointerup", handlePointerUp);
+      scrollContainer.removeEventListener("pointercancel", handlePointerCancel);
     });
   });
 
-  const overlayMount = () => table.getScrollWrapper();
+  const overlayMount = () => grid.getScrollWrapper();
 
   return (
     <Show when={overlayMount() && selectionBox()}>

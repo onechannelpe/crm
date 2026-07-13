@@ -60,8 +60,8 @@ export function getPointRelativeToContainer(
   const rect = container.getBoundingClientRect();
 
   return {
-    x: clientX - rect.left,
-    y: clientY - rect.top,
+    x: clientX - rect.left + container.scrollLeft,
+    y: clientY - rect.top + container.scrollTop,
   };
 }
 
@@ -94,8 +94,8 @@ export function getSelectableRowIdsInBox(
 
     const rect = rowElement.getBoundingClientRect();
     const rowBox = {
-      top: rect.top - containerRect.top,
-      left: rect.left - containerRect.left,
+      top: rect.top - containerRect.top + container.scrollTop,
+      left: rect.left - containerRect.left + container.scrollLeft,
       width: rect.width,
       height: rect.height,
     };

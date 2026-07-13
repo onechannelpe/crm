@@ -10,10 +10,12 @@ import { FileInput } from "~/components/ui/input/file-input";
 import { Select } from "~/components/ui/input/select";
 import {
   Table,
+  TableBody,
   TableCell,
+  TableHead,
   TableHeader,
   TableRow,
-} from "~/components/ui/layout/table-grid/table-grid";
+} from "~/components/ui/layout/table";
 import type {
   BulkApplyResult,
   BulkPreviewResult,
@@ -24,9 +26,6 @@ import { bulkImportSetupQuery } from "~/lib/queries/team";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-members.module.css";
-
-const ERROR_COLUMNS = "64px 1fr";
-const PREVIEW_COLUMNS = "1.2fr 1fr 1.6fr 1fr 1fr";
 
 export function BulkImportSection() {
   const bulkImportSetup = createAsync(() => bulkImportSetupQuery());
@@ -133,19 +132,27 @@ export function BulkImportSection() {
                       {previewData().parsed.errors.length} fila(s) con errores
                       (serán omitidas):
                     </p>
-                    <Table>
-                      <TableRow gridTemplateColumns={ERROR_COLUMNS}>
-                        <TableHeader>Fila</TableHeader>
-                        <TableHeader>Error</TableHeader>
-                      </TableRow>
-                      <For each={previewData().parsed.errors}>
-                        {(rowError) => (
-                          <TableRow gridTemplateColumns={ERROR_COLUMNS}>
-                            <TableCell>{rowError.row}</TableCell>
-                            <TableCell ellipsis>{rowError.message}</TableCell>
-                          </TableRow>
-                        )}
-                      </For>
+                    <Table variant="list">
+                      <colgroup>
+                        <col style={{ width: "64px" }} />
+                        <col />
+                      </colgroup>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Fila</TableHead>
+                          <TableHead>Error</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <For each={previewData().parsed.errors}>
+                          {(rowError) => (
+                            <TableRow>
+                              <TableCell>{rowError.row}</TableCell>
+                              <TableCell ellipsis>{rowError.message}</TableCell>
+                            </TableRow>
+                          )}
+                        </For>
+                      </TableBody>
                     </Table>
                   </div>
                 </Show>
@@ -160,40 +167,51 @@ export function BulkImportSection() {
                   }
                 >
                   <div class={styles.importBlock}>
-                    <Table>
-                      <TableRow gridTemplateColumns={PREVIEW_COLUMNS}>
-                        <TableHeader>Apellidos</TableHeader>
-                        <TableHeader>Nombres</TableHeader>
-                        <TableHeader>Correo</TableHeader>
-                        <TableHeader>Vencimiento</TableHeader>
-                        <TableHeader>Categoría</TableHeader>
-                      </TableRow>
-                      <For each={previewData().parsed.valid}>
-                        {(row) => (
-                          <TableRow gridTemplateColumns={PREVIEW_COLUMNS}>
-                            <TableCell ellipsis>
-                              {row.firstSurname} {row.secondSurname}
-                            </TableCell>
-                            <TableCell ellipsis>{row.names}</TableCell>
-                            <TableCell ellipsis>{row.email}</TableCell>
-                            <TableCell>
-                              {row.expiresAt
-                                ? new Date(row.expiresAt).toLocaleDateString(
-                                    APP_LOCALE,
-                                    {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
-                                    },
-                                  )
-                                : "—"}
-                            </TableCell>
-                            <TableCell>
-                              {row.executiveCategory ?? "—"}
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </For>
+                    <Table variant="list">
+                      <colgroup>
+                        <col style={{ width: "24%" }} />
+                        <col style={{ width: "20%" }} />
+                        <col style={{ width: "32%" }} />
+                        <col style={{ width: "20%" }} />
+                        <col style={{ width: "20%" }} />
+                      </colgroup>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Apellidos</TableHead>
+                          <TableHead>Nombres</TableHead>
+                          <TableHead>Correo</TableHead>
+                          <TableHead>Vencimiento</TableHead>
+                          <TableHead>Categoría</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <For each={previewData().parsed.valid}>
+                          {(row) => (
+                            <TableRow>
+                              <TableCell ellipsis>
+                                {row.firstSurname} {row.secondSurname}
+                              </TableCell>
+                              <TableCell ellipsis>{row.names}</TableCell>
+                              <TableCell ellipsis>{row.email}</TableCell>
+                              <TableCell>
+                                {row.expiresAt
+                                  ? new Date(row.expiresAt).toLocaleDateString(
+                                      APP_LOCALE,
+                                      {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                      },
+                                    )
+                                  : "—"}
+                              </TableCell>
+                              <TableCell>
+                                {row.executiveCategory ?? "—"}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </For>
+                      </TableBody>
                     </Table>
                     <div class={styles.inviteActions}>
                       <Button
@@ -222,17 +240,21 @@ export function BulkImportSection() {
                   {importResult().skipped} omitido(s).
                 </p>
                 <Show when={importResult().rowErrors.length > 0}>
-                  <Table>
-                    <TableRow>
-                      <TableHeader>Error</TableHeader>
-                    </TableRow>
-                    <For each={importResult().rowErrors}>
-                      {(rowError) => (
-                        <TableRow>
-                          <TableCell ellipsis>{rowError}</TableCell>
-                        </TableRow>
-                      )}
-                    </For>
+                  <Table variant="list">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Error</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <For each={importResult().rowErrors}>
+                        {(rowError) => (
+                          <TableRow>
+                            <TableCell ellipsis>{rowError}</TableCell>
+                          </TableRow>
+                        )}
+                      </For>
+                    </TableBody>
                   </Table>
                 </Show>
               </div>

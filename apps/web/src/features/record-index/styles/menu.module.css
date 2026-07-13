@@ -1,0 +1,162 @@
+.menuWrap {
+  position: relative;
+}
+
+.menu {
+  background: var(--background);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevation-2);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 320px;
+  padding: 0;
+  z-index: 38;
+}
+
+.menuFloating {
+  position: fixed;
+}
+
+.menuLeft {
+  transform-origin: top left;
+}
+
+.menuItem {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  min-height: 30px;
+  padding: 0 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.menuItem[data-active="true"],
+.menuItem:hover {
+  background: var(--background-transparent-light);
+}
+
+.menuItemIcon {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
+.menuItemContext {
+  color: var(--foreground-tertiary);
+}
+
+.menuHeader {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  display: flex;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 32px;
+  padding: 4px;
+  user-select: none;
+}
+
+.menuHeaderCloseButton {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.menuHeaderCloseButton:hover {
+  background: var(--background-transparent-light);
+}
+
+.menuHeaderTitle {
+  overflow: hidden;
+  padding: 0 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menuScrollable {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.menuGroupLabel {
+  align-items: center;
+  background-color: var(--background-transparent-lighter);
+  color: var(--foreground-tertiary);
+  display: flex;
+  font-size: var(--font-size-tiny);
+  justify-content: flex-start;
+  min-height: 20px;
+  padding-left: var(--spacing-1);
+  user-select: none;
+  width: auto;
+}
+
+.menuSectionLabel {
+  color: var(--foreground-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px 6px;
+  text-transform: uppercase;
+}
+
+.menuListbox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 6px;
+  width: auto;
+}
+
+.menuSeparator {
+  background: var(--border);
+  height: 1px;
+  margin: 6px 0;
+}
+
+.menuSearchInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  min-height: 34px;
+  outline: none;
+  padding: 0 10px;
+}
+
+.menuSearchInput::placeholder {
+  color: var(--foreground-light);
+}
+
+.menuEmptyState {
+  color: var(--foreground-tertiary);
+  font-size: 12px;
+  padding: 6px 16px;
+}

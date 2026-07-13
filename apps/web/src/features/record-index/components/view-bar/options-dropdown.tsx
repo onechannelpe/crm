@@ -1,25 +1,25 @@
-import { createMemo, createSignal, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import ChevronRight from "~/components/icons/chevron-right";
 import Link from "~/components/icons/link";
 import List from "~/components/icons/list";
+import { Checkbox } from "~/components/ui/input/checkbox";
 
-import { useRecordIndexModelContext } from "../../context/model-context";
-import { useRecordIndexSetup } from "../../context/setup-context";
+import { useRecordIndex } from "../../context/record-index-context";
 import { DropdownMenuHeader } from "./menu-primitives";
-import type { OptionsContentId } from "./types";
 
+import sharedStyles from "../../styles/menu.module.css";
 import styles from "./view-bar.module.css";
-import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
+
+type OptionsContentId = "menu" | "fields";
 
 export function OptionsDropdown(props: { onClose: () => void }) {
-  const model = useRecordIndexModelContext();
-  const setup = useRecordIndexSetup();
+  const recordIndex = useRecordIndex();
   const [contentId, setContentId] = createSignal<OptionsContentId>("menu");
 
-  const visibleFieldsCount = () => model.columns.visibleColumnKeys().size;
-  const optionActions = () => setup.actions ?? [];
+  const visibleFieldsCount = () => recordIndex.columns.visibleKeys().size;
+  const optionActions = () => recordIndex.definition.actions ?? [];
 
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
 
@@ -53,31 +53,21 @@ export function OptionsDropdown(props: { onClose: () => void }) {
           />
           <div class={sharedStyles.menuScrollable}>
             <div class={sharedStyles.menuGroupLabel}>Columnas de la tabla</div>
-            <div class={sharedStyles.menuListbox} role="menu">
-              <For each={setup.columns}>
+            <div class={sharedStyles.menuListbox}>
+              <For each={recordIndex.definition.columns}>
                 {(column) => {
-                  const isVisible = createMemo(() =>
-                    model.columns.visibleColumnKeys().has(column.key),
-                  );
+                  const isVisible = () =>
+                    recordIndex.columns.visibleKeys().has(column.key);
 
                   return (
-                    <button
-                      type="button"
+                    <Checkbox
                       class={sharedStyles.menuItem}
-                      role="menuitemcheckbox"
-                      data-active={isVisible() ? "true" : "false"}
-                      aria-checked={isVisible() ? "true" : "false"}
-                      onClick={() => model.columns.toggleColumn(column.key)}
-                    >
-                      <input
-                        checked={isVisible()}
-                        class={sharedStyles.menuCheckbox}
-                        type="checkbox"
-                        aria-hidden="true"
-                        tabIndex={-1}
-                      />
-                      <span>{column.label}</span>
-                    </button>
+                      checked={isVisible()}
+                      disabled={isVisible() && visibleFieldsCount() === 1}
+                      hoverable={false}
+                      label={column.label}
+                      onChange={() => recordIndex.columns.toggle(column.key)}
+                    />
                   );
                 }}
               </For>
@@ -88,10 +78,9 @@ export function OptionsDropdown(props: { onClose: () => void }) {
     >
       <DropdownMenuHeader title="Opciones" onClose={props.onClose} />
       <div class={sharedStyles.menuScrollable}>
-        <div class={sharedStyles.menuListbox} role="menu">
+        <div class={sharedStyles.menuListbox}>
           <button
             type="button"
-            role="menuitem"
             class={sharedStyles.menuItem}
             onClick={() => setContentId("fields")}
           >
@@ -104,7 +93,6 @@ export function OptionsDropdown(props: { onClose: () => void }) {
           </button>
           <button
             type="button"
-            role="menuitem"
             class={sharedStyles.menuItem}
             onClick={() => {
               void copyViewLink();
@@ -121,12 +109,11 @@ export function OptionsDropdown(props: { onClose: () => void }) {
           <>
             <div class={sharedStyles.menuSeparator} />
             <div class={sharedStyles.menuGroupLabel}>Acciones</div>
-            <div class={sharedStyles.menuListbox} role="menu">
+            <div class={sharedStyles.menuListbox}>
               <For each={optionActions()}>
                 {(action) => (
                   <button
                     type="button"
-                    role="menuitem"
                     class={sharedStyles.menuItem}
                     onClick={() => {
                       props.onClose();

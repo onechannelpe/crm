@@ -3,7 +3,7 @@ import { Show } from "solid-js";
 import ChevronLeft from "~/components/icons/chevron-left";
 import X from "~/components/icons/x";
 
-import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
+import sharedStyles from "../../styles/menu.module.css";
 
 export function DropdownMenuHeader(props: {
   onClose: () => void;
@@ -17,6 +17,7 @@ export function DropdownMenuHeader(props: {
         fallback={
           <button
             type="button"
+            autofocus
             class={sharedStyles.menuHeaderCloseButton}
             aria-label="Cerrar"
             onClick={props.onClose}
@@ -28,6 +29,7 @@ export function DropdownMenuHeader(props: {
         {(onBack) => (
           <button
             type="button"
+            autofocus
             class={sharedStyles.menuHeaderCloseButton}
             aria-label="Volver"
             onClick={onBack()}
@@ -39,11 +41,4 @@ export function DropdownMenuHeader(props: {
       <span class={sharedStyles.menuHeaderTitle}>{props.title}</span>
     </div>
   );
-}
-
-export function parseSortDirection(value: string | undefined): "asc" | "desc" {
-  if (value?.endsWith("_asc")) {
-    return "asc";
-  }
-  return "desc";
 }

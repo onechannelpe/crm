@@ -16,3 +16,11 @@
   border-radius: var(--radius-md);
   box-shadow: var(--overlay-shadow, 0 8px 24px rgba(0, 0, 0, 0.16));
 }
+
+.positioner {
+  display: flex;
+  inset: unset;
+  margin: 0;
+  position: fixed;
+  z-index: 3000;
+}

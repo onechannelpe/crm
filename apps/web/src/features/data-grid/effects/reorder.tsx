@@ -1,23 +1,28 @@
 import { onCleanup, onMount } from "solid-js";
 
-import { useDataGridInstance } from "../context/instance-context";
-import { useDataGridTable } from "../context/table-context";
+import { useDataGrid } from "../context/instance-context";
 import { autoScrollContainer, getRowIndexFromPointer } from "../dnd/geometry";
+import type { DataGridReorderController } from "../hooks/create-reorder-controller";
 
 const DRAG_REORDER_THRESHOLD = 4;
 
-export function DataGridReorderEffect() {
-  const interaction = useDataGridInstance();
-  const table = useDataGridTable();
+export function DataGridReorderEffect(props: {
+  reorder: DataGridReorderController;
+}) {
+  const grid = useDataGrid();
+  const reorderController = props.reorder;
 
   onMount(() => {
     function handlePointerMove(event: PointerEvent) {
-      const activeRowId = interaction.reorderState.activeRowId();
-      const sourceIndex = interaction.reorderState.sourceIndex();
-      const startY = interaction.reorderState.pointerStartY();
+      if (event.pointerId !== reorderController.pointerId()) {
+        return;
+      }
+
+      const activeRowId = reorderController.activeRowId();
+      const sourceIndex = reorderController.sourceIndex();
+      const startY = reorderController.pointerStartY();
 
       if (
-        !interaction.hasReorder() ||
         activeRowId === undefined ||
         sourceIndex === undefined ||
         startY === undefined
@@ -25,44 +30,58 @@ export function DataGridReorderEffect() {
         return;
       }
 
-      if (!interaction.isReordering()) {
+      if (!reorderController.dragging()) {
         const distance = Math.abs(event.clientY - startY);
         if (distance < DRAG_REORDER_THRESHOLD) {
           return;
         }
       }
 
-      interaction.setReorderDragging(true);
-      interaction.markRowOpenSuppressed();
+      reorderController.setDragging(true);
+      grid.activation.suppress();
 
-      autoScrollContainer(table.getScrollWrapper(), event.clientY);
+      autoScrollContainer(grid.getScrollWrapper(), event.clientY);
 
-      const container = table.getContainer();
+      const container = grid.getContainer();
       if (!container) {
         return;
       }
 
       const nextIndex = getRowIndexFromPointer(container, event.clientY);
       if (nextIndex !== undefined) {
-        interaction.setReorderTargetIndex(nextIndex);
+        reorderController.setTargetIndex(nextIndex);
       }
     }
 
-    function handlePointerUp() {
-      if (!interaction.reorderState.activeRowId()) {
+    function handlePointerUp(event: PointerEvent) {
+      if (
+        event.pointerId !== reorderController.pointerId() ||
+        !reorderController.activeRowId()
+      ) {
         return;
       }
 
-      interaction.completeRowReorder();
-      setTimeout(() => interaction.clearPendingRowOpenSuppression(), 0);
+      reorderController.complete();
+      setTimeout(() => grid.activation.clearSuppression(), 0);
+    }
+
+    function handlePointerCancel(event: PointerEvent) {
+      if (event.pointerId !== reorderController.pointerId()) {
+        return;
+      }
+
+      reorderController.cancel();
+      grid.activation.clearSuppression();
     }
 
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerCancel);
 
     onCleanup(() => {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerCancel);
     });
   });
 

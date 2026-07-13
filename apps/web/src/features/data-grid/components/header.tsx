@@ -1,101 +1,104 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 
 import Plus from "~/components/icons/plus";
 import { Checkbox } from "~/components/ui/input/checkbox";
 
-import { useDataGridInteractionReady } from "../context/interaction-context";
+import { useDataGrid } from "../context/instance-context";
 import type { DataGridColumn } from "../model/types";
 
-import styles from "../styles/data-grid.module.css";
+import styles from "../styles/table.module.css";
 
 export function DataGridHeader<T>(props: {
-  columns: DataGridColumn<T>[];
-  gridTemplateColumns: string;
-  reorderable: boolean;
-  selectionLeft: number;
-  selectable?: boolean;
-  allSelected?: boolean;
+  columns: ReadonlyArray<DataGridColumn<T>>;
   stickyColumnIndex: number;
-  stickyLeft: number;
   onAddColumn?: () => void;
-  onColumnResizeStart: (
-    key: string,
-    clientX: number,
-    currentWidth: number,
-  ) => void;
-  onToggleAll?: (checked: boolean) => void;
 }) {
-  const isInteractive = useDataGridInteractionReady();
+  const grid = useDataGrid();
 
   return (
-    <div
-      class={styles.headerRow}
-      style={{ "grid-template-columns": props.gridTemplateColumns }}
-    >
-      {props.reorderable ? (
-        <div class={`${styles.headerCell} ${styles.reorderCell}`} />
-      ) : null}
-      {props.selectable === false ? null : (
+    <div class={styles.headerRow} role="row" aria-rowindex={1}>
+      <Show when={grid.reorder}>
         <div
-          class={`${styles.headerCell} ${styles.checkboxCell}`}
-          style={
-            props.reorderable ? { left: `${props.selectionLeft}px` } : undefined
-          }
-        >
-          <Checkbox
-            checked={props.allSelected ?? false}
-            disabled={!isInteractive()}
-            onChange={(event: Event & { currentTarget: HTMLInputElement }) =>
-              props.onToggleAll?.(event.currentTarget.checked)
-            }
-          />
-        </div>
-      )}
+          class={`${styles.headerCell} ${styles.reorderCell}`}
+          aria-label="Reordenar filas"
+          role="columnheader"
+        />
+      </Show>
+      <Show when={grid.selection}>
+        {(selection) => (
+          <div
+            class={`${styles.headerCell} ${styles.checkboxCell}`}
+            role="columnheader"
+          >
+            <Checkbox
+              aria-label="Seleccionar todas las filas"
+              checked={selection().allSelected()}
+              indeterminate={selection().someSelected()}
+              disabled={!grid.isInteractive()}
+              onChange={(event) =>
+                selection().toggleAll(event.currentTarget.checked)
+              }
+            />
+          </div>
+        )}
+      </Show>
       <For each={props.columns}>
         {(column, index) => {
-          const Icon = column.icon;
           const isSticky = () => index() === props.stickyColumnIndex;
 
           return (
             <div
               class={`${styles.headerCell}${isSticky() ? ` ${styles.stickyCell}` : ""}`}
-              style={isSticky() ? { left: `${props.stickyLeft}px` } : undefined}
+              role="columnheader"
             >
               <span class={styles.headerCellContent}>
-                <span class={styles.headerIcon}>
-                  <Icon size={14} />
-                </span>
+                <Show when={column.icon} keyed>
+                  {(Icon) => (
+                    <span class={styles.headerIcon}>
+                      <Icon size={16} />
+                    </span>
+                  )}
+                </Show>
                 <span>{column.label}</span>
               </span>
-              <div
+              <button
+                type="button"
                 class={styles.resizeHandle}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const cell = e.currentTarget.parentElement;
-                  props.onColumnResizeStart(
-                    column.key,
-                    e.clientX,
-                    cell?.offsetWidth ?? 150,
-                  );
+                aria-label={`Redimensionar ${column.label}`}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  grid.resize.begin({
+                    key: column.key,
+                    pointerId: event.pointerId,
+                    clientX: event.clientX,
+                    currentWidth:
+                      event.currentTarget.parentElement?.offsetWidth ?? 150,
+                  });
                 }}
               />
             </div>
           );
         }}
       </For>
-      {props.onAddColumn ? (
-        <div class={`${styles.headerCell} ${styles.addColumnCell}`}>
-          <button
-            type="button"
-            class={styles.addColumnButton}
-            onClick={props.onAddColumn}
-            aria-label="Agregar columna"
+      <Show when={props.onAddColumn}>
+        {(onAddColumn) => (
+          <div
+            class={`${styles.headerCell} ${styles.addColumnCell}`}
+            role="columnheader"
           >
-            <Plus size={14} />
-          </button>
-        </div>
-      ) : null}
+            <button
+              type="button"
+              class={styles.addColumnButton}
+              onClick={onAddColumn()}
+              aria-label="Agregar columna"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+        )}
+      </Show>
     </div>
   );
 }

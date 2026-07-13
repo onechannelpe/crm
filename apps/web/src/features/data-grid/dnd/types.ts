@@ -2,7 +2,7 @@ export type DataGridReorderEvent<T> = {
   fromIndex: number;
   toIndex: number;
   row: T;
-  rows: T[];
+  rows: ReadonlyArray<T>;
 };
 
 export type DataGridReorderConfig<T> = {

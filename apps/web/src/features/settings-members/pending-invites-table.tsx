@@ -9,10 +9,12 @@ import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import {
   Table,
+  TableBody,
   TableCell,
+  TableHead,
   TableHeader,
   TableRow,
-} from "~/components/ui/layout/table-grid/table-grid";
+} from "~/components/ui/layout/table";
 import type { TeamInvite } from "~/contracts/team";
 import {
   getRoleBadgeVariant,
@@ -25,8 +27,6 @@ import {
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-members.module.css";
-
-const INVITE_COLUMNS = "2fr 1fr 1fr 88px";
 
 export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
   const resendInvite = useAction(resendTeamInviteMutation);
@@ -88,61 +88,74 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
       />
 
       <Show when={props.invites.length > 0}>
-        <Table class={styles.invitesTable} aria-label="Invitaciones pendientes">
-          <TableRow gridTemplateColumns={INVITE_COLUMNS}>
-            <TableHeader>Correo</TableHeader>
-            <TableHeader>Rol</TableHeader>
-            <TableHeader align="center">Vence</TableHeader>
-            <TableHeader align="right"> </TableHeader>
-          </TableRow>
+        <Table
+          class={styles.invitesTable}
+          aria-label="Invitaciones pendientes"
+          variant="list"
+        >
+          <colgroup>
+            <col style={{ width: "50%" }} />
+            <col style={{ width: "25%" }} />
+            <col style={{ width: "25%" }} />
+            <col style={{ width: "88px" }} />
+          </colgroup>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Correo</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead align="center">Vence</TableHead>
+              <TableHead align="right"> </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={props.invites}>
+              {(invite) => (
+                <TableRow>
+                  <TableCell>
+                    <span class={styles.inviteMailIcon} aria-hidden="true">
+                      <Mail size={16} />
+                    </span>
+                    <span class={styles.rosterName}>{invite.email}</span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getRoleBadgeVariant(invite.role)}>
+                      {getRoleLabel(invite.role)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Badge variant="secondary">
+                      {getExpiresAtText(invite.expiresAt)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell align="right">
+                    <div class={styles.actions}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Reenviar invitación"
+                        disabled={isResendPending(invite.inviteId)}
+                        title="Reenviar invitación"
+                        onClick={() => void handleResend(invite.inviteId)}
+                      >
+                        <Mail size={14} />
+                      </Button>
 
-          <For each={props.invites}>
-            {(invite) => (
-              <TableRow gridTemplateColumns={INVITE_COLUMNS}>
-                <TableCell>
-                  <span class={styles.inviteMailIcon} aria-hidden="true">
-                    <Mail size={16} />
-                  </span>
-                  <span class={styles.rosterName}>{invite.email}</span>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getRoleBadgeVariant(invite.role)}>
-                    {getRoleLabel(invite.role)}
-                  </Badge>
-                </TableCell>
-                <TableCell align="center">
-                  <Badge variant="secondary">
-                    {getExpiresAtText(invite.expiresAt)}
-                  </Badge>
-                </TableCell>
-                <TableCell align="right">
-                  <div class={styles.actions}>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label="Reenviar invitación"
-                      disabled={isResendPending(invite.inviteId)}
-                      title="Reenviar invitación"
-                      onClick={() => void handleResend(invite.inviteId)}
-                    >
-                      <Mail size={14} />
-                    </Button>
-
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label="Revocar invitación"
-                      disabled={isRevokePending(invite.inviteId)}
-                      title="Revocar invitación"
-                      onClick={() => setPendingRevokeId(invite.inviteId)}
-                    >
-                      <Trash size={14} />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </For>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Revocar invitación"
+                        disabled={isRevokePending(invite.inviteId)}
+                        title="Revocar invitación"
+                        onClick={() => setPendingRevokeId(invite.inviteId)}
+                      >
+                        <Trash size={14} />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </For>
+          </TableBody>
         </Table>
       </Show>
     </>

@@ -13,7 +13,6 @@ import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
 import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
 import { DataGrid } from "~/features/data-grid/components/grid";
-import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { upsertAuditPolicyMutation } from "~/lib/mutations/audit";
 import {
@@ -155,13 +154,12 @@ export default function SecurityPoliciesPage() {
       <p class={styles.errorText}>{policyErrorMessage() ?? ""}</p>
       <DataGrid
         ariaLabel="Políticas de seguridad"
-        columns={[...SECURITY_POLICY_COLUMNS]}
+        columns={SECURITY_POLICY_COLUMNS}
         emptyState={
           <p class="px-3 py-4 text-sm text-muted-foreground">
             No hay políticas registradas.
           </p>
         }
-        rowOpen={createNoopRowOpen()}
         source={{
           status: isLoading() ? "pending" : "ready",
           rows: rows(),

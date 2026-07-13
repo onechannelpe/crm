@@ -158,17 +158,17 @@ export default function MonitoringPage() {
 
       <DataGrid
         ariaLabel="Monitoreo"
-        columns={[...MONITORING_COLUMNS]}
+        columns={MONITORING_COLUMNS}
         emptyState={
           <p class="px-3 py-4 text-sm text-muted-foreground">
             No hay métricas disponibles para la ventana actual.
           </p>
         }
-        rowOpen={rowOpen}
+        onRowOpen={rowOpen}
+        rowOpenIndicator="panel"
         source={{
           status: sourceStatus(),
           rows: rows(),
-          error: snapshotError() ?? undefined,
         }}
       />
     </AppPage>

@@ -8,6 +8,7 @@
     "perf": "error"
   },
   "rules": {
+    "prefer-tag-over-role": "off",
     "typescript/no-non-null-assertion": "error",
     "vitest/expect-expect": [
       "error",
