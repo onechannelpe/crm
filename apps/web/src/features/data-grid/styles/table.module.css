@@ -353,6 +353,7 @@
 .actionRow {
   background: transparent;
   color: var(--foreground-tertiary);
+  cursor: pointer;
   padding: 0;
   text-align: left;
 }
@@ -363,11 +364,11 @@
   font-weight: 400;
 }
 
-.actionRow:has(.actionButton:hover) .actionCell {
+.actionRow:hover .actionCell:not(.reorderCell) {
   background: var(--secondary);
 }
 
-.actionButton {
+.actionTrigger {
   align-items: center;
   background: transparent;
   border: 0;
@@ -378,6 +379,11 @@
   height: 100%;
   padding: 0;
   width: 100%;
+}
+
+.actionTrigger:focus-visible {
+  outline: 1px solid var(--border-medium);
+  outline-offset: -1px;
 }
 
 .actionIcon {

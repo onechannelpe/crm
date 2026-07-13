@@ -6,12 +6,11 @@ import type { DataGridActionRowConfig } from "../model/types";
 
 import styles from "../styles/table.module.css";
 
-function getLabelGridColumn(
+function getLabelGridColumnStart(
   labelColumnIndex: number,
   leadingColumnCount: number,
 ) {
-  const start = labelColumnIndex + 1 + leadingColumnCount;
-  return `${start} / ${start + 1}`;
+  return labelColumnIndex + 1 + leadingColumnCount;
 }
 
 export function DataGridActionRow(props: {
@@ -22,8 +21,21 @@ export function DataGridActionRow(props: {
 }) {
   const grid = useDataGrid();
 
+  const labelStart = () =>
+    getLabelGridColumnStart(
+      props.labelColumnIndex,
+      Number(grid.reorder !== undefined) + Number(grid.selection !== undefined),
+    );
+
   return (
-    <div class={styles.actionRow} role="row" aria-rowindex={props.ariaRowIndex}>
+    <div
+      class={styles.actionRow}
+      role="row"
+      aria-rowindex={props.ariaRowIndex}
+      onClick={() => {
+        if (grid.isInteractive()) props.config.onClick();
+      }}
+    >
       <Show when={grid.reorder}>
         <span
           class={`${styles.actionCell} ${styles.reorderCell}`}
@@ -43,14 +55,9 @@ export function DataGridActionRow(props: {
         </span>
       </Show>
       <span
-        aria-label={props.config.label}
         class={`${styles.actionCell} ${props.labelColumnIndex === props.stickyColumnIndex ? styles.stickyCell : ""}`}
         style={{
-          "grid-column": getLabelGridColumn(
-            props.labelColumnIndex,
-            Number(grid.reorder !== undefined) +
-              Number(grid.selection !== undefined),
-          ),
+          "grid-column": `${labelStart()} / ${labelStart() + 1}`,
         }}
         role="gridcell"
       >
@@ -61,13 +68,18 @@ export function DataGridActionRow(props: {
         </Show>
         <button
           type="button"
-          class={styles.actionButton}
+          class={styles.actionTrigger}
           disabled={!grid.isInteractive()}
-          onClick={props.config.onClick}
         >
           <span class={styles.actionText}>{props.config.label}</span>
         </button>
       </span>
+      <span
+        class={styles.actionCell}
+        style={{ "grid-column": `${labelStart() + 1} / -1` }}
+        aria-hidden="true"
+        role="presentation"
+      />
     </div>
   );
 }
