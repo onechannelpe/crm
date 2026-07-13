@@ -32,7 +32,6 @@ export interface CurrentUserView {
   team: { id: string; name: string } | null;
   supervisor: { id: string; names: string } | null;
   branch: { id: string; name: string } | null;
-  // True when the current session is an administrator impersonating this user.
   impersonating: boolean;
 }
 

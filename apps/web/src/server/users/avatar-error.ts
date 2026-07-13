@@ -49,8 +49,7 @@ function isValidationAvatarError(
 }
 
 // Codes the caller can fix (file shape, size, mime) become validation; the rest
-// is reported upstream with a generic client message. Shared by the self-avatar
-// action and the member-avatar use-case so both surface identical errors.
+// is reported upstream with a generic client message.
 export function toAvatarDomainError(code: AvatarDomainErrorCode): DomainError {
   if (isValidationAvatarError(code)) {
     return invalid({ code });

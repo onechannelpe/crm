@@ -77,8 +77,7 @@ export function MemberAdminActions(props: { detail: MemberDetail }) {
     setBusy(true);
     try {
       await impersonate(props.detail.id);
-      // The session cookie now points at the impersonated user; reload so the
-      // whole app re-resolves under the new identity.
+      // Session provider still holds the previous identity; reload to re-resolve.
       window.location.assign("/");
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));

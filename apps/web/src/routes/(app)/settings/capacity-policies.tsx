@@ -27,8 +27,7 @@ function TeamPolicyRow(props: {
   const initialTeam = props.team();
   const initialBranchDefaults = props.branchDefaults();
   const savePolicy = useAction(updateScopePolicyMutation);
-  // One shared action drives every row; scope pending to this team's submission
-  // so saving one row never spins another row's button.
+  // Per-team submission; one mutation is shared across rows.
   const submission = useSubmission(
     updateScopePolicyMutation,
     (input) =>

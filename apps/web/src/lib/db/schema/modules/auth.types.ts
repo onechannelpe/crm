@@ -100,9 +100,8 @@ export interface UserSessionsTable {
   primary_auth_method: AuthMethodValue;
   strong_auth_method: "totp" | "passkey" | "federated" | null;
   strong_auth_at: Date | null;
-  // Set when this session was minted by an administrator impersonating the
-  // session owner. Holds the administrator's user id so the UI can surface the
-  // impersonation and the admin session can be restored on exit.
+  // Holds the administrator's user id so the UI can surface the impersonation
+  // and the admin session can be restored on exit.
   impersonator_user_id: NullableIdColumn<UserId>;
   ip_address: string | null;
   user_agent: string | null;

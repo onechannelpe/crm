@@ -16,9 +16,7 @@ export interface ImpersonationDeps {
 }
 
 // Impersonation mints a fresh session that acts as the target while recording
-// the administrator's id on the session row. The administrator's own session is
-// left untouched; the action boundary parks its cookie so exiting restores it.
-// Returns the new session token for the action to install.
+// the administrator's id on the session row.
 export async function startImpersonation(
   ctx: AppContext,
   deps: ImpersonationDeps,
@@ -63,8 +61,6 @@ export async function startImpersonation(
   return Ok({ token: issued.token });
 }
 
-// Ends the active impersonation by deleting the impersonating session. The
-// action boundary restores the parked administrator cookie.
 export async function stopImpersonation(
   ctx: AppContext,
   deps: ImpersonationDeps,

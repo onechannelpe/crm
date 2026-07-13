@@ -48,8 +48,7 @@ export function TeamTab() {
 
   const isSelf = (member: MemberListItem) => member.id === currentUser().id;
 
-  // Opening your own row would render a detail page with no available admin
-  // actions (you cannot manage yourself), so the roster leaves self inert.
+  // Roster never navigates into the actor's own row.
   function openMember(member: MemberListItem) {
     if (isSelf(member)) return;
     navigate(`/settings/members/${member.id}`);

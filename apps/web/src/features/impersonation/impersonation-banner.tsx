@@ -17,8 +17,7 @@ export function ImpersonationBanner() {
     setBusy(true);
     try {
       await stop();
-      // The admin session cookie is restored server-side; reload to re-resolve
-      // the app under the administrator identity.
+      // Session provider still holds the previous identity; reload to re-resolve.
       window.location.assign("/");
     } catch {
       setBusy(false);

@@ -58,10 +58,8 @@ export default function SettingsMemberDetailPage() {
   });
 
   return (
-    // Outer Show gates on the record being present and hands down a live
-    // accessor (header/badges track revalidation). Inner keyed Show remounts
-    // the tabs only when the member id changes, reseeding their drafts on
-    // navigation without clobbering them on same-member revalidation.
+    // Keyed inner Show remounts tabs on member change, reseeding their drafts
+    // without clobbering them on same-member revalidation.
     <Show when={detail()}>
       {(record) => (
         <Show when={record().id} keyed>
