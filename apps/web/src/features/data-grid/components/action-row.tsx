@@ -28,6 +28,9 @@ export function DataGridActionRow(props: {
     );
 
   return (
+    // oxlint click-events-have-key-events is suppressed: the nested <button>
+    // owns Enter/Space activation and bubbles its click to this row.
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events
     <div
       class={styles.actionRow}
       role="row"
@@ -60,6 +63,7 @@ export function DataGridActionRow(props: {
           "grid-column": `${labelStart()} / ${labelStart() + 1}`,
         }}
         role="gridcell"
+        aria-label={props.config.label}
       >
         <Show when={!grid.selection}>
           <span class={styles.actionIcon} aria-hidden="true">
