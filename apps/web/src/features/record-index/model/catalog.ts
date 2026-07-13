@@ -40,5 +40,4 @@ export type RecordIndexViewDefinition = {
 
 export type RecordIndexViews = {
   readonly available: ReadonlyArray<RecordIndexViewDefinition>;
-  readonly defaultId: string;
 };

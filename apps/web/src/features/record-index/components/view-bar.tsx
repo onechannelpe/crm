@@ -1,19 +1,16 @@
-import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
-
-import { useRecordIndexModelContext } from "../context/model-context";
-import { useRecordIndexSetup } from "../context/setup-context";
-import type { RecordIndexMenu } from "../model/view-state";
+import { useRecordIndex } from "../context/record-index-context";
+import type { RecordIndexMenu } from "../model/controller";
+import { RecordIndexToolbarMenu } from "./toolbar-menu";
 import { FilterMenu } from "./view-bar/filter-menu";
 import { OptionsDropdown } from "./view-bar/options-dropdown";
 import { SortMenu } from "./view-bar/sort-menu";
 
 export function RecordIndexViewBar() {
-  const model = useRecordIndexModelContext();
-  const setup = useRecordIndexSetup();
+  const recordIndex = useRecordIndex();
 
-  const openMenu = () => model.columns.openMenu();
+  const openMenu = () => recordIndex.columns.openMenu();
   const setOpenMenu = (menu: RecordIndexMenu) =>
-    model.columns.setOpenMenu(menu);
+    recordIndex.columns.setOpenMenu(menu);
 
   return (
     <>
@@ -29,10 +26,10 @@ export function RecordIndexViewBar() {
         onToggle={() => setOpenMenu(openMenu() === "sort" ? null : "sort")}
       />
 
-      <DataGridToolbarMenu
-        active={model.columns.hasHiddenColumns()}
+      <RecordIndexToolbarMenu
+        active={recordIndex.columns.hasHidden()}
         label="Opciones"
-        menuId={`${setup.id}-column-options`}
+        menuId={`${recordIndex.definition.id}-column-options`}
         open={openMenu() === "options"}
         onDismiss={() => setOpenMenu(null)}
         onToggle={() =>
@@ -40,7 +37,7 @@ export function RecordIndexViewBar() {
         }
       >
         <OptionsDropdown onClose={() => setOpenMenu(null)} />
-      </DataGridToolbarMenu>
+      </RecordIndexToolbarMenu>
     </>
   );
 }

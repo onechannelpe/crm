@@ -2,14 +2,14 @@ import { createMemo, createSignal, For, Show } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
-import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
 
-import { useRecordIndexModelContext } from "../../context/model-context";
-import { useRecordIndexSetup } from "../../context/setup-context";
-import { DropdownMenuHeader, parseSortDirection } from "./menu-primitives";
-import type { SortDirection } from "./types";
+import { useRecordIndex } from "../../context/record-index-context";
+import { RecordIndexToolbarMenu } from "../toolbar-menu";
+import { DropdownMenuHeader } from "./menu-primitives";
 
-import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
+import sharedStyles from "../../styles/menu.module.css";
+
+type SortDirection = "asc" | "desc";
 
 type SortMenuProps = {
   isOpen: boolean;
@@ -18,8 +18,7 @@ type SortMenuProps = {
 };
 
 export function SortMenu(props: SortMenuProps) {
-  const model = useRecordIndexModelContext();
-  const setup = useRecordIndexSetup();
+  const recordIndex = useRecordIndex();
 
   const [sortSearch, setSortSearch] = createSignal("");
   const [sortDirection, setSortDirection] = createSignal<SortDirection>("desc");
@@ -28,18 +27,20 @@ export function SortMenu(props: SortMenuProps) {
     sortSearch().trim().toLocaleLowerCase(),
   );
 
-  const sortOptions = createMemo(() => setup.sort?.options ?? []);
+  const sortOptions = createMemo(
+    () => recordIndex.definition.sort?.catalog.options ?? [],
+  );
 
   const filteredSortFields = createMemo(() =>
-    (setup.sort?.fields ?? []).filter((field) =>
+    (recordIndex.definition.sort?.catalog.fields ?? []).filter((field) =>
       field.label.toLocaleLowerCase().includes(normalizedSortSearch()),
     ),
   );
 
   function resetSortMenuState() {
     setSortSearch("");
-    const current = model.sorting?.value();
-    setSortDirection(parseSortDirection(current));
+    const current = recordIndex.sorting?.value();
+    setSortDirection(current?.endsWith("_asc") ? "asc" : "desc");
   }
 
   function closeMenu() {
@@ -53,7 +54,7 @@ export function SortMenu(props: SortMenuProps) {
     );
 
     if (target) {
-      model.sorting?.set(target.value);
+      recordIndex.sorting?.set(target.value);
     }
 
     setSortSearch("");
@@ -61,13 +62,14 @@ export function SortMenu(props: SortMenuProps) {
   }
 
   return (
-    <Show when={setup.sort}>
+    <Show when={recordIndex.definition.sort?.catalog}>
       {(sort) => (
-        <DataGridToolbarMenu
-          active={Boolean(model.sorting?.isActive())}
+        <RecordIndexToolbarMenu
+          active={Boolean(recordIndex.sorting?.isActive())}
           label={sort().label}
           menuId={sort().menuId}
           open={props.isOpen}
+          wide
           onDismiss={() => {
             resetSortMenuState();
             props.onDismiss();
@@ -87,13 +89,12 @@ export function SortMenu(props: SortMenuProps) {
             }}
           />
           <div class={sharedStyles.menuGroupLabel}>Direccion</div>
-          <div class={sharedStyles.menuListbox} role="menu">
+          <div class={sharedStyles.menuListbox}>
             <button
               type="button"
               class={sharedStyles.menuItem}
-              role="menuitemradio"
               data-active={sortDirection() === "asc" ? "true" : "false"}
-              aria-checked={sortDirection() === "asc" ? "true" : "false"}
+              aria-pressed={sortDirection() === "asc"}
               onClick={() => setSortDirection("asc")}
             >
               <span class={sharedStyles.menuItemIcon}>
@@ -104,9 +105,8 @@ export function SortMenu(props: SortMenuProps) {
             <button
               type="button"
               class={sharedStyles.menuItem}
-              role="menuitemradio"
               data-active={sortDirection() === "desc" ? "true" : "false"}
-              aria-checked={sortDirection() === "desc" ? "true" : "false"}
+              aria-pressed={sortDirection() === "desc"}
               onClick={() => setSortDirection("desc")}
             >
               <span class={sharedStyles.menuItemIcon}>
@@ -124,12 +124,12 @@ export function SortMenu(props: SortMenuProps) {
           />
           <div class={sharedStyles.menuScrollable}>
             <div class={sharedStyles.menuGroupLabel}>Campos ordenables</div>
-            <div class={sharedStyles.menuListbox} role="menu">
+            <div class={sharedStyles.menuListbox}>
               <For each={filteredSortFields()}>
                 {(fieldOption) => {
                   const FieldIcon = fieldOption.icon;
                   const isActive = () =>
-                    (model.sorting?.value() ?? "").startsWith(
+                    (recordIndex.sorting?.value() ?? "").startsWith(
                       `${fieldOption.prefix}_`,
                     );
 
@@ -137,9 +137,8 @@ export function SortMenu(props: SortMenuProps) {
                     <button
                       type="button"
                       class={sharedStyles.menuItem}
-                      role="menuitemradio"
                       data-active={isActive() ? "true" : "false"}
-                      aria-checked={isActive() ? "true" : "false"}
+                      aria-pressed={isActive()}
                       onClick={() => selectSortField(fieldOption.prefix)}
                     >
                       <span class={sharedStyles.menuItemIcon}>
@@ -153,10 +152,10 @@ export function SortMenu(props: SortMenuProps) {
             </div>
 
             <Show when={filteredSortFields().length === 0}>
-              <div class={sharedStyles.menuEmptyState}>No results</div>
+              <div class={sharedStyles.menuEmptyState}>Sin resultados</div>
             </Show>
           </div>
-        </DataGridToolbarMenu>
+        </RecordIndexToolbarMenu>
       )}
     </Show>
   );

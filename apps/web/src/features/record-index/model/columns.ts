@@ -2,13 +2,13 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 export function getVisibleRecordIndexColumns<T>(
   columns: ReadonlyArray<DataGridColumn<T>>,
-  visibleColumnKeys: Set<string>,
+  visibleColumnKeys: ReadonlySet<string>,
 ) {
   return columns.filter((column) => visibleColumnKeys.has(column.key));
 }
 
 export function toggleRecordIndexVisibleColumnKey(
-  visibleColumnKeys: Set<string>,
+  visibleColumnKeys: ReadonlySet<string>,
   key: string,
 ) {
   if (visibleColumnKeys.has(key)) {
@@ -28,7 +28,7 @@ export function toggleRecordIndexVisibleColumnKey(
 
 export function hasHiddenRecordIndexColumns<T>(
   columns: ReadonlyArray<DataGridColumn<T>>,
-  visibleColumnKeys: Set<string>,
+  visibleColumnKeys: ReadonlySet<string>,
 ) {
   return visibleColumnKeys.size !== columns.length;
 }

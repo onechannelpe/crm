@@ -1,9 +1,7 @@
 import { Show } from "solid-js";
 
-import { DataGridToolbarMenu } from "~/features/data-grid/components/toolbar-menu";
-
-import { useRecordIndexModelContext } from "../../context/model-context";
-import { useRecordIndexSetup } from "../../context/setup-context";
+import { useRecordIndex } from "../../context/record-index-context";
+import { RecordIndexToolbarMenu } from "../toolbar-menu";
 import { FilterDropdownContent } from "./filter-dropdown-content";
 
 type FilterMenuProps = {
@@ -13,20 +11,19 @@ type FilterMenuProps = {
 };
 
 export function FilterMenu(props: FilterMenuProps) {
-  const model = useRecordIndexModelContext();
-  const setup = useRecordIndexSetup();
+  const recordIndex = useRecordIndex();
 
   function resetFilterPanel() {
-    model.filtering?.setPanel({ kind: "field-list" });
+    recordIndex.filtering?.setPanel({ kind: "field-list" });
   }
 
   return (
-    <Show when={setup.filter}>
+    <Show when={recordIndex.definition.filter?.catalog}>
       {(filter) => (
-        <DataGridToolbarMenu
+        <RecordIndexToolbarMenu
           active={
-            Boolean(model.filtering?.isActive()) ||
-            Boolean(model.search?.value().trim())
+            Boolean(recordIndex.filtering?.isActive()) ||
+            Boolean(recordIndex.search?.value().trim())
           }
           label={filter().label}
           menuId={filter().menuId}
@@ -48,7 +45,7 @@ export function FilterMenu(props: FilterMenuProps) {
               props.onDismiss();
             }}
           />
-        </DataGridToolbarMenu>
+        </RecordIndexToolbarMenu>
       )}
     </Show>
   );

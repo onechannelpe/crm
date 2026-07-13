@@ -2,20 +2,18 @@ import { createMemo, createSignal, For, Show } from "solid-js";
 
 import List from "~/components/icons/list";
 
-import { useRecordIndexModelContext } from "../../context/model-context";
-import { useRecordIndexSetup } from "../../context/setup-context";
+import { useRecordIndex } from "../../context/record-index-context";
 import { AnyFieldSearchMenuItem } from "./any-field-search-menu-item";
 import { DropdownMenuHeader } from "./menu-primitives";
 
-import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
+import sharedStyles from "../../styles/menu.module.css";
 
 type FilterFieldSelectMenuProps = {
   onClose: () => void;
 };
 
 export function FilterFieldSelectMenu(props: FilterFieldSelectMenuProps) {
-  const model = useRecordIndexModelContext();
-  const setup = useRecordIndexSetup();
+  const recordIndex = useRecordIndex();
   const [fieldSearch, setFieldSearch] = createSignal("");
 
   const normalizedFieldSearch = createMemo(() =>
@@ -23,7 +21,7 @@ export function FilterFieldSelectMenu(props: FilterFieldSelectMenuProps) {
   );
 
   const filteredFilterFields = createMemo(() =>
-    (setup.filter?.fields ?? []).filter((field) =>
+    (recordIndex.definition.filter?.catalog.fields ?? []).filter((field) =>
       field.label.toLocaleLowerCase().includes(normalizedFieldSearch()),
     ),
   );
@@ -41,17 +39,16 @@ export function FilterFieldSelectMenu(props: FilterFieldSelectMenuProps) {
       />
       <div class={sharedStyles.menuScrollable}>
         <div class={sharedStyles.menuGroupLabel}>Campos disponibles</div>
-        <div class={sharedStyles.menuListbox} role="menu">
+        <div class={sharedStyles.menuListbox}>
           <For each={filteredFilterFields()}>
             {(fieldOption) => {
               const FieldIcon = fieldOption.icon;
               return (
                 <button
                   type="button"
-                  role="menuitem"
                   class={sharedStyles.menuItem}
                   onClick={() =>
-                    model.filtering?.setPanel({
+                    recordIndex.filtering?.setPanel({
                       kind: "field-value",
                       fieldId: fieldOption.id,
                     })
@@ -68,19 +65,20 @@ export function FilterFieldSelectMenu(props: FilterFieldSelectMenuProps) {
         </div>
 
         <Show when={filteredFilterFields().length === 0}>
-          <div class={sharedStyles.menuEmptyState}>No results</div>
+          <div class={sharedStyles.menuEmptyState}>Sin resultados</div>
         </Show>
 
         <div class={sharedStyles.menuSeparator} />
-        <div class={sharedStyles.menuListbox} role="menu">
+        <div class={sharedStyles.menuListbox}>
           <button
             type="button"
-            role="menuitem"
             class={sharedStyles.menuItem}
             onClick={() => {
-              model.filtering?.set(setup.filter?.defaultValue);
-              model.search?.set("");
-              model.filtering?.setPanel({ kind: "field-list" });
+              recordIndex.filtering?.set(
+                recordIndex.definition.filter?.catalog.defaultValue,
+              );
+              recordIndex.search?.set("");
+              recordIndex.filtering?.setPanel({ kind: "field-list" });
               props.onClose();
             }}
           >

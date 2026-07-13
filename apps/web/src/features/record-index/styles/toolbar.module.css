@@ -1,0 +1,95 @@
+.viewBar {
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  margin-left: 12px;
+}
+
+.viewBarTop {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: flex;
+  font-weight: 500;
+  height: 39px;
+  justify-content: space-between;
+  padding-right: 8px;
+  position: relative;
+}
+
+.viewPicker,
+.toolbarButton {
+  align-items: center;
+  background: var(--background);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  gap: var(--spacing-1);
+  min-height: 24px;
+  padding: var(--spacing-1) var(--spacing-2);
+  user-select: none;
+}
+
+.viewPicker:hover,
+.toolbarButton:hover {
+  background: var(--bg-translucent);
+}
+
+.toolbarButton[data-open="true"] {
+  background: var(--bg-translucent);
+}
+
+.toolbarButton[data-open="true"]:hover {
+  background: var(--background-transparent-medium);
+}
+
+.toolbarButton[data-active="true"] {
+  color: var(--info);
+}
+
+.viewPickerIcon,
+.viewPickerMeta {
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.viewPickerLabel {
+  margin-left: var(--spacing-1);
+  max-width: 130px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewPickerMeta {
+  color: var(--foreground-tertiary);
+  gap: 4px;
+  margin-left: var(--spacing-1);
+}
+
+.viewActions {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+  font-weight: 400;
+}
+
+@media (max-width: 768px) {
+  .viewBar {
+    margin-left: 0;
+  }
+
+  .viewBarTop {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    height: auto;
+    padding: 8px 0;
+  }
+}

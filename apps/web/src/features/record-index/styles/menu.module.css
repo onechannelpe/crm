@@ -1,0 +1,166 @@
+.menuWrap {
+  position: relative;
+}
+
+.menu {
+  backdrop-filter: var(--t-blur-medium);
+  -webkit-backdrop-filter: var(--t-blur-medium);
+  background: var(--background-transparent-light);
+  border: 1px solid var(--background-transparent-medium);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevation-2);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 200px;
+  padding: 0;
+  z-index: 38;
+}
+
+.menuWide {
+  min-width: 320px;
+}
+
+.menuFloating {
+  position: fixed;
+}
+
+.menuLeft {
+  transform-origin: top left;
+}
+
+.menuItem {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--font-size-body);
+  gap: 8px;
+  height: 32px;
+  padding: var(--spacing-2) var(--spacing-1);
+  text-align: left;
+  width: 100%;
+}
+
+.menuItem[data-active="true"],
+.menuItem:hover {
+  background: var(--bg-translucent);
+}
+
+.menuItemIcon {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
+.menuItemIcon svg {
+  stroke-width: 1.6;
+}
+
+.menuItemContext {
+  color: var(--foreground-tertiary);
+}
+
+.menuHeader {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  display: flex;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  min-height: 32px;
+  padding: 4px;
+  user-select: none;
+}
+
+.menuHeaderCloseButton {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.menuHeaderCloseButton:hover {
+  background: var(--bg-translucent);
+}
+
+.menuHeaderTitle {
+  overflow: hidden;
+  padding: 0 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menuScrollable {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: var(--spacing-1) 0;
+}
+
+.menuScrollableCompact {
+  max-height: 168px;
+}
+
+.menuGroupLabel {
+  align-items: center;
+  background-color: var(--background-transparent-lighter);
+  color: var(--foreground-tertiary);
+  display: flex;
+  font-size: var(--font-size-tiny);
+  justify-content: flex-start;
+  min-height: 20px;
+  padding: 0 var(--spacing-2);
+  user-select: none;
+  width: auto;
+}
+
+.menuListbox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--spacing-1);
+  width: auto;
+}
+
+.menuSeparator {
+  background: var(--border);
+  height: 1px;
+}
+
+.menuSearchInput {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  min-height: 36px;
+  outline: none;
+  padding: 0 var(--spacing-2);
+}
+
+.menuSearchInput::placeholder {
+  color: var(--foreground-light);
+}
+
+.menuEmptyState {
+  color: var(--foreground-tertiary);
+  font-size: 12px;
+  padding: 6px 16px;
+}

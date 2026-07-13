@@ -1,7 +1,6 @@
 import { Match, Switch } from "solid-js";
 
-import { useRecordIndexModelContext } from "../../context/model-context";
-import { useRecordIndexSetup } from "../../context/setup-context";
+import { useRecordIndex } from "../../context/record-index-context";
 import { AnyFieldSearchMenu } from "./any-field-search-menu";
 import { FilterFieldSelectMenu } from "./filter-field-select-menu";
 import { FilterValueMenu } from "./filter-value-menu";
@@ -11,24 +10,25 @@ type FilterDropdownContentProps = {
 };
 
 export function FilterDropdownContent(props: FilterDropdownContentProps) {
-  const model = useRecordIndexModelContext();
-  const setup = useRecordIndexSetup();
+  const recordIndex = useRecordIndex();
 
   const selectedField = () => {
-    const panel = model.filtering?.panel();
+    const panel = recordIndex.filtering?.panel();
     if (panel?.kind !== "field-value") {
       return undefined;
     }
 
-    return setup.filter?.fields.find((field) => field.id === panel.fieldId);
+    return recordIndex.definition.filter?.catalog.fields.find(
+      (field) => field.id === panel.fieldId,
+    );
   };
 
   return (
     <Switch>
       <Match
         when={
-          model.filtering?.panel().kind === "any-field-search"
-            ? model.search
+          recordIndex.filtering?.panel().kind === "any-field-search"
+            ? recordIndex.search
             : undefined
         }
       >

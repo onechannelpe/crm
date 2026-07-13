@@ -2,22 +2,21 @@ import { Show } from "solid-js";
 
 import Search from "~/components/icons/search";
 
-import { useRecordIndexModelContext } from "../../context/model-context";
+import { useRecordIndex } from "../../context/record-index-context";
 
-import sharedStyles from "~/features/data-grid/styles/data-grid.module.css";
+import sharedStyles from "../../styles/menu.module.css";
 
 export function AnyFieldSearchMenuItem() {
-  const model = useRecordIndexModelContext();
+  const recordIndex = useRecordIndex();
 
   return (
-    <Show when={model.search}>
+    <Show when={recordIndex.search}>
       {(search) => (
         <button
           type="button"
-          role="menuitem"
           class={sharedStyles.menuItem}
           onClick={() =>
-            model.filtering?.setPanel({ kind: "any-field-search" })
+            recordIndex.filtering?.setPanel({ kind: "any-field-search" })
           }
         >
           <span class={sharedStyles.menuItemIcon}>

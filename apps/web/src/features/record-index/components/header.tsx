@@ -1,37 +1,68 @@
-import List from "~/components/icons/list";
-import { DataGridToolbar } from "~/features/data-grid/components/toolbar";
-import type { DataGridIcon } from "~/features/data-grid/model/types";
+import { Show } from "solid-js";
 
-import { useRecordIndexModelContext } from "../context/model-context";
-import { useRecordIndexSetup } from "../context/setup-context";
+import ChevronDown from "~/components/icons/chevron-down";
+import List from "~/components/icons/list";
+
+import { useRecordIndex } from "../context/record-index-context";
 import { RecordIndexViewBar } from "./view-bar";
 import { RecordIndexViewPicker } from "./view-picker";
 
-export function RecordIndexHeader(props: { pickerIcon?: DataGridIcon }) {
-  const model = useRecordIndexModelContext();
-  const setup = useRecordIndexSetup();
-  const PickerIcon = props.pickerIcon ?? List;
+import menuStyles from "../styles/menu.module.css";
+import styles from "../styles/toolbar.module.css";
 
-  const pickerOnClick = setup.views
+export function RecordIndexHeader() {
+  const recordIndex = useRecordIndex();
+  const PickerIcon = recordIndex.definition.pickerIcon ?? List;
+  const viewPickerId = `${recordIndex.definition.id}-view-picker`;
+  let picker: HTMLButtonElement | undefined;
+
+  const pickerOnClick = recordIndex.definition.views
     ? () =>
-        model.columns.setOpenMenu((current) =>
+        recordIndex.columns.setOpenMenu((current) =>
           current === "views" ? null : "views",
         )
     : undefined;
 
   return (
-    <DataGridToolbar
-      picker={{
-        label: setup.title(),
-        meta: model.counts.pickerMeta(),
-        onClick: pickerOnClick,
-        hasDropdown: Boolean(setup.views),
-        renderIcon: () => <PickerIcon size={16} />,
-      }}
-      slots={{
-        dropdown: setup.views ? () => <RecordIndexViewPicker /> : undefined,
-        actions: () => <RecordIndexViewBar />,
-      }}
-    />
+    <div class={styles.viewBar}>
+      <div class={styles.viewBarTop}>
+        <div class={menuStyles.menuWrap}>
+          <button
+            ref={(element) => (picker = element)}
+            type="button"
+            class={styles.viewPicker}
+            aria-controls={
+              recordIndex.definition.views ? viewPickerId : undefined
+            }
+            aria-expanded={
+              recordIndex.definition.views
+                ? recordIndex.columns.openMenu() === "views"
+                : undefined
+            }
+            aria-haspopup={recordIndex.definition.views ? "dialog" : undefined}
+            onClick={pickerOnClick}
+          >
+            <span class={styles.viewPickerIcon}>
+              <PickerIcon size={16} />
+            </span>
+            <span class={styles.viewPickerLabel}>
+              {recordIndex.definition.title()}
+            </span>
+            <span class={styles.viewPickerMeta}>
+              {`· ${recordIndex.counts.pickerMeta()}`}
+              <Show when={recordIndex.definition.views}>
+                <ChevronDown size={14} />
+              </Show>
+            </span>
+          </button>
+          <Show when={recordIndex.definition.views}>
+            <RecordIndexViewPicker anchor={() => picker} />
+          </Show>
+        </div>
+        <div class={styles.viewActions}>
+          <RecordIndexViewBar />
+        </div>
+      </div>
+    </div>
   );
 }
