@@ -1,0 +1,21 @@
+.shell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.scroll {
+  background: var(--background);
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.loading {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-6);
+}

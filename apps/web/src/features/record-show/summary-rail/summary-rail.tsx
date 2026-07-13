@@ -1,7 +1,6 @@
 import { For } from "solid-js";
 
 import type { LeadDetailView } from "~/contracts/workflow/views";
-import { nextActionSummary } from "~/features/record-show/resumen/next-action";
 import { RecordSummaryCard } from "~/features/record-show/summary-card/record-summary-card";
 import {
   formatAmount,
@@ -23,12 +22,6 @@ export function SummaryRail(props: { data: LeadDetailView }) {
     <div class={styles.rail}>
       <RecordSummaryCard lead={props.data.lead} />
       <div class={styles.body}>
-        <div class={styles.nextAction}>
-          <span class={styles.nextActionLabel}>Próxima acción</span>
-          <span class={styles.nextActionValue}>
-            {nextActionSummary(props.data)}
-          </span>
-        </div>
         <dl class={styles.metrics}>
           <For each={metrics()}>
             {(metric) => (

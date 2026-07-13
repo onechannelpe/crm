@@ -4,6 +4,8 @@ import { CreateLeadPage } from "../pages/create-lead/page";
 import { CreateLeadPageInfo } from "../pages/create-lead/page-info";
 import { DataGridDetailPage } from "../pages/data-grid-detail/page";
 import { DataGridDetailPageInfo } from "../pages/data-grid-detail/page-info";
+import { LeadActionPage } from "../pages/lead-action/page";
+import { LeadActionPageInfo } from "../pages/lead-action/page-info";
 import { RecordPage } from "../pages/record-page/page";
 import { RecordPageInfo } from "../pages/record-page/page-info";
 import { RootPage } from "../pages/root/page";
@@ -49,6 +51,12 @@ export const SIDE_PANEL_PAGES_CONFIG = {
     showsSearch: false,
     component: RecordPage,
     pageInfoComponent: RecordPageInfo,
+    topBarActionsComponent: undefined,
+  },
+  "lead-action": {
+    showsSearch: false,
+    component: LeadActionPage,
+    pageInfoComponent: LeadActionPageInfo,
     topBarActionsComponent: undefined,
   },
   "data-grid-detail": {

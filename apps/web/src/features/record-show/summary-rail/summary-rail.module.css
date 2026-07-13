@@ -12,25 +12,6 @@
   padding: var(--spacing-4);
 }
 
-.nextAction {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-}
-
-.nextActionLabel {
-  color: var(--foreground-tertiary);
-  font-size: var(--font-size-caption);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.nextActionValue {
-  color: var(--foreground);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-}
-
 .metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

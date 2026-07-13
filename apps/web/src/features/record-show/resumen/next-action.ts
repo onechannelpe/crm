@@ -1,4 +1,6 @@
 import type { LeadDetailView } from "~/contracts/workflow/views";
+import type { LeadActionKind } from "~/features/record-show/model/lead-action-kind";
+import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 
 export type NextAction =
   | {
@@ -110,34 +112,79 @@ export function setupChecklist(data: LeadDetailView): SetupChecklistItem[] {
   ];
 }
 
-export function nextActionSummary(data: LeadDetailView): string {
+export type NextActionTarget =
+  | { kind: "action"; action: LeadActionKind }
+  | { kind: "tab"; tabId: RecordTabId };
+
+export type NextActionCta = {
+  label: string;
+  target: NextActionTarget;
+};
+
+export function nextActionCta(data: LeadDetailView): NextActionCta | null {
   const action = resolveNextAction(data);
   switch (action.kind) {
-    case "message":
-      return action.title;
     case "qualify":
-      return "Calificar disponibilidad";
+      return {
+        label: "Calificar disponibilidad",
+        target: { kind: "action", action: "qualify" },
+      };
     case "propose-rate":
-      return "Proponer tarifa";
+      return {
+        label: "Proponer tarifa",
+        target: { kind: "action", action: "propose-rate" },
+      };
     case "decide-rate": {
-      // The same card serves the executive (who decides) and back office (who
-      // may only correct their sent proposal), so label it for the actual role.
+      // Read-only viewers see the proposal in the body, so they get no CTA; the
+      // executive and back office (who can act) do.
       const canDecide =
         data.availableActions.includes("accept-rate") ||
-        data.availableActions.includes("request-rate-revision");
-      return canDecide ? "Confirmar o revisar tarifa" : "Propuesta enviada";
+        data.availableActions.includes("request-rate-revision") ||
+        data.availableActions.includes("edit-rate-proposal");
+      return canDecide
+        ? {
+            label: "Confirmar o revisar tarifa",
+            target: { kind: "action", action: "decide-rate" },
+          }
+        : null;
     }
     case "setup-checklist":
-      return "Completar afiliación";
+      return {
+        label: "Completar afiliación",
+        target: { kind: "tab", tabId: "afiliacion" },
+      };
     case "fulfillment":
-      return "Gestionar entrega";
+      return {
+        label: "Gestionar entrega",
+        target: { kind: "action", action: "fulfillment" },
+      };
     case "expired":
-      return "Reserva vencida";
+      return action.canRestart
+        ? {
+            label: "Reiniciar cotización",
+            target: { kind: "action", action: "expired" },
+          }
+        : null;
+    case "message":
     case "disqualified":
-      return "Descalificado";
+      return null;
     default: {
       const exhaustive: never = action;
       return exhaustive satisfies never;
     }
   }
+}
+
+// Whether an opened action page is still the lead's live next step. When it is
+// not (the action completed, or another actor advanced the stage), the page
+// returns to the record. `close` is a secondary outcome gated by its own
+// availability rather than by resolveNextAction.
+export function isLeadActionStillRelevant(
+  action: LeadActionKind,
+  data: LeadDetailView,
+): boolean {
+  if (action === "close") {
+    return data.availableActions.includes("close-lead");
+  }
+  return resolveNextAction(data).kind === action;
 }
