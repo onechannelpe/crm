@@ -1,3 +1,5 @@
+import { Show } from "solid-js";
+
 import Checkbox from "~/components/icons/checkbox";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
@@ -57,7 +59,9 @@ function PriorityRow(props: { data: LeadDetailView }) {
       empty={props.data.lead.priority === null}
     >
       <FieldTextValue>
-        {props.data.lead.priority && capitalize(props.data.lead.priority)}
+        <Show when={props.data.lead.priority} keyed>
+          {(priority) => capitalize(priority)}
+        </Show>
       </FieldTextValue>
     </RecordInlineCell>
   );

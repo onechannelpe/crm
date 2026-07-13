@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import Checkbox from "~/components/icons/checkbox";
@@ -96,7 +96,9 @@ export function RegistrySection(props: { data: LeadDetailView }) {
             empty={lead().status === null}
           >
             <FieldTextValue>
-              {lead().status && capitalize(lead().status)}
+              <Show when={lead().status} keyed>
+                {(status) => capitalize(status)}
+              </Show>
             </FieldTextValue>
           </RecordInlineCell>
         </FieldTable>
