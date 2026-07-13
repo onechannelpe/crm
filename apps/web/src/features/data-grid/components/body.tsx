@@ -1,54 +1,50 @@
-import { For } from "solid-js";
+import { Key } from "@solid-primitives/keyed";
+import { Show } from "solid-js";
 
-import type { DataGridRowOpen } from "../model/row-open";
-import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
+import type {
+  DataGridActionRowConfig,
+  DataGridColumn,
+  DataGridRowOpenIndicator,
+} from "../model/types";
 import { DataGridActionRow } from "./action-row";
 import { DataGridRow } from "./row";
 
 export function DataGridBody<T extends { id: string }>(props: {
   actionRow?: DataGridActionRowConfig;
-  columns: DataGridColumn<T>[];
-  gridTemplateColumns: string;
-  reorderable: boolean;
-  rowOpen: DataGridRowOpen<T>;
-  rows: T[];
-  selectionLeft: number;
-  selectable: boolean;
+  columns: ReadonlyArray<DataGridColumn<T>>;
+  onRowOpen?: (row: T) => void;
+  rowOpenIndicator?: DataGridRowOpenIndicator;
+  rowIndexOffset: number;
+  rows: ReadonlyArray<T>;
   stickyColumnIndex: number;
-  stickyLeft: number;
+  totalRowCount: number;
 }) {
   return (
     <>
-      <For each={props.rows}>
+      <Key each={props.rows} by="id">
         {(row, index) => (
           <DataGridRow
             columns={props.columns}
-            gridTemplateColumns={props.gridTemplateColumns}
-            reorderable={props.reorderable}
+            onRowOpen={props.onRowOpen}
+            row={row()}
+            rowOpenIndicator={props.rowOpenIndicator}
+            ariaRowIndex={props.rowIndexOffset + index() + 2}
             rowOrderIndex={index()}
-            selectable={props.selectable}
-            row={row}
-            rowOpen={props.rowOpen}
-            selectionLeft={props.selectionLeft}
             stickyColumnIndex={props.stickyColumnIndex}
-            stickyLeft={props.stickyLeft}
           />
         )}
-      </For>
+      </Key>
 
-      {props.actionRow ? (
-        <DataGridActionRow
-          gridTemplateColumns={props.gridTemplateColumns}
-          icon={props.actionRow.icon}
-          label={props.actionRow.label}
-          labelColumnIndex={Math.max(props.stickyColumnIndex, 0)}
-          onClick={props.actionRow.onClick}
-          reorderable={props.reorderable}
-          selectionLeft={props.selectionLeft}
-          stickyColumnIndex={props.stickyColumnIndex}
-          stickyLeft={props.stickyLeft}
-        />
-      ) : null}
+      <Show when={props.actionRow}>
+        {(action) => (
+          <DataGridActionRow
+            config={action()}
+            ariaRowIndex={props.totalRowCount + 2}
+            labelColumnIndex={Math.max(props.stickyColumnIndex, 0)}
+            stickyColumnIndex={props.stickyColumnIndex}
+          />
+        )}
+      </Show>
     </>
   );
 }

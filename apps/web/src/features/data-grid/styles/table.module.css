@@ -1,0 +1,513 @@
+.indexContainer {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.tableContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-left: 8px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.scrollWrapper {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+}
+
+.table {
+  background: var(--background);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 100%;
+  min-width: max-content;
+  position: relative;
+}
+
+.loadingState {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 280px;
+}
+
+.loadingStateContent {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loadingStateLabel {
+  font-size: 13px;
+  margin: 0;
+}
+
+.emptyStateSurface {
+  align-items: center;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 360px;
+}
+
+.headerRow,
+.bodyRow,
+.actionRow {
+  display: grid;
+  grid-template-columns: var(--data-grid-columns);
+  min-width: 100%;
+  width: max-content;
+}
+
+.headerRow {
+  background: var(--background);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.headerCell,
+.bodyCell,
+.actionCell {
+  align-items: center;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  box-sizing: border-box;
+  display: flex;
+  height: 32px;
+  min-width: 0;
+  padding: 0;
+}
+
+.headerCell {
+  color: var(--foreground-tertiary);
+  font-weight: 500;
+  position: relative;
+}
+
+.reorderCell {
+  background: var(--background);
+  justify-content: center;
+  left: 0;
+  padding: 0;
+  position: sticky;
+  width: 12px;
+  z-index: 8;
+}
+
+.headerCellContent {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.headerIcon {
+  align-items: center;
+  color: var(--foreground-tertiary);
+  display: inline-flex;
+  justify-content: center;
+}
+
+.bodyCell {
+  color: var(--foreground);
+  font-size: 13px;
+}
+
+.headerRow > :last-child,
+.bodyRow > :last-child,
+.actionRow > :last-child {
+  border-right: none;
+}
+
+.bodyRow[aria-selected="true"] .bodyCell,
+.bodyRow[data-focused="true"] .bodyCell,
+.bodyRow[data-active="true"] .bodyCell {
+  background: var(--accent-quaternary);
+}
+
+.bodyRow[data-focused="true"] .bodyCell,
+.bodyRow[data-active="true"] .bodyCell {
+  border-bottom-color: var(--border-medium);
+}
+
+.bodyRow[data-focused="true"] .stickyCell,
+.bodyRow[data-active="true"] .stickyCell {
+  border-left: 1px solid var(--border-medium);
+}
+
+.bodyRow[data-focused="true"] .bodyCell:last-child,
+.bodyRow[data-active="true"] .bodyCell:last-child {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-right: 1px solid var(--border-medium);
+}
+
+.bodyRow[data-dragged="true"] .bodyCell {
+  opacity: 0.55;
+}
+
+.dragSelectionBox {
+  background: color-mix(in srgb, var(--color-blue-11) 18%, transparent);
+  border: 1px solid var(--color-blue-11);
+  pointer-events: none;
+  position: absolute;
+  z-index: 12;
+}
+
+.bodyRow[data-drop-target="true"] .bodyCell {
+  box-shadow: inset 0 2px 0 var(--border-medium);
+}
+
+.rowButton {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  justify-content: flex-start;
+  line-height: inherit;
+  min-height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.rowContent:hover,
+.rowButton:not([data-editable="true"]):hover {
+  background: var(--secondary);
+  color: var(--foreground-secondary);
+  outline: 1px solid var(--border-medium);
+  outline-offset: -1px;
+}
+
+.rowContent:hover svg,
+.rowButton:not([data-editable="true"]):hover svg {
+  color: var(--foreground-secondary);
+}
+
+.rowButton:focus-visible {
+  outline: 1px solid var(--border-medium);
+  outline-offset: -1px;
+}
+
+.rowButtonContent {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  height: 100%;
+  justify-content: space-between;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 8px;
+  width: 100%;
+}
+
+.rowButtonLabel {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.rowButtonLabel > * {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.reorderHandle {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground-tertiary);
+  cursor: grab;
+  display: inline-flex;
+  height: 100%;
+  justify-content: center;
+  opacity: 0.38;
+  padding: 0;
+  transition: opacity 120ms ease;
+  width: 100%;
+}
+
+.reorderHandle:hover {
+  color: var(--foreground-secondary);
+}
+
+.reorderHandle:active {
+  cursor: grabbing;
+}
+
+.reorderHandle:focus-visible {
+  outline: 2px solid var(--border-medium);
+  outline-offset: 1px;
+}
+
+.reorderDots {
+  background: currentcolor;
+  border-radius: 999px;
+  corner-shape: round;
+  box-shadow:
+    0 -5px 0 currentcolor,
+    0 5px 0 currentcolor,
+    5px 0 0 currentcolor,
+    5px -5px 0 currentcolor,
+    5px 5px 0 currentcolor;
+  display: block;
+  height: 2px;
+  width: 2px;
+}
+
+.rowOpenHint {
+  align-items: center;
+  background: var(--background);
+  border: 1px solid var(--primary-border-40);
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 20px;
+  justify-content: center;
+  margin-right: 4px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+  width: 20px;
+}
+
+.bodyRow[data-focused="true"] .rowButton,
+.bodyRow[data-focused="true"] .rowContent {
+  color: var(--foreground);
+}
+
+.rowContent {
+  align-items: center;
+  color: inherit;
+  display: flex;
+  justify-content: flex-start;
+  min-height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.checkboxCell {
+  background: var(--background);
+  border-right: 1px solid var(--border);
+  justify-content: center;
+  left: var(--data-grid-selection-left);
+  padding: 0;
+  position: sticky;
+  width: 28px;
+  z-index: 8;
+}
+
+.stickyCell {
+  background: var(--background);
+  box-shadow: 4px 0 8px -6px color(display-p3 0 0 0 / 0.16);
+  left: var(--data-grid-sticky-left);
+  position: sticky;
+  z-index: 8;
+}
+
+.bodyRow {
+  transition: background-color 140ms ease;
+}
+
+.bodyRow:hover .reorderHandle,
+.reorderCell:hover .reorderHandle,
+.bodyRow[data-focused="true"] .reorderHandle,
+.bodyRow[data-active="true"] .reorderHandle,
+.bodyRow[data-dragged="true"] .reorderHandle {
+  opacity: 1;
+}
+
+.bodyRow:hover .rowOpenHint,
+.bodyRow[data-focused="true"] .rowOpenHint,
+.bodyRow[data-active="true"] .rowOpenHint {
+  opacity: 1;
+}
+
+.actionRow {
+  background: transparent;
+  color: var(--foreground-tertiary);
+  padding: 0;
+  text-align: left;
+}
+
+.actionCell {
+  color: var(--foreground-tertiary);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.actionRow:has(.actionButton:hover) .actionCell {
+  background: var(--secondary);
+}
+
+.actionButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  height: 100%;
+  padding: 0;
+  width: 100%;
+}
+
+.actionIcon {
+  align-items: center;
+  color: var(--foreground-tertiary);
+  display: inline-flex;
+  justify-content: center;
+}
+
+.actionText {
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.loadMoreSentinel {
+  align-items: center;
+  color: var(--foreground-tertiary);
+  display: flex;
+  font-size: 12px;
+  justify-content: center;
+  min-height: 32px;
+  width: 100%;
+}
+
+.paginationBar {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  color: var(--foreground-tertiary);
+  display: flex;
+  font-size: 12px;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 36px;
+  padding: 0 8px;
+}
+
+.paginationMeta {
+  font-size: 12px;
+}
+
+.paginationControls {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.paginationButton {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  min-height: 24px;
+  padding: 0 10px;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background: var(--background-transparent-light);
+}
+
+.paginationButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Sticky controls stay above scrollable header cells while columns move under them. */
+.headerRow .checkboxCell,
+.headerRow .reorderCell,
+.headerRow .stickyCell {
+  z-index: 14;
+}
+
+.resizeHandle {
+  background: transparent;
+  border: 0;
+  bottom: 0;
+  cursor: col-resize;
+  position: absolute;
+  right: 0;
+  padding: 0;
+  top: 0;
+  transition: background 80ms;
+  width: 4px;
+  touch-action: none;
+}
+
+.resizeHandle:hover,
+.resizeHandle:active {
+  background: var(--border-medium);
+}
+
+.addColumnCell {
+  border-right: none;
+  justify-content: center;
+  padding: 0;
+  width: 32px;
+}
+
+.addColumnButton {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  display: inline-flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.addColumnButton:hover {
+  background: var(--secondary);
+  color: var(--foreground-secondary);
+}
+
+@media (max-width: 768px) {
+  .tableContainer {
+    margin-left: 0;
+  }
+
+  .emptyStateSurface {
+    justify-content: flex-start;
+    min-width: 100%;
+  }
+}
+
+/* Inline cell editor portal. This layer is positioning-only: it places the editor
+   over the editing cell and nothing else. Each editor paints its own surface, so a
+   self-surfaced editor (e.g. UserPicker) does not get a double border/shadow. */
+.cellEditor {
+  z-index: 40;
+}

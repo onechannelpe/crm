@@ -1,18 +1,17 @@
 import { onCleanup, onMount } from "solid-js";
 
-import { useDataGridInstance } from "../context/instance-context";
-import { useDataGridTable } from "../context/table-context";
+import { useDataGrid } from "../context/instance-context";
 
 export function DataGridFocusClickOutsideEffect() {
-  const interaction = useDataGridInstance();
-  const table = useDataGridTable();
+  const grid = useDataGrid();
+  const focus = grid.focus;
 
   const handlePointerDown = (event: PointerEvent) => {
-    const container = table.getContainer();
+    const container = grid.getContainer();
     const target = event.target;
 
     if (
-      (!interaction.hasFocusedCell() && !interaction.hasActiveRow()) ||
+      (!focus.hasFocusedCell() && !focus.hasActiveRow()) ||
       !container ||
       !(target instanceof Node) ||
       container.contains(target)
@@ -20,8 +19,8 @@ export function DataGridFocusClickOutsideEffect() {
       return;
     }
 
-    interaction.clearFocus();
-    interaction.clearActiveRow();
+    focus.clearFocus();
+    focus.clearActiveRow();
   };
 
   onMount(() => {

@@ -1,51 +1,32 @@
-import { Show, type JSX } from "solid-js";
+/* oxlint-disable jsx-a11y/no-noninteractive-element-to-interactive-role */
+import { Show } from "solid-js";
 
+import { useDataGrid } from "../context/instance-context";
 import {
   REORDER_COLUMN_WIDTH,
   SELECTION_COLUMN_WIDTH,
-} from "../hooks/use-column-layout";
-import type { DataGridSelectionModel } from "../hooks/use-selection";
-import type { DataGridRowOpen } from "../model/row-open";
-import type { DataGridSource } from "../model/source";
-import type { DataGridActionRowConfig, DataGridColumn } from "../model/types";
+} from "../model/column-layout";
+import type { DataGridProps } from "../model/grid";
 import { DataGridBody } from "./body";
+import { DataGridEditorLayer } from "./editor-layer";
 import { DataGridHeader } from "./header";
+import { DataGridLoadMoreSentinel } from "./load-more-sentinel";
 import { DataGridLoadingState } from "./loading-state";
 
-import styles from "../styles/data-grid.module.css";
+import styles from "../styles/table.module.css";
 
-export function DataGridContent<T extends { id: string }>(props: {
-  actionRow?: DataGridActionRowConfig;
-  ariaLabel: string;
-  columns: DataGridColumn<T>[];
-  emptyState: JSX.Element;
-  errorState?: JSX.Element;
-  reorderable: boolean;
-  setContainer: (element: HTMLElement) => void;
-  setScrollWrapper: (element: HTMLElement) => void;
+type DataGridSurfaceProps<T extends { id: string }> = Omit<
+  DataGridProps<T>,
+  "reorder" | "selection"
+> & {
   gridTemplateColumns: string;
-  onAddColumn?: () => void;
-  pagination?: {
-    currentPage: number;
-    pageSize: number;
-    totalCount: number;
-    onNextPage: () => void;
-    onPreviousPage: () => void;
-  };
-  onColumnResizeStart: (
-    key: string,
-    clientX: number,
-    currentWidth: number,
-  ) => void;
-  rowOpen: DataGridRowOpen<T>;
-  source: DataGridSource<T>;
-  selectable: boolean;
-  selection?: DataGridSelectionModel;
   stickyColumnIndex: number;
-}) {
-  const selectionLeft = () => (props.reorderable ? REORDER_COLUMN_WIDTH : 0);
-  const stickyLeft = () =>
-    selectionLeft() + (props.selectable ? SELECTION_COLUMN_WIDTH : 0);
+};
+
+export function DataGridSurface<T extends { id: string }>(
+  props: DataGridSurfaceProps<T>,
+) {
+  const grid = useDataGrid();
   const rows = () => props.source.rows;
   const isLoading = () => props.source.status === "pending";
   const isError = () => props.source.status === "error";
@@ -65,62 +46,86 @@ export function DataGridContent<T extends { id: string }>(props: {
     paginationEnd() < props.pagination.totalCount;
   const shouldShowPagination = () =>
     props.pagination !== undefined && rows().length > 0;
+  const selectionLeft = () => (grid.reorder ? REORDER_COLUMN_WIDTH : 0);
+  const stickyLeft = () =>
+    selectionLeft() + (grid.selection ? SELECTION_COLUMN_WIDTH : 0);
+  const ariaColumnCount = () =>
+    props.columns.length +
+    Number(!!grid.reorder) +
+    Number(!!grid.selection) +
+    Number(props.onAddColumn !== undefined);
+  const rowIndexOffset = () =>
+    (props.pagination?.currentPage ?? 0) * (props.pagination?.pageSize ?? 0);
+  const dataRowCount = () =>
+    Math.max(
+      props.source.totalCount ?? rows().length,
+      rowIndexOffset() + rows().length,
+    );
+  const ariaRowCount = () =>
+    dataRowCount() + 1 + Number(props.actionRow !== undefined);
 
   return (
     <div class={styles.indexContainer}>
       <div class={styles.tableContainer}>
-        <div ref={props.setScrollWrapper} class={styles.scrollWrapper}>
+        <div ref={grid.setScrollWrapper} class={styles.scrollWrapper}>
           <section
-            ref={props.setContainer}
+            ref={grid.setContainer}
             class={styles.table}
             aria-label={props.ariaLabel}
+            aria-colcount={ariaColumnCount()}
+            aria-rowcount={ariaRowCount()}
+            role="grid"
+            style={{
+              "--data-grid-columns": props.gridTemplateColumns,
+              "--data-grid-selection-left": `${selectionLeft()}px`,
+              "--data-grid-sticky-left": `${stickyLeft()}px`,
+            }}
           >
             <DataGridHeader
               columns={props.columns}
-              gridTemplateColumns={props.gridTemplateColumns}
-              reorderable={props.reorderable}
-              selectionLeft={selectionLeft()}
-              selectable={props.selectable}
-              allSelected={props.selection?.allSelected()}
-              stickyColumnIndex={props.stickyColumnIndex}
-              stickyLeft={stickyLeft()}
               onAddColumn={props.onAddColumn}
-              onColumnResizeStart={props.onColumnResizeStart}
-              onToggleAll={props.selection?.toggleAll}
+              stickyColumnIndex={props.stickyColumnIndex}
             />
 
             <Show when={!isLoading()} fallback={<DataGridLoadingState />}>
               <Show
                 when={!isError()}
                 fallback={
-                  <div class={styles.emptyStateSurface}>{errorState()}</div>
+                  <div class={styles.emptyStateSurface} role="row">
+                    <div role="gridcell">{errorState()}</div>
+                  </div>
                 }
               >
                 <Show
                   when={rows().length > 0}
                   fallback={
-                    <div class={styles.emptyStateSurface}>
-                      {props.emptyState}
+                    <div class={styles.emptyStateSurface} role="row">
+                      <div role="gridcell">{props.emptyState}</div>
                     </div>
                   }
                 >
                   <DataGridBody
                     actionRow={props.actionRow}
                     columns={props.columns}
-                    gridTemplateColumns={props.gridTemplateColumns}
-                    reorderable={props.reorderable}
-                    rowOpen={props.rowOpen}
+                    onRowOpen={props.onRowOpen}
+                    rowOpenIndicator={props.rowOpenIndicator}
+                    rowIndexOffset={rowIndexOffset()}
                     rows={rows()}
-                    selectionLeft={selectionLeft()}
-                    selectable={props.selectable}
+                    totalRowCount={dataRowCount()}
                     stickyColumnIndex={props.stickyColumnIndex}
-                    stickyLeft={stickyLeft()}
                   />
+                  <Show when={props.loadMore}>
+                    {(loadMore) => (
+                      <DataGridLoadMoreSentinel config={loadMore()} />
+                    )}
+                  </Show>
                 </Show>
               </Show>
             </Show>
+            <DataGridEditorLayer columns={props.columns} rows={rows()} />
           </section>
         </div>
+
         <Show when={shouldShowPagination()}>
           <div class={styles.paginationBar}>
             <span class={styles.paginationMeta}>

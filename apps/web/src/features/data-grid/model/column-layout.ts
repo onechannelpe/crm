@@ -1,7 +1,8 @@
-import type { DataGridColumn } from "../model/types";
+import type { DataGridColumn } from "./types";
 
-export const REORDER_COLUMN_WIDTH = 32;
-export const SELECTION_COLUMN_WIDTH = 32;
+export const REORDER_COLUMN_WIDTH = 12;
+export const SELECTION_COLUMN_WIDTH = 28;
+export const ADD_COLUMN_WIDTH = 32;
 
 function toTrack<T>(column: DataGridColumn<T>) {
   if (column.width) return `${column.width}px`;
@@ -21,34 +22,30 @@ function toTrack<T>(column: DataGridColumn<T>) {
 }
 
 export function buildDataGridTemplateColumns<T>(
-  columns: DataGridColumn<T>[],
+  columns: ReadonlyArray<DataGridColumn<T>>,
   options?: {
-    reorderable?: boolean;
-    selectable?: boolean;
+    leadingTracks?: ReadonlyArray<number>;
+    trailingTracks?: ReadonlyArray<number>;
     columnWidths?: Record<string, number>;
-    addColumn?: boolean;
   },
 ) {
-  const columnTracks = columns
+  const dataColumnTracks = columns
     .map((column) => {
       const override = options?.columnWidths?.[column.key];
       return override !== undefined ? `${override}px` : toTrack(column);
     })
     .join(" ");
-  const leadingTracks = [
-    options?.reorderable === true ? `${REORDER_COLUMN_WIDTH}px` : null,
-    options?.selectable === false ? null : `${SELECTION_COLUMN_WIDTH}px`,
+  return [
+    ...(options?.leadingTracks ?? []).map((width) => `${width}px`),
+    dataColumnTracks,
+    ...(options?.trailingTracks ?? []).map((width) => `${width}px`),
   ]
     .filter(Boolean)
     .join(" ");
-
-  if (!leadingTracks) {
-    return columnTracks;
-  }
-
-  return `${leadingTracks} ${columnTracks}`;
 }
 
-export function getStickyDataGridColumnIndex<T>(columns: DataGridColumn<T>[]) {
+export function getStickyDataGridColumnIndex<T>(
+  columns: ReadonlyArray<DataGridColumn<T>>,
+) {
   return columns.findIndex((column) => column.sticky);
 }

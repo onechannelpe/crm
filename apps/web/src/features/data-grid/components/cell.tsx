@@ -1,19 +1,24 @@
-import type { JSX } from "solid-js";
+import { splitProps, type JSX } from "solid-js";
 
-import styles from "../styles/data-grid.module.css";
+import styles from "../styles/table.module.css";
 
-export function DataGridCell(props: {
-  children: JSX.Element;
-  class?: string;
+type DataGridCellProps = JSX.HTMLAttributes<HTMLDivElement> & {
   sticky?: boolean;
-  stickyLeft?: number;
-}) {
+};
+
+export function DataGridCell(props: DataGridCellProps) {
+  const [local, elementProps] = splitProps(props, [
+    "children",
+    "class",
+    "sticky",
+  ]);
+
   return (
     <div
-      class={`${styles.bodyCell}${props.class ? ` ${props.class}` : ""}${props.sticky ? ` ${styles.stickyCell}` : ""}`}
-      style={props.sticky ? { left: `${props.stickyLeft ?? 0}px` } : undefined}
+      {...elementProps}
+      class={`${styles.bodyCell}${local.class ? ` ${local.class}` : ""}${local.sticky ? ` ${styles.stickyCell}` : ""}`}
     >
-      {props.children}
+      {local.children}
     </div>
   );
 }

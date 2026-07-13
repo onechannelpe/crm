@@ -1,6 +1,5 @@
 export type DataGridSource<T> = {
   status: "pending" | "ready" | "error";
-  rows: T[];
+  rows: ReadonlyArray<T>;
   totalCount?: number;
-  error?: Error;
 };

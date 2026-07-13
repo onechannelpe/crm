@@ -1,66 +1,73 @@
-import { useDataGridInteractionReady } from "../context/interaction-context";
-import type { DataGridIcon } from "../model/types";
+import { Show } from "solid-js";
+import { Dynamic } from "solid-js/web";
 
-import styles from "../styles/data-grid.module.css";
+import { useDataGrid } from "../context/instance-context";
+import type { DataGridActionRowConfig } from "../model/types";
 
-function getActionRowLabelGridColumn(
+import styles from "../styles/table.module.css";
+
+function getLabelGridColumn(
   labelColumnIndex: number,
-  reorderable: boolean,
-): string {
-  const leadingColumns = reorderable ? 3 : 2;
-  const start = labelColumnIndex + leadingColumns;
+  leadingColumnCount: number,
+) {
+  const start = labelColumnIndex + 1 + leadingColumnCount;
   return `${start} / ${start + 1}`;
 }
 
 export function DataGridActionRow(props: {
-  gridTemplateColumns: string;
-  icon: DataGridIcon;
-  label: string;
+  ariaRowIndex: number;
+  config: DataGridActionRowConfig;
   labelColumnIndex: number;
-  onClick: () => void;
-  reorderable: boolean;
-  selectionLeft: number;
   stickyColumnIndex: number;
-  stickyLeft: number;
 }) {
-  const Icon = props.icon;
-  const isInteractive = useDataGridInteractionReady();
+  const grid = useDataGrid();
 
   return (
-    <button
-      type="button"
-      class={styles.actionRow}
-      disabled={!isInteractive()}
-      style={{ "grid-template-columns": props.gridTemplateColumns }}
-      onClick={props.onClick}
-    >
-      {props.reorderable ? (
-        <div class={`${styles.actionCell} ${styles.reorderCell}`} />
-      ) : null}
-      <div
-        class={`${styles.actionCell} ${styles.checkboxCell}`}
-        style={
-          props.reorderable ? { left: `${props.selectionLeft}px` } : undefined
-        }
-      >
-        <span class={styles.actionIcon} aria-hidden="true">
-          <Icon size={14} />
+    <div class={styles.actionRow} role="row" aria-rowindex={props.ariaRowIndex}>
+      <Show when={grid.reorder}>
+        <span
+          class={`${styles.actionCell} ${styles.reorderCell}`}
+          aria-hidden="true"
+          role="presentation"
+        />
+      </Show>
+      <Show when={grid.selection}>
+        <span
+          class={`${styles.actionCell} ${styles.checkboxCell}`}
+          aria-hidden="true"
+          role="presentation"
+        >
+          <span class={styles.actionIcon} aria-hidden="true">
+            <Dynamic component={props.config.icon} size={14} />
+          </span>
         </span>
-      </div>
-      <div
+      </Show>
+      <span
+        aria-label={props.config.label}
         class={`${styles.actionCell} ${props.labelColumnIndex === props.stickyColumnIndex ? styles.stickyCell : ""}`}
         style={{
-          "grid-column": getActionRowLabelGridColumn(
+          "grid-column": getLabelGridColumn(
             props.labelColumnIndex,
-            props.reorderable,
+            Number(grid.reorder !== undefined) +
+              Number(grid.selection !== undefined),
           ),
-          ...(props.labelColumnIndex === props.stickyColumnIndex
-            ? { left: `${props.stickyLeft}px` }
-            : {}),
         }}
+        role="gridcell"
       >
-        <span class={styles.actionText}>{props.label}</span>
-      </div>
-    </button>
+        <Show when={!grid.selection}>
+          <span class={styles.actionIcon} aria-hidden="true">
+            <Dynamic component={props.config.icon} size={14} />
+          </span>
+        </Show>
+        <button
+          type="button"
+          class={styles.actionButton}
+          disabled={!grid.isInteractive()}
+          onClick={props.config.onClick}
+        >
+          <span class={styles.actionText}>{props.config.label}</span>
+        </button>
+      </span>
+    </div>
   );
 }
