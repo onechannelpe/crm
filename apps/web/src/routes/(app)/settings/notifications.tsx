@@ -1,10 +1,11 @@
 import { createAsync, useAction } from "@solidjs/router";
-import { IconBrandWhatsapp, IconMail } from "@tabler/icons-solidjs";
 import { createSignal, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import type { NotificationPreferencesView } from "~/actions/settings/notifications";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
+import BrandWhatsapp from "~/components/icons/brand-whatsapp";
+import Mail from "~/components/icons/mail";
 import {
   SettingsToggleCard,
   type SettingsToggleRow,
@@ -23,8 +24,8 @@ import styles from "./notifications.module.css";
 type Channel = "email" | "whatsapp";
 
 const CHANNELS = [
-  { id: "email", label: "Correo", icon: IconMail },
-  { id: "whatsapp", label: "WhatsApp", icon: IconBrandWhatsapp },
+  { id: "email", label: "Correo", icon: Mail },
+  { id: "whatsapp", label: "WhatsApp", icon: BrandWhatsapp },
 ] as const satisfies ReadonlyArray<{
   id: Channel;
   label: string;
@@ -82,7 +83,7 @@ export default function NotificationsSettingsPage() {
     });
 
   const activeIcon = () =>
-    CHANNELS.find((c) => c.id === activeChannel())?.icon ?? IconMail;
+    CHANNELS.find((c) => c.id === activeChannel())?.icon ?? Mail;
 
   return (
     <SettingsSection

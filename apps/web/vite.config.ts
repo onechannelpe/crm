@@ -15,6 +15,9 @@ import { createRequestTracePlugin, resolveRequestTraceConfig } from "./tracer";
 const requestTraceConfig = resolveRequestTraceConfig(process.env);
 
 export default defineConfig({
+  optimizeDeps: {
+    include: ["@solid-primitives/keyed"],
+  },
   resolve: {
     dedupe: ["solid-js", "solid-js/web"],
   },

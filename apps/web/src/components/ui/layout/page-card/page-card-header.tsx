@@ -1,6 +1,6 @@
-import { IconLayoutSidebarLeftExpand } from "@tabler/icons-solidjs";
 import { Show, children, type JSX } from "solid-js";
 
+import LayoutSidebarLeftExpand from "~/components/icons/layout-sidebar-left-expand";
 import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
 import { cn } from "~/lib/utils";
 
@@ -50,7 +50,7 @@ export function PageCardHeader(props: PageCardHeaderProps) {
             onClick={() => setExpanded(true)}
             aria-label="Expandir barra lateral"
           >
-            <IconLayoutSidebarLeftExpand size={16} />
+            <LayoutSidebarLeftExpand size={16} />
           </button>
         </Show>
         {breadcrumb()}
