@@ -1,4 +1,4 @@
-import type { Component, JSX } from "solid-js";
+import type { JSX } from "solid-js";
 
 import Activity from "~/components/icons/activity";
 import CalendarClock from "~/components/icons/calendar-clock";
@@ -14,6 +14,7 @@ import type {
   EventLogTable,
 } from "~/contracts/event-logs/event-log";
 import { summarizeFieldChanges } from "~/contracts/events";
+import type { DataGridIcon } from "~/features/data-grid/model/types";
 import { formatDateTime } from "~/lib/utils";
 
 import { EventLogJsonCell } from "../components/event-log-json-cell";
@@ -28,7 +29,7 @@ export type EventLogFilterField =
 export type EventLogColumn = {
   id: string;
   label: string;
-  icon: Component<{ size?: number }>;
+  icon: DataGridIcon;
   minWidth: number;
   defaultWidth: number;
   renderCell: (record: EventLogRecord) => JSX.Element;
