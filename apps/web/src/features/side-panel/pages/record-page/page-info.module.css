@@ -1,0 +1,13 @@
+.avatar {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--t-border-radius-xs);
+  background: var(--avatar-bg);
+  color: var(--avatar-fg);
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  font-size: var(--font-size-tiny);
+  font-weight: var(--font-weight-semibold);
+}

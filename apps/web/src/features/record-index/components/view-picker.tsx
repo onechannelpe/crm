@@ -26,26 +26,32 @@ export function RecordIndexViewPicker(props: {
           variant="positioner"
         >
           <div role="dialog" aria-label="Seleccionar vista">
-            <div class={sharedStyles.menuSectionLabel}>Vista</div>
-            <For each={recordIndex.definition.views?.catalog.available ?? []}>
-              {(view) => {
-                const isActive = () => recordIndex.view?.value() === view.id;
-                return (
-                  <button
-                    type="button"
-                    class={sharedStyles.menuItem}
-                    aria-pressed={isActive()}
-                    data-active={isActive() ? "true" : "false"}
-                    onClick={() => {
-                      recordIndex.view?.set(view.id);
-                      recordIndex.columns.setOpenMenu(null);
-                    }}
-                  >
-                    {view.label}
-                  </button>
-                );
-              }}
-            </For>
+            <div class={sharedStyles.menuGroupLabel}>Vista</div>
+            <div
+              class={`${sharedStyles.menuScrollable} ${sharedStyles.menuScrollableCompact}`}
+            >
+              <div class={sharedStyles.menuListbox}>
+                <For each={recordIndex.definition.views?.catalog.available ?? []}>
+                  {(view) => {
+                    const isActive = () => recordIndex.view?.value() === view.id;
+                    return (
+                      <button
+                        type="button"
+                        class={sharedStyles.menuItem}
+                        aria-pressed={isActive()}
+                        data-active={isActive() ? "true" : "false"}
+                        onClick={() => {
+                          recordIndex.view?.set(view.id);
+                          recordIndex.columns.setOpenMenu(null);
+                        }}
+                      >
+                        {view.label}
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
+            </div>
           </div>
         </AnchoredPopover>
       )}

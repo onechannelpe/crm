@@ -1,6 +1,7 @@
 import { Show, type JSX } from "solid-js";
 
 import { AnchoredPopover } from "~/components/ui/overlay/anchored-popover";
+import { cn } from "~/lib/utils";
 
 import menuStyles from "../styles/menu.module.css";
 import styles from "../styles/toolbar.module.css";
@@ -13,6 +14,7 @@ export function RecordIndexToolbarMenu(props: {
   onDismiss: () => void;
   onToggle: () => void;
   open: boolean;
+  wide?: boolean;
 }) {
   let trigger: HTMLButtonElement | undefined;
 
@@ -36,7 +38,11 @@ export function RecordIndexToolbarMenu(props: {
           <AnchoredPopover
             id={props.menuId}
             anchor={anchor}
-            class={`${menuStyles.menu} ${menuStyles.menuFloating}`}
+            class={cn(
+              menuStyles.menu,
+              menuStyles.menuFloating,
+              props.wide && menuStyles.menuWide,
+            )}
             onClose={props.onDismiss}
             placement="bottom-end"
             variant="positioner"

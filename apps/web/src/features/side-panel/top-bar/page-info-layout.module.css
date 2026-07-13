@@ -30,6 +30,7 @@
   flex: 1;
   font-size: var(--t-font-size-md);
   font-weight: var(--font-weight-semibold);
+  max-width: 150px;
   min-width: 0;
   overflow: hidden;
   padding-inline: var(--spacing-1);

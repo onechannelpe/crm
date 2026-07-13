@@ -69,6 +69,7 @@ export function SortMenu(props: SortMenuProps) {
           label={sort().label}
           menuId={sort().menuId}
           open={props.isOpen}
+          wide
           onDismiss={() => {
             resetSortMenuState();
             props.onDismiss();

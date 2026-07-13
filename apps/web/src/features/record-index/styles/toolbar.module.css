@@ -19,30 +19,28 @@
 .viewPicker,
 .toolbarButton {
   align-items: center;
-  background: transparent;
-  border: 1px solid var(--background-transparent-medium);
-  border-radius: var(--radius-sm);
+  background: var(--background);
+  border: none;
+  border-radius: var(--radius-md);
   color: var(--foreground-secondary);
   cursor: pointer;
   display: inline-flex;
   font-family: inherit;
   font-size: 13px;
   font-weight: 400;
-  gap: 6px;
+  gap: var(--spacing-1);
   min-height: 24px;
-  padding: 3px 8px;
+  padding: var(--spacing-1) var(--spacing-2);
   user-select: none;
 }
 
 .viewPicker:hover,
 .toolbarButton:hover {
-  background: var(--background-transparent-light);
-  border-color: var(--background-transparent-medium);
+  background: var(--bg-translucent);
 }
 
 .toolbarButton[data-open="true"] {
-  background: var(--background-transparent-light);
-  border-color: var(--background-transparent-medium);
+  background: var(--bg-translucent);
 }
 
 .toolbarButton[data-open="true"]:hover {
@@ -61,7 +59,7 @@
 }
 
 .viewPickerLabel {
-  margin-left: 2px;
+  margin-left: var(--spacing-1);
   max-width: 130px;
   min-width: 0;
   overflow: hidden;
@@ -72,13 +70,13 @@
 .viewPickerMeta {
   color: var(--foreground-tertiary);
   gap: 4px;
-  margin-left: 2px;
+  margin-left: var(--spacing-1);
 }
 
 .viewActions {
   align-items: center;
   display: flex;
-  gap: 8px;
+  gap: 2px;
   font-weight: 400;
 }
 

@@ -267,6 +267,7 @@
 .reorderDots {
   background: currentcolor;
   border-radius: 999px;
+  corner-shape: round;
   box-shadow:
     0 -5px 0 currentcolor,
     0 5px 0 currentcolor,

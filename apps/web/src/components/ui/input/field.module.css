@@ -202,7 +202,8 @@
   align-items: center;
   background: transparent;
   border: 1px solid var(--foreground);
-  border-radius: var(--radius-sm);
+  border-radius: var(--t-border-radius-sm-round);
+  corner-shape: round;
   box-sizing: border-box;
   color: var(--background);
   display: inline-flex;
