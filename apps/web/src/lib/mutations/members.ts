@@ -1,0 +1,82 @@
+import { action, json } from "@solidjs/router";
+
+import { removeMemberAvatar, uploadMemberAvatar } from "~/actions/users/avatar";
+import {
+  startImpersonation,
+  stopImpersonation,
+} from "~/actions/users/impersonation";
+import {
+  changeMemberRole,
+  deactivateMember,
+  deleteMember,
+  reactivateMember,
+  updateMemberExpiry,
+  updateMemberProfile,
+} from "~/actions/users/write";
+import type {
+  ChangeMemberRoleInput,
+  UpdateMemberExpiryInput,
+  UpdateMemberProfileInput,
+} from "~/contracts/members";
+import { memberDetailQuery, membersRosterQuery } from "~/lib/queries/members";
+
+const revalidateMember = [membersRosterQuery.key, memberDetailQuery.key];
+
+export const updateMemberProfileMutation = action(
+  async (input: UpdateMemberProfileInput) => {
+    const { message } = await updateMemberProfile(input);
+    return json({ message }, { revalidate: revalidateMember });
+  },
+  "updateMemberProfile",
+);
+
+export const changeMemberRoleMutation = action(
+  async (input: ChangeMemberRoleInput) => {
+    const { message } = await changeMemberRole(input);
+    return json({ message }, { revalidate: revalidateMember });
+  },
+  "changeMemberRole",
+);
+
+export const deactivateMemberMutation = action(async (userId: string) => {
+  const { message } = await deactivateMember(userId);
+  return json({ message }, { revalidate: revalidateMember });
+}, "deactivateMember");
+
+export const reactivateMemberMutation = action(async (userId: string) => {
+  const { message } = await reactivateMember(userId);
+  return json({ message }, { revalidate: revalidateMember });
+}, "reactivateMember");
+
+export const updateMemberExpiryMutation = action(
+  async (input: UpdateMemberExpiryInput) => {
+    const { message } = await updateMemberExpiry(input);
+    return json({ message }, { revalidate: revalidateMember });
+  },
+  "updateMemberExpiry",
+);
+
+export const deleteMemberMutation = action(async (userId: string) => {
+  const { message } = await deleteMember(userId);
+  return json({ message }, { revalidate: membersRosterQuery.key });
+}, "deleteMember");
+
+export const uploadMemberAvatarMutation = action(async (formData: FormData) => {
+  const { message } = await uploadMemberAvatar(formData);
+  return json({ message }, { revalidate: revalidateMember });
+}, "uploadMemberAvatar");
+
+export const removeMemberAvatarMutation = action(async (userId: string) => {
+  const { message } = await removeMemberAvatar(userId);
+  return json({ message }, { revalidate: revalidateMember });
+}, "removeMemberAvatar");
+
+export const startImpersonationMutation = action(async (userId: string) => {
+  const { message } = await startImpersonation(userId);
+  return json({ message });
+}, "startImpersonation");
+
+export const stopImpersonationMutation = action(async () => {
+  const { message } = await stopImpersonation();
+  return json({ message });
+}, "stopImpersonation");

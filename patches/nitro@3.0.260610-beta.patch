@@ -1,0 +1,42 @@
+diff --git a/dist/runtime/internal/vite/dev-worker.mjs b/dist/runtime/internal/vite/dev-worker.mjs
+--- a/dist/runtime/internal/vite/dev-worker.mjs
++++ b/dist/runtime/internal/vite/dev-worker.mjs
+@@ -53,14 +53,19 @@ class ViteEnvRunner {
+     this.reload();
+   }
+ 
+-  async reload() {
+-    try {
+-      this.entry = await this.runner.import(this.entryPath);
+-      this.entryError = undefined;
+-    } catch (error) {
+-      console.error(error);
+-      this.entryError = error;
+-    }
++  reload() {
++    const entryPromise = this.runner.import(this.entryPath).then(
++      (entry) => {
++        this.entry = entry;
++        this.entryError = undefined;
++      },
++      (error) => {
++        console.error(error);
++        this.entryError = error;
++      },
++    );
++    this.entryPromise = entryPromise;
++    return entryPromise;
+   }
+ 
+   // Errors are intentionally not caught here: like production services,
+@@ -69,9 +74,7 @@ class ViteEnvRunner {
+   // they propagate to the caller (the nitro app's error handler or the
+   // env-runner fetch boundary below).
+   async fetch(req, init) {
+-    for (let i = 0; i < 5 && !(this.entry || this.entryError); i++) {
+-      await new Promise((r) => setTimeout(r, 100 * Math.pow(2, i)));
+-    }
++    await this.entryPromise;
+     if (this.entryError) {
+       throw this.entryError;
+     }

@@ -57,6 +57,7 @@ export function createSessionService(deps: SessionServiceDeps) {
         primary_auth_method: spec.primaryAuthMethod,
         strong_auth_method: spec.strongAuthMethod,
         strong_auth_at: spec.strongAuthAt,
+        impersonator_user_id: spec.impersonatorUserId ?? null,
         ip_address: spec.request.ipAddress,
         user_agent: spec.request.userAgent,
         created_at: nowTs,
@@ -106,6 +107,7 @@ export function createSessionService(deps: SessionServiceDeps) {
           primaryAuthMethod: cached.primaryAuthMethod,
           strongAuthMethod: cached.strongAuthMethod,
           strongAuthAt: cached.strongAuthAt,
+          impersonatorUserId: cached.impersonatorUserId,
         };
       }
 
@@ -184,6 +186,7 @@ export function createSessionService(deps: SessionServiceDeps) {
         primaryAuthMethod: authSession.primaryAuthMethod,
         strongAuthMethod: authSession.strongAuthMethod,
         strongAuthAt: authSession.strongAuthAt,
+        impersonatorUserId: authSession.impersonatorUserId,
         expiresAt: dbSession.expires_at,
       });
 

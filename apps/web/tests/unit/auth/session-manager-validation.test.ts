@@ -23,6 +23,7 @@ function buildSessionRow(sessionId: string, nowTs: number): UserSessionRow {
     primary_auth_method: "password",
     strong_auth_method: null,
     strong_auth_at: null,
+    impersonator_user_id: null,
     ip_address: null,
     user_agent: null,
     created_at: nowDate,

@@ -11,8 +11,8 @@ vi.mock("~/lib/auth/access/session", () => ({
 
 vi.mock("~/server/platform/container", () => ({
   getServerRuntime: () => ({
-    profilePicture: {
-      profilePictureService: {
+    avatar: {
+      avatarService: {
         get: getMock,
       },
     },

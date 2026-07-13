@@ -1,147 +1,180 @@
-import { createAsync, useAction } from "@solidjs/router";
-import { For, Show, createEffect, createSignal } from "solid-js";
+import { Key } from "@solid-primitives/keyed";
+import { createAsync, useAction, useSubmission } from "@solidjs/router";
+import { Show, createUniqueId, type Accessor } from "solid-js";
+import { createStore } from "solid-js/store";
 
-import { AppPage } from "~/components/layout/page";
-import { Button } from "~/components/ui/input/button";
-import { Input } from "~/components/ui/input/input";
-import type { CapacityPolicyTeamDefaultsView } from "~/contracts/capacity";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import {
-  updateLeadScopeDefaultMutation,
-  updateSearchScopeDefaultMutation,
-} from "~/lib/mutations/capacity";
+  CapacityLimitFields,
+  type CapacityLimitsDraft,
+} from "~/components/settings/capacity-limit-fields";
+import { SettingsSection } from "~/components/settings/SettingsSection";
+import { Button } from "~/components/ui/input/button";
+import type {
+  CapacityPolicyDefaultsView,
+  CapacityPolicyTeamDefaultsView,
+} from "~/contracts/capacity";
+import { updateScopePolicyMutation } from "~/lib/mutations/capacity";
 import { capacityPolicyDefaultsQuery } from "~/lib/queries/capacity";
+import { actionErrorMessage } from "~/lib/wire-error";
 
-interface TeamPolicyRowProps {
-  team: CapacityPolicyTeamDefaultsView;
-  branchSearchLimit: number | null;
-  branchActiveBufferTarget: number | null;
-  branchDailyRefillLimit: number | null;
-  onUpdateSearchDefault: (input: {
-    scopeType: "team";
-    scopeId: string;
-    monthlySearchLimit: number;
-  }) => Promise<unknown>;
-  onUpdateLeadDefault: (input: {
-    scopeType: "team";
-    scopeId: string;
-    activeBufferTarget: number;
-    dailyRefillLimit: number;
-  }) => Promise<unknown>;
-}
+import styles from "./settings-page.module.css";
 
-function TeamPolicyRow(props: TeamPolicyRowProps) {
-  const [teamSearchLimit, setTeamSearchLimit] = createSignal(
-    String(props.team.searchLimit ?? props.branchSearchLimit ?? 250),
+function TeamPolicyRow(props: {
+  team: Accessor<CapacityPolicyTeamDefaultsView>;
+  branchDefaults: Accessor<CapacityPolicyDefaultsView>;
+}) {
+  const initialTeam = props.team();
+  const initialBranchDefaults = props.branchDefaults();
+  const savePolicy = useAction(updateScopePolicyMutation);
+  // Per-team submission; one mutation is shared across rows.
+  const submission = useSubmission(
+    updateScopePolicyMutation,
+    (input) =>
+      input[0].scopeType === "team" && input[0].scopeId === props.team().teamId,
   );
-  const [teamBufferTarget, setTeamBufferTarget] = createSignal(
-    String(
-      props.team.activeBufferTarget ?? props.branchActiveBufferTarget ?? 10,
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
+  const [draft, setDraft] = createStore<CapacityLimitsDraft>({
+    searchLimit: String(
+      initialTeam.searchLimit ?? initialBranchDefaults.branchSearchLimit ?? 250,
     ),
-  );
-  const [teamDailyRefill, setTeamDailyRefill] = createSignal(
-    String(props.team.dailyRefillLimit ?? props.branchDailyRefillLimit ?? 25),
-  );
-
-  const [isSearchDirty, setIsSearchDirty] = createSignal(false);
-  const [isLeadDirty, setIsLeadDirty] = createSignal(false);
-
-  createEffect(() => {
-    if (isSearchDirty()) return;
-    setTeamSearchLimit(
-      String(props.team.searchLimit ?? props.branchSearchLimit ?? 250),
-    );
+    bufferTarget: String(
+      initialTeam.activeBufferTarget ??
+        initialBranchDefaults.branchActiveBufferTarget ??
+        10,
+    ),
+    dailyRefillLimit: String(
+      initialTeam.dailyRefillLimit ??
+        initialBranchDefaults.branchDailyRefillLimit ??
+        25,
+    ),
   });
 
-  createEffect(() => {
-    if (isLeadDirty()) return;
-    setTeamBufferTarget(
-      String(
-        props.team.activeBufferTarget ?? props.branchActiveBufferTarget ?? 10,
-      ),
-    );
-    setTeamDailyRefill(
-      String(props.team.dailyRefillLimit ?? props.branchDailyRefillLimit ?? 25),
-    );
-  });
+  async function save(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    try {
+      await savePolicy({
+        scopeType: "team",
+        scopeId: props.team().teamId,
+        monthlySearchLimit: Number(draft.searchLimit),
+        activeBufferTarget: Number(draft.bufferTarget),
+        dailyRefillLimit: Number(draft.dailyRefillLimit),
+      });
+      enqueueSuccessSnackBar("Límites del equipo actualizados");
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    }
+  }
 
   return (
-    <div class="rounded border p-4 space-y-4">
-      <div>
-        <div class="font-medium">{props.team.teamName}</div>
-        <div class="text-sm text-muted-foreground">
-          Búsquedas: {props.team.searchLimit ?? "usa default de sucursal"} |
-          Buffer: {props.team.activeBufferTarget ?? "usa default"} | Refill:{" "}
-          {props.team.dailyRefillLimit ?? "usa default"}
+    <form class={styles.teamCard} onSubmit={(event) => void save(event)}>
+      <div class={styles.teamCardHeader}>
+        <span class={styles.teamName}>{props.team().teamName}</span>
+        <span class={styles.teamMeta}>
+          Búsquedas {props.team().searchLimit ?? "(hereda)"} · Buffer{" "}
+          {props.team().activeBufferTarget ?? "(hereda)"} · Refill{" "}
+          {props.team().dailyRefillLimit ?? "(hereda)"}
+        </span>
+      </div>
+
+      <CapacityLimitFields
+        draft={draft}
+        setValue={(key, value) => setDraft(key, value)}
+      />
+
+      <div class={styles.formActions}>
+        <Button
+          type="submit"
+          size="sm"
+          variant="secondary"
+          loading={submission.pending}
+        >
+          Guardar
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function CapacityPoliciesEditor(props: {
+  snapshot: Accessor<CapacityPolicyDefaultsView>;
+}) {
+  const initialSnapshot = props.snapshot();
+  const savePolicy = useAction(updateScopePolicyMutation);
+  const submission = useSubmission(
+    updateScopePolicyMutation,
+    (input) => input[0].scopeType === "branch",
+  );
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
+  const branchFormId = createUniqueId();
+
+  const [branchDraft, setBranchDraft] = createStore<CapacityLimitsDraft>({
+    searchLimit: String(initialSnapshot.branchSearchLimit ?? 250),
+    bufferTarget: String(initialSnapshot.branchActiveBufferTarget ?? 10),
+    dailyRefillLimit: String(initialSnapshot.branchDailyRefillLimit ?? 25),
+  });
+
+  async function saveBranch(): Promise<void> {
+    try {
+      await savePolicy({
+        scopeType: "branch",
+        scopeId: props.snapshot().branchId,
+        monthlySearchLimit: Number(branchDraft.searchLimit),
+        activeBufferTarget: Number(branchDraft.bufferTarget),
+        dailyRefillLimit: Number(branchDraft.dailyRefillLimit),
+      });
+      enqueueSuccessSnackBar("Defaults de sucursal actualizados");
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    }
+  }
+
+  return (
+    <>
+      <SettingsSection
+        title="Sucursal"
+        description="Defaults de búsquedas y leads para toda la sucursal. Los equipos los heredan salvo que definan el suyo."
+        actions={
+          <Button
+            type="submit"
+            form={branchFormId}
+            size="sm"
+            variant="secondary"
+            loading={submission.pending}
+          >
+            Guardar
+          </Button>
+        }
+      >
+        <form
+          id={branchFormId}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveBranch();
+          }}
+        >
+          <CapacityLimitFields
+            draft={branchDraft}
+            setValue={(key, value) => setBranchDraft(key, value)}
+          />
+        </form>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Equipos"
+        description="Ajusta los límites por equipo. Deja el valor heredado para seguir el default de la sucursal."
+      >
+        <div class={styles.teamList}>
+          {/* Key by teamId: a row stays mounted across revalidation (new
+              objects, same id), so a half-typed draft is never reset. */}
+          <Key each={props.snapshot().teams} by="teamId">
+            {(team) => (
+              <TeamPolicyRow team={team} branchDefaults={props.snapshot} />
+            )}
+          </Key>
         </div>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2">
-        <form
-          class="space-y-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void props.onUpdateSearchDefault({
-              scopeType: "team",
-              scopeId: props.team.teamId,
-              monthlySearchLimit: Number(teamSearchLimit()),
-            });
-            setIsSearchDirty(false);
-          }}
-        >
-          <Input
-            type="number"
-            label="Límite mensual"
-            value={teamSearchLimit()}
-            onInput={(event) => {
-              setIsSearchDirty(true);
-              setTeamSearchLimit(event.currentTarget.value);
-            }}
-            required
-          />
-          <Button type="submit" variant="outline">
-            Guardar búsquedas
-          </Button>
-        </form>
-
-        <form
-          class="space-y-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void props.onUpdateLeadDefault({
-              scopeType: "team",
-              scopeId: props.team.teamId,
-              activeBufferTarget: Number(teamBufferTarget()),
-              dailyRefillLimit: Number(teamDailyRefill()),
-            });
-            setIsLeadDirty(false);
-          }}
-        >
-          <Input
-            type="number"
-            label="Buffer activo"
-            value={teamBufferTarget()}
-            onInput={(event) => {
-              setIsLeadDirty(true);
-              setTeamBufferTarget(event.currentTarget.value);
-            }}
-            required
-          />
-          <Input
-            type="number"
-            label="Refill diario"
-            value={teamDailyRefill()}
-            onInput={(event) => {
-              setIsLeadDirty(true);
-              setTeamDailyRefill(event.currentTarget.value);
-            }}
-            required
-          />
-          <Button type="submit" variant="outline">
-            Guardar leads
-          </Button>
-        </form>
-      </div>
-    </div>
+      </SettingsSection>
+    </>
   );
 }
 
@@ -149,116 +182,10 @@ export default function CapacityPoliciesPage() {
   const defaults = createAsync(() => capacityPolicyDefaultsQuery(), {
     initialValue: null,
   });
-  const updateSearchDefault = useAction(updateSearchScopeDefaultMutation);
-  const updateLeadDefault = useAction(updateLeadScopeDefaultMutation);
-  const [branchSearchLimit, setBranchSearchLimit] = createSignal("250");
-  const [branchBufferTarget, setBranchBufferTarget] = createSignal("10");
-  const [branchDailyRefill, setBranchDailyRefill] = createSignal("25");
-
-  createEffect(() => {
-    const snapshot = defaults();
-    if (!snapshot) return;
-    if (snapshot.branchSearchLimit !== null) {
-      setBranchSearchLimit(String(snapshot.branchSearchLimit));
-    }
-    if (snapshot.branchActiveBufferTarget !== null) {
-      setBranchBufferTarget(String(snapshot.branchActiveBufferTarget));
-    }
-    if (snapshot.branchDailyRefillLimit !== null) {
-      setBranchDailyRefill(String(snapshot.branchDailyRefillLimit));
-    }
-  });
 
   return (
-    <AppPage width="wide">
-      <Show when={defaults()} keyed>
-        {(snapshot) => (
-          <div class="space-y-8">
-            <div>
-              <h2 class="text-2xl font-semibold">Políticas comerciales</h2>
-              <p class="text-sm text-muted-foreground">
-                Define defaults de búsquedas y leads por sucursal y equipo.
-              </p>
-            </div>
-
-            <div class="grid gap-6 md:grid-cols-2">
-              <form
-                class="space-y-3 rounded border p-4"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void updateSearchDefault({
-                    scopeType: "branch",
-                    scopeId: snapshot.branchId,
-                    monthlySearchLimit: Number(branchSearchLimit()),
-                  });
-                }}
-              >
-                <h3 class="text-lg font-medium">Default de búsquedas</h3>
-                <Input
-                  type="number"
-                  label="Límite mensual de sucursal"
-                  value={branchSearchLimit()}
-                  onInput={(event) =>
-                    setBranchSearchLimit(event.currentTarget.value)
-                  }
-                  required
-                />
-                <Button type="submit">Guardar</Button>
-              </form>
-
-              <form
-                class="space-y-3 rounded border p-4"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void updateLeadDefault({
-                    scopeType: "branch",
-                    scopeId: snapshot.branchId,
-                    activeBufferTarget: Number(branchBufferTarget()),
-                    dailyRefillLimit: Number(branchDailyRefill()),
-                  });
-                }}
-              >
-                <h3 class="text-lg font-medium">Default de leads</h3>
-                <Input
-                  type="number"
-                  label="Buffer activo"
-                  value={branchBufferTarget()}
-                  onInput={(event) =>
-                    setBranchBufferTarget(event.currentTarget.value)
-                  }
-                  required
-                />
-                <Input
-                  type="number"
-                  label="Refill diario"
-                  value={branchDailyRefill()}
-                  onInput={(event) =>
-                    setBranchDailyRefill(event.currentTarget.value)
-                  }
-                  required
-                />
-                <Button type="submit">Guardar</Button>
-              </form>
-            </div>
-
-            <section class="space-y-3">
-              <h3 class="text-lg font-medium">Equipos</h3>
-              <For each={snapshot.teams}>
-                {(team) => (
-                  <TeamPolicyRow
-                    team={team}
-                    branchSearchLimit={snapshot.branchSearchLimit}
-                    branchActiveBufferTarget={snapshot.branchActiveBufferTarget}
-                    branchDailyRefillLimit={snapshot.branchDailyRefillLimit}
-                    onUpdateSearchDefault={updateSearchDefault}
-                    onUpdateLeadDefault={updateLeadDefault}
-                  />
-                )}
-              </For>
-            </section>
-          </div>
-        )}
-      </Show>
-    </AppPage>
+    <Show when={defaults()}>
+      {(snapshot) => <CapacityPoliciesEditor snapshot={snapshot} />}
+    </Show>
   );
 }

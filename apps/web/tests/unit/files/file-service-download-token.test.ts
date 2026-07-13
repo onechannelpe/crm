@@ -20,6 +20,7 @@ function makeContext(): AppContext {
       primaryAuthMethod: "password",
       strongAuthMethod: null,
       strongAuthAt: null,
+      impersonatorUserId: null,
     },
     requestId: "req-1",
     traceId: "trace-1",

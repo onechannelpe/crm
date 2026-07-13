@@ -1,7 +1,9 @@
-import { createAsync, useAction } from "@solidjs/router";
-import { Show, createEffect, createSignal } from "solid-js";
+import { createAsync, useAction, useSubmission } from "@solidjs/router";
+import { Show, createUniqueId, type Accessor } from "solid-js";
+import { createStore } from "solid-js/store";
 
-import { AppPage } from "~/components/layout/page";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
+import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { updateRateProposalPolicyMutation } from "~/lib/mutations/workflow-settings";
@@ -9,82 +11,91 @@ import { rateProposalPolicyQuery } from "~/lib/queries/workflow-settings";
 import { formatDateTime } from "~/lib/utils";
 import { actionErrorMessage } from "~/lib/wire-error";
 
-export default function QuotationPoliciesPage() {
-  const policy = createAsync(() => rateProposalPolicyQuery(), {
-    initialValue: null,
-  });
+import styles from "./settings-page.module.css";
+
+type RateProposalPolicySnapshot = Awaited<
+  ReturnType<typeof rateProposalPolicyQuery>
+>;
+
+function QuotationPolicyEditor(props: {
+  snapshot: Accessor<RateProposalPolicySnapshot>;
+}) {
+  const initialSnapshot = props.snapshot();
   const updatePolicy = useAction(updateRateProposalPolicyMutation);
-
-  const [validityDays, setValidityDays] = createSignal("");
-  const [submitting, setSubmitting] = createSignal(false);
-  const [policySaveErrorMessage, setPolicySaveErrorMessage] = createSignal<
-    string | null
-  >(null);
-
-  createEffect(() => {
-    const snapshot = policy();
-    if (!snapshot) return;
-    setValidityDays(String(snapshot.validityDays));
+  const submission = useSubmission(updateRateProposalPolicyMutation);
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
+  const formId = createUniqueId();
+  const [draft, setDraft] = createStore({
+    validityDays: String(initialSnapshot.validityDays),
   });
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
-    setPolicySaveErrorMessage(null);
-    setSubmitting(true);
-
     try {
-      await updatePolicy({
-        validityDays: Number(validityDays()),
-      });
-    } catch (caught) {
-      setPolicySaveErrorMessage(actionErrorMessage(caught));
-    } finally {
-      setSubmitting(false);
+      await updatePolicy({ validityDays: Number(draft.validityDays) });
+      enqueueSuccessSnackBar("Vigencia actualizada");
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   }
 
   return (
-    <AppPage width="narrow" class="space-y-6">
-      <div>
-        <h2 class="text-2xl font-semibold">Politicas de cotizacion</h2>
-        <p class="text-sm text-muted-foreground">
-          Define cuantos dias puede aceptar el ejecutivo una tarifa propuesta.
-        </p>
-      </div>
+    <SettingsSection
+      title="Vigencia de propuestas"
+      description="Cuántos días puede el ejecutivo aceptar una tarifa propuesta."
+      actions={
+        <Button
+          type="submit"
+          form={formId}
+          size="sm"
+          variant="secondary"
+          loading={submission.pending}
+        >
+          Guardar
+        </Button>
+      }
+    >
+      <form
+        id={formId}
+        class={styles.stack}
+        onSubmit={(event) => void handleSubmit(event)}
+      >
+        <div class={styles.formGrid}>
+          <Input
+            type="number"
+            min="1"
+            max="90"
+            step="1"
+            label="Vigencia de propuesta (días)"
+            value={draft.validityDays}
+            onInput={(event) =>
+              setDraft("validityDays", event.currentTarget.value)
+            }
+            required
+          />
+        </div>
 
-      <Show when={policy()} keyed>
-        {(snapshot) => (
-          <form
-            class="space-y-4 rounded border p-4"
-            onSubmit={(e) => void handleSubmit(e)}
-          >
-            <Input
-              type="number"
-              min="1"
-              max="90"
-              step="1"
-              label="Vigencia de propuesta (dias)"
-              value={validityDays()}
-              onInput={(event) => setValidityDays(event.currentTarget.value)}
-              required
-            />
-            <p class="text-sm text-muted-foreground">
-              Default del sistema: {snapshot.defaultValidityDays} dias.
-              <Show when={snapshot.updatedAt}>
-                {(updatedAt) => (
-                  <> Ultima actualizacion: {formatDateTime(updatedAt())}.</>
-                )}
-              </Show>
-            </p>
-            <Show when={policySaveErrorMessage()}>
-              {(message) => <p class="text-sm text-destructive">{message()}</p>}
-            </Show>
-            <Button type="submit" loading={submitting()}>
-              Guardar politica
-            </Button>
-          </form>
-        )}
-      </Show>
-    </AppPage>
+        <p class={styles.helperText}>
+          Default del sistema: {props.snapshot().defaultValidityDays} días.
+          <Show when={props.snapshot().updatedAt}>
+            {(updatedAt) => (
+              <> Última actualización: {formatDateTime(updatedAt())}.</>
+            )}
+          </Show>
+        </p>
+      </form>
+    </SettingsSection>
+  );
+}
+
+export default function QuotationPoliciesPage() {
+  const policy = createAsync(() => rateProposalPolicyQuery(), {
+    initialValue: null,
+  });
+
+  return (
+    <Show when={policy()}>
+      {(snapshot) => <QuotationPolicyEditor snapshot={snapshot} />}
+    </Show>
   );
 }

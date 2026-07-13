@@ -32,6 +32,7 @@ export interface CurrentUserView {
   team: { id: string; name: string } | null;
   supervisor: { id: string; names: string } | null;
   branch: { id: string; name: string } | null;
+  impersonating: boolean;
 }
 
 export interface SessionInfo {

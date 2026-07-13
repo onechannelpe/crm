@@ -5,9 +5,9 @@ import { updateUserProfile } from "~/actions/settings/profile";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { ProfileImageInput } from "~/components/settings/ProfileImageInput";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
+import { ImageInput } from "~/components/ui/input/image-input";
 import { Input } from "~/components/ui/input/input";
 import {
   removeUserAvatarMutation,
@@ -86,7 +86,7 @@ export default function ProfilePage() {
     }
   };
 
-  const uploadProfilePicture = async (file: File) => {
+  const handleAvatarUpload = async (file: File) => {
     setAvatarErrorMessage(null);
     clearAvatarPreview();
 
@@ -116,7 +116,7 @@ export default function ProfilePage() {
     }
   };
 
-  const removeProfilePicture = async () => {
+  const handleAvatarRemove = async () => {
     setAvatarErrorMessage(null);
     clearAvatarPreview();
 
@@ -140,13 +140,13 @@ export default function ProfilePage() {
   return (
     <>
       <SettingsSection title="Foto">
-        <ProfileImageInput
+        <ImageInput
           pictureUrl={avatarPreviewUrl() ?? avatarUrl()}
           initials={getUserInitials(shortName(user()))}
           uploading={avatarMutationPending()}
           errorMessage={avatarErrorMessage()}
-          onUpload={uploadProfilePicture}
-          onRemove={removeProfilePicture}
+          onUpload={handleAvatarUpload}
+          onRemove={handleAvatarRemove}
         />
       </SettingsSection>
 

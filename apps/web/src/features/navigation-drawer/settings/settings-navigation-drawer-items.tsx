@@ -41,15 +41,23 @@ export function SettingsNavigationDrawerItems() {
   return (
     <For each={settingsNavigationSections()}>
       {(section) => {
-        const allItemsHidden = createMemo(() =>
-          section.items.every((item) => item.isHidden),
+        const visibleItems = createMemo(() =>
+          section.items.filter((item) => !item.isHidden),
+        );
+
+        const allItemsHidden = createMemo(() => visibleItems().length === 0);
+
+        const sectionIsAdvanced = createMemo(
+          () =>
+            visibleItems().length > 0 &&
+            visibleItems().every((item) => item.isAdvanced),
         );
 
         return (
           <Show when={!allItemsHidden()}>
             <NavigationDrawerSection>
               <Show
-                when={section.isAdvanced}
+                when={sectionIsAdvanced()}
                 fallback={
                   <NavigationDrawerSectionTitle label={section.label} />
                 }

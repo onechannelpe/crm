@@ -2,10 +2,11 @@ import Activity from "~/components/icons/activity";
 import Bell from "~/components/icons/bell";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import LogOut from "~/components/icons/log-out";
-import Package from "~/components/icons/package";
 import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
+import Sun from "~/components/icons/sun";
 import UserIcon from "~/components/icons/user";
+import UserRound from "~/components/icons/user-round";
 import { canAccessPath, type Role } from "~/lib/auth/access/route-policy";
 
 import type { SettingsNavSection } from "./settings-navigation.types";
@@ -28,6 +29,13 @@ export function createSettingsNavigationSections(
           label: "Perfil",
           href: "/settings/profile",
           icon: UserIcon,
+          section: "account",
+        },
+        {
+          id: "appearance",
+          label: "Apariencia",
+          href: "/settings/appearance",
+          icon: Sun,
           section: "account",
         },
         {
@@ -77,6 +85,15 @@ export function createSettingsNavigationSections(
       label: "Administración",
       items: [
         {
+          id: "members",
+          label: "Miembros",
+          href: "/settings/members",
+          icon: UserRound,
+          section: "administration",
+          matchSubPages: true,
+          isHidden: !canAccessPath(options.role, "/settings/members"),
+        },
+        {
           id: "login-protection",
           label: "Proteccion de inicio de sesion",
           href: "/settings/login-protection",
@@ -102,16 +119,6 @@ export function createSettingsNavigationSections(
           section: "administration",
           isHidden: !canAccessPath(options.role, "/settings/event-logs"),
           isAdvanced: true,
-        },
-        {
-          id: "catalog",
-          label: "Catalogo",
-          href: "/settings/catalog",
-          icon: Package,
-          section: "administration",
-          isHidden: !canAccessPath(options.role, "/settings/catalog"),
-          isAdvanced: true,
-          modifier: "new",
         },
       ],
     },

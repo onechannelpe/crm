@@ -7,10 +7,8 @@ import { grantLeadCapacityDirect } from "~/server/capacity/application/use-cases
 import { grantSearchCapacityDirect } from "~/server/capacity/application/use-cases/grant-search-capacity-direct";
 import { rejectCapacityRequest } from "~/server/capacity/application/use-cases/reject-capacity-request";
 import { requestCapacity } from "~/server/capacity/application/use-cases/request-capacity";
-import { updateLeadPolicyDefault } from "~/server/capacity/application/use-cases/update-lead-policy-default";
-import { updateLeadPolicyOverride } from "~/server/capacity/application/use-cases/update-lead-policy-override";
-import { updateSearchPolicyDefault } from "~/server/capacity/application/use-cases/update-search-policy-default";
-import { updateSearchPolicyOverride } from "~/server/capacity/application/use-cases/update-search-policy-override";
+import { updateExecutivePolicyOverride } from "~/server/capacity/application/use-cases/update-executive-policy-override";
+import { updateScopePolicy } from "~/server/capacity/application/use-cases/update-scope-policy";
 import { createCapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import { createCapacityTeamsRepo } from "~/server/capacity/infrastructure/capacity-teams-repo";
 import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
@@ -88,22 +86,14 @@ export function createCapacityRuntime(infra: ServerInfra) {
         ctx: Parameters<typeof grantLeadCapacityDirect>[0],
         input: Parameters<typeof grantLeadCapacityDirect>[2],
       ) => grantLeadCapacityDirect(ctx, { uow }, input),
-      updateSearchPolicyDefault: (
-        ctx: Parameters<typeof updateSearchPolicyDefault>[0],
-        input: Parameters<typeof updateSearchPolicyDefault>[2],
-      ) => updateSearchPolicyDefault(ctx, { uow }, input),
-      updateLeadPolicyDefault: (
-        ctx: Parameters<typeof updateLeadPolicyDefault>[0],
-        input: Parameters<typeof updateLeadPolicyDefault>[2],
-      ) => updateLeadPolicyDefault(ctx, { uow }, input),
-      updateSearchPolicyOverride: (
-        ctx: Parameters<typeof updateSearchPolicyOverride>[0],
-        input: Parameters<typeof updateSearchPolicyOverride>[2],
-      ) => updateSearchPolicyOverride(ctx, { uow }, input),
-      updateLeadPolicyOverride: (
-        ctx: Parameters<typeof updateLeadPolicyOverride>[0],
-        input: Parameters<typeof updateLeadPolicyOverride>[2],
-      ) => updateLeadPolicyOverride(ctx, { uow }, input),
+      updateScopePolicy: (
+        ctx: Parameters<typeof updateScopePolicy>[0],
+        input: Parameters<typeof updateScopePolicy>[2],
+      ) => updateScopePolicy(ctx, { uow }, input),
+      updateExecutivePolicyOverride: (
+        ctx: Parameters<typeof updateExecutivePolicyOverride>[0],
+        input: Parameters<typeof updateExecutivePolicyOverride>[2],
+      ) => updateExecutivePolicyOverride(ctx, { uow }, input),
       listManagedExecutives: (
         ctx: Parameters<typeof listManagedExecutives>[0],
       ) => listManagedExecutives(ctx, { repos: readRepos }),

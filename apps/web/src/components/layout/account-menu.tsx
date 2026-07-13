@@ -1,18 +1,14 @@
 import { useNavigate } from "@solidjs/router";
-import { Show, createSignal, onMount } from "solid-js";
+import { Show, createSignal } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
 import LogOut from "~/components/icons/log-out";
-import Settings from "~/components/icons/settings";
+import Moon from "~/components/icons/moon";
+import Sun from "~/components/icons/sun";
 import UserRound from "~/components/icons/user-round";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { Avatar } from "~/components/ui/display/avatar";
-import {
-  applyThemeMode,
-  getThemeMode,
-  saveThemeMode,
-  type ThemeMode,
-} from "~/components/ui/theme/theme-mode";
+import { useTheme } from "~/components/ui/theme/theme-context";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { cn } from "~/lib/utils";
 
@@ -28,7 +24,7 @@ interface AccountMenuProps {
 
 export function AccountMenu(props: AccountMenuProps) {
   const [open, setOpen] = createSignal(false);
-  const [theme, setTheme] = createSignal<ThemeMode>("light");
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   let containerRef: HTMLDivElement | undefined;
 
@@ -37,15 +33,6 @@ export function AccountMenu(props: AccountMenuProps) {
     onDismiss: () => setOpen(false),
     getContainer: () => containerRef,
   });
-
-  onMount(() => setTheme(getThemeMode()));
-
-  const toggleTheme = () => {
-    const nextTheme = theme() === "light" ? "dark" : "light";
-    setTheme(nextTheme);
-    applyThemeMode(nextTheme);
-    saveThemeMode(nextTheme);
-  };
 
   return (
     <div
@@ -100,8 +87,8 @@ export function AccountMenu(props: AccountMenuProps) {
             }}
             class={styles.item}
           >
-            <Settings size={16} />
-            Tema {theme() === "light" ? "claro" : "oscuro"}
+            {theme() === "light" ? <Moon size={16} /> : <Sun size={16} />}
+            Tema {theme() === "light" ? "oscuro" : "claro"}
           </button>
           <hr class={styles.separator} />
           <button

@@ -17,4 +17,5 @@ export interface AuthSession {
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: Date | null;
+  impersonatorUserId: UserId | null;
 }

@@ -18,6 +18,23 @@ type AssignableExecutiveRow = {
   second_surname: string;
 };
 
+export type MemberRosterRow = {
+  id: UserId;
+  names: string;
+  first_surname: string;
+  second_surname: string;
+  email: string;
+  role: UserRole;
+  executive_category: ExecutiveCategoryValue | null;
+  is_active: boolean;
+  avatar_storage_key: string | null;
+  avatar_version: number;
+  expires_at: Date | null;
+  onboarding_completed_at: Date | null;
+  team_id: TeamId | null;
+  team_name: string | null;
+};
+
 export function createUsersRepo(db: DatabaseExecutor) {
   return {
     findById(id: UserId) {
@@ -138,6 +155,33 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
+    listByBranchWithTeam(branchId: BranchId): Promise<MemberRosterRow[]> {
+      return db
+        .selectFrom("users")
+        .leftJoin("teams", "teams.id", "users.team_id")
+        .select([
+          "users.id as id",
+          "users.names as names",
+          "users.first_surname as first_surname",
+          "users.second_surname as second_surname",
+          "users.email as email",
+          "users.role as role",
+          "users.executive_category as executive_category",
+          "users.is_active as is_active",
+          "users.avatar_storage_key as avatar_storage_key",
+          "users.avatar_version as avatar_version",
+          "users.expires_at as expires_at",
+          "users.onboarding_completed_at as onboarding_completed_at",
+          "users.team_id as team_id",
+          "teams.name as team_name",
+        ])
+        .where("users.branch_id", "=", branchId)
+        .orderBy("users.is_active", "desc")
+        .orderBy("users.names", "asc")
+        .orderBy("users.first_surname", "asc")
+        .execute();
+    },
+
     async create(values: {
       branch_id: BranchId;
       team_id?: TeamId | null;
@@ -201,6 +245,66 @@ export function createUsersRepo(db: DatabaseExecutor) {
         })
         .where("id", "=", id)
         .execute();
+    },
+
+    updateProfile(
+      id: UserId,
+      values: {
+        names: string;
+        first_surname: string;
+        second_surname: string;
+        team_id: TeamId | null;
+        executive_category: ExecutiveCategoryValue | null;
+      },
+    ) {
+      return db
+        .updateTable("users")
+        .set({
+          names: values.names,
+          first_surname: values.first_surname,
+          second_surname: values.second_surname,
+          team_id: values.team_id,
+          executive_category: values.executive_category,
+        })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    updateRole(
+      id: UserId,
+      values: {
+        role: UserRole;
+        executive_category: ExecutiveCategoryValue | null;
+      },
+    ) {
+      return db
+        .updateTable("users")
+        .set({
+          role: values.role,
+          executive_category: values.executive_category,
+        })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    setActive(id: UserId, isActive: boolean) {
+      return db
+        .updateTable("users")
+        .set({ is_active: isActive })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    updateExpiry(id: UserId, expiresAt: Date | null) {
+      return db
+        .updateTable("users")
+        .set({ expires_at: expiresAt, expiry_notified_at: null })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    deleteById(id: UserId) {
+      return db.deleteFrom("users").where("id", "=", id).execute();
     },
 
     completeOnboarding(id: UserId, values: { completedAt: Date }) {
