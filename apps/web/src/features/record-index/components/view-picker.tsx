@@ -31,9 +31,12 @@ export function RecordIndexViewPicker(props: {
               class={`${sharedStyles.menuScrollable} ${sharedStyles.menuScrollableCompact}`}
             >
               <div class={sharedStyles.menuListbox}>
-                <For each={recordIndex.definition.views?.catalog.available ?? []}>
+                <For
+                  each={recordIndex.definition.views?.catalog.available ?? []}
+                >
                   {(view) => {
-                    const isActive = () => recordIndex.view?.value() === view.id;
+                    const isActive = () =>
+                      recordIndex.view?.value() === view.id;
                     return (
                       <button
                         type="button"
