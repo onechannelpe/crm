@@ -56,7 +56,7 @@
 }
 
 .moreTabContent {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   display: flex;
   font-weight: var(--font-weight-medium);
   gap: var(--spacing-1);
@@ -93,12 +93,11 @@
   background: var(--foreground);
   bottom: 0;
   content: "";
-  height: 2px;
+  height: 1px;
   left: 0;
   position: absolute;
   right: 0;
   z-index: 1;
-  transform: scaleX(1);
 }
 
 .moreMenu {

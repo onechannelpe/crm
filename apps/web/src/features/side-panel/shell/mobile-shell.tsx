@@ -60,11 +60,7 @@ export function MobileShell(props: MobileShellProps) {
             containerRef = el;
           }}
           data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
-          class={cn(
-            styles.container,
-            variantClass(),
-            props.targetVariant === "fullScreen" && styles.mobileMaxHeight,
-          )}
+          class={cn(styles.container, variantClass())}
           onTransitionEnd={handleTransitionEnd}
         >
           {props.children}

@@ -21,8 +21,7 @@ export function TopBar(props: { isMobile: boolean }) {
   } = useSidePanel();
 
   const showBackButton = () => navigationStack().length > 1;
-  const showCloseButton = () =>
-    navigationStack().length === 1 && !props.isMobile;
+  const showCloseButton = () => !(props.isMobile && showBackButton());
   const showSearch = () => {
     const entry = currentEntry();
     if (!entry) return false;
@@ -35,16 +34,6 @@ export function TopBar(props: { isMobile: boolean }) {
       <div class={styles.content}>
         <div class={styles.leftControls}>
           <BackButton visible={showBackButton()} />
-          <Show when={showCloseButton()}>
-            <button
-              type="button"
-              class={styles.closeButton}
-              onClick={closePanel}
-              aria-label="Cerrar panel"
-            >
-              <X size={16} />
-            </button>
-          </Show>
         </div>
 
         <div class={styles.rightSlot}>
@@ -59,8 +48,18 @@ export function TopBar(props: { isMobile: boolean }) {
           </Show>
         </div>
       </div>
-      <div class={styles.actions}>
+      <div class={styles.rightControls}>
         <TopBarActions />
+        <Show when={showCloseButton()}>
+          <button
+            type="button"
+            class={styles.closeButton}
+            onClick={closePanel}
+            aria-label="Cerrar panel"
+          >
+            <X size={16} />
+          </button>
+        </Show>
       </div>
     </div>
   );

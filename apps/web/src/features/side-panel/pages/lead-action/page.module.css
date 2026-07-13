@@ -1,11 +1,5 @@
-.hiddenTabContent {
+.loading {
   color: var(--foreground-secondary);
   font-size: var(--font-size-sm);
   padding: var(--spacing-6);
-}
-
-.error {
-  color: var(--destructive, #b91c1c);
-  font-size: 12px;
-  margin: 0;
 }

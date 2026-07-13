@@ -1,16 +1,13 @@
-import { createPanelRowOpen } from "~/features/data-grid/model/row-open";
-import type { DataGridRowOpen } from "~/features/data-grid/model/row-open";
-
 import { useSidePanel } from "../state/use-side-panel";
 import type { SidePanelPageDefinition } from "../types/side-panel-page";
 
 export function useSidePanelRowOpen<T>(
   buildPage: (row: T) => SidePanelPageDefinition,
-): DataGridRowOpen<T> {
+): (row: T) => void {
   const { closePanel, currentEntry, isClosing, isOpen, openPanel } =
     useSidePanel();
 
-  return createPanelRowOpen((row) => {
+  return (row) => {
     const page = buildPage(row);
     const activeEntry = currentEntry();
 
@@ -25,5 +22,5 @@ export function useSidePanelRowOpen<T>(
     }
 
     openPanel(page);
-  });
+  };
 }

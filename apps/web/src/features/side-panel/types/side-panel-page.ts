@@ -5,6 +5,7 @@ import Info from "~/components/icons/info";
 import Search from "~/components/icons/search";
 import User from "~/components/icons/user";
 import Users from "~/components/icons/users";
+import type { LeadActionKind } from "~/features/record-show/model/lead-action-kind";
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 import type {
   CompanyGroup,
@@ -27,6 +28,7 @@ export type SidePanelPageKey =
   | "search-company-detail"
   | "create-lead"
   | "view-record"
+  | "lead-action"
   | "data-grid-detail";
 
 export type SidePanelNavigationEntry = {
@@ -69,6 +71,14 @@ export type ViewRecordSidePanelPageState = {
   activeTab: RecordTabId;
 };
 
+export type LeadActionSidePanelPageState = {
+  page: "lead-action";
+  leadId: string;
+  action: LeadActionKind;
+  title: string;
+  subtitle: string;
+};
+
 export type DataGridDetailSidePanelItem = {
   label: string;
   value: string;
@@ -87,6 +97,7 @@ export type SidePanelPageState =
   | SearchCompanyDetailSidePanelPageState
   | CreateLeadSidePanelPageState
   | ViewRecordSidePanelPageState
+  | LeadActionSidePanelPageState
   | DataGridDetailSidePanelPageState;
 
 export type SidePanelPageDefinition = {
@@ -214,7 +225,39 @@ export function createLeadRecordDetailSidePanelPage(
       leadId: input.leadId,
       title: input.title,
       subtitle: input.subtitle ?? `Cliente ${input.leadId}`,
-      activeTab: "resumen",
+      activeTab: "datos",
+    },
+  };
+}
+
+type CreateLeadActionSidePanelPageInput = {
+  leadId: string;
+  action: LeadActionKind;
+  title: string;
+  subtitle: string;
+};
+
+export function createLeadActionSidePanelPage(
+  input: CreateLeadActionSidePanelPageInput,
+): SidePanelPageDefinition {
+  const pageId = createEntitySidePanelPageId(
+    "lead-action",
+    `${input.leadId}:${input.action}`,
+  );
+
+  return {
+    entry: {
+      page: "lead-action",
+      pageId,
+      pageTitle: input.title,
+      pageIcon: Building2,
+    },
+    state: {
+      page: "lead-action",
+      leadId: input.leadId,
+      action: input.action,
+      title: input.title,
+      subtitle: input.subtitle,
     },
   };
 }

@@ -77,12 +77,12 @@
   overflow: hidden;
 }
 
-.actions {
+.rightControls {
   align-items: center;
   color: var(--foreground-secondary);
   display: flex;
   flex-shrink: 0;
-  min-width: 24px;
+  gap: 4px;
 }
 
 .chip {

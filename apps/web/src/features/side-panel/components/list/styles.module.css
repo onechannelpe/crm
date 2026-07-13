@@ -1,18 +1,6 @@
+/* Keyboard-navigation container only. Scrolling is owned by SidePanelPage. */
 .list {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.scrollArea {
-  background: var(--background);
-  box-sizing: border-box;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  overflow-y: auto;
   width: 100%;
 }

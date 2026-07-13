@@ -1,13 +1,13 @@
 import { For } from "solid-js";
 
-import { PanelList } from "../../components/list";
+import { SidePanelPage } from "../../components/page";
 import { useSidePanelPageState } from "../../router/page-state";
 
 export function DataGridDetailPage() {
   const pageState = useSidePanelPageState("data-grid-detail");
 
   return (
-    <PanelList>
+    <SidePanelPage>
       <div style={{ display: "grid", gap: "12px" }}>
         <For each={pageState().items}>
           {(item) => (
@@ -33,6 +33,6 @@ export function DataGridDetailPage() {
           )}
         </For>
       </div>
-    </PanelList>
+    </SidePanelPage>
   );
 }

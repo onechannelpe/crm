@@ -61,7 +61,7 @@ export function PanelList(props: ParentProps) {
       }}
       class={styles.list}
     >
-      <div class={styles.scrollArea}>{props.children}</div>
+      {props.children}
     </div>
   );
 }

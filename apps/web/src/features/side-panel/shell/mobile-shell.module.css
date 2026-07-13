@@ -36,7 +36,3 @@
   transition: transform var(--motion-normal) var(--ease-standard);
   width: 100%;
 }
-
-.mobileMaxHeight {
-  max-height: calc(100% - 64px);
-}

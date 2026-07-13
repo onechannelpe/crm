@@ -1,7 +1,7 @@
 import Users from "~/components/icons/users";
 import { RecordChipList } from "~/components/ui/record-chip/record-chip";
 
-import { PanelList } from "../../components/list";
+import { SidePanelPage } from "../../components/page";
 import { useSidePanelPageState } from "../../router/page-state";
 
 import styles from "./page.module.css";
@@ -10,7 +10,7 @@ export function SearchCompanyPage() {
   const pageState = useSidePanelPageState("search-company-detail");
 
   return (
-    <PanelList>
+    <SidePanelPage>
       <div class={styles.content}>
         <section class={styles.hero}>
           <div class={styles.heroIcon}>
@@ -31,6 +31,6 @@ export function SearchCompanyPage() {
           <RecordChipList items={pageState().company.phones} shape="square" />
         </section>
       </div>
-    </PanelList>
+    </SidePanelPage>
   );
 }

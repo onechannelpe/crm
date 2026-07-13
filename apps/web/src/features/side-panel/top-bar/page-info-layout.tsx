@@ -7,6 +7,7 @@ type PageInfoLayoutProps = {
   icon?: JSX.Element;
   iconColor?: string;
   title: JSX.Element;
+  badge?: JSX.Element;
   label?: string;
 };
 
@@ -20,6 +21,9 @@ export function PageInfoLayout(props: PageInfoLayoutProps) {
       </Show>
       <div class={styles.textContainer}>
         <div class={styles.titleWrapper}>{props.title}</div>
+        <Show when={props.badge}>
+          <span class={styles.badge}>{props.badge}</span>
+        </Show>
         <Show when={props.label}>
           <span class={styles.label}>{props.label}</span>
         </Show>
