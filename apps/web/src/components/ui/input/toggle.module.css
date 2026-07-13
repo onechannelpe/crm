@@ -2,6 +2,7 @@
   align-items: center;
   background-color: var(--background-transparent-medium);
   border-radius: 10px;
+  corner-shape: round;
   cursor: pointer;
   display: inline-flex;
   flex-shrink: 0;
@@ -32,6 +33,7 @@
 .circle {
   background-color: var(--background);
   border-radius: 50%;
+  corner-shape: round;
   height: 16px;
   left: 0;
   position: absolute;

@@ -19,12 +19,8 @@
   background: var(--bg-translucent);
 }
 
-.table.compact .row,
-.table.compact .head,
-.table.compact .cell {
-  height: 24px;
-  font-size: var(--font-size-caption);
-  padding: 0 8px;
+.row[data-clickable="true"] {
+  cursor: pointer;
 }
 
 .head {
@@ -55,8 +51,45 @@
   border-right: 0;
 }
 
-.caption {
-  margin-top: 12px;
+.head[data-align="right"],
+.cell[data-align="right"] {
+  text-align: right;
+}
+
+.head[data-align="center"],
+.cell[data-align="center"] {
+  text-align: center;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list {
+  table-layout: fixed;
+}
+
+.list .row,
+.list .head,
+.list .cell {
+  height: var(--spacing-8);
+}
+
+.list .head,
+.list .cell {
+  border-right: 0;
+  padding: 0 var(--spacing-2);
+}
+
+.list .head {
+  border-bottom-color: var(--border-light);
   color: var(--foreground-tertiary);
-  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+.list .cell {
+  border-bottom: 0;
+  color: var(--foreground-secondary);
 }

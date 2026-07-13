@@ -160,49 +160,104 @@
   color: var(--destructive);
 }
 
-.checkboxLabel {
-  display: inline-flex;
+.checkboxRoot {
   align-items: center;
-  gap: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  position: relative;
+}
+
+.checkboxHoverable {
+  padding: 5px;
+}
+
+.checkboxLarge.checkboxHoverable {
+  padding: 6px;
+}
+
+.checkboxHoverable:hover {
+  background-color: var(--background-transparent-light);
+}
+
+.checkboxOn.checkboxHoverable:hover {
+  background-color: var(--background-transparent-blue);
+}
+
+.checkboxDisabled.checkboxHoverable:hover {
+  background-color: transparent;
 }
 
 .checkboxInput {
-  width: 16px;
-  height: 16px;
-  appearance: none;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  background: var(--surface);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
 }
 
-.checkboxInput:checked {
-  background: var(--primary);
-  border-color: var(--primary);
+.checkboxBox {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--foreground);
+  border-radius: var(--t-border-radius-sm-round);
+  corner-shape: round;
+  box-sizing: border-box;
+  color: var(--background);
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  position: relative;
+}
+
+.checkboxInput:focus-visible + .checkboxBox {
+  box-shadow: var(--focus-ring-shadow);
+}
+
+.checkboxSmall .checkboxBox {
+  height: 14px;
+  width: 14px;
+}
+
+.checkboxLarge .checkboxBox {
+  border-width: 1.43px;
+  height: 20px;
+  width: 20px;
+}
+
+.checkboxOn .checkboxBox {
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+}
+
+.checkboxIcon {
+  height: 14px;
+  pointer-events: none;
+  width: 14px;
+}
+
+.checkboxLarge .checkboxIcon {
+  height: 20px;
+  width: 20px;
+}
+
+.checkboxDisabled {
+  cursor: not-allowed;
+}
+
+.checkboxDisabled .checkboxBox {
+  border-color: var(--primary-border-40);
+}
+
+.checkboxDisabled.checkboxOn .checkboxBox {
+  background: var(--color-blue-7);
+  border-color: var(--color-blue-7);
 }
 
 .checkboxText {
   color: var(--foreground);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
-}
-
-.checkIcon {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  color: var(--primary-foreground);
-  pointer-events: none;
-}
-
-.checkboxWrap {
-  position: relative;
-  width: 16px;
-  height: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }

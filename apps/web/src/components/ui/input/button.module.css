@@ -146,3 +146,13 @@
   text-underline-offset: 4px;
   padding: 0;
 }
+
+.primary.accentBlue {
+  background: var(--color-blue);
+  border-color: color-mix(in oklab, var(--color-blue) 82%, black 18%);
+  color: var(--color-white);
+}
+
+.primary.accentBlue:hover {
+  background: color-mix(in oklab, var(--color-blue) 90%, black 10%);
+}

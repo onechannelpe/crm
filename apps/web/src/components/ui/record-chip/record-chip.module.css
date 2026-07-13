@@ -1,13 +1,14 @@
 .chip {
   align-items: center;
   background: var(--bg-translucent);
-  border-radius: var(--radius-sm);
+  border-radius: var(--t-border-radius-sm-round);
+  corner-shape: round;
   display: inline-flex;
   gap: 4px;
   height: 20px;
   max-width: min(100%, 200px);
   overflow: hidden;
-  padding: 2px 4px;
+  padding: var(--spacing-1);
   user-select: none;
   vertical-align: middle;
 }
@@ -44,10 +45,11 @@
 
 .avatarRound {
   border-radius: 50%;
+  corner-shape: round;
 }
 
 .avatarSquare {
-  border-radius: 2px;
+  border-radius: var(--t-border-radius-xs);
 }
 
 .avatarImage {
