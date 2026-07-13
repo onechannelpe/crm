@@ -37,6 +37,11 @@
   white-space: nowrap;
 }
 
+.badge {
+  display: flex;
+  flex-shrink: 0;
+}
+
 .label {
   color: var(--foreground-tertiary);
   flex-shrink: 0;

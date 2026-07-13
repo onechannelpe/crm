@@ -1,27 +1,17 @@
-.panel {
+.page {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  min-width: 0;
-  overflow: hidden;
 }
 
 .scroll {
+  background: var(--background);
+  box-sizing: border-box;
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
   overflow-y: auto;
-}
-
-@media (max-width: 768px) {
-  .panel {
-    height: auto;
-    overflow: visible;
-  }
-
-  .scroll {
-    overflow: visible;
-  }
+  width: 100%;
 }

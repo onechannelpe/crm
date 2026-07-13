@@ -7,7 +7,7 @@ import type { RecordContext } from "~/features/record-show/model/record-context"
 import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
 import { createLeadMutation } from "~/features/workflow/data/command-mutations";
 
-import { PanelList } from "../../components/list";
+import { SidePanelPage } from "../../components/page";
 import { SidePanelFooter } from "../../components/panel-footer";
 import { useSidePanel } from "../../state/use-side-panel";
 import { createLeadRecordDetailSidePanelPage } from "../../types/side-panel-page";
@@ -96,29 +96,27 @@ export function CreateLeadPage() {
   }));
 
   return (
-    <div class={styles.pageShell}>
-      <PanelList>
-        <div class={styles.page}>
-          <RecordTabs
-            context={recordContext()}
-            activeTab={activeTab()}
-            onTabSelect={setActiveTab}
-          />
-
-          <Show when={errorMessage()}>
-            {(message) => <p class={styles.error}>{message()}</p>}
-          </Show>
-        </div>
-      </PanelList>
-
-      <SidePanelFooter
-        primary={{
-          label: "Crear cliente",
-          shortcut: "⏎",
-          onClick: () => void submit(),
-          disabled: submitting(),
-        }}
+    <SidePanelPage
+      footer={
+        <SidePanelFooter
+          primary={{
+            label: "Crear cliente",
+            shortcut: "⏎",
+            onClick: () => void submit(),
+            disabled: submitting(),
+          }}
+        />
+      }
+    >
+      <RecordTabs
+        context={recordContext()}
+        activeTab={activeTab()}
+        onTabSelect={setActiveTab}
       />
-    </div>
+
+      <Show when={errorMessage()}>
+        {(message) => <p class={styles.error}>{message()}</p>}
+      </Show>
+    </SidePanelPage>
   );
 }

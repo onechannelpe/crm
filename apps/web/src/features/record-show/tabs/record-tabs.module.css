@@ -3,12 +3,4 @@
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  overflow-y: auto;
-}
-
-/* Mobile record pages scroll the tab strip and pane together. */
-@media (max-width: 768px) {
-  .pane {
-    overflow-y: visible;
-  }
 }

@@ -1,76 +1,84 @@
-import { createSignal, For } from "solid-js";
-import type { JSX } from "solid-js";
-
-import ChevronDown from "~/components/icons/chevron-down";
+import Checkbox from "~/components/icons/checkbox";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
-import { AnimatedExpandableContainer } from "~/components/ui/animation/animated-expandable-container";
+import { RecordChip } from "~/components/ui/record-chip/record-chip";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import type { CommercialScopeBinding } from "~/features/record-show/model/record-context";
 import {
-  FieldRow,
   FieldTable,
   FieldTextValue,
-  FieldValue,
-  FieldValueDisplay,
+  RecordInlineCell,
 } from "~/features/side-panel/components/field-table";
 import {
   RecordDetailSection,
   RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSubsectionChevron,
-  RecordDetailSubsectionHeader,
-  RecordDetailSectionTitle,
 } from "~/features/side-panel/components/record-detail-section";
-import {
-  LEAD_DETAIL_FIELD_GROUPS,
-  type FieldGroup,
-} from "~/features/workflow/fields/lead-field-layout";
+import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import { CommercialScopeFields } from "~/features/workflow/forms/commercial-scope/fields";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
+import { capitalize } from "~/lib/utils";
 
-import { CommercialScopeGroup } from "./commercial-scope-group";
+import { CommercialFields } from "./commercial-fields";
+import { RegistrySection } from "./registry-section";
 
-type FieldIcon = (props: { size?: number }) => JSX.Element;
-
-function FieldsSectionFrame(props: { children: JSX.Element }) {
-  const [isExpanded, setIsExpanded] = createSignal(true);
+function ManagedByRow(props: { data: LeadDetailView }) {
+  const canEdit = () => props.data.availableActions.includes("reassign-lead");
 
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Campos" />
-      </RecordDetailSectionHeader>
-      <RecordDetailSectionBody>
-        <RecordDetailSubsectionHeader
-          onClick={() => setIsExpanded((current) => !current)}
-        >
-          <span>General</span>
-          <RecordDetailSubsectionChevron isExpanded={isExpanded()}>
-            <ChevronDown size={14} />
-          </RecordDetailSubsectionChevron>
-        </RecordDetailSubsectionHeader>
-        <AnimatedExpandableContainer isExpanded={isExpanded()}>
-          {props.children}
-        </AnimatedExpandableContainer>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+    <RecordInlineCell
+      label="Administrado por"
+      icon={User}
+      edit={
+        canEdit()
+          ? {
+              ariaLabel: "Editar Administrado por",
+              renderEditor: (onClose) => (
+                <ExecutivePicker
+                  leadId={props.data.lead.id}
+                  currentUserId={props.data.lead.executiveId}
+                  onSelect={onClose}
+                  onClose={onClose}
+                />
+              ),
+            }
+          : undefined
+      }
+    >
+      <RecordChip name={props.data.lead.executiveName} shape="round" />
+    </RecordInlineCell>
   );
 }
 
-function ReadonlyFieldRow(props: {
-  label: string;
-  icon: FieldIcon;
-  value: string;
-}) {
+function PriorityRow(props: { data: LeadDetailView }) {
   return (
-    <FieldRow label={props.label} icon={props.icon} readonly>
-      <FieldValue>
-        <FieldValueDisplay>
-          <FieldTextValue>{props.value}</FieldTextValue>
-        </FieldValueDisplay>
-      </FieldValue>
-    </FieldRow>
+    <RecordInlineCell
+      label="Prioridad"
+      icon={Checkbox}
+      empty={props.data.lead.priority === null}
+    >
+      <FieldTextValue>
+        {props.data.lead.priority && capitalize(props.data.lead.priority)}
+      </FieldTextValue>
+    </RecordInlineCell>
+  );
+}
+
+// The Datos view is Twenty's Fields widget: one short, flat property box of the
+// deal's own working attributes, then the registry (reference data) collapsed
+// below. Stage lives in the header Tag, the pending step in Tareas, and audit
+// metadata (updated by/at) is dropped — none of them belong in the field list.
+export function DetailFieldsSection(props: { data: LeadDetailView }) {
+  return (
+    <RecordDetailSection>
+      <RecordDetailSectionBody>
+        <FieldTable>
+          <CommercialFields data={props.data} />
+          <PriorityRow data={props.data} />
+          <ManagedByRow data={props.data} />
+        </FieldTable>
+        <RegistrySection data={props.data} />
+      </RecordDetailSectionBody>
+    </RecordDetailSection>
   );
 }
 
@@ -78,60 +86,20 @@ export function CreateFieldsSection(props: {
   commercialScope: CommercialScopeBinding;
 }) {
   return (
-    <FieldsSectionFrame>
-      <FieldTable>
-        <CommercialScopeFields
-          values={props.commercialScope.values}
-          onChange={props.commercialScope.setField}
-        />
-        <ReadonlyFieldRow
-          label="Ejecutivo asignado"
-          icon={User}
-          value="Actual"
-        />
-        <ReadonlyFieldRow
-          label="Etapa inicial"
-          icon={Package}
-          value={leadStageLabel("QUALIFYING")}
-        />
-      </FieldTable>
-    </FieldsSectionFrame>
-  );
-}
-
-function FieldGroupSection(props: { group: FieldGroup; data: LeadDetailView }) {
-  const [isExpanded, setIsExpanded] = createSignal(true);
-
-  return (
-    <>
-      <RecordDetailSubsectionHeader onClick={() => setIsExpanded((v) => !v)}>
-        <span>{props.group.label}</span>
-        <RecordDetailSubsectionChevron isExpanded={isExpanded()}>
-          <ChevronDown size={14} />
-        </RecordDetailSubsectionChevron>
-      </RecordDetailSubsectionHeader>
-      <AnimatedExpandableContainer isExpanded={isExpanded()}>
-        <FieldTable>
-          <For each={props.group.fields}>
-            {(field) => field.renderCell(props.data)}
-          </For>
-        </FieldTable>
-      </AnimatedExpandableContainer>
-    </>
-  );
-}
-
-export function DetailFieldsSection(props: { data: LeadDetailView }) {
-  return (
     <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Campos" />
-      </RecordDetailSectionHeader>
       <RecordDetailSectionBody>
-        <CommercialScopeGroup data={props.data} />
-        <For each={LEAD_DETAIL_FIELD_GROUPS}>
-          {(group) => <FieldGroupSection group={group} data={props.data} />}
-        </For>
+        <FieldTable>
+          <CommercialScopeFields
+            values={props.commercialScope.values}
+            onChange={props.commercialScope.setField}
+          />
+          <RecordInlineCell label="Ejecutivo asignado" icon={User}>
+            <FieldTextValue>Actual</FieldTextValue>
+          </RecordInlineCell>
+          <RecordInlineCell label="Etapa inicial" icon={Package}>
+            <FieldTextValue>{leadStageLabel("QUALIFYING")}</FieldTextValue>
+          </RecordInlineCell>
+        </FieldTable>
       </RecordDetailSectionBody>
     </RecordDetailSection>
   );

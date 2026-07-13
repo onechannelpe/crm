@@ -10,19 +10,19 @@ import Trash from "~/components/icons/trash";
 import X from "~/components/icons/x";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { createRecordPageController } from "~/features/record-show/record-page-controller";
+import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
+import { useLeadActions } from "~/features/record-show/use-record-actions";
 import {
   nextActionCta,
   type NextActionTarget,
-} from "~/features/record-show/resumen/next-action";
-import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
-import { useLeadActions } from "~/features/record-show/use-record-actions";
+} from "~/features/record-show/workflow/next-action";
 import {
   leadDetailQuery,
   leadListQuery,
 } from "~/features/workflow/data/queries";
 import { actionErrorMessage } from "~/lib/wire-error";
 
-import { PanelList } from "../../components/list";
+import { SidePanelPage } from "../../components/page";
 import {
   SidePanelFooter,
   type FooterOption,
@@ -221,29 +221,27 @@ export function RecordPage() {
   });
 
   return (
-    <div class={styles.pageShell}>
-      <PanelList>
-        <div class={styles.page}>
-          <Show
-            when={detailData()}
-            fallback={
-              <div class={styles.hiddenTabContent}>Cargando detalle...</div>
-            }
-          >
-            {(detail) => (
-              <RecordTabs
-                context={{ kind: "lead", data: detail() }}
-                activeTab={activeTab()}
-                onTabSelect={setActiveTab}
-              />
-            )}
-          </Show>
-        </div>
-      </PanelList>
-
-      <Show when={detailData()}>
-        <SidePanelFooter primary={primary()} options={options()} />
+    <SidePanelPage
+      footer={
+        <Show when={detailData()}>
+          <SidePanelFooter primary={primary()} options={options()} />
+        </Show>
+      }
+    >
+      <Show
+        when={detailData()}
+        fallback={
+          <div class={styles.hiddenTabContent}>Cargando detalle...</div>
+        }
+      >
+        {(detail) => (
+          <RecordTabs
+            context={{ kind: "lead", data: detail() }}
+            activeTab={activeTab()}
+            onTabSelect={setActiveTab}
+          />
+        )}
       </Show>
-    </div>
+    </SidePanelPage>
   );
 }

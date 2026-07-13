@@ -1,7 +1,7 @@
 export type RecordTabId =
   | "registro"
-  | "resumen"
   | "datos"
+  | "tareas"
   | "afiliacion"
   | "notas"
   | "actividad"

@@ -7,6 +7,7 @@ import { getNavigableRoutes } from "~/lib/nav/policy";
 
 import { PanelGroup } from "../../components/group";
 import { PanelList } from "../../components/list";
+import { SidePanelPage } from "../../components/page";
 import { useSidePanel } from "../../state/use-side-panel";
 import { EmptyState } from "../common/empty-state";
 
@@ -75,33 +76,35 @@ export function RootPage() {
   const hasResults = () => filteredGroups().some((g) => g.items.length > 0);
 
   return (
-    <PanelList>
-      <div class={styles.commandList}>
-        <Show
-          when={hasResults()}
-          fallback={<EmptyState>No se encontraron resultados</EmptyState>}
-        >
-          <For each={filteredGroups()}>
-            {(group) => (
-              <PanelGroup label={group.label}>
-                <For each={group.items}>
-                  {(item, index) => (
-                    <button
-                      type="button"
-                      class={styles.actionItem}
-                      data-index={index()}
-                      onClick={item.onAction}
-                    >
-                      <item.icon size={16} />
-                      {item.label}
-                    </button>
-                  )}
-                </For>
-              </PanelGroup>
-            )}
-          </For>
-        </Show>
-      </div>
-    </PanelList>
+    <SidePanelPage>
+      <PanelList>
+        <div class={styles.commandList}>
+          <Show
+            when={hasResults()}
+            fallback={<EmptyState>No se encontraron resultados</EmptyState>}
+          >
+            <For each={filteredGroups()}>
+              {(group) => (
+                <PanelGroup label={group.label}>
+                  <For each={group.items}>
+                    {(item, index) => (
+                      <button
+                        type="button"
+                        class={styles.actionItem}
+                        data-index={index()}
+                        onClick={item.onAction}
+                      >
+                        <item.icon size={16} />
+                        {item.label}
+                      </button>
+                    )}
+                  </For>
+                </PanelGroup>
+              )}
+            </For>
+          </Show>
+        </div>
+      </PanelList>
+    </SidePanelPage>
   );
 }

@@ -2,13 +2,10 @@ import type { LeadDetailView } from "~/contracts/workflow/views";
 import type { LeadActionKind } from "~/features/record-show/model/lead-action-kind";
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 
+// "message" marks a stage with no actionable next step (nothing for the footer
+// CTA to offer); the record body conveys the state through the stage Tag.
 export type NextAction =
-  | {
-      kind: "message";
-      tone: "success" | "terminal" | "waiting";
-      title: string;
-      message: string;
-    }
+  | { kind: "message" }
   | { kind: "qualify" }
   | { kind: "propose-rate" }
   | {
@@ -23,8 +20,6 @@ export type NextAction =
       disqualification: LeadDetailView["disqualification"];
     };
 
-export type SetupChecklistItem = { label: string; done: boolean };
-
 // Server-resolved actions preserve authorization while stage selects presentation.
 export function resolveNextAction(data: LeadDetailView): NextAction {
   const { stage } = data.lead;
@@ -35,13 +30,7 @@ export function resolveNextAction(data: LeadDetailView): NextAction {
       if (actions.includes("review")) {
         return { kind: "qualify" };
       }
-      return {
-        kind: "message",
-        tone: "success",
-        title: "Cliente registrado",
-        message:
-          "En espera de calificación de disponibilidad por back office (Estado y Prioridad).",
-      };
+      return { kind: "message" };
     case "PRICING": {
       // Only back office holds propose-rate, and only when no proposal is
       // active-pending (none yet, or the last was sent back for revision).
@@ -57,24 +46,14 @@ export function resolveNextAction(data: LeadDetailView): NextAction {
       if (proposal) {
         return { kind: "decide-rate", proposal };
       }
-      return {
-        kind: "message",
-        tone: "waiting",
-        title: "En definición de tarifa",
-        message: "Esperando propuesta de tarifa de back office.",
-      };
+      return { kind: "message" };
     }
     case "SETUP":
       return { kind: "setup-checklist" };
     case "FULFILLMENT":
       return { kind: "fulfillment" };
     case "LIVE":
-      return {
-        kind: "message",
-        tone: "success",
-        title: "Cliente activo",
-        message: "La afiliación está completa.",
-      };
+      return { kind: "message" };
     case "DISQUALIFIED":
       return { kind: "disqualified", disqualification: data.disqualification };
     case "EXPIRED":
@@ -83,33 +62,12 @@ export function resolveNextAction(data: LeadDetailView): NextAction {
         canRestart: actions.includes("restart-quotation"),
       };
     case "CLOSED_LOST":
-      return {
-        kind: "message",
-        tone: "terminal",
-        title: "Cotización cerrada",
-        message: "La cotización se cerró como perdida.",
-      };
+      return { kind: "message" };
     default: {
       const exhaustive: never = stage;
       return exhaustive satisfies never;
     }
   }
-}
-
-// Derived from record data directly (not from blockingFields, which only reports
-// the single current blocker) so each row reflects its own completion.
-export function setupChecklist(data: LeadDetailView): SetupChecklistItem[] {
-  return [
-    { label: "Representante legal", done: data.repLegal !== undefined },
-    {
-      label: "Política digital",
-      done: !data.blockingFields.includes("digitalPolicy"),
-    },
-    {
-      label: "Sedes y cuentas",
-      done: data.venues.some((venue) => venue.solesAccount !== undefined),
-    },
-  ];
 }
 
 export type NextActionTarget =
@@ -187,4 +145,82 @@ export function isLeadActionStillRelevant(
     return data.availableActions.includes("close-lead");
   }
   return resolveNextAction(data).kind === action;
+}
+
+export type LeadTaskOwner = "executive" | "back_office";
+
+// The pending step of the pipeline, resolved independently of who is looking so
+// the Tareas tab reads the same truth for every role ("Proponer tarifa · Back
+// office" whether you are the waiting executive or the acting back office).
+// `isYourMove` layers the viewer's authorization on top: the footer CTA exists
+// (nextActionCta) exactly when the current user can perform the step.
+export type LeadTask = {
+  label: string;
+  owner: LeadTaskOwner;
+  isYourMove: boolean;
+};
+
+const LEAD_TASK_OWNER_LABELS: Record<LeadTaskOwner, string> = {
+  executive: "Ejecutivo",
+  back_office: "Back office",
+};
+
+export function leadTaskOwnerLabel(owner: LeadTaskOwner): string {
+  return LEAD_TASK_OWNER_LABELS[owner];
+}
+
+export function resolveLeadTask(data: LeadDetailView): LeadTask | null {
+  const task = resolveLeadTaskBase(data);
+  if (!task) {
+    return null;
+  }
+  return { ...task, isYourMove: nextActionCta(data) !== null };
+}
+
+function resolveLeadTaskBase(
+  data: LeadDetailView,
+): Omit<LeadTask, "isYourMove"> | null {
+  const { stage, nextStep } = data.lead;
+
+  switch (stage) {
+    case "QUALIFYING":
+      // No LeadNextStep encodes the availability review, so it is stage-derived.
+      return { label: "Calificar disponibilidad", owner: "back_office" };
+    case "EXPIRED":
+      return { label: "Reiniciar cotización", owner: "executive" };
+    case "LIVE":
+    case "DISQUALIFIED":
+    case "CLOSED_LOST":
+      return null;
+    case "PRICING":
+    case "SETUP":
+    case "FULFILLMENT":
+      break;
+    default: {
+      const exhaustive: never = stage;
+      return exhaustive satisfies never;
+    }
+  }
+
+  switch (nextStep) {
+    case "PROPOSE_RATE":
+      return { label: "Proponer tarifa", owner: "back_office" };
+    case "ACCEPT_RATE":
+      return { label: "Confirmar tarifa con el cliente", owner: "executive" };
+    case "DEFINE_DIGITAL_POLICY":
+      return { label: "Definir política digital", owner: "executive" };
+    case "REGISTER_VENUE_ACCOUNTS":
+      return { label: "Registrar cuentas de sedes", owner: "executive" };
+    case "COMPLETE_FULFILLMENT":
+      return {
+        label: "Completar entrega",
+        owner: data.fulfillment?.pendingOwner ?? "back_office",
+      };
+    case "NO_ACTION":
+      return null;
+    default: {
+      const exhaustive: never = nextStep;
+      return exhaustive satisfies never;
+    }
+  }
 }

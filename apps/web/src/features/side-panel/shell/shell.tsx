@@ -34,6 +34,10 @@ export function PanelShell(props: PanelShellProps) {
       const path = e.composedPath();
       const isExcluded = path.some((el) => {
         if (!(el instanceof Element)) return false;
+        // A data-grid row is the panel's own navigator: clicking another record
+        // swaps the panel content in place, so it must not count as "outside"
+        // (otherwise the panel closes and immediately reopens).
+        if (el.hasAttribute("data-grid-row-id")) return true;
         const id = el.getAttribute("data-click-outside-id");
         return (
           id !== null && SIDE_PANEL_EXCLUDED_CLICK_OUTSIDE_IDS.includes(id)

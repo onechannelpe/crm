@@ -18,11 +18,8 @@ import { closeLeadMutation } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import { actionErrorMessage } from "~/lib/wire-error";
 
-import styles from "./resumen.module.css";
+import styles from "./close-quotation.module.css";
 
-// The third quotation outcome: close the lead as lost with a recorded reason.
-// Stays collapsed behind a subtle trigger so it never competes with accept or
-// request-revision (the primary outcomes).
 export function CloseQuotationSection(props: { leadId: string }) {
   const close = useAction(closeLeadMutation);
 

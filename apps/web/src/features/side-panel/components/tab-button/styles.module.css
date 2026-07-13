@@ -30,9 +30,11 @@
 }
 
 .tabHover {
+  align-items: center;
   border-radius: var(--radius-md);
   box-sizing: border-box;
   display: flex;
+  font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
   gap: var(--spacing-1);
   padding: var(--spacing-1) var(--spacing-2);

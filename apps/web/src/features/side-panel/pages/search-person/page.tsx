@@ -3,7 +3,7 @@ import { For } from "solid-js";
 import User from "~/components/icons/user";
 import { RecordChipList } from "~/components/ui/record-chip/record-chip";
 
-import { PanelList } from "../../components/list";
+import { SidePanelPage } from "../../components/page";
 import { useSidePanelPageState } from "../../router/page-state";
 
 import styles from "./page.module.css";
@@ -12,7 +12,7 @@ export function SearchPersonPage() {
   const pageState = useSidePanelPageState("search-person-detail");
 
   return (
-    <PanelList>
+    <SidePanelPage>
       <div class={styles.content}>
         <section class={styles.hero}>
           <div class={styles.heroIcon}>
@@ -52,6 +52,6 @@ export function SearchPersonPage() {
           </div>
         </section>
       </div>
-    </PanelList>
+    </SidePanelPage>
   );
 }
