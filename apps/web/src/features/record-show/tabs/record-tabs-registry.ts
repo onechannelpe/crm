@@ -1,8 +1,8 @@
 import type { JSX } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
+import Checkbox from "~/components/icons/checkbox";
 import HomeTabler from "~/components/icons/home-tabler";
-import Info from "~/components/icons/info";
 import MessageSquare from "~/components/icons/message-square";
 import Paperclip from "~/components/icons/paperclip";
 import Plus from "~/components/icons/plus";
@@ -15,8 +15,8 @@ import type { RecordContext } from "~/features/record-show/model/record-context"
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 import { NotasTab } from "~/features/record-show/notas/notas-tab";
 import { RegistroTab } from "~/features/record-show/registro/registro-tab";
-import { ResumenTab } from "~/features/record-show/resumen/resumen-tab";
 import { FilesTab } from "~/features/record-show/tabs/files-tab";
+import { TareasTab } from "~/features/record-show/tareas/tareas-tab";
 import type { TabIconComponent } from "~/features/side-panel/components/tab-strip";
 
 type RecordTabKind = RecordContext["kind"];
@@ -49,18 +49,25 @@ const RECORD_TABS: readonly RecordTabDefinition[] = [
     component: RegistroTab,
   },
   {
-    id: "resumen",
-    icon: Info,
-    label: "Resumen",
-    visibleForKinds: LEAD,
-    component: ResumenTab,
-  },
-  {
     id: "datos",
     icon: HomeTabler,
     label: "Datos",
     visibleForKinds: LEAD,
     component: DatosTab,
+  },
+  {
+    id: "actividad",
+    icon: TimelineEvent,
+    label: "Actividad",
+    visibleForKinds: BOTH,
+    component: ActividadTab,
+  },
+  {
+    id: "tareas",
+    icon: Checkbox,
+    label: "Tareas",
+    visibleForKinds: LEAD,
+    component: TareasTab,
   },
   {
     id: "afiliacion",
@@ -76,13 +83,6 @@ const RECORD_TABS: readonly RecordTabDefinition[] = [
     label: "Notas",
     visibleForKinds: LEAD,
     component: NotasTab,
-  },
-  {
-    id: "actividad",
-    icon: TimelineEvent,
-    label: "Actividad",
-    visibleForKinds: BOTH,
-    component: ActividadTab,
   },
   {
     id: "archivos",
