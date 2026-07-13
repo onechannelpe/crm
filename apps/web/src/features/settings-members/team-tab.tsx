@@ -10,17 +10,17 @@ import { Badge } from "~/components/ui/display/badge";
 import { SearchInput } from "~/components/ui/input/search-input";
 import {
   Table,
+  TableBody,
   TableCell,
+  TableHead,
   TableHeader,
   TableRow,
-} from "~/components/ui/layout/table-grid/table-grid";
+} from "~/components/ui/layout/table";
 import type { MemberListItem } from "~/contracts/members";
 import { membersRosterQuery } from "~/lib/queries/members";
 import { shortName } from "~/lib/users/display-name";
 
 import styles from "./settings-members.module.css";
-
-const ROSTER_COLUMNS = "200px minmax(0, 1fr) 120px 40px";
 
 function statusBadge(member: MemberListItem) {
   if (!member.isActive)
@@ -68,57 +68,76 @@ export function TeamTab() {
         />
       </div>
 
-      <Table aria-label="Miembros del equipo">
-        <TableRow gridTemplateColumns={ROSTER_COLUMNS}>
-          <TableHeader>Nombre</TableHeader>
-          <TableHeader>Correo</TableHeader>
-          <TableHeader>Estado</TableHeader>
-          <TableHeader align="right"> </TableHeader>
-        </TableRow>
-
-        <Show
-          when={filtered().length > 0}
-          fallback={
-            <TableRow>
-              <TableCell class={styles.rosterEmpty}>
-                {filter()
-                  ? "Ningún miembro coincide con tu búsqueda."
-                  : "No hay miembros."}
-              </TableCell>
-            </TableRow>
-          }
-        >
-          <For each={filtered()}>
-            {(member) => {
-              const status = statusBadge(member);
-              return (
-                <TableRow
-                  gridTemplateColumns={ROSTER_COLUMNS}
-                  clickable={!isSelf(member)}
-                  onClick={() => openMember(member)}
-                >
-                  <TableCell>
-                    <Avatar
-                      class={styles.rosterAvatar}
-                      imageUrl={member.avatarUrl}
-                      fallback={getUserInitials(shortName(member))}
-                    />
-                    <span class={styles.rosterName}>{shortName(member)}</span>
-                  </TableCell>
-                  <TableCell ellipsis>{member.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={status.variant}>{status.label}</Badge>
-                  </TableCell>
-                  <TableCell align="right" class={styles.rosterChevron}>
-                    <Show when={!isSelf(member)}>
-                      <ChevronRight size={16} />
-                    </Show>
-                  </TableCell>
-                </TableRow>
-              );
-            }}
-          </For>
-        </Show>
+      <Table aria-label="Miembros del equipo" variant="list">
+        <colgroup>
+          <col style={{ width: "200px" }} />
+          <col />
+          <col style={{ width: "120px" }} />
+          <col style={{ width: "40px" }} />
+        </colgroup>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Correo</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead align="right"> </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <Show
+            when={filtered().length > 0}
+            fallback={
+              <TableRow>
+                <TableCell class={styles.rosterEmpty} colSpan={4}>
+                  {filter()
+                    ? "Ningún miembro coincide con tu búsqueda."
+                    : "No hay miembros."}
+                </TableCell>
+              </TableRow>
+            }
+          >
+            <For each={filtered()}>
+              {(member) => {
+                const status = statusBadge(member);
+                const canOpen = () => !isSelf(member);
+                return (
+                  <TableRow
+                    clickable={canOpen()}
+                    tabIndex={canOpen() ? 0 : undefined}
+                    onClick={() => openMember(member)}
+                    onKeyDown={(event) => {
+                      if (
+                        canOpen() &&
+                        (event.key === "Enter" || event.key === " ")
+                      ) {
+                        event.preventDefault();
+                        openMember(member);
+                      }
+                    }}
+                  >
+                    <TableCell>
+                      <Avatar
+                        class={styles.rosterAvatar}
+                        imageUrl={member.avatarUrl}
+                        fallback={getUserInitials(shortName(member))}
+                      />
+                      <span class={styles.rosterName}>{shortName(member)}</span>
+                    </TableCell>
+                    <TableCell ellipsis>{member.email}</TableCell>
+                    <TableCell>
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                    </TableCell>
+                    <TableCell align="right" class={styles.rosterChevron}>
+                      <Show when={!isSelf(member)}>
+                        <ChevronRight size={16} />
+                      </Show>
+                    </TableCell>
+                  </TableRow>
+                );
+              }}
+            </For>
+          </Show>
+        </TableBody>
       </Table>
     </SettingsSection>
   );

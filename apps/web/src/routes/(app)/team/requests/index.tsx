@@ -8,7 +8,6 @@ import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import type { PendingCapacityRequestView } from "~/contracts/capacity";
 import { DataGrid } from "~/features/data-grid/components/grid";
-import { createNoopRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   approveCapacityRequestMutation,
@@ -102,13 +101,12 @@ export default function TeamRequestsPage() {
         </div>
         <DataGrid
           ariaLabel="Solicitudes del equipo"
-          columns={[...columns]}
+          columns={columns}
           emptyState={
             <p class="px-3 py-4 text-sm text-muted-foreground">
               No hay solicitudes pendientes.
             </p>
           }
-          rowOpen={createNoopRowOpen()}
           source={{
             status: isLoading() ? "pending" : "ready",
             rows: rows(),

@@ -10,7 +10,6 @@ import { Badge } from "~/components/ui/display/badge";
 import { Input } from "~/components/ui/input/input";
 import type { ManagedExecutiveView } from "~/contracts/capacity";
 import { DataGrid } from "~/features/data-grid/components/grid";
-import { createRouteRowOpen } from "~/features/data-grid/model/row-open";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
 
@@ -109,9 +108,9 @@ export default function TeamPage() {
     );
   });
   const isLoading = () => executives() === undefined;
-  const rowOpen = createRouteRowOpen<ManagedExecutiveGridRow>((executive) => {
+  const openExecutive = (executive: ManagedExecutiveGridRow) => {
     navigate(`/settings/members/${executive.executiveId}?tab=capacity`);
-  });
+  };
 
   return (
     <AppPage width="wide">
@@ -145,13 +144,14 @@ export default function TeamPage() {
 
         <DataGrid
           ariaLabel="Equipo"
-          columns={[...TEAM_COLUMNS]}
+          columns={TEAM_COLUMNS}
           emptyState={
             <p class="px-3 py-4 text-sm text-muted-foreground">
               No hay ejecutivos visibles.
             </p>
           }
-          rowOpen={rowOpen}
+          onRowOpen={openExecutive}
+          rowOpenIndicator="route"
           source={{
             status: isLoading() ? "pending" : "ready",
             rows: filtered(),
