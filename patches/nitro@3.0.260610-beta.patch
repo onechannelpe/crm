@@ -1,16 +1,11 @@
 diff --git a/dist/runtime/internal/vite/dev-worker.mjs b/dist/runtime/internal/vite/dev-worker.mjs
-index bfc182bce14a25194c85538439ca9e7f7d55e25b..e744ccd812a495087ff17e05865f1dbd816b4c72 100644
 --- a/dist/runtime/internal/vite/dev-worker.mjs
 +++ b/dist/runtime/internal/vite/dev-worker.mjs
-@@ -50,32 +50,32 @@ class ViteEnvRunner {
-       typeof process !== "undefined" && process.env?.NITRO_DEBUG ? console.debug : undefined;
-     this.runner = new ModuleRunner({ transport }, evaluator, debug);
- 
--    this.reload();
-+    this.entryPromise = this.reload();
+@@ -53,14 +53,19 @@ class ViteEnvRunner {
+     this.reload();
    }
  
-   async reload() {
+-  async reload() {
 -    try {
 -      this.entry = await this.runner.import(this.entryPath);
 -      this.entryError = undefined;
@@ -18,6 +13,7 @@ index bfc182bce14a25194c85538439ca9e7f7d55e25b..e744ccd812a495087ff17e05865f1dbd
 -      console.error(error);
 -      this.entryError = error;
 -    }
++  reload() {
 +    const entryPromise = this.runner.import(this.entryPath).then(
 +      (entry) => {
 +        this.entry = entry;
@@ -29,10 +25,11 @@ index bfc182bce14a25194c85538439ca9e7f7d55e25b..e744ccd812a495087ff17e05865f1dbd
 +      },
 +    );
 +    this.entryPromise = entryPromise;
-+    await entryPromise;
++    return entryPromise;
    }
  
    // Errors are intentionally not caught here: like production services,
+@@ -69,9 +74,7 @@ class ViteEnvRunner {
    // they propagate to the caller (the nitro app's error handler or the
    // env-runner fetch boundary below).
    async fetch(req, init) {
@@ -43,9 +40,3 @@ index bfc182bce14a25194c85538439ca9e7f7d55e25b..e744ccd812a495087ff17e05865f1dbd
      if (this.entryError) {
        throw this.entryError;
      }
--    if (!this.entry) {
--      throw httpError(503, `Vite environment "${this.name}" is unavailable`);
--    }
-     const entryFetch = this.entry.fetch || this.entry.default?.fetch;
-     if (!entryFetch) {
-       throw httpError(500, `No fetch handler exported from ${this.entryPath}`);
