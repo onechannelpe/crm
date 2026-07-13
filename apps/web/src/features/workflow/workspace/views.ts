@@ -57,3 +57,18 @@ export function defaultViewIdForRole(role: string): string {
   if (configured && views.some((v) => v.id === configured)) return configured;
   return views[0].id;
 }
+
+export function resolveWorkspaceView(
+  available: ReadonlyArray<WorkspaceView>,
+  defaultViewId: string,
+  viewParam: string | undefined,
+): WorkspaceView {
+  const match =
+    available.find((v) => v.id === viewParam) ??
+    available.find((v) => v.id === defaultViewId) ??
+    available[0];
+  if (!match) {
+    throw new Error("The lead index requires at least one available view");
+  }
+  return match;
+}

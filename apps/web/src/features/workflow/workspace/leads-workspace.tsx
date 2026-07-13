@@ -1,11 +1,4 @@
 import { createAsync } from "@solidjs/router";
-import {
-  createEffect,
-  createMemo,
-  createSignal,
-  on,
-  onCleanup,
-} from "solid-js";
 
 import { requestWorkflowLeadsExportDownloadToken } from "~/actions/workflow/files";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
@@ -13,12 +6,10 @@ import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
-import type { LeadListRowView, LeadListView } from "~/contracts/workflow/views";
+import type { LeadListRowView } from "~/contracts/workflow/views";
+import type { DataGridSource } from "~/features/data-grid/model/source";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
-import type {
-  RecordIndexAdapter,
-  RecordIndexSource,
-} from "~/features/record-index/model/adapter";
+import type { RecordIndexDefinition } from "~/features/record-index/model/definition";
 import { mergeLeadRows } from "~/features/workflow/data/merge-lead-rows";
 import { getOptimisticLeadRows } from "~/features/workflow/data/optimistic-leads";
 import {
@@ -30,20 +21,16 @@ import { downloadWithToken } from "~/lib/files/client";
 
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";
-import {
-  LEAD_WORKSPACE_FILTER,
-  resolveLeadWorkspaceFilterQuery,
-} from "./filter";
+import { LEAD_WORKSPACE_FILTER } from "./filter";
 import { ImportDropzone } from "./import-dropzone";
+import { LEAD_PAGE_SIZE, resolveLeadListQueryInput } from "./lead-list-query";
 import { useOpenLeadRecord } from "./open-row";
-import { LEAD_WORKSPACE_SORT, resolveLeadWorkspaceSortQuery } from "./sort";
+import { LEAD_WORKSPACE_SORT } from "./sort";
+import { useLeadIndexRoute } from "./use-lead-index-route";
 import { useRecordsImport } from "./use-records-import";
 import { defaultViewIdForRole, viewsForRole } from "./views";
 
 import styles from "./styles.module.css";
-
-const LEAD_PAGE_SIZE = 100;
-const LEAD_SEARCH_DEBOUNCE_MS = 250;
 
 async function handleLeadsExport() {
   const { token } = await requestWorkflowLeadsExportDownloadToken();
@@ -56,94 +43,36 @@ export function LeadsWorkspace() {
 
   const available = viewsForRole(user.role);
   const defaultViewId = defaultViewIdForRole(user.role);
-  const [activeId, setActiveId] = createSignal(defaultViewId);
-
-  const activeView = createMemo(
-    () => available.find((v) => v.id === activeId()) ?? available[0],
-  );
-  const [pageIndex, setPageIndex] = createSignal(0);
-  const [selectedFilter, setSelectedFilter] = createSignal<string | undefined>(
-    LEAD_WORKSPACE_FILTER.defaultValue,
-  );
-  const [selectedSort, setSelectedSort] = createSignal<string | undefined>(
-    LEAD_WORKSPACE_SORT.defaultValue,
-  );
-  const [anyFieldSearch, setAnyFieldSearch] = createSignal("");
-  const [debouncedAnyFieldSearch, setDebouncedAnyFieldSearch] =
-    createSignal("");
-
-  const [lastResolvedLeads, setLastResolvedLeads] =
-    createSignal<LeadListView>();
-
-  createEffect(
-    on(activeView, () => {
-      setAnyFieldSearch("");
-      setDebouncedAnyFieldSearch("");
-      setLastResolvedLeads(undefined);
-      setPageIndex(0);
-    }),
-  );
-
-  createEffect(
-    on(anyFieldSearch, (value) => {
-      const normalized = value.trim();
-      if (!normalized) {
-        setDebouncedAnyFieldSearch("");
-        return;
-      }
-
-      const timeout = setTimeout(() => {
-        setDebouncedAnyFieldSearch(normalized);
-      }, LEAD_SEARCH_DEBOUNCE_MS);
-
-      onCleanup(() => clearTimeout(timeout));
-    }),
-  );
-
-  createEffect(
-    on([selectedFilter, selectedSort, debouncedAnyFieldSearch], () => {
-      setPageIndex(0);
-    }),
-  );
-
-  const anyFieldSearchQuery = createMemo(
-    () => debouncedAnyFieldSearch() || undefined,
-  );
-  const queryFilters = createMemo(() => ({
-    ...activeView().filters(user.id),
-    ...resolveLeadWorkspaceFilterQuery(selectedFilter()),
-    ...resolveLeadWorkspaceSortQuery(selectedSort()),
-    anyFieldSearch: anyFieldSearchQuery(),
-  }));
-
-  const leads = createAsync(() =>
-    leadListQuery({
-      ...queryFilters(),
-      limit: LEAD_PAGE_SIZE,
-      offset: pageIndex() * LEAD_PAGE_SIZE,
-    }),
-  );
-
-  createEffect(() => {
-    const data = leads();
-    if (data !== undefined) {
-      setLastResolvedLeads(() => data);
-    }
+  const route = useLeadIndexRoute({
+    availableViews: available,
+    defaultViewId,
   });
-
-  const effectiveLeads = createMemo(() => leads() ?? lastResolvedLeads());
-  const totalCount = createMemo(() => effectiveLeads()?.totalCount ?? 0);
-  const hasPreviousPage = createMemo(() => pageIndex() > 0);
-  const hasNextPage = createMemo(
-    () => (pageIndex() + 1) * LEAD_PAGE_SIZE < totalCount(),
+  const leads = createAsync(() =>
+    leadListQuery(
+      resolveLeadListQueryInput(
+        {
+          view: route.view.value(),
+          filter: route.filter.value(),
+          sort: route.sort.value(),
+          search: route.search.query(),
+          pageIndex: route.page.index(),
+        },
+        { id: user.id, role: user.role },
+      ),
+    ),
   );
 
-  const source = (): RecordIndexSource<LeadListRowView> => {
-    const data = effectiveLeads();
+  const totalCount = () => leads.latest?.totalCount ?? 0;
+  const hasPreviousPage = () => route.page.index() > 0;
+  const hasNextPage = () =>
+    (route.page.index() + 1) * LEAD_PAGE_SIZE < totalCount();
+
+  const source = (): DataGridSource<LeadListRowView> => {
+    const data = leads.latest;
     const serverRows = data?.rows ?? [];
     const rows = mergeLeadRows(
       serverRows,
-      getOptimisticLeadRows(activeView().id),
+      getOptimisticLeadRows(route.activeView().id),
     );
 
     if (data === undefined && rows.length === 0) {
@@ -157,7 +86,7 @@ export function LeadsWorkspace() {
     };
   };
 
-  const { rowOpen } = useOpenLeadRecord();
+  const openLeadRecord = useOpenLeadRecord();
   const { enqueueWarningSnackBar } = useSnackBar();
 
   const canRegister = hasPermission(user.role, "lead:register");
@@ -181,30 +110,41 @@ export function LeadsWorkspace() {
   const recordImport = useRecordsImport();
   const canManageIntegrations = hasPermission(user.role, "integration:manage");
 
-  const adapter = {
+  const recordIndex = {
     id: "leads-workspace",
-    title: () => activeView().label,
+    title: () => route.activeView().label,
     ariaLabel: "Clientes",
-    class: `${styles.page} record-index-container-gate-for-drag-select`,
+    class: styles.page,
     pickerIcon: List,
+    object: {
+      label: "Registros",
+      icon: Building2,
+      color: "blue",
+    },
     columns: workspaceColumnsForRole(user.role),
     source,
     search: {
-      value: anyFieldSearch,
+      value: route.search.value,
       placeholder: "RUC, cliente, dirección o ejecutivo",
-      set: setAnyFieldSearch,
+      set: route.search.set,
     },
     pagination: {
-      currentPage: pageIndex,
+      currentPage: route.page.index,
       pageSize: LEAD_PAGE_SIZE,
       totalCount,
-      onNextPage: () =>
-        setPageIndex((current) => (hasNextPage() ? current + 1 : current)),
-      onPreviousPage: () =>
-        setPageIndex((current) => (hasPreviousPage() ? current - 1 : current)),
+      onNextPage: () => {
+        if (hasNextPage()) {
+          route.page.next();
+        }
+      },
+      onPreviousPage: () => {
+        if (hasPreviousPage()) {
+          route.page.previous();
+        }
+      },
     },
-    selectable: true,
-    rowOpen,
+    onRowOpen: openLeadRecord,
+    rowOpenIndicator: "panel",
     emptyState: {
       icon: Building2,
       title: "No hay clientes",
@@ -212,18 +152,16 @@ export function LeadsWorkspace() {
     },
     createAction: canRegister ? createAction : undefined,
     views: {
-      catalog: { available, defaultId: defaultViewId },
-      value: { value: activeId, set: setActiveId },
+      catalog: { available },
+      control: route.view,
     },
     actions: canManageIntegrations
       ? [
           {
-            key: "import-csv",
             label: "Importar",
             onClick: () => recordImport.openFilePicker(),
           },
           {
-            key: "export",
             label: "Exportar",
             onClick: handleLeadsExport,
           },
@@ -231,16 +169,13 @@ export function LeadsWorkspace() {
       : undefined,
     filter: {
       catalog: LEAD_WORKSPACE_FILTER,
-      value: {
-        value: selectedFilter,
-        set: (value) => setSelectedFilter(value),
-      },
+      control: route.filter,
     },
     sort: {
       catalog: LEAD_WORKSPACE_SORT,
-      value: { value: selectedSort, set: (value) => setSelectedSort(value) },
+      control: route.sort,
     },
-  } satisfies RecordIndexAdapter<LeadListRowView>;
+  } satisfies RecordIndexDefinition<LeadListRowView>;
 
   return (
     <ImportDropzone
@@ -254,7 +189,7 @@ export function LeadsWorkspace() {
         style={{ display: "none" }}
         onChange={recordImport.onFileInputChange}
       />
-      <RecordIndexScreen adapter={adapter} />
+      <RecordIndexScreen definition={recordIndex} />
     </ImportDropzone>
   );
 }
