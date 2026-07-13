@@ -3,6 +3,7 @@ import type { Kysely } from "kysely";
 import type { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
+import { WORKFLOW_VENUE_ACCOUNT_IDS } from "../demo-ids";
 import { BACK_OFFICE, EXECUTIVES, type OrganizationSeedKey } from "../scenario";
 import type { WorkflowCommercialIds, WorkflowLeadIds } from "./history-events";
 
@@ -126,7 +127,7 @@ export async function persistWorkflowCommercialData(
     .insertInto("workflow_lead_venue_accounts")
     .values([
       {
-        id: "demo-workflow-venue-account-pen",
+        id: WORKFLOW_VENUE_ACCOUNT_IDS.pen,
         venue_id: vidConverted,
         currency: "PEN",
         bank: "BCP",
@@ -136,7 +137,7 @@ export async function persistWorkflowCommercialData(
         is_settlement: true,
       },
       {
-        id: "demo-workflow-venue-account-usd",
+        id: WORKFLOW_VENUE_ACCOUNT_IDS.usd,
         venue_id: vidConverted,
         currency: "USD",
         bank: "BBVA",

@@ -3,6 +3,7 @@ import type { Kysely } from "kysely";
 import type { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
+import { WORKFLOW_LEAD_ASSIGNMENT_IDS } from "../demo-ids";
 import {
   BACK_OFFICE,
   EXECUTIVES,
@@ -194,7 +195,7 @@ export async function persistWorkflowLeadsAndAssignments(
     .insertInto("workflow_lead_assignments")
     .values([
       {
-        id: "demo-workflow-assignment-pending",
+        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.pending,
         lead_id: idPending,
         executive_id: EXECUTIVES.CAMILA,
         assigned_by: SUPERVISORS.DIEGO,
@@ -202,7 +203,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: new Date(now - day),
       },
       {
-        id: "demo-workflow-assignment-needs",
+        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.needs,
         lead_id: idNeeds,
         executive_id: EXECUTIVES.MATIAS,
         assigned_by: SUPERVISORS.DIEGO,
@@ -210,7 +211,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: new Date(now - 4 * day),
       },
       {
-        id: "demo-workflow-assignment-ready",
+        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.ready,
         lead_id: idReady,
         executive_id: EXECUTIVES.LUCIA,
         assigned_by: SUPERVISORS.DIEGO,
@@ -218,7 +219,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: new Date(now - 7 * day),
       },
       {
-        id: "demo-workflow-assignment-quoted",
+        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.quoted,
         lead_id: idQuoted,
         executive_id: EXECUTIVES.SOFIA,
         assigned_by: SUPERVISORS.NICOLAS,
@@ -226,7 +227,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: new Date(now - 14 * day),
       },
       {
-        id: "demo-workflow-assignment-for-sale",
+        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.forSale,
         lead_id: idForSale,
         executive_id: EXECUTIVES.FERNANDA,
         assigned_by: SUPERVISORS.DIEGO,
@@ -234,7 +235,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: new Date(now - 21 * day),
       },
       {
-        id: "demo-workflow-assignment-converted",
+        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.converted,
         lead_id: idConverted,
         executive_id: EXECUTIVES.CLAUDIA,
         assigned_by: SUPERVISORS.DIEGO,
@@ -242,7 +243,7 @@ export async function persistWorkflowLeadsAndAssignments(
         assigned_at: new Date(now - 30 * day),
       },
       {
-        id: "demo-workflow-assignment-rejected",
+        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.rejected,
         lead_id: idRejected,
         executive_id: EXECUTIVES.PABLO,
         assigned_by: SUPERVISORS.NICOLAS,
