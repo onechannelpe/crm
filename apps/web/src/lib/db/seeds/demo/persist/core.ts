@@ -2,6 +2,7 @@ import type { Kysely } from "kysely";
 
 import type { Database } from "../../../types";
 import type { CompiledWorkflowScenario } from "../compiler";
+import { WORKFLOW_RATE_PROPOSAL_IDS, WORKFLOW_VENUE_IDS } from "../demo-ids";
 import type { LeadSeedKey } from "../scenario";
 import { persistCompanyRegistryRecords } from "./company-registry-records";
 import {
@@ -49,7 +50,7 @@ export async function persistWorkflowSample(
 }
 
 function buildLeadIds(compiled: CompiledWorkflowScenario): WorkflowLeadIds {
-  const getLeadId = (key: LeadSeedKey): string => {
+  const getLeadId = (key: LeadSeedKey) => {
     const leadId = compiled.leadIdsByKey.get(key);
     if (!leadId) {
       throw new Error(`missing_seed_lead_id:${key}`);
@@ -70,9 +71,9 @@ function buildLeadIds(compiled: CompiledWorkflowScenario): WorkflowLeadIds {
 
 function buildWorkflowCommercialIds(): WorkflowCommercialIds {
   return {
-    qidQuoted: "demo-workflow-quotation-quoted",
-    qidForSale: "demo-workflow-quotation-for-sale",
-    qidConverted: "demo-workflow-quotation-converted",
-    vidConverted: "demo-workflow-venue-converted",
+    qidQuoted: WORKFLOW_RATE_PROPOSAL_IDS.quoted,
+    qidForSale: WORKFLOW_RATE_PROPOSAL_IDS.forSale,
+    qidConverted: WORKFLOW_RATE_PROPOSAL_IDS.converted,
+    vidConverted: WORKFLOW_VENUE_IDS.converted,
   };
 }

@@ -1,24 +1,30 @@
 import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
+import type {
+  WorkflowLeadId,
+  WorkflowRateProposalId,
+  WorkflowVenueId,
+} from "~/server/shared/ids";
+
 import type { Database } from "../../../types";
 import { BACK_OFFICE, EXECUTIVES, SUPERVISORS } from "../scenario";
 
 export type WorkflowLeadIds = {
-  idPending: string;
-  idNeeds: string;
-  idReady: string;
-  idQuoted: string;
-  idForSale: string;
-  idConverted: string;
-  idRejected: string;
+  idPending: WorkflowLeadId;
+  idNeeds: WorkflowLeadId;
+  idReady: WorkflowLeadId;
+  idQuoted: WorkflowLeadId;
+  idForSale: WorkflowLeadId;
+  idConverted: WorkflowLeadId;
+  idRejected: WorkflowLeadId;
 };
 
 export type WorkflowCommercialIds = {
-  qidQuoted: string;
-  qidForSale: string;
-  qidConverted: string;
-  vidConverted: string;
+  qidQuoted: WorkflowRateProposalId;
+  qidForSale: WorkflowRateProposalId;
+  qidConverted: WorkflowRateProposalId;
+  vidConverted: WorkflowVenueId;
 };
 
 export async function persistWorkflowHistoryEvents(

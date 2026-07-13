@@ -1,3 +1,6 @@
+import type { WorkflowLeadId } from "~/server/shared/ids";
+
+import { WORKFLOW_LEAD_IDS } from "./demo-ids";
 import {
   LEADS,
   ORGANIZATION_KEYS,
@@ -6,7 +9,7 @@ import {
 } from "./scenario";
 
 export type CompiledWorkflowScenario = {
-  leadIdsByKey: Map<LeadSeedKey, string>;
+  leadIdsByKey: Map<LeadSeedKey, WorkflowLeadId>;
   organizationKeys: readonly OrganizationSeedKey[];
   leadKeys: readonly LeadSeedKey[];
   generatedAtMs: number;
@@ -27,9 +30,9 @@ export function compileWorkflowScenario(
     }
   }
 
-  const leadIdsByKey = new Map<LeadSeedKey, string>();
+  const leadIdsByKey = new Map<LeadSeedKey, WorkflowLeadId>();
   for (const lead of LEADS) {
-    leadIdsByKey.set(lead.key, `demo-workflow-lead-${lead.key}`);
+    leadIdsByKey.set(lead.key, WORKFLOW_LEAD_IDS[lead.key]);
   }
 
   return {
