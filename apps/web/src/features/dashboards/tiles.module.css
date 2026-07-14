@@ -1,7 +1,3 @@
-/* Mirrors Twenty's GraphWidgetAggregateChart StyledContainer: value left,
-   trend right, filling the card. The --t-* tokens are the verbatim mirror of
-   Twenty's themeCssVariables, so these rules compute to the same values their
-   bundle does. */
 .aggregate {
   align-items: center;
   display: flex;
@@ -10,8 +6,6 @@
   width: 100%;
 }
 
-/* Twenty renders this through H1Title (semi-bold) with the aggregate chart
-   overriding the size to xxl. */
 .aggregateValue {
   color: var(--foreground);
   font-size: var(--t-font-size-xxl);

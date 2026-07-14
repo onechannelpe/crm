@@ -17,9 +17,7 @@ interface LineChartProps {
 const PAD = { top: 16, right: 16, bottom: 28, left: 16 };
 const FALLBACK_WIDTH = 640;
 
-// Single-series area + line. Touch-first: the max and latest points carry direct
-// value labels so nothing depends on hover. Marks use the app's blue ramp; the
-// optional target is a dashed neutral reference (one measure, one axis).
+// Max and latest points carry value labels; target is a dashed neutral line.
 export function LineChart(props: LineChartProps) {
   const height = () => props.height ?? 220;
 

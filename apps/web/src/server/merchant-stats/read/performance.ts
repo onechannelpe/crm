@@ -11,16 +11,13 @@ import {
 import { cohortFilter } from "./filters";
 import { withLatestMetric } from "./latest-metric";
 
-// A merchant that has not transacted in this long reads as dormant. Chosen to
-// be longer than a month so a merchant who simply bills late is not flagged,
-// and short enough that a real stall surfaces within one reporting cycle.
+// A merchant that has not transacted in this long reads as dormant. Chosen
+// longer than a month so a merchant who simply bills late is not flagged.
 const DORMANT_AFTER_DAYS = 30;
 
 // The ramp curve: one line per sale-month cohort, tracking that cohort across
-// its own months (m0 = the sale month, m1 the next, ...). This is the only
-// honest time axis for this source. A calendar-month axis would silently drop
-// every cohort older than four months, because that is all any sale reports.
-// See business-stats-plan.txt §4.
+// its own months (m0 = the sale month, m1 the next, ...). The calendar axis is
+// not available to this source (business-stats-plan.txt §4).
 export async function getCohortRamp(
   db: DatabaseExecutor,
   filters: CohortFilters,
@@ -81,10 +78,9 @@ export async function getCohortRamp(
   return [...byCohort.values()];
 }
 
-// Attainment per real seller at one cohort step. Grouping replaces the seller
-// filter: the whole book is ranked at once instead of one name at a time, and
-// each row keeps its user id so the UI can link to the record rather than
-// making the reader re-pick a filter.
+// Attainment per real seller at one cohort step. Grouping, not filtering:
+// the whole book is ranked at once and each row keeps its user id so the UI
+// can link to the record.
 export async function getSellerAttainment(
   db: DatabaseExecutor,
   filters: CohortFilters,
@@ -149,9 +145,8 @@ export async function getSellerAttainment(
   return rows.sort((a, b) => b.gpv - a.gpv);
 }
 
-// Attainment per zone. The zonal control used to be a filter that showed one
-// zone at a time; there are only a handful, so showing them together is both
-// shorter to read and strictly more informative.
+// Attainment per zone. There are only a handful of zones, so the surface
+// groups and ranks them at once rather than filtering to one.
 export async function getBranchAttainment(
   db: DatabaseExecutor,
   filters: CohortFilters,
@@ -202,10 +197,6 @@ export async function getBranchAttainment(
     .sort((a, b) => b.gpv - a.gpv);
 }
 
-// Activation and dormancy, from columns the intake has always written and no
-// read path has ever touched: dia_activo and ultima_trx. This is the funnel the
-// spreadsheet cannot express, because it has no durable row identity to
-// measure a lifecycle against.
 export async function getLifecycle(
   db: DatabaseExecutor,
   filters: CohortFilters,

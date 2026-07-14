@@ -23,10 +23,9 @@ export interface MatchContext {
   branchByName: Map<string, BranchId>;
 }
 
-// Resolves every lookup the import needs in a handful of batch queries rather
-// than per row: RUC -> organization, organization -> active lead (the partial
-// unique index guarantees at most one), lead executive -> branch, and the
-// name-keyed maps used to attach the file's real seller / zone to CRM records.
+// Resolves every lookup the import needs in batch queries rather than per row:
+// RUC -> org -> active lead -> executive -> branch, plus name-keyed maps for
+// the file's real seller / zone.
 export async function loadMatchContext(
   db: DatabaseExecutor,
   rows: readonly MappedGpvRow[],
@@ -74,8 +73,8 @@ export async function loadMatchContext(
   for (const user of users) {
     if (execIds.includes(user.id)) branchByExec.set(user.id, user.branch_id);
     for (const key of nameKeys(user)) {
-      // First writer wins so an exact "names + surname" match is not clobbered
-      // by a looser one from another user.
+      // First writer wins so an exact "names + surname" match is not clobbered by
+      // a looser one from another user.
       if (!userByName.has(key)) userByName.set(key, user.id);
     }
   }
@@ -110,8 +109,8 @@ export function resolveRowMatch(
   };
 }
 
-// Free-text "VENDEDOR R" like "PAOLA LOZANO" -> a CRM user, best effort. The
-// attach grid lets the business team correct any miss.
+// Best-effort match of free-text "VENDEDOR R" to user. The attach grid
+// lets the business team correct any miss.
 export function matchSellerUser(
   ctx: MatchContext,
   realSellerName: string | null,

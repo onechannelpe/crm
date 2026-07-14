@@ -6,11 +6,8 @@ import { withLatestMetric } from "./latest-metric";
 
 // One row per sale, with its cohort measures pivoted back onto it. The intake
 // un-pivots gpv_m0..m3 into (month, offset) facts so the months are addressable;
-// this puts them back into the M0/M1/M2/M3 shape a reader scans across.
-//
-// m0Plus15d stays off the months array on purpose: it is cumulative (the sale
-// month plus the first 15 days of m1) and overlaps m0, so it belongs beside the
-// series as a checkpoint, never inside it. See business-stats-plan.txt §2.1.
+// this puts them back into the M0/M1/M2/M3 shape a reader scans across. The
+// m0Plus15d contract lives in read/contracts.ts.
 export async function getCohortReport(
   db: DatabaseExecutor,
   filters: RecordFilters,

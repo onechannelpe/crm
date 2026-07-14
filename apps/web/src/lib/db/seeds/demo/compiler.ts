@@ -14,9 +14,6 @@ import {
   type LeadSpec,
 } from "./scenario";
 
-// One lead spec with every id it needs, generated once so the leads, commercial
-// and history-event passes all reference the same rows. rateProposalIds line up
-// positionally with spec.proposals; venueAccountIds with spec.venue.accounts.
 export interface CompiledLead {
   spec: LeadSpec;
   projection: {

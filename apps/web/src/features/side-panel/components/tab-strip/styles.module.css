@@ -1,7 +1,8 @@
-/* padding-left mirrors Twenty's PageLayoutTabList, and it is load-bearing
-   rather than decorative: it lines the tab's hover/active box up with the
-   widget grid's own spacing-2 padding below, so the strip and the cards share
-   a left edge. Without it the tabs sit flush at 0 while the content is inset. */
+/* 
+  padding-left is load-bearing: it lines the tab's hover/active box up with
+  the widget grid's own spacing-2 padding below, so the strip and the cards
+  share a left edge.
+*/
 .tabs {
   box-sizing: border-box;
   display: flex;
@@ -12,7 +13,6 @@
   width: 100%;
 }
 
-/* Twenty's TabList right slot: page actions ride at the far end of the strip. */
 .rightSlot {
   align-items: center;
   display: flex;

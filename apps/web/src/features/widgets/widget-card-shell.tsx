@@ -12,9 +12,6 @@ import {
 
 import styles from "./widget-card-shell.module.css";
 
-// Declarative sugar over WidgetCard for the common title + content + status
-// case (dashboard tiles, the GPV record tab). Sections with custom bodies
-// (forms, collapsible subsections) compose WidgetCard directly instead.
 export type WidgetStatus =
   | "ready"
   | "loading"

@@ -43,9 +43,9 @@ const METRICS_CHUNK = 4000;
 
 export type SaleIdByIdentity = Map<string, MerchantSaleId>;
 
-// Upserts the batch on the (merchant_id, product, coalesce(serial_number,''))
-// identity and returns the sale id for each source row, whether inserted or
-// updated, so metrics and staging can reference it.
+// Upserts on the (merchant_id, product, coalesce(serial_number,'')) identity.
+// Returns the id for every source row, inserted or updated, so metrics and
+// staging can reference it.
 export async function upsertSales(
   trx: DatabaseExecutor,
   reportId: MerchantSalesReportId,

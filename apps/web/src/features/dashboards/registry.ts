@@ -1,9 +1,5 @@
 import type { RouteIcon } from "~/lib/nav/config";
 
-// Dashboards are a first-class object with an index and a show page, mirroring
-// records. The set is code-defined (authored by the product team), not
-// user-composed, so the registry is a static list rather than metadata rows.
-// Add a dashboard by appending a descriptor here and a case in the show route.
 export type DashboardId = "merchant-gpv";
 
 export interface DashboardDescriptor {

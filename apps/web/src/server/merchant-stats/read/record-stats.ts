@@ -3,8 +3,8 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { OrgMerchantStats } from "./contracts";
 import { withLatestMetric } from "./latest-metric";
 
-// The GPV picture on a merchant's own record, keyed by RUC (always present on
-// the record, and the grain merchant data is stored at).
+// The GPV picture on a merchant's own record, keyed by RUC, the grain at which
+// merchant data is stored.
 export async function getMerchantStatsByRuc(
   db: DatabaseExecutor,
   ruc: string,
@@ -23,8 +23,8 @@ export async function getMerchantStatsByRuc(
     .execute();
 
   // Summed across offsets, so a RUC with devices sold in different months reads
-  // as one line per calendar month rather than one per (month, cohort). See the
-  // note on OrgMerchantStats.monthlyGpv for why this grain is sound here.
+  // as one line per calendar month. See the note on OrgMerchantStats.monthlyGpv
+  // for why this grain is sound here.
   const monthly = await withLatestMetric(db)
     .selectFrom("latest_metric as lm")
     .innerJoin("merchant_sales as s", "s.id", "lm.sale_id")

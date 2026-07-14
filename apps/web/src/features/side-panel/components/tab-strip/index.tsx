@@ -33,8 +33,7 @@ type TabStripProps<TId extends string> = {
   tabs: ReadonlyArray<TabItem<TId>>;
   activeTab: TId;
   onTabSelect: (id: TId) => void;
-  // Right-aligned slot, mirroring Twenty's TabList rightComponent. Page-level
-  // actions belong here rather than in a filter bar, where they read as filters.
+  // Page-level actions ride at the far end of the strip.
   rightComponent?: JSX.Element;
 };
 
@@ -109,7 +108,6 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
 
   return (
     <div class={styles.tabs} ref={setContainerRef}>
-      {/* Hidden measurement row gives ResizeObserver each tab's natural width. */}
       <div class={styles.hiddenMeasure}>
         <For each={props.tabs}>
           {(tab) => {

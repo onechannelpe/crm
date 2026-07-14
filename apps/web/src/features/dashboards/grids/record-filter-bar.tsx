@@ -21,13 +21,7 @@ interface RecordFilterBarProps {
   children?: JSX.Element;
 }
 
-// Narrowing belongs to the record surfaces: here a reader is hunting specific
-// rows, so a filter answers the question they came with. The performance tab
-// groups instead of filtering, which is why it carries no bar of its own.
-//
-// Every control here is honored by both getCohortReport and getMerchantAccounts.
-// Adding one that only some queries read is what produced the old page's "one
-// bar, five queries, three different honored subsets".
+// Every control here is honored by every query that takes the bar.
 export function RecordFilterBar(props: RecordFilterBarProps) {
   const value = (raw: string) => (raw === ALL ? undefined : raw);
 

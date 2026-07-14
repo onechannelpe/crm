@@ -50,9 +50,8 @@ export function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
-// Port of Twenty's computeRatioDisplayValue: one decimal, collapsed to an
-// integer when it would be trailing-zero, and 0% rather than NaN on an empty
-// denominator.
+// One decimal, collapsed to an integer when trailing-zero, and 0% on an empty
+// denominator rather than NaN.
 export function formatRatio(numerator: number, denominator: number): string {
   if (denominator === 0) return "0%";
 
@@ -63,9 +62,8 @@ export function formatRatio(numerator: number, denominator: number): string {
   return `${formatted}%`;
 }
 
-// Period-over-period movement, rounded to whole percent to match the trend
-// label Twenty renders. Undefined when there is no comparable prior period, or
-// when the prior period is zero and the change is therefore unbounded.
+// Period-over-period movement as a whole percent. Undefined when there is no
+// comparable prior period, or when the prior period is zero.
 export function trendPercentage(
   current: number | undefined,
   prior: number | undefined,

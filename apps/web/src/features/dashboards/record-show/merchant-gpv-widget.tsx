@@ -10,7 +10,7 @@ import { formatMonth, formatSolesCompact } from "../format";
 import styles from "./merchant-gpv-widget.module.css";
 
 // Per-merchant GPV on the record. Gated server-side by dashboards:read, so
-// it renders empty for roles without access rather than erroring.
+// roles without access render an empty widget rather than an error.
 export function MerchantGpvWidget(props: { ruc: string }) {
   const stats = createAsync(() => merchantStatsByRucQuery(props.ruc));
 

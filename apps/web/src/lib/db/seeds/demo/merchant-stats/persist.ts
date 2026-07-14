@@ -17,11 +17,6 @@ import { EXECUTIVES, LEAD_SPECS } from "../scenario";
 import { generateMerchants, toMappedRow, type MerchantSpec } from "./generator";
 import { CULQI_MERCHANT_REPORT_PROFILE as PROFILE } from "./profile";
 
-// Two snapshots exercise both write paths and the "latest snapshot wins" read
-// dedup: an older raw dealer upload (no enrichment, backfillAccounts) followed
-// by a newer enriched "GPV AL" upload (file-authored seller/zone/projected,
-// applyAccountEnrichment). The enriched cut is later, so its metrics supersede
-// the raw ones for shared months.
 export async function persistDemoMerchantStats(
   db: Kysely<Database>,
   context: SeedContext,
@@ -101,8 +96,7 @@ async function applySnapshot(
     .execute();
 }
 
-// A snapshot only carries merchants that existed by its cut date; the raw
-// upload predates the newest cohorts, which then appear in the enriched one.
+// A snapshot only carries merchants that existed by its cut date.
 function rowsForSnapshot(
   merchants: readonly MerchantSpec[],
   cutDate: string,
@@ -156,8 +150,8 @@ function linkableOrganizations(): Array<{
   }));
 }
 
-// Match the exact string matchSellerUser normalizes against: names + both
-// surnames. Only executives sell, so scope to that role.
+// Names + both surnames, the exact string matchSellerUser normalizes against.
+// Only executives sell, so scope to that role.
 async function sellerProfiles(
   db: Kysely<Database>,
 ): Promise<Array<{ name: string; branchName: string }>> {

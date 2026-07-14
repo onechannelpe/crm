@@ -1,19 +1,14 @@
 import { sql, type Kysely } from "kysely";
 
-// Culqi dealer GPV reports. A "sale" here is one product unit sold to a
-// merchant (a POS device, a payment link, or an online checkout). The dealer
-// re-sends the whole book every week as an xlsx snapshot; we upsert so the
-// business team's manual enrichment (real seller, zone, projected target)
-// attaches once per RUC and survives every reimport.
+// Per-RUC enrichment (real seller, zone, projected target) lives in
+// merchant_accounts and is never touched by a reimport.
 //
-// Metric anchoring is the crucial fact, verified against the source file:
 // gpv_m0..m3 are indexed off the SALE month (añomes_vta), not the snapshot
-// date. gpv_m0 is the sale month, gpv_m1 the next calendar month, and so on.
-// So a metric row's month is simply sale_month + offset; the cut date only
-// tells us which snapshot is freshest.
+// date. m0 is the sale month, m1 the next calendar month, and so on. The cut
+// date only tells us which snapshot is freshest.
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
-  // One row per uploaded snapshot. cut_date is the "AL" date of the file
-  // (max ultima_trx); it orders snapshots so the latest wins per month.
+  // One row per uploaded snapshot. cut_date (max ultima_trx) orders snapshots
+  // so the latest wins per month.
   await db.schema
     .createTable("merchant_sales_reports")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -37,9 +32,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .column("cut_date")
     .execute();
 
-  // The durable sale entity. Culqi-owned facts only; every column here is
-  // refreshed on reimport. Enrichment lives in merchant_accounts, keyed by
-  // RUC, so it is never touched by a reimport.
+  // Durable sale: Culqi-owned facts, refreshed on reimport. Enrichment lives
+  // in merchant_accounts.
   await db.schema
     .createTable("merchant_sales")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -47,8 +41,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     // Null for CULQILINK / CULQIONLINE, which have no physical device.
     .addColumn("serial_number", "text")
     .addColumn("ruc", "text", (col) => col.notNull())
-    // Matched by RUC; null when the dealer sold to a merchant the CRM never
-    // registered. Such rows are kept (they are a lead-gen list), FKs null.
+    // Null when the dealer sold to a merchant the CRM never registered.
+    // Kept as a lead-gen list.
     .addColumn("organization_id", "uuid", (col) =>
       col.references("organizations.id"),
     )
@@ -74,10 +68,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("trial_at", "date")
     .addColumn("activated_at", "date")
     .addColumn("last_transaction_at", "date")
-    // gpv_m0_15d is "sale month + first 15 days of the next month", so it is
-    // cumulative and overlaps m0 rather than being a month of its own. It stays
-    // a latest-snapshot pulse on the sale instead of a metric row, which would
-    // put it on the m0..m3 axis and double-count the sale month.
+    // Cumulative, sale month + first 15d of m1. Overlaps m0, so it stays a
+    // column on the sale rather than a row on the m0..m3 axis.
     .addColumn("m0_plus_15d_gpv", "numeric")
     .addColumn("m0_plus_15d_trx", "integer")
     .addColumn("first_seen_report_id", "uuid", (col) =>
@@ -121,11 +113,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .column("lead_id")
     .execute();
 
-  // Per-RUC enrichment the business team maintains by hand. CRM-owned: seeded
-  // once (from the matched lead's executive/branch, or from an enriched
-  // upload) and edited in-app afterwards, never overwritten by a reimport.
-  // Verified per-RUC: real seller and projected target are constant within a
-  // RUC across the source file.
+  // Per-RUC enrichment. Seeded once, edited in-app, never overwritten by a
+  // reimport. Real seller and projected target are constant within a RUC
+  // across the source file.
   await db.schema
     .createTable("merchant_accounts")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -163,10 +153,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .column("branch_id")
     .execute();
 
-  // Append-only monthly GPV/TRX facts. One row per (snapshot, sale, month).
-  // month = sale_month + month_offset. Keeping every snapshot is cheap and is
-  // the only honest source of snapshot-over-snapshot deltas; current truth for
-  // a month is the row from the latest report (max cut_date) that carries it.
+  // Append-only monthly facts. One row per (snapshot, sale, month). Current
+  // truth for a month is the row from the latest report (max cut_date) that
+  // carries it.
   await db.schema
     .createTable("merchant_sale_metrics")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -195,9 +184,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .columns(["merchant_sale_id", "month"])
     .execute();
 
-  // Staging/audit. raw_row keeps the full source row (the ~30 columns we do
-  // not model: banks, giro, address, kam...). Promote a column only when a
-  // dashboard needs it.
+  // raw_row keeps the unmodeled source columns. Promote one to a typed column
+  // only when a dashboard needs it.
   await db.schema
     .createTable("merchant_sales_import_rows")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))

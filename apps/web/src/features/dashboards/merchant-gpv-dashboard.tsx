@@ -60,12 +60,12 @@ const GPV_TABS: ReadonlyArray<TabItem<GpvTabId>> = [
 ];
 
 // Attainment is read at m0: the sale month is the only step every cohort has
-// reached, so it is the one comparison that is never half-empty. Exported so a
-// route preload warms the same cache entry the component reads.
+// reached, so the comparison is never half-empty. Exported so a route preload
+// warms the same cache entry the component reads.
 export const ATTAINMENT_OFFSET = 0;
 
-// More lines than this and the cohort curve stops being readable, whatever the
-// palette does. Newest cohorts are the ones anyone is asking about.
+// More lines and the cohort curve stops being readable. Newest cohorts are
+// the ones anyone is asking about.
 const MAX_RAMP_SERIES = 5;
 
 export function MerchantGpvDashboard() {
@@ -80,8 +80,8 @@ export function MerchantGpvDashboard() {
     initialValue: { branches: [], sellers: [], saleMonths: [], products: [] },
   });
 
-  // Newest cohorts last so the ramp reads left-to-right oldest-to-newest inside
-  // the window, matching how the legend is scanned.
+  // Newest cohorts last so the ramp reads left-to-right oldest-to-newest,
+  // matching how the legend is scanned.
   const rampSeries = createMemo(() =>
     performance()
       .ramp.slice(-MAX_RAMP_SERIES)
@@ -104,15 +104,14 @@ export function MerchantGpvDashboard() {
   const latestGpv = createMemo(() => gpvAt(latestCohort(), ATTAINMENT_OFFSET));
   const priorGpv = createMemo(() => gpvAt(priorCohort(), ATTAINMENT_OFFSET));
 
-  // Attainment is a ratio of the same two quantities in both cohorts, so its
-  // period-over-period movement is a like-for-like comparison.
+  // Like-for-like: attainment is the same two quantities in both cohorts, so
+  // its period-over-period movement is comparable.
   const attainment = (series: CohortRampSeries | undefined) => {
     const gpv = gpvAt(series, ATTAINMENT_OFFSET);
     if (gpv === undefined || !series?.projectedGpv) return undefined;
     return gpv / series.projectedGpv;
   };
 
-  // "Jun 26", or an em dash before the first import lands.
   const cohortLabel = createMemo(() => {
     const cohort = latestCohort();
     return cohort ? formatMonth(cohort.saleMonth) : "—";
@@ -155,9 +154,10 @@ export function MerchantGpvDashboard() {
         </div>
       </Show>
 
-      {/* One ScrollWrapper per surface, mirroring Twenty's PageLayoutTabsRenderer.
-          The record tabs own their scroll through the data grid, so they are not
-          nested inside a second one. */}
+      {/*
+        Record tabs own their scroll through the data grid,
+        so they are not nested inside a second one.
+      */}
       <Switch>
         <Match when={tab() === "rendimiento"}>
           <div class={styles.scrollArea}>
@@ -207,9 +207,10 @@ export function MerchantGpvDashboard() {
                   target={latestCohort()?.projectedGpv ?? null}
                 />
 
-                {/* Every RUC contributes exactly one M0 and one monthly target
-                    here, so the sum stays like-for-like: first-month GPV against
-                    the target that month was measured against. */}
+                {/*
+                  Each RUC contributes one M0 and one monthly target, 
+                  so the sum is like-for-like.
+                */}
                 <BarTile
                   title="Cumplimiento M0 por vendedor"
                   span="half"
@@ -221,10 +222,6 @@ export function MerchantGpvDashboard() {
                       sublabel: row.sublabel ?? undefined,
                       value: row.gpv,
                       target: row.projectedGpv || null,
-                      // The seller filter used to be the only way to read one
-                      // person's book. Grouping shows every seller at once and the
-                      // row links to the record, which is what the filter was
-                      // standing in for.
                       href: row.userId
                         ? `/settings/members/${row.userId}?tab=capacity`
                         : undefined,

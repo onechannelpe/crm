@@ -1,8 +1,7 @@
 import { normalizeCsvHeader } from "~/server/csv/core";
 
-// Canonical (accent-stripped, snake_cased) header names. normalizeCsvHeader
-// maps the source columns onto these, so `añomes_vta` -> `anomes_vta` and
-// `VENDEDOR R` -> `vendedor_r`.
+// Canonical (accent-stripped, snake_cased) header names that normalizeCsvHeader
+// maps source columns onto.
 export const GPV_COLUMNS = {
   saleMonth: "anomes_vta",
   ruc: "identificador_tributario",
@@ -13,11 +12,9 @@ export const GPV_COLUMNS = {
   soldAtAlt: "fecha",
   tradeName: "nbr_comercial",
   legalName: "nbr_razon_social",
-  // cod_vendedor / vendedor is the seller the sale was registered under at
-  // Culqi, which the business team calls the "usuario". It is not the real
-  // seller: that is tracked per RUC in merchant_accounts and arrives via
-  // realSeller below. Naming these culqiUser* keeps the two from being read as
-  // the same concept, which is what the source column names invite.
+  // culqiUserCode/Name is the seller the sale was registered under at Culqi
+  // (the "usuario"). Not the real seller: that lives in merchant_accounts
+  // under realSeller. The culqiUser prefix keeps the two readable as distinct.
   culqiUserCode: "cod_vendedor",
   culqiUserName: "vendedor",
   mesa: "mesa",
@@ -30,8 +27,8 @@ export const GPV_COLUMNS = {
   trialAt: "dia_prueba",
   activatedAt: "dia_activo",
   lastTransactionAt: "ultima_trx",
-  // Cumulative: the sale month plus the first 15 days of m1. It overlaps m0 and
-  // is not a rolling 15-day window, so it never joins the m0..m3 series.
+  // Cumulative, sale month + first 15d of m1. Overlaps m0; never joins the
+  // m0..m3 series.
   m0Plus15dGpv: "gpv_m0_15d",
   m0Plus15dTrx: "trx_m0_15d",
   // Enrichment columns, present only in the team-maintained "GPV AL" file.
@@ -40,9 +37,9 @@ export const GPV_COLUMNS = {
   projected: "proyectado",
 } as const;
 
-// Minimal set that marks a worksheet as a GPV report. fecha_venta is left out
-// because the enriched file names the sale date `fecha`; añomes_vta is the
-// reliable anchor and is present in both.
+// Minimal set that marks a worksheet as a GPV report. fecha_venta is left
+// out because the enriched file names the sale date `fecha`; añomes_vta is
+// the reliable anchor and is present in both.
 export const GPV_REQUIRED_HEADERS = [
   GPV_COLUMNS.saleMonth,
   GPV_COLUMNS.ruc,
@@ -132,10 +129,8 @@ export function normalizeGpvHeader(raw: string): string {
 // coalesce(serial_number,'')) unique index. Used to map upsert results back to
 // their source rows and to dedupe a batch before the multi-row upsert.
 //
-// NUL separates the parts because no source cell can carry one, so the key
-// cannot be forged by an id that happens to contain the separator. It is an
-// escape rather than a literal NUL byte: an embedded raw NUL makes this file
-// binary to grep and ripgrep, which silently hides it from code search.
+// NUL is the separator: no source cell carries one, so an id cannot
+// accidentally contain it.
 const KEY_SEPARATOR = "\u0000";
 
 export function saleIdentityKey(

@@ -73,9 +73,8 @@ const COLUMNS = [
     width: 110,
     renderCell: (row) => formatSolesCompact(gpvAt(row, 0)),
   },
-  // Cumulative through the first 15 days of M1, so it overlaps M0 and is not
-  // comparable to the per-month columns beside it. It sits next to M0 because
-  // that is the pair a reader compares: how much of the ramp landed early.
+  // Cumulative through the first 15 days of M1, overlaps M0. Sits next to M0
+  // because that is the pair a reader compares.
   {
     key: "m0_plus_15d",
     label: "M0+15D",

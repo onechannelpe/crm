@@ -23,9 +23,6 @@ type DataGridSurfaceProps<T extends { id: string }> = Omit<
   stickyColumnIndex: number;
 };
 
-// Solid's JSX.Element already admits strings, so a caller can pass either a
-// sentence or a component. A sentence is the common case and the grid styles it
-// here; anything richer (RecordIndexEmpty) paints itself and passes through.
 function SurfaceMessage(props: { content: JSX.Element }) {
   return (
     <Show when={typeof props.content === "string"} fallback={props.content}>

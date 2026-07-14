@@ -65,9 +65,6 @@
   min-height: 360px;
 }
 
-/* Applied by the grid to a plain-string empty/error state, so call sites pass a
-   sentence and never restyle it. .emptyStateSurface already centers within 360px,
-   hence no padding here. */
 .surfaceMessage {
   color: var(--foreground-tertiary);
   font-size: var(--font-size-sm);
@@ -520,9 +517,8 @@
   }
 }
 
-/* Inline cell editor portal. This layer is positioning-only: it places the editor
-   over the editing cell and nothing else. Each editor paints its own surface, so a
-   self-surfaced editor (e.g. UserPicker) does not get a double border/shadow. */
+/* Positioning only: editors paint their own surface, so a self-surfaced one
+   does not get a double border/shadow. */
 .cellEditor {
   z-index: 40;
 }

@@ -4,9 +4,6 @@ import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-toolt
 
 import styles from "./widget-card.module.css";
 
-//   dashboard    grid tile (secondary bg, bordered, rounded)
-//   record-page  record detail card (primary bg, framed inner content box)
-//   side-column  side-panel stacked widget (borderless, bottom-divider rows)
 export type WidgetCardVariant = "dashboard" | "record-page" | "side-column";
 
 export function WidgetCard(

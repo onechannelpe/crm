@@ -13,11 +13,7 @@ import { RampChart, type RampSeries } from "./charts/ramp-chart";
 
 import styles from "./tiles.module.css";
 
-// Port of Twenty's GraphWidgetAggregateChart: the value carries the weight and
-// the period-over-period trend rides beside it. The value is never tinted --
-// movement is the signal, not colour. Omit trendPercentage when there is no
-// prior period to compare against; the tile then renders value-only, which is
-// how Twenty handles a missing trend too.
+// Omit trendPercentage to render value-only (no prior period to compare).
 export function AggregateTile(props: {
   title: string;
   span: WidgetSpan;
@@ -58,7 +54,6 @@ export function AggregateTile(props: {
   );
 }
 
-// Twenty's formatNumberChartTrend: an explicit + on gains, bare - on losses.
 function formatTrend(trendPercentage: number): string {
   return trendPercentage >= 0 ? `+${trendPercentage}` : `${trendPercentage}`;
 }

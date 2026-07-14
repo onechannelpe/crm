@@ -173,8 +173,8 @@ async function insertDigitalPolicies(
   await db.insertInto("workflow_lead_digital_policy").values(rows).execute();
 }
 
-// Legal reps are relational (people -> organization_people -> role), so each is
-// inserted in sequence rather than batched.
+// Legal reps are relational (people -> organization_people -> role), so each
+// is inserted in sequence rather than batched.
 async function insertLegalReps(
   db: Kysely<Database>,
   now: number,

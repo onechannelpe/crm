@@ -3,10 +3,9 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { MerchantAccountRow, RecordFilters } from "./contracts";
 import { cohortFilter } from "./filters";
 
-// The attribution work queue: one row per RUC with its enrichment state. This
-// is the CRM's actual edge over the spreadsheet -- the team re-attaches seller,
-// zone and target by hand every week because a downloaded sheet has no durable
-// row identity. Here the enrichment is keyed to the RUC and survives reimport.
+// The attribution work queue: one row per RUC with its enrichment state.
+// Enrichment is keyed to the RUC and survives reimport, which a downloaded
+// spreadsheet cannot.
 export async function getMerchantAccounts(
   db: DatabaseExecutor,
   filters: RecordFilters & { missingEnrichment?: boolean },

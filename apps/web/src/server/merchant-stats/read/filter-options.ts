@@ -2,8 +2,8 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { sellerKeyOf, type MerchantStatsFilterOptions } from "./contracts";
 
-// Options for the controls that survive on the record surfaces. The analytics
-// surface groups instead of filtering, so it needs none of this.
+// Options for the record surfaces. The analytics surface groups, so it
+// needs none of this.
 export async function getFilterOptions(
   db: DatabaseExecutor,
 ): Promise<MerchantStatsFilterOptions> {
@@ -15,9 +15,8 @@ export async function getFilterOptions(
     .orderBy("b.name")
     .execute();
 
-  // Left join, not inner: a real seller is only sometimes a CRM user. The
-  // previous inner join to users silently dropped every label-only seller,
-  // "EMPRESA" among them, so a third of the book could not be selected at all.
+  // Left join, not inner: a real seller is only sometimes a CRM user. An
+  // inner join to users would drop label-only sellers like "EMPRESA".
   const sellers = await db
     .selectFrom("merchant_accounts as a")
     .leftJoin("users as u", "u.id", "a.real_seller_user_id")

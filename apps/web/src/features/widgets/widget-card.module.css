@@ -1,13 +1,3 @@
-/*
-  One WidgetCard shell (card > header > content) with three variants:
-    dashboard    grid tile: secondary bg, bordered, rounded.
-    record-page  record detail card: primary bg framed card holding an inner
-                 secondary-bg content frame (Twenty's FieldsWidget look).
-    side-column  side-panel stacked widget: borderless with a bottom divider
-                 that drops on the last item (:last-child stands in for Twenty's
-                 isLastWidget without any runtime plumbing).
-*/
-
 .card {
   box-sizing: border-box;
   display: flex;
@@ -112,8 +102,6 @@
   padding: 0;
 }
 
-/* Form-footer action row inside the body (submit/cancel). Distinct from the
-   header-level actions above. */
 .actions {
   display: flex;
   gap: var(--spacing-2);

@@ -10,10 +10,8 @@ import {
 
 const ACCOUNTS_CHUNK = 1000;
 
-// Raw dealer upload: ensure a per-RUC account exists and backfill match-derived
-// defaults (real seller = the lead's executive, its branch) without ever
-// overwriting a value the business team already set. coalesce(existing, new)
-// keeps human enrichment; it only fills nulls.
+// Raw dealer upload. Backfills match-derived defaults (real seller, branch)
+// only where the column is null, so human enrichment is never overwritten.
 export async function backfillAccounts(
   trx: DatabaseExecutor,
   rows: readonly MappedGpvRow[],
@@ -60,9 +58,9 @@ export async function backfillAccounts(
   }
 }
 
-// Enriched "GPV AL" upload: the file is the authority for real seller / zone /
-// projected, so file values win. Blank file cells fall back to what is stored,
-// so a partially filled file never erases prior enrichment.
+// Enriched "GPV AL" upload. File values win for seller / zone / projected;
+// blank cells fall back to what is stored, so a partially filled file does
+// not erase prior enrichment.
 export async function applyAccountEnrichment(
   trx: DatabaseExecutor,
   rows: readonly MappedGpvRow[],
@@ -119,8 +117,8 @@ export async function applyAccountEnrichment(
   }
 }
 
-// One row per RUC, preferring a row that actually carries enrichment so the
-// representative used for the account is the informative one.
+// One row per RUC, preferring a row that carries enrichment so the
+// representative is the informative one.
 function perRuc(rows: readonly MappedGpvRow[]): MappedGpvRow[] {
   const byRuc = new Map<string, MappedGpvRow>();
   for (const row of rows) {

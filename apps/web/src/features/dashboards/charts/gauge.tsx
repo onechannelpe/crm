@@ -10,8 +10,6 @@ interface GaugeProps {
   caption?: string;
 }
 
-// Progress toward a per-RUC monthly target. Green once the target is reached,
-// blue while below. When there is no target, it degrades to a plain figure.
 export function Gauge(props: GaugeProps) {
   const ratio = () =>
     props.target && props.target > 0

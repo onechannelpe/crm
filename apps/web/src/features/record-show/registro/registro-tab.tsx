@@ -7,8 +7,6 @@ import { WidgetStack } from "~/features/widgets/widget-layout";
 import styles from "~/features/record-show/tabs/home.module.css";
 
 export function RegistroTab(props: { context: RecordContext }) {
-  // Non-keyed narrowing: the draft pane stays mounted while fields change, so the
-  // editable inputs keep focus across keystrokes.
   return (
     <Show when={props.context.kind === "draft" && props.context}>
       {(draft) => (

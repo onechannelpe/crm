@@ -4,7 +4,7 @@ import type { MappedGpvRow } from "~/server/merchant-stats/intake/contracts";
 import type { SeedContext } from "../../shared/context";
 import { CULQI_MERCHANT_REPORT_PROFILE as PROFILE } from "./profile";
 
-// Synthetic trade-name parts; combined into "<A> <B>" business names.
+// Combined into "<A> <B>" business names.
 const TRADE_HEADS = [
   "Bodega",
   "Minimarket",
@@ -69,13 +69,12 @@ export interface GenerateInput {
     tradeName: string | null;
   }>;
   sellers: ReadonlyArray<{ name: string; branchName: string }>;
-  // Seeded branch names, used verbatim as ZONAL so the zone match resolves.
+  // Used verbatim as ZONAL so the zone match resolves.
   branchNames: readonly string[];
   totalMerchants: number;
 }
 
-// Deterministic PRNG (mulberry32): seeds reproduce byte for byte across runs so
-// the demo dashboard is stable.
+// mulberry32: seeds reproduce byte for byte so the demo dashboard is stable.
 function mulberry32(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
@@ -161,8 +160,8 @@ function buildMerchant(
   };
 }
 
-// VENDEDOR R / ZONAL / PROYECTADO, left blank on a minority so the accounts
-// grid's "missing enrichment" filter and the data-quality panel have signal.
+// VENDEDOR R / ZONAL / PROYECTADO are left blank on a minority so the
+// "missing enrichment" filter and the data-quality panel have signal.
 function enrichment(
   rng: () => number,
   input: GenerateInput,
@@ -187,8 +186,8 @@ function enrichment(
   };
 }
 
-// Heavy-tailed monthly GPV with a realistic m0..m3 decay: most accounts are
-// small, a few are large, and later cohort months thin out as merchants churn.
+// Heavy-tailed monthly GPV with an m0..m3 decay. Most accounts are small,
+// a few are large; later cohort months thin out as merchants churn.
 function buildSeries(rng: () => number): Array<{ gpv: number; trx: number }> {
   const scale = tailedScale(rng);
   const decay = [1, 0.9 + rng() * 0.3, 0.6 + rng() * 0.3, 0.3 + rng() * 0.3];
@@ -211,9 +210,8 @@ function tailedScale(rng: () => number): number {
   return q.p99 + rng() * q.p99 * 1.5;
 }
 
-// Renders one merchant as a MappedGpvRow for a snapshot dated cutMonth. Cohort
-// metrics past the snapshot month are dropped, matching the intake's cutMonth
-// rule. Enrichment fields are attached only for the enriched upload.
+// Cohort metrics past the snapshot month are dropped, matching the intake's
+// cutMonth rule. Enrichment fields are attached only for the enriched upload.
 export function toMappedRow(
   merchant: MerchantSpec,
   rowNumber: number,
@@ -266,7 +264,6 @@ export function toMappedRow(
   };
 }
 
-// Mirrors the source columns so staged import rows read like a real upload.
 function buildRawRecord(merchant: MerchantSpec): Record<string, string> {
   return {
     identificador_tributario: merchant.ruc,

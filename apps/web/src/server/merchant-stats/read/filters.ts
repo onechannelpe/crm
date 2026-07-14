@@ -6,13 +6,9 @@ import { BranchId, UserId } from "~/server/shared/ids";
 import { parseSellerKey, type CohortFilters } from "./contracts";
 
 // The one owner of filter application. Every merchant-stats query routes
-// through here, so "does the seller filter work?" has a single answer instead
-// of one per query. It previously had five, three of which disagreed.
-//
-// Both dimensions live on merchant_accounts, which every caller joins as "a".
-// The alias is pinned in the type rather than passed in: a second alias would
-// mean a second meaning for the same filter, which is what this module exists
-// to prevent.
+// through here. Both dimensions live on merchant_accounts, which every caller
+// joins as "a"; the alias is pinned in the type so a second alias would mean
+// a second meaning for the same filter.
 type AccountsExpressionBuilder = ExpressionBuilder<
   Database & { a: Database["merchant_accounts"] },
   "a"
@@ -22,8 +18,7 @@ type AccountsExpressionBuilder = ExpressionBuilder<
 // and combine with eb.and, which yields TRUE on an empty list. Callers pass the
 // result straight to .where(...), so an unfiltered query needs no special case.
 //
-// Filter ids cross the wire as plain strings; they come from our own filter
-// option list, so trust (a cast) rather than parse.
+// Filter ids come from our own option list, so trust (a cast) rather than parse.
 export function cohortFilter(
   eb: AccountsExpressionBuilder,
   filters: CohortFilters,

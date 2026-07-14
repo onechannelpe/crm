@@ -1,16 +1,9 @@
-// Shapes returned by the merchant GPV read model. Kept flat and serializable so
-// server actions can hand them straight to the dashboards.
-//
-// The cohort is the grain. Every sale belongs to the month it was sold in, and
-// its metrics are indexed off that month: m0 is the sale month, m1 the next
-// calendar month, and so on. There is deliberately no calendar-month series
-// here: the source reports only m0..m3 per sale, so any calendar total silently
-// drops every older cohort still transacting. See business-stats-plan.txt §4.
+// Shapes returned by the merchant GPV read model.
+// The cohort is the grain. The source reports only m0..m3 per sale.
 
-// A real seller is a CRM user when the name resolves, and free text otherwise
-// ("EMPRESA", or a name we could not match). Both must be selectable, so the
-// key is the user id when there is one and a label sentinel when there is not.
-// sellerKeyOf is the only place this shape is constructed.
+// A real seller is a user when the name resolves, free text otherwise.
+// The key is the user id when there is one and a label sentinel when there
+// is not; sellerKeyOf is the only place this shape is constructed.
 export type SellerKey = string;
 
 export function sellerKeyOf(
@@ -28,10 +21,9 @@ export function parseSellerKey(
     : { kind: "user", userId: key };
 }
 
-// The dimensions that are real slices of the book. Month is absent on purpose:
-// it is the cohort axis, not a filter. Product is absent from analytics for the
-// same reason (it is a count measure, "POS / LINK"), but stays available to the
-// record surfaces where a reader is looking for specific rows.
+// Real slices of the book. Month is absent (it is the cohort axis). Product
+// is absent from analytics (a count measure, "POS / LINK"), available to
+// record surfaces where a reader is hunting specific rows.
 export interface CohortFilters {
   branchId?: string;
   sellerKey?: SellerKey;
@@ -50,9 +42,8 @@ export interface GpvPoint {
 // 0..3, matching gpv_m0..gpv_m3. GPV_MAX_MONTH_OFFSET owns the bound.
 export type CohortOffset = number;
 
-// One sale's cohort measures. m0Plus15d is cumulative (the sale month plus the
-// first 15 days of m1) and overlaps months[0], so it is kept apart from the
-// per-month series rather than appended to it: they cannot share an axis.
+// One sale's cohort measures. m0Plus15d is cumulative and overlaps months[0],
+// so it is kept apart from the per-month series: the two cannot share an axis.
 export interface CohortMeasures {
   months: Array<GpvPoint & { offset: CohortOffset }>;
   m0Plus15d: GpvPoint | null;
@@ -77,9 +68,8 @@ export interface CohortSaleRow extends CohortMeasures {
   clientType: string | null;
 }
 
-// One line of the ramp curve: how a sale-month cohort performed across its own
-// months. Points stop where the data does, so a young cohort is a short line
-// rather than a line that dives to zero.
+// One line of the ramp curve: a sale-month cohort across its own months.
+// Points stop where the data does.
 export interface CohortRampSeries {
   saleMonth: string;
   deviceCount: number;
@@ -87,8 +77,8 @@ export interface CohortRampSeries {
   points: Array<GpvPoint & { offset: CohortOffset }>;
 }
 
-// Attainment for one seller or zone, at a single cohort step. gpv and projected
-// stay separate so the caller can render the ratio and the magnitudes.
+// Attainment for one seller or zone at a single cohort step. gpv and
+// projected stay separate so the caller can render the ratio and magnitudes.
 export interface AttainmentRow {
   key: string;
   label: string;
@@ -101,7 +91,7 @@ export interface AttainmentRow {
 }
 
 // Lifecycle signals derived from columns the source has always carried and the
-// dashboards never read: dia_activo, dia_prueba, ultima_trx.
+// dashboards never read.
 export interface LifecycleSummary {
   salesTotal: number;
   activatedCount: number;
@@ -136,9 +126,8 @@ export interface DataQualitySummary {
 
 export interface MerchantStatsFilterOptions {
   branches: Array<{ id: string; name: string }>;
-  // Includes label-only sellers ("EMPRESA", unmatched names). The previous
-  // inner join to users dropped them, which made a third of the book
-  // unreachable from the seller control.
+  // Includes label-only sellers ("EMPRESA", unmatched names) so the seller
+  // control can select them. An inner join to users would drop them.
   sellers: Array<{ key: SellerKey; name: string }>;
   saleMonths: string[];
   products: string[];
@@ -154,11 +143,8 @@ export interface OrgMerchantStats {
     m0Plus15dGpv: number | null;
   }>;
   // Calendar months, which are honest at the RUC grain even though they are not
-  // at the book grain. One RUC's month total is the sum of what its own sales
-  // reported for that month: a May device's m1 plus a June device's m0 is that
-  // RUC's real June volume across its devices, and projectedGpv is a per-RUC
-  // monthly target measured against exactly this. The book total cannot be built
-  // this way because it would drop every cohort whose m0..m3 window has closed;
-  // one RUC's window is just its own coverage, not a silent omission.
+  // at the book grain. A May device's m1 plus a June device's m0 is that RUC's
+  // real June volume across its devices, and projectedGpv is a per-RUC monthly
+  // target measured against exactly this.
   monthlyGpv: Array<GpvPoint & { month: string }>;
 }

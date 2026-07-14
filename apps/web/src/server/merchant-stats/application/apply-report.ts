@@ -43,10 +43,8 @@ export interface ApplyMerchantReportResult {
 
 const STAGING_CHUNK = 1000;
 
-// Applies one uploaded snapshot in a single transaction: create the report,
-// resolve matches in batch, upsert the durable sales, attach per-RUC
-// enrichment (defaults for a raw file, file values for an enriched one), write
-// the monthly metric facts, then stage every row for audit.
+// Applies one uploaded snapshot in a single transaction: report, matches,
+// sales, per-RUC enrichment, monthly metrics, then audit staging.
 export async function applyMerchantReport(
   input: ApplyMerchantReportInput,
   ports: { executor: DatabaseExecutor; now: Date },

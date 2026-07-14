@@ -13,8 +13,6 @@ interface EventDraft {
   occurredAtMs: number;
 }
 
-// Projects each compiled story into the complete event stream expected from
-// the same user actions in the application.
 export async function persistWorkflowHistoryEvents(
   db: Kysely<Database>,
   now: number,

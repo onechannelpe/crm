@@ -22,10 +22,8 @@ const FALLBACK_WIDTH = 640;
 const TOOLTIP_WIDTH = 128;
 const TOOLTIP_GAP = 12;
 
-// Twenty's categorical ramp, in series order. The dashboard palette is
-// deliberately small: a cohort chart with more than a handful of lines is
-// unreadable regardless of colour, so callers cap the series count instead of
-// this cycling into indistinguishable hues.
+// Callers cap the series count: a cohort chart with more than a handful of
+// lines is unreadable regardless of colour.
 const SERIES_COLORS = [
   "var(--color-blue-11)",
   "var(--color-turquoise-11)",
@@ -34,15 +32,11 @@ const SERIES_COLORS = [
   "var(--color-pink-11)",
 ];
 
-// Multi-series ramp: x is the cohort's own month offset, not a calendar month,
-// so every cohort starts at the same origin and their shapes can be compared.
-// That is the whole point -- "does June ramp like May did?" is unanswerable on
-// a calendar axis, and a calendar axis is not available to us anyway (each sale
-// reports only m0..m3, so calendar totals drop older cohorts silently).
+// The x axis is the cohort's own month offset. Each cohort starts at the same
+// origin so their shapes can be compared. Calendar axes are not available to
+// this source anyway: each sale reports only m0..m3.
 //
-// A series stops where its data does. A young cohort is a short line rather
-// than one that plunges to zero, because a month that has not happened is not
-// a month with no GPV.
+// A series renders only the points it has. Young cohorts are short lines.
 export function RampChart(props: RampChartProps) {
   const height = () => props.height ?? 240;
 

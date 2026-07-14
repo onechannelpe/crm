@@ -1,9 +1,8 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 // The single source of "current truth": the value for each (sale, month) from
-// the freshest snapshot that carries it. Ordered by cut_date then import time so
-// a re-imported dirty-dated file never shadows the newest real snapshot. Every
-// dashboard reads through this.
+// the freshest snapshot that carries it. Ordered by cut_date then import time
+// so a re-imported dirty-dated file never shadows the newest real snapshot.
 export function withLatestMetric(db: DatabaseExecutor) {
   return db.with("latest_metric", (qc) =>
     qc

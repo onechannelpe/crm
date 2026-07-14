@@ -35,9 +35,9 @@ const UNASSIGNED = "Sin asignar";
 
 type Row = MerchantAccountRow & { id: string };
 
-// Attribution edits move the numbers every other surface reads, so the whole
-// dashboard is revalidated rather than just this grid. Options move too: naming
-// a seller on a RUC is what promotes them out of label-only into the dropdown.
+// Attribution edits move the numbers every other surface reads and shift the
+// seller option list, so the whole dashboard is revalidated rather than just
+// this grid.
 async function commit(): Promise<void> {
   await Promise.all([
     revalidate(accountRowsQuery.key),
@@ -67,9 +67,8 @@ export function AccountsGrid(props: { options: MerchantStatsFilterOptions }) {
     (page.latest ?? []).map((row) => ({ ...row, id: row.ruc })),
   );
 
-  // Only CRM users can be attributed: real_seller_user_id is a foreign key, so
-  // the label-only sellers that the filter offers ("EMPRESA", unmatched names)
-  // are not assignable here. Assigning is how a label becomes a real user.
+  // Only our users can be attributed: real_seller_user_id is a foreign key,
+  // so the label-only sellers in the filter options are not assignable.
   const assignableSellers = createMemo(() =>
     props.options.sellers.flatMap((seller) => {
       const parsed = parseSellerKey(seller.key);

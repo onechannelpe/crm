@@ -48,12 +48,10 @@ export type Permission =
   | "quotation:policy:manage"
   | "integration:manage"
   | "fulfillment:manage"
-  // Client-facing fulfillment steps the executive performs on their own leads
-  // (e.g. the refurbished transactions report); back office holds the broader
-  // fulfillment:manage.
+  // Client-facing fulfillment steps the executive performs on their own leads.
   | "fulfillment:client-step"
-  // Business (Culqi GPV) dashboards: read the views, manage = upload dealer
-  // reports and edit per-RUC enrichment.
+  // Business (Culqi GPV) dashboards. manage = upload dealer reports and edit
+  // per-RUC enrichment.
   | "dashboards:read"
   | "dashboards:manage";
 

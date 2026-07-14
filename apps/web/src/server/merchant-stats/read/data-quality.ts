@@ -2,9 +2,9 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { DataQualitySummary } from "./contracts";
 
-// Deliberately unfiltered. Every check here counts rows that are missing the
-// very enrichment the filters read from, so filtering the checks by that
-// enrichment would hide exactly the rows the reader is looking for.
+// Deliberately unfiltered: every check counts rows missing the very
+// enrichment the filters read from, so a filter would hide the rows the
+// reader is looking for.
 export async function getDataQuality(
   db: DatabaseExecutor,
 ): Promise<DataQualitySummary> {

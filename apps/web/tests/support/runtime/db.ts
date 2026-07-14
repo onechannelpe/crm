@@ -21,15 +21,11 @@ import {
   type TestRepositories,
 } from "../runtime/repos";
 
-// Postgres test isolation: build one seeded template database, then
-// `CREATE DATABASE <clone> TEMPLATE <template>` once per test FILE (not per
-// test, matching graphile-worker's own test harness pattern).
-// Individual tests within a file share that one clone and are isolated from
-// each other by `resetTestDb`, which truncates everything dynamic and
-// reseeds fixtures. No DDL, safe under Vitest's default
-// sequential-within-file execution. Cloning requires the template to have no
-// live connections, so the template pool is destroyed after seeding and
-// tests never connect to it directly.
+// One seeded template per test FILE: `CREATE DATABASE <clone> TEMPLATE
+// <template>` once, then `resetTestDb` isolates individual tests inside the
+// file by truncating dynamic tables and reseeding fixtures. Cloning requires
+// the template to have no live connections, so the template pool is destroyed
+// after seeding.
 const NAMESPACE = (process.env.TEST_DB_NAMESPACE ?? "default").replace(
   /[^a-z0-9_]/gi,
   "_",
@@ -124,10 +120,8 @@ async function withMaintenanceClient<T>(
   }
 }
 
-// Test-harness fixture rows (branches/users/organizations/people). Unlike
-// vocabulary data, tests can mutate these (e.g. a profile-update command), so
-// this runs both at template-build time and on every `resetTestDb` call to
-// restore the baseline before each test.
+// Fixture rows tests can mutate (e.g. a profile-update command). Runs at
+// template-build time and on every `resetTestDb` call to restore the baseline.
 async function seedFixtures(db: Kysely<Database>) {
   const now = new Date();
 
@@ -343,11 +337,7 @@ async function buildTemplate(): Promise<void> {
           await db.destroy();
         }
       } catch (error) {
-        // templateExists only checks that the pg_database row exists, not
-        // that seeding actually finished. Without this, a template that dies
-        // mid-migrate/seed (crash, killed run) leaves a half-built database
-        // registered as "done", and every future run silently reuses the
-        // broken template forever. Drop it so the next run rebuilds cleanly.
+        // Drop a half-built template so the next run rebuilds it cleanly.
         await client.query(
           `DROP DATABASE IF EXISTS "${TEMPLATE_DB_NAME}" WITH (FORCE)`,
         );
@@ -407,9 +397,8 @@ export async function createIsolatedTestDb(
   };
 }
 
-// The migration marker survives per-test resets. Reference tables are
-// truncated and restored together so the harness follows the same ownership
-// boundary as schema preparation.
+// The migration marker survives per-test resets. Reference tables share
+// schema preparation's ownership boundary.
 const STATIC_TABLES = new Set(["schema_integrity"]);
 
 async function truncateDynamicTables(db: Kysely<Database>): Promise<void> {
@@ -428,10 +417,8 @@ async function truncateDynamicTables(db: Kysely<Database>): Promise<void> {
   );
 }
 
-// Isolates individual tests within a file-scoped `TestDbContext` (see
-// `createIsolatedTestDb`'s module comment). Cheap: no DDL, just a truncate +
-// a handful of inserts, restoring exactly the state a fresh clone would have
-// had. Run this in `beforeEach`, not `beforeAll`.
+// Cheap per-test reset: truncate dynamic tables and reseed fixtures. Run in
+// `beforeEach`, not `beforeAll`.
 export async function resetTestDb(ctx: TestDbContext): Promise<void> {
   await truncateDynamicTables(ctx.db);
   for (const module of REFERENCE_DATA_MODULES) {
@@ -463,8 +450,8 @@ export interface FreshDbContext {
   db: Kysely<Database>;
 }
 
-// Empty, unmigrated databases are not cloned from the fixture template. Use
-// these for migration/seeding tests, not app behavior against seeded fixtures.
+// Unmigrated databases: for migration/seeding tests, not app behavior against
+// seeded fixtures.
 export async function createFreshDb(prefix: string): Promise<FreshDbContext> {
   const dbName = `crm_test_fresh_${prefix}_${Date.now()}_${Math.random()
     .toString(16)

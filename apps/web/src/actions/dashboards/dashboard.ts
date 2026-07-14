@@ -30,9 +30,8 @@ type RawFilters = Partial<RecordFilters> | undefined;
 const pick = (value: unknown) =>
   typeof value === "string" && value.length > 0 ? value : undefined;
 
-// Branch and seller are the only real slices of the book. Month is the cohort
-// axis and product is a count measure, so neither is a filter here; both stay
-// available to the record surfaces, where a reader is hunting specific rows.
+// Branch and seller are the only real slices of the book.
+// Month is the cohort axis.
 function cleanCohortFilters(raw: RawFilters): CohortFilters {
   if (!raw) return {};
   return { branchId: pick(raw.branchId), sellerKey: pick(raw.sellerKey) };
@@ -55,9 +54,9 @@ export interface MerchantPerformance {
   dataQuality: DataQualitySummary;
 }
 
-// The performance surface, read whole and unfiltered: it groups instead. The
-// cohort step is a parameter rather than a filter because a target is per
-// month, so comparing GPV to it only means anything at one step at a time.
+// The performance surface is read whole and grouped: the whole book is ranked
+// at once. Cohort step is a parameter because a target is per month, so
+// comparing GPV to it only means anything at one step at a time.
 export async function getMerchantPerformance(
   offset: number,
 ): Promise<MerchantPerformance> {

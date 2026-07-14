@@ -11,8 +11,7 @@ export interface BarRow {
   sublabel?: string;
   value: number;
   target?: number | null;
-  // When the row stands for a record, it links to it. Twenty's answer to
-  // "filter to one seller" is to open that seller, not to narrow the page.
+  // When the row stands for a record, the row links to it.
   href?: string;
 }
 
@@ -20,10 +19,7 @@ interface BarListProps {
   rows: BarRow[];
 }
 
-// Horizontal magnitude bars (one measure), rounded data-end anchored at the
-// baseline. A dashed tick marks each row's projected target on the same axis, so
-// realized-vs-target reads without a second scale. Values are always visible
-// (touch-first, no hover dependency).
+// Realized and target share one axis: a dashed tick on the bar is the target.
 export function BarList(props: BarListProps) {
   const max = () =>
     Math.max(

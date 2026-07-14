@@ -3,8 +3,6 @@ import type { Kysely } from "kysely";
 import type { Database } from "../../../types";
 import type { CompiledLead } from "../compiler";
 
-// SUNAT overlay for each seeded organization, derived from the same spec so the
-// registry and the organizations row never drift.
 export async function persistCompanyRegistryRecords(
   db: Kysely<Database>,
   now: number,

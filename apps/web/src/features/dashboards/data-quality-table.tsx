@@ -30,8 +30,6 @@ const DATA_QUALITY_COLUMNS = [
     label: "Pendientes",
     icon: CircleAlert,
     width: 140,
-    // A clean check reads as a plain zero; only a real backlog earns a badge,
-    // so the eye lands on the rows that need work.
     renderCell: (row) => (
       <Show when={row.count > 0} fallback={formatInteger(row.count)}>
         <Badge variant="warning">{formatInteger(row.count)}</Badge>

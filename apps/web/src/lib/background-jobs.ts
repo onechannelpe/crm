@@ -61,8 +61,6 @@ export function startBackgroundJobs() {
     runtime: integration,
     readFile,
   });
-  // Shares the workflow_integration_jobs channel with records-import; the two
-  // claim disjoint job types, so both wake on the same NOTIFY.
   const merchantReportsQueue = createMerchantReportsQueue(WORKER_ID, {
     runtime: integration,
     readFile,

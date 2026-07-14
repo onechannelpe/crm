@@ -19,10 +19,8 @@ import {
 } from "~/features/widgets/widget-card";
 import { capitalize } from "~/lib/utils";
 
-// The SUNAT registry (RUC, legal name, address, contributor status, economic
-// activities) is stable reference data about the company, not the deal's own
-// working attributes. Twenty would keep it behind a relation rather than inline,
-// so it lives in a collapsed section that stays out of the way until needed.
+// Stable reference data about the company. Lives in a collapsed section that
+// stays out of the way.
 export function RegistrySection(props: { data: LeadDetailView }) {
   const [isExpanded, setIsExpanded] = createSignal(false);
 

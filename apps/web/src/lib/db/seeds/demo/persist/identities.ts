@@ -536,8 +536,6 @@ export async function persistDemoIdentities(
     ])
     .execute();
 
-  // Opt-out row exercises the deviation-from-default lookup; no rows for other
-  // (category, channel) pairs leave them on.
   await db
     .insertInto("notification_opt_outs")
     .values([
