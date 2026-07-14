@@ -3,6 +3,7 @@ import type { Component } from "solid-js";
 import Activity from "~/components/icons/activity";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
+import ChartColumn from "~/components/icons/chart-column";
 import House from "~/components/icons/house";
 import Info from "~/components/icons/info";
 import Moneybag from "~/components/icons/moneybag";
@@ -30,4 +31,5 @@ export const ICON_BY_ROUTE: Record<
   profile: UserRound,
   schedule: CalendarDays,
   monitoring: Activity,
+  "business-stats": ChartColumn,
 };

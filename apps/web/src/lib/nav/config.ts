@@ -12,7 +12,8 @@ export type RouteIcon =
   | "capacity"
   | "profile"
   | "schedule"
-  | "monitoring";
+  | "monitoring"
+  | "business-stats";
 
 export type SidebarSection = "primary" | "secondary";
 
@@ -74,6 +75,10 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Solicitudes", icon: "team" },
   },
   { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
+  {
+    match: "/business-stats",
+    header: { label: "Estadísticas de negocio", icon: "business-stats" },
+  },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
   {
     match: "/settings/capacity-policies",
@@ -182,6 +187,18 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
       { href: "/team", label: "Capacidad", order: 1 },
       { href: "/team/requests", label: "Solicitudes", order: 2 },
     ],
+  },
+  {
+    id: "business-stats",
+    href: "/business-stats",
+    activePrefixes: ["/business-stats"],
+    label: "Estadísticas de negocio",
+    navLabel: "Negocio",
+    icon: "business-stats",
+    tileColor: "green",
+    section: "secondary",
+    order: 7,
+    group: "Negocio",
   },
   {
     id: "monitoring",

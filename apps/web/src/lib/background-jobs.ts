@@ -7,6 +7,7 @@ import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { readStoredFile } from "~/server/files/storage";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
+import { createMerchantReportsQueue } from "~/server/merchant-stats/queue/merchant-reports-queue";
 import { getServerRuntime } from "~/server/platform/container";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
 import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/lead-reservation-maintenance";
@@ -53,31 +54,46 @@ export function startBackgroundJobs() {
 
   const { integration } = getServerRuntime().integrations;
 
+  const readFile = (filePath: string) =>
+    readStoredFile(uploadsConfig().storageRoot, filePath);
+
   const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
     runtime: integration,
-    readFile: (filePath) =>
-      readStoredFile(uploadsConfig().storageRoot, filePath),
+    readFile,
+  });
+  // Shares the workflow_integration_jobs channel with records-import; the two
+  // claim disjoint job types, so both wake on the same NOTIFY.
+  const merchantReportsQueue = createMerchantReportsQueue(WORKER_ID, {
+    runtime: integration,
+    readFile,
   });
   const enrichmentQueue =
     getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
   const notificationQueues =
     getServerRuntime().notifications.createQueues(WORKER_ID);
 
-  const queueByChannel: Record<string, QueueRunner> = {
-    [JOB_TABLE_CHANNELS.workflow_integration_jobs]: recordsImportQueue,
-    [JOB_TABLE_CHANNELS.company_registry_record]: enrichmentQueue,
-    [JOB_TABLE_CHANNELS.notification_intents]: notificationQueues.expansion,
-    [JOB_TABLE_CHANNELS.notification_deliveries]: notificationQueues.dispatch,
-    [JOB_TABLE_CHANNELS.whatsapp_inbound_events]:
+  const queuesByChannel: Record<string, QueueRunner[]> = {
+    [JOB_TABLE_CHANNELS.workflow_integration_jobs]: [
+      recordsImportQueue,
+      merchantReportsQueue,
+    ],
+    [JOB_TABLE_CHANNELS.company_registry_record]: [enrichmentQueue],
+    [JOB_TABLE_CHANNELS.notification_intents]: [notificationQueues.expansion],
+    [JOB_TABLE_CHANNELS.notification_deliveries]: [notificationQueues.dispatch],
+    [JOB_TABLE_CHANNELS.whatsapp_inbound_events]: [
       notificationQueues.whatsappInbound,
-    [JOB_TABLE_CHANNELS.outbound_whatsapp_messages]:
+    ],
+    [JOB_TABLE_CHANNELS.outbound_whatsapp_messages]: [
       notificationQueues.outboundWhatsApp,
+    ],
   };
 
   const wakers = new Map<string, () => void>();
   const channels: Record<string, PgListenerHandler[]> = {};
-  for (const [channel, queue] of Object.entries(queueByChannel)) {
-    const wake = makeWaker(() => queue.runOnce());
+  for (const [channel, queues] of Object.entries(queuesByChannel)) {
+    const wake = makeWaker(() =>
+      Promise.all(queues.map((queue) => queue.runOnce())).then(() => undefined),
+    );
     wakers.set(channel, wake);
     channels[channel] = [wake];
   }

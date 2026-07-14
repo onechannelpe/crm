@@ -1,0 +1,103 @@
+"use server";
+
+import type {
+  BusinessStatsFilterOptions,
+  BusinessStatsFilters,
+  CohortGridRow,
+  DataQualitySummary,
+  MerchantAccountRow,
+  MonthlyGpvPoint,
+  SellerPerformanceRow,
+} from "~/server/merchant-stats/read/contracts";
+import {
+  getCohortGrid,
+  getDataQuality,
+  getFilterOptions,
+  getMerchantAccounts,
+  getMonthlyGpv,
+  getSellerPerformance,
+} from "~/server/merchant-stats/read/queries";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { Ok } from "~/server/shared/result";
+
+type RawFilters = Partial<BusinessStatsFilters> | undefined;
+
+function cleanFilters(raw: RawFilters): BusinessStatsFilters {
+  if (!raw) return {};
+  const pick = (value: unknown) =>
+    typeof value === "string" && value.length > 0 ? value : undefined;
+  return {
+    month: pick(raw.month),
+    branchId: pick(raw.branchId),
+    sellerUserId: pick(raw.sellerUserId),
+    product: pick(raw.product),
+  };
+}
+
+export interface BusinessStatsOverview {
+  monthly: MonthlyGpvPoint[];
+  sellers: SellerPerformanceRow[];
+  dataQuality: DataQualitySummary;
+  options: BusinessStatsFilterOptions;
+}
+
+export async function getBusinessStatsOverview(
+  raw: RawFilters,
+): Promise<BusinessStatsOverview> {
+  return runAction({
+    name: "business-stats.overview.read",
+    access: { kind: "permission", permission: "business-stats:read" },
+    parse: () => Ok(cleanFilters(raw)),
+
+    execute: async (_ctx, filters) => {
+      const db = getServerRuntime().infra.db;
+      const [monthly, sellers, dataQuality, options] = await Promise.all([
+        getMonthlyGpv(db, filters),
+        getSellerPerformance(db, filters),
+        getDataQuality(db),
+        getFilterOptions(db),
+      ]);
+      return Ok({ monthly, sellers, dataQuality, options });
+    },
+  });
+}
+
+export async function getCohortRows(
+  raw: RawFilters,
+  page: { limit: number; offset: number },
+): Promise<CohortGridRow[]> {
+  return runAction({
+    name: "business-stats.cohort.read",
+    access: { kind: "permission", permission: "business-stats:read" },
+    parse: () => Ok({ filters: cleanFilters(raw), page }),
+
+    execute: async (_ctx, input) => {
+      const db = getServerRuntime().infra.db;
+      return Ok(await getCohortGrid(db, input.filters, input.page));
+    },
+  });
+}
+
+export async function getAccountRows(
+  raw: (RawFilters & { missingEnrichment?: boolean }) | undefined,
+  page: { limit: number; offset: number },
+): Promise<MerchantAccountRow[]> {
+  return runAction({
+    name: "business-stats.accounts.read",
+    access: { kind: "permission", permission: "business-stats:read" },
+    parse: () =>
+      Ok({
+        filters: {
+          ...cleanFilters(raw),
+          missingEnrichment: raw?.missingEnrichment === true,
+        },
+        page,
+      }),
+
+    execute: async (_ctx, input) => {
+      const db = getServerRuntime().infra.db;
+      return Ok(await getMerchantAccounts(db, input.filters, input.page));
+    },
+  });
+}

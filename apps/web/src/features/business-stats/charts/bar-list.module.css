@@ -1,0 +1,66 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.label {
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.value {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+
+.fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: 999px;
+  background: var(--color-blue-11);
+  min-width: 4px;
+  transition: width 0.2s ease;
+}
+
+.fillHit {
+  background: var(--color-green-11);
+}
+
+/* Target tick sits above the fill; the 2px surface ring keeps it legible on the
+   bar. */
+.target {
+  position: absolute;
+  inset-block: -2px;
+  width: 2px;
+  background: var(--foreground);
+  outline: 2px solid var(--background);
+  transform: translateX(-1px);
+}

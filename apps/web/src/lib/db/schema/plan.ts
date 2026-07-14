@@ -7,6 +7,7 @@ import * as files from "./modules/files";
 import * as fulfillment from "./modules/fulfillment";
 import * as identity from "./modules/identity";
 import * as integrations from "./modules/integrations";
+import * as merchantStats from "./modules/merchant-stats";
 import * as notifications from "./modules/notifications";
 import * as observability from "./modules/observability";
 import * as organization from "./modules/organization";
@@ -34,4 +35,5 @@ export const SCHEMA_MODULES = [
   pricing,
   sales,
   fulfillment,
+  merchantStats,
 ] as const;
