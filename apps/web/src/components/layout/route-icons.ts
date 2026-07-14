@@ -31,5 +31,5 @@ export const ICON_BY_ROUTE: Record<
   profile: UserRound,
   schedule: CalendarDays,
   monitoring: Activity,
-  "business-stats": ChartColumn,
+  dashboards: ChartColumn,
 };

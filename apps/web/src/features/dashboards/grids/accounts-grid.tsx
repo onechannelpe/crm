@@ -1,7 +1,7 @@
 import { revalidate } from "@solidjs/router";
 import { createMemo, createResource, createSignal } from "solid-js";
 
-import { updateMerchantAccount } from "~/actions/business-stats/accounts";
+import { updateMerchantAccount } from "~/actions/dashboards/accounts";
 import Building2 from "~/components/icons/building-2";
 import ChartColumn from "~/components/icons/chart-column";
 import User from "~/components/icons/user";
@@ -14,7 +14,7 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   accountRowsQuery,
   businessStatsOverviewQuery,
-} from "~/lib/queries/business-stats";
+} from "~/lib/queries/dashboards";
 import type {
   BusinessStatsFilterOptions,
   BusinessStatsFilters,

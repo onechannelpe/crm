@@ -54,8 +54,8 @@ export type Permission =
   | "fulfillment:client-step"
   // Business (Culqi GPV) dashboards: read the views, manage = upload dealer
   // reports and edit per-RUC enrichment.
-  | "business-stats:read"
-  | "business-stats:manage";
+  | "dashboards:read"
+  | "dashboards:manage";
 
 export const ROLES = [
   "executive",
@@ -105,8 +105,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "team:read",
     "team:manage",
     "audit:read",
-    "business-stats:read",
-    "business-stats:manage",
+    "dashboards:read",
+    "dashboards:manage",
   ],
   back_office: [
     "lead:note:add",
@@ -122,8 +122,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "integration:manage",
     "lead:sale:upload-proof",
     "fulfillment:manage",
-    "business-stats:read",
-    "business-stats:manage",
+    "dashboards:read",
+    "dashboards:manage",
   ],
   sales_manager: [
     "lead:note:add",
@@ -149,8 +149,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "quotation:policy:manage",
-    "business-stats:read",
-    "business-stats:manage",
+    "dashboards:read",
+    "dashboards:manage",
   ],
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],
@@ -188,8 +188,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "audit:read",
-    "business-stats:read",
-    "business-stats:manage",
+    "dashboards:read",
+    "dashboards:manage",
   ],
   superuser: [
     "lead:note:add",
@@ -228,8 +228,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "audit:read",
-    "business-stats:read",
-    "business-stats:manage",
+    "dashboards:read",
+    "dashboards:manage",
   ],
 };
 

@@ -46,8 +46,8 @@ export async function getBusinessStatsOverview(
   raw: RawFilters,
 ): Promise<BusinessStatsOverview> {
   return runAction({
-    name: "business-stats.overview.read",
-    access: { kind: "permission", permission: "business-stats:read" },
+    name: "dashboards.overview.read",
+    access: { kind: "permission", permission: "dashboards:read" },
     parse: () => Ok(cleanFilters(raw)),
 
     execute: async (_ctx, filters) => {
@@ -68,8 +68,8 @@ export async function getCohortRows(
   page: { limit: number; offset: number },
 ): Promise<CohortGridRow[]> {
   return runAction({
-    name: "business-stats.cohort.read",
-    access: { kind: "permission", permission: "business-stats:read" },
+    name: "dashboards.cohort.read",
+    access: { kind: "permission", permission: "dashboards:read" },
     parse: () => Ok({ filters: cleanFilters(raw), page }),
 
     execute: async (_ctx, input) => {
@@ -84,8 +84,8 @@ export async function getAccountRows(
   page: { limit: number; offset: number },
 ): Promise<MerchantAccountRow[]> {
   return runAction({
-    name: "business-stats.accounts.read",
-    access: { kind: "permission", permission: "business-stats:read" },
+    name: "dashboards.accounts.read",
+    access: { kind: "permission", permission: "dashboards:read" },
     parse: () =>
       Ok({
         filters: {

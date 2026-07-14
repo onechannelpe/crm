@@ -19,8 +19,8 @@ export async function getMerchantStatsForRuc(
   rawRuc: string,
 ): Promise<OrgMerchantStats> {
   return runAction({
-    name: "business-stats.ruc.read",
-    access: { kind: "permission", permission: "business-stats:read" },
+    name: "dashboards.ruc.read",
+    access: { kind: "permission", permission: "dashboards:read" },
     parse: () => parseRuc(rawRuc),
 
     execute: async (_ctx, { ruc }) => {

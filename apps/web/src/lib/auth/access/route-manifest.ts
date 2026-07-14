@@ -17,7 +17,7 @@ export type AppPath =
   | "/fulfillment"
   | "/rate-simulator"
   | "/dashboard"
-  | "/business-stats"
+  | "/dashboards"
   | "/schedule"
   | "/settings/profile"
   | "/settings/appearance"
@@ -51,7 +51,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/fulfillment": { permission: "fulfillment:manage" },
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
   "/dashboard": { permission: "lead:work", landingPriority: 1 },
-  "/business-stats": { permission: "business-stats:read" },
+  "/dashboards": { permission: "dashboards:read" },
   "/schedule": {},
   "/settings/profile": {},
   "/settings/appearance": {},
@@ -61,6 +61,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
   { pattern: /^\/records\/[^/]+$/ },
+  { pattern: /^\/dashboards\/[^/]+$/, permission: "dashboards:read" },
   {
     pattern: /^\/settings\/members\/[^/]+$/,
     permission: "team:read",

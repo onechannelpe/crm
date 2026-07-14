@@ -51,8 +51,8 @@ export async function updateMerchantAccount(
   raw: unknown,
 ): Promise<{ ok: true }> {
   return runAction({
-    name: "business-stats.account.update",
-    access: { kind: "permission", permission: "business-stats:manage" },
+    name: "dashboards.account.update",
+    access: { kind: "permission", permission: "dashboards:manage" },
     parse: () => parsePatch(raw),
     audit: (patch) => ({ ruc: patch.ruc, field: patch.field }),
 

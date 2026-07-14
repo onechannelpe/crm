@@ -4,13 +4,13 @@ import { createSignal, Match, onCleanup, Show, Switch } from "solid-js";
 import {
   getMerchantReportJob,
   uploadMerchantReport,
-} from "~/actions/business-stats/imports";
+} from "~/actions/dashboards/imports";
 import { FileDropzone } from "~/components/ui/input/file-dropzone";
 import {
   accountRowsQuery,
   businessStatsOverviewQuery,
   cohortRowsQuery,
-} from "~/lib/queries/business-stats";
+} from "~/lib/queries/dashboards";
 
 import { formatInteger } from "../format";
 

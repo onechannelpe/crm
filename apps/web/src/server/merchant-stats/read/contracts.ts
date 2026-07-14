@@ -1,4 +1,4 @@
-// Shapes returned by the business-stats read model. Kept flat and
+// Shapes returned by the merchant GPV read model. Kept flat and
 // serializable so server actions can hand them straight to the dashboards.
 
 export interface BusinessStatsFilters {

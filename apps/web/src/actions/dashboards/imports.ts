@@ -44,8 +44,8 @@ export async function uploadMerchantReport(formData: FormData): Promise<{
   rowsTotal: number;
 }> {
   return runAction({
-    name: "business-stats.import.upload",
-    access: { kind: "permission", permission: "business-stats:manage" },
+    name: "dashboards.import.upload",
+    access: { kind: "permission", permission: "dashboards:manage" },
     parse: () => parseUpload(formData),
     audit: ({ file }) => ({ fileName: file.name, fileSize: file.size }),
 
@@ -111,8 +111,8 @@ export async function getMerchantReportJob(
   rawJobId: string,
 ): Promise<IntegrationJobRow> {
   return runAction({
-    name: "business-stats.import.get_job",
-    access: { kind: "permission", permission: "business-stats:read" },
+    name: "dashboards.import.get_job",
+    access: { kind: "permission", permission: "dashboards:read" },
 
     parse: () =>
       parseObject({ jobId: rawJobId }, validationFail, (r) => ({

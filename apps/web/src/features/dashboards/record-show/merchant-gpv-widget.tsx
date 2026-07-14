@@ -1,7 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
-import { merchantStatsByRucQuery } from "~/lib/queries/business-stats";
+import { merchantStatsByRucQuery } from "~/lib/queries/dashboards";
 
 import { Gauge } from "../charts/gauge";
 import { LineChart } from "../charts/line-chart";
@@ -9,7 +9,7 @@ import { formatMonth, formatSolesCompact } from "../format";
 
 import styles from "./merchant-gpv-widget.module.css";
 
-// Per-merchant GPV on the record. Gated server-side by business-stats:read, so
+// Per-merchant GPV on the record. Gated server-side by dashboards:read, so
 // it renders empty for roles without access rather than erroring.
 export function MerchantGpvWidget(props: { ruc: string }) {
   const stats = createAsync(() => merchantStatsByRucQuery(props.ruc));

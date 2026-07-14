@@ -1,12 +1,9 @@
 import { query } from "@solidjs/router";
 
-import {
-  getAccountRows,
-  getCohortRows,
-} from "~/actions/business-stats/dashboard";
-import { getBusinessStatsOverview } from "~/actions/business-stats/dashboard";
-import { getMerchantReportJob } from "~/actions/business-stats/imports";
-import { getMerchantStatsForRuc } from "~/actions/business-stats/org-stats";
+import { getAccountRows, getCohortRows } from "~/actions/dashboards/dashboard";
+import { getBusinessStatsOverview } from "~/actions/dashboards/dashboard";
+import { getMerchantReportJob } from "~/actions/dashboards/imports";
+import { getMerchantStatsForRuc } from "~/actions/dashboards/org-stats";
 import type { BusinessStatsFilters } from "~/server/merchant-stats/read/contracts";
 
 export const businessStatsOverviewQuery = query(

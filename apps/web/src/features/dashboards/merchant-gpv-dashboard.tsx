@@ -5,7 +5,7 @@ import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
-import { businessStatsOverviewQuery } from "~/lib/queries/business-stats";
+import { businessStatsOverviewQuery } from "~/lib/queries/dashboards";
 import type { BusinessStatsFilters } from "~/server/merchant-stats/read/contracts";
 
 import { BarList } from "./charts/bar-list";
@@ -21,7 +21,7 @@ import { AccountsGrid } from "./grids/accounts-grid";
 import { CohortGrid } from "./grids/cohort-grid";
 import { UploadReport } from "./upload/upload-report";
 
-import styles from "./business-stats-page.module.css";
+import styles from "./merchant-gpv-dashboard.module.css";
 
 const EMPTY_OVERVIEW = {
   monthly: [],
@@ -37,7 +37,7 @@ const EMPTY_OVERVIEW = {
 
 type Tab = "cohort" | "accounts";
 
-export function BusinessStatsPage() {
+export function MerchantGpvDashboard() {
   const [month, setMonth] = createSignal("");
   const [branchId, setBranchId] = createSignal("");
   const [sellerUserId, setSellerUserId] = createSignal("");

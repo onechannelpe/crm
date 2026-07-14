@@ -13,7 +13,7 @@ export type RouteIcon =
   | "profile"
   | "schedule"
   | "monitoring"
-  | "business-stats";
+  | "dashboards";
 
 export type SidebarSection = "primary" | "secondary";
 
@@ -76,9 +76,10 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   },
   { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
   {
-    match: "/business-stats",
-    header: { label: "Estadísticas de negocio", icon: "business-stats" },
+    match: /^\/dashboards\/[^/]+$/,
+    header: { label: "GPV de comercios", icon: "dashboards" },
   },
+  { match: "/dashboards", header: { label: "Paneles", icon: "dashboards" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
   {
     match: "/settings/capacity-policies",
@@ -189,12 +190,12 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     ],
   },
   {
-    id: "business-stats",
-    href: "/business-stats",
-    activePrefixes: ["/business-stats"],
-    label: "Estadísticas de negocio",
-    navLabel: "Negocio",
-    icon: "business-stats",
+    id: "dashboards",
+    href: "/dashboards",
+    activePrefixes: ["/dashboards"],
+    label: "Paneles",
+    navLabel: "Paneles",
+    icon: "dashboards",
     tileColor: "green",
     section: "secondary",
     order: 7,

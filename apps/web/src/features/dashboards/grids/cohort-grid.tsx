@@ -8,7 +8,7 @@ import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import { cohortRowsQuery } from "~/lib/queries/business-stats";
+import { cohortRowsQuery } from "~/lib/queries/dashboards";
 import type {
   BusinessStatsFilters,
   CohortGridRow,
