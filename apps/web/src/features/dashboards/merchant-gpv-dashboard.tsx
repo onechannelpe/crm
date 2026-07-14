@@ -5,6 +5,7 @@ import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import { ScrollWrapper } from "~/components/ui/utilities/scroll-wrapper";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetGrid, WidgetGridItem } from "~/features/widgets/widget-layout";
 import { merchantStatsOverviewQuery } from "~/lib/queries/dashboards";
@@ -135,124 +136,128 @@ export function MerchantGpvDashboard() {
         </WidgetCardShell>
       </Show>
 
-      <WidgetGrid>
-        <MetricTile
-          title="GPV mes actual"
-          span="quarter"
-          value={formatSolesCompact(metrics().currentMonthGpv)}
-          tone="default"
-        />
-        <MetricTile
-          title="Objetivo mensual"
-          span="quarter"
-          value={formatSolesCompact(metrics().totalProjected)}
-          tone="default"
-        />
-        <MetricTile
-          title="Cumplimiento"
-          span="quarter"
-          value={
-            metrics().attainment != null
-              ? formatPercent(metrics().attainment!)
-              : "—"
-          }
-          tone={
-            metrics().attainment != null && metrics().attainment! >= 1
-              ? "positive"
-              : "default"
-          }
-        />
-        <MetricTile
-          title="RUCs sin CRM"
-          span="quarter"
-          value={formatInteger(overview().dataQuality.unmatchedRucs)}
-          tone={
-            overview().dataQuality.unmatchedRucs > 0 ? "warning" : "default"
-          }
-          hint={`${formatInteger(metrics().totalRucs)} RUCs atribuidos`}
-        />
-
-        <LineTile
-          title="GPV realizado por mes"
-          span="full"
-          points={overview().monthly.map((point) => ({
-            label: point.month,
-            value: point.gpv,
-          }))}
-          target={metrics().totalProjected || null}
-        />
-
-        <BarTile
-          title="Rendimiento por vendedor"
-          span="half"
-          rows={overview()
-            .sellers.slice(0, 8)
-            .map((row) => ({
-              key: row.sellerKey,
-              label: row.sellerName,
-              value: row.gpv,
-              target: row.projectedGpv || null,
-            }))}
-        />
-
-        <StatRowsTile
-          title="Calidad de datos"
-          span="half"
-          rows={[
-            {
-              label: "RUCs sin registrar en CRM",
-              value: formatInteger(overview().dataQuality.unmatchedRucs),
-              alert: overview().dataQuality.unmatchedRucs > 0,
-            },
-            {
-              label: "Cuentas sin vendedor real",
-              value: formatInteger(
-                overview().dataQuality.accountsMissingSeller,
-              ),
-              alert: overview().dataQuality.accountsMissingSeller > 0,
-            },
-            {
-              label: "Cuentas sin proyectado",
-              value: formatInteger(
-                overview().dataQuality.accountsMissingProjected,
-              ),
-              alert: overview().dataQuality.accountsMissingProjected > 0,
-            },
-            {
-              label: "Series que no cuadran con entregas",
-              value: formatInteger(overview().dataQuality.serialMismatches),
-              alert: overview().dataQuality.serialMismatches > 0,
-            },
-          ]}
-        />
-
-        <WidgetGridItem span="full">
-          <WidgetCardShell title="Cohortes de ventas">
-            <CohortGrid filters={filters()} />
-          </WidgetCardShell>
-        </WidgetGridItem>
-
-        <WidgetGridItem span="full">
-          <WidgetCardShell
-            title="Atribución por RUC"
-            action={
-              <label class={styles.toggle}>
-                <input
-                  type="checkbox"
-                  checked={missingOnly()}
-                  onChange={(e) => setMissingOnly(e.currentTarget.checked)}
-                />
-                Solo faltantes
-              </label>
-            }
-          >
-            <AccountsGrid
-              filters={{ ...filters(), missingEnrichment: missingOnly() }}
-              options={overview().options}
+      <div class={styles.scrollArea}>
+        <ScrollWrapper>
+          <WidgetGrid>
+            <MetricTile
+              title="GPV mes actual"
+              span="quarter"
+              value={formatSolesCompact(metrics().currentMonthGpv)}
+              tone="default"
             />
-          </WidgetCardShell>
-        </WidgetGridItem>
-      </WidgetGrid>
+            <MetricTile
+              title="Objetivo mensual"
+              span="quarter"
+              value={formatSolesCompact(metrics().totalProjected)}
+              tone="default"
+            />
+            <MetricTile
+              title="Cumplimiento"
+              span="quarter"
+              value={
+                metrics().attainment != null
+                  ? formatPercent(metrics().attainment!)
+                  : "—"
+              }
+              tone={
+                metrics().attainment != null && metrics().attainment! >= 1
+                  ? "positive"
+                  : "default"
+              }
+            />
+            <MetricTile
+              title="RUCs sin CRM"
+              span="quarter"
+              value={formatInteger(overview().dataQuality.unmatchedRucs)}
+              tone={
+                overview().dataQuality.unmatchedRucs > 0 ? "warning" : "default"
+              }
+              hint={`${formatInteger(metrics().totalRucs)} RUCs atribuidos`}
+            />
+
+            <LineTile
+              title="GPV realizado por mes"
+              span="full"
+              points={overview().monthly.map((point) => ({
+                label: point.month,
+                value: point.gpv,
+              }))}
+              target={metrics().totalProjected || null}
+            />
+
+            <BarTile
+              title="Rendimiento por vendedor"
+              span="half"
+              rows={overview()
+                .sellers.slice(0, 8)
+                .map((row) => ({
+                  key: row.sellerKey,
+                  label: row.sellerName,
+                  value: row.gpv,
+                  target: row.projectedGpv || null,
+                }))}
+            />
+
+            <StatRowsTile
+              title="Calidad de datos"
+              span="half"
+              rows={[
+                {
+                  label: "RUCs sin registrar en CRM",
+                  value: formatInteger(overview().dataQuality.unmatchedRucs),
+                  alert: overview().dataQuality.unmatchedRucs > 0,
+                },
+                {
+                  label: "Cuentas sin vendedor real",
+                  value: formatInteger(
+                    overview().dataQuality.accountsMissingSeller,
+                  ),
+                  alert: overview().dataQuality.accountsMissingSeller > 0,
+                },
+                {
+                  label: "Cuentas sin proyectado",
+                  value: formatInteger(
+                    overview().dataQuality.accountsMissingProjected,
+                  ),
+                  alert: overview().dataQuality.accountsMissingProjected > 0,
+                },
+                {
+                  label: "Series que no cuadran con entregas",
+                  value: formatInteger(overview().dataQuality.serialMismatches),
+                  alert: overview().dataQuality.serialMismatches > 0,
+                },
+              ]}
+            />
+
+            <WidgetGridItem span="full">
+              <WidgetCardShell title="Cohortes de ventas">
+                <CohortGrid filters={filters()} />
+              </WidgetCardShell>
+            </WidgetGridItem>
+
+            <WidgetGridItem span="full">
+              <WidgetCardShell
+                title="Atribución por RUC"
+                action={
+                  <label class={styles.toggle}>
+                    <input
+                      type="checkbox"
+                      checked={missingOnly()}
+                      onChange={(e) => setMissingOnly(e.currentTarget.checked)}
+                    />
+                    Solo faltantes
+                  </label>
+                }
+              >
+                <AccountsGrid
+                  filters={{ ...filters(), missingEnrichment: missingOnly() }}
+                  options={overview().options}
+                />
+              </WidgetCardShell>
+            </WidgetGridItem>
+          </WidgetGrid>
+        </ScrollWrapper>
+      </div>
     </AppPage>
   );
 }

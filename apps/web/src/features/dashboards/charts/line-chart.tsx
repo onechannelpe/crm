@@ -81,65 +81,65 @@ export function LineChart(props: LineChartProps) {
           <line
             x1={PAD.left}
             x2={width() - PAD.right}
-          y1={geometry().targetY!}
-          y2={geometry().targetY!}
-          stroke="var(--muted-foreground)"
-          stroke-width="1.5"
-          stroke-dasharray="4 4"
-          opacity="0.7"
+            y1={geometry().targetY!}
+            y2={geometry().targetY!}
+            stroke="var(--muted-foreground)"
+            stroke-width="1.5"
+            stroke-dasharray="4 4"
+            opacity="0.7"
+          />
+        </Show>
+
+        <path d={geometry().area} fill="var(--color-blue-5)" opacity="0.6" />
+        <path
+          d={geometry().line}
+          fill="none"
+          stroke="var(--color-blue-11)"
+          stroke-width="2"
+          stroke-linejoin="round"
+          stroke-linecap="round"
         />
-      </Show>
 
-      <path d={geometry().area} fill="var(--color-blue-5)" opacity="0.6" />
-      <path
-        d={geometry().line}
-        fill="none"
-        stroke="var(--color-blue-11)"
-        stroke-width="2"
-        stroke-linejoin="round"
-        stroke-linecap="round"
-      />
-
-      <For each={geometry().coords}>
-        {(coord, index) => (
-          <>
-            <circle
-              cx={coord.x}
-              cy={coord.y}
-              r={index() === geometry().maxIndex ? 4 : 3}
-              fill="var(--color-blue-11)"
-              stroke="var(--background)"
-              stroke-width="2"
-            />
-            <Show
-              when={
-                index() === geometry().maxIndex ||
-                index() === geometry().coords.length - 1
-              }
-            >
+        <For each={geometry().coords}>
+          {(coord, index) => (
+            <>
+              <circle
+                cx={coord.x}
+                cy={coord.y}
+                r={index() === geometry().maxIndex ? 4 : 3}
+                fill="var(--color-blue-11)"
+                stroke="var(--background)"
+                stroke-width="2"
+              />
+              <Show
+                when={
+                  index() === geometry().maxIndex ||
+                  index() === geometry().coords.length - 1
+                }
+              >
+                <text
+                  x={coord.x}
+                  y={coord.y - 8}
+                  text-anchor="middle"
+                  fill="var(--foreground)"
+                  font-size="11"
+                  font-weight="600"
+                >
+                  {formatSolesCompact(coord.value)}
+                </text>
+              </Show>
               <text
                 x={coord.x}
-                y={coord.y - 8}
+                y={height() - 10}
                 text-anchor="middle"
-                fill="var(--foreground)"
-                font-size="11"
-                font-weight="600"
+                fill="var(--muted-foreground)"
+                font-size="10"
               >
-                {formatSolesCompact(coord.value)}
+                {formatMonth(coord.label)}
               </text>
-            </Show>
-            <text
-              x={coord.x}
-              y={height() - 10}
-              text-anchor="middle"
-              fill="var(--muted-foreground)"
-              font-size="10"
-            >
-              {formatMonth(coord.label)}
-            </text>
-          </>
-        )}
-      </For>
+            </>
+          )}
+        </For>
       </svg>
     </div>
   );
