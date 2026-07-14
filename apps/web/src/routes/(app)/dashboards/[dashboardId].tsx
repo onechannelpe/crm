@@ -1,12 +1,23 @@
 import { type RouteDefinition, useParams } from "@solidjs/router";
 import { Show } from "solid-js";
 
-import { MerchantGpvDashboard } from "~/features/dashboards/merchant-gpv-dashboard";
+import { EmptyState } from "~/components/feedback/empty-state/empty";
+import { AppPage, AppPageSection } from "~/components/layout/page";
+import {
+  ATTAINMENT_OFFSET,
+  MerchantGpvDashboard,
+} from "~/features/dashboards/merchant-gpv-dashboard";
 import { findDashboard } from "~/features/dashboards/registry";
-import { merchantStatsOverviewQuery } from "~/lib/queries/dashboards";
+import {
+  merchantFilterOptionsQuery,
+  merchantPerformanceQuery,
+} from "~/lib/queries/dashboards";
 
 export const route = {
-  preload: () => merchantStatsOverviewQuery({}),
+  preload: () => {
+    void merchantPerformanceQuery(ATTAINMENT_OFFSET);
+    void merchantFilterOptionsQuery();
+  },
 } satisfies RouteDefinition;
 
 export default function DashboardShowRoute() {
@@ -22,6 +33,13 @@ export default function DashboardShowRoute() {
 
 function DashboardNotFound() {
   return (
-    <p class="px-1 py-6 text-sm text-muted-foreground">Este panel no existe.</p>
+    <AppPage>
+      <AppPageSection>
+        <EmptyState
+          title="Este panel no existe"
+          description="Revisa el enlace o vuelve a la lista de paneles."
+        />
+      </AppPageSection>
+    </AppPage>
   );
 }

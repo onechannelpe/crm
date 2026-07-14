@@ -17,6 +17,8 @@ import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { observabilitySnapshotQuery } from "~/lib/queries/audit";
 
+import styles from "./monitoring-page.module.css";
+
 type MonitoringStatus = "all" | "ok" | "error";
 type MonitoringRow = ObservabilitySnapshot["summary"][number] & { id: string };
 
@@ -133,7 +135,7 @@ export default function MonitoringPage() {
     <AppPage>
       <FilterBar>
         <WindowSelect value={windowMinutes()} onInput={setWindowMinutes} />
-        <div style={{ width: "10rem" }}>
+        <div class={styles.filter}>
           <Select
             label="Estado"
             value={status()}
@@ -152,18 +154,14 @@ export default function MonitoringPage() {
           Recargar
         </Button>
         <Show when={isRefreshing() && !isInitialLoading()}>
-          <span class="text-xs text-muted-foreground">Actualizando...</span>
+          <span class={styles.refreshing}>Actualizando...</span>
         </Show>
       </FilterBar>
 
       <DataGrid
         ariaLabel="Monitoreo"
         columns={MONITORING_COLUMNS}
-        emptyState={
-          <p class="px-3 py-4 text-sm text-muted-foreground">
-            No hay métricas disponibles para la ventana actual.
-          </p>
-        }
+        emptyState="No hay métricas disponibles para la ventana actual."
         onRowOpen={rowOpen}
         rowOpenIndicator="panel"
         source={{

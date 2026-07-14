@@ -1,59 +1,42 @@
-.metric {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.metricValue {
-  font-size: 1.375rem;
-  font-weight: 700;
-  color: var(--foreground);
-  font-variant-numeric: tabular-nums;
-}
-
-.positive {
-  color: var(--color-green-11);
-}
-
-.warning {
-  color: var(--color-orange-11);
-}
-
-.metricHint {
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-}
-
-.statRows {
-  display: flex;
-  flex-direction: column;
-}
-
-.statRow {
-  display: flex;
+/* Mirrors Twenty's GraphWidgetAggregateChart StyledContainer: value left,
+   trend right, filling the card. The --t-* tokens are the verbatim mirror of
+   Twenty's themeCssVariables, so these rules compute to the same values their
+   bundle does. */
+.aggregate {
   align-items: center;
+  display: flex;
+  height: 100%;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--border-light, var(--border));
+  width: 100%;
 }
 
-.statRow:last-child {
-  border-bottom: none;
-}
-
-.statLabel {
-  font-size: 0.8125rem;
-  color: var(--foreground-secondary, var(--foreground));
-}
-
-.statValue {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--muted-foreground);
+/* Twenty renders this through H1Title (semi-bold) with the aggregate chart
+   overriding the size to xxl. */
+.aggregateValue {
+  color: var(--foreground);
+  font-size: var(--t-font-size-xxl);
   font-variant-numeric: tabular-nums;
+  font-weight: var(--t-font-weight-semi-bold);
 }
 
-.statAlert {
-  color: var(--color-orange-11);
+.trend {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.trendValue {
+  color: var(--foreground-secondary);
+  font-size: var(--t-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--t-font-weight-regular);
+  margin-right: var(--t-spacing-2);
+}
+
+.trendIconUp {
+  color: var(--color-turquoise-11);
+}
+
+.trendIconDown {
+  color: var(--color-red-11);
 }

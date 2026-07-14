@@ -24,22 +24,28 @@ export function MerchantGpvWidget(props: { ruc: string }) {
           }
         >
           <div class={styles.widget}>
-            <Show when={data.monthly.length > 0}>
-              <Gauge
-                actual={data.monthly.at(-1)?.gpv ?? 0}
-                target={data.projectedGpv}
-                caption={formatMonth(data.monthly.at(-1)!.month)}
-              />
-              <div class={styles.chart}>
-                <LineChart
-                  points={data.monthly.map((point) => ({
-                    label: point.month,
-                    value: point.gpv,
-                  }))}
-                  target={data.projectedGpv}
-                  height={160}
-                />
-              </div>
+            {/* The target recurs monthly per RUC, so the gauge reads the latest
+                month against it rather than a running total. */}
+            <Show when={data.monthlyGpv.at(-1)} keyed>
+              {(latest) => (
+                <>
+                  <Gauge
+                    actual={latest.gpv}
+                    target={data.projectedGpv}
+                    caption={formatMonth(latest.month)}
+                  />
+                  <div class={styles.chart}>
+                    <LineChart
+                      points={data.monthlyGpv.map((point) => ({
+                        label: point.month,
+                        value: point.gpv,
+                      }))}
+                      target={data.projectedGpv}
+                      height={160}
+                    />
+                  </div>
+                </>
+              )}
             </Show>
 
             <div class={styles.devices}>
@@ -59,8 +65,8 @@ export function MerchantGpvWidget(props: { ruc: string }) {
                       </Show>
                     </span>
                     <span class={styles.deviceGpv}>
-                      {device.last15dGpv != null
-                        ? formatSolesCompact(device.last15dGpv)
+                      {device.m0Plus15dGpv != null
+                        ? formatSolesCompact(device.m0Plus15dGpv)
                         : "—"}
                     </span>
                   </div>

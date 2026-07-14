@@ -1,5 +1,5 @@
 /* oxlint-disable jsx-a11y/no-noninteractive-element-to-interactive-role */
-import { Show } from "solid-js";
+import { Show, type JSX } from "solid-js";
 
 import { useDataGrid } from "../context/instance-context";
 import {
@@ -23,6 +23,17 @@ type DataGridSurfaceProps<T extends { id: string }> = Omit<
   stickyColumnIndex: number;
 };
 
+// Solid's JSX.Element already admits strings, so a caller can pass either a
+// sentence or a component. A sentence is the common case and the grid styles it
+// here; anything richer (RecordIndexEmpty) paints itself and passes through.
+function SurfaceMessage(props: { content: JSX.Element }) {
+  return (
+    <Show when={typeof props.content === "string"} fallback={props.content}>
+      <p class={styles.surfaceMessage}>{props.content}</p>
+    </Show>
+  );
+}
+
 export function DataGridSurface<T extends { id: string }>(
   props: DataGridSurfaceProps<T>,
 ) {
@@ -30,7 +41,7 @@ export function DataGridSurface<T extends { id: string }>(
   const rows = () => props.source.rows;
   const isLoading = () => props.source.status === "pending";
   const isError = () => props.source.status === "error";
-  const errorState = () => props.errorState ?? <>No se pudo cargar la tabla.</>;
+  const errorState = () => props.errorState ?? "No se pudo cargar la tabla.";
   const paginationStart = () =>
     (props.pagination?.currentPage ?? 0) * (props.pagination?.pageSize ?? 0) +
     1;
@@ -92,7 +103,9 @@ export function DataGridSurface<T extends { id: string }>(
                 when={!isError()}
                 fallback={
                   <div class={styles.emptyStateSurface} role="row">
-                    <div role="gridcell">{errorState()}</div>
+                    <div role="gridcell">
+                      <SurfaceMessage content={errorState()} />
+                    </div>
                   </div>
                 }
               >
@@ -100,7 +113,9 @@ export function DataGridSurface<T extends { id: string }>(
                   when={rows().length > 0}
                   fallback={
                     <div class={styles.emptyStateSurface} role="row">
-                      <div role="gridcell">{props.emptyState}</div>
+                      <div role="gridcell">
+                        <SurfaceMessage content={props.emptyState} />
+                      </div>
                     </div>
                   }
                 >

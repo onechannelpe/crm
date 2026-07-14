@@ -65,6 +65,15 @@
   min-height: 360px;
 }
 
+/* Applied by the grid to a plain-string empty/error state, so call sites pass a
+   sentence and never restyle it. .emptyStateSurface already centers within 360px,
+   hence no padding here. */
+.surfaceMessage {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
 .headerRow,
 .bodyRow,
 .actionRow {

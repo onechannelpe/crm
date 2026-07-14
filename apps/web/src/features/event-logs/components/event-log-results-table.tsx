@@ -35,9 +35,7 @@ export function EventLogResultsTable(props: ResultsProps) {
       <DataGrid
         ariaLabel="Resultados del registro de eventos"
         columns={columns()}
-        emptyState={
-          <p class={styles.empty}>No hay eventos para los filtros actuales.</p>
-        }
+        emptyState="No hay eventos para los filtros actuales."
         loadMore={{
           hasMore: props.hasNextPage,
           loading: props.loading,

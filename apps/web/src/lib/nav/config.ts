@@ -56,6 +56,7 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
   { match: "/records", header: { label: "Registros", icon: "leads" } },
+  { match: "/search", header: { label: "Búsqueda", icon: "search" } },
   {
     match: "/rate-simulator",
     header: { label: "Simulador de tasas", icon: "rate-simulator" },

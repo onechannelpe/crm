@@ -117,7 +117,7 @@ export default function SecurityPoliciesPage() {
   return (
     <SettingsSection title="Políticas de riesgo de auditoría">
       <FilterBar>
-        <div style={{ width: "13rem" }}>
+        <div class={styles.filterAction}>
           <Input
             label="Acción"
             value={policyAction()}
@@ -125,7 +125,7 @@ export default function SecurityPoliciesPage() {
             placeholder="leads_requested"
           />
         </div>
-        <div style={{ width: "9rem" }}>
+        <div class={styles.filterRiskLevel}>
           <Select
             label="Nivel de riesgo"
             value={policyRiskLevel()}
@@ -155,11 +155,7 @@ export default function SecurityPoliciesPage() {
       <DataGrid
         ariaLabel="Políticas de seguridad"
         columns={SECURITY_POLICY_COLUMNS}
-        emptyState={
-          <p class="px-3 py-4 text-sm text-muted-foreground">
-            No hay políticas registradas.
-          </p>
-        }
+        emptyState="No hay políticas registradas."
         source={{
           status: isLoading() ? "pending" : "ready",
           rows: rows(),

@@ -1,7 +1,7 @@
 "use server";
 
 import type { OrgMerchantStats } from "~/server/merchant-stats/read/contracts";
-import { getMerchantStatsByRuc } from "~/server/merchant-stats/read/queries";
+import { getMerchantStatsByRuc } from "~/server/merchant-stats/read/record-stats";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { fail } from "~/server/shared/domain-error";

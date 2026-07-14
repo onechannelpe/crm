@@ -8,8 +8,9 @@ import {
 import { FileDropzone } from "~/components/ui/input/file-dropzone";
 import {
   accountRowsQuery,
-  merchantStatsOverviewQuery,
   cohortRowsQuery,
+  merchantFilterOptionsQuery,
+  merchantPerformanceQuery,
 } from "~/lib/queries/dashboards";
 
 import { formatInteger } from "../format";
@@ -32,9 +33,12 @@ export function UploadReport(props: { onClose?: () => void }) {
     cancelled = true;
   });
 
+  // An import can introduce new months, products, sellers and zones, so the
+  // filter options are revalidated alongside the data they describe.
   async function refreshDashboards(): Promise<void> {
     await Promise.all([
-      revalidate(merchantStatsOverviewQuery.key),
+      revalidate(merchantPerformanceQuery.key),
+      revalidate(merchantFilterOptionsQuery.key),
       revalidate(cohortRowsQuery.key),
       revalidate(accountRowsQuery.key),
     ]);

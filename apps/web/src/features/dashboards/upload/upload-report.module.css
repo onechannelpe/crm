@@ -27,29 +27,29 @@
 }
 
 .dropTitle {
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   font-weight: 600;
   color: var(--foreground);
 }
 
 .dropHint {
-  font-size: 0.75rem;
+  font-size: var(--font-size-sm);
   color: var(--muted-foreground);
 }
 
 .status {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }
 
 .statusDone {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-body);
   font-weight: 600;
   color: var(--color-green-11);
 }
 
 .statusError {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-body);
   font-weight: 600;
   color: var(--destructive);
 }
@@ -70,7 +70,7 @@
 
 .close {
   align-self: flex-end;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-body);
   color: var(--muted-foreground);
   background: none;
   border: none;

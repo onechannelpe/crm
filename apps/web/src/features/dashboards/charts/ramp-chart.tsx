@@ -1,0 +1,267 @@
+import { createElementSize } from "@solid-primitives/resize-observer";
+import { createMemo, createSignal, For, Show } from "solid-js";
+
+import { formatMonth, formatSolesCompact } from "../format";
+
+import styles from "./ramp-chart.module.css";
+
+export interface RampSeries {
+  key: string;
+  label: string;
+  points: Array<{ offset: number; value: number }>;
+}
+
+interface RampChartProps {
+  series: RampSeries[];
+  target?: number | null;
+  height?: number;
+}
+
+const PAD = { top: 20, right: 16, bottom: 30, left: 16 };
+const FALLBACK_WIDTH = 640;
+const TOOLTIP_WIDTH = 128;
+const TOOLTIP_GAP = 12;
+
+// Twenty's categorical ramp, in series order. The dashboard palette is
+// deliberately small: a cohort chart with more than a handful of lines is
+// unreadable regardless of colour, so callers cap the series count instead of
+// this cycling into indistinguishable hues.
+const SERIES_COLORS = [
+  "var(--color-blue-11)",
+  "var(--color-turquoise-11)",
+  "var(--color-purple-11)",
+  "var(--color-orange-11)",
+  "var(--color-pink-11)",
+];
+
+// Multi-series ramp: x is the cohort's own month offset, not a calendar month,
+// so every cohort starts at the same origin and their shapes can be compared.
+// That is the whole point -- "does June ramp like May did?" is unanswerable on
+// a calendar axis, and a calendar axis is not available to us anyway (each sale
+// reports only m0..m3, so calendar totals drop older cohorts silently).
+//
+// A series stops where its data does. A young cohort is a short line rather
+// than one that plunges to zero, because a month that has not happened is not
+// a month with no GPV.
+export function RampChart(props: RampChartProps) {
+  const height = () => props.height ?? 240;
+
+  const [container, setContainer] = createSignal<HTMLDivElement>();
+  const [activeOffset, setActiveOffset] = createSignal<number | null>(null);
+  const size = createElementSize(container);
+  const width = () => size.width ?? FALLBACK_WIDTH;
+
+  const maxOffset = createMemo(() =>
+    Math.max(
+      1,
+      ...props.series.flatMap((s) => s.points.map((point) => point.offset)),
+    ),
+  );
+
+  const stepX = () => (width() - PAD.left - PAD.right) / maxOffset();
+  const xOf = (offset: number) => PAD.left + stepX() * offset;
+
+  const geometry = createMemo(() => {
+    const h = height();
+    const innerH = h - PAD.top - PAD.bottom;
+    const max = Math.max(
+      props.target ?? 0,
+      ...props.series.flatMap((s) => s.points.map((p) => p.value)),
+      1,
+    );
+
+    const lines = props.series.map((series, index) => {
+      const coords = series.points
+        .slice()
+        .sort((a, b) => a.offset - b.offset)
+        .map((point) => ({
+          ...point,
+          x: xOf(point.offset),
+          y: PAD.top + innerH - (point.value / max) * innerH,
+        }));
+
+      return {
+        key: series.key,
+        label: series.label,
+        color: SERIES_COLORS[index % SERIES_COLORS.length],
+        coords,
+        path: coords
+          .map(
+            (c, i) =>
+              `${i === 0 ? "M" : "L"}${c.x.toFixed(1)},${c.y.toFixed(1)}`,
+          )
+          .join(" "),
+      };
+    });
+
+    const targetY =
+      props.target != null && props.target > 0
+        ? PAD.top + innerH - (props.target / max) * innerH
+        : null;
+
+    return { lines, innerH, targetY };
+  });
+
+  const tooltip = createMemo(() => {
+    const offset = activeOffset();
+    if (offset === null) return null;
+
+    const items = geometry()
+      .lines.map((line) => ({
+        key: line.key,
+        label: formatMonth(line.label),
+        color: line.color,
+        value: line.coords.find((c) => c.offset === offset)?.value,
+      }))
+      .filter(
+        (item): item is typeof item & { value: number } =>
+          item.value !== undefined && item.value !== 0,
+      );
+
+    if (items.length === 0) return null;
+    return { offset, items };
+  });
+
+  // Clamped so the card never hangs off either edge of the widget.
+  const tooltipLeft = () => {
+    const raw = xOf(tooltip()?.offset ?? 0) + TOOLTIP_GAP;
+    return Math.min(raw, Math.max(0, width() - TOOLTIP_WIDTH));
+  };
+
+  const offsetFromPointer = (event: PointerEvent, svg: SVGSVGElement) => {
+    const rect = svg.getBoundingClientRect();
+    const ratio = (event.clientX - rect.left) / rect.width;
+    const x = ratio * width();
+    const nearest = Math.round((x - PAD.left) / stepX());
+    return Math.min(maxOffset(), Math.max(0, nearest));
+  };
+
+  return (
+    <div class={styles.wrap}>
+      <div ref={setContainer} class={styles.canvas}>
+        <svg
+          viewBox={`0 0 ${width()} ${height()}`}
+          width={width()}
+          height={height()}
+          class={styles.svg}
+          role="img"
+          aria-label="GPV por cohorte y mes del ciclo"
+          onPointerMove={(event) =>
+            setActiveOffset(offsetFromPointer(event, event.currentTarget))
+          }
+          onPointerLeave={() => setActiveOffset(null)}
+        >
+          <Show when={geometry().targetY != null}>
+            <line
+              x1={PAD.left}
+              x2={width() - PAD.right}
+              y1={geometry().targetY!}
+              y2={geometry().targetY!}
+              stroke="var(--foreground-tertiary)"
+              stroke-width="1"
+              stroke-dasharray="4 4"
+            />
+          </Show>
+
+          {/* Guide at the read position, behind the lines. */}
+          <Show when={tooltip()}>
+            {(active) => (
+              <line
+                x1={xOf(active().offset)}
+                x2={xOf(active().offset)}
+                y1={PAD.top}
+                y2={PAD.top + geometry().innerH}
+                stroke="var(--border)"
+                stroke-width="1"
+              />
+            )}
+          </Show>
+
+          <For each={geometry().lines}>
+            {(line) => (
+              <>
+                <path
+                  d={line.path}
+                  fill="none"
+                  stroke={line.color}
+                  stroke-width="2"
+                  stroke-linejoin="round"
+                  stroke-linecap="round"
+                />
+                <For each={line.coords}>
+                  {(coord) => (
+                    <circle
+                      cx={coord.x}
+                      cy={coord.y}
+                      r={activeOffset() === coord.offset ? 4 : 3}
+                      fill={line.color}
+                      stroke="var(--background)"
+                      stroke-width="2"
+                    />
+                  )}
+                </For>
+              </>
+            )}
+          </For>
+
+          <For each={Array.from({ length: maxOffset() + 1 }, (_, i) => i)}>
+            {(offset) => (
+              <text
+                x={xOf(offset)}
+                y={height() - 10}
+                text-anchor="middle"
+                fill="var(--foreground-tertiary)"
+                font-size="10"
+              >
+                M{offset}
+              </text>
+            )}
+          </For>
+        </svg>
+
+        <Show when={tooltip()}>
+          {(active) => (
+            <div class={styles.tooltip} style={{ left: `${tooltipLeft()}px` }}>
+              <span class={styles.tooltipHeader}>M{active().offset}</span>
+              <For each={active().items}>
+                {(item) => (
+                  <div class={styles.tooltipRow}>
+                    <span
+                      class={styles.legendSwatch}
+                      style={{ "background-color": item.color }}
+                      aria-hidden="true"
+                    />
+                    <span class={styles.tooltipLabel}>{item.label}</span>
+                    <span class={styles.tooltipValue}>
+                      {formatSolesCompact(item.value)}
+                    </span>
+                  </div>
+                )}
+              </For>
+            </div>
+          )}
+        </Show>
+      </div>
+
+      <div class={styles.legend}>
+        <For each={geometry().lines}>
+          {(line) => (
+            <span class={styles.legendItem}>
+              <span
+                class={styles.legendSwatch}
+                style={{ "background-color": line.color }}
+                aria-hidden="true"
+              />
+              {formatMonth(line.label)}
+              <span class={styles.legendValue}>
+                {formatSolesCompact(
+                  line.coords.reduce((sum, c) => sum + c.value, 0),
+                )}
+              </span>
+            </span>
+          )}
+        </For>
+      </div>
+    </div>
+  );
+}

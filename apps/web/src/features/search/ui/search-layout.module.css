@@ -78,6 +78,13 @@
   table-layout: fixed;
 }
 
+.emptyResults {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+  margin: 0;
+  padding: var(--spacing-4) var(--spacing-3);
+}
+
 .headerCell {
   background: var(--background);
   border-bottom: 1px solid var(--border);

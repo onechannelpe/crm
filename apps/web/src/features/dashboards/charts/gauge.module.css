@@ -19,7 +19,7 @@
 }
 
 .target {
-  font-size: 0.8125rem;
+  font-size: var(--font-size-body);
   color: var(--muted-foreground);
 }
 
@@ -47,7 +47,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--font-size-sm);
   color: var(--muted-foreground);
 }
 

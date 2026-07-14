@@ -60,10 +60,10 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("trade_name", "text")
     .addColumn("legal_name", "text")
     // cod_vendedor / vendedor: the seller the sale was registered under at
-    // Culqi (the "usuario"). Kept as reference; NOT the real seller, which the
-    // business team tracks per RUC in merchant_accounts.
-    .addColumn("registered_seller_code", "text")
-    .addColumn("registered_seller_name", "text")
+    // Culqi, which the business team calls the "usuario". Kept as reference;
+    // NOT the real seller, which they track per RUC in merchant_accounts.
+    .addColumn("culqi_user_code", "text")
+    .addColumn("culqi_user_name", "text")
     .addColumn("mesa", "text")
     .addColumn("channel", "text")
     .addColumn("subchannel", "text")
@@ -74,11 +74,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("trial_at", "date")
     .addColumn("activated_at", "date")
     .addColumn("last_transaction_at", "date")
-    // gpv_m0_15d is "sale month + first 15 days of the next month", not a
-    // calendar month, so it stays a latest-snapshot pulse on the sale rather
-    // than a metric row.
-    .addColumn("last_15d_gpv", "numeric")
-    .addColumn("last_15d_trx", "integer")
+    // gpv_m0_15d is "sale month + first 15 days of the next month", so it is
+    // cumulative and overlaps m0 rather than being a month of its own. It stays
+    // a latest-snapshot pulse on the sale instead of a metric row, which would
+    // put it on the m0..m3 axis and double-count the sale month.
+    .addColumn("m0_plus_15d_gpv", "numeric")
+    .addColumn("m0_plus_15d_trx", "integer")
     .addColumn("first_seen_report_id", "uuid", (col) =>
       col.notNull().references("merchant_sales_reports.id"),
     )

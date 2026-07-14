@@ -1,5 +1,7 @@
-import { For, Show } from "solid-js";
+import { Show } from "solid-js";
 
+import TrendingDown from "~/components/icons/trending-down";
+import TrendingUp from "~/components/icons/trending-up";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import {
   WidgetGridItem,
@@ -7,40 +9,48 @@ import {
 } from "~/features/widgets/widget-layout";
 
 import { BarList, type BarRow } from "./charts/bar-list";
-import { LineChart, type LinePoint } from "./charts/line-chart";
+import { RampChart, type RampSeries } from "./charts/ramp-chart";
 
 import styles from "./tiles.module.css";
 
-export type MetricTone = "default" | "positive" | "warning";
-
-export interface StatRow {
-  label: string;
-  value: string;
-  alert: boolean;
-}
-
-export function MetricTile(props: {
+// Port of Twenty's GraphWidgetAggregateChart: the value carries the weight and
+// the period-over-period trend rides beside it. The value is never tinted --
+// movement is the signal, not colour. Omit trendPercentage when there is no
+// prior period to compare against; the tile then renders value-only, which is
+// how Twenty handles a missing trend too.
+export function AggregateTile(props: {
   title: string;
   span: WidgetSpan;
   value: string;
-  tone: MetricTone;
-  hint?: string;
+  caption?: string;
+  trendPercentage?: number;
 }) {
+  const trend = () => props.trendPercentage;
+
   return (
     <WidgetGridItem span={props.span}>
       <WidgetCardShell title={props.title}>
-        <div class={styles.metric}>
-          <span
-            class={styles.metricValue}
-            classList={{
-              [styles.positive]: props.tone === "positive",
-              [styles.warning]: props.tone === "warning",
-            }}
-          >
-            {props.value}
-          </span>
-          <Show when={props.hint}>
-            <span class={styles.metricHint}>{props.hint}</span>
+        <div class={styles.aggregate}>
+          <div class={styles.aggregateBody}>
+            <span class={styles.aggregateValue}>{props.value}</span>
+            <Show when={props.caption}>
+              {(caption) => <span class={styles.caption}>{caption()}</span>}
+            </Show>
+          </div>
+          <Show when={trend() !== undefined}>
+            <div class={styles.trend}>
+              <span class={styles.trendValue}>
+                {formatTrend(trend() ?? 0)}%
+              </span>
+              <Show
+                when={(trend() ?? 0) >= 0}
+                fallback={
+                  <TrendingDown size={16} class={styles.trendIconDown} />
+                }
+              >
+                <TrendingUp size={16} class={styles.trendIconUp} />
+              </Show>
+            </div>
           </Show>
         </div>
       </WidgetCardShell>
@@ -48,19 +58,24 @@ export function MetricTile(props: {
   );
 }
 
-export function LineTile(props: {
+// Twenty's formatNumberChartTrend: an explicit + on gains, bare - on losses.
+function formatTrend(trendPercentage: number): string {
+  return trendPercentage >= 0 ? `+${trendPercentage}` : `${trendPercentage}`;
+}
+
+export function RampTile(props: {
   title: string;
   span: WidgetSpan;
-  points: LinePoint[];
-  target: number | null;
+  series: RampSeries[];
+  target?: number | null;
 }) {
   return (
     <WidgetGridItem span={props.span}>
       <WidgetCardShell
         title={props.title}
-        status={props.points.length ? "ready" : "empty"}
+        status={props.series.length ? "ready" : "empty"}
       >
-        <LineChart points={props.points} target={props.target} />
+        <RampChart series={props.series} target={props.target} />
       </WidgetCardShell>
     </WidgetGridItem>
   );
@@ -78,34 +93,6 @@ export function BarTile(props: {
         status={props.rows.length ? "ready" : "empty"}
       >
         <BarList rows={props.rows} />
-      </WidgetCardShell>
-    </WidgetGridItem>
-  );
-}
-
-export function StatRowsTile(props: {
-  title: string;
-  span: WidgetSpan;
-  rows: StatRow[];
-}) {
-  return (
-    <WidgetGridItem span={props.span}>
-      <WidgetCardShell title={props.title}>
-        <div class={styles.statRows}>
-          <For each={props.rows}>
-            {(row) => (
-              <div class={styles.statRow}>
-                <span class={styles.statLabel}>{row.label}</span>
-                <span
-                  class={styles.statValue}
-                  classList={{ [styles.statAlert]: row.alert }}
-                >
-                  {row.value}
-                </span>
-              </div>
-            )}
-          </For>
-        </div>
       </WidgetCardShell>
     </WidgetGridItem>
   );

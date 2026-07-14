@@ -7,6 +7,7 @@ import {
   createSignal,
   onCleanup,
   onMount,
+  type JSX,
 } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -32,6 +33,9 @@ type TabStripProps<TId extends string> = {
   tabs: ReadonlyArray<TabItem<TId>>;
   activeTab: TId;
   onTabSelect: (id: TId) => void;
+  // Right-aligned slot, mirroring Twenty's TabList rightComponent. Page-level
+  // actions belong here rather than in a filter bar, where they read as filters.
+  rightComponent?: JSX.Element;
 };
 
 export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
@@ -181,6 +185,10 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
             </div>
           </Show>
         </div>
+      </Show>
+
+      <Show when={props.rightComponent}>
+        {(right) => <div class={styles.rightSlot}>{right()}</div>}
       </Show>
     </div>
   );

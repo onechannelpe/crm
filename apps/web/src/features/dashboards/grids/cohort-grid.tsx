@@ -10,21 +10,29 @@ import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { cohortRowsQuery } from "~/lib/queries/dashboards";
 import type {
-  MerchantStatsFilters,
-  CohortGridRow,
+  CohortSaleRow,
+  MerchantStatsFilterOptions,
+  RecordFilters,
 } from "~/server/merchant-stats/read/contracts";
 
 import { formatInteger, formatMonth, formatSolesCompact } from "../format";
+import { RecordFilterBar } from "./record-filter-bar";
+
+import styles from "./grid-surface.module.css";
 
 const PAGE = 60;
 
-type Row = CohortGridRow & { id: string };
+// gpv_m0..gpv_m3 is the whole reported window; the sale carries nothing past it.
+const OFFSETS = [0, 1, 2, 3] as const;
+
+type Row = CohortSaleRow & { id: string };
 
 function gpvAt(row: Row, offset: number): number {
-  return row.months.find((m) => m.offset === offset)?.gpv ?? 0;
+  return row.months.find((month) => month.offset === offset)?.gpv ?? 0;
 }
+
 function trxAt(row: Row, offset: number): number {
-  return row.months.find((m) => m.offset === offset)?.trx ?? 0;
+  return row.months.find((month) => month.offset === offset)?.trx ?? 0;
 }
 
 const COLUMNS = [
@@ -49,7 +57,7 @@ const COLUMNS = [
     label: "Vendedor",
     icon: User,
     width: 170,
-    renderCell: (row) => row.sellerName ?? "Sin asignar",
+    renderCell: (row) => row.realSellerName ?? "Sin asignar",
   },
   {
     key: "saleMonth",
@@ -65,13 +73,16 @@ const COLUMNS = [
     width: 110,
     renderCell: (row) => formatSolesCompact(gpvAt(row, 0)),
   },
+  // Cumulative through the first 15 days of M1, so it overlaps M0 and is not
+  // comparable to the per-month columns beside it. It sits next to M0 because
+  // that is the pair a reader compares: how much of the ramp landed early.
   {
-    key: "m0_15",
-    label: "M0+15",
+    key: "m0_plus_15d",
+    label: "M0+15D",
     icon: ChartColumn,
     width: 110,
     renderCell: (row) =>
-      row.last15dGpv != null ? formatSolesCompact(row.last15dGpv) : "—",
+      row.m0Plus15d ? formatSolesCompact(row.m0Plus15d.gpv) : "—",
   },
   {
     key: "m1",
@@ -104,11 +115,12 @@ const COLUMNS = [
   },
 ] satisfies ReadonlyArray<DataGridColumn<Row>>;
 
-export function CohortGrid(props: { filters: MerchantStatsFilters }) {
+export function CohortGrid(props: { options: MerchantStatsFilterOptions }) {
+  const [filters, setFilters] = createSignal<RecordFilters>({});
   const [limit, setLimit] = createSignal(PAGE);
 
   const [page] = createResource(
-    () => ({ filters: props.filters, limit: limit() }),
+    () => ({ filters: filters(), limit: limit() }),
     (input) =>
       cohortRowsQuery({
         filters: input.filters,
@@ -126,39 +138,60 @@ export function CohortGrid(props: { filters: MerchantStatsFilters }) {
       subtitle: `${row.product} · ${row.ruc}`,
       items: [
         { label: "Serie", value: row.serialNumber ?? "—" },
-        { label: "Vendedor", value: row.sellerName ?? "Sin asignar" },
+        { label: "Vendedor", value: row.realSellerName ?? "Sin asignar" },
         { label: "Zonal", value: row.branchName ?? "—" },
         { label: "Mes de venta", value: formatMonth(row.saleMonth) },
-        ...[0, 1, 2, 3].map((offset) => ({
+        {
+          label: "Proyectado mensual",
+          value:
+            row.projectedGpv != null
+              ? formatSolesCompact(row.projectedGpv)
+              : "—",
+        },
+        ...OFFSETS.map((offset) => ({
           label: `M${offset} (GPV / TRX)`,
           value: `${formatSolesCompact(gpvAt(row, offset))} · ${formatInteger(
             trxAt(row, offset),
           )}`,
         })),
+        {
+          label: "M0+15D (GPV / TRX)",
+          value: row.m0Plus15d
+            ? `${formatSolesCompact(row.m0Plus15d.gpv)} · ${formatInteger(
+                row.m0Plus15d.trx,
+              )}`
+            : "—",
+        },
       ],
     }),
   );
 
   return (
-    <DataGrid
-      ariaLabel="Cohortes de ventas"
-      columns={COLUMNS}
-      emptyState={
-        <p class="px-3 py-4 text-sm text-muted-foreground">
-          No hay ventas para los filtros actuales.
-        </p>
-      }
-      onRowOpen={rowOpen}
-      rowOpenIndicator="panel"
-      loadMore={{
-        hasMore: rows().length >= limit(),
-        loading: page.state === "pending" || page.state === "refreshing",
-        onLoadMore: () => void setLimit((value) => value + PAGE),
-      }}
-      source={{
-        status: page.state === "errored" ? "error" : "ready",
-        rows: rows(),
-      }}
-    />
+    <div class={styles.surface}>
+      <RecordFilterBar
+        options={props.options}
+        filters={filters()}
+        onChange={(patch) => {
+          setFilters((current) => ({ ...current, ...patch }));
+          setLimit(PAGE);
+        }}
+      />
+      <DataGrid
+        ariaLabel="Cohortes de ventas"
+        columns={COLUMNS}
+        emptyState="No hay ventas para los filtros actuales."
+        onRowOpen={rowOpen}
+        rowOpenIndicator="panel"
+        loadMore={{
+          hasMore: rows().length >= limit(),
+          loading: page.state === "pending" || page.state === "refreshing",
+          onLoadMore: () => void setLimit((value) => value + PAGE),
+        }}
+        source={{
+          status: page.state === "errored" ? "error" : "ready",
+          rows: rows(),
+        }}
+      />
+    </div>
   );
 }

@@ -1,0 +1,4 @@
+.rowActions {
+  display: flex;
+  gap: var(--spacing-2);
+}

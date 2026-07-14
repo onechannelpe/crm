@@ -1,263 +1,265 @@
 import { createAsync, revalidate } from "@solidjs/router";
-import { createMemo, createSignal, For, Show } from "solid-js";
+import { createMemo, createSignal, Match, Show, Switch } from "solid-js";
 
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
-import { Select } from "~/components/ui/input/select";
-import { FilterBar } from "~/components/ui/layout/filter-bar";
 import { ScrollWrapper } from "~/components/ui/utilities/scroll-wrapper";
+import {
+  TabStrip,
+  type TabItem,
+} from "~/features/side-panel/components/tab-strip";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetGrid, WidgetGridItem } from "~/features/widgets/widget-layout";
-import { merchantStatsOverviewQuery } from "~/lib/queries/dashboards";
-import type { MerchantStatsFilters } from "~/server/merchant-stats/read/contracts";
+import {
+  merchantFilterOptionsQuery,
+  merchantPerformanceQuery,
+} from "~/lib/queries/dashboards";
+import type { CohortRampSeries } from "~/server/merchant-stats/read/contracts";
 
+import { DataQualityTable } from "./data-quality-table";
 import {
   formatInteger,
   formatMonth,
-  formatPercent,
+  formatRatio,
   formatSolesCompact,
+  trendPercentage,
 } from "./format";
 import { AccountsGrid } from "./grids/accounts-grid";
 import { CohortGrid } from "./grids/cohort-grid";
-import { BarTile, LineTile, MetricTile, StatRowsTile } from "./tiles";
+import { AggregateTile, BarTile, RampTile } from "./tiles";
 import { UploadReport } from "./upload/upload-report";
 
 import styles from "./merchant-gpv-dashboard.module.css";
 
-const EMPTY_OVERVIEW = {
-  monthly: [],
+const EMPTY_PERFORMANCE = {
+  ramp: [],
   sellers: [],
+  branches: [],
+  lifecycle: {
+    salesTotal: 0,
+    activatedCount: 0,
+    medianDaysToActivate: null,
+    dormantCount: 0,
+    dormantThresholdDays: 30,
+  },
   dataQuality: {
     unmatchedRucs: 0,
     accountsMissingSeller: 0,
     accountsMissingProjected: 0,
+    accountsMissingBranch: 0,
     serialMismatches: 0,
   },
-  options: { months: [], branches: [], sellers: [], products: [] },
 };
 
+type GpvTabId = "rendimiento" | "cohortes" | "atribucion";
+
+const GPV_TABS: ReadonlyArray<TabItem<GpvTabId>> = [
+  { id: "rendimiento", label: "Rendimiento" },
+  { id: "cohortes", label: "Cohortes" },
+  { id: "atribucion", label: "Atribución" },
+];
+
+// Attainment is read at m0: the sale month is the only step every cohort has
+// reached, so it is the one comparison that is never half-empty. Exported so a
+// route preload warms the same cache entry the component reads.
+export const ATTAINMENT_OFFSET = 0;
+
+// More lines than this and the cohort curve stops being readable, whatever the
+// palette does. Newest cohorts are the ones anyone is asking about.
+const MAX_RAMP_SERIES = 5;
+
 export function MerchantGpvDashboard() {
-  const [month, setMonth] = createSignal("");
-  const [branchId, setBranchId] = createSignal("");
-  const [sellerUserId, setSellerUserId] = createSignal("");
-  const [product, setProduct] = createSignal("");
+  const [tab, setTab] = createSignal<GpvTabId>("rendimiento");
   const [showUpload, setShowUpload] = createSignal(false);
-  const [missingOnly, setMissingOnly] = createSignal(false);
 
-  const filters = createMemo<MerchantStatsFilters>(() => ({
-    month: month() || undefined,
-    branchId: branchId() || undefined,
-    sellerUserId: sellerUserId() || undefined,
-    product: product() || undefined,
-  }));
-
-  const overview = createAsync(() => merchantStatsOverviewQuery(filters()), {
-    initialValue: EMPTY_OVERVIEW,
+  const performance = createAsync(
+    () => merchantPerformanceQuery(ATTAINMENT_OFFSET),
+    { initialValue: EMPTY_PERFORMANCE },
+  );
+  const options = createAsync(() => merchantFilterOptionsQuery(), {
+    initialValue: { branches: [], sellers: [], saleMonths: [], products: [] },
   });
 
-  const metrics = createMemo(() => {
-    const data = overview();
-    const currentMonthGpv = data.monthly.at(-1)?.gpv ?? 0;
-    const totalProjected = data.sellers.reduce(
-      (sum, row) => sum + row.projectedGpv,
-      0,
-    );
-    const totalRucs = data.sellers.reduce((sum, row) => sum + row.rucCount, 0);
-    const attainment =
-      totalProjected > 0 ? currentMonthGpv / totalProjected : null;
-    return { currentMonthGpv, totalProjected, totalRucs, attainment };
+  // Newest cohorts last so the ramp reads left-to-right oldest-to-newest inside
+  // the window, matching how the legend is scanned.
+  const rampSeries = createMemo(() =>
+    performance()
+      .ramp.slice(-MAX_RAMP_SERIES)
+      .map((series) => ({
+        key: series.saleMonth,
+        label: series.saleMonth,
+        points: series.points.map((point) => ({
+          offset: point.offset,
+          value: point.gpv,
+        })),
+      })),
+  );
+
+  const latestCohort = createMemo(() => performance().ramp.at(-1));
+  const priorCohort = createMemo(() => performance().ramp.at(-2));
+
+  const gpvAt = (series: CohortRampSeries | undefined, offset: number) =>
+    series?.points.find((point) => point.offset === offset)?.gpv;
+
+  const latestGpv = createMemo(() => gpvAt(latestCohort(), ATTAINMENT_OFFSET));
+  const priorGpv = createMemo(() => gpvAt(priorCohort(), ATTAINMENT_OFFSET));
+
+  // Attainment is a ratio of the same two quantities in both cohorts, so its
+  // period-over-period movement is a like-for-like comparison.
+  const attainment = (series: CohortRampSeries | undefined) => {
+    const gpv = gpvAt(series, ATTAINMENT_OFFSET);
+    if (gpv === undefined || !series?.projectedGpv) return undefined;
+    return gpv / series.projectedGpv;
+  };
+
+  // "Jun 26", or an em dash before the first import lands.
+  const cohortLabel = createMemo(() => {
+    const cohort = latestCohort();
+    return cohort ? formatMonth(cohort.saleMonth) : "—";
+  });
+
+  const activationRate = createMemo(() => {
+    const { activatedCount, salesTotal } = performance().lifecycle;
+    return formatRatio(activatedCount, salesTotal);
   });
 
   return (
     <AppPage>
-      <FilterBar>
-        <div class={styles.filter}>
-          <Select
-            label="Mes"
-            value={month()}
-            onInput={(e) => setMonth(e.currentTarget.value)}
-          >
-            <option value="">Todos</option>
-            <For each={overview().options.months}>
-              {(m) => <option value={m}>{formatMonth(m)}</option>}
-            </For>
-          </Select>
-        </div>
-        <div class={styles.filter}>
-          <Select
-            label="Zonal"
-            value={branchId()}
-            onInput={(e) => setBranchId(e.currentTarget.value)}
-          >
-            <option value="">Todas</option>
-            <For each={overview().options.branches}>
-              {(b) => <option value={b.id}>{b.name}</option>}
-            </For>
-          </Select>
-        </div>
-        <div class={styles.filter}>
-          <Select
-            label="Vendedor"
-            value={sellerUserId()}
-            onInput={(e) => setSellerUserId(e.currentTarget.value)}
-          >
-            <option value="">Todos</option>
-            <For each={overview().options.sellers}>
-              {(s) => <option value={s.id}>{s.name}</option>}
-            </For>
-          </Select>
-        </div>
-        <div class={styles.filter}>
-          <Select
-            label="Producto"
-            value={product()}
-            onInput={(e) => setProduct(e.currentTarget.value)}
-          >
-            <option value="">Todos</option>
-            <For each={overview().options.products}>
-              {(p) => <option value={p}>{p}</option>}
-            </For>
-          </Select>
-        </div>
-        <Button onClick={() => setShowUpload((v) => !v)}>
-          Importar reporte
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => void revalidate(merchantStatsOverviewQuery.key)}
-        >
-          Recargar
-        </Button>
-      </FilterBar>
+      <TabStrip
+        tabs={GPV_TABS}
+        activeTab={tab()}
+        onTabSelect={setTab}
+        rightComponent={
+          <div class={styles.tabActions}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowUpload((v) => !v)}
+            >
+              Importar reporte
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => void revalidate(merchantPerformanceQuery.key)}
+            >
+              Recargar
+            </Button>
+          </div>
+        }
+      />
 
       <Show when={showUpload()}>
-        <WidgetCardShell title="Importar reporte GPV">
-          <UploadReport onClose={() => setShowUpload(false)} />
-        </WidgetCardShell>
+        <div class={styles.uploadBand}>
+          <WidgetCardShell title="Importar reporte GPV">
+            <UploadReport onClose={() => setShowUpload(false)} />
+          </WidgetCardShell>
+        </div>
       </Show>
 
-      <div class={styles.scrollArea}>
-        <ScrollWrapper>
-          <WidgetGrid>
-            <MetricTile
-              title="GPV mes actual"
-              span="quarter"
-              value={formatSolesCompact(metrics().currentMonthGpv)}
-              tone="default"
-            />
-            <MetricTile
-              title="Objetivo mensual"
-              span="quarter"
-              value={formatSolesCompact(metrics().totalProjected)}
-              tone="default"
-            />
-            <MetricTile
-              title="Cumplimiento"
-              span="quarter"
-              value={
-                metrics().attainment != null
-                  ? formatPercent(metrics().attainment!)
-                  : "—"
-              }
-              tone={
-                metrics().attainment != null && metrics().attainment! >= 1
-                  ? "positive"
-                  : "default"
-              }
-            />
-            <MetricTile
-              title="RUCs sin CRM"
-              span="quarter"
-              value={formatInteger(overview().dataQuality.unmatchedRucs)}
-              tone={
-                overview().dataQuality.unmatchedRucs > 0 ? "warning" : "default"
-              }
-              hint={`${formatInteger(metrics().totalRucs)} RUCs atribuidos`}
-            />
-
-            <LineTile
-              title="GPV realizado por mes"
-              span="full"
-              points={overview().monthly.map((point) => ({
-                label: point.month,
-                value: point.gpv,
-              }))}
-              target={metrics().totalProjected || null}
-            />
-
-            <BarTile
-              title="Rendimiento por vendedor"
-              span="half"
-              rows={overview()
-                .sellers.slice(0, 8)
-                .map((row) => ({
-                  key: row.sellerKey,
-                  label: row.sellerName,
-                  value: row.gpv,
-                  target: row.projectedGpv || null,
-                }))}
-            />
-
-            <StatRowsTile
-              title="Calidad de datos"
-              span="half"
-              rows={[
-                {
-                  label: "RUCs sin registrar en CRM",
-                  value: formatInteger(overview().dataQuality.unmatchedRucs),
-                  alert: overview().dataQuality.unmatchedRucs > 0,
-                },
-                {
-                  label: "Cuentas sin vendedor real",
-                  value: formatInteger(
-                    overview().dataQuality.accountsMissingSeller,
-                  ),
-                  alert: overview().dataQuality.accountsMissingSeller > 0,
-                },
-                {
-                  label: "Cuentas sin proyectado",
-                  value: formatInteger(
-                    overview().dataQuality.accountsMissingProjected,
-                  ),
-                  alert: overview().dataQuality.accountsMissingProjected > 0,
-                },
-                {
-                  label: "Series que no cuadran con entregas",
-                  value: formatInteger(overview().dataQuality.serialMismatches),
-                  alert: overview().dataQuality.serialMismatches > 0,
-                },
-              ]}
-            />
-
-            <WidgetGridItem span="full">
-              <WidgetCardShell title="Cohortes de ventas">
-                <CohortGrid filters={filters()} />
-              </WidgetCardShell>
-            </WidgetGridItem>
-
-            <WidgetGridItem span="full">
-              <WidgetCardShell
-                title="Atribución por RUC"
-                action={
-                  <label class={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={missingOnly()}
-                      onChange={(e) => setMissingOnly(e.currentTarget.checked)}
-                    />
-                    Solo faltantes
-                  </label>
-                }
-              >
-                <AccountsGrid
-                  filters={{ ...filters(), missingEnrichment: missingOnly() }}
-                  options={overview().options}
+      {/* One ScrollWrapper per surface, mirroring Twenty's PageLayoutTabsRenderer.
+          The record tabs own their scroll through the data grid, so they are not
+          nested inside a second one. */}
+      <Switch>
+        <Match when={tab() === "rendimiento"}>
+          <div class={styles.scrollArea}>
+            <ScrollWrapper>
+              <WidgetGrid>
+                <AggregateTile
+                  title={`GPV ${cohortLabel()}`}
+                  span="quarter"
+                  value={formatSolesCompact(latestGpv() ?? 0)}
+                  caption={`${formatInteger(latestCohort()?.deviceCount ?? 0)} comercios vendidos`}
+                  trendPercentage={trendPercentage(latestGpv(), priorGpv())}
                 />
-              </WidgetCardShell>
-            </WidgetGridItem>
-          </WidgetGrid>
-        </ScrollWrapper>
-      </div>
+                <AggregateTile
+                  title={`Cumplimiento ${cohortLabel()}`}
+                  span="quarter"
+                  value={formatRatio(
+                    latestGpv() ?? 0,
+                    latestCohort()?.projectedGpv ?? 0,
+                  )}
+                  caption={`Objetivo ${formatSolesCompact(latestCohort()?.projectedGpv ?? 0)}`}
+                  trendPercentage={trendPercentage(
+                    attainment(latestCohort()),
+                    attainment(priorCohort()),
+                  )}
+                />
+                <AggregateTile
+                  title="Tasa de activación"
+                  span="quarter"
+                  value={activationRate()}
+                  caption={
+                    performance().lifecycle.medianDaysToActivate == null
+                      ? `${formatInteger(performance().lifecycle.salesTotal)} ventas`
+                      : `Mediana ${performance().lifecycle.medianDaysToActivate} días hasta activar`
+                  }
+                />
+                <AggregateTile
+                  title="Comercios sin transaccionar"
+                  span="quarter"
+                  value={formatInteger(performance().lifecycle.dormantCount)}
+                  caption={`Inactivos hace ${performance().lifecycle.dormantThresholdDays}+ días`}
+                />
+
+                <RampTile
+                  title="Curva de rampa por cohorte"
+                  span="half"
+                  series={rampSeries()}
+                  target={latestCohort()?.projectedGpv ?? null}
+                />
+
+                {/* Every RUC contributes exactly one M0 and one monthly target
+                    here, so the sum stays like-for-like: first-month GPV against
+                    the target that month was measured against. */}
+                <BarTile
+                  title="Cumplimiento M0 por vendedor"
+                  span="half"
+                  rows={performance()
+                    .sellers.slice(0, 10)
+                    .map((row) => ({
+                      key: row.key,
+                      label: row.label,
+                      sublabel: row.sublabel ?? undefined,
+                      value: row.gpv,
+                      target: row.projectedGpv || null,
+                      // The seller filter used to be the only way to read one
+                      // person's book. Grouping shows every seller at once and the
+                      // row links to the record, which is what the filter was
+                      // standing in for.
+                      href: row.userId
+                        ? `/settings/members/${row.userId}?tab=capacity`
+                        : undefined,
+                    }))}
+                />
+
+                <BarTile
+                  title="Cumplimiento M0 por zonal"
+                  span="half"
+                  rows={performance().branches.map((row) => ({
+                    key: row.key,
+                    label: row.label,
+                    value: row.gpv,
+                    target: row.projectedGpv || null,
+                  }))}
+                />
+
+                <WidgetGridItem span="half">
+                  <WidgetCardShell title="Calidad de datos">
+                    <DataQualityTable summary={performance().dataQuality} />
+                  </WidgetCardShell>
+                </WidgetGridItem>
+              </WidgetGrid>
+            </ScrollWrapper>
+          </div>
+        </Match>
+
+        <Match when={tab() === "cohortes"}>
+          <CohortGrid options={options()} />
+        </Match>
+
+        <Match when={tab() === "atribucion"}>
+          <AccountsGrid options={options()} />
+        </Match>
+      </Switch>
     </AppPage>
   );
 }

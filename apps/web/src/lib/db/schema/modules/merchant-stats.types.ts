@@ -49,8 +49,8 @@ export interface MerchantSalesTable {
   sale_month: string;
   trade_name: string | null;
   legal_name: string | null;
-  registered_seller_code: string | null;
-  registered_seller_name: string | null;
+  culqi_user_code: string | null;
+  culqi_user_name: string | null;
   mesa: string | null;
   channel: string | null;
   subchannel: string | null;
@@ -61,8 +61,8 @@ export interface MerchantSalesTable {
   trial_at: string | null;
   activated_at: string | null;
   last_transaction_at: string | null;
-  last_15d_gpv: number | null;
-  last_15d_trx: number | null;
+  m0_plus_15d_gpv: number | null;
+  m0_plus_15d_trx: number | null;
   first_seen_report_id: IdColumn<MerchantSalesReportId>;
   last_seen_report_id: IdColumn<MerchantSalesReportId>;
   created_at: Date;

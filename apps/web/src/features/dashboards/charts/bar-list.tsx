@@ -1,6 +1,7 @@
-import { For } from "solid-js";
+import { A } from "@solidjs/router";
+import { For, Show } from "solid-js";
 
-import { formatSoles } from "../format";
+import { formatRatio, formatSoles } from "../format";
 
 import styles from "./bar-list.module.css";
 
@@ -10,6 +11,9 @@ export interface BarRow {
   sublabel?: string;
   value: number;
   target?: number | null;
+  // When the row stands for a record, it links to it. Twenty's answer to
+  // "filter to one seller" is to open that seller, not to narrow the page.
+  href?: string;
 }
 
 interface BarListProps {
@@ -39,10 +43,28 @@ export function BarList(props: BarListProps) {
           return (
             <div class={styles.row}>
               <div class={styles.head}>
-                <span class={styles.label} title={row.label}>
-                  {row.label}
-                </span>
+                <Show
+                  when={row.href}
+                  fallback={
+                    <span class={styles.label} title={row.label}>
+                      {row.label}
+                    </span>
+                  }
+                >
+                  {(href) => (
+                    <A class={styles.labelLink} href={href()} title={row.label}>
+                      {row.label}
+                    </A>
+                  )}
+                </Show>
                 <span class={styles.value}>{formatSoles(row.value)}</span>
+                <Show when={row.target}>
+                  {(target) => (
+                    <span class={styles.ratio}>
+                      {formatRatio(row.value, target())}
+                    </span>
+                  )}
+                </Show>
               </div>
               <div class={styles.track}>
                 <div
@@ -50,9 +72,15 @@ export function BarList(props: BarListProps) {
                   classList={{ [styles.fillHit]: hitsTarget() }}
                   style={{ width: width() }}
                 />
-                {targetLeft() != null && (
-                  <div class={styles.target} style={{ left: targetLeft()! }} />
-                )}
+                <Show when={targetLeft()}>
+                  {(left) => (
+                    <div
+                      class={styles.target}
+                      style={{ left: left() }}
+                      title={`Objetivo ${formatSoles(row.target ?? 0)}`}
+                    />
+                  )}
+                </Show>
               </div>
             </div>
           );

@@ -51,6 +51,6 @@
 
 .empty {
   color: var(--muted-foreground);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
   padding: 1.5rem 0.25rem;
 }

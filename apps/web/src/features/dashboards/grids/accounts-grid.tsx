@@ -3,6 +3,7 @@ import { createMemo, createResource, createSignal } from "solid-js";
 
 import { updateMerchantAccount } from "~/actions/dashboards/accounts";
 import Building2 from "~/components/icons/building-2";
+import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import User from "~/components/icons/user";
 import {
@@ -13,36 +14,48 @@ import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   accountRowsQuery,
-  merchantStatsOverviewQuery,
+  merchantFilterOptionsQuery,
+  merchantPerformanceQuery,
 } from "~/lib/queries/dashboards";
-import type {
-  MerchantStatsFilterOptions,
-  MerchantStatsFilters,
-  MerchantAccountRow,
+import {
+  parseSellerKey,
+  type MerchantAccountRow,
+  type MerchantStatsFilterOptions,
+  type RecordFilters,
 } from "~/server/merchant-stats/read/contracts";
 
-import { formatInteger, formatSoles } from "../format";
+import { formatInteger, formatMonth, formatSoles } from "../format";
+import { RecordFilterBar } from "./record-filter-bar";
+
+import styles from "./grid-surface.module.css";
+import filterStyles from "./record-filter-bar.module.css";
 
 const PAGE = 60;
 const UNASSIGNED = "Sin asignar";
 
 type Row = MerchantAccountRow & { id: string };
 
+// Attribution edits move the numbers every other surface reads, so the whole
+// dashboard is revalidated rather than just this grid. Options move too: naming
+// a seller on a RUC is what promotes them out of label-only into the dropdown.
 async function commit(): Promise<void> {
   await Promise.all([
     revalidate(accountRowsQuery.key),
-    revalidate(merchantStatsOverviewQuery.key),
+    revalidate(merchantPerformanceQuery.key),
+    revalidate(merchantFilterOptionsQuery.key),
   ]);
 }
 
-export function AccountsGrid(props: {
-  filters: MerchantStatsFilters & { missingEnrichment?: boolean };
-  options: MerchantStatsFilterOptions;
-}) {
+export function AccountsGrid(props: { options: MerchantStatsFilterOptions }) {
+  const [filters, setFilters] = createSignal<RecordFilters>({});
+  const [missingOnly, setMissingOnly] = createSignal(false);
   const [limit, setLimit] = createSignal(PAGE);
 
   const [page] = createResource(
-    () => ({ filters: props.filters, limit: limit() }),
+    () => ({
+      filters: { ...filters(), missingEnrichment: missingOnly() },
+      limit: limit(),
+    }),
     (input) =>
       accountRowsQuery({
         filters: input.filters,
@@ -54,13 +67,25 @@ export function AccountsGrid(props: {
     (page.latest ?? []).map((row) => ({ ...row, id: row.ruc })),
   );
 
+  // Only CRM users can be attributed: real_seller_user_id is a foreign key, so
+  // the label-only sellers that the filter offers ("EMPRESA", unmatched names)
+  // are not assignable here. Assigning is how a label becomes a real user.
+  const assignableSellers = createMemo(() =>
+    props.options.sellers.flatMap((seller) => {
+      const parsed = parseSellerKey(seller.key);
+      return parsed.kind === "user"
+        ? [{ userId: parsed.userId, name: seller.name }]
+        : [];
+    }),
+  );
+
   const sellerNames = () => [
     UNASSIGNED,
-    ...props.options.sellers.map((s) => s.name),
+    ...assignableSellers().map((seller) => seller.name),
   ];
   const branchNames = () => [
     UNASSIGNED,
-    ...props.options.branches.map((b) => b.name),
+    ...props.options.branches.map((branch) => branch.name),
   ];
 
   const columns = createMemo<ReadonlyArray<DataGridColumn<Row>>>(() => [
@@ -86,11 +111,13 @@ export function AccountsGrid(props: {
             options={sellerNames()}
             selected={editor.row.realSellerName ?? UNASSIGNED}
             onSubmit={async (name) => {
-              const seller = props.options.sellers.find((s) => s.name === name);
+              const seller = assignableSellers().find(
+                (candidate) => candidate.name === name,
+              );
               await updateMerchantAccount({
                 ruc: editor.row.ruc,
                 field: "realSellerUserId",
-                value: seller?.id ?? null,
+                value: seller?.userId ?? null,
               });
               await commit();
             }}
@@ -114,7 +141,7 @@ export function AccountsGrid(props: {
             selected={editor.row.branchName ?? UNASSIGNED}
             onSubmit={async (name) => {
               const branch = props.options.branches.find(
-                (b) => b.name === name,
+                (candidate) => candidate.name === name,
               );
               await updateMerchantAccount({
                 ruc: editor.row.ruc,
@@ -130,9 +157,9 @@ export function AccountsGrid(props: {
     },
     {
       key: "projected",
-      label: "Proyectado",
+      label: "Proyectado mensual",
       icon: ChartColumn,
-      width: 140,
+      width: 160,
       renderCell: (row) =>
         row.projectedGpv != null ? formatSoles(row.projectedGpv) : "—",
       edit: {
@@ -158,11 +185,12 @@ export function AccountsGrid(props: {
       },
     },
     {
-      key: "latest",
-      label: "GPV mes actual",
-      icon: ChartColumn,
-      width: 150,
-      renderCell: (row) => formatSoles(row.latestMonthGpv),
+      key: "latestSaleMonth",
+      label: "Última venta",
+      icon: CalendarDays,
+      width: 130,
+      renderCell: (row) =>
+        row.latestSaleMonth ? formatMonth(row.latestSaleMonth) : "—",
     },
     {
       key: "salesCount",
@@ -174,23 +202,41 @@ export function AccountsGrid(props: {
   ]);
 
   return (
-    <DataGrid
-      ariaLabel="Atribución por RUC"
-      columns={columns()}
-      emptyState={
-        <p class="px-3 py-4 text-sm text-muted-foreground">
-          No hay cuentas para los filtros actuales.
-        </p>
-      }
-      loadMore={{
-        hasMore: rows().length >= limit(),
-        loading: page.state === "pending" || page.state === "refreshing",
-        onLoadMore: () => void setLimit((value) => value + PAGE),
-      }}
-      source={{
-        status: page.state === "errored" ? "error" : "ready",
-        rows: rows(),
-      }}
-    />
+    <div class={styles.surface}>
+      <RecordFilterBar
+        options={props.options}
+        filters={filters()}
+        onChange={(patch) => {
+          setFilters((current) => ({ ...current, ...patch }));
+          setLimit(PAGE);
+        }}
+      >
+        <label class={filterStyles.toggle}>
+          <input
+            type="checkbox"
+            checked={missingOnly()}
+            onChange={(event) => {
+              setMissingOnly(event.currentTarget.checked);
+              setLimit(PAGE);
+            }}
+          />
+          Solo faltantes
+        </label>
+      </RecordFilterBar>
+      <DataGrid
+        ariaLabel="Atribución por RUC"
+        columns={columns()}
+        emptyState="No hay cuentas para los filtros actuales."
+        loadMore={{
+          hasMore: rows().length >= limit(),
+          loading: page.state === "pending" || page.state === "refreshing",
+          onLoadMore: () => void setLimit((value) => value + PAGE),
+        }}
+        source={{
+          status: page.state === "errored" ? "error" : "ready",
+          rows: rows(),
+        }}
+      />
+    </div>
   );
 }

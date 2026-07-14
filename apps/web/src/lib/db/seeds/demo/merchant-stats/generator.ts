@@ -53,8 +53,8 @@ export interface MerchantSpec {
   trialAt: string | null;
   activatedAt: string | null;
   lastTransactionAt: string | null;
-  last15dGpv: number;
-  last15dTrx: number;
+  m0Plus15dGpv: number;
+  m0Plus15dTrx: number;
   series: Array<{ gpv: number; trx: number }>;
   realSellerName: string | null;
   zonal: string | null;
@@ -154,8 +154,8 @@ function buildMerchant(
     lastTransactionAt: activatedAt
       ? dateBetween(rng, activatedAt, anchorDate)
       : null,
-    last15dGpv: round2(series[0].gpv * (0.2 + rng() * 0.4)),
-    last15dTrx: Math.round(series[0].trx * (0.2 + rng() * 0.4)),
+    m0Plus15dGpv: round2(series[0].gpv * (0.2 + rng() * 0.4)),
+    m0Plus15dTrx: Math.round(series[0].trx * (0.2 + rng() * 0.4)),
     series,
     ...enrichment(rng, input, index),
   };
@@ -237,8 +237,8 @@ export function toMappedRow(
     saleMonth: merchant.saleMonth,
     tradeName: merchant.tradeName,
     legalName: merchant.legalName,
-    registeredSellerCode: null,
-    registeredSellerName: null,
+    culqiUserCode: null,
+    culqiUserName: null,
     mesa: merchant.mesa,
     channel: "DEALERS",
     subchannel: merchant.subchannel,
@@ -256,8 +256,8 @@ export function toMappedRow(
       merchant.lastTransactionAt && merchant.lastTransactionAt <= cutDate
         ? merchant.lastTransactionAt
         : null,
-    last15dGpv: merchant.last15dGpv,
-    last15dTrx: merchant.last15dTrx,
+    m0Plus15dGpv: merchant.m0Plus15dGpv,
+    m0Plus15dTrx: merchant.m0Plus15dTrx,
     metrics,
     realSellerName: hasEnrichment ? merchant.realSellerName : null,
     zonal: hasEnrichment ? merchant.zonal : null,
