@@ -1,7 +1,7 @@
 // Shapes returned by the merchant GPV read model. Kept flat and
 // serializable so server actions can hand them straight to the dashboards.
 
-export interface BusinessStatsFilters {
+export interface MerchantStatsFilters {
   month?: string; // ISO first-of-month; scopes the seller view and totals
   branchId?: string;
   sellerUserId?: string;
@@ -64,7 +64,7 @@ export interface DataQualitySummary {
   serialMismatches: number;
 }
 
-export interface BusinessStatsFilterOptions {
+export interface MerchantStatsFilterOptions {
   months: string[];
   branches: Array<{ id: string; name: string }>;
   sellers: Array<{ id: string; name: string }>;

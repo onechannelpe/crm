@@ -28,7 +28,7 @@ export type MerchantImportRowState =
 export interface MerchantSalesReportsTable {
   id: GeneratedId<MerchantSalesReportId>;
   job_id: IdColumn<IntegrationJobId>;
-  cut_date: Date;
+  cut_date: string;
   source_filename: string;
   uploaded_by: IdColumn<UserId>;
   rows_total: number;
@@ -45,8 +45,8 @@ export interface MerchantSalesTable {
   organization_id: NullableIdColumn<OrganizationId>;
   lead_id: NullableIdColumn<WorkflowLeadId>;
   product: string;
-  sold_at: Date;
-  sale_month: Date;
+  sold_at: string;
+  sale_month: string;
   trade_name: string | null;
   legal_name: string | null;
   registered_seller_code: string | null;
@@ -58,9 +58,9 @@ export interface MerchantSalesTable {
   promotion: string | null;
   client_type: string | null;
   stock_type: string | null;
-  trial_at: Date | null;
-  activated_at: Date | null;
-  last_transaction_at: Date | null;
+  trial_at: string | null;
+  activated_at: string | null;
+  last_transaction_at: string | null;
   last_15d_gpv: number | null;
   last_15d_trx: number | null;
   first_seen_report_id: IdColumn<MerchantSalesReportId>;
@@ -85,7 +85,7 @@ export interface MerchantSaleMetricsTable {
   id: GeneratedId<MerchantSaleMetricId>;
   report_id: IdColumn<MerchantSalesReportId>;
   merchant_sale_id: IdColumn<MerchantSaleId>;
-  month: Date;
+  month: string;
   month_offset: number;
   gpv: number;
   trx: number;

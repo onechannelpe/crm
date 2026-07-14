@@ -17,19 +17,19 @@ import {
   type CollectionMode,
   type ProductScope,
 } from "~/contracts/workflow/vocabulary";
-import { Card, CardContent } from "~/features/side-panel/components/card";
 import {
   FieldInputValue,
   FieldRow,
   FieldTable,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
 import {
-  RecordDetailSectionActions,
-  RecordDetailSection,
-  RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSectionTitle,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCardActions,
+  WidgetCard,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
+import { WidgetStack } from "~/features/widgets/widget-layout";
 import {
   addVenueAccountsMutation,
   createVenueMutation,
@@ -67,7 +67,7 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
   const [editingVenueId, setEditingVenueId] = createSignal<string | null>(null);
 
   return (
-    <div>
+    <WidgetStack>
       <Show when={canEditDigitalPolicy()}>
         <DigitalPolicyPanel
           leadId={props.data.lead.id}
@@ -91,11 +91,11 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
         when={props.data.venues.length > 0}
         fallback={
           <Show when={!canAddVenue()}>
-            <Card fullWidth>
-              <CardContent>
+            <WidgetCard>
+              <WidgetCardContent>
                 <div class={styles.emptyState}>No hay sedes registradas</div>
-              </CardContent>
-            </Card>
+              </WidgetCardContent>
+            </WidgetCard>
           </Show>
         }
       >
@@ -130,7 +130,7 @@ export function SetupWorkspace(props: { data: LeadDetailView }) {
           )}
         </For>
       </Show>
-    </div>
+    </WidgetStack>
   );
 }
 
@@ -225,12 +225,12 @@ function DigitalPolicyPanel(props: {
   }
 
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Política digital" />
-      </RecordDetailSectionHeader>
+    <WidgetCard>
+      <WidgetCardHeader>
+        <WidgetCardTitle text="Política digital" />
+      </WidgetCardHeader>
 
-      <RecordDetailSectionBody>
+      <WidgetCardContent>
         <form onSubmit={(event) => void handleSave(event)}>
           <FieldTable>
             <FieldRow label="Activar CulqiLink" icon={LinkIcon}>
@@ -352,7 +352,7 @@ function DigitalPolicyPanel(props: {
             {(msg) => <p class={styles.error}>{msg()}</p>}
           </Show>
 
-          <RecordDetailSectionActions>
+          <WidgetCardActions>
             <Button
               type="submit"
               variant="secondary"
@@ -361,10 +361,10 @@ function DigitalPolicyPanel(props: {
             >
               Guardar política digital
             </Button>
-          </RecordDetailSectionActions>
+          </WidgetCardActions>
         </form>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }
 
@@ -413,12 +413,12 @@ function VenueCreatePanel(props: {
     <Show
       when={showForm()}
       fallback={
-        <RecordDetailSection>
-          <RecordDetailSectionHeader>
-            <RecordDetailSectionTitle text="Sedes" />
-          </RecordDetailSectionHeader>
-          <RecordDetailSectionBody>
-            <RecordDetailSectionActions align="start">
+        <WidgetCard>
+          <WidgetCardHeader>
+            <WidgetCardTitle text="Sedes" />
+          </WidgetCardHeader>
+          <WidgetCardContent>
+            <WidgetCardActions align="start">
               <Button
                 type="button"
                 variant="secondary"
@@ -427,9 +427,9 @@ function VenueCreatePanel(props: {
               >
                 + Agregar sede
               </Button>
-            </RecordDetailSectionActions>
-          </RecordDetailSectionBody>
-        </RecordDetailSection>
+            </WidgetCardActions>
+          </WidgetCardContent>
+        </WidgetCard>
       }
     >
       <VenueForm

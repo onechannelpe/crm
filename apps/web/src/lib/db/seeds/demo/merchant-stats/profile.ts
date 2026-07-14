@@ -1,0 +1,59 @@
+export const CULQI_MERCHANT_REPORT_PROFILE = {
+  merchantCount: 180,
+  cohortWindowMonths: 10,
+  linkedOrganizationLimit: 40,
+  products: [
+    { value: "CULQIFULL", weight: 0.9299, hasSerial: true },
+    { value: "CULQILINK", weight: 0.0634, hasSerial: false },
+    { value: "CULQIONLINE", weight: 0.0067, hasSerial: false },
+  ],
+  subchannels: [
+    { value: "INFINITY PAY LIMA", weight: 0.844 },
+    { value: "INFINITY PAY CHICLAYO", weight: 0.156 },
+  ],
+  mesas: [
+    { value: "MESA 1", weight: 0.4776 },
+    { value: "MESA 2", weight: 0.3672 },
+    { value: "MESA 3", weight: 0.1552 },
+  ],
+  clientTypes: [
+    { value: "NUEVO", weight: 0.8015 },
+    { value: "RECURRENTE", weight: 0.1985 },
+  ],
+  stockTypes: [
+    { value: "NUEVO", weight: 0.9612 },
+    { value: "STOCK", weight: 0.0388 },
+  ],
+  offerAmounts: [0, 60, 79, 89, 119, 139, 149, 159, 169, 180, 240, 299],
+  promotions: [
+    { value: "COSTO 0 - BCP", weight: 0.2007 },
+    { value: "Cyber - MEMBRESIA 60 - RUC 20", weight: 0.1776 },
+    { value: "COSTO 0 - REFURBISHED", weight: 0.1299 },
+    { value: "P8 - MEMBRESIA - RUC10 - BCP - 139", weight: 0.0873 },
+    { value: "MEMBRESIA - RUC20 - 79", weight: 0.0746 },
+    {
+      value: "P3- MEMBRESIA - OTRO BANCO - RUC20 - 79",
+      weight: 0.0657,
+    },
+    { value: "P8 - MEMBRESIA - RUC20 - BCP - 79", weight: 0.0433 },
+    { value: "MEMBRESIA - RUC20 - 99", weight: 0.0209 },
+    { value: "MEMBRESIA - RUC10CN - 139", weight: 0.0194 },
+    { value: "Cyber - MEMBRESIA 110 - RUC 10", weight: 0.0127 },
+    { value: "P8 - RUC20 - MEMBRESIA 89 - OTRO BANCO", weight: 0.0119 },
+    { value: "P8 - RUC 10 - MEMBRESIA - BCP", weight: 0.0104 },
+  ],
+  activationRate: 0.8149,
+  gpvM0Quantiles: {
+    p25: 0,
+    p50: 66,
+    p75: 5_210.1,
+    p90: 16_492.6,
+    p99: 96_527,
+  },
+  monthlyNonZeroRates: [0.5843, 0.7537, 0.644, 0.4896],
+  enrichmentRates: {
+    seller: 0.8,
+    branch: 0.85,
+    projectedGpv: 0.75,
+  },
+} as const;

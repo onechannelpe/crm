@@ -10,12 +10,30 @@ function createUser(overrides?: Partial<OnboardingUser>): OnboardingUser {
     phone: null,
     strongAuthConfigured: false,
     onboardingCompletedAt: null,
+    passwordChangeRequired: false,
     role: "executive",
     ...overrides,
   };
 }
 
 describe("onboarding flow", () => {
+  it("requires replacing the installation password before other onboarding steps", () => {
+    const requirements = deriveOnboardingRequirements(
+      createUser({ passwordChangeRequired: true }),
+    );
+
+    expect(requirements.sessionState).toBe("onboarding_password");
+    expect(requirements.requiredActions).toEqual([
+      "change_password",
+      "set_profile",
+    ]);
+    expect(requirements.reasons).toEqual([
+      "installation_password_change_required",
+      "phone_required",
+    ]);
+    expect(requirements.canAccessApp).toBe(false);
+  });
+
   it("requires only profile for executive users without security setup", () => {
     const requirements = deriveOnboardingRequirements(createUser());
 

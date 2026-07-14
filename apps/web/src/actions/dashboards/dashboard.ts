@@ -1,8 +1,8 @@
 "use server";
 
 import type {
-  BusinessStatsFilterOptions,
-  BusinessStatsFilters,
+  MerchantStatsFilterOptions,
+  MerchantStatsFilters,
   CohortGridRow,
   DataQualitySummary,
   MerchantAccountRow,
@@ -21,9 +21,9 @@ import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { Ok } from "~/server/shared/result";
 
-type RawFilters = Partial<BusinessStatsFilters> | undefined;
+type RawFilters = Partial<MerchantStatsFilters> | undefined;
 
-function cleanFilters(raw: RawFilters): BusinessStatsFilters {
+function cleanFilters(raw: RawFilters): MerchantStatsFilters {
   if (!raw) return {};
   const pick = (value: unknown) =>
     typeof value === "string" && value.length > 0 ? value : undefined;
@@ -35,16 +35,16 @@ function cleanFilters(raw: RawFilters): BusinessStatsFilters {
   };
 }
 
-export interface BusinessStatsOverview {
+export interface MerchantStatsOverview {
   monthly: MonthlyGpvPoint[];
   sellers: SellerPerformanceRow[];
   dataQuality: DataQualitySummary;
-  options: BusinessStatsFilterOptions;
+  options: MerchantStatsFilterOptions;
 }
 
-export async function getBusinessStatsOverview(
+export async function getMerchantStatsOverview(
   raw: RawFilters,
-): Promise<BusinessStatsOverview> {
+): Promise<MerchantStatsOverview> {
   return runAction({
     name: "dashboards.overview.read",
     access: { kind: "permission", permission: "dashboards:read" },

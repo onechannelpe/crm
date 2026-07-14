@@ -1,9 +1,9 @@
 import { Show } from "solid-js";
 
 import { MerchantGpvWidget } from "~/features/dashboards/record-show/merchant-gpv-widget";
-import { WidgetList } from "~/features/page-layout/widget-list";
-import { WidgetRenderer } from "~/features/page-layout/widget-renderer";
 import type { RecordContext } from "~/features/record-show/model/record-context";
+import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
+import { WidgetStack } from "~/features/widgets/widget-layout";
 
 export function GpvTab(props: { context: RecordContext }) {
   const ruc = () =>
@@ -12,11 +12,11 @@ export function GpvTab(props: { context: RecordContext }) {
   return (
     <Show when={ruc()} keyed>
       {(value) => (
-        <WidgetList>
-          <WidgetRenderer title="GPV del comercio">
+        <WidgetStack>
+          <WidgetCardShell variant="record-page" title="GPV del comercio">
             <MerchantGpvWidget ruc={value} />
-          </WidgetRenderer>
-        </WidgetList>
+          </WidgetCardShell>
+        </WidgetStack>
       )}
     </Show>
   );

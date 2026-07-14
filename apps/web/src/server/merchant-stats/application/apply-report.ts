@@ -1,6 +1,3 @@
-import type { Transaction } from "kysely";
-
-import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   IntegrationJobId,
@@ -35,7 +32,6 @@ export interface ApplyMerchantReportInput {
     rowsFailed: number;
   }) => void;
 }
-
 export interface ApplyMerchantReportResult {
   reportId: MerchantSalesReportId;
   rowsTotal: number;
@@ -55,61 +51,75 @@ export async function applyMerchantReport(
   input: ApplyMerchantReportInput,
   ports: { executor: DatabaseExecutor; now: Date },
 ): Promise<ApplyMerchantReportResult> {
+  if (ports.executor.isTransaction) {
+    return applyMerchantReportInTransaction(input, ports);
+  }
+
+  return ports.executor.transaction().execute((trx) =>
+    applyMerchantReportInTransaction(input, {
+      executor: trx,
+      now: ports.now,
+    }),
+  );
+}
+
+export async function applyMerchantReportInTransaction(
+  input: ApplyMerchantReportInput,
+  ports: { executor: DatabaseExecutor; now: Date },
+): Promise<ApplyMerchantReportResult> {
   const { executor, now } = ports;
   const rowsTotal = input.validRows.length + input.invalidRows.length;
 
   input.onProgress?.({ rowsTotal, rowsApplied: 0, rowsFailed: 0 });
 
-  return executor.transaction().execute(async (trx) => {
-    const reportId = await insertReport(trx, input, rowsTotal, now);
+  const reportId = await insertReport(executor, input, rowsTotal, now);
 
-    const ctx = await loadMatchContext(trx, input.validRows);
-    const saleIdByIdentity = await upsertSales(
-      trx,
-      reportId,
-      input.validRows,
-      ctx,
-      now,
-    );
+  const ctx = await loadMatchContext(executor, input.validRows);
+  const saleIdByIdentity = await upsertSales(
+    executor,
+    reportId,
+    input.validRows,
+    ctx,
+    now,
+  );
 
-    if (input.hasEnrichment) {
-      await applyAccountEnrichment(trx, input.validRows, ctx, now);
-    } else {
-      await backfillAccounts(trx, input.validRows, ctx, now);
-    }
+  if (input.hasEnrichment) {
+    await applyAccountEnrichment(executor, input.validRows, ctx, now);
+  } else {
+    await backfillAccounts(executor, input.validRows, ctx, now);
+  }
 
-    await insertMetrics(trx, reportId, input.validRows, saleIdByIdentity);
+  await insertMetrics(executor, reportId, input.validRows, saleIdByIdentity);
 
-    const matched = countMatched(ctx, input.validRows);
-    await stageRows(trx, reportId, input, ctx, saleIdByIdentity, now);
-    await trx
-      .updateTable("merchant_sales_reports")
-      .set({
-        rows_matched: matched,
-        rows_unmatched: input.validRows.length - matched,
-      })
-      .where("id", "=", reportId)
-      .execute();
+  const matched = countMatched(ctx, input.validRows);
+  await stageRows(executor, reportId, input, ctx, saleIdByIdentity, now);
+  await executor
+    .updateTable("merchant_sales_reports")
+    .set({
+      rows_matched: matched,
+      rows_unmatched: input.validRows.length - matched,
+    })
+    .where("id", "=", reportId)
+    .execute();
 
-    input.onProgress?.({
-      rowsTotal,
-      rowsApplied: input.validRows.length,
-      rowsFailed: input.invalidRows.length,
-    });
-
-    return {
-      reportId,
-      rowsTotal,
-      rowsApplied: input.validRows.length,
-      rowsFailed: input.invalidRows.length,
-      rowsMatched: matched,
-      rowsUnmatched: input.validRows.length - matched,
-    };
+  input.onProgress?.({
+    rowsTotal,
+    rowsApplied: input.validRows.length,
+    rowsFailed: input.invalidRows.length,
   });
+
+  return {
+    reportId,
+    rowsTotal,
+    rowsApplied: input.validRows.length,
+    rowsFailed: input.invalidRows.length,
+    rowsMatched: matched,
+    rowsUnmatched: input.validRows.length - matched,
+  };
 }
 
 async function insertReport(
-  trx: Transaction<Database>,
+  trx: DatabaseExecutor,
   input: ApplyMerchantReportInput,
   rowsTotal: number,
   now: Date,
@@ -132,7 +142,7 @@ async function insertReport(
 }
 
 async function stageRows(
-  trx: Transaction<Database>,
+  trx: DatabaseExecutor,
   reportId: MerchantSalesReportId,
   input: ApplyMerchantReportInput,
   ctx: Awaited<ReturnType<typeof loadMatchContext>>,

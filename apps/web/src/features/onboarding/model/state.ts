@@ -1,6 +1,7 @@
 import type { OnboardingRequirements } from "~/server/auth/policy/types";
 
 export type Step =
+  | "password"
   | "profile"
   | "security-choice"
   | "passkey-step"

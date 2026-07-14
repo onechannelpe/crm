@@ -8,6 +8,7 @@ import {
   Suspense,
 } from "solid-js";
 
+import { changeOnboardingPassword } from "~/actions/auth/onboarding/change-password";
 import {
   completeOnboardingFromCurrentSession,
   completeOnboardingWithPasskey,
@@ -30,6 +31,7 @@ import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import type { RequestedStep } from "~/features/onboarding/model/event";
 import { buildView } from "~/features/onboarding/services/view";
+import { OnboardingPasswordStep } from "~/features/onboarding/ui/onboarding-password-step";
 import { OnboardingProfileStep } from "~/features/onboarding/ui/onboarding-profile-step";
 import { OnboardingSecurityStep } from "~/features/onboarding/ui/onboarding-security-step";
 import {
@@ -58,7 +60,11 @@ function parseRequestedStep(raw: string | string[] | undefined): RequestedStep {
 }
 
 function OnboardingProgress(props: { step: string }) {
-  const percent = () => (props.step === "profile" ? 50 : 100);
+  const percent = () => {
+    if (props.step === "password") return 25;
+    if (props.step === "profile") return 50;
+    return 100;
+  };
   return (
     <progress
       class={styles.progressTrack}
@@ -80,6 +86,8 @@ function OnboardingContent() {
   );
 
   const [phone, setPhone] = createSignal("");
+  const [password, setPassword] = createSignal("");
+  const [confirmPassword, setConfirmPassword] = createSignal("");
   const [passkeyPhase, setPasskeyPhase] = createSignal<PasskeyPhase>("idle");
   const [passkeySupported, setPasskeySupported] = createSignal(false);
   const [totpLoading, setTotpLoading] = createSignal(false);
@@ -165,6 +173,24 @@ function OnboardingContent() {
     }
   }
 
+  async function handlePasswordSubmit() {
+    setSubmitting(true);
+    try {
+      await changeOnboardingPassword({
+        password: password(),
+        confirmPassword: confirmPassword(),
+      });
+      setPassword("");
+      setConfirmPassword("");
+      await refreshCurrentUser();
+      await refetchRequirements();
+    } catch (error: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   function handleChooseSecurity(method: "passkey-step" | "totp-step") {
     navigate(`/onboarding?step=${method}`);
   }
@@ -226,6 +252,8 @@ function OnboardingContent() {
     const next = view();
     if (!next) return "Onboarding";
     switch (next.step) {
+      case "password":
+        return "Crea tu contraseña";
       case "profile":
         return "Perfil";
       case "security-choice":
@@ -256,6 +284,20 @@ function OnboardingContent() {
           title={title()}
           footer={
             <div class={styles.footerActions}>
+              <Show when={state.next.step === "password"}>
+                <Button
+                  type="button"
+                  loading={submitting()}
+                  disabled={
+                    password().length < 8 ||
+                    confirmPassword().length < 8 ||
+                    password() !== confirmPassword()
+                  }
+                  onClick={() => void handlePasswordSubmit()}
+                >
+                  Cambiar contraseña
+                </Button>
+              </Show>
               <Show when={state.next.step === "profile"}>
                 <Button
                   type="button"
@@ -295,6 +337,17 @@ function OnboardingContent() {
             </div>
           }
         >
+          <Show when={state.next.step === "password"}>
+            <EnterTransition>
+              <OnboardingPasswordStep
+                password={password()}
+                confirmPassword={confirmPassword()}
+                onPasswordInput={setPassword}
+                onConfirmPasswordInput={setConfirmPassword}
+              />
+            </EnterTransition>
+          </Show>
+
           <Show when={state.next.step === "profile"}>
             <EnterTransition>
               <OnboardingProfileStep

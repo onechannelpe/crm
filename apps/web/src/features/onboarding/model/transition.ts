@@ -18,6 +18,14 @@ export function resolveViewState(
     };
   }
 
+  if (facts.requirements.requiredActions.includes("change_password")) {
+    return {
+      step: "password",
+      securityRequired: false,
+      canFinishWithoutSecurity: false,
+    };
+  }
+
   if (!facts.hasPhone) {
     return {
       step: "profile",

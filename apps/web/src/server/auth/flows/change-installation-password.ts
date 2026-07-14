@@ -1,0 +1,56 @@
+import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
+import { sessionCache } from "~/lib/auth/session/session-cache";
+import { auditEntityId } from "~/server/shared/audit-entity";
+import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { UserId } from "~/server/shared/ids";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+
+import type { AuthOnboardingContext } from "../infrastructure/onboarding-context";
+
+export async function changeInstallationPassword(
+  deps: AuthOnboardingContext,
+  input: {
+    userId: UserId;
+    currentSessionId: string;
+    password: string;
+    confirmPassword: string;
+    now: Date;
+  },
+): Promise<Result<void, DomainError>> {
+  if (input.password.length < 8) {
+    return Err(fail("password_too_short"));
+  }
+  if (input.password !== input.confirmPassword) {
+    return Err(fail("password_mismatch"));
+  }
+
+  const user = await deps.repos.users.findById(input.userId);
+  if (!user) {
+    return Err(fail("user_not_found"));
+  }
+  if (!user.password_change_required) {
+    return Ok(undefined);
+  }
+  if (await verifyPassword(user.password_hash, input.password)) {
+    return Err(fail("installation_password_must_change"));
+  }
+
+  const passwordHash = await hashPassword(input.password);
+
+  const changed = await deps.uow.run(async (repos) => {
+    await repos.users.replaceInstallationPassword(user.id, passwordHash);
+    await repos.sessions.deleteOtherForUser(user.id, input.currentSessionId);
+    await repos.events.append({
+      type: "password_changed",
+      entityType: "user",
+      entityId: auditEntityId("user", user.id),
+      actorUserId: user.id,
+      occurredAt: input.now,
+    });
+    return Ok(undefined);
+  });
+  if (isErr(changed)) return changed;
+
+  sessionCache.deleteByUserId(user.id);
+  return Ok(undefined);
+}

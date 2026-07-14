@@ -42,6 +42,9 @@ export async function completeAccountOnboardingWithRepos(
   if (user.onboarding_completed_at !== null) {
     return Ok(undefined);
   }
+  if (user.password_change_required) {
+    return Err(fail("installation_password_change_required"));
+  }
 
   const strongAuthStatus = await getStrongAuthStatus(input.userId, repos);
   if (

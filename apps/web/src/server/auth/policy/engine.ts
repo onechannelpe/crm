@@ -94,13 +94,22 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
 export function deriveOnboardingRequirements(
   user: Pick<
     CurrentUserView,
-    "phone" | "strongAuthConfigured" | "onboardingCompletedAt" | "role"
+    | "phone"
+    | "strongAuthConfigured"
+    | "onboardingCompletedAt"
+    | "passwordChangeRequired"
+    | "role"
   >,
 ): OnboardingRequirements {
   const hasPhone = user.phone !== null;
   const strongAuthRequired = requiresStrongAuthRole(user.role);
-  const requiredActions: Array<"set_profile" | "configure_strong_auth"> = [];
+  const requiredActions: OnboardingRequirements["requiredActions"] = [];
   const reasons: string[] = [];
+
+  if (user.passwordChangeRequired) {
+    requiredActions.push("change_password");
+    reasons.push("installation_password_change_required");
+  }
 
   if (!hasPhone) {
     requiredActions.push("set_profile");
@@ -119,6 +128,7 @@ export function deriveOnboardingRequirements(
 
   const sessionState = resolveOnboardingSessionState({
     onboardingCompleted: user.onboardingCompletedAt !== null,
+    passwordChangeRequired: user.passwordChangeRequired,
     hasPhone,
     requiresStrongAuth: strongAuthRequired,
     strongAuthConfigured: user.strongAuthConfigured,

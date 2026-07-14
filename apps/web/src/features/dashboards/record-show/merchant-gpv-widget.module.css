@@ -1,0 +1,56 @@
+.widget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.chart {
+  width: 100%;
+}
+
+.devices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.devicesTitle {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.device {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-2) 0;
+}
+
+.deviceName {
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.serial {
+  color: var(--muted-foreground);
+}
+
+.deviceGpv {
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.empty {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  padding: 1.5rem 0.25rem;
+}

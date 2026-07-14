@@ -1,4 +1,5 @@
-import { createMemo, For, Show } from "solid-js";
+import { createElementSize } from "@solid-primitives/resize-observer";
+import { createMemo, createSignal, For, Show } from "solid-js";
 
 import { formatMonth, formatSolesCompact } from "../format";
 
@@ -13,8 +14,8 @@ interface LineChartProps {
   height?: number;
 }
 
-const WIDTH = 640;
 const PAD = { top: 16, right: 16, bottom: 28, left: 16 };
+const FALLBACK_WIDTH = 640;
 
 // Single-series area + line. Touch-first: the max and latest points carry direct
 // value labels so nothing depends on hover. Marks use the app's blue ramp; the
@@ -22,10 +23,14 @@ const PAD = { top: 16, right: 16, bottom: 28, left: 16 };
 export function LineChart(props: LineChartProps) {
   const height = () => props.height ?? 220;
 
+  const [container, setContainer] = createSignal<HTMLDivElement>();
+  const size = createElementSize(container);
+  const width = () => size.width ?? FALLBACK_WIDTH;
+
   const geometry = createMemo(() => {
     const points = props.points;
     const h = height();
-    const innerW = WIDTH - PAD.left - PAD.right;
+    const innerW = width() - PAD.left - PAD.right;
     const innerH = h - PAD.top - PAD.bottom;
     const max = Math.max(props.target ?? 0, ...points.map((p) => p.value), 1);
     const stepX = points.length > 1 ? innerW / (points.length - 1) : 0;
@@ -63,16 +68,19 @@ export function LineChart(props: LineChartProps) {
   });
 
   return (
-    <svg
-      viewBox={`0 0 ${WIDTH} ${height()}`}
-      style={{ width: "100%", height: "auto", "font-family": "inherit" }}
-      role="img"
-      aria-label="GPV realizado por mes"
-    >
-      <Show when={geometry().targetY != null}>
-        <line
-          x1={PAD.left}
-          x2={WIDTH - PAD.right}
+    <div ref={setContainer} style={{ width: "100%" }}>
+      <svg
+        viewBox={`0 0 ${width()} ${height()}`}
+        width={width()}
+        height={height()}
+        style={{ display: "block", "font-family": "inherit" }}
+        role="img"
+        aria-label="GPV realizado por mes"
+      >
+        <Show when={geometry().targetY != null}>
+          <line
+            x1={PAD.left}
+            x2={width() - PAD.right}
           y1={geometry().targetY!}
           y2={geometry().targetY!}
           stroke="var(--muted-foreground)"
@@ -132,6 +140,7 @@ export function LineChart(props: LineChartProps) {
           </>
         )}
       </For>
-    </svg>
+      </svg>
+    </div>
   );
 }

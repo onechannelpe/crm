@@ -12,11 +12,11 @@ import {
   FieldTable,
   FieldTextValue,
   RecordInlineCell,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
 import {
-  RecordDetailSubsectionChevron,
-  RecordDetailSubsectionHeader,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCardSubsectionChevron,
+  WidgetCardSubsectionHeader,
+} from "~/features/widgets/widget-card";
 import { capitalize } from "~/lib/utils";
 
 // The SUNAT registry (RUC, legal name, address, contributor status, economic
@@ -31,12 +31,12 @@ export function RegistrySection(props: { data: LeadDetailView }) {
 
   return (
     <>
-      <RecordDetailSubsectionHeader onClick={() => setIsExpanded((v) => !v)}>
+      <WidgetCardSubsectionHeader onClick={() => setIsExpanded((v) => !v)}>
         <span>Empresa</span>
-        <RecordDetailSubsectionChevron isExpanded={isExpanded()}>
+        <WidgetCardSubsectionChevron isExpanded={isExpanded()}>
           <ChevronDown size={14} />
-        </RecordDetailSubsectionChevron>
-      </RecordDetailSubsectionHeader>
+        </WidgetCardSubsectionChevron>
+      </WidgetCardSubsectionHeader>
       <AnimatedExpandableContainer isExpanded={isExpanded()}>
         <FieldTable>
           <RecordInlineCell label="RUC" icon={Building2}>

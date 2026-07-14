@@ -1,15 +1,15 @@
 import { sql } from "kysely";
 import type { Kysely } from "kysely";
 
-import type { SchemaModule, SeedModule } from "./schema";
+import type { ReferenceDataModule, SchemaModule } from "./schema";
 
 export async function computeHash(
   schemas: readonly SchemaModule[],
-  seeds: readonly SeedModule[],
+  referenceData: readonly ReferenceDataModule[],
 ): Promise<string> {
   const input = [
     ...schemas.map((m) => m.createTables.toString()),
-    ...seeds.map((m) => m.run.toString()),
+    ...referenceData.map((module) => module.run.toString()),
   ].join("\n");
 
   const bytes = new TextEncoder().encode(input);

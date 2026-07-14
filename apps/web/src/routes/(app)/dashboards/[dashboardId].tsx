@@ -3,10 +3,10 @@ import { Show } from "solid-js";
 
 import { MerchantGpvDashboard } from "~/features/dashboards/merchant-gpv-dashboard";
 import { findDashboard } from "~/features/dashboards/registry";
-import { businessStatsOverviewQuery } from "~/lib/queries/dashboards";
+import { merchantStatsOverviewQuery } from "~/lib/queries/dashboards";
 
 export const route = {
-  preload: () => businessStatsOverviewQuery({}),
+  preload: () => merchantStatsOverviewQuery({}),
 } satisfies RouteDefinition;
 
 export default function DashboardShowRoute() {

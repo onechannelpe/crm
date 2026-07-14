@@ -15,7 +15,7 @@ import { SETTLEMENT_BANKS } from "~/contracts/workflow/vocabulary";
 import {
   FieldTextValue,
   RecordInlineCell,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
 import { editCommercialScopeMutation } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import {

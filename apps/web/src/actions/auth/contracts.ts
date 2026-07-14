@@ -17,6 +17,7 @@ export interface CurrentUserView {
   avatarUrl: string | null;
   avatarVersion: number;
   onboardingCompletedAt: number | null;
+  passwordChangeRequired: boolean;
   role: Role;
   strongAuthRequired: boolean;
   strongAuthConfigured: boolean;

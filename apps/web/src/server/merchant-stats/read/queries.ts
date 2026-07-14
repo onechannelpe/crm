@@ -1,8 +1,9 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { BranchId, UserId } from "~/server/shared/ids";
 
 import type {
-  BusinessStatsFilterOptions,
-  BusinessStatsFilters,
+  MerchantStatsFilterOptions,
+  MerchantStatsFilters,
   CohortGridRow,
   DataQualitySummary,
   MerchantAccountRow,
@@ -10,6 +11,18 @@ import type {
   OrgMerchantStats,
   SellerPerformanceRow,
 } from "./contracts";
+
+// Filter ids cross the wire as plain strings; brand them for the branded id
+// columns. They come from our own filter-option list, so trust (a cast) rather
+// than parse.
+function brandedIds(filters: MerchantStatsFilters) {
+  return {
+    branchId: filters.branchId ? BranchId.trust(filters.branchId) : undefined,
+    sellerUserId: filters.sellerUserId
+      ? UserId.trust(filters.sellerUserId)
+      : undefined,
+  };
+}
 
 // The single source of "current truth": the value for each (sale, month) from
 // the freshest snapshot that carries it. Ordered by cut_date then import time so
@@ -38,17 +51,16 @@ function withLatestMetric(db: DatabaseExecutor) {
 // Actual GPV per calendar month, honoring seller / branch / product filters.
 export async function getMonthlyGpv(
   db: DatabaseExecutor,
-  filters: BusinessStatsFilters,
+  filters: MerchantStatsFilters,
 ): Promise<MonthlyGpvPoint[]> {
+  const { branchId, sellerUserId } = brandedIds(filters);
   const rows = await withLatestMetric(db)
     .selectFrom("latest_metric as lm")
     .innerJoin("merchant_sales as s", "s.id", "lm.sale_id")
     .leftJoin("merchant_accounts as a", "a.ruc", "s.ruc")
-    .$if(!!filters.branchId, (qb) =>
-      qb.where("a.branch_id", "=", filters.branchId!),
-    )
-    .$if(!!filters.sellerUserId, (qb) =>
-      qb.where("a.real_seller_user_id", "=", filters.sellerUserId!),
+    .$if(!!branchId, (qb) => qb.where("a.branch_id", "=", branchId!))
+    .$if(!!sellerUserId, (qb) =>
+      qb.where("a.real_seller_user_id", "=", sellerUserId!),
     )
     .$if(!!filters.product, (qb) =>
       qb.where("s.product", "=", filters.product!),
@@ -63,7 +75,7 @@ export async function getMonthlyGpv(
     .execute();
 
   return rows.map((row) => ({
-    month: monthIso(row.month),
+    month: row.month,
     gpv: Number(row.gpv ?? 0),
     trx: Number(row.trx ?? 0),
   }));
@@ -74,11 +86,12 @@ export async function getMonthlyGpv(
 // metric join, so it is never multiplied by the number of months.
 export async function getSellerPerformance(
   db: DatabaseExecutor,
-  filters: BusinessStatsFilters,
+  filters: MerchantStatsFilters,
 ): Promise<SellerPerformanceRow[]> {
   const month = filters.month ?? (await latestMonth(db));
   if (!month) return [];
 
+  const { branchId } = brandedIds(filters);
   const actuals = await withLatestMetric(db)
     .selectFrom("latest_metric as lm")
     .innerJoin("merchant_sales as s", "s.id", "lm.sale_id")
@@ -86,9 +99,7 @@ export async function getSellerPerformance(
     .leftJoin("users as u", "u.id", "a.real_seller_user_id")
     .leftJoin("branches as b", "b.id", "a.branch_id")
     .where("lm.month", "=", month)
-    .$if(!!filters.branchId, (qb) =>
-      qb.where("a.branch_id", "=", filters.branchId!),
-    )
+    .$if(!!branchId, (qb) => qb.where("a.branch_id", "=", branchId!))
     .$if(!!filters.product, (qb) =>
       qb.where("s.product", "=", filters.product!),
     )
@@ -112,9 +123,7 @@ export async function getSellerPerformance(
   const projected = await db
     .selectFrom("merchant_accounts as a")
     .leftJoin("users as u", "u.id", "a.real_seller_user_id")
-    .$if(!!filters.branchId, (qb) =>
-      qb.where("a.branch_id", "=", filters.branchId!),
-    )
+    .$if(!!branchId, (qb) => qb.where("a.branch_id", "=", branchId!))
     .select((eb) => [
       "a.real_seller_user_id as seller_user_id",
       "a.real_seller_label",
@@ -144,7 +153,7 @@ export async function getSellerPerformance(
       branchName: null,
       gpv: 0,
       projectedGpv: Number(row.projected ?? 0),
-      rucCount: Number(row.ruc_count ?? 0),
+      rucCount: row.ruc_count ?? 0,
     });
   }
   for (const row of actuals) {
@@ -173,20 +182,19 @@ export async function getSellerPerformance(
 // m0..m3. Optional month filter targets the sale's own month.
 export async function getCohortGrid(
   db: DatabaseExecutor,
-  filters: BusinessStatsFilters,
+  filters: MerchantStatsFilters,
   page: { limit: number; offset: number },
 ): Promise<CohortGridRow[]> {
+  const { branchId, sellerUserId } = brandedIds(filters);
   const rows = await withLatestMetric(db)
     .selectFrom("latest_metric as lm")
     .innerJoin("merchant_sales as s", "s.id", "lm.sale_id")
     .leftJoin("merchant_accounts as a", "a.ruc", "s.ruc")
     .leftJoin("users as u", "u.id", "a.real_seller_user_id")
     .leftJoin("branches as b", "b.id", "a.branch_id")
-    .$if(!!filters.branchId, (qb) =>
-      qb.where("a.branch_id", "=", filters.branchId!),
-    )
-    .$if(!!filters.sellerUserId, (qb) =>
-      qb.where("a.real_seller_user_id", "=", filters.sellerUserId!),
+    .$if(!!branchId, (qb) => qb.where("a.branch_id", "=", branchId!))
+    .$if(!!sellerUserId, (qb) =>
+      qb.where("a.real_seller_user_id", "=", sellerUserId!),
     )
     .$if(!!filters.product, (qb) =>
       qb.where("s.product", "=", filters.product!),
@@ -240,7 +248,7 @@ export async function getCohortGrid(
     tradeName: row.trade_name,
     serialNumber: row.serial_number,
     product: row.product,
-    saleMonth: monthIso(row.sale_month),
+    saleMonth: row.sale_month,
     sellerName: displayName(row) ?? row.real_seller_label,
     branchName: row.branch_name,
     projectedGpv: numberOrNull(row.projected_gpv),
@@ -257,20 +265,19 @@ export async function getCohortGrid(
 // realized-GPV signal for the latest month.
 export async function getMerchantAccounts(
   db: DatabaseExecutor,
-  filters: BusinessStatsFilters & { missingEnrichment?: boolean },
+  filters: MerchantStatsFilters & { missingEnrichment?: boolean },
   page: { limit: number; offset: number },
 ): Promise<MerchantAccountRow[]> {
+  const { branchId, sellerUserId } = brandedIds(filters);
   const accounts = await db
     .selectFrom("merchant_accounts as a")
     .leftJoin("organizations as o", "o.id", "a.organization_id")
     .leftJoin("users as u", "u.id", "a.real_seller_user_id")
     .leftJoin("branches as b", "b.id", "a.branch_id")
     .leftJoin("merchant_sales as s", "s.ruc", "a.ruc")
-    .$if(!!filters.branchId, (qb) =>
-      qb.where("a.branch_id", "=", filters.branchId!),
-    )
-    .$if(!!filters.sellerUserId, (qb) =>
-      qb.where("a.real_seller_user_id", "=", filters.sellerUserId!),
+    .$if(!!branchId, (qb) => qb.where("a.branch_id", "=", branchId!))
+    .$if(!!sellerUserId, (qb) =>
+      qb.where("a.real_seller_user_id", "=", sellerUserId!),
     )
     .$if(!!filters.missingEnrichment, (qb) =>
       qb.where((eb) =>
@@ -323,7 +330,7 @@ export async function getMerchantAccounts(
     branchId: row.branch_id,
     branchName: row.branch_name,
     projectedGpv: numberOrNull(row.projected_gpv),
-    salesCount: Number(row.sales_count ?? 0),
+    salesCount: row.sales_count ?? 0,
     latestMonthGpv: latestGpvByRuc.get(row.ruc) ?? 0,
   }));
 }
@@ -370,16 +377,16 @@ export async function getDataQuality(
     .executeTakeFirst();
 
   return {
-    unmatchedRucs: Number(unmatched?.count ?? 0),
-    accountsMissingSeller: Number(missingSeller?.count ?? 0),
-    accountsMissingProjected: Number(missingProjected?.count ?? 0),
-    serialMismatches: Number(serialMismatches?.count ?? 0),
+    unmatchedRucs: unmatched?.count ?? 0,
+    accountsMissingSeller: missingSeller?.count ?? 0,
+    accountsMissingProjected: missingProjected?.count ?? 0,
+    serialMismatches: serialMismatches?.count ?? 0,
   };
 }
 
 export async function getFilterOptions(
   db: DatabaseExecutor,
-): Promise<BusinessStatsFilterOptions> {
+): Promise<MerchantStatsFilterOptions> {
   const months = await db
     .selectFrom("merchant_sale_metrics")
     .select("month")
@@ -410,7 +417,7 @@ export async function getFilterOptions(
     .execute();
 
   return {
-    months: months.map((row) => monthIso(row.month)),
+    months: months.map((row) => row.month),
     branches: branches.map((row) => ({ id: row.id, name: row.name })),
     sellers: sellers
       .map((row) => ({
@@ -460,11 +467,11 @@ export async function getMerchantStatsByRuc(
       saleId: row.id,
       product: row.product,
       serialNumber: row.serial_number,
-      soldAt: monthIso(row.sold_at),
+      soldAt: row.sold_at,
       last15dGpv: numberOrNull(row.last_15d_gpv),
     })),
     monthly: monthly.map((row) => ({
-      month: monthIso(row.month),
+      month: row.month,
       gpv: Number(row.gpv ?? 0),
       trx: Number(row.trx ?? 0),
     })),
@@ -496,7 +503,7 @@ async function latestMonth(db: DatabaseExecutor): Promise<string | null> {
     .selectFrom("merchant_sale_metrics")
     .select((eb) => eb.fn.max("month").as("month"))
     .executeTakeFirst();
-  return row?.month ? monthIso(row.month) : null;
+  return row?.month ?? null;
 }
 
 function displayName(row: {
@@ -509,9 +516,4 @@ function displayName(row: {
 
 function numberOrNull(value: unknown): number | null {
   return value == null ? null : Number(value);
-}
-
-function monthIso(value: unknown): string {
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
-  return String(value).slice(0, 10);
 }

@@ -1,6 +1,6 @@
-import { sql, type Transaction } from "kysely";
+import { sql } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   MerchantSaleId,
   MerchantSalesReportId,
@@ -47,7 +47,7 @@ export type SaleIdByIdentity = Map<string, MerchantSaleId>;
 // identity and returns the sale id for each source row, whether inserted or
 // updated, so metrics and staging can reference it.
 export async function upsertSales(
-  trx: Transaction<Database>,
+  trx: DatabaseExecutor,
   reportId: MerchantSalesReportId,
   rows: readonly MappedGpvRow[],
   ctx: MatchContext,
@@ -93,7 +93,7 @@ export async function upsertSales(
 }
 
 export async function insertMetrics(
-  trx: Transaction<Database>,
+  trx: DatabaseExecutor,
   reportId: MerchantSalesReportId,
   rows: readonly MappedGpvRow[],
   saleIdByIdentity: SaleIdByIdentity,

@@ -1,65 +1,33 @@
-import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
-import { ORGANIZATIONS, type OrganizationSeedKey } from "../scenario";
+import { stableSeedId } from "../../shared/stable-id";
+import type { CompiledLead } from "../compiler";
 
-export type OrganizationLookup = {
-  getOrganizationId: (key: OrganizationSeedKey) => OrganizationId;
-};
+export type OrganizationsByRuc = Map<string, OrganizationId>;
 
+// Each lead owns a distinct organization; the spec is the single source for its
+// identity, so the SUNAT overlay and any venue reuse the same values.
 export async function persistOrganizations(
   db: Kysely<Database>,
-  organizationKeys: readonly OrganizationSeedKey[],
+  leads: readonly CompiledLead[],
   now: Date,
-): Promise<OrganizationLookup> {
-  const organizationsToInsert: Array<{
-    id: OrganizationId;
-    ruc: string;
-    legal_name: string;
-    address: string;
-    district: string;
-    department: string;
-    created_at: Date;
-  }> = [];
+): Promise<OrganizationsByRuc> {
+  const rows = leads.map(({ spec }) => ({
+    id: OrganizationId.trust(stableSeedId(`organization:${spec.key}`)),
+    ruc: spec.org.ruc,
+    legal_name: spec.org.legalName,
+    line_of_business: spec.org.lineOfBusiness,
+    address: spec.org.address,
+    district: spec.org.district,
+    province: spec.org.province,
+    department: spec.org.department,
+    created_at: now,
+  }));
 
-  for (const key of organizationKeys) {
-    const { name, ...organization } = ORGANIZATIONS[key];
-    organizationsToInsert.push({
-      id: OrganizationId.trust(randomUUIDv7()),
-      ...organization,
-      legal_name: name,
-      created_at: now,
-    });
-  }
+  await db.insertInto("organizations").values(rows).execute();
 
-  await db
-    .insertInto("organizations")
-    .values(organizationsToInsert)
-    .onConflict((oc) => oc.column("ruc").doNothing())
-    .execute();
-
-  const organizationsInDb = await db
-    .selectFrom("organizations")
-    .select(["id", "ruc"])
-    .where(
-      "ruc",
-      "in",
-      organizationKeys.map((key) => ORGANIZATIONS[key].ruc),
-    )
-    .execute();
-  const organizationIdByRuc = new Map(
-    organizationsInDb.map((row) => [row.ruc, row.id]),
-  );
-
-  const getOrganizationId = (key: OrganizationSeedKey): OrganizationId => {
-    const organizationId = organizationIdByRuc.get(ORGANIZATIONS[key].ruc);
-    if (!organizationId) {
-      throw new Error(`missing_seed_organization_id:${key}`);
-    }
-    return organizationId;
-  };
-  return { getOrganizationId };
+  return new Map(rows.map((row) => [row.ruc, row.id]));
 }

@@ -1,0 +1,157 @@
+/*
+  One WidgetCard shell (card > header > content) with three variants:
+    dashboard    grid tile: secondary bg, bordered, rounded.
+    record-page  record detail card: primary bg framed card holding an inner
+                 secondary-bg content frame (Twenty's FieldsWidget look).
+    side-column  side-panel stacked widget: borderless with a bottom divider
+                 that drops on the last item (:last-child stands in for Twenty's
+                 isLastWidget without any runtime plumbing).
+*/
+
+.card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+}
+
+.card[data-variant="dashboard"] {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  height: 100%;
+  padding: var(--spacing-2);
+}
+
+.card[data-variant="record-page"] {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2);
+}
+
+.card[data-variant="side-column"] {
+  border-bottom: 1px solid var(--border);
+  padding: var(--spacing-3) 0;
+}
+
+.card[data-variant="side-column"]:last-child {
+  border-bottom: none;
+}
+
+.header {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  height: var(--spacing-6);
+}
+
+.title {
+  color: var(--foreground);
+  display: flex;
+  flex: 1;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  min-width: 0;
+  overflow: hidden;
+  padding-inline: var(--spacing-1);
+  user-select: none;
+}
+
+.card[data-variant="side-column"] .title {
+  padding-inline: 0;
+}
+
+.rightContainer {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+}
+
+.actionsContainer {
+  align-items: center;
+  display: flex;
+  gap: var(--spacing-1);
+}
+
+.content {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: var(--spacing-2);
+}
+
+.content:empty {
+  margin-top: 0;
+}
+
+.card[data-variant="dashboard"] .content {
+  height: 100%;
+  overflow: hidden;
+  padding: var(--spacing-2);
+}
+
+.card[data-variant="dashboard"] .content:empty {
+  padding: 0;
+}
+
+.card[data-variant="record-page"] .content {
+  background: var(--secondary);
+  border: 1px solid var(--t-border-color-medium);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2);
+}
+
+.card[data-variant="record-page"] .content:empty {
+  border: none;
+  padding: 0;
+}
+
+.card[data-variant="side-column"] .content {
+  padding: 0;
+}
+
+/* Form-footer action row inside the body (submit/cancel). Distinct from the
+   header-level actions above. */
+.actions {
+  display: flex;
+  gap: var(--spacing-2);
+  justify-content: flex-end;
+  padding-top: var(--spacing-3);
+}
+
+.actionsStart {
+  justify-content: flex-start;
+}
+
+.actionsStack {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.subsectionHeader {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  height: var(--spacing-6);
+  justify-content: space-between;
+  padding: 0;
+  width: 100%;
+}
+
+.subsectionChevron {
+  color: var(--foreground-tertiary);
+  display: flex;
+  transform: rotate(0deg);
+  transition: transform var(--motion-normal) var(--ease-standard);
+}
+
+.subsectionChevronExpanded {
+  transform: rotate(180deg);
+}

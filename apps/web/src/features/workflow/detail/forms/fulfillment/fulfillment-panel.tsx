@@ -27,11 +27,11 @@ import {
   isProductKind,
 } from "~/contracts/workflow/vocabulary";
 import {
-  RecordDetailSection,
-  RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSectionTitle,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCard,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import {
@@ -164,11 +164,11 @@ export function FulfillmentPanel(props: { data: LeadDetailView }) {
           </Show>
 
           <Show when={view().documents.length > 0}>
-            <RecordDetailSection>
-              <RecordDetailSectionHeader>
-                <RecordDetailSectionTitle text="Documentos" />
-              </RecordDetailSectionHeader>
-              <RecordDetailSectionBody>
+            <WidgetCard variant="side-column">
+              <WidgetCardHeader>
+                <WidgetCardTitle text="Documentos" />
+              </WidgetCardHeader>
+              <WidgetCardContent>
                 <ul class={styles.docList}>
                   <For each={view().documents}>
                     {(doc) => (
@@ -193,8 +193,8 @@ export function FulfillmentPanel(props: { data: LeadDetailView }) {
                     )}
                   </For>
                 </ul>
-              </RecordDetailSectionBody>
-            </RecordDetailSection>
+              </WidgetCardContent>
+            </WidgetCard>
           </Show>
         </div>
       )}

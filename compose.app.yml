@@ -39,7 +39,7 @@ services:
       timeout: 3s
       retries: 6
 
-  migrate:
+  prepare:
     image: crm-app-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}:latest
     build:
       context: .
@@ -55,7 +55,7 @@ services:
       - -c
       - >-
         bun run migrate:prod &&
-        bun src/lib/db/seed.ts
+        bun run provision:prod
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,7 +73,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      migrate:
+      prepare:
         condition: service_completed_successfully
     healthcheck:
       test:
@@ -94,7 +94,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      migrate:
+      prepare:
         condition: service_completed_successfully
 
 networks:

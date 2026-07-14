@@ -2,35 +2,44 @@ import type { Kysely } from "kysely";
 
 import { createLogger } from "../observability/logger";
 import { db as globalDb } from "./db";
-import { runBootstrapSeedStage } from "./seeds/bootstrap";
 import {
   runDemoIdentitiesSeedStage,
+  runDemoMerchantStatsSeedStage,
   runDemoWorkflowSeedStage,
 } from "./seeds/demo";
+import {
+  provisionInstallation,
+  verifyInstallation,
+} from "./seeds/installation";
+import { createSeedContext } from "./seeds/shared/context";
 import type { Database } from "./types";
 
 const logger = createLogger("db-seed");
 
-export async function seedIfEmpty(db: Kysely<Database>) {
-  const branchCount = await db
-    .selectFrom("branches")
-    .select(db.fn.countAll().as("count"))
+export async function seedIfEmpty(db: Kysely<Database>): Promise<void> {
+  const existingUser = await db
+    .selectFrom("users")
+    .select("id")
+    .limit(1)
     .executeTakeFirst();
 
-  if (branchCount && Number(branchCount.count) > 0) {
+  if (existingUser) {
+    await verifyInstallation(db);
     logger.info("seed_skipped_already_initialized");
     return;
   }
 
   logger.info("seed_started");
-  const nowMs = Date.now();
+  const context = createSeedContext();
+  const includeDemoFixtures = process.env.NODE_ENV !== "production";
 
   await db.transaction().execute(async (trx) => {
-    await runBootstrapSeedStage(trx, nowMs);
+    await provisionInstallation(trx, context.anchorDate);
 
-    if (process.env.NODE_ENV !== "production") {
-      await runDemoIdentitiesSeedStage(trx, nowMs);
-      await runDemoWorkflowSeedStage(trx, nowMs);
+    if (includeDemoFixtures) {
+      await runDemoIdentitiesSeedStage(trx, context);
+      await runDemoWorkflowSeedStage(trx, context);
+      await runDemoMerchantStatsSeedStage(trx, context);
     }
   });
 

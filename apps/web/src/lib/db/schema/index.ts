@@ -1,16 +1,20 @@
 import type { Kysely } from "kysely";
 
-import * as auditActionPoliciesSeed from "../seeds/bootstrap/audit-action-policies";
 import { SCHEMA_MODULES } from "./plan";
+import * as auditActionPolicies from "./reference-data/audit-action-policies";
+import * as workflowKinds from "./reference-data/workflow-kinds";
 
 export interface SchemaModule {
   createTables(db: Kysely<any>): Promise<void>;
 }
 
-export interface SeedModule {
+export interface ReferenceDataModule {
   run(db: Kysely<any>): Promise<void>;
 }
 
 export { SCHEMA_MODULES };
 
-export const BOOTSTRAP_SEED_MODULES: SeedModule[] = [auditActionPoliciesSeed];
+export const REFERENCE_DATA_MODULES: ReferenceDataModule[] = [
+  auditActionPolicies,
+  workflowKinds,
+];

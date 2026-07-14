@@ -58,6 +58,7 @@ export async function getCurrentUser(
       : null,
     avatarVersion: user.avatar_version,
     onboardingCompletedAt: user.onboarding_completed_at?.getTime() ?? null,
+    passwordChangeRequired: user.password_change_required,
     role,
     strongAuthRequired: requiresStrongAuthRole(user.role),
     strongAuthConfigured: strongAuthStatus.hasVerifiedStrongAuth,

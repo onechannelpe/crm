@@ -53,7 +53,7 @@ export async function changePassword(
 ): Promise<{ message: string }> {
   return runAction({
     name: "settings.security.change_password",
-    access: { kind: "session" },
+    access: { kind: "auth" },
 
     parse: () =>
       parseObject({ currentPassword, newPassword }, validationFail, (r) => ({

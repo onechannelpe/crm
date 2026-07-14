@@ -97,6 +97,10 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró el proceso de importación.",
   },
+  merchant_account_not_found: {
+    kind: "not_found",
+    message: "No se encontró la cuenta del comercio.",
+  },
   resource_not_found: {
     kind: "not_found",
     message: "No se encontró el recurso solicitado.",
@@ -510,6 +514,19 @@ export const ERROR_CATALOG = {
   password_mismatch: {
     kind: "validation",
     message: "Las contraseñas no coinciden.",
+  },
+  installation_password_change_required: {
+    kind: "forbidden",
+    message: "Cambia la contraseña temporal antes de continuar.",
+  },
+  installation_password_must_change: {
+    kind: "validation",
+    message:
+      "La nueva contraseña debe ser diferente de la contraseña temporal.",
+  },
+  invalid_input: {
+    kind: "validation",
+    message: "Los datos enviados no son válidos.",
   },
 } as const satisfies Record<string, { kind: DomainErrorKind; message: string }>;
 

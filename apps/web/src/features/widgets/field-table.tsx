@@ -6,7 +6,7 @@ import { EditButtonWrapper } from "~/components/ui/input/edit-button-wrapper";
 import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 
-import styles from "./styles.module.css";
+import styles from "./field-table.module.css";
 
 type FieldIconComponent = (props: {
   size?: number;

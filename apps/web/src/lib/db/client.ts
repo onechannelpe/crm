@@ -19,6 +19,13 @@ function createPoolTypes(): TypeOverrides {
   // must remain within that limit.
   poolTypes.setTypeParser(types.builtins.INT8, Number.parseInt);
 
+  // `date` columns are pure calendar dates (no time, no zone). The default
+  // parser turns them into a JS Date at local midnight, which shifts across
+  // timezones. Keep the raw 'YYYY-MM-DD' string so a date is one value from
+  // intake to read, matching how the merchant-stats module models it. Only
+  // `date` columns use this; `timestamptz` stays a Date.
+  poolTypes.setTypeParser(types.builtins.DATE, (value) => value);
+
   return poolTypes;
 }
 

@@ -52,6 +52,14 @@ export function createSessionRepository(db: Kysely<Database>) {
         .execute();
     },
 
+    async deleteOtherForUser(userId: UserId, currentSessionId: string) {
+      await db
+        .deleteFrom("user_sessions")
+        .where("user_id", "=", userId)
+        .where("id", "!=", currentSessionId)
+        .execute();
+    },
+
     async deleteExpired(): Promise<number> {
       const result = await db
         .deleteFrom("user_sessions")

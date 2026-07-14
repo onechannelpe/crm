@@ -6,10 +6,7 @@ import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
 import { TextInput } from "~/components/ui/input/text-input";
 import { SETTLEMENT_BANKS } from "~/contracts/workflow/vocabulary";
-import {
-  FieldInputValue,
-  FieldRow,
-} from "~/features/side-panel/components/field-table";
+import { FieldInputValue, FieldRow } from "~/features/widgets/field-table";
 
 import { coerceSettlementBank, type CommercialScopeFormValues } from "./values";
 

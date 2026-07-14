@@ -8,7 +8,7 @@ import {
 import { FileDropzone } from "~/components/ui/input/file-dropzone";
 import {
   accountRowsQuery,
-  businessStatsOverviewQuery,
+  merchantStatsOverviewQuery,
   cohortRowsQuery,
 } from "~/lib/queries/dashboards";
 
@@ -34,7 +34,7 @@ export function UploadReport(props: { onClose?: () => void }) {
 
   async function refreshDashboards(): Promise<void> {
     await Promise.all([
-      revalidate(businessStatsOverviewQuery.key),
+      revalidate(merchantStatsOverviewQuery.key),
       revalidate(cohortRowsQuery.key),
       revalidate(accountRowsQuery.key),
     ]);

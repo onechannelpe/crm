@@ -1,6 +1,4 @@
-import type { Transaction } from "kysely";
-
-import type { Database } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import type { MappedGpvRow } from "../intake/contracts";
 import {
@@ -17,7 +15,7 @@ const ACCOUNTS_CHUNK = 1000;
 // overwriting a value the business team already set. coalesce(existing, new)
 // keeps human enrichment; it only fills nulls.
 export async function backfillAccounts(
-  trx: Transaction<Database>,
+  trx: DatabaseExecutor,
   rows: readonly MappedGpvRow[],
   ctx: MatchContext,
   now: Date,
@@ -36,7 +34,7 @@ export async function backfillAccounts(
     };
   });
 
-  for (const chunk of chunk_(values, ACCOUNTS_CHUNK)) {
+  for (const chunk of chunks(values, ACCOUNTS_CHUNK)) {
     // eslint-disable-next-line no-await-in-loop
     await trx
       .insertInto("merchant_accounts")
@@ -66,7 +64,7 @@ export async function backfillAccounts(
 // projected, so file values win. Blank file cells fall back to what is stored,
 // so a partially filled file never erases prior enrichment.
 export async function applyAccountEnrichment(
-  trx: Transaction<Database>,
+  trx: DatabaseExecutor,
   rows: readonly MappedGpvRow[],
   ctx: MatchContext,
   now: Date,
@@ -87,7 +85,7 @@ export async function applyAccountEnrichment(
     };
   });
 
-  for (const chunk of chunk_(values, ACCOUNTS_CHUNK)) {
+  for (const chunk of chunks(values, ACCOUNTS_CHUNK)) {
     // eslint-disable-next-line no-await-in-loop
     await trx
       .insertInto("merchant_accounts")
@@ -142,7 +140,7 @@ function hasEnrichment(row: MappedGpvRow): boolean {
   );
 }
 
-function chunk_<T>(items: readonly T[], size: number): T[][] {
+function chunks<T>(items: readonly T[], size: number): T[][] {
   const out: T[][] = [];
   for (let index = 0; index < items.length; index += size) {
     out.push(items.slice(index, index + size));

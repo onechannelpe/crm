@@ -1,264 +1,68 @@
 import type { Kysely } from "kysely";
 
-import type { OrganizationId } from "~/server/shared/ids";
-
 import type { Database } from "../../../types";
-import { WORKFLOW_LEAD_ASSIGNMENT_IDS } from "../demo-ids";
-import {
-  BACK_OFFICE,
-  EXECUTIVES,
-  SUPERVISORS,
-  type OrganizationSeedKey,
-} from "../scenario";
-import type { WorkflowLeadIds } from "./history-events";
+import type { CompiledLead } from "../compiler";
+import type { OrganizationsByRuc } from "./organizations";
 
 export async function persistWorkflowLeadsAndAssignments(
   db: Kysely<Database>,
   now: number,
   day: number,
-  getOrganizationId: (key: OrganizationSeedKey) => OrganizationId,
-  leadIds: WorkflowLeadIds,
+  orgIdByRuc: OrganizationsByRuc,
+  leads: readonly CompiledLead[],
 ): Promise<void> {
-  const {
-    idPending,
-    idNeeds,
-    idReady,
-    idQuoted,
-    idForSale,
-    idConverted,
-    idRejected,
-  } = leadIds;
   await db
     .insertInto("workflow_leads")
-    .values([
-      {
-        id: idPending,
-        organization_id: getOrganizationId("pending"),
-        executive_id: EXECUTIVES.CAMILA,
-        stage: "QUALIFYING",
-        status: null,
-        priority: null,
-        created_by: SUPERVISORS.DIEGO,
-        updated_by: null,
-        created_at: new Date(now - day),
-        updated_at: new Date(now - day),
-        current_provider: "BCP",
-        current_debit_rate: 2.5,
-        current_credit_rate: 2.9,
-        gpv: 45_000.0,
-        ticket: 120.0,
-        settlement_bank: "BCP",
-        pos_count: 2,
-      },
-      {
-        id: idNeeds,
-        organization_id: getOrganizationId("needs"),
-        executive_id: EXECUTIVES.MATIAS,
-        stage: "PRICING",
-        status: "DISPONIBLE",
-        priority: "P2",
-        created_by: SUPERVISORS.DIEGO,
-        updated_by: BACK_OFFICE.JOSEFINA,
-        created_at: new Date(now - 4 * day),
-        updated_at: new Date(now - 3 * day),
-        current_provider: "BBVA",
-        current_debit_rate: 2.6,
-        current_credit_rate: 3.0,
-        gpv: 60_000.0,
-        ticket: 150.0,
-        settlement_bank: "BBVA",
-        pos_count: 3,
-      },
-      {
-        id: idReady,
-        organization_id: getOrganizationId("ready"),
-        executive_id: EXECUTIVES.LUCIA,
-        stage: "PRICING",
-        status: "DISPONIBLE",
-        priority: "P1",
-        created_by: SUPERVISORS.DIEGO,
-        updated_by: BACK_OFFICE.JOSEFINA,
-        created_at: new Date(now - 7 * day),
-        updated_at: new Date(now - 6 * day),
-        current_provider: "SCOTIABANK",
-        current_debit_rate: 2.7,
-        current_credit_rate: 3.05,
-        gpv: 95_000.0,
-        ticket: 210.0,
-        settlement_bank: "INTERBANK",
-        pos_count: 5,
-      },
-      {
-        id: idQuoted,
-        organization_id: getOrganizationId("quoted"),
-        executive_id: EXECUTIVES.SOFIA,
-        stage: "PRICING",
-        status: "DISPONIBLE",
-        priority: "P2",
-        created_by: SUPERVISORS.NICOLAS,
-        updated_by: BACK_OFFICE.GABRIEL,
-        created_at: new Date(now - 14 * day),
-        updated_at: new Date(now - 10 * day),
-        // reservation_expires_at is set for live holds; the back-office UI
-        // blocks registering a new lead on the same RUC until this passes.
-        reservation_expires_at: new Date(now + 4 * day),
-        current_provider: "INTERBANK",
-        current_debit_rate: 2.55,
-        current_credit_rate: 2.95,
-        gpv: 70_000.0,
-        ticket: 180.0,
-        settlement_bank: "BCP",
-        pos_count: 3,
-      },
-      {
-        id: idForSale,
-        organization_id: getOrganizationId("forSale"),
-        executive_id: EXECUTIVES.FERNANDA,
-        stage: "SETUP",
-        status: "DISPONIBLE",
-        priority: "P1",
-        created_by: SUPERVISORS.DIEGO,
-        updated_by: BACK_OFFICE.JOSEFINA,
-        created_at: new Date(now - 21 * day),
-        updated_at: new Date(now - 15 * day),
-        current_provider: "BBVA",
-        current_debit_rate: 2.75,
-        current_credit_rate: 3.1,
-        gpv: 120_000.0,
-        ticket: 260.0,
-        settlement_bank: "SCOTIABANK",
-        pos_count: 6,
-      },
-      {
-        id: idConverted,
-        organization_id: getOrganizationId("converted"),
-        executive_id: EXECUTIVES.CLAUDIA,
-        stage: "LIVE",
-        status: "DISPONIBLE",
-        priority: "P1",
-        created_by: SUPERVISORS.DIEGO,
-        updated_by: EXECUTIVES.CLAUDIA,
-        created_at: new Date(now - 30 * day),
-        updated_at: new Date(now - 20 * day),
-        current_provider: "BBVA",
-        current_debit_rate: 2.8,
-        current_credit_rate: 3.1,
-        gpv: 85_000.0,
-        ticket: 245.5,
-        settlement_bank: "INTERBANK",
-        pos_count: 4,
-      },
-      {
-        id: idRejected,
-        organization_id: getOrganizationId("rejected"),
-        executive_id: EXECUTIVES.PABLO,
-        stage: "DISQUALIFIED",
-        status: "CARTERIZADO",
-        priority: "SIN RESULTADO",
-        created_by: SUPERVISORS.NICOLAS,
-        updated_by: BACK_OFFICE.GABRIEL,
-        created_at: new Date(now - 3 * day),
-        updated_at: new Date(now - 2 * day),
-        current_provider: "NACION",
-        current_debit_rate: 2.4,
-        current_credit_rate: 2.85,
-        gpv: 30_000.0,
-        ticket: 90.0,
-        settlement_bank: "NACION",
-        pos_count: 1,
-      },
-    ])
-    .onConflict((oc) =>
-      oc.column("id").doUpdateSet((eb) => ({
-        organization_id: eb.ref("excluded.organization_id"),
-        executive_id: eb.ref("excluded.executive_id"),
-        stage: eb.ref("excluded.stage"),
-        status: eb.ref("excluded.status"),
-        priority: eb.ref("excluded.priority"),
-        created_by: eb.ref("excluded.created_by"),
-        updated_by: eb.ref("excluded.updated_by"),
-        created_at: eb.ref("excluded.created_at"),
-        updated_at: eb.ref("excluded.updated_at"),
-        reservation_expires_at: eb.ref("excluded.reservation_expires_at"),
-        current_provider: eb.ref("excluded.current_provider"),
-        current_debit_rate: eb.ref("excluded.current_debit_rate"),
-        current_credit_rate: eb.ref("excluded.current_credit_rate"),
-        gpv: eb.ref("excluded.gpv"),
-        ticket: eb.ref("excluded.ticket"),
-        settlement_bank: eb.ref("excluded.settlement_bank"),
-        pos_count: eb.ref("excluded.pos_count"),
-      })),
-    )
+    .values(leads.map((lead) => leadRow(lead, now, day, orgIdByRuc)))
     .execute();
 
   await db
     .insertInto("workflow_lead_assignments")
-    .values([
-      {
-        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.pending,
-        lead_id: idPending,
-        executive_id: EXECUTIVES.CAMILA,
-        assigned_by: SUPERVISORS.DIEGO,
+    .values(
+      leads.map((lead) => ({
+        id: lead.assignmentId,
+        lead_id: lead.leadId,
+        executive_id: lead.spec.executiveId,
+        assigned_by: lead.spec.createdBy,
         is_active: true,
-        assigned_at: new Date(now - day),
-      },
-      {
-        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.needs,
-        lead_id: idNeeds,
-        executive_id: EXECUTIVES.MATIAS,
-        assigned_by: SUPERVISORS.DIEGO,
-        is_active: true,
-        assigned_at: new Date(now - 4 * day),
-      },
-      {
-        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.ready,
-        lead_id: idReady,
-        executive_id: EXECUTIVES.LUCIA,
-        assigned_by: SUPERVISORS.DIEGO,
-        is_active: true,
-        assigned_at: new Date(now - 7 * day),
-      },
-      {
-        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.quoted,
-        lead_id: idQuoted,
-        executive_id: EXECUTIVES.SOFIA,
-        assigned_by: SUPERVISORS.NICOLAS,
-        is_active: true,
-        assigned_at: new Date(now - 14 * day),
-      },
-      {
-        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.forSale,
-        lead_id: idForSale,
-        executive_id: EXECUTIVES.FERNANDA,
-        assigned_by: SUPERVISORS.DIEGO,
-        is_active: true,
-        assigned_at: new Date(now - 21 * day),
-      },
-      {
-        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.converted,
-        lead_id: idConverted,
-        executive_id: EXECUTIVES.CLAUDIA,
-        assigned_by: SUPERVISORS.DIEGO,
-        is_active: true,
-        assigned_at: new Date(now - 30 * day),
-      },
-      {
-        id: WORKFLOW_LEAD_ASSIGNMENT_IDS.rejected,
-        lead_id: idRejected,
-        executive_id: EXECUTIVES.PABLO,
-        assigned_by: SUPERVISORS.NICOLAS,
-        is_active: true,
-        assigned_at: new Date(now - 3 * day),
-      },
-    ])
-    .onConflict((oc) =>
-      oc.column("id").doUpdateSet((eb) => ({
-        lead_id: eb.ref("excluded.lead_id"),
-        executive_id: eb.ref("excluded.executive_id"),
-        assigned_by: eb.ref("excluded.assigned_by"),
-        is_active: eb.ref("excluded.is_active"),
-        assigned_at: eb.ref("excluded.assigned_at"),
+        assigned_at: new Date(now - lead.spec.createdOffsetDays * day),
       })),
     )
     .execute();
+}
+
+function leadRow(
+  lead: CompiledLead,
+  now: number,
+  day: number,
+  orgIdByRuc: OrganizationsByRuc,
+) {
+  const { spec } = lead;
+  const organizationId = orgIdByRuc.get(spec.org.ruc);
+  if (!organizationId) {
+    throw new Error(`missing_seed_organization_id:${spec.org.ruc}`);
+  }
+  return {
+    id: lead.leadId,
+    organization_id: organizationId,
+    executive_id: spec.executiveId,
+    stage: lead.projection.stage,
+    status: lead.projection.status,
+    priority: lead.projection.priority,
+    created_by: spec.createdBy,
+    updated_by: spec.updatedBy,
+    created_at: new Date(now - spec.createdOffsetDays * day),
+    updated_at: new Date(now - lead.projection.updatedOffsetDays * day),
+    reservation_expires_at:
+      spec.reservationOffsetDays === undefined
+        ? null
+        : new Date(now + spec.reservationOffsetDays * day),
+    current_provider: spec.current.provider,
+    current_debit_rate: spec.current.debitRate,
+    current_credit_rate: spec.current.creditRate,
+    gpv: spec.current.gpv,
+    ticket: spec.current.ticket,
+    settlement_bank: spec.current.settlementBank,
+    pos_count: spec.current.posCount,
+  };
 }

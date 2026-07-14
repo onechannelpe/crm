@@ -4,15 +4,9 @@ import { join } from "node:path";
 import { sql, type Kysely } from "kysely";
 import { Client } from "pg";
 
-import {
-  SETTLEMENT_BANKS,
-  ACCOUNT_TYPE_KINDS,
-  COLLECTION_MODES,
-  CURRENCIES,
-} from "~/contracts/workflow/vocabulary";
 import { createDb } from "~/lib/db/client";
 import { migrateToLatest } from "~/lib/db/migrate";
-import { BOOTSTRAP_SEED_MODULES } from "~/lib/db/schema";
+import { REFERENCE_DATA_MODULES } from "~/lib/db/schema";
 import type { Database } from "~/lib/db/types";
 import {
   BranchId,
@@ -128,32 +122,6 @@ async function withMaintenanceClient<T>(
   } finally {
     await client.end();
   }
-}
-
-// Vocabulary lookup tables (currency/account-type/settlement-bank/collection
-// mode). Genuinely static reference data: nothing in the app or the test
-// suite ever writes to these outside migration seeding, so they're seeded
-// once at template-build time and excluded from `resetTestDb`'s truncation.
-async function seedVocabulary(db: Kysely<Database>) {
-  await db
-    .insertInto("workflow_collection_mode_kinds")
-    .values(COLLECTION_MODES.map((value) => ({ value })))
-    .execute();
-
-  await db
-    .insertInto("workflow_currency_kinds")
-    .values(CURRENCIES.map((value) => ({ value })))
-    .execute();
-
-  await db
-    .insertInto("workflow_account_type_kinds")
-    .values(ACCOUNT_TYPE_KINDS.map((value) => ({ value })))
-    .execute();
-
-  await db
-    .insertInto("workflow_settlement_banks")
-    .values(SETTLEMENT_BANKS.map((value) => ({ value })))
-    .execute();
 }
 
 // Test-harness fixture rows (branches/users/organizations/people). Unlike
@@ -369,7 +337,6 @@ async function buildTemplate(): Promise<void> {
         const db = createDb(databaseUrl(TEMPLATE_DB_NAME));
         try {
           await migrateToLatest(db);
-          await seedVocabulary(db);
           await seedFixtures(db);
         } finally {
           // Drop the seeding connection so the database can serve as a template.
@@ -440,17 +407,10 @@ export async function createIsolatedTestDb(
   };
 }
 
-// Vocabulary tables are seeded once at template-build time and never written
-// to by app or test code (verified: only `seedVocabulary` inserts into
-// them), so they're excluded from truncation. `schema_integrity` is the
-// migration hash marker and is irrelevant post-clone.
-const STATIC_TABLES = new Set([
-  "schema_integrity",
-  "workflow_collection_mode_kinds",
-  "workflow_currency_kinds",
-  "workflow_account_type_kinds",
-  "workflow_settlement_banks",
-]);
+// The migration marker survives per-test resets. Reference tables are
+// truncated and restored together so the harness follows the same ownership
+// boundary as schema preparation.
+const STATIC_TABLES = new Set(["schema_integrity"]);
 
 async function truncateDynamicTables(db: Kysely<Database>): Promise<void> {
   const { rows } = await sql<{ tablename: string }>`
@@ -474,7 +434,7 @@ async function truncateDynamicTables(db: Kysely<Database>): Promise<void> {
 // had. Run this in `beforeEach`, not `beforeAll`.
 export async function resetTestDb(ctx: TestDbContext): Promise<void> {
   await truncateDynamicTables(ctx.db);
-  for (const module of BOOTSTRAP_SEED_MODULES) {
+  for (const module of REFERENCE_DATA_MODULES) {
     // eslint-disable-next-line no-await-in-loop
     await module.run(ctx.db);
   }

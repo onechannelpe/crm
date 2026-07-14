@@ -13,11 +13,11 @@ import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   accountRowsQuery,
-  businessStatsOverviewQuery,
+  merchantStatsOverviewQuery,
 } from "~/lib/queries/dashboards";
 import type {
-  BusinessStatsFilterOptions,
-  BusinessStatsFilters,
+  MerchantStatsFilterOptions,
+  MerchantStatsFilters,
   MerchantAccountRow,
 } from "~/server/merchant-stats/read/contracts";
 
@@ -31,13 +31,13 @@ type Row = MerchantAccountRow & { id: string };
 async function commit(): Promise<void> {
   await Promise.all([
     revalidate(accountRowsQuery.key),
-    revalidate(businessStatsOverviewQuery.key),
+    revalidate(merchantStatsOverviewQuery.key),
   ]);
 }
 
 export function AccountsGrid(props: {
-  filters: BusinessStatsFilters & { missingEnrichment?: boolean };
-  options: BusinessStatsFilterOptions;
+  filters: MerchantStatsFilters & { missingEnrichment?: boolean };
+  options: MerchantStatsFilterOptions;
 }) {
   const [limit, setLimit] = createSignal(PAGE);
 

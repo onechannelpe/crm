@@ -24,14 +24,14 @@ import {
   FieldTable,
   FieldTextValue,
   RecordInlineCell,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
 import {
-  RecordDetailSectionActions,
-  RecordDetailSection,
-  RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSectionTitle,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCardActions,
+  WidgetCard,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
 import {
   formatAmount,
   formatRate,
@@ -247,14 +247,14 @@ export function RateProposalSection(props: RateProposalSectionProps) {
   }
 
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Tarifa propuesta" />
+    <WidgetCard variant="side-column">
+      <WidgetCardHeader>
+        <WidgetCardTitle text="Tarifa propuesta" />
         <Show when={isRenegotiation()}>
           <span class={styles.roundBadge}>Ronda {currentRound() + 1}</span>
         </Show>
-      </RecordDetailSectionHeader>
-      <RecordDetailSectionBody>
+      </WidgetCardHeader>
+      <WidgetCardContent>
         <FieldTable>
           <RecordInlineCell
             label="Payback"
@@ -342,7 +342,7 @@ export function RateProposalSection(props: RateProposalSectionProps) {
             !showRevisionForm() && (props.canAccept || props.canRequestRevision)
           }
         >
-          <RecordDetailSectionActions stack>
+          <WidgetCardActions stack>
             <Show when={props.canAccept}>
               <Button
                 type="button"
@@ -367,7 +367,7 @@ export function RateProposalSection(props: RateProposalSectionProps) {
                 Solicitar revision de tarifa
               </Button>
             </Show>
-          </RecordDetailSectionActions>
+          </WidgetCardActions>
         </Show>
 
         <Show when={showRevisionForm()}>
@@ -470,8 +470,8 @@ export function RateProposalSection(props: RateProposalSectionProps) {
         <Show when={acceptErrorMessage()}>
           {(message) => <p class={styles.error}>{message()}</p>}
         </Show>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }
 

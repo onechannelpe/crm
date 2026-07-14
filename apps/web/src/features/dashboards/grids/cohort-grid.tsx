@@ -10,7 +10,7 @@ import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { cohortRowsQuery } from "~/lib/queries/dashboards";
 import type {
-  BusinessStatsFilters,
+  MerchantStatsFilters,
   CohortGridRow,
 } from "~/server/merchant-stats/read/contracts";
 
@@ -104,7 +104,7 @@ const COLUMNS = [
   },
 ] satisfies ReadonlyArray<DataGridColumn<Row>>;
 
-export function CohortGrid(props: { filters: BusinessStatsFilters }) {
+export function CohortGrid(props: { filters: MerchantStatsFilters }) {
   const [limit, setLimit] = createSignal(PAGE);
 
   const [page] = createResource(

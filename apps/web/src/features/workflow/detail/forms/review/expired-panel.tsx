@@ -3,12 +3,12 @@ import { createSignal, Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
 import {
-  RecordDetailSection,
-  RecordDetailSectionActions,
-  RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSectionTitle,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCard,
+  WidgetCardActions,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import { restartQuotationMutation } from "../../../data/command-mutations";
@@ -36,12 +36,12 @@ export function ExpiredPanel(props: { leadId: string; canRestart: boolean }) {
   }
 
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Reserva vencida" />
-      </RecordDetailSectionHeader>
+    <WidgetCard variant="side-column">
+      <WidgetCardHeader>
+        <WidgetCardTitle text="Reserva vencida" />
+      </WidgetCardHeader>
 
-      <RecordDetailSectionBody>
+      <WidgetCardContent>
         <Show
           when={props.canRestart}
           fallback={
@@ -56,7 +56,7 @@ export function ExpiredPanel(props: { leadId: string; canRestart: boolean }) {
             propuesta como punto de partida.
           </p>
           {errorMessage() && <p class={styles.error}>{errorMessage()}</p>}
-          <RecordDetailSectionActions>
+          <WidgetCardActions>
             <Button
               type="button"
               variant="primary"
@@ -66,9 +66,9 @@ export function ExpiredPanel(props: { leadId: string; canRestart: boolean }) {
             >
               Reiniciar cotización
             </Button>
-          </RecordDetailSectionActions>
+          </WidgetCardActions>
         </Show>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }

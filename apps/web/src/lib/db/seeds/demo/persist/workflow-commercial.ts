@@ -3,269 +3,240 @@ import type { Kysely } from "kysely";
 import type { OrganizationId } from "~/server/shared/ids";
 
 import type { Database } from "../../../types";
-import { WORKFLOW_VENUE_ACCOUNT_IDS } from "../demo-ids";
-import { BACK_OFFICE, EXECUTIVES, type OrganizationSeedKey } from "../scenario";
-import type { WorkflowCommercialIds, WorkflowLeadIds } from "./history-events";
+import type { CompiledLead } from "../compiler";
+import type { LegalRepSpec } from "../scenario";
+import type { OrganizationsByRuc } from "./organizations";
 
 export async function persistWorkflowCommercialData(
   db: Kysely<Database>,
   now: number,
   day: number,
-  leadIds: WorkflowLeadIds,
-  commercialIds: WorkflowCommercialIds,
-  getOrganizationId: (key: OrganizationSeedKey) => OrganizationId,
+  orgIdByRuc: OrganizationsByRuc,
+  leads: readonly CompiledLead[],
 ): Promise<void> {
-  const { idQuoted, idForSale, idConverted } = leadIds;
-  const { qidQuoted, qidForSale, qidConverted, vidConverted } = commercialIds;
-  await db
-    .insertInto("workflow_rate_proposals")
-    .values([
-      {
-        id: qidQuoted,
-        lead_id: idQuoted,
-        round: 1,
-        payback_pricing: 1.2,
-        proposed_debit_rate: 0.9,
-        proposed_credit_rate: 2.3,
-        proposed_foreign_rate: 1.7,
-        fee: 18.0,
-        currency: "PEN",
-        proposed_by: BACK_OFFICE.JOSEFINA,
-        proposed_at: new Date(now - 10 * day),
-        outcome: "pending",
-        decided_at: null,
-      },
-      {
-        id: qidForSale,
-        lead_id: idForSale,
-        round: 1,
-        payback_pricing: 1.15,
-        proposed_debit_rate: 0.85,
-        proposed_credit_rate: 2.2,
-        proposed_foreign_rate: 1.6,
-        fee: 20.0,
-        currency: "PEN",
-        proposed_by: BACK_OFFICE.JOSEFINA,
-        proposed_at: new Date(now - 18 * day),
-        outcome: "accepted",
-        decided_at: new Date(now - 16 * day),
-      },
-      {
-        id: qidConverted,
-        lead_id: idConverted,
-        round: 1,
-        payback_pricing: 1.25,
-        proposed_debit_rate: 0.95,
-        proposed_credit_rate: 2.5,
-        proposed_foreign_rate: 1.8,
-        fee: 15.0,
-        currency: "PEN",
-        proposed_by: BACK_OFFICE.JOSEFINA,
-        proposed_at: new Date(now - 27 * day),
-        outcome: "accepted",
-        decided_at: new Date(now - 25 * day),
-      },
-    ])
-    .onConflict((oc) =>
-      oc.column("id").doUpdateSet((eb) => ({
-        lead_id: eb.ref("excluded.lead_id"),
-        round: eb.ref("excluded.round"),
-        payback_pricing: eb.ref("excluded.payback_pricing"),
-        proposed_debit_rate: eb.ref("excluded.proposed_debit_rate"),
-        proposed_credit_rate: eb.ref("excluded.proposed_credit_rate"),
-        proposed_foreign_rate: eb.ref("excluded.proposed_foreign_rate"),
-        fee: eb.ref("excluded.fee"),
-        currency: eb.ref("excluded.currency"),
-        proposed_by: eb.ref("excluded.proposed_by"),
-        proposed_at: eb.ref("excluded.proposed_at"),
-        outcome: eb.ref("excluded.outcome"),
-        decided_at: eb.ref("excluded.decided_at"),
-      })),
-    )
-    .execute();
+  await insertRateProposals(db, now, day, leads);
+  await insertRateRevisions(db, now, day, leads);
+  await insertVenues(db, now, day, leads);
+  await insertDigitalPolicies(db, now, day, leads);
+  await insertLegalReps(db, now, day, orgIdByRuc, leads);
+}
 
-  await db
-    .insertInto("workflow_lead_venues")
-    .values([
+async function insertRateRevisions(
+  db: Kysely<Database>,
+  now: number,
+  day: number,
+  leads: readonly CompiledLead[],
+): Promise<void> {
+  const rows = leads.flatMap((lead) =>
+    (lead.spec.proposals ?? []).flatMap((proposal, index) => {
+      if (proposal.outcome !== "revision_requested") return [];
+      const revisionId = lead.rateRevisionIds[index];
+      if (revisionId === null || proposal.decidedOffsetDays === undefined) {
+        throw new Error(`missing_compiled_rate_revision:${lead.spec.key}`);
+      }
+
+      return [
+        {
+          id: revisionId,
+          lead_id: lead.leadId,
+          proposal_id: lead.rateProposalIds[index],
+          round: proposal.round,
+          justification: "El comercio solicita una tarifa más competitiva",
+          requested_by: lead.spec.executiveId,
+          requested_at: new Date(now - proposal.decidedOffsetDays * day),
+        },
+      ];
+    }),
+  );
+  if (rows.length === 0) return;
+  await db.insertInto("workflow_rate_revisions").values(rows).execute();
+}
+
+async function insertRateProposals(
+  db: Kysely<Database>,
+  now: number,
+  day: number,
+  leads: readonly CompiledLead[],
+): Promise<void> {
+  const rows = leads.flatMap((lead) =>
+    (lead.spec.proposals ?? []).map((proposal, index) => ({
+      id: lead.rateProposalIds[index],
+      lead_id: lead.leadId,
+      round: proposal.round,
+      payback_pricing: proposal.paybackPricing,
+      proposed_debit_rate: proposal.debitRate,
+      proposed_credit_rate: proposal.creditRate,
+      proposed_foreign_rate: proposal.foreignRate,
+      fee: proposal.fee,
+      currency: proposal.currency,
+      proposed_by: proposal.proposedBy,
+      proposed_at: new Date(now - proposal.proposedOffsetDays * day),
+      outcome: proposal.outcome,
+      decided_at:
+        proposal.decidedOffsetDays === undefined
+          ? null
+          : new Date(now - proposal.decidedOffsetDays * day),
+    })),
+  );
+  if (rows.length === 0) return;
+  await db.insertInto("workflow_rate_proposals").values(rows).execute();
+}
+
+async function insertVenues(
+  db: Kysely<Database>,
+  now: number,
+  day: number,
+  leads: readonly CompiledLead[],
+): Promise<void> {
+  const venueRows = leads.flatMap((lead) => {
+    const venue = lead.spec.venue;
+    const venueId = lead.venueId;
+    if (!venue || !venueId) return [];
+
+    return [
       {
-        id: vidConverted,
-        lead_id: idConverted,
-        trade_name: "Andes Miraflores",
-        pos_quantity: 3,
+        id: venueId,
+        lead_id: lead.leadId,
+        trade_name: venue.tradeName,
+        pos_quantity: venue.posQuantity,
         link_url: null,
         online_url: null,
         online_collection_mode: null,
-        address: "AV. BENAVIDES NRO. 1855",
-        address_reference: "Frente al parque central",
-        district: "MIRAFLORES",
-        province: "LIMA",
-        department: "LIMA",
-        created_at: new Date(now - 22 * day),
-        created_by: EXECUTIVES.CLAUDIA,
+        address: venue.address,
+        address_reference: venue.addressReference,
+        district: lead.spec.org.district,
+        province: lead.spec.org.province,
+        department: lead.spec.org.department,
+        created_at: new Date(now - venue.createdOffsetDays * day),
+        created_by: venue.createdBy,
       },
-    ])
-    .onConflict((oc) =>
-      oc.column("id").doUpdateSet((eb) => ({
-        lead_id: eb.ref("excluded.lead_id"),
-        trade_name: eb.ref("excluded.trade_name"),
-        pos_quantity: eb.ref("excluded.pos_quantity"),
-        link_url: eb.ref("excluded.link_url"),
-        online_url: eb.ref("excluded.online_url"),
-        online_collection_mode: eb.ref("excluded.online_collection_mode"),
-        address: eb.ref("excluded.address"),
-        address_reference: eb.ref("excluded.address_reference"),
-        district: eb.ref("excluded.district"),
-        province: eb.ref("excluded.province"),
-        department: eb.ref("excluded.department"),
-        created_at: eb.ref("excluded.created_at"),
-        created_by: eb.ref("excluded.created_by"),
-      })),
-    )
-    .execute();
+    ];
+  });
+  if (venueRows.length === 0) return;
 
+  await db.insertInto("workflow_lead_venues").values(venueRows).execute();
+
+  const accountRows = leads.flatMap((lead) => {
+    const venue = lead.spec.venue;
+    const venueId = lead.venueId;
+    if (!venue || !venueId) return [];
+
+    return venue.accounts.map((account, index) => {
+      const accountId = lead.venueAccountIds[index];
+      if (!accountId) {
+        throw new Error(
+          `missing_seed_venue_account_id:${lead.spec.key}:${index}`,
+        );
+      }
+      return {
+        id: accountId,
+        venue_id: venueId,
+        currency: account.currency,
+        bank: account.bank,
+        account_type: account.accountType,
+        account_number: account.accountNumber,
+        cci: account.cci,
+        is_settlement: account.isSettlement,
+      };
+    });
+  });
+  if (accountRows.length === 0) return;
   await db
     .insertInto("workflow_lead_venue_accounts")
-    .values([
-      {
-        id: WORKFLOW_VENUE_ACCOUNT_IDS.pen,
-        venue_id: vidConverted,
-        currency: "PEN",
-        bank: "BCP",
-        account_type: "CORRIENTE",
-        account_number: "194-12345678-0-21",
-        cci: null,
-        is_settlement: true,
-      },
-      {
-        id: WORKFLOW_VENUE_ACCOUNT_IDS.usd,
-        venue_id: vidConverted,
-        currency: "USD",
-        bank: "BBVA",
-        account_type: "AHORROS",
-        account_number: "0011-0245-9988776655",
-        cci: "01124500998877665522",
-        is_settlement: false,
-      },
-    ])
-    .onConflict((oc) =>
-      oc.column("id").doUpdateSet((eb) => ({
-        venue_id: eb.ref("excluded.venue_id"),
-        currency: eb.ref("excluded.currency"),
-        bank: eb.ref("excluded.bank"),
-        account_type: eb.ref("excluded.account_type"),
-        account_number: eb.ref("excluded.account_number"),
-        cci: eb.ref("excluded.cci"),
-        is_settlement: eb.ref("excluded.is_settlement"),
-      })),
-    )
+    .values(accountRows)
     .execute();
+}
 
-  await db
-    .insertInto("workflow_lead_digital_policy")
-    .values([
+async function insertDigitalPolicies(
+  db: Kysely<Database>,
+  now: number,
+  day: number,
+  leads: readonly CompiledLead[],
+): Promise<void> {
+  const rows = leads.flatMap((lead) => {
+    const policy = lead.spec.digitalPolicy;
+    if (!policy) return [];
+    return [
       {
-        lead_id: idConverted,
-        link_scope: "none",
-        link_url: null,
-        online_scope: "none",
-        online_url: null,
-        online_collection_mode: null,
-        updated_at: new Date(now - 28 * day),
-        updated_by: EXECUTIVES.CLAUDIA,
+        lead_id: lead.leadId,
+        link_scope: policy.linkScope,
+        link_url: policy.linkUrl,
+        online_scope: policy.onlineScope,
+        online_url: policy.onlineUrl,
+        online_collection_mode: policy.onlineCollectionMode,
+        updated_at: new Date(now - policy.updatedOffsetDays * day),
+        updated_by: policy.updatedBy,
       },
-    ])
-    .onConflict((oc) =>
-      oc.column("lead_id").doUpdateSet((eb) => ({
-        link_scope: eb.ref("excluded.link_scope"),
-        link_url: eb.ref("excluded.link_url"),
-        online_scope: eb.ref("excluded.online_scope"),
-        online_url: eb.ref("excluded.online_url"),
-        online_collection_mode: eb.ref("excluded.online_collection_mode"),
-        updated_at: eb.ref("excluded.updated_at"),
-        updated_by: eb.ref("excluded.updated_by"),
-      })),
-    )
-    .execute();
+    ];
+  });
+  if (rows.length === 0) return;
+  await db.insertInto("workflow_lead_digital_policy").values(rows).execute();
+}
 
-  const convertedOrgId = getOrganizationId("converted");
+// Legal reps are relational (people -> organization_people -> role), so each is
+// inserted in sequence rather than batched.
+async function insertLegalReps(
+  db: Kysely<Database>,
+  now: number,
+  day: number,
+  orgIdByRuc: OrganizationsByRuc,
+  leads: readonly CompiledLead[],
+): Promise<void> {
+  for (const lead of leads) {
+    if (!lead.spec.legalRep) continue;
+    const organizationId = orgIdByRuc.get(lead.spec.org.ruc);
+    if (!organizationId) {
+      throw new Error(`missing_seed_organization_id:${lead.spec.org.ruc}`);
+    }
+    // eslint-disable-next-line no-await-in-loop
+    await insertLegalRep(db, now, day, organizationId, lead.spec.legalRep);
+  }
+}
 
-  await db
+async function insertLegalRep(
+  db: Kysely<Database>,
+  now: number,
+  day: number,
+  organizationId: OrganizationId,
+  rep: LegalRepSpec,
+): Promise<void> {
+  const at = new Date(now - rep.offsetDays * day);
+
+  const person = await db
     .insertInto("people")
     .values({
-      dni: "42715983",
-      names: "Daniel",
-      first_surname: "Gutierrez",
-      second_surname: "Paredes",
-      email: "daniel.gutierrez@andes.pe",
-      created_at: new Date(now - 29 * day),
-      updated_at: new Date(now - 29 * day),
+      dni: rep.dni,
+      names: rep.names,
+      first_surname: rep.firstSurname,
+      second_surname: rep.secondSurname,
+      email: rep.email,
+      created_at: at,
+      updated_at: at,
     })
-    .onConflict((oc) =>
-      oc.column("dni").doUpdateSet({
-        names: "Daniel",
-        first_surname: "Gutierrez",
-        second_surname: "Paredes",
-        email: "daniel.gutierrez@andes.pe",
-        updated_at: new Date(now - 29 * day),
-      }),
-    )
-    .execute();
-  const legalRepPerson = await db
-    .selectFrom("people")
-    .select("id")
-    .where("dni", "=", "42715983")
+    .returning("id")
     .executeTakeFirstOrThrow();
 
-  await db
-    .updateTable("organizations")
-    .set({ line_of_business: "Construccion de edificios residenciales" })
-    .where("id", "=", convertedOrgId)
-    .execute();
-
-  await db
+  const orgPerson = await db
     .insertInto("organization_people")
     .values({
-      person_id: legalRepPerson.id,
-      organization_id: convertedOrgId,
-      phone: "987654321",
-      email: "daniel.gutierrez@andes.pe",
-      created_at: new Date(now - 29 * day),
-      updated_at: new Date(now - 29 * day),
+      person_id: person.id,
+      organization_id: organizationId,
+      phone: rep.phone,
+      email: rep.email,
+      created_at: at,
+      updated_at: at,
     })
-    .onConflict((oc) =>
-      oc.columns(["organization_id", "person_id"]).doUpdateSet((eb) => ({
-        phone: eb.ref("excluded.phone"),
-        email: eb.ref("excluded.email"),
-        updated_at: eb.ref("excluded.updated_at"),
-      })),
-    )
-    .execute();
-
-  const legalRep = await db
-    .selectFrom("organization_people")
-    .innerJoin("people", "people.id", "organization_people.person_id")
-    .select("organization_people.id as id")
-    .where("organization_people.organization_id", "=", convertedOrgId)
-    .where("people.dni", "=", "42715983")
+    .returning("id")
     .executeTakeFirstOrThrow();
 
-  const existingLegalRepRole = await db
-    .selectFrom("organization_person_roles")
-    .select("id")
-    .where("organization_person_id", "=", legalRep.id)
-    .where("role", "=", "LEGAL_REPRESENTATIVE")
-    .where("effective_to", "is", null)
-    .executeTakeFirst();
-  if (!existingLegalRepRole) {
-    await db
-      .insertInto("organization_person_roles")
-      .values({
-        organization_person_id: legalRep.id,
-        role: "LEGAL_REPRESENTATIVE",
-        is_primary: true,
-        effective_from: new Date(now - 29 * day),
-        effective_to: null,
-      })
-      .execute();
-  }
+  await db
+    .insertInto("organization_person_roles")
+    .values({
+      organization_person_id: orgPerson.id,
+      role: "LEGAL_REPRESENTATIVE",
+      is_primary: true,
+      effective_from: at,
+      effective_to: null,
+    })
+    .execute();
 }

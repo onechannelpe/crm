@@ -1,10 +1,11 @@
-import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import { hashPassword } from "~/lib/auth/password/password";
 
 import type { Database } from "../../../types";
-import { resolveSeedPassword } from "../../shared/seed-password";
+import type { SeedContext } from "../../shared/context";
+import { resolveInstallationPassword } from "../../shared/installation-password";
+import { stableSeedId } from "../../shared/stable-id";
 import {
   ANDRES,
   CAMILA,
@@ -37,20 +38,19 @@ import {
 
 export async function persistDemoIdentities(
   db: Kysely<Database>,
-  generatedAtMs: number,
+  context: SeedContext,
 ): Promise<void> {
-  const nowMs = generatedAtMs;
+  const nowMs = context.anchorDate.getTime();
   const now = new Date(nowMs);
-  const passwordHash = await hashPassword(resolveSeedPassword());
+  const passwordHash = await hashPassword(resolveInstallationPassword());
 
   await db
     .insertInto("branches")
     .values([
-      { id: DEMO_BRANCH_1, name: "Demo Branch 1", created_at: now },
-      { id: DEMO_BRANCH_2, name: "Demo Branch 2", created_at: now },
-      { id: DEMO_BRANCH_3, name: "Demo Branch 3", created_at: now },
+      { id: DEMO_BRANCH_1, name: "Lima Centro", created_at: now },
+      { id: DEMO_BRANCH_2, name: "Lima Norte", created_at: now },
+      { id: DEMO_BRANCH_3, name: "Chiclayo", created_at: now },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -192,7 +192,7 @@ export async function persistDemoIdentities(
         first_surname: "Vargas",
         second_surname: "Riva",
         onboarding_completed_at: now,
-        role: "executive",
+        role: "back_office",
         is_active: true,
         created_at: now,
       },
@@ -337,7 +337,6 @@ export async function persistDemoIdentities(
         created_at: now,
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -368,7 +367,6 @@ export async function persistDemoIdentities(
         created_at: now,
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -378,7 +376,6 @@ export async function persistDemoIdentities(
       { branch_id: DEMO_BRANCH_2, user_id: NICOLAS, created_at: now },
       { branch_id: DEMO_BRANCH_2, user_id: MARIANA, created_at: now },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -394,8 +391,17 @@ export async function persistDemoIdentities(
         team_id: DEMO_TEAM_BRAVO,
         assigned_at: now,
       },
+      {
+        back_office_user_id: GABRIEL,
+        team_id: DEMO_TEAM_NORTE,
+        assigned_at: now,
+      },
+      {
+        back_office_user_id: GABRIEL,
+        team_id: DEMO_TEAM_NORTE_B,
+        assigned_at: now,
+      },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -411,7 +417,7 @@ export async function persistDemoIdentities(
   await db
     .updateTable("users")
     .set({ team_id: DEMO_TEAM_NORTE })
-    .where("id", "in", [SOFIA, GABRIEL, ELENA])
+    .where("id", "in", [SOFIA, ELENA])
     .execute();
   await db
     .updateTable("users")
@@ -482,14 +488,13 @@ export async function persistDemoIdentities(
         updated_at: now,
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
     .insertInto("user_channel_addresses")
     .values([
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("channel-address:valeria:email"),
         user_id: VALERIA,
         channel: "email",
         address: "valeria.paredes@onechannel.pe",
@@ -499,7 +504,7 @@ export async function persistDemoIdentities(
         updated_at: new Date(nowMs - oneDay),
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("channel-address:valeria:whatsapp"),
         user_id: VALERIA,
         channel: "whatsapp",
         address: "911000001",
@@ -509,7 +514,7 @@ export async function persistDemoIdentities(
         updated_at: new Date(nowMs - oneDay),
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("channel-address:roberto:email"),
         user_id: ROBERTO,
         channel: "email",
         address: "roberto.quispe@onechannel.pe",
@@ -519,7 +524,7 @@ export async function persistDemoIdentities(
         updated_at: new Date(nowMs - oneDay),
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("channel-address:roberto:whatsapp"),
         user_id: ROBERTO,
         channel: "whatsapp",
         address: "911000012",
@@ -529,7 +534,6 @@ export async function persistDemoIdentities(
         updated_at: new Date(nowMs - oneDay),
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   // Opt-out row exercises the deviation-from-default lookup; no rows for other
@@ -538,14 +542,13 @@ export async function persistDemoIdentities(
     .insertInto("notification_opt_outs")
     .values([
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("notification-opt-out:roberto:broadcasts:whatsapp"),
         user_id: ROBERTO,
         category: "broadcasts",
         channel: "whatsapp",
         created_at: new Date(nowMs - oneDay * 6),
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -554,7 +557,6 @@ export async function persistDemoIdentities(
       { user_id: VALERIA, expires_at: new Date(nowMs + oneDay) },
       { user_id: ROBERTO, expires_at: new Date(nowMs + oneDay) },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 }
 

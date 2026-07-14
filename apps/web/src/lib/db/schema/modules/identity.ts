@@ -11,6 +11,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("username", "text", (col) => col.notNull().unique())
     .addColumn("email", "text", (col) => col.notNull().unique())
     .addColumn("password_hash", "text", (col) => col.notNull())
+    .addColumn("password_change_required", "boolean", (col) =>
+      col.notNull().defaultTo(false),
+    )
     .addColumn("names", "text", (col) => col.notNull())
     .addColumn("first_surname", "text", (col) => col.notNull())
     .addColumn("second_surname", "text", (col) => col.notNull())

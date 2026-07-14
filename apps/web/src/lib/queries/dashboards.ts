@@ -1,30 +1,33 @@
 import { query } from "@solidjs/router";
 
-import { getAccountRows, getCohortRows } from "~/actions/dashboards/dashboard";
-import { getBusinessStatsOverview } from "~/actions/dashboards/dashboard";
+import {
+  getAccountRows,
+  getCohortRows,
+  getMerchantStatsOverview,
+} from "~/actions/dashboards/dashboard";
 import { getMerchantReportJob } from "~/actions/dashboards/imports";
 import { getMerchantStatsForRuc } from "~/actions/dashboards/org-stats";
-import type { BusinessStatsFilters } from "~/server/merchant-stats/read/contracts";
+import type { MerchantStatsFilters } from "~/server/merchant-stats/read/contracts";
 
-export const businessStatsOverviewQuery = query(
-  (filters: BusinessStatsFilters) => getBusinessStatsOverview(filters),
-  "businessStatsOverview",
+export const merchantStatsOverviewQuery = query(
+  (filters: MerchantStatsFilters) => getMerchantStatsOverview(filters),
+  "merchantStatsOverview",
 );
 
 export const cohortRowsQuery = query(
   (input: {
-    filters: BusinessStatsFilters;
+    filters: MerchantStatsFilters;
     page: { limit: number; offset: number };
   }) => getCohortRows(input.filters, input.page),
-  "businessStatsCohort",
+  "merchantStatsCohort",
 );
 
 export const accountRowsQuery = query(
   (input: {
-    filters: BusinessStatsFilters & { missingEnrichment?: boolean };
+    filters: MerchantStatsFilters & { missingEnrichment?: boolean };
     page: { limit: number; offset: number };
   }) => getAccountRows(input.filters, input.page),
-  "businessStatsAccounts",
+  "merchantStatsAccounts",
 );
 
 export const merchantReportJobQuery = query(

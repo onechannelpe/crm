@@ -34,6 +34,7 @@ export interface UsersTable {
   username: string;
   email: string;
   password_hash: string;
+  password_change_required: ColumnType<boolean, boolean | undefined, boolean>;
   names: string;
   first_surname: string;
   second_surname: string;

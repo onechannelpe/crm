@@ -11,14 +11,14 @@ import {
   FieldInputValue,
   FieldRow,
   FieldTable,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
 import {
-  RecordDetailSection,
-  RecordDetailSectionActions,
-  RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSectionTitle,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCard,
+  WidgetCardActions,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import { proposeRateMutation } from "../../../data/command-mutations";
@@ -109,12 +109,12 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
   }
 
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Proponer tarifa" />
-      </RecordDetailSectionHeader>
+    <WidgetCard variant="side-column">
+      <WidgetCardHeader>
+        <WidgetCardTitle text="Proponer tarifa" />
+      </WidgetCardHeader>
 
-      <RecordDetailSectionBody>
+      <WidgetCardContent>
         <form onSubmit={(event) => void handleSubmit(event)}>
           <FieldTable>
             <RateInputRow
@@ -168,7 +168,7 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
 
           {errorMessage() && <p class={styles.error}>{errorMessage()}</p>}
 
-          <RecordDetailSectionActions>
+          <WidgetCardActions>
             <Button
               type="submit"
               variant="primary"
@@ -177,9 +177,9 @@ export function ProposeRateSection(props: ProposeRateSectionProps) {
             >
               Proponer tarifa
             </Button>
-          </RecordDetailSectionActions>
+          </WidgetCardActions>
         </form>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }

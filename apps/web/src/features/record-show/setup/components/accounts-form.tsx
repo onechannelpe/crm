@@ -12,14 +12,14 @@ import {
   FieldInputValue,
   FieldRow,
   FieldTable,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
 import {
-  RecordDetailSectionActions,
-  RecordDetailSection,
-  RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSectionTitle,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCardActions,
+  WidgetCard,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
 
 import type { AccountsFormState } from "../model/accounts-form-state";
 
@@ -71,11 +71,11 @@ export function AccountsForm(props: {
   const { form } = props;
 
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text={`Cuentas: ${props.venueName}`} />
-      </RecordDetailSectionHeader>
-      <RecordDetailSectionBody>
+    <WidgetCard>
+      <WidgetCardHeader>
+        <WidgetCardTitle text={`Cuentas: ${props.venueName}`} />
+      </WidgetCardHeader>
+      <WidgetCardContent>
         <form onSubmit={props.onSubmit}>
           <FieldTable>
             <BankPickerRow
@@ -207,7 +207,7 @@ export function AccountsForm(props: {
             {(message) => <p class={styles.error}>{message()}</p>}
           </Show>
 
-          <RecordDetailSectionActions>
+          <WidgetCardActions>
             <Button
               type="submit"
               variant="primary"
@@ -216,9 +216,9 @@ export function AccountsForm(props: {
             >
               Guardar cuentas
             </Button>
-          </RecordDetailSectionActions>
+          </WidgetCardActions>
         </form>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }

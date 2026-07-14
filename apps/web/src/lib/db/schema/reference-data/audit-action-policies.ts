@@ -12,8 +12,8 @@ const PROTECTED_HIGH_RISK_ACTIONS = [
 ] as const;
 
 export async function run(db: Kysely<any>): Promise<void> {
-  // Seeds run through the migration harness, which passes an untyped Kysely.
-  // Cast here validates table names against the schema so this seed fails to
+  // Reference modules run through the schema harness, which passes an untyped
+  // Kysely. This cast validates table names so the module fails to
   // compile if `audit_action_policies` is renamed without a migration update.
   // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   const typed = db as unknown as Kysely<Database>;
@@ -32,6 +32,5 @@ export async function run(db: Kysely<any>): Promise<void> {
         updated_at: seededAt,
       })),
     )
-    .onConflict((oc) => oc.column("action").doNothing())
     .execute();
 }

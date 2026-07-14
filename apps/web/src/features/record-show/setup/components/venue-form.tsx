@@ -18,14 +18,14 @@ import {
   FieldInputValue,
   FieldRow,
   FieldTable,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
 import {
-  RecordDetailSectionActions,
-  RecordDetailSection,
-  RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSectionTitle,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCardActions,
+  WidgetCard,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
 
 import type { VenueFormState } from "../model/venue-form-state";
 
@@ -76,12 +76,12 @@ export function VenueForm(props: {
   onSubmit: (event: SubmitEvent) => void;
 }) {
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text={props.title} />
-      </RecordDetailSectionHeader>
+    <WidgetCard>
+      <WidgetCardHeader>
+        <WidgetCardTitle text={props.title} />
+      </WidgetCardHeader>
 
-      <RecordDetailSectionBody>
+      <WidgetCardContent>
         <form onSubmit={props.onSubmit}>
           <FieldTable>
             <TextFieldRow
@@ -190,7 +190,7 @@ export function VenueForm(props: {
             {(message) => <p class={styles.error}>{message()}</p>}
           </Show>
 
-          <RecordDetailSectionActions>
+          <WidgetCardActions>
             {props.secondaryAction}
             <Button
               type="submit"
@@ -200,9 +200,9 @@ export function VenueForm(props: {
             >
               {props.submitLabel}
             </Button>
-          </RecordDetailSectionActions>
+          </WidgetCardActions>
         </form>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }

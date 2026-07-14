@@ -8,6 +8,10 @@ export function resolveOnboardingSessionState(
     return "app_ready";
   }
 
+  if (input.passwordChangeRequired) {
+    return "onboarding_password";
+  }
+
   if (!input.hasPhone) {
     return "onboarding_profile";
   }
