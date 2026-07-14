@@ -1,0 +1,59 @@
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metricValue {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.positive {
+  color: var(--color-green-11);
+}
+
+.warning {
+  color: var(--color-orange-11);
+}
+
+.metricHint {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.statRows {
+  display: flex;
+  flex-direction: column;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border-light, var(--border));
+}
+
+.statRow:last-child {
+  border-bottom: none;
+}
+
+.statLabel {
+  font-size: 0.8125rem;
+  color: var(--foreground-secondary, var(--foreground));
+}
+
+.statValue {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.statAlert {
+  color: var(--color-orange-11);
+}

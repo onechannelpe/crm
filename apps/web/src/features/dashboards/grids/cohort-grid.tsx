@@ -153,7 +153,7 @@ export function CohortGrid(props: { filters: BusinessStatsFilters }) {
       loadMore={{
         hasMore: rows().length >= limit(),
         loading: page.state === "pending" || page.state === "refreshing",
-        onLoadMore: () => setLimit((value) => value + PAGE),
+        onLoadMore: () => void setLimit((value) => value + PAGE),
       }}
       source={{
         status: page.state === "errored" ? "error" : "ready",

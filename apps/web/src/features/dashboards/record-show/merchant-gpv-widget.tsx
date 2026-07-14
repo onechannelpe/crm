@@ -32,7 +32,10 @@ export function MerchantGpvWidget(props: { ruc: string }) {
               />
               <div class={styles.chart}>
                 <LineChart
-                  points={data.monthly}
+                  points={data.monthly.map((point) => ({
+                    label: point.month,
+                    value: point.gpv,
+                  }))}
                   target={data.projectedGpv}
                   height={160}
                 />
