@@ -517,8 +517,10 @@
   }
 }
 
-/* Positioning only: editors paint their own surface, so a self-surfaced one
-   does not get a double border/shadow. */
+/*
+  Positioning only: editors paint their own surface, so a self-surfaced one
+  does not get a double border/shadow.
+*/
 .cellEditor {
   z-index: 40;
 }
