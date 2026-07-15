@@ -1,14 +1,17 @@
 import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyLoginStateService } from "~/server/auth/factors/passkey/service/login-state";
-import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
+import type { AuthLoginRepos } from "~/server/auth/flows/login-deps";
 import type { AuthLoginFlowId } from "~/server/shared/ids";
 
 import type { LoginFlowState } from "../contracts";
 
 export async function getLoginFlowState(
   flowId: AuthLoginFlowId,
-  deps: AuthLoginDeps,
+  deps: Pick<
+    AuthLoginRepos,
+    "events" | "loginFlows" | "passkeys" | "webauthnChallenges"
+  >,
   webauthnProvider: WebauthnProvider,
 ): Promise<LoginFlowState | null> {
   const flow = await deps.loginFlows.findById(flowId);

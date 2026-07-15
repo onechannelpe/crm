@@ -1,3 +1,4 @@
+import type { AuthContextUser } from "~/lib/auth/context/auth-context";
 import type { InvalidCredentialsError } from "~/lib/auth/errors";
 import type {
   PasskeyLoginFlowState,
@@ -6,6 +7,7 @@ import type {
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { config } from "~/lib/config";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
@@ -13,169 +15,193 @@ import type { PasskeyAuthRepos } from "./shared";
 
 const DISCOVERABLE_PASSKEY_IDENTIFIER = "discoverable";
 
-interface PasskeyLoginStartServiceDeps {
-  webauthnProvider: {
-    getAuthenticationOptions(input: {
-      userId?: UserId;
-      userVerification: "preferred" | "required";
-    }): Promise<PasskeyLoginFlowState["requestOptions"]>;
-  };
-}
+type IdentifiedPasskeyUser = Pick<AuthContextUser, "id" | "is_active">;
 
-export type BeginPasskeyLoginInput =
+type PreparePasskeyLoginInput =
   | {
       identifier: string;
       ipAddress: string;
       mode: "identified";
       primaryAuthMethod?: "password" | "google" | "passkey";
+      occurredAt: Date;
+      account:
+        | { kind: "lookup" }
+        | { kind: "authenticated"; user: IdentifiedPasskeyUser };
     }
   | {
       ipAddress: string;
       mode: "discoverable";
       primaryAuthMethod?: "passkey";
+      occurredAt: Date;
     };
 
-export function createPasskeyLoginStartService(
+export type PreparedPasskeyLogin = {
+  challengeUserId: UserId | null;
+  flowUserId: UserId | null;
+  identifier: string;
+  mode: PasskeyLoginMode;
+  options: PasskeyLoginFlowState["requestOptions"];
+  primaryAuthMethod: "password" | "google" | "passkey";
+  occurredAt: Date;
+};
+
+async function prepareDiscoverableLogin(
   repos: PasskeyAuthRepos,
-  deps: PasskeyLoginStartServiceDeps,
-) {
+  webauthnProvider: WebauthnProvider,
+  input: Extract<PreparePasskeyLoginInput, { mode: "discoverable" }>,
+): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
+  const throttle = await createAuthThrottleService({
+    authThrottle: repos.authThrottle,
+    now: () => input.occurredAt,
+  }).checkPasskeyChallengeThrottle(
+    DISCOVERABLE_PASSKEY_IDENTIFIER,
+    input.ipAddress,
+  );
+  if (!throttle.allowed) {
+    await recordAuthEvent(repos, {
+      userId: null,
+      identifier: DISCOVERABLE_PASSKEY_IDENTIFIER,
+      ipAddress: input.ipAddress,
+      method: "passkey",
+      stage: "challenge",
+      outcome: "throttled",
+      reason: "threshold_exceeded",
+      occurredAt: input.occurredAt,
+    });
+    return Err({ kind: "invalid_credentials" });
+  }
+
+  const options = await webauthnProvider.getAuthenticationOptions({
+    userVerification: "required",
+  });
+  return Ok({
+    challengeUserId: null,
+    flowUserId: null,
+    identifier: DISCOVERABLE_PASSKEY_IDENTIFIER,
+    mode: "discoverable",
+    options,
+    primaryAuthMethod: "passkey",
+    occurredAt: input.occurredAt,
+  });
+}
+
+async function prepareIdentifiedLogin(
+  repos: PasskeyAuthRepos,
+  webauthnProvider: WebauthnProvider,
+  input: Extract<PreparePasskeyLoginInput, { mode: "identified" }>,
+): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
+  const identifier = input.identifier.trim();
+  if (!identifier) return Err({ kind: "invalid_credentials" });
+
   const throttleService = createAuthThrottleService({
     authThrottle: repos.authThrottle,
+    now: () => input.occurredAt,
+  });
+  const throttle = await throttleService.checkPasskeyChallengeThrottle(
+    identifier,
+    input.ipAddress,
+  );
+  const user =
+    input.account.kind === "authenticated"
+      ? input.account.user
+      : await repos.users.findByUsername(identifier);
+
+  if (!throttle.allowed) {
+    await recordAuthEvent(repos, {
+      userId: user?.id ?? null,
+      identifier,
+      ipAddress: input.ipAddress,
+      method: "passkey",
+      stage: "challenge",
+      outcome: "throttled",
+      reason: "threshold_exceeded",
+      occurredAt: input.occurredAt,
+    });
+    return Err({ kind: "invalid_credentials" });
+  }
+
+  if (!user?.is_active) {
+    await throttleService.recordPasskeyChallengeFailure(
+      identifier,
+      input.ipAddress,
+    );
+    await recordAuthEvent(repos, {
+      userId: user?.id ?? null,
+      identifier,
+      ipAddress: input.ipAddress,
+      method: "passkey",
+      stage: "challenge",
+      outcome: "failure",
+      reason: user ? "inactive_user" : "user_not_found",
+      occurredAt: input.occurredAt,
+    });
+    return Err({ kind: "invalid_credentials" });
+  }
+
+  const options = await webauthnProvider.getAuthenticationOptions({
+    userId: user.id,
+    userVerification: "preferred",
+  });
+  return Ok({
+    challengeUserId: user.id,
+    flowUserId: user.id,
+    identifier,
+    mode: "identified",
+    options,
+    primaryAuthMethod: input.primaryAuthMethod ?? "passkey",
+    occurredAt: input.occurredAt,
+  });
+}
+
+export function preparePasskeyLogin(
+  repos: PasskeyAuthRepos,
+  webauthnProvider: WebauthnProvider,
+  input: PreparePasskeyLoginInput,
+): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
+  return input.mode === "discoverable"
+    ? prepareDiscoverableLogin(repos, webauthnProvider, input)
+    : prepareIdentifiedLogin(repos, webauthnProvider, input);
+}
+
+export async function persistPasskeyLoginFlow(
+  repos: PasskeyAuthRepos,
+  prepared: PreparedPasskeyLogin,
+): Promise<PasskeyLoginFlowState> {
+  const challengeId = await repos.webauthnChallenges.create({
+    user_id: prepared.challengeUserId,
+    type: "authentication",
+    challenge: prepared.options.challenge,
+    expires_at: new Date(
+      prepared.occurredAt.getTime() + config.auth.webauthnChallengeTtlMs,
+    ),
+    created_at: prepared.occurredAt,
+  });
+  const flowId = await repos.loginFlows.create({
+    identifier: prepared.identifier,
+    primary_auth_method: prepared.primaryAuthMethod,
+    user_id: prepared.flowUserId,
+    challenge_id: challengeId,
+    state: "passkey",
+    expires_at: new Date(
+      prepared.occurredAt.getTime() + config.auth.loginFlowTtlMs,
+    ),
+    created_at: prepared.occurredAt,
   });
 
-  async function createAuthenticationFlow(input: {
-    challengeUserId: UserId | null;
-    flowUserId: UserId | null;
-    identifier: string;
-    mode: PasskeyLoginMode;
-    primaryAuthMethod: "password" | "google" | "passkey";
-    userVerification: "preferred" | "required";
-  }): Promise<PasskeyLoginFlowState> {
-    const options = await deps.webauthnProvider.getAuthenticationOptions({
-      userId: input.challengeUserId ?? undefined,
-      userVerification: input.userVerification,
-    });
-    const challengeId = await repos.webauthnChallenges.create({
-      user_id: input.challengeUserId,
-      type: "authentication",
-      challenge: options.challenge,
-      expires_at: new Date(Date.now() + config.auth.webauthnChallengeTtlMs),
-    });
-    const flowId = await repos.loginFlows.create({
-      identifier: input.identifier,
-      primary_auth_method: input.primaryAuthMethod,
-      user_id: input.flowUserId,
-      challenge_id: challengeId,
-      state: "passkey",
-      expires_at: new Date(Date.now() + config.auth.loginFlowTtlMs),
-    });
-
-    if (input.mode === "identified") {
-      return {
-        id: flowId,
-        identifier: input.identifier,
-        mode: "identified",
-        state: "passkey",
-        requestOptions: options,
-      };
-    }
-
+  if (prepared.mode === "identified") {
     return {
       id: flowId,
-      mode: "discoverable",
+      identifier: prepared.identifier,
+      mode: "identified",
       state: "passkey",
-      requestOptions: options,
+      requestOptions: prepared.options,
     };
   }
 
   return {
-    async beginLogin(
-      input: BeginPasskeyLoginInput,
-    ): Promise<Result<PasskeyLoginFlowState, InvalidCredentialsError>> {
-      if (input.mode === "discoverable") {
-        const throttle = await throttleService.checkPasskeyChallengeThrottle(
-          DISCOVERABLE_PASSKEY_IDENTIFIER,
-          input.ipAddress,
-        );
-        if (!throttle.allowed) {
-          await recordAuthEvent(repos, {
-            userId: null,
-            identifier: DISCOVERABLE_PASSKEY_IDENTIFIER,
-            ipAddress: input.ipAddress,
-            method: "passkey",
-            stage: "challenge",
-            outcome: "throttled",
-            reason: "threshold_exceeded",
-          });
-          return Err({ kind: "invalid_credentials" });
-        }
-
-        return Ok(
-          await createAuthenticationFlow({
-            challengeUserId: null,
-            flowUserId: null,
-            identifier: DISCOVERABLE_PASSKEY_IDENTIFIER,
-            mode: "discoverable",
-            primaryAuthMethod: "passkey",
-            userVerification: "required",
-          }),
-        );
-      }
-
-      const identifier = input.identifier.trim();
-      if (!identifier) {
-        return Err({ kind: "invalid_credentials" });
-      }
-
-      const throttle = await throttleService.checkPasskeyChallengeThrottle(
-        identifier,
-        input.ipAddress,
-      );
-      if (!throttle.allowed) {
-        // Resolve the user on the blocked path: lockout events stay
-        // attributable in findRecentLoginRetriesByUser. The identifier hash
-        // alone cannot be grouped by account.
-        const blockedUser = await repos.users.findByUsername(identifier);
-        await recordAuthEvent(repos, {
-          userId: blockedUser?.id ?? null,
-          identifier,
-          ipAddress: input.ipAddress,
-          method: "passkey",
-          stage: "challenge",
-          outcome: "throttled",
-          reason: "threshold_exceeded",
-        });
-        return Err({ kind: "invalid_credentials" });
-      }
-
-      const user = await repos.users.findByUsername(identifier);
-      if (!user || !user.is_active) {
-        await throttleService.recordPasskeyChallengeFailure(
-          identifier,
-          input.ipAddress,
-        );
-        await recordAuthEvent(repos, {
-          userId: user?.id ?? null,
-          identifier,
-          ipAddress: input.ipAddress,
-          method: "passkey",
-          stage: "challenge",
-          outcome: "failure",
-          reason: user ? "inactive_user" : "user_not_found",
-        });
-        return Err({ kind: "invalid_credentials" });
-      }
-
-      return Ok(
-        await createAuthenticationFlow({
-          challengeUserId: user.id,
-          flowUserId: user.id,
-          identifier,
-          mode: "identified",
-          primaryAuthMethod: input.primaryAuthMethod ?? "passkey",
-          userVerification: "preferred",
-        }),
-      );
-    },
+    id: flowId,
+    mode: "discoverable",
+    state: "passkey",
+    requestOptions: prepared.options,
   };
 }

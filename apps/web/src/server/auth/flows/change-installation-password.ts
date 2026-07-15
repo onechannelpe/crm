@@ -1,14 +1,14 @@
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
-import { sessionCache } from "~/lib/auth/session/session-cache";
 import { auditEntityId } from "~/server/shared/audit-entity";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import type { AuthOnboardingContext } from "../infrastructure/onboarding-context";
+import type { AuthSetupContext } from "../infrastructure/setup-context";
+import { createSessionService } from "../session/session.service";
 
 export async function changeInstallationPassword(
-  deps: AuthOnboardingContext,
+  deps: AuthSetupContext,
   input: {
     userId: UserId;
     currentSessionId: string;
@@ -39,7 +39,12 @@ export async function changeInstallationPassword(
 
   const changed = await deps.uow.run(async (repos) => {
     await repos.users.replaceInstallationPassword(user.id, passwordHash);
-    await repos.sessions.deleteOtherForUser(user.id, input.currentSessionId);
+    await createSessionService({
+      sessions: repos.sessions,
+      users: repos.users,
+      events: repos.events,
+      now: () => input.now,
+    }).revokeOtherForUser(user.id, input.currentSessionId);
     await repos.events.append({
       type: "password_changed",
       entityType: "user",
@@ -51,6 +56,5 @@ export async function changeInstallationPassword(
   });
   if (isErr(changed)) return changed;
 
-  sessionCache.deleteByUserId(user.id);
   return Ok(undefined);
 }

@@ -157,7 +157,7 @@ export async function disableTotp(): Promise<{ message: string }> {
         hasPasskey: strongAuthStatus.hasPasskey,
       });
 
-      await userTotpFactors.disable(userId);
+      await userTotpFactors.disable(userId, new Date());
       // Delete recovery codes only after the account loses its last strong factor.
       if (!strongAuthStatus.hasPasskey) {
         await userRecoveryCodes.deleteAllByUser(userId);
@@ -206,14 +206,15 @@ export async function regenerateRecoveryCodes(): Promise<{
     name: "settings.security.regenerate_recovery",
     access: { kind: "session" },
 
-    execute: async ({ actor }) => {
-      const { userRecoveryCodes } = getServerRuntime().security;
-      const recoveryCodes = await regenerateRecoveryCodesForUser(
-        { userRecoveryCodes },
-        actor.userId,
-      );
-      return Ok({ recoveryCodes });
-    },
+    execute: (ctx) =>
+      getServerRuntime().auth.setup.uow.run(async (repos) => {
+        const recoveryCodes = await regenerateRecoveryCodesForUser(
+          repos,
+          ctx.actor.userId,
+          ctx.now(),
+        );
+        return Ok({ recoveryCodes });
+      }),
   });
 }
 
@@ -222,9 +223,9 @@ export async function acknowledgeRecoveryCodes(): Promise<{ message: string }> {
     name: "settings.security.acknowledge_recovery",
     access: { kind: "session" },
 
-    execute: async ({ actor }) => {
+    execute: async ({ actor, now }) => {
       const { userRecoveryCodes } = getServerRuntime().security;
-      await userRecoveryCodes.acknowledgeActiveSet(actor.userId);
+      await userRecoveryCodes.acknowledgeActiveSet(actor.userId, now());
       return Ok({ message: "Códigos de recuperación guardados" });
     },
   });

@@ -36,21 +36,3 @@ export type LoginDecision =
       kind: "deny";
       reason: "strong_auth_required";
     };
-
-export type AuthSessionState =
-  | "pre_auth"
-  | "onboarding_password"
-  | "onboarding_profile"
-  | "onboarding_security_required"
-  | "app_ready";
-
-export interface OnboardingRequirements {
-  sessionState: AuthSessionState;
-  requiredActions: Array<
-    "change_password" | "set_profile" | "configure_strong_auth"
-  >;
-  optionalActions: Array<"configure_totp" | "configure_passkey">;
-  canAccessApp: boolean;
-  nextRoute: string;
-  reasons: string[];
-}

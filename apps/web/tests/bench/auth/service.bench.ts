@@ -1,8 +1,8 @@
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
-import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
+import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { isErr } from "~/server/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -13,8 +13,6 @@ import {
   resetLoginState,
   seedAuthLoginUser,
 } from "./fixtures";
-
-const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
 
 describe("auth login service benchmark", () => {
   const db = createBenchDbFixture("bench-auth-login-service");
@@ -44,8 +42,7 @@ describe("auth login service benchmark", () => {
           ipAddress: fixture.ipAddress,
           userAgent: "codspeed-bench",
         },
-        ctx.repos,
-        sendPrivilegedLoginAlert,
+        createAuthLoginContext(ctx.db),
         createTestPasskeyProvider(ctx.repos),
       );
 

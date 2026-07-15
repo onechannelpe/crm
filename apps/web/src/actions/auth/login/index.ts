@@ -6,10 +6,13 @@ import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
 import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
+import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
 import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
-import { submitRecoveryForLoginFlow } from "~/server/auth/flows/submit-recovery-login";
-import { submitTotpForLoginFlow } from "~/server/auth/flows/submit-totp-login";
+import {
+  verifyRecoveryLoginProof,
+  verifyTotpLoginProof,
+} from "~/server/auth/flows/verify-pending-login";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runPublicAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
@@ -40,8 +43,7 @@ export async function passwordLogin(
         ipAddress: request.ipAddress,
         userAgent: request.userAgent,
       },
-      loginContext.repos,
-      loginContext.privilegedLoginAlertSender,
+      loginContext,
       createRequestPasskeyProvider(loginContext.repos),
     );
 
@@ -129,7 +131,7 @@ export async function passkeyStart(
 
     const result = await startPasskeyLogin(
       command,
-      loginContext.repos,
+      loginContext,
       createRequestPasskeyProvider(loginContext.repos),
     );
 
@@ -173,19 +175,16 @@ export async function totpLogin(formData: FormData): Promise<void> {
     const analyticsContext = getActionRequestContext();
     const loginContext = getServerRuntime().auth.login;
 
-    const result = await submitTotpForLoginFlow(
-      {
-        flowId,
-        totpCode,
-        ipAddress: request.ipAddress,
-        userAgent: request.userAgent,
-      },
-      loginContext.repos,
-      loginContext.privilegedLoginAlertSender,
-    );
+    const verifiedAt = loginContext.now();
+    const verified = await verifyTotpLoginProof(loginContext, {
+      flowId,
+      totpCode,
+      ipAddress: request.ipAddress,
+      occurredAt: verifiedAt,
+    });
 
-    if (isErr(result)) {
-      if (result.error.kind === "flow_expired") {
+    if (isErr(verified)) {
+      if (verified.error.kind === "flow_expired") {
         await recordAuthAnalyticsEvent(
           {
             source: "server",
@@ -212,6 +211,22 @@ export async function totpLogin(formData: FormData): Promise<void> {
       throwDomain(fail("totp_code_invalid"));
     }
 
+    const completed = await completePendingLogin(loginContext, {
+      proof: verified.value,
+      occurredAt: verifiedAt,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+    });
+    if (isErr(completed)) {
+      throwDomain(
+        fail(
+          completed.error.kind === "flow_expired"
+            ? "flow_expired"
+            : "totp_code_invalid",
+        ),
+      );
+    }
+
     await recordAuthAnalyticsEvent(
       {
         source: "server",
@@ -221,7 +236,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
       analyticsContext,
     );
 
-    return completeLoginAndRedirect(result.value.result);
+    return completeLoginAndRedirect(completed.value);
   });
 }
 
@@ -237,27 +252,40 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
     const request = getRequestClientMetadata();
     const loginContext = getServerRuntime().auth.login;
 
-    const result = await submitRecoveryForLoginFlow(
-      {
-        flowId,
-        recoveryCode,
-        ipAddress: request.ipAddress,
-        userAgent: request.userAgent,
-      },
-      loginContext.repos,
-      loginContext.privilegedLoginAlertSender,
-    );
+    const verifiedAt = loginContext.now();
+    const verified = await verifyRecoveryLoginProof(loginContext, {
+      flowId,
+      recoveryCode,
+      ipAddress: request.ipAddress,
+      occurredAt: verifiedAt,
+    });
 
-    if (isErr(result)) {
+    if (isErr(verified)) {
       throwDomain(
         fail(
-          result.error.kind === "flow_expired"
+          verified.error.kind === "flow_expired"
             ? "flow_expired"
             : "recovery_code_invalid",
         ),
       );
     }
 
-    return completeLoginAndRedirect(result.value.result);
+    const completed = await completePendingLogin(loginContext, {
+      proof: verified.value,
+      occurredAt: verifiedAt,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+    });
+    if (isErr(completed)) {
+      throwDomain(
+        fail(
+          completed.error.kind === "flow_expired"
+            ? "flow_expired"
+            : "recovery_code_invalid",
+        ),
+      );
+    }
+
+    return completeLoginAndRedirect(completed.value);
   });
 }

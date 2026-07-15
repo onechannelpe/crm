@@ -47,6 +47,7 @@ export async function enableIdentityPasskey(
     public_key: "base64-public-key",
     counter: 0,
     transports: JSON.stringify(["internal"]),
+    created_at: new Date(),
   });
 }
 
@@ -54,9 +55,14 @@ export async function enableIdentityTotp(
   ctx: TestDbContext,
   identity: TestIdentity,
 ): Promise<void> {
-  await ctx.repos.userTotpFactors.createOrRotate(
+  const factor = await ctx.repos.userTotpFactors.createOrRotate(
     identity.userId,
     await encryptTotpSecret(generateTotpSecret()),
+    new Date(),
   );
-  await ctx.repos.userTotpFactors.markEnabled(identity.userId);
+  await ctx.repos.userTotpFactors.enableIfSecretMatches(
+    identity.userId,
+    factor.secret_encrypted,
+    new Date(),
+  );
 }

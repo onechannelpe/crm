@@ -10,11 +10,11 @@ export function createWebauthnChallengesRepo(db: Kysely<Database>) {
       type: string;
       challenge: string;
       expires_at: Date;
+      created_at: Date;
     }): Promise<WebauthnChallengeId> {
-      const now = new Date();
       const inserted = await db
         .insertInto("webauthn_challenges")
-        .values({ ...values, created_at: now })
+        .values(values)
         .returning("id")
         .executeTakeFirstOrThrow();
 
@@ -31,6 +31,15 @@ export function createWebauthnChallengesRepo(db: Kysely<Database>) {
 
     async delete(id: WebauthnChallengeId): Promise<void> {
       await db.deleteFrom("webauthn_challenges").where("id", "=", id).execute();
+    },
+
+    async consume(id: WebauthnChallengeId): Promise<boolean> {
+      const deleted = await db
+        .deleteFrom("webauthn_challenges")
+        .where("id", "=", id)
+        .returning("id")
+        .executeTakeFirst();
+      return deleted !== undefined;
     },
 
     async deleteExpired(now = new Date()): Promise<number> {

@@ -39,6 +39,14 @@ function addMilliseconds(date: Date, milliseconds: number): Date {
 export function createSessionService(deps: SessionServiceDeps) {
   const now = deps.now ?? (() => new Date());
   const logger = deps.logger ?? noopLogger;
+  const revokeSession = async (sessionId: string): Promise<void> => {
+    await deps.sessions.delete(sessionId);
+    sessionCache.delete(sessionId);
+  };
+  const revokeUserSessions = async (userId: UserId): Promise<void> => {
+    await deps.sessions.deleteAllForUser(userId);
+    sessionCache.deleteByUserId(userId);
+  };
 
   return {
     async establish(spec: SessionSpec): Promise<IssuedSession> {
@@ -117,37 +125,37 @@ export function createSessionService(deps: SessionServiceDeps) {
       }
 
       if (!isRole(dbSession.role)) {
-        await deps.sessions.delete(sessionId);
+        await revokeSession(sessionId);
         return null;
       }
       if (!isSessionClass(dbSession.session_class)) {
-        await deps.sessions.delete(sessionId);
+        await revokeSession(sessionId);
         return null;
       }
       if (!isPrimaryAuthMethod(dbSession.primary_auth_method)) {
-        await deps.sessions.delete(sessionId);
+        await revokeSession(sessionId);
         return null;
       }
       if (
         dbSession.strong_auth_method !== null &&
         !isStrongAuthMethod(dbSession.strong_auth_method)
       ) {
-        await deps.sessions.delete(sessionId);
+        await revokeSession(sessionId);
         return null;
       }
       if (dbSession.expires_at < nowTs) {
-        await deps.sessions.delete(sessionId);
+        await revokeSession(sessionId);
         return null;
       }
 
       const user = await deps.users.findById(dbSession.user_id);
       if (!user || !user.is_active) {
-        await deps.sessions.delete(sessionId);
+        await revokeSession(sessionId);
         return null;
       }
       if (user.expires_at !== null && user.expires_at <= nowTs) {
         await deps.users.deactivateIfExpired(user.id, nowTs);
-        await deps.sessions.deleteAllForUser(user.id);
+        await revokeUserSessions(user.id);
         return null;
       }
 
@@ -194,13 +202,19 @@ export function createSessionService(deps: SessionServiceDeps) {
     },
 
     async revoke(sessionId: string): Promise<void> {
-      await deps.sessions.delete(sessionId);
-      sessionCache.delete(sessionId);
+      await revokeSession(sessionId);
     },
 
     async revokeAllForUser(userId: UserId): Promise<void> {
-      await deps.sessions.deleteAllForUser(userId);
-      sessionCache.deleteByUserId(userId);
+      await revokeUserSessions(userId);
+    },
+
+    async revokeOtherForUser(
+      userId: UserId,
+      retainedSessionId: string,
+    ): Promise<void> {
+      await deps.sessions.deleteOtherForUser(userId, retainedSessionId);
+      sessionCache.deleteByUserIdExcept(userId, retainedSessionId);
     },
   };
 }

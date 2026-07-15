@@ -1,11 +1,10 @@
 import { loadActiveAuthContext } from "~/lib/auth/context/auth-context";
-import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
 } from "~/server/auth/application/contracts";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
-import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
+import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import type { AuthProof } from "~/server/auth/policy/types";
 import type { UserId } from "~/server/shared/ids";
 import { Err, type Result } from "~/server/shared/result";
@@ -19,8 +18,7 @@ export async function submitGoogleLogin(
     userAgent: string | null;
     trustedFederatedMfa?: boolean;
   },
-  deps: AuthLoginDeps,
-  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
+  deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
 ): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const proof: Extract<AuthProof, { kind: "google" }> = {
@@ -28,7 +26,11 @@ export async function submitGoogleLogin(
     userId: input.userId,
     trustedFederatedMfa: input.trustedFederatedMfa === true,
   };
-  const context = await loadActiveAuthContext(proof.userId, deps);
+  const context = await loadActiveAuthContext(
+    proof.userId,
+    deps.repos,
+    deps.now(),
+  );
   if (!context) {
     return Err({ kind: "invalid_credentials" });
   }
@@ -42,7 +44,6 @@ export async function submitGoogleLogin(
     },
     context,
     deps,
-    sendPrivilegedLoginAlert,
     webauthnProvider,
   });
 }

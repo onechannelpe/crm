@@ -2,66 +2,87 @@
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { installSession } from "~/actions/auth/install-session";
+import { isRegistrationResponse } from "~/lib/auth/passkey/credential-response";
 import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/types";
-import {
-  beginPasskeyEnrollment as beginPasskeyEnrollmentCommand,
-  finishPasskeyEnrollment as finishPasskeyEnrollmentCommand,
-} from "~/server/auth/flows/passkey-enrollment";
+import { setSessionCookie } from "~/lib/auth/session/cookies";
+import { verifyPasskeyEnrollment } from "~/server/auth/factors/passkey/service";
+import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-enrollment";
+import { startPasskeyEnrollment } from "~/server/auth/flows/start-passkey-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { WebauthnChallengeId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {
-  const { repos } = getServerRuntime().auth.onboarding;
+  const setup = getServerRuntime().auth.setup;
+  const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);
 
   return runAction({
     name: "auth.passkey.enroll.begin",
     access: { kind: "session" },
 
-    execute: ({ actor, ipAddress }) =>
-      beginPasskeyEnrollmentCommand(repos, {
+    execute: ({ actor, ipAddress, now }) =>
+      startPasskeyEnrollment(setup, {
         userId: actor.userId,
         ipAddress,
+        occurredAt: now(),
         webauthnProvider,
       }),
   });
 }
 
 export async function finishPasskeyEnrollment(
-  challengeId: string,
-  response: RegistrationResponseJSON,
+  challengeId: unknown,
+  response: unknown,
 ): Promise<{ message: string; recoveryCodes: string[] }> {
-  const { repos } = getServerRuntime().auth.onboarding;
+  const setup = getServerRuntime().auth.setup;
+  const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);
 
   const result = await runAction({
     name: "auth.passkey.enroll.finish",
     access: { kind: "session" },
 
-    execute: async ({ actor, ipAddress, userAgent }) => {
+    parse: (): Result<
+      {
+        challengeId: WebauthnChallengeId;
+        response: RegistrationResponseJSON;
+      },
+      DomainError
+    > => {
       const parsedChallengeId = WebauthnChallengeId.parse(challengeId);
       if (isErr(parsedChallengeId)) return parsedChallengeId;
+      if (!isRegistrationResponse(response)) {
+        return Err(fail("invalid_passkey_request"));
+      }
+      return Ok({ challengeId: parsedChallengeId.value, response });
+    },
 
-      return finishPasskeyEnrollmentCommand(repos, {
-        session: {
-          userId: actor.userId,
-          sessionClass: actor.sessionClass,
-          primaryAuthMethod: actor.primaryAuthMethod,
-        },
-        challengeId: parsedChallengeId.value,
-        response,
-        ipAddress,
-        userAgent,
+    execute: async (ctx, command) => {
+      const verified = await verifyPasskeyEnrollment(
+        setup.repos,
         webauthnProvider,
+        {
+          userId: ctx.actor.userId,
+          challengeId: command.challengeId,
+          response: command.response,
+          ipAddress: ctx.ipAddress,
+          verifiedAt: ctx.now(),
+        },
+      );
+      if (isErr(verified)) return verified;
+
+      return completeFactorEnrollment(ctx, setup, {
+        method: "passkey",
+        enrollment: verified.value,
       });
     },
   });
 
-  await installSession(result.sessionToken);
+  setSessionCookie(result.sessionToken);
 
   return {
     message: "Clave de acceso configurada",

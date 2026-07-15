@@ -45,6 +45,15 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
+    findByIdForUpdate(id: UserId) {
+      return db
+        .selectFrom("users")
+        .selectAll()
+        .where("id", "=", id)
+        .forUpdate()
+        .executeTakeFirst();
+    },
+
     findByIds(ids: UserId[]): Promise<UserNameRow[]> {
       if (ids.length === 0) {
         return Promise.resolve([]);

@@ -258,41 +258,6 @@
   user-select: all;
 }
 
-.pendingStack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 32px;
-  text-align: center;
-}
-
-.pendingLogo {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-}
-
-.activationSteps {
-  position: relative;
-  width: 440px;
-  max-width: 100%;
-}
-
-.activationStep {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-}
-
-.activationMessage {
-  display: block;
-  color: var(--foreground-secondary);
-  font-size: var(--font-size-body);
-  line-height: 1.4;
-  text-align: center;
-}
-
 .loaderCenter {
   display: flex;
   justify-content: center;

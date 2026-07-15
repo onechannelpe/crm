@@ -24,12 +24,8 @@ export async function verifyRecoveryCode(params: {
   ipAddress: string;
   recoveryCode?: string;
   deps: Deps;
-}): Promise<
-  Result<
-    { strongAuthMethod: "recovery"; strongAuthAt: Date },
-    { kind: "invalid_recovery" }
-  >
-> {
+  occurredAt: Date;
+}): Promise<Result<{ codeHash: string }, { kind: "invalid_recovery" }>> {
   const { user, ipAddress, recoveryCode, deps } = params;
   const safeCode = recoveryCode?.trim();
   if (!safeCode) {
@@ -54,38 +50,10 @@ export async function verifyRecoveryCode(params: {
       stage: "recovery",
       outcome: "throttled",
       reason: "threshold_exceeded",
+      occurredAt: params.occurredAt,
     });
     return Err({ kind: "invalid_recovery" });
   }
 
-  const consumed = await deps.userRecoveryCodes.consumeActiveCode(
-    user.id,
-    hashRecoveryCode(safeCode),
-  );
-
-  if (!consumed) {
-    await throttleService.recordRecoveryVerifyFailure(identifier, ipAddress);
-    await recordAuthEvent(deps, {
-      userId: user.id,
-      identifier,
-      ipAddress,
-      method: "recovery",
-      stage: "recovery",
-      outcome: "failure",
-      reason: "invalid_token",
-    });
-    return Err({ kind: "invalid_recovery" });
-  }
-
-  await throttleService.clearRecoveryVerifyFailureState(identifier, ipAddress);
-  await recordAuthEvent(deps, {
-    userId: user.id,
-    identifier,
-    ipAddress,
-    method: "recovery",
-    stage: "recovery",
-    outcome: "success",
-  });
-
-  return Ok({ strongAuthMethod: "recovery", strongAuthAt: new Date() });
+  return Ok({ codeHash: hashRecoveryCode(safeCode) });
 }

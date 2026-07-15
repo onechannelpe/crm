@@ -41,6 +41,15 @@ export function createSessionServiceHarness(
   const sessionsFindById = vi.fn<SessionRepositoryPort["findById"]>(
     async (id) => store.get(id) ?? null,
   );
+  const sessionsDeleteOtherForUser = vi.fn<
+    SessionRepositoryPort["deleteOtherForUser"]
+  >(async (userId, retainedSessionId) => {
+    for (const [id, row] of store.entries()) {
+      if (row.user_id === userId && id !== retainedSessionId) {
+        store.delete(id);
+      }
+    }
+  });
 
   const sessions: SessionRepositoryPort = {
     async create(session) {
@@ -51,6 +60,7 @@ export function createSessionServiceHarness(
     extendExpiry: noopExtendExpiry,
     delete: sessionsDelete,
     deleteAllForUser: sessionsDeleteAllForUser,
+    deleteOtherForUser: sessionsDeleteOtherForUser,
   };
 
   const users: SessionUsersPort = {

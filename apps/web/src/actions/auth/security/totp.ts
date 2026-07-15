@@ -1,12 +1,13 @@
 "use server";
 
-import { installSession } from "~/actions/auth/install-session";
-import { beginTotpEnrollment as beginTotpEnrollmentService } from "~/server/auth/flows/begin-totp-enrollment";
-import { finishTotpEnrollment as finishTotpEnrollmentService } from "~/server/auth/flows/finish-totp-enrollment";
+import { setSessionCookie } from "~/lib/auth/session/cookies";
+import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
+import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-enrollment";
+import { startTotpEnrollment } from "~/server/auth/flows/start-totp-enrollment";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { isErr, Ok } from "~/server/shared/result";
+import { fail, type DomainError } from "~/server/shared/domain-error";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
 export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
@@ -16,47 +17,43 @@ export async function beginTotpEnrollment(): Promise<{
     name: "auth.totp.begin",
     access: { kind: "session" },
 
-    execute: (ctx) =>
-      beginTotpEnrollmentService(ctx, getServerRuntime().auth.totp),
+    execute: (ctx) => startTotpEnrollment(ctx, getServerRuntime().auth.setup),
   });
 }
 
 export async function finishTotpEnrollment(
-  rawCode: string,
+  rawCode: unknown,
 ): Promise<{ recoveryCodes: string[]; message: string }> {
   const result = await runAction({
     name: "auth.totp.finish",
     access: { kind: "session" },
 
-    // TOTP code is parsed then never written to the audit projection; only
-    // the enrollment result lands.
-    parse: () =>
-      parseObject({ code: rawCode }, validationFail, (r) => ({
-        code: r.str("code"),
-      })),
+    parse: (): Result<{ code: string }, DomainError> => {
+      if (typeof rawCode !== "string" || !/^\d{6}$/.test(rawCode)) {
+        return Err(fail("totp_code_invalid"));
+      }
+      return Ok({ code: rawCode });
+    },
 
     execute: async (ctx, command) => {
-      const enrollment = await finishTotpEnrollmentService(
-        ctx,
-        getServerRuntime().auth.totp,
-        { code: command.code },
-      );
+      const setup = getServerRuntime().auth.setup;
+      const verified = await verifyTotpEnrollment(setup.repos, {
+        userId: ctx.actor.userId,
+        code: command.code,
+      });
+      if (isErr(verified)) return verified;
 
-      if (isErr(enrollment)) {
-        return enrollment;
-      }
-
-      return Ok({
-        ...enrollment.value,
-        message: "Aplicación de autenticación configurada",
+      return completeFactorEnrollment(ctx, setup, {
+        method: "totp",
+        enrollment: verified.value,
       });
     },
   });
 
-  await installSession(result.sessionToken);
+  setSessionCookie(result.sessionToken);
 
   return {
     recoveryCodes: result.recoveryCodes,
-    message: result.message,
+    message: "Aplicación de autenticación configurada",
   };
 }

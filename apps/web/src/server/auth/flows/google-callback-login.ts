@@ -1,33 +1,8 @@
 import { authenticateGoogleAuthorizationCode } from "~/lib/auth/google/google-oauth";
-import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { submitGoogleLogin } from "~/server/auth/flows/submit-google-login";
-import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
-import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
-import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
-import type { createOAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
-import type { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
-import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import type { createSessionRepository } from "~/server/sessions/repos-sessions";
-import type { createEventsRepo } from "~/server/shared/repos-events";
+import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
-import type { createUsersRepo } from "~/server/users/repos-users";
-import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
-
-type GoogleCallbackDeps = {
-  oauthAccounts: ReturnType<typeof createOAuthAccountsRepo>;
-  users: ReturnType<typeof createUsersRepo>;
-  loginFlows: ReturnType<typeof createLoginFlowsRepo>;
-  sessions: ReturnType<typeof createSessionRepository>;
-  events: ReturnType<typeof createEventsRepo>;
-  authThrottle: ReturnType<typeof createAuthThrottleRepo>;
-  authEvents: ReturnType<typeof createAuthEventsRepo>;
-  userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-  userRecoveryCodes: ReturnType<typeof createUserRecoveryCodesRepo>;
-  passkeys: ReturnType<typeof createPasskeysRepo>;
-  webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
-};
 
 export type CompleteGoogleOAuthCallbackError =
   | { kind: "bad_request" }
@@ -54,8 +29,7 @@ export async function completeGoogleOAuthCallback(
     ipAddress: string;
     userAgent: string | null;
   },
-  deps: GoogleCallbackDeps,
-  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
+  deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
 ): Promise<
   Result<CompleteGoogleOAuthCallbackSuccess, CompleteGoogleOAuthCallbackError>
@@ -81,7 +55,7 @@ export async function completeGoogleOAuthCallback(
     return Err({ kind: "bad_request" });
   }
 
-  const oauthAccount = await deps.oauthAccounts.findByProvider(
+  const oauthAccount = await deps.repos.oauthAccounts.findByProvider(
     "google",
     googleProfile.value.sub,
   );
@@ -89,7 +63,7 @@ export async function completeGoogleOAuthCallback(
     return Err({ kind: "redirect_to_login", error: "google_not_linked" });
   }
 
-  const user = await deps.users.findById(oauthAccount.user_id);
+  const user = await deps.repos.users.findById(oauthAccount.user_id);
   if (!user || !user.is_active) {
     return Err({ kind: "redirect_to_login", error: "google_not_linked" });
   }
@@ -102,7 +76,6 @@ export async function completeGoogleOAuthCallback(
       trustedFederatedMfa: false,
     },
     deps,
-    sendPrivilegedLoginAlert,
     webauthnProvider,
   );
 

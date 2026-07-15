@@ -11,7 +11,7 @@ import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { migrateToLatest } from "~/lib/db/migrate";
 import { seedIfEmpty } from "~/lib/db/seed";
 import { changeInstallationPassword } from "~/server/auth/flows/change-installation-password";
-import { createAuthOnboardingContext } from "~/server/auth/infrastructure/onboarding-context";
+import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import { isErr } from "~/server/shared/result";
 
@@ -42,7 +42,7 @@ describe("seed invariants", () => {
     if (installationAdmin == null) {
       throw new Error("installation administrator not found in seed");
     }
-    const onboarding = createAuthOnboardingContext(ctx.db);
+    const setup = createAuthSetupContext(ctx.db);
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 60_000);
     for (const id of [
@@ -50,7 +50,7 @@ describe("seed invariants", () => {
       "stale-installation-session",
     ]) {
       // eslint-disable-next-line no-await-in-loop
-      await onboarding.repos.sessions.create({
+      await setup.repos.sessions.create({
         id,
         user_id: installationAdmin.id,
         branch_id: installationAdmin.branch_id,
@@ -67,7 +67,7 @@ describe("seed invariants", () => {
         expires_at: expiresAt,
       });
     }
-    const passwordChanged = await changeInstallationPassword(onboarding, {
+    const passwordChanged = await changeInstallationPassword(setup, {
       userId: installationAdmin.id,
       currentSessionId: "current-installation-session",
       password: "new-installation-password",
@@ -79,7 +79,7 @@ describe("seed invariants", () => {
 
     const updatedAdmin = await repos.users.findById(installationAdmin.id);
     expect(updatedAdmin?.password_change_required).toBe(false);
-    const remainingSessions = await onboarding.repos.sessions.listForUser(
+    const remainingSessions = await setup.repos.sessions.listForUser(
       installationAdmin.id,
     );
     expect(remainingSessions.map((session) => session.id)).toEqual([

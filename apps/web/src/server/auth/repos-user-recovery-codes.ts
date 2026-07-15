@@ -1,55 +1,54 @@
-import type { Kysely } from "kysely";
-
 import type { RecoveryCodeSetSource } from "~/lib/db/schema/modules/auth.types";
-import type { Database } from "~/lib/db/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { UserId } from "~/server/shared/ids";
 
-export type ActiveRecoveryCodeSet = {
+type ActiveRecoveryCodeSet = {
   createdAt: Date;
   acknowledgedAt: Date | null;
   total: number;
   unused: number;
 };
 
+async function insertSet(
+  executor: DatabaseExecutor,
+  userId: UserId,
+  source: RecoveryCodeSetSource,
+  codeHashes: string[],
+  createdAt: Date,
+): Promise<void> {
+  const set = await executor
+    .insertInto("recovery_code_set")
+    .values({
+      user_id: userId,
+      source,
+      created_at: createdAt,
+      acknowledged_at: null,
+      revoked_at: null,
+    })
+    .returning("id")
+    .executeTakeFirstOrThrow();
+
+  await executor
+    .insertInto("recovery_code")
+    .values(
+      codeHashes.map((code_hash) => ({
+        set_id: set.id,
+        code_hash,
+        used_at: null,
+      })),
+    )
+    .execute();
+}
+
 // An active set serves both TOTP and passkey. This repository owns atomic
 // single-use consumption rather than leaving a read-then-write race to callers.
-export function createUserRecoveryCodesRepo(db: Kysely<Database>) {
+export function createUserRecoveryCodesRepo(db: DatabaseExecutor) {
   function activeSetIds(userId: UserId) {
     return db
       .selectFrom("recovery_code_set")
       .select("id")
       .where("user_id", "=", userId)
       .where("revoked_at", "is", null);
-  }
-
-  async function insertSet(
-    executor: Kysely<Database>,
-    userId: UserId,
-    source: RecoveryCodeSetSource,
-    codeHashes: string[],
-  ): Promise<void> {
-    const set = await executor
-      .insertInto("recovery_code_set")
-      .values({
-        user_id: userId,
-        source,
-        created_at: new Date(),
-        acknowledged_at: null,
-        revoked_at: null,
-      })
-      .returning("id")
-      .executeTakeFirstOrThrow();
-
-    await executor
-      .insertInto("recovery_code")
-      .values(
-        codeHashes.map((code_hash) => ({
-          set_id: set.id,
-          code_hash,
-          used_at: null,
-        })),
-      )
-      .execute();
   }
 
   return {
@@ -59,22 +58,23 @@ export function createUserRecoveryCodesRepo(db: Kysely<Database>) {
       userId: UserId,
       source: RecoveryCodeSetSource,
       codeHashes: string[],
+      createdAt: Date,
     ): Promise<void> {
-      return insertSet(db, userId, source, codeHashes);
+      return insertSet(db, userId, source, codeHashes, createdAt);
     },
 
-    // Revoke the current set and issue a fresh one atomically, so a crash can
-    // never leave the account with zero recovery codes.
-    regenerateSet(userId: UserId, codeHashes: string[]): Promise<void> {
-      return db.transaction().execute(async (tx) => {
-        await tx
-          .updateTable("recovery_code_set")
-          .set({ revoked_at: new Date() })
-          .where("user_id", "=", userId)
-          .where("revoked_at", "is", null)
-          .execute();
-        await insertSet(tx, userId, "regenerate", codeHashes);
-      });
+    async replaceSet(
+      userId: UserId,
+      codeHashes: string[],
+      replacedAt: Date,
+    ): Promise<void> {
+      await db
+        .updateTable("recovery_code_set")
+        .set({ revoked_at: replacedAt })
+        .where("user_id", "=", userId)
+        .where("revoked_at", "is", null)
+        .execute();
+      await insertSet(db, userId, "regenerate", codeHashes, replacedAt);
     },
 
     async getActiveSet(userId: UserId): Promise<ActiveRecoveryCodeSet | null> {
@@ -109,10 +109,11 @@ export function createUserRecoveryCodesRepo(db: Kysely<Database>) {
     async consumeActiveCode(
       userId: UserId,
       codeHash: string,
+      consumedAt: Date,
     ): Promise<boolean> {
       const consumed = await db
         .updateTable("recovery_code")
-        .set({ used_at: new Date() })
+        .set({ used_at: consumedAt })
         .where("code_hash", "=", codeHash)
         .where("used_at", "is", null)
         .where("set_id", "in", activeSetIds(userId))
@@ -122,10 +123,10 @@ export function createUserRecoveryCodesRepo(db: Kysely<Database>) {
       return consumed !== undefined;
     },
 
-    acknowledgeActiveSet(userId: UserId): Promise<void> {
+    acknowledgeActiveSet(userId: UserId, acknowledgedAt: Date): Promise<void> {
       return db
         .updateTable("recovery_code_set")
-        .set({ acknowledged_at: new Date() })
+        .set({ acknowledged_at: acknowledgedAt })
         .where("user_id", "=", userId)
         .where("revoked_at", "is", null)
         .where("acknowledged_at", "is", null)

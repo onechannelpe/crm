@@ -30,22 +30,30 @@ export interface AuthContext {
   strongAuthStatus: StrongAuthStatus;
 }
 
-export async function loadActiveAuthContext(
-  userId: UserId,
+export async function loadActiveAuthContextForUser(
+  user: UserRow,
   deps: AuthContextDeps,
+  now: Date,
 ): Promise<AuthContext | null> {
-  const now = new Date();
-  const user = await deps.users.findById(userId);
-  if (!user || !user.is_active) {
+  if (!user.is_active) {
     return null;
   }
   if (user.expires_at !== null && user.expires_at <= now) {
-    await deps.users.deactivateIfExpired(userId, now);
+    await deps.users.deactivateIfExpired(user.id, now);
     return null;
   }
 
   return {
     user,
-    strongAuthStatus: await getStrongAuthStatus(userId, deps),
+    strongAuthStatus: await getStrongAuthStatus(user.id, deps),
   };
+}
+
+export async function loadActiveAuthContext(
+  userId: UserId,
+  deps: AuthContextDeps,
+  now: Date,
+): Promise<AuthContext | null> {
+  const user = await deps.users.findById(userId);
+  return user ? loadActiveAuthContextForUser(user, deps, now) : null;
 }

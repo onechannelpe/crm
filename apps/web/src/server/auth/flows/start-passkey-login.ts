@@ -1,17 +1,53 @@
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import {
-  createPasskeyLoginStartAuthService,
-  type BeginPasskeyLoginInput,
+  persistPasskeyLoginFlow,
+  preparePasskeyLogin,
 } from "~/server/auth/factors/passkey/service";
+import { isErr, Ok } from "~/server/shared/result";
 
-import type { AuthLoginDeps } from "./login-deps";
+import type { AuthLoginContext } from "../infrastructure/login-context";
+
+type StartPasskeyLoginInput =
+  | {
+      identifier: string;
+      ipAddress: string;
+      mode: "identified";
+      primaryAuthMethod?: "password" | "google" | "passkey";
+    }
+  | {
+      ipAddress: string;
+      mode: "discoverable";
+      primaryAuthMethod?: "passkey";
+    };
 
 export async function startPasskeyLogin(
-  input: BeginPasskeyLoginInput,
-  repos: AuthLoginDeps,
+  input: StartPasskeyLoginInput,
+  deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
 ) {
-  return createPasskeyLoginStartAuthService(repos, {
+  const occurredAt = deps.now();
+  const prepared = await preparePasskeyLogin(
+    deps.repos,
     webauthnProvider,
-  }).beginLogin(input);
+    input.mode === "identified"
+      ? {
+          identifier: input.identifier,
+          ipAddress: input.ipAddress,
+          mode: input.mode,
+          primaryAuthMethod: input.primaryAuthMethod,
+          occurredAt,
+          account: { kind: "lookup" },
+        }
+      : {
+          ipAddress: input.ipAddress,
+          mode: input.mode,
+          primaryAuthMethod: input.primaryAuthMethod,
+          occurredAt,
+        },
+  );
+  if (isErr(prepared)) return prepared;
+
+  return deps.uow.run(async (repos) =>
+    Ok(await persistPasskeyLoginFlow(repos, prepared.value)),
+  );
 }

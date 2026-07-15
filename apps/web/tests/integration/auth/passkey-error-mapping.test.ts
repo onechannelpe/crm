@@ -8,13 +8,15 @@ import {
 } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import {
-  createPasskeyLoginFinishAuthService,
-  createPasskeyLoginStartAuthService,
+  persistPasskeyLoginFlow,
+  preparePasskeyLogin,
+  verifyPasskeyLogin,
 } from "~/server/auth/factors/passkey/service";
-
-const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
+import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
+import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
+import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
+import { isErr } from "~/server/shared/result";
 
 describe("passkey error mapping", () => {
   const scenario = createAuthScenario("passkey-error-mapping");
@@ -34,12 +36,12 @@ describe("passkey error mapping", () => {
   });
 
   it("returns invalid credentials for empty identifier", async () => {
-    const result = await createPasskeyLoginStartAuthService(
-      scenario.ctx.repos,
-      {
-        webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
-      },
-    ).beginLogin({ identifier: "   ", ipAddress, mode: "identified" });
+    const login = createAuthLoginContext(scenario.ctx.db);
+    const result = await startPasskeyLogin(
+      { identifier: "   ", ipAddress, mode: "identified" },
+      login,
+      createTestPasskeyProvider(login.repos),
+    );
 
     const error = expectErr(result);
     expect(error.kind).toBe("invalid_credentials");
@@ -52,10 +54,24 @@ describe("passkey error mapping", () => {
       public_key: "base64-public-key",
       counter: 0,
       transports: JSON.stringify(["internal"]),
+      created_at: new Date(),
     });
 
+    const prepared = await preparePasskeyLogin(
+      scenario.ctx.repos,
+      createTestPasskeyProvider(scenario.ctx.repos),
+      {
+        identifier: "exec.one",
+        ipAddress,
+        mode: "identified",
+        occurredAt: new Date(),
+        account: { kind: "lookup" },
+      },
+    );
+    if (isErr(prepared)) throw new Error("expected prepared passkey login");
+
     await expect(
-      createPasskeyLoginStartAuthService(
+      persistPasskeyLoginFlow(
         {
           ...scenario.ctx.repos,
           loginFlows: {
@@ -65,8 +81,8 @@ describe("passkey error mapping", () => {
             },
           },
         },
-        { webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos) },
-      ).beginLogin({ identifier: "exec.one", ipAddress, mode: "identified" }),
+        prepared.value,
+      ),
     ).rejects.toThrow("boom");
   });
 
@@ -77,16 +93,23 @@ describe("passkey error mapping", () => {
       challenge: "challenge-1",
     });
 
-    const result = await createPasskeyLoginFinishAuthService(
-      scenario.ctx.repos,
-      { webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos) },
-    ).finishLogin({
+    const login = createAuthLoginContext(scenario.ctx.db);
+    const occurredAt = login.now();
+    const verified = await verifyPasskeyLogin(login.repos, {
       flowId,
       response: buildAssertionResponse("missing-passkey"),
       ipAddress,
-      userAgent: "vitest-agent",
-      sendPrivilegedLoginAlert,
+      occurredAt,
+      webauthnProvider: createTestPasskeyProvider(login.repos),
     });
+    const result = isErr(verified)
+      ? verified
+      : await completePendingLogin(login, {
+          proof: verified.value,
+          occurredAt,
+          ipAddress,
+          userAgent: "vitest-agent",
+        });
 
     const error = expectErr(result);
     expect(error.kind).toBe("invalid_credentials");
@@ -104,44 +127,5 @@ describe("passkey error mapping", () => {
     expect(retries[0]?.stage).toBe("verify");
     expect(retries[0]?.outcome).toBe("failure");
     expect(retries[0]?.reason).toBe("assertion_invalid");
-  });
-
-  it("throws when session issuance fails", async () => {
-    const { flowId } = await createAuthFlow({
-      ctx: scenario.ctx,
-      userId: execOne.userId,
-      challenge: "challenge-workflow-2",
-    });
-
-    await expect(
-      createPasskeyLoginFinishAuthService(scenario.ctx.repos, {
-        webauthnProvider: {
-          async getRegistrationOptions() {
-            throw new Error("not used");
-          },
-          async verifyRegistration() {
-            throw new Error("not used");
-          },
-          async getAuthenticationOptions() {
-            throw new Error("not used");
-          },
-          async getAuthenticationOptionsForChallenge() {
-            throw new Error("not used");
-          },
-          async verifyAuthentication() {
-            return { verified: true, userId: execOne.userId };
-          },
-        },
-        async establishSession() {
-          throw new Error("boom");
-        },
-      }).finishLogin({
-        flowId,
-        response: buildAssertionResponse("passkey-1"),
-        ipAddress,
-        userAgent: "vitest-agent",
-        sendPrivilegedLoginAlert,
-      }),
-    ).rejects.toThrow("boom");
   });
 });

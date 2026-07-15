@@ -7,22 +7,34 @@ import type { UserId } from "~/server/shared/ids";
 
 type Repos = { userRecoveryCodes: UserRecoveryCodesRepo };
 
-// Preserve an active account-level set when another strong factor is enrolled.
-// Return plaintext only for a new set, so callers never redisplay stored codes.
-export async function issueRecoveryCodesIfAbsent(
+// Preserve acknowledged account-level codes when another factor is enrolled.
+// Replace an unacknowledged set so a lost response can never strand plaintext
+// codes that the user did not receive.
+export async function issueRecoveryCodesForEnrollment(
   repos: Repos,
   userId: UserId,
-): Promise<string[] | null> {
+  issuedAt: Date,
+): Promise<string[]> {
   const active = await repos.userRecoveryCodes.getActiveSet(userId);
-  if (active) {
-    return null;
+  if (active?.acknowledgedAt) {
+    return [];
   }
 
   const codes = generateRecoveryCodes();
+  if (active) {
+    await repos.userRecoveryCodes.replaceSet(
+      userId,
+      codes.map(hashRecoveryCode),
+      issuedAt,
+    );
+    return codes;
+  }
+
   await repos.userRecoveryCodes.issueSet(
     userId,
     "enroll",
     codes.map(hashRecoveryCode),
+    issuedAt,
   );
   return codes;
 }
@@ -30,11 +42,13 @@ export async function issueRecoveryCodesIfAbsent(
 export async function regenerateRecoveryCodes(
   repos: Repos,
   userId: UserId,
+  regeneratedAt: Date,
 ): Promise<string[]> {
   const codes = generateRecoveryCodes();
-  await repos.userRecoveryCodes.regenerateSet(
+  await repos.userRecoveryCodes.replaceSet(
     userId,
     codes.map(hashRecoveryCode),
+    regeneratedAt,
   );
   return codes;
 }

@@ -1,10 +1,7 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import type { CurrentUserView } from "~/server/auth/application/contracts";
 
-import { resolveOnboardingSessionState } from "../state/transitions";
 import { requiresStrongAuthRole } from "./rules/role";
-import type { AuthProof, LoginDecision, OnboardingRequirements } from "./types";
+import type { AuthProof, LoginDecision } from "./types";
 
 export interface LoginPolicyInput {
   proof: AuthProof;
@@ -88,59 +85,5 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
   return {
     kind: "deny",
     reason: "strong_auth_required",
-  };
-}
-
-export function deriveOnboardingRequirements(
-  user: Pick<
-    CurrentUserView,
-    | "phone"
-    | "strongAuthConfigured"
-    | "onboardingCompletedAt"
-    | "passwordChangeRequired"
-    | "role"
-  >,
-): OnboardingRequirements {
-  const hasPhone = user.phone !== null;
-  const strongAuthRequired = requiresStrongAuthRole(user.role);
-  const requiredActions: OnboardingRequirements["requiredActions"] = [];
-  const reasons: string[] = [];
-
-  if (user.passwordChangeRequired) {
-    requiredActions.push("change_password");
-    reasons.push("installation_password_change_required");
-  }
-
-  if (!hasPhone) {
-    requiredActions.push("set_profile");
-    reasons.push("phone_required");
-  }
-
-  if (strongAuthRequired && !user.strongAuthConfigured) {
-    requiredActions.push("configure_strong_auth");
-    reasons.push("strong_auth_required");
-  }
-
-  const optionalActions: Array<"configure_totp" | "configure_passkey"> = [];
-  if (!strongAuthRequired) {
-    optionalActions.push("configure_passkey", "configure_totp");
-  }
-
-  const sessionState = resolveOnboardingSessionState({
-    onboardingCompleted: user.onboardingCompletedAt !== null,
-    passwordChangeRequired: user.passwordChangeRequired,
-    hasPhone,
-    requiresStrongAuth: strongAuthRequired,
-    strongAuthConfigured: user.strongAuthConfigured,
-  });
-  const canAccessApp = sessionState === "app_ready";
-
-  return {
-    sessionState,
-    requiredActions,
-    optionalActions,
-    canAccessApp,
-    nextRoute: canAccessApp ? getDefaultAppPath(user.role) : "/onboarding",
-    reasons,
   };
 }

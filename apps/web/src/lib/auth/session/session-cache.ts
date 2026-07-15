@@ -63,6 +63,14 @@ class SessionCache {
     }
   }
 
+  deleteByUserIdExcept(userId: UserId, retainedSessionId: string): void {
+    for (const [key, value] of this.cache.entries()) {
+      if (value.userId === userId && key !== retainedSessionId) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
   clear(): void {
     this.cache.clear();
   }

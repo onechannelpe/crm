@@ -19,23 +19,23 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
     async createOrRotate(
       userId: UserId,
       secretEncrypted: string,
+      changedAt: Date,
     ): Promise<UserTotpFactorRow> {
-      const now = new Date();
       await db
         .insertInto("user_totp_factors")
         .values({
           user_id: userId,
           secret_encrypted: secretEncrypted,
           is_enabled: false,
-          created_at: now,
-          updated_at: now,
+          created_at: changedAt,
+          updated_at: changedAt,
           enabled_at: null,
         } satisfies NewUserTotpFactorRow)
         .onConflict((oc) =>
           oc.column("user_id").doUpdateSet({
             secret_encrypted: secretEncrypted,
             is_enabled: false,
-            updated_at: now,
+            updated_at: changedAt,
             enabled_at: null,
           }),
         )
@@ -48,27 +48,32 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
         .executeTakeFirstOrThrow();
     },
 
-    async markEnabled(userId: UserId): Promise<void> {
-      const now = new Date();
-      await db
+    async enableIfSecretMatches(
+      userId: UserId,
+      secretEncrypted: string,
+      enabledAt: Date,
+    ): Promise<boolean> {
+      const result = await db
         .updateTable("user_totp_factors")
         .set({
           is_enabled: true,
-          enabled_at: now,
-          updated_at: now,
+          enabled_at: enabledAt,
+          updated_at: enabledAt,
         })
         .where("user_id", "=", userId)
-        .execute();
+        .where("secret_encrypted", "=", secretEncrypted)
+        .executeTakeFirst();
+
+      return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
-    async disable(userId: UserId): Promise<void> {
-      const now = new Date();
+    async disable(userId: UserId, disabledAt: Date): Promise<void> {
       await db
         .updateTable("user_totp_factors")
         .set({
           is_enabled: false,
           enabled_at: null,
-          updated_at: now,
+          updated_at: disabledAt,
         })
         .where("user_id", "=", userId)
         .execute();

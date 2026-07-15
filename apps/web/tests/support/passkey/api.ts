@@ -6,6 +6,7 @@ import {
   PasskeyRequestError,
   resolveWebauthnRelyingParty,
   type PasskeyProviderDeps,
+  type VerifiedRegistrationCredential,
 } from "~/server/auth/factors/passkey-provider";
 import type { UserId } from "~/server/shared/ids";
 
@@ -25,8 +26,17 @@ type WebauthnOverrides = {
     userId: UserId,
     response: RegistrationResponseJSON,
     challenge: string,
-  ) => Promise<{ verified: boolean }>;
-  verifyAuthentication?: () => Promise<{ verified: boolean; userId: UserId }>;
+  ) => Promise<{
+    verified: boolean;
+    credential?: VerifiedRegistrationCredential;
+  }>;
+  verifyAuthentication?: () => Promise<{
+    verified: boolean;
+    credentialId?: string;
+    newCounter?: number;
+    previousCounter?: number;
+    userId: UserId;
+  }>;
 };
 
 interface PasskeyCredentialResponse {
@@ -53,6 +63,7 @@ export async function createAuthFlow(input: {
     type: "authentication",
     challenge: input.challenge,
     expires_at: expiresAtFromNow(nowMs),
+    created_at: new Date(nowMs),
   });
   const flowId = await input.ctx.repos.loginFlows.create({
     identifier: input.identifier ?? "exec.one",
@@ -61,6 +72,7 @@ export async function createAuthFlow(input: {
     challenge_id: challengeId,
     state: "passkey",
     expires_at: expiresAtFromNow(nowMs),
+    created_at: new Date(nowMs),
   });
   return { challengeId, flowId };
 }
@@ -77,6 +89,7 @@ export async function createRegistrationChallenge(input: {
     type: "registration",
     challenge: input.challenge,
     expires_at: expiresAtFromNow(nowMs),
+    created_at: new Date(nowMs),
   });
 }
 
@@ -94,7 +107,20 @@ export function createWebauthnProvider(overrides: WebauthnOverrides = {}) {
       challenge: string,
     ) {
       if (overrides.verifyRegistration) {
-        return overrides.verifyRegistration(userId, response, challenge);
+        const result = await overrides.verifyRegistration(
+          userId,
+          response,
+          challenge,
+        );
+        return {
+          verified: result.verified,
+          credential: result.credential ?? {
+            id: response.id,
+            publicKey: Buffer.from("test-public-key").toString("base64"),
+            counter: 0,
+            transports: JSON.stringify(["internal"]),
+          },
+        };
       }
       throw new Error("not used in this test");
     },
@@ -106,7 +132,13 @@ export function createWebauthnProvider(overrides: WebauthnOverrides = {}) {
     },
     async verifyAuthentication() {
       if (overrides.verifyAuthentication) {
-        return overrides.verifyAuthentication();
+        const result = await overrides.verifyAuthentication();
+        return {
+          ...result,
+          credentialId: result.credentialId ?? "passkey-1",
+          newCounter: result.newCounter ?? 1,
+          previousCounter: result.previousCounter ?? 0,
+        };
       }
       throw new Error("not used in this test");
     },

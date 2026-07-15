@@ -14,7 +14,8 @@ const {
     vi.fn<
       () => Promise<{ challengeId: string; options: { challenge: string } }>
     >(),
-  finishPasskeyEnrollment: vi.fn<() => Promise<{ message: string }>>(),
+  finishPasskeyEnrollment:
+    vi.fn<() => Promise<{ message: string; recoveryCodes: string[] }>>(),
   createRegistrationResponse: vi.fn<() => Promise<{ id: string }>>(),
   isPasskeyRegistrationSupported: vi.fn<() => boolean>(),
 }));
@@ -41,6 +42,7 @@ describe("usePasskeyEnrollment", () => {
     });
     finishPasskeyEnrollment.mockResolvedValue({
       message: "Clave de acceso configurada",
+      recoveryCodes: [],
     });
     createRegistrationResponse.mockResolvedValue({ id: "credential-1" });
     isPasskeyRegistrationSupported.mockReturnValue(true);

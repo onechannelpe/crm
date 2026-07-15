@@ -27,19 +27,24 @@ export function createPasskeysRepo(db: Kysely<Database>) {
       public_key: string;
       counter: number;
       transports: string | null;
+      created_at: Date;
     }) {
-      return db
-        .insertInto("passkeys")
-        .values({ ...values, created_at: new Date() })
-        .executeTakeFirstOrThrow();
+      return db.insertInto("passkeys").values(values).executeTakeFirstOrThrow();
     },
 
-    updateCounter(id: string, counter: number) {
-      return db
+    async updateCounter(
+      id: string,
+      expectedCounter: number,
+      counter: number,
+      usedAt: Date,
+    ): Promise<boolean> {
+      const result = await db
         .updateTable("passkeys")
-        .set({ counter, last_used_at: new Date() })
+        .set({ counter, last_used_at: usedAt })
         .where("id", "=", id)
-        .execute();
+        .where("counter", "=", expectedCounter)
+        .executeTakeFirst();
+      return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
     deleteAllByUser(userId: UserId) {

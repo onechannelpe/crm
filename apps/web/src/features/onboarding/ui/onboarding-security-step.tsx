@@ -1,9 +1,9 @@
 import { Show } from "solid-js";
 
-import { OnboardingSkipButton } from "./onboarding-skip-button";
 import { OnboardingStepAnimatedItem } from "./onboarding-step-animated-item";
 import { OnboardingStepHeading } from "./onboarding-step-heading";
 
+import pageStyles from "./onboarding-page.module.css";
 import styles from "./onboarding-security-step.module.css";
 
 interface OnboardingSecurityStepProps {
@@ -67,11 +67,14 @@ export function OnboardingSecurityStep(props: OnboardingSecurityStepProps) {
 
       <Show when={!props.securityRequired}>
         <OnboardingStepAnimatedItem index={3} class={styles.actionBlock}>
-          <OnboardingSkipButton
-            label="Finalizar sin 2FA"
+          <button
+            type="button"
+            class={pageStyles.skipButton}
             disabled={props.finishing}
             onClick={props.onFinishWithoutSecurity}
-          />
+          >
+            Finalizar sin 2FA
+          </button>
         </OnboardingStepAnimatedItem>
       </Show>
     </>

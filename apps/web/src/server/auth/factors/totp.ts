@@ -27,11 +27,13 @@ export async function verifyTotpStepUp(params: {
   ipAddress: string;
   totpCode?: string;
   deps: Deps;
+  occurredAt: Date;
 }): Promise<
   Result<
     {
       strongAuthMethod: "totp";
       strongAuthAt: Date;
+      secretEncrypted: string;
     },
     TotpStepUpError
   >
@@ -53,6 +55,7 @@ export async function verifyTotpStepUp(params: {
       stage: "verify",
       outcome: "failure",
       reason: "strong_auth_factor_missing",
+      occurredAt: params.occurredAt,
     });
     return Err({ kind: "invalid_totp" });
   }
@@ -70,22 +73,18 @@ export async function verifyTotpStepUp(params: {
       stage: "verify",
       outcome: "throttled",
       reason: "threshold_exceeded",
+      occurredAt: params.occurredAt,
     });
     return Err({ kind: "invalid_totp" });
   }
 
   const secret = await decryptTotpSecret(factor.secret_encrypted);
   if (verifyTotpCode(secret, safeCode)) {
-    await throttleService.clearTotpVerifyFailureState(identifier, ipAddress);
-    await recordAuthEvent(deps, {
-      userId: user.id,
-      identifier,
-      ipAddress,
-      method: "totp",
-      stage: "verify",
-      outcome: "success",
+    return Ok({
+      strongAuthMethod: "totp",
+      strongAuthAt: params.occurredAt,
+      secretEncrypted: factor.secret_encrypted,
     });
-    return Ok({ strongAuthMethod: "totp", strongAuthAt: new Date() });
   }
 
   await throttleService.recordTotpVerifyFailure(identifier, ipAddress);
@@ -97,6 +96,7 @@ export async function verifyTotpStepUp(params: {
     stage: "verify",
     outcome: "failure",
     reason: "invalid_token",
+    occurredAt: params.occurredAt,
   });
   return Err({ kind: "invalid_totp" });
 }

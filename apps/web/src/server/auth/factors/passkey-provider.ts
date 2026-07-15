@@ -10,9 +10,7 @@ import {
   type AuthenticationResponseJSON,
 } from "@simplewebauthn/server";
 
-import { auditEntityId } from "~/server/shared/audit-entity";
 import type { UserId } from "~/server/shared/ids";
-import type { createEventsRepo } from "~/server/shared/repos-events";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
 const rpName = "CRM OneChannel";
@@ -88,8 +86,21 @@ function parseStoredTransports(
 
 export type PasskeyProviderDeps = {
   passkeys: ReturnType<typeof createPasskeysRepo>;
-  events: ReturnType<typeof createEventsRepo>;
 };
+
+export interface VerifiedRegistrationCredential {
+  id: string;
+  publicKey: string;
+  counter: number;
+  transports: string | null;
+}
+
+export interface VerifiedAuthenticationCredential {
+  credentialId: string;
+  newCounter: number;
+  previousCounter: number;
+  userId: UserId;
+}
 
 export function createPasskeyProvider(
   repos: PasskeyProviderDeps,
@@ -148,14 +159,6 @@ export function createPasskeyProvider(
         },
       });
 
-      await repos.events.append({
-        type: "passkey_registration_started",
-        entityType: "passkey",
-        entityId: auditEntityId("passkey", userId),
-        actorUserId: userId,
-        occurredAt: new Date(),
-      });
-
       return options;
     },
 
@@ -181,17 +184,16 @@ export function createPasskeyProvider(
       }
 
       const { credential } = verification.registrationInfo;
-      await repos.passkeys.create({
+      const registered: VerifiedRegistrationCredential = {
         id: credential.id,
-        user_id: userId,
-        public_key: Buffer.from(credential.publicKey).toString("base64"),
+        publicKey: Buffer.from(credential.publicKey).toString("base64"),
         counter: credential.counter,
         transports: response.response.transports
           ? JSON.stringify(response.response.transports)
           : null,
-      });
+      };
 
-      return { verified: true };
+      return { verified: true, credential: registered };
     },
 
     async getAuthenticationOptions(input: {
@@ -238,13 +240,11 @@ export function createPasskeyProvider(
         throw new PasskeyRequestError("Authentication verification failed");
       }
 
-      await repos.passkeys.updateCounter(
-        passkey.id,
-        verification.authenticationInfo.newCounter,
-      );
-
       return {
         verified: true,
+        credentialId: passkey.id,
+        newCounter: verification.authenticationInfo.newCounter,
+        previousCounter: passkey.counter,
         userId: passkey.user_id,
       };
     },
