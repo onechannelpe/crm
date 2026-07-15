@@ -28,7 +28,7 @@ function buildSearchUsageRepos(executor: DatabaseExecutor) {
   };
 }
 
-function createSearchUsageReservationPorts(
+export function createSearchUsageReservationPorts(
   executor: DatabaseExecutor,
 ): UsageReservationPorts<"search"> {
   return {
