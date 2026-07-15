@@ -5,10 +5,6 @@ import type { UserId } from "~/server/shared/ids";
 
 type UserTotpFactorRow = Selectable<Database["user_totp_factors"]>;
 type NewUserTotpFactorRow = Insertable<Database["user_totp_factors"]>;
-type UserTotpRecoveryCodeRow = Selectable<Database["user_totp_recovery_codes"]>;
-type NewUserTotpRecoveryCodeRow = Insertable<
-  Database["user_totp_recovery_codes"]
->;
 
 export function createUserTotpFactorsRepo(db: Kysely<Database>) {
   return {
@@ -80,68 +76,4 @@ export function createUserTotpFactorsRepo(db: Kysely<Database>) {
   };
 }
 
-export function createUserTotpRecoveryCodesRepo(db: Kysely<Database>) {
-  return {
-    async replaceForUser(
-      userId: UserId,
-      codeHashes: string[],
-    ): Promise<UserTotpRecoveryCodeRow[]> {
-      await db
-        .deleteFrom("user_totp_recovery_codes")
-        .where("user_id", "=", userId)
-        .execute();
-      const now = new Date();
-      await db
-        .insertInto("user_totp_recovery_codes")
-        .values(
-          codeHashes.map(
-            (code_hash) =>
-              ({
-                user_id: userId,
-                code_hash,
-                used_at: null,
-                created_at: now,
-              }) satisfies NewUserTotpRecoveryCodeRow,
-          ),
-        )
-        .execute();
-      return db
-        .selectFrom("user_totp_recovery_codes")
-        .selectAll()
-        .where("user_id", "=", userId)
-        .execute();
-    },
-
-    listUnusedByUser(userId: UserId): Promise<UserTotpRecoveryCodeRow[]> {
-      return db
-        .selectFrom("user_totp_recovery_codes")
-        .selectAll()
-        .where("user_id", "=", userId)
-        .where("used_at", "is", null)
-        .execute();
-    },
-
-    markUsed(id: string): Promise<void> {
-      return db
-        .updateTable("user_totp_recovery_codes")
-        .set({ used_at: new Date() })
-        .where("id", "=", id)
-        .where("used_at", "is", null)
-        .execute()
-        .then(() => undefined);
-    },
-
-    deleteAllByUser(userId: UserId): Promise<void> {
-      return db
-        .deleteFrom("user_totp_recovery_codes")
-        .where("user_id", "=", userId)
-        .execute()
-        .then(() => undefined);
-    },
-  };
-}
-
 export type UserTotpFactorsRepo = ReturnType<typeof createUserTotpFactorsRepo>;
-export type UserTotpRecoveryCodesRepo = ReturnType<
-  typeof createUserTotpRecoveryCodesRepo
->;

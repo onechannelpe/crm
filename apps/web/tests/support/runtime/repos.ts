@@ -6,10 +6,8 @@ import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import { createOAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
 import { createPasswordResetTokensRepo } from "~/server/auth/repos-password-reset";
-import {
-  createUserTotpFactorsRepo,
-  createUserTotpRecoveryCodesRepo,
-} from "~/server/auth/repos-user-totp-factors";
+import { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
+import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createCapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import {
   createLeadPolicyDefaultsRepo,
@@ -60,7 +58,7 @@ export function createTestRepositories(db: Kysely<Database>) {
     authThrottle: createAuthThrottleRepo(db),
     actionRateLimits: createActionRateLimitsRepo(db),
     userTotpFactors: createUserTotpFactorsRepo(db),
-    userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(db),
+    userRecoveryCodes: createUserRecoveryCodesRepo(db),
     organization: createOrganizationRepo(db),
     searchEnrichment: createCompanyRegistryRepo(db),
     contactAssignments: createContactAssignmentsRepo(db),

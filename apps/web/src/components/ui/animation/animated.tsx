@@ -28,6 +28,7 @@ type MotionVariants = Record<string, MotionTarget>;
 interface MotionTransition {
   duration?: number;
   ease?: string;
+  delay?: number;
 }
 
 interface AnimatedProps extends Omit<
@@ -61,6 +62,7 @@ function transitionToOptions(
 ): KeyframeAnimationOptions {
   return {
     duration: Math.max(0, (transition.duration ?? 0.3) * 1000),
+    delay: Math.max(0, (transition.delay ?? 0) * 1000),
     easing: transition.ease ?? "cubic-bezier(0.22, 1, 0.36, 1)",
     fill: "forwards",
   };

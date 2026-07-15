@@ -18,7 +18,7 @@ export function readPasskeyStartMode(
 
 export function readLoginText(
   formData: FormData,
-  field: "identifier" | "password" | "totpCode",
+  field: "identifier" | "password" | "totpCode" | "recoveryCode",
   options?: { trim?: boolean },
 ): string {
   const value = formData.get(field);

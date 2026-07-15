@@ -15,6 +15,7 @@ interface TotpEnrollmentOptions {
   enqueueSuccessSnackBar: (message: string) => void;
   enqueueErrorSnackBar: (message: string) => void;
   refreshStatus: () => void | PromiseLike<unknown>;
+  onRecoveryCodes?: (codes: string[]) => void;
 }
 
 export function useTotpEnrollment(options: TotpEnrollmentOptions) {
@@ -51,6 +52,10 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       setCode("");
 
       await options.refreshStatus();
+
+      if (codes.length > 0) {
+        options.onRecoveryCodes?.(codes);
+      }
 
       options.enqueueSuccessSnackBar(message);
     } catch (caught) {

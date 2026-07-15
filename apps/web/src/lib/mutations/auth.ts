@@ -9,7 +9,12 @@ import {
   acceptInvitePasswordStep,
   type AcceptInviteResult,
 } from "~/actions/auth/invite";
-import { passkeyStart, passwordLogin, totpLogin } from "~/actions/auth/login";
+import {
+  passkeyStart,
+  passwordLogin,
+  recoveryLogin,
+  totpLogin,
+} from "~/actions/auth/login";
 import {
   requestPasswordReset,
   resetPassword,
@@ -30,6 +35,11 @@ export const passkeyStartMutation = action(
 export const totpLoginMutation = action(
   async (formData: FormData): Promise<void> => totpLogin(formData),
   "totpLogin",
+);
+
+export const recoveryLoginMutation = action(
+  async (formData: FormData): Promise<void> => recoveryLogin(formData),
+  "recoveryLogin",
 );
 
 export const requestPasswordResetMutation = action(

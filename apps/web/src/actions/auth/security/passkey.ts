@@ -34,7 +34,7 @@ export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallen
 export async function finishPasskeyEnrollment(
   challengeId: string,
   response: RegistrationResponseJSON,
-): Promise<{ message: string }> {
+): Promise<{ message: string; recoveryCodes: string[] }> {
   const { repos } = getServerRuntime().auth.onboarding;
   const webauthnProvider = createRequestPasskeyProvider(repos);
 
@@ -63,5 +63,8 @@ export async function finishPasskeyEnrollment(
 
   await installSession(result.sessionToken);
 
-  return { message: "Clave de acceso configurada" };
+  return {
+    message: "Clave de acceso configurada",
+    recoveryCodes: result.recoveryCodes,
+  };
 }

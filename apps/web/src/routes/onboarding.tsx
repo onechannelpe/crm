@@ -4,8 +4,10 @@ import {
   createResource,
   createSignal,
   createEffect,
+  Match,
   Show,
   Suspense,
+  Switch,
 } from "solid-js";
 
 import { changeOnboardingPassword } from "~/actions/auth/onboarding/change-password";
@@ -20,20 +22,21 @@ import {
   beginTotpEnrollment,
   finishTotpEnrollment,
 } from "~/actions/auth/security/totp";
+import { acknowledgeRecoveryCodes } from "~/actions/settings/security";
 import { Loader } from "~/components/feedback/loading/loader";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { SessionProvider } from "~/components/providers/session-provider";
 import { useSession } from "~/components/providers/session-provider";
-import { EnterTransition } from "~/components/ui/animation/enter-transition";
-import { Button } from "~/components/ui/input/button";
-import { RecoveryCodesPanel } from "~/features/auth/security/recovery-codes-panel";
-import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
-import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import type { RequestedStep } from "~/features/onboarding/model/event";
 import { buildView } from "~/features/onboarding/services/view";
+import { OnboardingPasskeyStep } from "~/features/onboarding/ui/onboarding-passkey-step";
+import type { PasskeyPhase } from "~/features/onboarding/ui/onboarding-passkey-step";
 import { OnboardingPasswordStep } from "~/features/onboarding/ui/onboarding-password-step";
+import { OnboardingPendingStep } from "~/features/onboarding/ui/onboarding-pending-step";
 import { OnboardingProfileStep } from "~/features/onboarding/ui/onboarding-profile-step";
 import { OnboardingSecurityStep } from "~/features/onboarding/ui/onboarding-security-step";
+import { OnboardingShell } from "~/features/onboarding/ui/onboarding-shell";
+import { OnboardingTotpStep } from "~/features/onboarding/ui/onboarding-totp-step";
 import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
@@ -43,36 +46,16 @@ import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 
-type PasskeyPhase = "idle" | "device" | "server";
-
 function parseRequestedStep(raw: string | string[] | undefined): RequestedStep {
   if (Array.isArray(raw) || !raw) return null;
   if (
-    raw === "profile" ||
     raw === "security-choice" ||
     raw === "passkey-step" ||
-    raw === "totp-step" ||
-    raw === "pending-step"
+    raw === "totp-step"
   ) {
     return raw;
   }
   return null;
-}
-
-function OnboardingProgress(props: { step: string }) {
-  const percent = () => {
-    if (props.step === "password") return 25;
-    if (props.step === "profile") return 50;
-    return 100;
-  };
-  return (
-    <progress
-      class={styles.progressTrack}
-      value={percent()}
-      max={100}
-      aria-label="Progreso del registro"
-    />
-  );
 }
 
 function OnboardingContent() {
@@ -90,6 +73,14 @@ function OnboardingContent() {
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [passkeyPhase, setPasskeyPhase] = createSignal<PasskeyPhase>("idle");
   const [passkeySupported, setPasskeySupported] = createSignal(false);
+  // Keep newly issued codes visible until acknowledgement; stored codes are
+  // never returned.
+  const [passkeyRecoveryCodes, setPasskeyRecoveryCodes] = createSignal<
+    string[]
+  >([]);
+  const [passkeyRedirectTo, setPasskeyRedirectTo] = createSignal<string | null>(
+    null,
+  );
   const [totpLoading, setTotpLoading] = createSignal(false);
   const [totpEnrollment, setTotpEnrollment] = createSignal<{
     otpauthUri: string;
@@ -99,6 +90,10 @@ function OnboardingContent() {
   const [totpCode, setTotpCode] = createSignal("");
   const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
   const [submitting, setSubmitting] = createSignal(false);
+  // Delay app-route navigation until the preparation animation completes.
+  const [completingRedirect, setCompletingRedirect] = createSignal<
+    string | null
+  >(null);
 
   const requestedStep = createMemo(() => parseRequestedStep(searchParams.step));
   const view = createMemo(() => {
@@ -119,9 +114,9 @@ function OnboardingContent() {
   });
 
   createEffect(() => {
+    if (completingRedirect()) return;
     const next = view();
-    if (!next) return;
-    if (next.step === "done") {
+    if (next?.step === "done") {
       navigate(requirements()?.nextRoute ?? "/");
     }
   });
@@ -136,12 +131,8 @@ function OnboardingContent() {
 
   createEffect(() => {
     const next = view();
-    if (!next || next.step !== "totp-step") {
-      return;
-    }
-    if (totpEnrollment() || totpLoading() || totpStartAttempted()) {
-      return;
-    }
+    if (!next || next.step !== "totp-step") return;
+    if (totpEnrollment() || totpLoading() || totpStartAttempted()) return;
     setTotpStartAttempted(true);
     setTotpLoading(true);
     void beginTotpEnrollment()
@@ -152,25 +143,14 @@ function OnboardingContent() {
       .finally(() => setTotpLoading(false));
   });
 
-  async function handleProfileSubmit() {
-    const currentPhone = normalizePhoneInput(phone());
-    setPhone(currentPhone);
-    if (!isValidPhone(currentPhone)) {
-      enqueueErrorSnackBar(
-        "Ingresa 9 dígitos de tu WhatsApp corporativo y que empiece con 9",
-      );
+  // Navigate within onboarding immediately; defer app-route navigation until
+  // preparation ends.
+  function finish(redirectTo: string) {
+    if (redirectTo.startsWith("/onboarding")) {
+      navigate(redirectTo);
       return;
     }
-    setSubmitting(true);
-    try {
-      const result = await submitOnboardingProfile({ phone: currentPhone });
-      await refreshCurrentUser();
-      navigate(result.redirectTo);
-    } catch (error: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(error));
-    } finally {
-      setSubmitting(false);
-    }
+    setCompletingRedirect(redirectTo);
   }
 
   async function handlePasswordSubmit() {
@@ -191,6 +171,22 @@ function OnboardingContent() {
     }
   }
 
+  async function handleProfileSubmit() {
+    const currentPhone = normalizePhoneInput(phone());
+    setPhone(currentPhone);
+    if (!isValidPhone(currentPhone)) return;
+    setSubmitting(true);
+    try {
+      const result = await submitOnboardingProfile({ phone: currentPhone });
+      await refreshCurrentUser();
+      finish(result.redirectTo);
+    } catch (error: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   function handleChooseSecurity(method: "passkey-step" | "totp-step") {
     navigate(`/onboarding?step=${method}`);
   }
@@ -202,7 +198,6 @@ function OnboardingContent() {
       );
       return;
     }
-
     setPasskeyPhase("device");
     try {
       const { challengeId, options } = await beginPasskeyEnrollment();
@@ -212,12 +207,33 @@ function OnboardingContent() {
         challengeId,
         response,
       });
-      navigate(result.redirectTo);
+      if (result.recoveryCodes.length > 0) {
+        setPasskeyRedirectTo(result.redirectTo);
+        setPasskeyRecoveryCodes(result.recoveryCodes);
+        return;
+      }
+      finish(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       setPasskeyPhase("idle");
     }
+  }
+
+  async function acknowledgeRecoveryCodesQuietly() {
+    try {
+      await acknowledgeRecoveryCodes();
+    } catch {
+      // Ignore acknowledgement failures because the session is established and
+      // navigation must proceed.
+    }
+  }
+
+  async function handlePasskeyComplete() {
+    const redirectTo = passkeyRedirectTo();
+    if (!redirectTo) return;
+    await acknowledgeRecoveryCodesQuietly();
+    finish(redirectTo);
   }
 
   async function handleTotpVerify() {
@@ -239,35 +255,17 @@ function OnboardingContent() {
   async function handleComplete() {
     setSubmitting(true);
     try {
+      if (recoveryCodes().length > 0) {
+        await acknowledgeRecoveryCodesQuietly();
+      }
       const result = await completeOnboardingFromCurrentSession();
-      navigate(result.redirectTo);
+      finish(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
   }
-
-  const title = createMemo(() => {
-    const next = view();
-    if (!next) return "Onboarding";
-    switch (next.step) {
-      case "password":
-        return "Crea tu contraseña";
-      case "profile":
-        return "Perfil";
-      case "security-choice":
-        return "Seguridad";
-      case "passkey-step":
-        return "Clave de acceso";
-      case "totp-step":
-        return "Aplicación de autenticación";
-      case "pending-step":
-        return "Creando tu espacio de trabajo";
-      default:
-        return "Onboarding";
-    }
-  });
 
   const resolved = createMemo(() => {
     const next = view();
@@ -278,196 +276,96 @@ function OnboardingContent() {
 
   return (
     <Show when={resolved()} keyed>
-      {(state) => (
-        <AuthFlowShell
-          topBar={<OnboardingProgress step={state.next.step} />}
-          title={title()}
-          footer={
-            <div class={styles.footerActions}>
-              <Show when={state.next.step === "password"}>
-                <Button
-                  type="button"
-                  loading={submitting()}
-                  disabled={
-                    password().length < 8 ||
-                    confirmPassword().length < 8 ||
-                    password() !== confirmPassword()
-                  }
-                  onClick={() => void handlePasswordSubmit()}
-                >
-                  Cambiar contraseña
-                </Button>
-              </Show>
-              <Show when={state.next.step === "profile"}>
-                <Button
-                  type="button"
-                  loading={submitting()}
-                  onClick={() => void handleProfileSubmit()}
-                >
-                  Continuar
-                </Button>
-              </Show>
-              <Show
-                when={
-                  state.next.step === "security-choice" &&
-                  state.next.canFinishWithoutSecurity
-                }
-              >
-                <Button
-                  type="button"
-                  loading={submitting()}
-                  onClick={() => void handleComplete()}
-                >
-                  Finalizar sin 2FA
-                </Button>
-              </Show>
-              <Show
-                when={
-                  state.next.step === "totp-step" && recoveryCodes().length > 0
-                }
-              >
-                <Button
-                  type="button"
-                  loading={submitting()}
-                  onClick={() => void handleComplete()}
-                >
-                  Finalizar
-                </Button>
-              </Show>
-            </div>
-          }
-        >
-          <Show when={state.next.step === "password"}>
-            <EnterTransition>
-              <OnboardingPasswordStep
-                password={password()}
-                confirmPassword={confirmPassword()}
-                onPasswordInput={setPassword}
-                onConfirmPasswordInput={setConfirmPassword}
-              />
-            </EnterTransition>
-          </Show>
+      {(state) => {
+        const isSubStep =
+          state.next.step === "passkey-step" || state.next.step === "totp-step";
 
-          <Show when={state.next.step === "profile"}>
-            <EnterTransition>
-              <OnboardingProfileStep
-                email={state.current.email}
-                fullName={`${state.current.names} ${state.current.firstSurname} ${state.current.secondSurname}`}
-                phone={phone()}
-                role={state.current.role}
-                onPhoneInput={setPhone}
-              />
-            </EnterTransition>
-          </Show>
+        return (
+          <OnboardingShell
+            onBack={
+              !completingRedirect() &&
+              isSubStep &&
+              passkeyRecoveryCodes().length === 0
+                ? () => navigate("/onboarding?step=security-choice")
+                : undefined
+            }
+            centered={completingRedirect() !== null}
+          >
+            <Show
+              when={completingRedirect()}
+              fallback={
+                <Switch>
+                  <Match when={state.next.step === "password"}>
+                    <OnboardingPasswordStep
+                      password={password()}
+                      confirmPassword={confirmPassword()}
+                      submitting={submitting()}
+                      onPasswordInput={setPassword}
+                      onConfirmPasswordInput={setConfirmPassword}
+                      onSubmit={() => void handlePasswordSubmit()}
+                    />
+                  </Match>
 
-          <Show when={state.next.step === "security-choice"}>
-            <EnterTransition>
-              <OnboardingSecurityStep
-                hasPasskey={state.current.hasPasskey}
-                totpEnabled={state.current.totpEnabled}
-                securityRequired={state.next.securityRequired}
-                onSelectPasskey={() => handleChooseSecurity("passkey-step")}
-                onSelectTotp={() => handleChooseSecurity("totp-step")}
-              />
-            </EnterTransition>
-          </Show>
+                  <Match when={state.next.step === "profile"}>
+                    <OnboardingProfileStep
+                      email={state.current.email}
+                      fullName={`${state.current.names} ${state.current.firstSurname} ${state.current.secondSurname}`}
+                      role={state.current.role}
+                      phone={phone()}
+                      submitting={submitting()}
+                      onPhoneInput={setPhone}
+                      onSubmit={() => void handleProfileSubmit()}
+                    />
+                  </Match>
 
-          <Show when={state.next.step === "passkey-step"}>
-            <EnterTransition>
-              <div class={styles.passkeyEnrollStep}>
-                <Show when={passkeyPhase() === "device"}>
-                  <p class={styles.passkeyStatus}>
-                    Esperando tu dispositivo...
-                  </p>
-                </Show>
-                <Show when={passkeyPhase() === "server"}>
-                  <p class={styles.passkeyStatus}>Guardando tu registro...</p>
-                </Show>
-                <Show when={passkeyPhase() === "idle"}>
-                  <Button
-                    type="button"
-                    onClick={() => void handlePasskeySetup()}
-                  >
-                    Configurar clave de acceso
-                  </Button>
-                </Show>
-              </div>
-            </EnterTransition>
-          </Show>
+                  <Match when={state.next.step === "security-choice"}>
+                    <OnboardingSecurityStep
+                      hasPasskey={state.current.hasPasskey}
+                      totpEnabled={state.current.totpEnabled}
+                      securityRequired={state.next.securityRequired}
+                      finishing={submitting()}
+                      onSelectPasskey={() =>
+                        handleChooseSecurity("passkey-step")
+                      }
+                      onSelectTotp={() => handleChooseSecurity("totp-step")}
+                      onFinishWithoutSecurity={() => void handleComplete()}
+                    />
+                  </Match>
 
-          <Show when={state.next.step === "totp-step"}>
-            <EnterTransition>
-              <div class={styles.totpStack}>
-                <Show
-                  when={totpEnrollment()}
-                  fallback={
-                    <Show when={totpLoading()}>
-                      <p class={styles.passkeyStatus}>Generando código QR...</p>
-                    </Show>
-                  }
-                >
-                  {(enrollment) => (
-                    <div class={styles.totpInline}>
-                      <div class={styles.qrCenter}>
-                        <img
-                          src={enrollment().qrCodeDataUrl}
-                          alt="Código QR para autenticación"
-                          class={styles.qrCode}
-                        />
-                      </div>
-                      <details class={styles.secretDetails}>
-                        <summary>¿No puedes escanear el código?</summary>
-                        <div class={styles.secretKeyBlock}>
-                          <span class={styles.secretKeyLabel}>
-                            Ingresa esta clave en tu app
-                          </span>
-                          <span class={styles.secretKeyText}>
-                            {new URL(enrollment().otpauthUri).searchParams.get(
-                              "secret",
-                            )}
-                          </span>
-                        </div>
-                      </details>
-                      <OtpSlotInput
-                        value={totpCode()}
-                        disabled={totpLoading()}
-                        onValueChange={setTotpCode}
-                      />
-                      <Button
-                        type="button"
-                        disabled={totpLoading() || totpCode().length < 6}
-                        loading={totpLoading()}
-                        onClick={() => void handleTotpVerify()}
-                      >
-                        Verificar
-                      </Button>
-                    </div>
-                  )}
-                </Show>
+                  <Match when={state.next.step === "passkey-step"}>
+                    <OnboardingPasskeyStep
+                      phase={passkeyPhase()}
+                      recoveryCodes={passkeyRecoveryCodes()}
+                      finishing={submitting()}
+                      onSetup={() => void handlePasskeySetup()}
+                      onComplete={handlePasskeyComplete}
+                    />
+                  </Match>
 
-                <Show when={recoveryCodes().length > 0}>
-                  <RecoveryCodesPanel
-                    title="Códigos de recuperación"
-                    description="Guárdalos en un lugar seguro."
-                    codes={recoveryCodes()}
-                  />
-                </Show>
-              </div>
-            </EnterTransition>
-          </Show>
-
-          <Show when={state.next.step === "pending-step"}>
-            <div class={styles.pendingCreationLoader}>
-              <p class={styles.pendingCreationLabel}>
-                Procesando tu configuración...
-              </p>
-              <output class={styles.loadingStack} aria-live="polite">
-                <Loader />
-              </output>
-            </div>
-          </Show>
-        </AuthFlowShell>
-      )}
+                  <Match when={state.next.step === "totp-step"}>
+                    <OnboardingTotpStep
+                      enrollment={totpEnrollment()}
+                      loading={totpLoading()}
+                      code={totpCode()}
+                      recoveryCodes={recoveryCodes()}
+                      finishing={submitting()}
+                      onCodeInput={setTotpCode}
+                      onVerify={() => void handleTotpVerify()}
+                      onComplete={() => void handleComplete()}
+                    />
+                  </Match>
+                </Switch>
+              }
+            >
+              {(redirectTo) => (
+                <OnboardingPendingStep
+                  onComplete={() => navigate(redirectTo())}
+                />
+              )}
+            </Show>
+          </OnboardingShell>
+        );
+      }}
     </Show>
   );
 }
@@ -477,11 +375,11 @@ export default function OnboardingPage() {
     <SessionProvider>
       <Suspense
         fallback={
-          <AuthFlowShell title="Cargando onboarding">
-            <output class={styles.loadingStack} aria-live="polite">
+          <OnboardingShell centered>
+            <output class={styles.loaderCenter} aria-live="polite">
               <Loader />
             </output>
-          </AuthFlowShell>
+          </OnboardingShell>
         }
       >
         <OnboardingContent />

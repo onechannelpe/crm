@@ -1,9 +1,6 @@
-import {
-  generateRecoveryCodes,
-  hashRecoveryCodes,
-} from "~/lib/auth/totp/recovery-codes";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { verifyTotpCode } from "~/lib/auth/totp/totp";
+import { issueRecoveryCodesIfAbsent } from "~/server/auth/recovery/issue-recovery-codes";
 import { createSessionService } from "~/server/auth/session/session.service";
 import type { AppContext } from "~/server/platform/action/context";
 import { auditEntityId } from "~/server/shared/audit-entity";
@@ -33,9 +30,9 @@ export async function finishTotpEnrollment(
   }
 
   await deps.repos.userTotpFactors.markEnabled(user.id);
-  const recoveryCodes = generateRecoveryCodes();
-  const hashes = await hashRecoveryCodes(recoveryCodes);
-  await deps.repos.userTotpRecoveryCodes.replaceForUser(user.id, hashes);
+  // Return newly issued codes for one-time display; an existing set remains hidden.
+  const recoveryCodes =
+    (await issueRecoveryCodesIfAbsent(deps.repos, user.id)) ?? [];
   await deps.repos.events.append({
     type: "totp_enabled",
     entityType: "user",

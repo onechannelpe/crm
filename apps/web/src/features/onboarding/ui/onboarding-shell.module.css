@@ -1,0 +1,95 @@
+.background {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  background: var(--tertiary);
+}
+
+.header {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  padding: 32px 32px 1px;
+}
+
+.headerLeft,
+.headerRight {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  align-items: center;
+}
+
+.headerLeft {
+  justify-content: flex-start;
+}
+
+.headerRight {
+  justify-content: flex-end;
+}
+
+.headerCenter {
+  display: flex;
+  flex: 0 1 440px;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerLogo {
+  width: 24px;
+  height: 24px;
+  display: block;
+  opacity: 0.4;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--foreground-tertiary);
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.backButton:hover {
+  background: color-mix(in oklab, var(--foreground) 6%, transparent);
+  color: var(--foreground-secondary);
+}
+
+.stepPage {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 56px;
+  min-height: 0;
+  width: 100%;
+  padding: 64px 32px;
+  overflow-y: auto;
+}
+
+.stepPageCentered {
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 32px 16px 1px;
+  }
+
+  .stepPage {
+    gap: 32px;
+    padding: 32px 16px;
+  }
+}

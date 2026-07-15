@@ -1,7 +1,5 @@
-import {
-  createUserTotpFactorsRepo,
-  createUserTotpRecoveryCodesRepo,
-} from "~/server/auth/repos-user-totp-factors";
+import { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
+import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createEventsRepo } from "~/server/shared/repos-events";
@@ -13,7 +11,7 @@ export function createTotpEnrollmentContext(executor: DatabaseExecutor) {
       sessions: createSessionRepository(executor),
       users: createUsersRepo(executor),
       userTotpFactors: createUserTotpFactorsRepo(executor),
-      userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(executor),
+      userRecoveryCodes: createUserRecoveryCodesRepo(executor),
       events: createEventsRepo(executor),
     },
   };

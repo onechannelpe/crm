@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import type { StrongAuthMethod } from "~/lib/auth/core/session-contract";
 import type { Phone } from "~/lib/phone/pe-mobile";
 import { createSessionService } from "~/server/auth/session/session.service";
 import { type DomainError } from "~/server/shared/domain-error";
@@ -16,7 +17,7 @@ export async function completeOnboarding(
       userId: UserId;
       role: Role;
       primaryAuthMethod: "password" | "google" | "passkey";
-      strongAuthMethod: "totp" | "passkey" | "federated" | null;
+      strongAuthMethod: StrongAuthMethod | null;
       strongAuthAt: Date | null;
     };
     phone: Phone;

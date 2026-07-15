@@ -95,6 +95,12 @@ function parseTotpEnv(source: EnvSource) {
   } as const;
 }
 
+function parseRecoveryEnv(source: EnvSource) {
+  return {
+    recoveryCodePepper: required(source, "RECOVERY_CODE_PEPPER", true),
+  } as const;
+}
+
 function parseExtensionEnv(source: EnvSource) {
   return {
     extensionHandoffPrivateKeyPkcs8Base64: optional(
@@ -335,6 +341,7 @@ export function loadServerEnv(source: EnvSource) {
   return {
     session: parseSessionEnv(source),
     totp: parseTotpEnv(source),
+    recovery: parseRecoveryEnv(source),
     extension: parseExtensionEnv(source),
     security: parseSecurityEnv(source),
     app: parseAppEnv(source),
@@ -357,6 +364,7 @@ function section<T>(parse: (source: EnvSource) => T): () => T {
 }
 
 export const totpConfig = section(parseTotpEnv);
+export const recoveryConfig = section(parseRecoveryEnv);
 export const extensionConfig = section(parseExtensionEnv);
 export const securityConfig = section(parseSecurityEnv);
 export const appConfig = section(parseAppEnv);

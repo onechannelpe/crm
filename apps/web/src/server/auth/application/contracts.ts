@@ -77,3 +77,7 @@ export type SubmitPrimaryLoginError = {
 export type SubmitTotpLoginError =
   | { kind: "flow_expired" }
   | { kind: "invalid_totp" };
+
+export type SubmitRecoveryLoginError =
+  | { kind: "flow_expired" }
+  | { kind: "invalid_recovery" };

@@ -4,12 +4,11 @@ import { createMemo, createSignal, Show, Suspense } from "solid-js";
 import { Loader } from "~/components/feedback/loading/loader";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
 import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
-import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
-import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
-import { totpLoginMutation } from "~/lib/mutations/auth";
+import { recoveryLoginMutation } from "~/lib/mutations/auth";
 import { loginFlowQuery } from "~/lib/queries/auth";
 import { parseWireError } from "~/lib/wire-error";
 import { codeIs } from "~/lib/wire-error-codes";
@@ -19,11 +18,10 @@ import linkStyles from "~/features/auth/ui/auth-links.module.css";
 import styles from "~/features/auth/ui/auth-shell.module.css";
 import pageStyles from "~/features/auth/ui/login-page.module.css";
 
-export default function LoginVerifyPage() {
-  useAuthPageView("login_verify");
+export default function LoginRecoveryPage() {
   const [searchParams] = useSearchParams();
-  const totpSubmission = useSubmission(totpLoginMutation);
-  const [totpCode, setTotpCode] = createSignal("");
+  const recoverySubmission = useSubmission(recoveryLoginMutation);
+  const [recoveryCode, setRecoveryCode] = createSignal("");
   const flowId = () => parseLoginFlowId(searchParams.flow);
   const loginFlow = createAsync(() => {
     const currentFlowId = flowId();
@@ -32,21 +30,28 @@ export default function LoginVerifyPage() {
       : Promise.resolve(null);
   });
   const submitError = () =>
-    totpSubmission.error ? parseWireError(totpSubmission.error) : undefined;
+    recoverySubmission.error
+      ? parseWireError(recoverySubmission.error)
+      : undefined;
 
   const flowExpiredAtSubmit = () => {
     const submitFailure = submitError();
     return submitFailure !== undefined && codeIs(submitFailure, "flow_expired");
   };
 
-  const totpFlow = createMemo(() => {
+  // Allow TOTP and identified-passkey flows only; a discoverable passkey flow
+  // has no user for recovery-code redemption.
+  const recoveryFlow = createMemo(() => {
     const flow = loginFlow();
     if (flow === undefined && flowId()) return undefined;
     if (flowExpiredAtSubmit()) return null;
-    return flow?.state === "totp" ? flow : null;
+    if (!flow) return null;
+    if (flow.state === "totp") return flow;
+    if (flow.state === "passkey" && flow.mode === "identified") return flow;
+    return null;
   });
 
-  const totpError = () => {
+  const recoveryError = () => {
     const submitFailure = submitError();
     if (submitFailure === undefined || codeIs(submitFailure, "flow_expired")) {
       return undefined;
@@ -56,20 +61,20 @@ export default function LoginVerifyPage() {
 
   return (
     <AuthFlowShell
-      title="Verificar código"
-      description="Ingresa el código de 6 dígitos de tu app de autenticación."
+      title="Código de recuperación"
+      description="Ingresa uno de los códigos que guardaste al configurar tu seguridad."
     >
       <div class={pageStyles.formStack}>
         <Suspense
           fallback={
             <output class={pageStyles.loadingStack} aria-live="polite">
-              <p class={pageStyles.loadingLabel}>Cargando verificación</p>
+              <p class={pageStyles.loadingLabel}>Cargando recuperación</p>
               <Loader />
             </output>
           }
         >
           <Show
-            when={totpFlow()}
+            when={recoveryFlow()}
             fallback={
               <form
                 class={pageStyles.formStack}
@@ -88,16 +93,26 @@ export default function LoginVerifyPage() {
               <EnterTransition>
                 <form
                   class={pageStyles.formStack}
-                  action={totpLoginMutation}
+                  action={recoveryLoginMutation}
                   method="post"
                 >
                   <input type="hidden" name="flowId" value={flow().id} />
-                  <input type="hidden" name="totpCode" value={totpCode()} />
-                  <OtpSlotInput
-                    value={totpCode()}
-                    onValueChange={setTotpCode}
+                  <Input
+                    id="recovery-code"
+                    type="text"
+                    name="recoveryCode"
+                    placeholder="Código de recuperación"
+                    autocomplete="one-time-code"
+                    autocapitalize="characters"
+                    autocorrect="off"
+                    spellcheck={false}
+                    value={recoveryCode()}
+                    onInput={(event) =>
+                      setRecoveryCode(event.currentTarget.value)
+                    }
+                    required
                   />
-                  <Show when={totpError()}>
+                  <Show when={recoveryError()}>
                     {(msg) => (
                       <p class={pageStyles.formError} role="alert">
                         {msg()}
@@ -114,17 +129,11 @@ export default function LoginVerifyPage() {
                     <Button
                       type="submit"
                       class={styles.full}
-                      loading={totpSubmission.pending}
+                      loading={recoverySubmission.pending}
                     >
                       Iniciar sesión
                     </Button>
                   </div>
-                  <a
-                    href={`/login/recovery?flow=${flow().id}`}
-                    class={linkStyles.helpLink}
-                  >
-                    Usar un código de recuperación
-                  </a>
                 </form>
               </EnterTransition>
             )}

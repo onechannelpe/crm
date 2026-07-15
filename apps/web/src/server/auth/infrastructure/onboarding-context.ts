@@ -1,6 +1,7 @@
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
+import { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
@@ -21,6 +22,7 @@ export type AuthOnboardingRepos = {
   authThrottle: ReturnType<typeof createAuthThrottleRepo>;
   authEvents: ReturnType<typeof createAuthEventsRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
+  userRecoveryCodes: ReturnType<typeof createUserRecoveryCodesRepo>;
   userChannelAddresses: ReturnType<typeof createUserChannelAddressRepo>;
 };
 
@@ -35,6 +37,7 @@ export function createAuthOnboardingContext(executor: DatabaseExecutor) {
     authThrottle: createAuthThrottleRepo(executor),
     authEvents: createAuthEventsRepo(executor),
     userTotpFactors: createUserTotpFactorsRepo(executor),
+    userRecoveryCodes: createUserRecoveryCodesRepo(executor),
     userChannelAddresses: createUserChannelAddressRepo(executor),
   };
 
@@ -52,6 +55,7 @@ export function createAuthOnboardingContext(executor: DatabaseExecutor) {
         authThrottle: createAuthThrottleRepo(txDb),
         authEvents: createAuthEventsRepo(txDb),
         userTotpFactors: createUserTotpFactorsRepo(txDb),
+        userRecoveryCodes: createUserRecoveryCodesRepo(txDb),
         userChannelAddresses: createUserChannelAddressRepo(txDb),
       }),
     ),

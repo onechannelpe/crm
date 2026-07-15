@@ -6,7 +6,7 @@ type Deps = {
   authEvents: ReturnType<typeof createAuthEventsRepo>;
 };
 
-export type AuthEventMethod = "password" | "passkey" | "totp";
+export type AuthEventMethod = "password" | "passkey" | "totp" | "recovery";
 export type AuthEventStage = "login" | "challenge" | "verify" | "recovery";
 export type AuthEventOutcome = "success" | "failure" | "throttled";
 

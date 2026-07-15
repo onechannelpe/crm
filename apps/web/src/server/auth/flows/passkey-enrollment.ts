@@ -2,6 +2,7 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyEnrollmentAuthService } from "~/server/auth/factors/passkey/service";
+import { issueRecoveryCodesIfAbsent } from "~/server/auth/recovery/issue-recovery-codes";
 import { createSessionService } from "~/server/auth/session/session.service";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId, WebauthnChallengeId } from "~/server/shared/ids";
@@ -34,8 +35,8 @@ export function beginPasskeyEnrollment(
   });
 }
 
-// Onboarding issues its session after all steps complete; enrollment must
-// not double-issue.
+// Complete registration without establishing a session; onboarding establishes
+// it after completion.
 export async function enrollPasskey(
   repos: AuthOnboardingRepos,
   input: {
@@ -73,7 +74,9 @@ export async function finishPasskeyEnrollment(
     userAgent: string | null;
     webauthnProvider: WebauthnProvider;
   },
-): Promise<Result<{ sessionToken: string }, DomainError>> {
+): Promise<
+  Result<{ sessionToken: string; recoveryCodes: string[] }, DomainError>
+> {
   const result = await enrollPasskey(repos, {
     userId: input.session.userId,
     challengeId: input.challengeId,
@@ -90,6 +93,10 @@ export async function finishPasskeyEnrollment(
     throw new Error("No se pudo configurar la clave de acceso");
   }
 
+  // Return newly issued codes for one-time display; an existing set remains hidden.
+  const recoveryCodes =
+    (await issueRecoveryCodesIfAbsent(repos, user.id)) ?? [];
+
   const issued = await createSessionService(repos).establish({
     user,
     sessionClass: input.session.sessionClass,
@@ -102,5 +109,5 @@ export async function finishPasskeyEnrollment(
     strongAuthAt: new Date(),
   });
 
-  return Ok({ sessionToken: issued.token });
+  return Ok({ sessionToken: issued.token, recoveryCodes });
 }

@@ -6,7 +6,6 @@ export type Step =
   | "security-choice"
   | "passkey-step"
   | "totp-step"
-  | "pending-step"
   | "done";
 
 export interface Facts {

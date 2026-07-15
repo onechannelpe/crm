@@ -327,6 +327,10 @@ export const ERROR_CATALOG = {
     kind: "validation",
     message: "El código de verificación no es válido.",
   },
+  recovery_code_invalid: {
+    kind: "validation",
+    message: "El código de recuperación no es válido.",
+  },
   totp_setup_invalid: {
     kind: "validation",
     message: "La configuración de verificación no es válida.",

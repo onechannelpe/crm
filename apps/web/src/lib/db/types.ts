@@ -53,7 +53,8 @@ export interface Database {
   user_sessions: auth.UserSessionsTable;
   request_sessions: auth.RequestSessionsTable;
   user_totp_factors: auth.UserTotpFactorsTable;
-  user_totp_recovery_codes: auth.UserTotpRecoveryCodesTable;
+  recovery_code_set: auth.RecoveryCodeSetTable;
+  recovery_code: auth.RecoveryCodeTable;
   user_invites: auth.UserInvitesTable;
   auth_funnel_events: auth.AuthFunnelEventsTable;
   users: identity.UsersTable;

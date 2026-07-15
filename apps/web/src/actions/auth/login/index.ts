@@ -8,6 +8,7 @@ import { getRequestClientMetadata } from "~/lib/http/request-context";
 import { getActionRequestContext } from "~/lib/observability/context";
 import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
+import { submitRecoveryForLoginFlow } from "~/server/auth/flows/submit-recovery-login";
 import { submitTotpForLoginFlow } from "~/server/auth/flows/submit-totp-login";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runPublicAction } from "~/server/platform/action";
@@ -219,6 +220,43 @@ export async function totpLogin(formData: FormData): Promise<void> {
       },
       analyticsContext,
     );
+
+    return completeLoginAndRedirect(result.value.result);
+  });
+}
+
+export async function recoveryLogin(formData: FormData): Promise<void> {
+  return runPublicAction(async () => {
+    const flowId = readLoginFlowId(formData, "flowId");
+    const recoveryCode = readLoginText(formData, "recoveryCode");
+
+    if (!flowId) {
+      throwDomain(fail("flow_expired"));
+    }
+
+    const request = getRequestClientMetadata();
+    const loginContext = getServerRuntime().auth.login;
+
+    const result = await submitRecoveryForLoginFlow(
+      {
+        flowId,
+        recoveryCode,
+        ipAddress: request.ipAddress,
+        userAgent: request.userAgent,
+      },
+      loginContext.repos,
+      loginContext.privilegedLoginAlertSender,
+    );
+
+    if (isErr(result)) {
+      throwDomain(
+        fail(
+          result.error.kind === "flow_expired"
+            ? "flow_expired"
+            : "recovery_code_invalid",
+        ),
+      );
+    }
 
     return completeLoginAndRedirect(result.value.result);
   });

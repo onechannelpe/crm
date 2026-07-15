@@ -4,10 +4,8 @@ import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import { createOAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
-import {
-  createUserTotpFactorsRepo,
-  createUserTotpRecoveryCodesRepo,
-} from "~/server/auth/repos-user-totp-factors";
+import { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
+import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
@@ -32,7 +30,7 @@ export function createAuthLoginContext(
       authThrottle: createAuthThrottleRepo(executor),
       authEvents: createAuthEventsRepo(executor),
       userTotpFactors: createUserTotpFactorsRepo(executor),
-      userTotpRecoveryCodes: createUserTotpRecoveryCodesRepo(executor),
+      userRecoveryCodes: createUserRecoveryCodesRepo(executor),
       passkeys: createPasskeysRepo(executor),
       webauthnChallenges: createWebauthnChallengesRepo(executor),
     } satisfies AuthLoginDeps,

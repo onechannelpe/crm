@@ -1,6 +1,11 @@
 const SESSION_CLASSES = ["pre_auth", "app"] as const;
 const PRIMARY_AUTH_METHODS = ["password", "google", "passkey"] as const;
-const STRONG_AUTH_METHODS = ["totp", "passkey", "federated"] as const;
+const STRONG_AUTH_METHODS = [
+  "totp",
+  "passkey",
+  "federated",
+  "recovery",
+] as const;
 
 export type SessionClass = (typeof SESSION_CLASSES)[number];
 export type PrimaryAuthMethod = (typeof PRIMARY_AUTH_METHODS)[number];

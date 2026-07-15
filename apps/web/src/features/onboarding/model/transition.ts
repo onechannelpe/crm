@@ -39,14 +39,6 @@ export function resolveViewState(
   );
   const canFinishWithoutSecurity = canCompleteWithoutSecurity(facts);
 
-  if (requestedStep === "pending-step") {
-    return {
-      step: "pending-step",
-      securityRequired,
-      canFinishWithoutSecurity,
-    };
-  }
-
   if (!securityRequired) {
     return {
       step: "security-choice",

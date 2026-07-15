@@ -14,6 +14,7 @@ interface PasskeyEnrollmentOptions {
   enqueueSuccessSnackBar: (message: string) => void;
   enqueueErrorSnackBar: (message: string) => void;
   refreshStatus: () => void | PromiseLike<unknown>;
+  onRecoveryCodes?: (codes: string[]) => void;
 }
 
 export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
@@ -29,11 +30,14 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
     try {
       const { challengeId, options: registrationOptions } =
         await beginPasskeyEnrollment();
-      const { message } = await finishPasskeyEnrollment(
+      const { message, recoveryCodes } = await finishPasskeyEnrollment(
         challengeId,
         await createRegistrationResponse(registrationOptions),
       );
       await options.refreshStatus();
+      if (recoveryCodes.length > 0) {
+        options.onRecoveryCodes?.(recoveryCodes);
+      }
       options.enqueueSuccessSnackBar(message);
     } catch (caught: unknown) {
       options.enqueueErrorSnackBar(actionErrorMessage(caught));

@@ -68,7 +68,7 @@ export interface AuthThrottleCountersTable {
 export interface AuthEventsTable {
   id: Generated<string>;
   user_id: NullableIdColumn<UserId>;
-  method: "password" | "passkey" | "totp";
+  method: "password" | "passkey" | "totp" | "recovery";
   stage: "login" | "challenge" | "verify" | "recovery";
   outcome: "success" | "failure" | "throttled";
   reason: string | null;

@@ -6,10 +6,8 @@ import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import type { createOAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
-import type {
-  createUserTotpFactorsRepo,
-  createUserTotpRecoveryCodesRepo,
-} from "~/server/auth/repos-user-totp-factors";
+import type { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
+import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 import type { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -26,7 +24,7 @@ type GoogleCallbackDeps = {
   authThrottle: ReturnType<typeof createAuthThrottleRepo>;
   authEvents: ReturnType<typeof createAuthEventsRepo>;
   userTotpFactors: ReturnType<typeof createUserTotpFactorsRepo>;
-  userTotpRecoveryCodes: ReturnType<typeof createUserTotpRecoveryCodesRepo>;
+  userRecoveryCodes: ReturnType<typeof createUserRecoveryCodesRepo>;
   passkeys: ReturnType<typeof createPasskeysRepo>;
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
 };

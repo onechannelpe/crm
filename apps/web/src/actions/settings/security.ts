@@ -4,6 +4,7 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import { regenerateRecoveryCodes as regenerateRecoveryCodesForUser } from "~/server/auth/recovery/issue-recovery-codes";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { auditEntityId } from "~/server/shared/audit-entity";
@@ -104,7 +105,8 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
 
     execute: async ({ actor }) => {
       const userId = actor.userId;
-      const { passkeys, events } = getServerRuntime().security;
+      const { passkeys, userRecoveryCodes, events } =
+        getServerRuntime().security;
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
 
@@ -117,6 +119,10 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
       });
 
       await passkeys.deleteAllByUser(userId);
+      // Delete recovery codes only after the account loses its last strong factor.
+      if (!strongAuthStatus.hasTotp) {
+        await userRecoveryCodes.deleteAllByUser(userId);
+      }
 
       await events.append({
         type: "passkeys_removed",
@@ -138,7 +144,7 @@ export async function disableTotp(): Promise<{ message: string }> {
 
     execute: async ({ actor }) => {
       const userId = actor.userId;
-      const { userTotpFactors, userTotpRecoveryCodes, events } =
+      const { userTotpFactors, userRecoveryCodes, events } =
         getServerRuntime().security;
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
@@ -152,7 +158,10 @@ export async function disableTotp(): Promise<{ message: string }> {
       });
 
       await userTotpFactors.disable(userId);
-      await userTotpRecoveryCodes.deleteAllByUser(userId);
+      // Delete recovery codes only after the account loses its last strong factor.
+      if (!strongAuthStatus.hasPasskey) {
+        await userRecoveryCodes.deleteAllByUser(userId);
+      }
 
       await events.append({
         type: "totp_disabled",
@@ -163,6 +172,60 @@ export async function disableTotp(): Promise<{ message: string }> {
       });
 
       return Ok({ message: "Aplicación de autenticación desactivada" });
+    },
+  });
+}
+
+export async function getRecoveryCodesStatus(): Promise<{
+  hasActiveSet: boolean;
+  total: number;
+  unused: number;
+  acknowledged: boolean;
+}> {
+  return runAction({
+    name: "settings.security.recovery_status",
+    access: { kind: "session" },
+
+    execute: async ({ actor }) => {
+      const { userRecoveryCodes } = getServerRuntime().security;
+      const active = await userRecoveryCodes.getActiveSet(actor.userId);
+      return Ok({
+        hasActiveSet: active !== null,
+        total: active?.total ?? 0,
+        unused: active?.unused ?? 0,
+        acknowledged: active?.acknowledgedAt != null,
+      });
+    },
+  });
+}
+
+export async function regenerateRecoveryCodes(): Promise<{
+  recoveryCodes: string[];
+}> {
+  return runAction({
+    name: "settings.security.regenerate_recovery",
+    access: { kind: "session" },
+
+    execute: async ({ actor }) => {
+      const { userRecoveryCodes } = getServerRuntime().security;
+      const recoveryCodes = await regenerateRecoveryCodesForUser(
+        { userRecoveryCodes },
+        actor.userId,
+      );
+      return Ok({ recoveryCodes });
+    },
+  });
+}
+
+export async function acknowledgeRecoveryCodes(): Promise<{ message: string }> {
+  return runAction({
+    name: "settings.security.acknowledge_recovery",
+    access: { kind: "session" },
+
+    execute: async ({ actor }) => {
+      const { userRecoveryCodes } = getServerRuntime().security;
+      await userRecoveryCodes.acknowledgeActiveSet(actor.userId);
+      return Ok({ message: "Códigos de recuperación guardados" });
     },
   });
 }

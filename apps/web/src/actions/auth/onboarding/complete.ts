@@ -29,7 +29,7 @@ export async function completeOnboardingFromCurrentSession(): Promise<{
 export async function completeOnboardingWithPasskey(input: {
   challengeId: string;
   response: RegistrationResponseJSON;
-}): Promise<{ redirectTo: string }> {
+}): Promise<{ redirectTo: string; recoveryCodes: string[] }> {
   const phone = await requireCurrentUserPhone();
   const challengeId = WebauthnChallengeId.parse(input.challengeId);
   if (isErr(challengeId)) throwDomain(challengeId.error);

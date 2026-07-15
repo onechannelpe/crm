@@ -1,68 +1,198 @@
-.footerActions {
+.heading {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.passwordStep {
-  display: grid;
+  flex-direction: column;
   gap: 16px;
+  width: 440px;
+  max-width: 100%;
 }
 
-.passwordHint {
-  color: var(--muted-foreground);
-  font-size: var(--font-size-sm);
-  line-height: 1.5;
+.title {
   margin: 0;
+  color: var(--foreground);
+  font-size: var(--font-size-heading-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
 }
 
-.passwordField {
-  display: grid;
+.subtitle {
+  margin: 0;
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+}
+
+/* Keep form fields as direct step-page children while retaining native Enter-to-submit behavior. */
+.formContents {
+  display: contents;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 440px;
+  max-width: 100%;
+}
+
+.profileGroups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  width: 440px;
+  max-width: 100%;
+}
+
+.profileGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.groupHint {
+  margin: 0;
+  color: var(--foreground-tertiary);
   font-size: var(--font-size-sm);
-  gap: 6px;
+  line-height: 1.4;
 }
 
-.passwordField input {
-  background: var(--background);
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.textInput {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
+  background: var(--background);
   color: var(--foreground);
   font: inherit;
-  padding: 10px 12px;
+  font-size: var(--font-size-body);
+  transition: outline 0.15s ease;
 }
 
-.progressTrack {
+.textInput::placeholder {
+  color: var(--muted-foreground);
+}
+
+.textInput:focus {
+  outline: 2px solid var(--foreground);
+  outline-offset: 1px;
+}
+
+.fieldError {
+  margin: 0;
+  color: var(--destructive);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+}
+
+.infoRow {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.infoRow:first-child {
+  padding-top: 0;
+}
+
+.infoRow:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.infoKey {
+  flex-shrink: 0;
+  width: 64px;
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.infoValue {
+  color: var(--foreground);
+  font-size: var(--font-size-sm);
+  word-break: break-word;
+}
+
+.infoValueMissing {
+  color: color-mix(in oklab, var(--destructive) 80%, transparent);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+}
+
+.actionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 440px;
+  max-width: 100%;
+}
+
+.primaryButton {
   width: 100%;
-  height: 3px;
-  border: none;
-  background-color: var(--border);
-  border-radius: 999px;
-  overflow: hidden;
-  appearance: none;
 }
 
-.progressTrack::-webkit-progress-bar {
-  background-color: var(--border);
+.skipButton {
+  width: 100%;
+  height: 32px;
+  padding: 0 20px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--foreground-tertiary);
+  font: inherit;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background 0.1s ease;
 }
 
-.progressTrack::-webkit-progress-value {
-  background: var(--foreground);
-  border-radius: 999px;
-  transition: width 300ms ease;
+.skipButton:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--foreground) 4%, transparent);
 }
 
-.progressTrack::-moz-progress-bar {
-  background: var(--foreground);
-  border-radius: 999px;
+.skipButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.statusText {
+  margin: 0;
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+  text-align: center;
 }
 
 .totpStack {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  width: 440px;
+  max-width: 100%;
 }
 
 .totpInline {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
@@ -76,21 +206,21 @@
 .qrCode {
   width: 160px;
   height: 160px;
-  border-radius: 8px;
   border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
 .secretDetails {
+  color: var(--foreground-secondary);
   font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
 }
 
 .secretDetails summary {
   cursor: pointer;
   list-style: none;
+  text-align: center;
   text-decoration: underline;
   text-underline-offset: 2px;
-  text-align: center;
 }
 
 .secretDetails summary:hover {
@@ -104,79 +234,67 @@
 .secretKeyBlock {
   display: flex;
   flex-direction: column;
-  gap: 4px;
   align-items: center;
+  gap: 4px;
 }
 
 .secretKeyLabel {
-  font-size: var(--font-size-xs);
   color: var(--muted-foreground);
-  text-transform: uppercase;
+  font-size: var(--font-size-xs);
   letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .secretKeyText {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--border) 50%, transparent);
+  color: var(--foreground);
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: var(--font-size-sm);
   letter-spacing: 0.12em;
-  color: var(--foreground);
-  background: color-mix(in oklab, var(--border) 50%, transparent);
-  padding: 6px 10px;
-  border-radius: 6px;
-  user-select: all;
+  text-align: center;
   word-break: break-all;
-  text-align: center;
+  user-select: all;
 }
 
-.passkeyEnrollStep {
-  display: grid;
-  gap: 12px;
-  text-align: center;
-}
-
-.passkeyStatus {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--muted-foreground);
-  line-height: 1.5;
-}
-
-.passkeyStatusConfigured {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--success-foreground, #16a34a);
-  line-height: 1.5;
-  font-weight: var(--font-weight-medium);
-}
-
-.loadingStack {
-  align-items: center;
-  color: var(--foreground-tertiary);
-  display: flex;
-  justify-content: center;
-  margin-bottom: var(--spacing-8);
-  margin-top: var(--spacing-8);
-  width: 100%;
-}
-
-.pendingCreationLoader {
-  align-items: center;
+.pendingStack {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  width: 100%;
-}
-
-.pendingCreationLabel {
-  color: var(--muted-foreground);
-  font-size: var(--font-size-sm);
-  line-height: 1.5;
-  margin: 0;
+  align-items: center;
+  gap: 32px;
   text-align: center;
 }
 
-@media (max-width: 768px) {
-  .footerActions {
-    flex-direction: column-reverse;
-  }
+.pendingLogo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+}
+
+.activationSteps {
+  position: relative;
+  width: 440px;
+  max-width: 100%;
+}
+
+.activationStep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.activationMessage {
+  display: block;
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.loaderCenter {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
