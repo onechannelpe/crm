@@ -24,7 +24,6 @@ export type AuthFunnelEventNameValue =
   | "passkey_result";
 export type AuthFunnelScreenValue =
   | "login"
-  | "login_user"
   | "login_verify"
   | "login_passkey"
   | "reset_password";

@@ -132,6 +132,7 @@ export function LoginHome() {
         <Input
           id="auth-username"
           type="text"
+          aria-label="Usuario"
           placeholder="Usuario"
           name="identifier"
           autocomplete="username"
@@ -151,6 +152,7 @@ export function LoginHome() {
         <Input
           id="current-password"
           type="password"
+          aria-label="Contraseña"
           placeholder="Contraseña"
           name="password"
           autocomplete="current-password"
