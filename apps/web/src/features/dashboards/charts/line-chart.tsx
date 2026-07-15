@@ -1,6 +1,8 @@
 import { createElementSize } from "@solid-primitives/resize-observer";
 import { createMemo, createSignal, For, Show } from "solid-js";
 
+import { Present } from "~/components/ui/control-flow/present";
+
 import { formatMonth, formatSolesCompact } from "../format";
 
 export interface LinePoint {
@@ -34,7 +36,8 @@ export function LineChart(props: LineChartProps) {
     const stepX = points.length > 1 ? innerW / (points.length - 1) : 0;
 
     const coords = points.map((point, index) => ({
-      ...point,
+      label: point.label,
+      value: point.value,
       x: PAD.left + stepX * index,
       y: PAD.top + innerH - (point.value / max) * innerH,
     }));
@@ -75,18 +78,20 @@ export function LineChart(props: LineChartProps) {
         role="img"
         aria-label="GPV realizado por mes"
       >
-        <Show when={geometry().targetY != null}>
-          <line
-            x1={PAD.left}
-            x2={width() - PAD.right}
-            y1={geometry().targetY!}
-            y2={geometry().targetY!}
-            stroke="var(--muted-foreground)"
-            stroke-width="1.5"
-            stroke-dasharray="4 4"
-            opacity="0.7"
-          />
-        </Show>
+        <Present when={geometry().targetY}>
+          {(targetY) => (
+            <line
+              x1={PAD.left}
+              x2={width() - PAD.right}
+              y1={targetY()}
+              y2={targetY()}
+              stroke="var(--muted-foreground)"
+              stroke-width="1.5"
+              stroke-dasharray="4 4"
+              opacity="0.7"
+            />
+          )}
+        </Present>
 
         <path d={geometry().area} fill="var(--color-blue-5)" opacity="0.6" />
         <path

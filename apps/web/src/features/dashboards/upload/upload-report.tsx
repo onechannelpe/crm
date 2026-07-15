@@ -6,11 +6,16 @@ import {
   uploadMerchantReport,
 } from "~/actions/dashboards/imports";
 import { FileDropzone } from "~/components/ui/input/file-dropzone";
+import { InputHint } from "~/components/ui/input/input-hint";
+import { InputLabel } from "~/components/ui/input/input-label";
+import { TextInput } from "~/components/ui/input/text-input";
 import {
-  accountRowsQuery,
+  attainmentQuery,
   cohortRowsQuery,
+  lifecycleQuery,
   merchantFilterOptionsQuery,
-  merchantPerformanceQuery,
+  qualitySummaryQuery,
+  rampQuery,
 } from "~/lib/queries/dashboards";
 
 import { formatInteger } from "../format";
@@ -20,47 +25,85 @@ import styles from "./upload-report.module.css";
 type Phase =
   | { kind: "idle" }
   | { kind: "uploading" }
+  | { kind: "duplicate" }
   | { kind: "processing"; applied: number; total: number }
   | { kind: "done"; matched: number; total: number }
   | { kind: "error"; message: string };
 
+const POLL_INTERVAL_MS = 1500;
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// An import can introduce new months, products, sellers and zones, so the filter
+// options are revalidated alongside the data they describe.
+async function refreshDashboards(): Promise<void> {
+  await Promise.all([
+    revalidate(attainmentQuery.key),
+    revalidate(rampQuery.key),
+    revalidate(lifecycleQuery.key),
+    revalidate(cohortRowsQuery.key),
+    revalidate(merchantFilterOptionsQuery.key),
+    revalidate(qualitySummaryQuery.key),
+  ]);
+}
 
 export function UploadReport(props: { onClose?: () => void }) {
   const [phase, setPhase] = createSignal<Phase>({ kind: "idle" });
+  // Optional. The dealer names every export with its cut, so this stays empty
+  // unless the file was renamed on the way here.
+  const [cutAt, setCutAt] = createSignal("");
   let cancelled = false;
   onCleanup(() => {
     cancelled = true;
   });
 
-  // An import can introduce new months, products, sellers and zones, so the
-  // filter options are revalidated alongside the data they describe.
-  async function refreshDashboards(): Promise<void> {
-    await Promise.all([
-      revalidate(merchantPerformanceQuery.key),
-      revalidate(merchantFilterOptionsQuery.key),
-      revalidate(cohortRowsQuery.key),
-      revalidate(accountRowsQuery.key),
-    ]);
-  }
+  // One accessor per kind. Narrowing inside a function body is something
+  // TypeScript does natively from the discriminant, so the Switch below needs no
+  // casts to read a phase's own fields.
+  const processing = () => {
+    const current = phase();
+    return current.kind === "processing" ? current : null;
+  };
+  const done = () => {
+    const current = phase();
+    return current.kind === "done" ? current : null;
+  };
+  const errored = () => {
+    const current = phase();
+    return current.kind === "error" ? current : null;
+  };
 
   async function handleFile(file: File): Promise<void> {
     setPhase({ kind: "uploading" });
     try {
       const form = new FormData();
       form.append("file", file);
-      const { jobId, rowsTotal } = await uploadMerchantReport(form);
-      setPhase({ kind: "processing", applied: 0, total: rowsTotal });
+      if (cutAt()) form.append("cutAt", new Date(cutAt()).toISOString());
+
+      const upload = await uploadMerchantReport(form);
+      if (upload.duplicate || !upload.jobId) {
+        setPhase({ kind: "duplicate" });
+        return;
+      }
+
+      const jobId = upload.jobId;
+      // The row count is not known yet: the upload only stores and books the
+      // file, and the worker reports the total once it has decoded it.
+      setPhase({ kind: "processing", applied: 0, total: 0 });
 
       for (;;) {
         if (cancelled) return;
+        // A status poll is sequential by nature: there is nothing to run in
+        // parallel with, and the next read depends on this one.
+        // eslint-disable-next-line no-await-in-loop
         const job = await getMerchantReportJob(jobId);
         if (job.status === "COMPLETED") {
+          // eslint-disable-next-line no-await-in-loop
           await refreshDashboards();
           setPhase({
             kind: "done",
             matched: job.rows_applied ?? 0,
-            total: job.rows_total ?? rowsTotal,
+            total: job.rows_total ?? 0,
           });
           return;
         }
@@ -74,9 +117,10 @@ export function UploadReport(props: { onClose?: () => void }) {
         setPhase({
           kind: "processing",
           applied: job.rows_applied ?? 0,
-          total: job.rows_total ?? rowsTotal,
+          total: job.rows_total ?? 0,
         });
-        await sleep(1500);
+        // eslint-disable-next-line no-await-in-loop
+        await sleep(POLL_INTERVAL_MS);
       }
     } catch (error) {
       setPhase({
@@ -107,52 +151,68 @@ export function UploadReport(props: { onClose?: () => void }) {
               Arrastra el reporte GPV (.xlsx) o haz clic para elegir
             </p>
             <p class={styles.dropHint}>
-              Acepta el reporte del dealer o el archivo "GPV AL" con atribución.
+              El reporte del dealer, tal como sale del sistema de Culqi.
             </p>
           </div>
         )}
       </FileDropzone>
 
+      <div class={styles.cutField}>
+        <InputLabel for="gpv-cut-at">Fecha de corte</InputLabel>
+        <TextInput
+          id="gpv-cut-at"
+          type="datetime-local"
+          value={cutAt()}
+          disabled={busy()}
+          onChange={setCutAt}
+        />
+        <InputHint>
+          Se lee del nombre del archivo. Indícala solo si fue renombrado.
+        </InputHint>
+      </div>
+
       <Switch>
         <Match when={phase().kind === "uploading"}>
-          <p class={styles.status}>Analizando archivo…</p>
+          <p class={styles.status}>Subiendo archivo…</p>
         </Match>
-        <Match when={phase().kind === "processing"}>
-          {(_) => {
-            const p = phase() as Extract<Phase, { kind: "processing" }>;
-            return (
-              <div>
-                <p class={styles.status}>
-                  Procesando {formatInteger(p.applied)} de{" "}
-                  {formatInteger(p.total)} filas…
-                </p>
-                <div class={styles.bar}>
-                  <div
-                    class={styles.barFill}
-                    style={{
-                      width: `${p.total ? (p.applied / p.total) * 100 : 0}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          }}
-        </Match>
-        <Match when={phase().kind === "done"}>
-          {(_) => {
-            const p = phase() as Extract<Phase, { kind: "done" }>;
-            return (
-              <p class={styles.statusDone}>
-                Importado: {formatInteger(p.matched)} de{" "}
-                {formatInteger(p.total)} filas aplicadas.
-              </p>
-            );
-          }}
-        </Match>
-        <Match when={phase().kind === "error"}>
-          <p class={styles.statusError}>
-            {(phase() as Extract<Phase, { kind: "error" }>).message}
+        <Match when={phase().kind === "duplicate"}>
+          <p class={styles.statusDone}>
+            Este archivo ya se importó. No se cambió nada.
           </p>
+        </Match>
+        <Match when={processing()}>
+          {(current) => (
+            <div>
+              <p class={styles.status}>
+                {current().total === 0
+                  ? "Leyendo el archivo…"
+                  : `Procesando ${formatInteger(current().applied)} de ${formatInteger(current().total)} filas...`}
+              </p>
+              <div class={styles.bar}>
+                <div
+                  class={styles.barFill}
+                  style={{
+                    width: `${
+                      current().total
+                        ? (current().applied / current().total) * 100
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </Match>
+        <Match when={done()}>
+          {(current) => (
+            <p class={styles.statusDone}>
+              Importado: {formatInteger(current().matched)} de{" "}
+              {formatInteger(current().total)} filas aplicadas.
+            </p>
+          )}
+        </Match>
+        <Match when={errored()}>
+          {(current) => <p class={styles.statusError}>{current().message}</p>}
         </Match>
       </Switch>
 

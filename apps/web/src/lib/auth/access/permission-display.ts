@@ -223,10 +223,16 @@ const PERMISSION_CATALOG: Record<Permission, PermissionMeta> = {
     description: "Consultar los paneles de GPV y estadísticas de negocio.",
     group: "negocio",
   },
+  "dashboards:read:own": {
+    label: "Ver GPV de sus clientes",
+    description:
+      "Consultar el GPV de los comercios que tiene asignados, desde su ficha.",
+    group: "negocio",
+  },
   "dashboards:manage": {
     label: "Gestionar paneles de negocio",
     description:
-      "Importar reportes de dealers y editar la atribución por comercio.",
+      "Importar reportes de dealers y resolver la atribución por comercio.",
     group: "negocio",
   },
   "admin:read": {

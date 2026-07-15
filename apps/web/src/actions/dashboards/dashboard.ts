@@ -1,139 +1,170 @@
 "use server";
 
-import { getMerchantAccounts } from "~/server/merchant-stats/read/attribution";
-import { getCohortReport } from "~/server/merchant-stats/read/cohort-report";
 import type {
-  AttainmentRow,
-  CohortFilters,
+  Attainment,
+  BookFilter,
   CohortRampSeries,
   CohortSaleRow,
-  DataQualitySummary,
+  CulqiUserGpvRow,
+  FilterOptions,
   LifecycleSummary,
-  MerchantAccountRow,
-  MerchantStatsFilterOptions,
-  RecordFilters,
-} from "~/server/merchant-stats/read/contracts";
-import { getDataQuality } from "~/server/merchant-stats/read/data-quality";
-import { getFilterOptions } from "~/server/merchant-stats/read/filter-options";
+  Page,
+} from "~/contracts/merchant-stats/views";
+import { getAttainment as readAttainment } from "~/server/merchant-stats/read/attainment";
 import {
-  getBranchAttainment,
   getCohortRamp,
-  getLifecycle,
-  getSellerAttainment,
-} from "~/server/merchant-stats/read/performance";
+  getCohortRows as readCohortRows,
+} from "~/server/merchant-stats/read/cohort";
+import { getCulqiUserGpv as readCulqiUserGpv } from "~/server/merchant-stats/read/culqi-users";
+import { getLifecycle } from "~/server/merchant-stats/read/lifecycle";
+import { getFilterOptions as readFilterOptions } from "~/server/merchant-stats/read/options";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { Ok } from "~/server/shared/result";
+import type { DomainError } from "~/server/shared/domain-error";
+import {
+  parseObject,
+  validationFail,
+  type Reader,
+} from "~/server/shared/parsing";
+import { Ok, type Result } from "~/server/shared/result";
 
-type RawFilters = Partial<RecordFilters> | undefined;
+const DEFAULT_PAGE = 60;
+const MAX_PAGE = 200;
 
-const pick = (value: unknown) =>
-  typeof value === "string" && value.length > 0 ? value : undefined;
-
-// Branch and seller are the only real slices of the book.
-// Month is the cohort axis.
-function cleanCohortFilters(raw: RawFilters): CohortFilters {
-  if (!raw) return {};
-  return { branchId: pick(raw.branchId), sellerKey: pick(raw.sellerKey) };
-}
-
-function cleanRecordFilters(raw: RawFilters): RecordFilters {
-  if (!raw) return {};
+// Filters arrive from our own option list, but they arrive over the wire, so
+// they are read as unknown and narrowed here rather than trusted as a shape.
+function readFilter(r: Reader<DomainError>): BookFilter {
   return {
-    ...cleanCohortFilters(raw),
-    saleMonth: pick(raw.saleMonth),
-    product: pick(raw.product),
+    branchId: r.optStr("branchId") ?? undefined,
+    sellerUserId: r.optStr("sellerUserId") ?? undefined,
+    month: r.optStr("month") ?? undefined,
+    product: r.optStr("product") ?? undefined,
   };
 }
 
-export interface MerchantPerformance {
-  ramp: CohortRampSeries[];
-  sellers: AttainmentRow[];
-  branches: AttainmentRow[];
-  lifecycle: LifecycleSummary;
-  dataQuality: DataQualitySummary;
+// The client picks the page size, so it is bounded here rather than passed
+// straight into .limit(): an unbounded limit is a database-sized foot-gun on a
+// public boundary.
+function readPage(r: Reader<DomainError>): Page {
+  return {
+    limit: r.optIntRange("limit", { min: 1, max: MAX_PAGE }) ?? DEFAULT_PAGE,
+    offset: r.optIntRange("offset", { min: 0, max: 1_000_000 }) ?? 0,
+  };
 }
 
-// The performance surface is read whole and grouped: the whole book is ranked
-// at once. Cohort step is a parameter because a target is per month, so
-// comparing GPV to it only means anything at one step at a time.
-export async function getMerchantPerformance(
-  offset: number,
-): Promise<MerchantPerformance> {
-  return runAction({
-    name: "dashboards.performance.read",
-    access: { kind: "permission", permission: "dashboards:read" },
-    parse: () => Ok({ offset: Number.isInteger(offset) ? offset : 0 }),
+function parseFilterAndMonth(
+  raw: unknown,
+): Result<{ filter: BookFilter; month: string }, DomainError> {
+  return parseObject(raw, validationFail, (r) => ({
+    filter: r.obj("filter", readFilter),
+    month: r.str("month"),
+  }));
+}
 
-    execute: async (_ctx, input) => {
-      const db = getServerRuntime().infra.db;
-      const [ramp, sellers, branches, lifecycle, dataQuality] =
-        await Promise.all([
-          getCohortRamp(db, {}),
-          getSellerAttainment(db, {}, input.offset),
-          getBranchAttainment(db, {}, input.offset),
-          getLifecycle(db, {}),
-          getDataQuality(db),
-        ]);
-      return Ok({ ramp, sellers, branches, lifecycle, dataQuality });
-    },
+function parseFilter(
+  raw: unknown,
+): Result<{ filter: BookFilter }, DomainError> {
+  return parseObject(raw, validationFail, (r) => ({
+    filter: r.obj("filter", readFilter),
+  }));
+}
+
+export async function getAttainment(raw: unknown): Promise<Attainment> {
+  return runAction({
+    name: "dashboards.attainment.read",
+    access: { kind: "permission", permission: "dashboards:read" },
+    parse: () => parseFilterAndMonth(raw),
+
+    execute: async (_ctx, input) =>
+      Ok(
+        await readAttainment(
+          getServerRuntime().infra.db,
+          input.filter,
+          input.month,
+        ),
+      ),
   });
 }
 
-export async function getMerchantFilterOptions(): Promise<MerchantStatsFilterOptions> {
+// Culqi's own view of who sold what. A reconciliation surface, not a board.
+export async function getCulqiUserGpv(
+  raw: unknown,
+): Promise<CulqiUserGpvRow[]> {
+  return runAction({
+    name: "dashboards.culqiUsers.read",
+    access: { kind: "permission", permission: "dashboards:read" },
+    parse: () => parseFilterAndMonth(raw),
+
+    execute: async (_ctx, input) =>
+      Ok(
+        await readCulqiUserGpv(
+          getServerRuntime().infra.db,
+          input.filter,
+          input.month,
+        ),
+      ),
+  });
+}
+
+export async function getRamp(raw: unknown): Promise<CohortRampSeries[]> {
+  return runAction({
+    name: "dashboards.ramp.read",
+    access: { kind: "permission", permission: "dashboards:read" },
+    parse: () => parseFilter(raw),
+
+    execute: async (_ctx, input) =>
+      Ok(await getCohortRamp(getServerRuntime().infra.db, input.filter)),
+  });
+}
+
+export async function getLifecycleSummary(
+  raw: unknown,
+): Promise<LifecycleSummary> {
+  return runAction({
+    name: "dashboards.lifecycle.read",
+    access: { kind: "permission", permission: "dashboards:read" },
+    parse: () => parseFilter(raw),
+
+    execute: async (ctx, input) =>
+      Ok(
+        await getLifecycle(
+          getServerRuntime().infra.db,
+          input.filter,
+          ctx.now(),
+        ),
+      ),
+  });
+}
+
+export async function getCohortRows(raw: unknown): Promise<CohortSaleRow[]> {
+  return runAction({
+    name: "dashboards.cohort.read",
+    access: { kind: "permission", permission: "dashboards:read" },
+
+    parse: () =>
+      parseObject(raw, validationFail, (r) => ({
+        filter: r.obj("filter", readFilter),
+        page: r.obj("page", readPage),
+      })),
+
+    execute: async (_ctx, input) =>
+      Ok(
+        await readCohortRows(
+          getServerRuntime().infra.db,
+          input.filter,
+          input.page,
+        ),
+      ),
+  });
+}
+
+export async function getFilterOptions(): Promise<FilterOptions> {
   return runAction({
     name: "dashboards.filterOptions.read",
     access: { kind: "permission", permission: "dashboards:read" },
     parse: () => Ok(undefined),
 
     execute: async () =>
-      Ok(await getFilterOptions(getServerRuntime().infra.db)),
-  });
-}
-
-export async function getCohortRows(
-  raw: RawFilters,
-  page: { limit: number; offset: number },
-): Promise<CohortSaleRow[]> {
-  return runAction({
-    name: "dashboards.cohort.read",
-    access: { kind: "permission", permission: "dashboards:read" },
-    parse: () => Ok({ filters: cleanRecordFilters(raw), page }),
-
-    execute: async (_ctx, input) =>
-      Ok(
-        await getCohortReport(
-          getServerRuntime().infra.db,
-          input.filters,
-          input.page,
-        ),
-      ),
-  });
-}
-
-export async function getAccountRows(
-  raw: (RawFilters & { missingEnrichment?: boolean }) | undefined,
-  page: { limit: number; offset: number },
-): Promise<MerchantAccountRow[]> {
-  return runAction({
-    name: "dashboards.accounts.read",
-    access: { kind: "permission", permission: "dashboards:read" },
-    parse: () =>
-      Ok({
-        filters: {
-          ...cleanRecordFilters(raw),
-          missingEnrichment: raw?.missingEnrichment === true,
-        },
-        page,
-      }),
-
-    execute: async (_ctx, input) =>
-      Ok(
-        await getMerchantAccounts(
-          getServerRuntime().infra.db,
-          input.filters,
-          input.page,
-        ),
-      ),
+      Ok(await readFilterOptions(getServerRuntime().infra.db)),
   });
 }

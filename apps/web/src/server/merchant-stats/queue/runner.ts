@@ -1,19 +1,10 @@
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { IntegrationJobId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
-import { applyMerchantReport } from "../application/apply-report";
-import type { InvalidGpvRow, MappedGpvRow } from "../intake/contracts";
-
-// The upload action parses the workbook and stores this payload as JSON; the
-// runner only applies it, so a heavy parse never blocks the request.
-export interface StoredGpvReport {
-  cutDate: string;
-  sourceFilename: string;
-  hasEnrichment: boolean;
-  validRows: MappedGpvRow[];
-  invalidRows: InvalidGpvRow[];
-}
+import { applyReport, findReportForJob } from "../apply/apply-report";
+import { parseReport } from "../intake/parse-report";
 
 export interface MerchantReportProcessResult {
   rowsTotal: number;
@@ -23,7 +14,7 @@ export interface MerchantReportProcessResult {
 }
 
 export function createMerchantReportRunner(deps: {
-  executor: DatabaseExecutor;
+  db: DatabaseExecutor;
   now: () => Date;
   readFile: (filePath: string) => Promise<Uint8Array>;
   updateProgress: (input: {
@@ -33,26 +24,32 @@ export function createMerchantReportRunner(deps: {
     rowsFailed?: number;
   }) => Promise<unknown>;
 }) {
-  const { executor, now, readFile, updateProgress } = deps;
+  const { db, now, readFile, updateProgress } = deps;
 
   return {
+    // The worker reads the original .xlsx and decodes it. The upload only stores
+    // and books; a 1,300-row workbook takes ~400ms to parse and that belongs on
+    // a queue, not in a request. It also means a decoder fix can be replayed
+    // against the real file rather than against yesterday's decoder output.
     async process(
       job: IntegrationJobRow,
       signal: AbortSignal,
     ): Promise<MerchantReportProcessResult> {
-      if (!job.file_path) {
-        throw new Error("Missing file path for GPV import job");
-      }
       if (job.type !== "import_gpv") {
         throw new Error(`Unsupported import type: ${job.type}`);
       }
 
-      const bytes = await readFile(job.file_path);
-      const stored: StoredGpvReport = JSON.parse(
-        new TextDecoder().decode(bytes),
-      );
-      const rowsTotal = stored.validRows.length + stored.invalidRows.length;
+      const report = await findReportForJob(db, job.id);
+      if (!report) throw new Error(`No merchant report for job ${job.id}`);
 
+      const bytes = await readFile(report.storageKey);
+      const parsed = parseReport(toArrayBuffer(bytes), { cutAt: report.cutAt });
+      if (isErr(parsed)) {
+        throw new Error(`Unreadable GPV workbook: ${parsed.error.code}`);
+      }
+
+      const rowsTotal =
+        parsed.value.rows.length + parsed.value.rejections.length;
       await updateProgress({
         jobId: job.id,
         rowsTotal,
@@ -62,34 +59,44 @@ export function createMerchantReportRunner(deps: {
 
       if (signal.aborted) throw new Error("Job aborted");
 
-      const result = await applyMerchantReport(
-        {
-          jobId: job.id,
-          uploadedBy: job.requested_by_user_id,
-          cutDate: stored.cutDate,
-          sourceFilename: stored.sourceFilename,
-          hasEnrichment: stored.hasEnrichment,
-          validRows: stored.validRows,
-          invalidRows: stored.invalidRows,
-          onProgress: (progress) => {
-            void updateProgress({ jobId: job.id, ...progress });
-          },
-        },
-        { executor, now: now() },
+      const result = await applyReport(
+        { reportId: report.id, cutAt: report.cutAt, parsed: parsed.value },
+        { db, now: now() },
       );
 
       if (signal.aborted) throw new Error("Job aborted after processing");
 
+      await updateProgress({
+        jobId: job.id,
+        rowsTotal: result.rowsTotal,
+        rowsApplied: result.rowsValid,
+        rowsFailed: result.rowsRejected,
+      });
+
       return {
         rowsTotal: result.rowsTotal,
-        rowsApplied: result.rowsApplied,
-        rowsFailed: result.rowsFailed,
+        rowsApplied: result.rowsValid,
+        rowsFailed: result.rowsRejected,
         resultsJson: JSON.stringify({
-          reportId: result.reportId,
-          rowsMatched: result.rowsMatched,
-          rowsUnmatched: result.rowsUnmatched,
+          reportId: report.id,
+          conflicts: result.conflicts,
+          needsReview: result.needsReview,
         }),
       };
     },
   };
+}
+
+// bytes.buffer may be larger than bytes itself (e.g. Node's Buffer pool for
+// small reads), so the slice must stay bounded by byteOffset/byteLength
+// rather than returning the raw buffer.
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const { buffer, byteOffset, byteLength } = bytes;
+  if (buffer instanceof ArrayBuffer) {
+    return buffer.slice(byteOffset, byteOffset + byteLength);
+  }
+  // SharedArrayBuffer-backed view: fall back to an explicit copy.
+  const copy = new Uint8Array(byteLength);
+  copy.set(bytes);
+  return copy.buffer;
 }

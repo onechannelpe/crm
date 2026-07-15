@@ -34,7 +34,7 @@ export function createMerchantReportsQueue(
   const runner =
     deps.runner ??
     createMerchantReportRunner({
-      executor: runtime.executor,
+      db: runtime.executor,
       now: runtime.now,
       readFile: deps.readFile,
       updateProgress: (progress) =>

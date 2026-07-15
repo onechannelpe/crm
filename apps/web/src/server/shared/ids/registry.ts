@@ -65,20 +65,11 @@ export const FulfillmentOrderId = uuidId("FulfillmentOrderId");
 export type IntegrationJobId = BrandedId<"IntegrationJobId">;
 export const IntegrationJobId = uuidId("IntegrationJobId");
 
-export type MerchantSalesReportId = BrandedId<"MerchantSalesReportId">;
-export const MerchantSalesReportId = uuidId("MerchantSalesReportId");
+export type MerchantReportId = BrandedId<"MerchantReportId">;
+export const MerchantReportId = uuidId("MerchantReportId");
 
 export type MerchantSaleId = BrandedId<"MerchantSaleId">;
 export const MerchantSaleId = uuidId("MerchantSaleId");
-
-export type MerchantAccountId = BrandedId<"MerchantAccountId">;
-export const MerchantAccountId = uuidId("MerchantAccountId");
-
-export type MerchantSaleMetricId = BrandedId<"MerchantSaleMetricId">;
-export const MerchantSaleMetricId = uuidId("MerchantSaleMetricId");
-
-export type MerchantSalesImportRowId = BrandedId<"MerchantSalesImportRowId">;
-export const MerchantSalesImportRowId = uuidId("MerchantSalesImportRowId");
 
 export type NotificationDeliveryId = BrandedId<"NotificationDeliveryId">;
 export const NotificationDeliveryId = uuidId("NotificationDeliveryId");

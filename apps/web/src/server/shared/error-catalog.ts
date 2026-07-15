@@ -97,9 +97,15 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró el proceso de importación.",
   },
-  merchant_account_not_found: {
+  merchant_attribution_not_found: {
     kind: "not_found",
-    message: "No se encontró la cuenta del comercio.",
+    message: "No se encontró la atribución de ese comercio para ese mes.",
+  },
+  // Also returned when the RUC exists but is not the caller's client: an
+  // executive must not be able to probe which RUCs the book contains.
+  merchant_stats_not_found: {
+    kind: "not_found",
+    message: "No se encontró información de GPV para este comercio.",
   },
   resource_not_found: {
     kind: "not_found",
@@ -342,6 +348,16 @@ export const ERROR_CATALOG = {
   unsupported_file_type: {
     kind: "validation",
     message: "Solo se permiten archivos .csv y .xlsx.",
+  },
+  gpv_cut_required: {
+    kind: "validation",
+    message:
+      "No se pudo leer la fecha de corte del nombre del archivo. Indícala antes de subirlo.",
+  },
+  gpv_no_worksheet: {
+    kind: "validation",
+    message:
+      "El archivo no tiene ninguna hoja con las columnas del reporte GPV.",
   },
   rate_revision_files_required: {
     kind: "validation",

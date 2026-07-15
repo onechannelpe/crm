@@ -53,6 +53,7 @@ export type Permission =
   // Business (Culqi GPV) dashboards. manage = upload dealer reports and edit
   // per-RUC enrichment.
   | "dashboards:read"
+  | "dashboards:read:own"
   | "dashboards:manage";
 
 export const ROLES = [
@@ -82,6 +83,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:create",
     "lead:sale:upload-proof",
     "fulfillment:client-step",
+    // Their own clients' GPV on the record, not the org-wide book. Plain
+    // dashboards:read would also open /dashboards via the route manifest.
+    "dashboards:read:own",
   ],
   supervisor: [
     "lead:note:add",
@@ -104,6 +108,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "team:manage",
     "audit:read",
     "dashboards:read",
+    "dashboards:read:own",
     "dashboards:manage",
   ],
   back_office: [
@@ -121,6 +126,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:upload-proof",
     "fulfillment:manage",
     "dashboards:read",
+    "dashboards:read:own",
     "dashboards:manage",
   ],
   sales_manager: [
@@ -148,6 +154,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:manage",
     "quotation:policy:manage",
     "dashboards:read",
+    "dashboards:read:own",
     "dashboards:manage",
   ],
   logistics: ["inventory:read", "inventory:manage"],
@@ -187,6 +194,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:manage",
     "audit:read",
     "dashboards:read",
+    "dashboards:read:own",
     "dashboards:manage",
   ],
   superuser: [
@@ -227,6 +235,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:manage",
     "audit:read",
     "dashboards:read",
+    "dashboards:read:own",
     "dashboards:manage",
   ],
 };

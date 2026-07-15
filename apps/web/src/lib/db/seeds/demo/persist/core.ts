@@ -3,6 +3,7 @@ import type { Kysely } from "kysely";
 import type { Database } from "../../../types";
 import type { CompiledWorkflowScenario } from "../compiler";
 import { persistCompanyRegistryRecords } from "./company-registry-records";
+import { persistWorkflowFulfillment } from "./fulfillment";
 import { persistWorkflowHistoryEvents } from "./history-events";
 import { persistOrganizations } from "./organizations";
 import { persistWorkflowCommercialData } from "./workflow-commercial";
@@ -21,5 +22,7 @@ export async function persistWorkflowSample(
   await persistWorkflowLeadsAndAssignments(db, now, day, orgIdByRuc, leads);
   await persistCompanyRegistryRecords(db, now, day, overlayTtl, leads);
   await persistWorkflowCommercialData(db, now, day, orgIdByRuc, leads);
+  // Needs the venues created above (units reference them).
+  await persistWorkflowFulfillment(db, now, day, leads);
   await persistWorkflowHistoryEvents(db, now, day, leads);
 }

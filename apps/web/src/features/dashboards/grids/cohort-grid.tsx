@@ -4,16 +4,17 @@ import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
+import type {
+  BookFilter,
+  CohortSaleRow,
+  FilterOptions,
+} from "~/contracts/merchant-stats/views";
+import { COHORT_OFFSETS } from "~/contracts/merchant-stats/vocabulary";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { cohortRowsQuery } from "~/lib/queries/dashboards";
-import type {
-  CohortSaleRow,
-  MerchantStatsFilterOptions,
-  RecordFilters,
-} from "~/server/merchant-stats/read/contracts";
 
 import { formatInteger, formatMonth, formatSolesCompact } from "../format";
 import { RecordFilterBar } from "./record-filter-bar";
@@ -21,9 +22,6 @@ import { RecordFilterBar } from "./record-filter-bar";
 import styles from "./grid-surface.module.css";
 
 const PAGE = 60;
-
-// gpv_m0..gpv_m3 is the whole reported window; the sale carries nothing past it.
-const OFFSETS = [0, 1, 2, 3] as const;
 
 type Row = CohortSaleRow & { id: string };
 
@@ -57,7 +55,7 @@ const COLUMNS = [
     label: "Vendedor",
     icon: User,
     width: 170,
-    renderCell: (row) => row.realSellerName ?? "Sin asignar",
+    renderCell: (row) => row.sellerName ?? "Sin asignar",
   },
   {
     key: "saleMonth",
@@ -114,20 +112,24 @@ const COLUMNS = [
   },
 ] satisfies ReadonlyArray<DataGridColumn<Row>>;
 
-export function CohortGrid(props: { options: MerchantStatsFilterOptions }) {
-  const [filters, setFilters] = createSignal<RecordFilters>({});
+export function CohortGrid(props: { options: FilterOptions }) {
+  const [filter, setFilter] = createSignal<BookFilter>({});
   const [limit, setLimit] = createSignal(PAGE);
 
   const [page] = createResource(
-    () => ({ filters: filters(), limit: limit() }),
+    () => ({ filter: filter(), limit: limit() }),
     (input) =>
       cohortRowsQuery({
-        filters: input.filters,
+        filter: input.filter,
         page: { limit: input.limit, offset: 0 },
       }),
   );
 
   const rows = createMemo<Row[]>(() =>
+    // The grid keys on `id`, which the read contract has no business
+    // carrying. These rows are the cached query result, so a copy is the
+    // only correct way to add it.
+    // eslint-disable-next-line oxc/no-map-spread
     (page.latest ?? []).map((row) => ({ ...row, id: row.saleId })),
   );
 
@@ -137,7 +139,7 @@ export function CohortGrid(props: { options: MerchantStatsFilterOptions }) {
       subtitle: `${row.product} · ${row.ruc}`,
       items: [
         { label: "Serie", value: row.serialNumber ?? "—" },
-        { label: "Vendedor", value: row.realSellerName ?? "Sin asignar" },
+        { label: "Vendedor", value: row.sellerName ?? "Sin asignar" },
         { label: "Zonal", value: row.branchName ?? "—" },
         { label: "Mes de venta", value: formatMonth(row.saleMonth) },
         {
@@ -147,7 +149,7 @@ export function CohortGrid(props: { options: MerchantStatsFilterOptions }) {
               ? formatSolesCompact(row.projectedGpv)
               : "—",
         },
-        ...OFFSETS.map((offset) => ({
+        ...COHORT_OFFSETS.map((offset) => ({
           label: `M${offset} (GPV / TRX)`,
           value: `${formatSolesCompact(gpvAt(row, offset))} · ${formatInteger(
             trxAt(row, offset),
@@ -169,9 +171,9 @@ export function CohortGrid(props: { options: MerchantStatsFilterOptions }) {
     <div class={styles.surface}>
       <RecordFilterBar
         options={props.options}
-        filters={filters()}
+        filter={filter()}
         onChange={(patch) => {
-          setFilters((current) => ({ ...current, ...patch }));
+          setFilter((current) => ({ ...current, ...patch }));
           setLimit(PAGE);
         }}
       />

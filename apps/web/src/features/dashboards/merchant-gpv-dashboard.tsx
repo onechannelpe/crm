@@ -4,6 +4,7 @@ import { createMemo, createSignal, Match, Show, Switch } from "solid-js";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { ScrollWrapper } from "~/components/ui/utilities/scroll-wrapper";
+import type { BookFilter } from "~/contracts/merchant-stats/views";
 import {
   TabStrip,
   type TabItem,
@@ -11,80 +12,109 @@ import {
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetGrid, WidgetGridItem } from "~/features/widgets/widget-layout";
 import {
+  attainmentQuery,
+  lifecycleQuery,
   merchantFilterOptionsQuery,
-  merchantPerformanceQuery,
+  qualitySummaryQuery,
+  rampQuery,
 } from "~/lib/queries/dashboards";
-import type { CohortRampSeries } from "~/server/merchant-stats/read/contracts";
 
-import { DataQualityTable } from "./data-quality-table";
+import { CulqiView } from "./culqi/culqi-view";
 import {
   formatInteger,
   formatMonth,
   formatRatio,
   formatSolesCompact,
-  trendPercentage,
 } from "./format";
-import { AccountsGrid } from "./grids/accounts-grid";
+import { AttributionGrid } from "./grids/attribution-grid";
 import { CohortGrid } from "./grids/cohort-grid";
+import { RecordFilterBar } from "./grids/record-filter-bar";
+import { QualityPanel } from "./quality/quality-panel";
 import { AggregateTile, BarTile, RampTile } from "./tiles";
 import { UploadReport } from "./upload/upload-report";
 
 import styles from "./merchant-gpv-dashboard.module.css";
 
-const EMPTY_PERFORMANCE = {
-  ramp: [],
-  sellers: [],
+const EMPTY_OPTIONS = {
   branches: [],
-  lifecycle: {
-    salesTotal: 0,
-    activatedCount: 0,
-    medianDaysToActivate: null,
-    dormantCount: 0,
-    dormantThresholdDays: 30,
-  },
-  dataQuality: {
-    unmatchedRucs: 0,
-    accountsMissingSeller: 0,
-    accountsMissingProjected: 0,
-    accountsMissingBranch: 0,
-    serialMismatches: 0,
-  },
+  sellers: [],
+  months: [],
+  products: [],
 };
 
-type GpvTabId = "rendimiento" | "cohortes" | "atribucion";
+const EMPTY_ATTAINMENT = {
+  sellers: [],
+  branches: [],
+  coverage: { attributedGpv: 0, totalGpv: 0 },
+};
+
+const EMPTY_LIFECYCLE = {
+  salesTotal: 0,
+  activatedCount: 0,
+  medianDaysToActivate: null,
+  dormantCount: 0,
+  dormantThresholdDays: 30,
+};
+
+const EMPTY_QUALITY = {
+  conflict: 0,
+  late: 0,
+  none: 0,
+  no_target: 0,
+  serial_mismatch: 0,
+};
+
+type GpvTabId = "rendimiento" | "cohortes" | "atribucion" | "culqi";
 
 const GPV_TABS: ReadonlyArray<TabItem<GpvTabId>> = [
   { id: "rendimiento", label: "Rendimiento" },
   { id: "cohortes", label: "Cohortes" },
   { id: "atribucion", label: "Atribución" },
+  { id: "culqi", label: "Vista Culqi" },
 ];
 
-// Attainment is read at m0: the sale month is the only step every cohort has
-// reached, so the comparison is never half-empty. Exported so a route preload
-// warms the same cache entry the component reads.
-export const ATTAINMENT_OFFSET = 0;
-
-// More lines and the cohort curve stops being readable. Newest cohorts are
-// the ones anyone is asking about.
+// More lines and the cohort curve stops being readable. Newest cohorts are the
+// ones anyone is asking about.
 const MAX_RAMP_SERIES = 5;
 
 export function MerchantGpvDashboard() {
   const [tab, setTab] = createSignal<GpvTabId>("rendimiento");
   const [showUpload, setShowUpload] = createSignal(false);
+  const [filter, setFilter] = createSignal<BookFilter>({});
 
-  const performance = createAsync(
-    () => merchantPerformanceQuery(ATTAINMENT_OFFSET),
-    { initialValue: EMPTY_PERFORMANCE },
-  );
   const options = createAsync(() => merchantFilterOptionsQuery(), {
-    initialValue: { branches: [], sellers: [], saleMonths: [], products: [] },
+    initialValue: EMPTY_OPTIONS,
+  });
+
+  // Attainment is a calendar-month question: the target is a flat monthly
+  // number, so the newest month with data is the one worth landing on.
+  const month = createMemo(() => filter().month ?? options().months[0] ?? null);
+
+  const attainment = createAsync(
+    () => {
+      const current = month();
+      return current
+        ? attainmentQuery({ filter: filter(), month: current })
+        : Promise.resolve(EMPTY_ATTAINMENT);
+    },
+    { initialValue: EMPTY_ATTAINMENT },
+  );
+
+  const ramp = createAsync(() => rampQuery({ filter: filter() }), {
+    initialValue: [],
+  });
+  const lifecycle = createAsync(() => lifecycleQuery({ filter: filter() }), {
+    initialValue: EMPTY_LIFECYCLE,
+  });
+  const quality = createAsync(() => qualitySummaryQuery(), {
+    initialValue: EMPTY_QUALITY,
   });
 
   // Newest cohorts last so the ramp reads left-to-right oldest-to-newest,
   // matching how the legend is scanned.
   const rampSeries = createMemo(() =>
-    performance()
-      .ramp.slice(-MAX_RAMP_SERIES)
+    ramp()
+      .slice(-MAX_RAMP_SERIES)
       .map((series) => ({
         key: series.saleMonth,
         label: series.saleMonth,
@@ -95,32 +125,30 @@ export function MerchantGpvDashboard() {
       })),
   );
 
-  const latestCohort = createMemo(() => performance().ramp.at(-1));
-  const priorCohort = createMemo(() => performance().ramp.at(-2));
-
-  const gpvAt = (series: CohortRampSeries | undefined, offset: number) =>
-    series?.points.find((point) => point.offset === offset)?.gpv;
-
-  const latestGpv = createMemo(() => gpvAt(latestCohort(), ATTAINMENT_OFFSET));
-  const priorGpv = createMemo(() => gpvAt(priorCohort(), ATTAINMENT_OFFSET));
-
-  // Like-for-like: attainment is the same two quantities in both cohorts, so
-  // its period-over-period movement is comparable.
-  const attainment = (series: CohortRampSeries | undefined) => {
-    const gpv = gpvAt(series, ATTAINMENT_OFFSET);
-    if (gpv === undefined || !series?.projectedGpv) return undefined;
-    return gpv / series.projectedGpv;
-  };
-
-  const cohortLabel = createMemo(() => {
-    const cohort = latestCohort();
-    return cohort ? formatMonth(cohort.saleMonth) : "—";
+  const monthLabel = createMemo(() => {
+    const current = month();
+    return current ? formatMonth(current) : "—";
   });
 
-  const activationRate = createMemo(() => {
-    const { activatedCount, salesTotal } = performance().lifecycle;
-    return formatRatio(activatedCount, salesTotal);
-  });
+  // From coverage, not from summing the board: the board only holds RUC-months
+  // the ladder could attribute, and that is never all of them. Summing it would
+  // report a smaller book than the dealer actually sold.
+  const monthGpv = createMemo(() => attainment().coverage.totalGpv);
+  const attributedGpv = createMemo(() => attainment().coverage.attributedGpv);
+  const monthTarget = createMemo(() =>
+    attainment().sellers.reduce((total, row) => total + row.projectedGpv, 0),
+  );
+  const monthDevices = createMemo(() =>
+    attainment().sellers.reduce((total, row) => total + row.deviceCount, 0),
+  );
+
+  const activationRate = createMemo(() =>
+    formatRatio(lifecycle().activatedCount, lifecycle().salesTotal),
+  );
+
+  const latestCohortTarget = createMemo(
+    () => ramp().at(-1)?.projectedGpv ?? null,
+  );
 
   return (
     <AppPage>
@@ -138,7 +166,7 @@ export function MerchantGpvDashboard() {
             </Button>
             <Button
               variant="secondary"
-              onClick={() => void revalidate(merchantPerformanceQuery.key)}
+              onClick={() => void revalidate(attainmentQuery.key)}
             >
               Recargar
             </Button>
@@ -160,79 +188,91 @@ export function MerchantGpvDashboard() {
       */}
       <Switch>
         <Match when={tab() === "rendimiento"}>
+          <RecordFilterBar
+            options={options()}
+            filter={filter()}
+            onChange={(patch) =>
+              setFilter((current) => ({ ...current, ...patch }))
+            }
+          />
           <div class={styles.scrollArea}>
             <ScrollWrapper>
               <WidgetGrid>
                 <AggregateTile
-                  title={`GPV ${cohortLabel()}`}
+                  title={`GPV ${monthLabel()}`}
                   span="quarter"
-                  value={formatSolesCompact(latestGpv() ?? 0)}
-                  caption={`${formatInteger(latestCohort()?.deviceCount ?? 0)} comercios vendidos`}
-                  trendPercentage={trendPercentage(latestGpv(), priorGpv())}
+                  value={formatSolesCompact(monthGpv())}
+                  caption={`${formatInteger(monthDevices())} dispositivos activos`}
+                />
+                {/*
+                  How much of the month the board below actually accounts for.
+                  Unattributed volume is a steady state, not a backlog, so the
+                  ranking is only meaningful next to this number.
+                */}
+                <AggregateTile
+                  title={`Atribución ${monthLabel()}`}
+                  span="quarter"
+                  value={formatRatio(attributedGpv(), monthGpv())}
+                  caption={`${formatSolesCompact(monthGpv() - attributedGpv())} sin asignar`}
                 />
                 <AggregateTile
-                  title={`Cumplimiento ${cohortLabel()}`}
+                  title={`Cumplimiento ${monthLabel()}`}
                   span="quarter"
-                  value={formatRatio(
-                    latestGpv() ?? 0,
-                    latestCohort()?.projectedGpv ?? 0,
-                  )}
-                  caption={`Objetivo ${formatSolesCompact(latestCohort()?.projectedGpv ?? 0)}`}
-                  trendPercentage={trendPercentage(
-                    attainment(latestCohort()),
-                    attainment(priorCohort()),
-                  )}
+                  value={formatRatio(attributedGpv(), monthTarget())}
+                  caption={`Objetivo ${formatSolesCompact(monthTarget())}`}
                 />
                 <AggregateTile
                   title="Tasa de activación"
                   span="quarter"
                   value={activationRate()}
                   caption={
-                    performance().lifecycle.medianDaysToActivate == null
-                      ? `${formatInteger(performance().lifecycle.salesTotal)} ventas`
-                      : `Mediana ${performance().lifecycle.medianDaysToActivate} días hasta activar`
+                    lifecycle().medianDaysToActivate == null
+                      ? `${formatInteger(lifecycle().salesTotal)} ventas`
+                      : `Mediana ${lifecycle().medianDaysToActivate} días hasta activar`
                   }
                 />
                 <AggregateTile
                   title="Comercios sin transaccionar"
                   span="quarter"
-                  value={formatInteger(performance().lifecycle.dormantCount)}
-                  caption={`Inactivos hace ${performance().lifecycle.dormantThresholdDays}+ días`}
+                  value={formatInteger(lifecycle().dormantCount)}
+                  caption={`Inactivos hace ${lifecycle().dormantThresholdDays}+ días`}
                 />
 
                 <RampTile
                   title="Curva de rampa por cohorte"
                   span="half"
                   series={rampSeries()}
-                  target={latestCohort()?.projectedGpv ?? null}
+                  target={latestCohortTarget()}
                 />
 
                 {/*
-                  Each RUC contributes one M0 and one monthly target, 
-                  so the sum is like-for-like.
+                  Each RUC contributes one month of GPV and the projection in
+                  force for that month, so the sum is like-for-like. The
+                  "Sin asignar" row is one of these and is deliberately not
+                  filtered out.
                 */}
                 <BarTile
-                  title="Cumplimiento M0 por vendedor"
+                  title={`Cumplimiento ${monthLabel()} por vendedor`}
                   span="half"
-                  rows={performance()
+                  rows={attainment()
                     .sellers.slice(0, 10)
                     .map((row) => ({
-                      key: row.key,
+                      key: row.id ?? "unassigned",
                       label: row.label,
                       sublabel: row.sublabel ?? undefined,
                       value: row.gpv,
                       target: row.projectedGpv || null,
-                      href: row.userId
-                        ? `/settings/members/${row.userId}?tab=capacity`
+                      href: row.id
+                        ? `/settings/members/${row.id}?tab=capacity`
                         : undefined,
                     }))}
                 />
 
                 <BarTile
-                  title="Cumplimiento M0 por zonal"
+                  title={`Cumplimiento ${monthLabel()} por zonal`}
                   span="half"
-                  rows={performance().branches.map((row) => ({
-                    key: row.key,
+                  rows={attainment().branches.map((row) => ({
+                    key: row.id ?? "unassigned",
                     label: row.label,
                     value: row.gpv,
                     target: row.projectedGpv || null,
@@ -241,7 +281,7 @@ export function MerchantGpvDashboard() {
 
                 <WidgetGridItem span="half">
                   <WidgetCardShell title="Calidad de datos">
-                    <DataQualityTable summary={performance().dataQuality} />
+                    <QualityPanel summary={quality()} />
                   </WidgetCardShell>
                 </WidgetGridItem>
               </WidgetGrid>
@@ -254,7 +294,11 @@ export function MerchantGpvDashboard() {
         </Match>
 
         <Match when={tab() === "atribucion"}>
-          <AccountsGrid options={options()} />
+          <AttributionGrid options={options()} />
+        </Match>
+
+        <Match when={tab() === "culqi"}>
+          <CulqiView options={options()} />
         </Match>
       </Switch>
     </AppPage>

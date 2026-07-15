@@ -1,8 +1,17 @@
 import type { Kysely } from "kysely";
 
+import {
+  stepDefinition,
+  stepsForProduct,
+} from "~/server/workflow/lead/fulfillment/steps";
+
 import type { Database } from "../../../types";
 import { stableSeedId } from "../../shared/stable-id";
 import type { CompiledLead } from "../compiler";
+import {
+  fulfillmentEnteredOffsetDays,
+  type FulfillmentSpec,
+} from "../scenario";
 
 interface EventDraft {
   leadId: string;
@@ -183,6 +192,10 @@ function buildLeadEvents(
     );
   }
 
+  if (spec.fulfillment) {
+    pushFulfillmentEvents(lead, spec.fulfillment, push, at);
+  }
+
   if (spec.legalRep) {
     push(
       "rep_legal_recorded",
@@ -227,4 +240,84 @@ function buildLeadEvents(
   }
 
   return events;
+}
+
+// Mirrors the transition events addVenueAccountsCommand / commands.ts /
+// completeFulfillment emit in real operation, so a seeded lead's timeline has
+// no gaps where these leads' fulfillment history should be. The
+// FULFILLMENT -> LIVE workflow_stage_changed pair itself is already covered
+// by the advances loop above; this only adds the fulfillment-specific events.
+function pushFulfillmentEvents(
+  lead: CompiledLead,
+  fulfillment: FulfillmentSpec,
+  push: (
+    type: string,
+    payload: Record<string, unknown>,
+    occurredAtMs: number,
+    actors?: { actor?: string | null; subject?: string | null },
+  ) => void,
+  at: (offsetDays: number, nudgeMs?: number) => number,
+): void {
+  const { spec } = lead;
+  const orderId = lead.fulfillmentOrderId;
+  push(
+    "fulfillment_started",
+    { orderId, unitCount: 0 },
+    at(fulfillmentEnteredOffsetDays(spec)),
+    { actor: spec.executiveId },
+  );
+
+  if (
+    fulfillment.productKind === null ||
+    fulfillment.chosenOffsetDays === undefined
+  ) {
+    return;
+  }
+
+  const sequence = stepsForProduct(fulfillment.productKind);
+  const targetIndex = sequence.indexOf(fulfillment.targetStep);
+  const chosenAtMs = at(fulfillment.chosenOffsetDays);
+  const nowMs = at(0);
+  const stepGapMs =
+    targetIndex > 0 ? (nowMs - chosenAtMs) / (targetIndex + 1) : 0;
+  const stepAtMs = (index: number) => chosenAtMs + index * stepGapMs;
+
+  push(
+    "fulfillment_product_chosen",
+    { orderId, productKind: fulfillment.productKind },
+    chosenAtMs,
+    { actor: spec.executiveId },
+  );
+  push(
+    "fulfillment_step_advanced",
+    {
+      orderId,
+      from: "CHOOSE_PRODUCT",
+      to: sequence[1],
+      action: "choose_product",
+    },
+    chosenAtMs + 1,
+    { actor: spec.executiveId },
+  );
+
+  for (let index = 1; index < targetIndex; index += 1) {
+    const from = sequence[index];
+    const to = sequence[index + 1];
+    const atMs = stepAtMs(index + 1);
+    const actor =
+      stepDefinition(from).owner === "back_office"
+        ? (spec.review?.by ?? spec.executiveId)
+        : spec.executiveId;
+
+    if (to === "COMPLETED") {
+      push("fulfillment_completed", { orderId }, atMs, { actor });
+      continue;
+    }
+    push(
+      "fulfillment_step_advanced",
+      { orderId, from, to, action: stepDefinition(from).action },
+      atMs,
+      { actor },
+    );
+  }
 }

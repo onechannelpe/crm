@@ -49,13 +49,15 @@ function makeWaker(run: () => Promise<void>): () => void {
   return () => void tick();
 }
 
+// Reads the storage root per call rather than closing over it, so a config
+// change does not require a worker restart to take effect.
+const readFile = (filePath: string) =>
+  readStoredFile(uploadsConfig().storageRoot, filePath);
+
 export function startBackgroundJobs() {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
 
   const { integration } = getServerRuntime().integrations;
-
-  const readFile = (filePath: string) =>
-    readStoredFile(uploadsConfig().storageRoot, filePath);
 
   const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
     runtime: integration,

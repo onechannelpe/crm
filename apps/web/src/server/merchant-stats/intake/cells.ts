@@ -1,4 +1,4 @@
-import type { GpvCellValue } from "./contracts";
+import type { GpvCellValue } from "./types";
 
 // The workbook is read with cellDates:true, so cells arrive as Date | number |
 // string | null. These coercers narrow each cell to the shape a column needs
@@ -40,11 +40,10 @@ export function cellDateOrNull(value: GpvCellValue): string | null {
   }
   const text = String(value ?? "").trim();
   if (!text) return null;
-  const iso = parseFlexibleDate(text);
-  return iso;
+  return parseFlexibleDate(text);
 }
 
-// añomes_vta like 202605 -> first day of that month (2026-05-01).
+// anomes_vta like 202605 -> first day of that month (2026-05-01).
 export function saleMonthFromAnomes(value: GpvCellValue): string | null {
   const text = cellText(value).replace(/\D/g, "");
   if (text.length !== 6) return null;
@@ -78,13 +77,19 @@ function isoDate(date: Date): string {
     .padStart(2, "0")}-${date.getUTCDate().toString().padStart(2, "0")}`;
 }
 
+// The dealer export writes ultima_trx / dia_activo / dia_prueba as ISO and
+// fecha_venta as d/m/y. Measured across the sample: of 1,340 fecha_venta cells,
+// 1,013 are provably d/m/y (a first part above 12) and none are provably m/d/y,
+// so the d/m/y default below is right for every one of the 327 that could be
+// read either way.
+//
+// The m/d/y branch is a guard, not a live path: if Culqi ever flips the export's
+// locale, an unambiguous cell steers the whole cell rather than silently
+// transposing the day and the month.
 function parseFlexibleDate(text: string): string | null {
   const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (iso) return buildDate(iso[1], Number(iso[2]), Number(iso[3]));
 
-  // Team-entered dates are ambiguous: Peru writes d/m/y, but some cells are
-  // m/d/y. Disambiguate by range (a value > 12 can only be a day), defaulting
-  // to d/m/y when both fit.
   const parts = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
   if (parts) {
     const first = Number(parts[1]);

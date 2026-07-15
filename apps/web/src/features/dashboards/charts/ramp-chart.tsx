@@ -1,6 +1,8 @@
 import { createElementSize } from "@solid-primitives/resize-observer";
 import { createMemo, createSignal, For, Show } from "solid-js";
 
+import { Present } from "~/components/ui/control-flow/present";
+
 import { formatMonth, formatSolesCompact } from "../format";
 
 import styles from "./ramp-chart.module.css";
@@ -33,8 +35,9 @@ const SERIES_COLORS = [
 ];
 
 // The x axis is the cohort's own month offset. Each cohort starts at the same
-// origin so their shapes can be compared. Calendar axes are not available to
-// this source anyway: each sale reports only m0..m3.
+// origin so their shapes can be compared, which is the whole point of this
+// chart: the calendar view of the same facts lives on the attainment surface,
+// which reads merchant_monthly_gpv.
 //
 // A series renders only the points it has. Young cohorts are short lines.
 export function RampChart(props: RampChartProps) {
@@ -66,10 +69,10 @@ export function RampChart(props: RampChartProps) {
 
     const lines = props.series.map((series, index) => {
       const coords = series.points
-        .slice()
-        .sort((a, b) => a.offset - b.offset)
+        .toSorted((a, b) => a.offset - b.offset)
         .map((point) => ({
-          ...point,
+          offset: point.offset,
+          value: point.value,
           x: xOf(point.offset),
           y: PAD.top + innerH - (point.value / max) * innerH,
         }));
@@ -145,17 +148,19 @@ export function RampChart(props: RampChartProps) {
           }
           onPointerLeave={() => setActiveOffset(null)}
         >
-          <Show when={geometry().targetY != null}>
-            <line
-              x1={PAD.left}
-              x2={width() - PAD.right}
-              y1={geometry().targetY!}
-              y2={geometry().targetY!}
-              stroke="var(--foreground-tertiary)"
-              stroke-width="1"
-              stroke-dasharray="4 4"
-            />
-          </Show>
+          <Present when={geometry().targetY}>
+            {(targetY) => (
+              <line
+                x1={PAD.left}
+                x2={width() - PAD.right}
+                y1={targetY()}
+                y2={targetY()}
+                stroke="var(--foreground-tertiary)"
+                stroke-width="1"
+                stroke-dasharray="4 4"
+              />
+            )}
+          </Present>
 
           {/* Guide at the read position, behind the lines. */}
           <Show when={tooltip()}>

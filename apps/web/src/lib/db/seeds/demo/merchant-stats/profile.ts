@@ -51,9 +51,5 @@ export const CULQI_MERCHANT_REPORT_PROFILE = {
     p99: 96_527,
   },
   monthlyNonZeroRates: [0.5843, 0.7537, 0.644, 0.4896],
-  enrichmentRates: {
-    seller: 0.8,
-    branch: 0.85,
-    projectedGpv: 0.75,
-  },
+  projectedGpvRate: 0.75,
 } as const;

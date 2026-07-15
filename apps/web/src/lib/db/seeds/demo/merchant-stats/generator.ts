@@ -1,5 +1,5 @@
 import { addMonths, firstOfMonth } from "~/server/merchant-stats/intake/cells";
-import type { MappedGpvRow } from "~/server/merchant-stats/intake/contracts";
+import type { SourceRow } from "~/server/merchant-stats/intake/types";
 
 import type { SeedContext } from "../../shared/context";
 import { CULQI_MERCHANT_REPORT_PROFILE as PROFILE } from "./profile";
@@ -56,8 +56,12 @@ export interface MerchantSpec {
   m0Plus15dGpv: number;
   m0Plus15dTrx: number;
   series: Array<{ gpv: number; trx: number }>;
-  realSellerName: string | null;
-  zonal: string | null;
+  // Culqi's usuario, carried by the file. Never a CRM user: it is who registered
+  // the sale at Culqi, and it does not name the seller.
+  culqiUserCode: string | null;
+  culqiUserName: string | null;
+  // Not part of the file. The seed writes it through setTarget, the way a human
+  // would, because the dealer export carries no projection at all.
   projectedGpv: number | null;
 }
 
@@ -67,10 +71,12 @@ export interface GenerateInput {
     ruc: string;
     legalName: string;
     tradeName: string | null;
+    // Pins this RUC's device to CULQIFULL with this exact serial, keyed by
+    // RUC rather than array position so it survives LEAD_SPECS edits. Used to
+    // make a fulfillment unit's serial deterministically match (or
+    // deliberately mismatch) this device -- see MERCHANT_STATS_SERIAL_LINKS.
+    serialOverride?: string;
   }>;
-  sellers: ReadonlyArray<{ name: string; branchName: string }>;
-  // Used verbatim as ZONAL so the zone match resolves.
-  branchNames: readonly string[];
   totalMerchants: number;
 }
 
@@ -119,7 +125,15 @@ function buildMerchant(
   index: number,
   linkedOrganization: GenerateInput["linkedOrganizations"][number] | undefined,
 ): MerchantSpec {
-  const product = pickProduct(rng, index, input.totalMerchants);
+  const pickedProduct = pickProduct(rng, index, input.totalMerchants);
+  const pickedSerial = pickedProduct.hasSerial
+    ? syntheticSerial(rng, index)
+    : null;
+  // Overridden after the fact, not before: pickProduct/syntheticSerial must
+  // still run so every later merchant draws the same rng() sequence whether
+  // or not this particular RUC is overridden.
+  const serialOverride = linkedOrganization?.serialOverride;
+  const product = serialOverride ? PROFILE.products[0] : pickedProduct;
   const saleMonth = index < 4 ? requiredCaseMonth : pickMonth(rng, saleMonths);
   const soldAt = dayWithin(rng, saleMonth);
   const series = buildSeries(rng);
@@ -134,7 +148,7 @@ function buildMerchant(
   return {
     ruc,
     merchantId: `2000000${(1_000_000 + index).toString()}`,
-    serialNumber: product.hasSerial ? syntheticSerial(rng, index) : null,
+    serialNumber: serialOverride ?? pickedSerial,
     product: product.value,
     saleMonth,
     soldAt,
@@ -156,33 +170,40 @@ function buildMerchant(
     m0Plus15dGpv: round2(series[0].gpv * (0.2 + rng() * 0.4)),
     m0Plus15dTrx: Math.round(series[0].trx * (0.2 + rng() * 0.4)),
     series,
-    ...enrichment(rng, input, index),
+    ...culqiUser(rng, index),
+    // Left off a minority so the no_target queue has signal.
+    projectedGpv:
+      index !== 2 && chance(rng, PROFILE.projectedGpvRate)
+        ? round2(2000 + rng() * 45000)
+        : null,
   };
 }
 
-// VENDEDOR R / ZONAL / PROYECTADO are left blank on a minority so the
-// "missing enrichment" filter and the data-quality panel have signal.
-function enrichment(
+// Culqi's usuarios are a small closed pool of dealer staff, and deliberately
+// none of them is a CRM user: in the real export the usuario named the actual
+// seller 0% of the time. The demo has to reproduce that, or the reconciliation
+// view would look like a leaderboard that happens to agree.
+const CULQI_USERS = [
+  "JULIO BENJAMIN ALLAUCA VALENCIA",
+  "CLAUDIA EDITH RODRIGUEZ FLORES DE PEREZ",
+  "GIORGIA AREZI SALDAÑA FARFAN",
+  "MARVICK GIZZIANA FRANCO SAAVEDRA",
+  "GRACIELA NATALIA AVILEZ ESCUDERO",
+  "JORGE ANTONIO INOÑAN SUAREZ",
+  "VERONICA VANESA BANQUEZ BARRETO",
+  "ELVIS FRANCO FERNANDEZ FLORES",
+];
+
+function culqiUser(
   rng: () => number,
-  input: GenerateInput,
   index: number,
-): Pick<MerchantSpec, "realSellerName" | "zonal" | "projectedGpv"> {
-  const seller = pick(rng, input.sellers);
+): Pick<MerchantSpec, "culqiUserCode" | "culqiUserName"> {
+  // A handful of rows arrive with no usuario at all, as they do in the export.
+  if (index % 23 === 0) return { culqiUserCode: null, culqiUserName: null };
+  const slot = Math.floor(rng() * CULQI_USERS.length);
   return {
-    realSellerName:
-      index !== 1 && chance(rng, PROFILE.enrichmentRates.seller)
-        ? seller.name
-        : null,
-    zonal:
-      index !== 3 && chance(rng, PROFILE.enrichmentRates.branch)
-        ? chance(rng, 0.9)
-          ? seller.branchName
-          : pick(rng, input.branchNames)
-        : null,
-    projectedGpv:
-      index !== 2 && chance(rng, PROFILE.enrichmentRates.projectedGpv)
-        ? round2(2000 + rng() * 45000)
-        : null,
+    culqiUserCode: `V${(100 + slot).toString()}`,
+    culqiUserName: CULQI_USERS[slot],
   };
 }
 
@@ -210,19 +231,17 @@ function tailedScale(rng: () => number): number {
   return q.p99 + rng() * q.p99 * 1.5;
 }
 
-// Cohort metrics past the snapshot month are dropped, matching the intake's
-// cutMonth rule. Enrichment fields are attached only for the enriched upload.
-export function toMappedRow(
+// Cohort metrics past the snapshot month are dropped, matching the decoder's
+// cutMonth rule.
+export function toSourceRow(
   merchant: MerchantSpec,
   rowNumber: number,
   cutDate: string,
-  hasEnrichment: boolean,
-): MappedGpvRow {
+): SourceRow {
   const cutMonth = firstOfMonth(cutDate);
-  const metrics = merchant.series.flatMap((point, offset) => {
-    const month = addMonths(merchant.saleMonth, offset);
-    if (month > cutMonth) return [];
-    return [{ monthOffset: offset, month, gpv: point.gpv, trx: point.trx }];
+  const gpv = merchant.series.flatMap((point, offset) => {
+    if (addMonths(merchant.saleMonth, offset) > cutMonth) return [];
+    return [{ offset, gpv: point.gpv, trx: point.trx }];
   });
 
   return {
@@ -235,8 +254,8 @@ export function toMappedRow(
     saleMonth: merchant.saleMonth,
     tradeName: merchant.tradeName,
     legalName: merchant.legalName,
-    culqiUserCode: null,
-    culqiUserName: null,
+    culqiUserCode: merchant.culqiUserCode,
+    culqiUserName: merchant.culqiUserName,
     mesa: merchant.mesa,
     channel: "DEALERS",
     subchannel: merchant.subchannel,
@@ -256,10 +275,7 @@ export function toMappedRow(
         : null,
     m0Plus15dGpv: merchant.m0Plus15dGpv,
     m0Plus15dTrx: merchant.m0Plus15dTrx,
-    metrics,
-    realSellerName: hasEnrichment ? merchant.realSellerName : null,
-    zonal: hasEnrichment ? merchant.zonal : null,
-    projectedGpv: hasEnrichment ? merchant.projectedGpv : null,
+    gpv,
     raw: buildRawRecord(merchant),
   };
 }

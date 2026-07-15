@@ -3,21 +3,14 @@ import { Show } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { AppPage, AppPageSection } from "~/components/layout/page";
-import {
-  ATTAINMENT_OFFSET,
-  MerchantGpvDashboard,
-} from "~/features/dashboards/merchant-gpv-dashboard";
+import { MerchantGpvDashboard } from "~/features/dashboards/merchant-gpv-dashboard";
 import { findDashboard } from "~/features/dashboards/registry";
-import {
-  merchantFilterOptionsQuery,
-  merchantPerformanceQuery,
-} from "~/lib/queries/dashboards";
+import { merchantFilterOptionsQuery } from "~/lib/queries/dashboards";
 
+// Attainment needs a month, and the month comes from the options list, so the
+// options are the only thing worth warming ahead of the component.
 export const route = {
-  preload: () => {
-    void merchantPerformanceQuery(ATTAINMENT_OFFSET);
-    void merchantFilterOptionsQuery();
-  },
+  preload: () => void merchantFilterOptionsQuery(),
 } satisfies RouteDefinition;
 
 export default function DashboardShowRoute() {

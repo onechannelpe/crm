@@ -1,4 +1,5 @@
 import {
+  FulfillmentOrderId,
   WorkflowLeadId,
   WorkflowRateProposalId,
   WorkflowRateRevisionId,
@@ -28,6 +29,8 @@ export interface CompiledLead {
   rateRevisionIds: Array<WorkflowRateRevisionId | null>;
   venueId: WorkflowVenueId | null;
   venueAccountIds: string[];
+  fulfillmentOrderId: FulfillmentOrderId | null;
+  fulfillmentUnitIds: string[];
 }
 
 export interface CompiledWorkflowScenario {
@@ -87,7 +90,21 @@ function compileLead(spec: LeadSpec): CompiledLead {
     venueAccountIds: (spec.venue?.accounts ?? []).map((account) =>
       stableSeedId(`venue-account:${spec.key}:${account.currency}`),
     ),
+    fulfillmentOrderId: spec.fulfillment
+      ? FulfillmentOrderId.trust(stableSeedId(`fulfillment-order:${spec.key}`))
+      : null,
+    fulfillmentUnitIds: Array.from(
+      { length: fulfillmentUnitCount(spec) },
+      (_, index) => stableSeedId(`fulfillment-unit:${spec.key}:${index}`),
+    ),
   };
+}
+
+function fulfillmentUnitCount(spec: LeadSpec): number {
+  const fulfillment = spec.fulfillment;
+  if (!fulfillment || fulfillment.productKind === null) return 0;
+  if (fulfillment.productKind === "digital_only") return 1;
+  return Math.max(1, spec.venue?.posQuantity ?? 1);
 }
 
 function deriveProjection(spec: LeadSpec): CompiledLead["projection"] {
@@ -107,6 +124,7 @@ function deriveProjection(spec: LeadSpec): CompiledLead["projection"] {
     ...(spec.advances ?? []).map((advance) => advance.offsetDays),
     spec.venue?.createdOffsetDays,
     spec.venue ? Math.max(0, spec.venue.createdOffsetDays - 2) : undefined,
+    spec.fulfillment?.chosenOffsetDays,
     spec.digitalPolicy?.updatedOffsetDays,
     spec.legalRep?.offsetDays,
     spec.close?.offsetDays,
@@ -164,6 +182,7 @@ function validateLeadStory(spec: LeadSpec): void {
   if (spec.close?.by !== undefined) {
     requireOwner("close_actor", spec, spec.close.by);
   }
+  validateFulfillmentStory(spec);
 
   const eventOffsets = [
     spec.review?.offsetDays,
@@ -173,6 +192,7 @@ function validateLeadStory(spec: LeadSpec): void {
     ]),
     ...(spec.advances ?? []).map((advance) => advance.offsetDays),
     spec.venue?.createdOffsetDays,
+    spec.fulfillment?.chosenOffsetDays,
     spec.digitalPolicy?.updatedOffsetDays,
     spec.legalRep?.offsetDays,
     spec.close?.offsetDays,
@@ -194,6 +214,41 @@ function validateLeadStory(spec: LeadSpec): void {
     projection.priority !== spec.priority
   ) {
     throw new Error(`invalid_workflow_seed_review_projection:${spec.key}`);
+  }
+}
+
+// A fulfillment order is created the moment a lead's venue-accounts
+// transition pushes it to FULFILLMENT (addVenueAccountsCommand), and reaching
+// COMPLETED on it is what flips the lead to LIVE (completeFulfillment). So
+// every FULFILLMENT/LIVE lead must carry one, LIVE must be COMPLETED, and a
+// venue must exist -- these are not just coverage gaps, they are states the
+// real domain logic could not otherwise produce.
+function validateFulfillmentStory(spec: LeadSpec): void {
+  const isPastSetup = spec.stage === "FULFILLMENT" || spec.stage === "LIVE";
+  if (!isPastSetup) {
+    if (spec.fulfillment !== undefined) {
+      throw new Error(`invalid_workflow_seed_fulfillment_stage:${spec.key}`);
+    }
+    return;
+  }
+
+  if (spec.fulfillment === undefined) {
+    throw new Error(`missing_workflow_seed_fulfillment:${spec.key}`);
+  }
+  if (spec.venue === undefined) {
+    throw new Error(`missing_workflow_seed_fulfillment_venue:${spec.key}`);
+  }
+
+  const { productKind, targetStep, chosenOffsetDays } = spec.fulfillment;
+  if (spec.stage === "LIVE" && targetStep !== "COMPLETED") {
+    throw new Error(`invalid_workflow_seed_live_not_completed:${spec.key}`);
+  }
+  if (targetStep === "CHOOSE_PRODUCT") {
+    if (productKind !== null || chosenOffsetDays !== undefined) {
+      throw new Error(`invalid_workflow_seed_fulfillment_choice:${spec.key}`);
+    }
+  } else if (productKind === null || chosenOffsetDays === undefined) {
+    throw new Error(`missing_workflow_seed_fulfillment_choice:${spec.key}`);
   }
 }
 

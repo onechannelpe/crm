@@ -107,11 +107,13 @@ export interface Database {
   lead_sourcing_policies: workflow.LeadSourcingPoliciesTable;
   workflow_integration_jobs: integrations.WorkflowIntegrationJobsTable;
   workflow_integration_import_rows: integrations.WorkflowIntegrationImportRowsTable;
-  merchant_sales_reports: merchantStats.MerchantSalesReportsTable;
+  merchant_reports: merchantStats.MerchantReportsTable;
+  merchant_report_rejections: merchantStats.MerchantReportRejectionsTable;
   merchant_sales: merchantStats.MerchantSalesTable;
-  merchant_accounts: merchantStats.MerchantAccountsTable;
-  merchant_sale_metrics: merchantStats.MerchantSaleMetricsTable;
-  merchant_sales_import_rows: merchantStats.MerchantSalesImportRowsTable;
+  merchant_sale_gpv: merchantStats.MerchantSaleGpvTable;
+  merchant_monthly_gpv: merchantStats.MerchantMonthlyGpvTable;
+  merchant_monthly_attribution: merchantStats.MerchantMonthlyAttributionTable;
+  merchant_targets: merchantStats.MerchantTargetsTable;
   file_assets: files.FileAssetsTable;
   file_download_tokens: files.FileDownloadTokensTable;
   workflow_sale_proof_files: files.WorkflowSaleProofFilesTable;

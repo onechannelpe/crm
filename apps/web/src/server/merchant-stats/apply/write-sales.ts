@@ -1,23 +1,27 @@
 import { sql } from "kysely";
 
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type {
-  MerchantSaleId,
-  MerchantSalesReportId,
-} from "~/server/shared/ids";
+import type { MerchantReportId, MerchantSaleId } from "~/server/shared/ids";
 
-import { saleIdentityKey, type MappedGpvRow } from "../intake/contracts";
-import { resolveRowMatch, type MatchContext, type RowMatch } from "./matching";
+import { saleIdentityKey } from "../intake/sale-identity";
+import type { SourceRow } from "../intake/types";
+import { chunks } from "./chunks";
 
-// Columns refreshed from every snapshot. The identity columns (merchant_id,
-// product, serial_number) and provenance (first_seen_report_id, created_at) are
-// intentionally excluded so reimport never rewrites them.
+// Columns every snapshot restates. Identity (merchant_id, product,
+// serial_number), the cohort anchor (sale_month) and provenance
+// (first_seen_report_id, created_at) are absent on purpose: a reimport must not
+// rewrite them.
+//
+// `ruc` IS refreshed. A merchant can re-register, and the monthly rollup is a
+// view, so it simply follows -- there is no cached key left behind holding the
+// old RUC's volume.
+//
+// Attribution is not here and never will be: credit is stamped per (ruc, month)
+// in merchant_monthly_attribution, not recomputed from current CRM state on
+// every import.
 const REFRESHED_COLUMNS = [
   "ruc",
-  "organization_id",
-  "lead_id",
   "sold_at",
-  "sale_month",
   "trade_name",
   "legal_name",
   "culqi_user_code",
@@ -39,29 +43,29 @@ const REFRESHED_COLUMNS = [
 ] as const;
 
 const SALES_CHUNK = 1000;
-const METRICS_CHUNK = 4000;
 
 export type SaleIdByIdentity = Map<string, MerchantSaleId>;
 
 // Upserts on the (merchant_id, product, coalesce(serial_number,'')) identity.
-// Returns the id for every source row, inserted or updated, so metrics and
-// staging can reference it.
+// Returns the id for every source row, inserted or updated, so gpv rows can
+// reference it.
+//
+// Callers must pass rows already cleared by partitionBySaleMonth: a row whose
+// sale_month moved is rejected, not written.
 export async function upsertSales(
-  trx: DatabaseExecutor,
-  reportId: MerchantSalesReportId,
-  rows: readonly MappedGpvRow[],
-  ctx: MatchContext,
+  db: DatabaseExecutor,
+  reportId: MerchantReportId,
+  rows: readonly SourceRow[],
   now: Date,
 ): Promise<SaleIdByIdentity> {
-  const deduped = dedupeByIdentity(rows);
   const idByIdentity: SaleIdByIdentity = new Map();
 
-  for (const chunk of chunks(deduped, SALES_CHUNK)) {
-    const values = chunk.map((row) =>
-      toSaleValues(row, resolveRowMatch(ctx, row), reportId, now),
-    );
+  for (const chunk of chunks(dedupeByIdentity(rows), SALES_CHUNK)) {
+    const values = chunk.map((row) => toSaleValues(row, reportId, now));
+    // One transaction, one connection: awaiting here is not a cost, it is the
+    // only option. Promise.all would queue on the same connection anyway.
     // eslint-disable-next-line no-await-in-loop
-    const returned = await trx
+    const returned = await db
       .insertInto("merchant_sales")
       .values(values)
       .onConflict((oc) =>
@@ -72,8 +76,8 @@ export async function upsertSales(
           .expression(sql`merchant_id, product, coalesce(serial_number, '')`)
           .doUpdateSet((eb) => {
             const set: Record<string, unknown> = {};
-            for (const col of REFRESHED_COLUMNS) {
-              set[col] = eb.ref(`excluded.${col}`);
+            for (const column of REFRESHED_COLUMNS) {
+              set[column] = eb.ref(`excluded.${column}`);
             }
             return set;
           }),
@@ -92,46 +96,12 @@ export async function upsertSales(
   return idByIdentity;
 }
 
-export async function insertMetrics(
-  trx: DatabaseExecutor,
-  reportId: MerchantSalesReportId,
-  rows: readonly MappedGpvRow[],
-  saleIdByIdentity: SaleIdByIdentity,
-): Promise<void> {
-  const values = rows.flatMap((row) => {
-    const saleId = saleIdByIdentity.get(
-      saleIdentityKey(row.merchantId, row.product, row.serialNumber),
-    );
-    if (!saleId) return [];
-    return row.metrics.map((metric) => ({
-      report_id: reportId,
-      merchant_sale_id: saleId,
-      month: metric.month,
-      month_offset: metric.monthOffset,
-      gpv: metric.gpv,
-      trx: metric.trx,
-    }));
-  });
-
-  for (const chunk of chunks(values, METRICS_CHUNK)) {
-    // eslint-disable-next-line no-await-in-loop
-    await trx.insertInto("merchant_sale_metrics").values(chunk).execute();
-  }
-}
-
-function toSaleValues(
-  row: MappedGpvRow,
-  match: RowMatch,
-  reportId: MerchantSalesReportId,
-  now: Date,
-) {
+function toSaleValues(row: SourceRow, reportId: MerchantReportId, now: Date) {
   return {
     merchant_id: row.merchantId,
+    product: row.product,
     serial_number: row.serialNumber,
     ruc: row.ruc,
-    organization_id: match.organizationId,
-    lead_id: match.leadId,
-    product: row.product,
     sold_at: row.soldAt,
     sale_month: row.saleMonth,
     trade_name: row.tradeName,
@@ -157,10 +127,10 @@ function toSaleValues(
   };
 }
 
-function dedupeByIdentity(rows: readonly MappedGpvRow[]): MappedGpvRow[] {
+function dedupeByIdentity(rows: readonly SourceRow[]): SourceRow[] {
   // A multi-row upsert cannot touch the same conflict target twice, so keep the
   // last occurrence when a file repeats an identity (it should not, but be safe).
-  const byKey = new Map<string, MappedGpvRow>();
+  const byKey = new Map<string, SourceRow>();
   for (const row of rows) {
     byKey.set(
       saleIdentityKey(row.merchantId, row.product, row.serialNumber),
@@ -168,12 +138,4 @@ function dedupeByIdentity(rows: readonly MappedGpvRow[]): MappedGpvRow[] {
     );
   }
   return [...byKey.values()];
-}
-
-function chunks<T>(items: readonly T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let index = 0; index < items.length; index += size) {
-    out.push(items.slice(index, index + size));
-  }
-  return out;
 }

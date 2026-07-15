@@ -1,12 +1,12 @@
 import type { RouteDefinition } from "@solidjs/router";
 
 import { DashboardsIndex } from "~/features/dashboards/dashboards-index";
-import { ATTAINMENT_OFFSET } from "~/features/dashboards/merchant-gpv-dashboard";
-import { merchantPerformanceQuery } from "~/lib/queries/dashboards";
+import { merchantFilterOptionsQuery } from "~/lib/queries/dashboards";
 
-// Warm the single canonical dashboard so opening it from the index streams data.
+// Warm the options so opening the single canonical dashboard from the index can
+// resolve its month and stream data immediately.
 export const route = {
-  preload: () => void merchantPerformanceQuery(ATTAINMENT_OFFSET),
+  preload: () => void merchantFilterOptionsQuery(),
 } satisfies RouteDefinition;
 
 export default function DashboardsIndexRoute() {

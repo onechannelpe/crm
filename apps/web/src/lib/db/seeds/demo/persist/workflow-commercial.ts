@@ -99,9 +99,11 @@ async function insertVenues(
         lead_id: lead.leadId,
         trade_name: venue.tradeName,
         pos_quantity: venue.posQuantity,
-        link_url: null,
-        online_url: null,
-        online_collection_mode: null,
+        // Only set for a per_venue digital policy; every other lead leaves
+        // these null exactly as before.
+        link_url: venue.linkUrl ?? null,
+        online_url: venue.onlineUrl ?? null,
+        online_collection_mode: venue.onlineCollectionMode ?? null,
         address: venue.address,
         address_reference: venue.addressReference,
         district: lead.spec.org.district,
