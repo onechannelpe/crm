@@ -1,6 +1,6 @@
 "use server";
 
-import type { SessionInfo } from "~/actions/auth/contracts";
+import type { SessionInfo } from "~/contracts/auth";
 import { countActiveSessions as countActiveSessionsService } from "~/server/auth/application/queries/count-active-sessions";
 import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/auth/application/queries/list-all-active-sessions";
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";

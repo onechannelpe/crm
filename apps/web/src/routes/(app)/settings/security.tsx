@@ -2,10 +2,12 @@ import { Show, Suspense, createResource, createSignal } from "solid-js";
 
 import {
   acknowledgeRecoveryCodes,
-  changePassword,
-  disableTotp,
   getRecoveryCodesStatus,
   regenerateRecoveryCodes,
+} from "~/actions/auth/recovery-codes";
+import {
+  changePassword,
+  disableTotp,
   removeAllPasskeys,
 } from "~/actions/settings/security";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
@@ -190,6 +192,7 @@ export default function SecurityPage() {
       try {
         await acknowledgeRecoveryCodes();
         setFreshRecoveryCodes([]);
+        await refreshCurrentUser();
         await refetchRecoveryStatus();
       } catch (caught: unknown) {
         enqueueErrorSnackBar(actionErrorMessage(caught));

@@ -1,4 +1,4 @@
-const SESSION_CLASSES = ["pre_auth", "app"] as const;
+const SESSION_CLASSES = ["pre_auth", "recovery_setup", "app"] as const;
 const PRIMARY_AUTH_METHODS = ["password", "google", "passkey"] as const;
 const STRONG_AUTH_METHODS = [
   "totp",
@@ -13,6 +13,14 @@ export type StrongAuthMethod = (typeof STRONG_AUTH_METHODS)[number];
 
 export function isSessionClass(value: string): value is SessionClass {
   return SESSION_CLASSES.some((item) => item === value);
+}
+
+export function resolveSessionClass(input: {
+  onboardingCompleted: boolean;
+  recoveryCodesAcknowledgementRequired: boolean;
+}): SessionClass {
+  if (!input.onboardingCompleted) return "pre_auth";
+  return input.recoveryCodesAcknowledgementRequired ? "recovery_setup" : "app";
 }
 
 export function isPrimaryAuthMethod(value: string): value is PrimaryAuthMethod {

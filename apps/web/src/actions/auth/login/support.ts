@@ -4,7 +4,8 @@ import { redirect } from "@solidjs/router";
 
 import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
 import type { Role } from "~/lib/auth/access/rbac";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { getSessionPath } from "~/lib/auth/access/route-policy";
+import type { SessionClass } from "~/lib/auth/core/session-contract";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
 import type { AuthLoginFlowId } from "~/server/shared/ids";
 
@@ -42,11 +43,9 @@ export function readLoginFlowId(
 export function completeLoginAndRedirect(result: {
   token: string;
   role: Role;
-  onboardingCompleted: boolean;
+  sessionClass: SessionClass;
 }): never {
   setSessionCookie(result.token);
 
-  throw redirect(
-    result.onboardingCompleted ? getDefaultAppPath(result.role) : "/onboarding",
-  );
+  throw redirect(getSessionPath(result.sessionClass, result.role));
 }

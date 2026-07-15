@@ -10,6 +10,7 @@ function createInput(overrides?: {
   proof?: LoginPolicyInput["proof"];
   user?: LoginPolicyInput["context"]["user"];
   strongAuthStatus?: LoginPolicyInput["context"]["strongAuthStatus"];
+  recoveryCodesAcknowledgementRequired?: boolean;
 }): LoginPolicyInput {
   return {
     proof: overrides?.proof ?? {
@@ -27,6 +28,8 @@ function createInput(overrides?: {
         hasPasskey: false,
         hasVerifiedStrongAuth: false,
       },
+      recoveryCodesAcknowledgementRequired:
+        overrides?.recoveryCodesAcknowledgementRequired ?? false,
     },
   };
 }
@@ -126,6 +129,29 @@ describe("login policy", () => {
     expect(decision).toEqual({
       kind: "issue_session",
       sessionClass: "pre_auth",
+      strongAuthMethod: null,
+      strongAuthAt: null,
+    });
+  });
+
+  it("issues a recovery-setup session while recovery codes are unacknowledged", () => {
+    const decision = evaluateLoginPolicy(
+      createInput({
+        proof: {
+          kind: "password",
+          userId: UserId.trust("1"),
+        },
+        user: {
+          role: "executive",
+          onboarding_completed_at: new Date(1_710_000_000_000),
+        },
+        recoveryCodesAcknowledgementRequired: true,
+      }),
+    );
+
+    expect(decision).toEqual({
+      kind: "issue_session",
+      sessionClass: "recovery_setup",
       strongAuthMethod: null,
       strongAuthAt: null,
     });

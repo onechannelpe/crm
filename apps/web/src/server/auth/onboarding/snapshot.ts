@@ -16,7 +16,6 @@ export interface OnboardingSnapshot {
     role: Role;
     phone: string | null;
   };
-  onboardingCompleted: boolean;
   passwordChangeRequired: boolean;
   strongAuthRequired: boolean;
   hasPasskey: boolean;
@@ -45,7 +44,6 @@ export async function loadOnboardingSnapshot(
       role: user.role,
       phone: phoneAddress?.address ?? null,
     },
-    onboardingCompleted: user.onboarding_completed_at !== null,
     passwordChangeRequired: user.password_change_required,
     strongAuthRequired: requiresStrongAuthRole(user.role),
     hasPasskey: strongAuth.hasPasskey,

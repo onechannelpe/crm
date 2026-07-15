@@ -39,7 +39,6 @@ export interface SessionSpec {
 export interface IssuedSession {
   userId: UserId;
   role: Role;
-  onboardingCompleted: boolean;
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;

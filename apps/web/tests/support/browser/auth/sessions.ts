@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import type { SessionClass } from "~/lib/auth/core/session-contract";
 import {
   generateSessionToken,
   hashSessionToken,
@@ -12,7 +13,7 @@ export async function seedBrowserSession(
   runtime: BrowserDbRuntime,
   identity: BrowserIdentity,
   options?: {
-    sessionClass?: "pre_auth" | "app";
+    sessionClass?: SessionClass;
     primaryAuthMethod?: "password" | "google" | "passkey";
     strongAuthMethod?: "totp" | "passkey" | "federated" | null;
     strongAuthAt?: Date | null;

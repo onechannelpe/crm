@@ -1,7 +1,8 @@
 import { loadActiveAuthContextForUser } from "~/lib/auth/context/auth-context";
+import { resolveSessionClass } from "~/lib/auth/core/session-contract";
 import { recordAuthEvent } from "~/lib/auth/security/auth-events";
 import { enqueueAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
-import type { LoginFlowLoginResult } from "~/server/auth/application/contracts";
+import type { LoginFlowLoginResult } from "~/server/auth/application/login-contracts";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { VerifiedPasskeyLogin } from "~/server/auth/factors/passkey/service/login-finish";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
@@ -171,12 +172,17 @@ export async function completePendingLogin(
       input.occurredAt,
     );
 
+    const sessionClass = resolveSessionClass({
+      onboardingCompleted: context.user.onboarding_completed_at !== null,
+      recoveryCodesAcknowledgementRequired:
+        context.recoveryCodesAcknowledgementRequired,
+    });
     const session = await createSessionService({
       ...repos,
       now: () => input.occurredAt,
     }).establish({
       user: context.user,
-      sessionClass: context.user.onboarding_completed_at ? "app" : "pre_auth",
+      sessionClass,
       request: {
         ipAddress: input.ipAddress,
         userAgent: input.userAgent,
@@ -192,7 +198,7 @@ export async function completePendingLogin(
     return Ok({
       userId: session.userId,
       role: session.role,
-      onboardingCompleted: session.onboardingCompleted,
+      sessionClass: session.sessionClass,
       token: session.token,
     });
   });

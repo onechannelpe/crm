@@ -82,7 +82,7 @@ describe("session manager validation", () => {
     expect(store.has(sessionId)).toBe(false);
   });
 
-  it("derives onboarding completion from session class without user lookup", async () => {
+  it("preserves the pre-auth session class without user onboarding lookup", async () => {
     const nowTs = 1_700_000_000_000;
     const store = new Map<string, UserSessionRow>();
     const token = generateSessionToken();
@@ -93,7 +93,7 @@ describe("session manager validation", () => {
     const { service, spies } = createSessionServiceHarness(nowTs, store);
     const result = await service.resolve(token);
 
-    expect(result?.onboardingCompleted).toBe(false);
+    expect(result?.sessionClass).toBe("pre_auth");
     expect(spies.usersFindById).toHaveBeenCalledOnce();
   });
 

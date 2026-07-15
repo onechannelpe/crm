@@ -1,7 +1,9 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { isErr } from "~/server/shared/result";
+import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
+import { issueRecoveryCodesForEnrollment } from "~/server/auth/recovery/issue-recovery-codes";
+import { isErr, Ok } from "~/server/shared/result";
 
 function runSeries(count: number, task: () => Promise<void>): Promise<void> {
   let sequence = Promise.resolve();
@@ -117,6 +119,26 @@ describe("password login service", () => {
     if (isErr(result) || result.value.kind !== "complete") {
       throw new Error("expected completed password login");
     }
-    expect(result.value.result.onboardingCompleted).toBe(false);
+    expect(result.value.result.sessionClass).toBe("pre_auth");
+  });
+
+  it("resumes recovery-code setup after a lost enrollment response", async () => {
+    const setup = createAuthSetupContext(scenario.ctx.db);
+    const userId = scenario.identity(identity).userId;
+    await setup.uow.run(async (repos) => {
+      await issueRecoveryCodesForEnrollment(repos, userId, new Date());
+      return Ok(undefined);
+    });
+
+    const result = await scenario.loginPassword(
+      identity,
+      rightPassword,
+      requestMeta,
+    );
+    expect(isErr(result)).toBe(false);
+    if (isErr(result) || result.value.kind !== "complete") {
+      throw new Error("expected completed password login");
+    }
+    expect(result.value.result.sessionClass).toBe("recovery_setup");
   });
 });

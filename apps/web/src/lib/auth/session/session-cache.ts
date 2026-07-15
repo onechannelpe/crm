@@ -11,7 +11,6 @@ interface CachedSession {
   userId: UserId;
   branchId: BranchId;
   role: Role;
-  onboardingCompleted: boolean;
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;

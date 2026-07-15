@@ -4,7 +4,7 @@ import { createPasskeyLoginStateService } from "~/server/auth/factors/passkey/se
 import type { AuthLoginRepos } from "~/server/auth/flows/login-deps";
 import type { AuthLoginFlowId } from "~/server/shared/ids";
 
-import type { LoginFlowState } from "../contracts";
+import type { LoginFlowState } from "../login-contracts";
 
 export async function getLoginFlowState(
   flowId: AuthLoginFlowId,

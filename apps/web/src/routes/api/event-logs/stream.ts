@@ -34,7 +34,6 @@ export async function GET(
   if (
     !session ||
     session.sessionClass !== "app" ||
-    !session.onboardingCompleted ||
     !hasPermission(session.role, "audit:read")
   ) {
     return new Response(null, { status: 401 });

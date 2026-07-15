@@ -1,3 +1,4 @@
+import type { SessionClass } from "../core/session-contract";
 import { hasPermission, type Permission, type Role } from "./rbac";
 import { DYNAMIC_ROUTES, ROUTE_MANIFEST, type AppPath } from "./route-manifest";
 
@@ -56,4 +57,17 @@ export function getDefaultAppPath(role: Role): string {
     });
 
   return candidate ?? "/dashboard";
+}
+
+export function getSessionPath(sessionClass: SessionClass, role: Role): string {
+  switch (sessionClass) {
+    case "pre_auth":
+      return "/onboarding";
+    case "recovery_setup":
+      return "/recovery-codes";
+    case "app":
+      return getDefaultAppPath(role);
+    default:
+      return sessionClass satisfies never;
+  }
 }

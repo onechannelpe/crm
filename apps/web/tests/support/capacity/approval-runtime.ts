@@ -58,7 +58,6 @@ export function makeApprovalContext(
       role: overrides.role ?? "superuser",
       branchId:
         overrides.branchId ?? SEEDED_APPROVAL_USERS.superuserBranchTwo.branchId,
-      onboardingCompleted: true,
       sessionClass: "app",
       primaryAuthMethod: "password",
       strongAuthMethod: null,

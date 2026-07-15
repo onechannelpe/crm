@@ -16,15 +16,11 @@ import {
 } from "solid-js";
 
 import { changeOnboardingPassword } from "~/actions/auth/onboarding/change-password";
-import {
-  completeOnboardingWithoutFactor,
-  completeOnboardingWithPasskey,
-  completeOnboardingWithTotp,
-} from "~/actions/auth/onboarding/complete";
+import { completeOnboardingAction } from "~/actions/auth/onboarding/complete";
 import { submitOnboardingProfile } from "~/actions/auth/onboarding/submit-profile";
+import { acknowledgeRecoveryCodes } from "~/actions/auth/recovery-codes";
 import { beginPasskeyEnrollment } from "~/actions/auth/security/passkey";
 import { beginTotpEnrollment } from "~/actions/auth/security/totp";
-import { acknowledgeRecoveryCodes } from "~/actions/settings/security";
 import { Loader } from "~/components/feedback/loading/loader";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import {
@@ -84,7 +80,6 @@ function OnboardingContent() {
   const [totpStartAttempted, setTotpStartAttempted] = createSignal(false);
   const [totpCode, setTotpCode] = createSignal("");
   const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
-  const [completionRedirect, setCompletionRedirect] = createSignal<string>();
 
   let initializedPhone = false;
   createEffect(() => {
@@ -159,7 +154,7 @@ function OnboardingContent() {
   async function handleCompleteWithoutFactor() {
     setSubmitting(true);
     try {
-      const result = await completeOnboardingWithoutFactor();
+      const result = await completeOnboardingAction({ method: "none" });
       navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(error));
@@ -181,7 +176,8 @@ function OnboardingContent() {
       const { challengeId, options } = await beginPasskeyEnrollment();
       const response = await createRegistrationResponse(options);
       setPasskeyPhase("server");
-      const result = await completeOnboardingWithPasskey({
+      const result = await completeOnboardingAction({
+        method: "passkey",
         challengeId,
         response,
       });
@@ -198,7 +194,8 @@ function OnboardingContent() {
 
     setTotpLoading(true);
     try {
-      const result = await completeOnboardingWithTotp({
+      const result = await completeOnboardingAction({
+        method: "totp",
         code: totpCode(),
       });
       applyCompletion(result);
@@ -210,24 +207,21 @@ function OnboardingContent() {
   }
 
   function applyCompletion(
-    result: Awaited<ReturnType<typeof completeOnboardingWithTotp>>,
+    result: Awaited<ReturnType<typeof completeOnboardingAction>>,
   ) {
     if (result.recoveryCodes.length === 0) {
       navigate(result.redirectTo);
       return;
     }
 
-    setCompletionRedirect(result.redirectTo);
     setRecoveryCodes(result.recoveryCodes);
   }
 
   async function handleRecoveryCodesComplete() {
-    const redirectTo = completionRedirect();
-    if (!redirectTo) return;
     setSubmitting(true);
     try {
-      await acknowledgeRecoveryCodes();
-      navigate(redirectTo);
+      const result = await acknowledgeRecoveryCodes();
+      navigate(result.redirectTo);
     } catch (error: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {

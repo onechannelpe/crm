@@ -20,6 +20,7 @@ export type AuthRequestDecision =
   | { kind: "allow" }
   | { kind: "redirect_login" }
   | { kind: "redirect_onboarding" }
+  | { kind: "redirect_recovery_setup" }
   | { kind: "redirect_home"; to: string }
   | { kind: "reject"; response: Response };
 
@@ -152,14 +153,21 @@ export async function enforceAuthRequest(
       : { kind: "redirect_login" };
   }
 
-  if (session.sessionClass === "pre_auth" && url.pathname !== "/onboarding") {
-    return { kind: "redirect_onboarding" };
+  if (session.sessionClass === "pre_auth") {
+    return url.pathname === "/onboarding"
+      ? { kind: "allow" }
+      : { kind: "redirect_onboarding" };
+  }
+
+  if (session.sessionClass === "recovery_setup") {
+    return url.pathname === "/recovery-codes"
+      ? { kind: "allow" }
+      : { kind: "redirect_recovery_setup" };
   }
 
   if (
     session.sessionClass === "app" &&
-    session.onboardingCompleted &&
-    url.pathname === "/onboarding"
+    (url.pathname === "/onboarding" || url.pathname === "/recovery-codes")
   ) {
     return { kind: "redirect_home", to: getDefaultAppPath(session.role) };
   }

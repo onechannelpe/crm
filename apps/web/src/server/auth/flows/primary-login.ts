@@ -6,7 +6,7 @@ import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
   TotpLoginFlowState,
-} from "~/server/auth/application/contracts";
+} from "~/server/auth/application/login-contracts";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import {
@@ -149,7 +149,7 @@ export async function completePrimaryAuthProof(params: {
         result: {
           userId: issued.userId,
           role: issued.role,
-          onboardingCompleted: issued.onboardingCompleted,
+          sessionClass: issued.sessionClass,
           token: issued.token,
         },
       });

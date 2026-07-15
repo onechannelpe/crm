@@ -34,9 +34,10 @@ export function usePasskeyEnrollment(options: PasskeyEnrollmentOptions) {
         challengeId,
         await createRegistrationResponse(registrationOptions),
       );
-      await options.refreshStatus();
       if (recoveryCodes.length > 0) {
         options.onRecoveryCodes?.(recoveryCodes);
+      } else {
+        await options.refreshStatus();
       }
       options.enqueueSuccessSnackBar(message);
     } catch (caught: unknown) {

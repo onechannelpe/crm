@@ -2,7 +2,7 @@
 
 import { redirect } from "@solidjs/router";
 
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { getSessionPath } from "~/lib/auth/access/route-policy";
 import { getSession } from "~/lib/auth/access/session";
 import type { OnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
 import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
@@ -14,8 +14,8 @@ export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {
   if (!session) {
     throw redirect("/login");
   }
-  if (session.onboardingCompleted) {
-    throw redirect(getDefaultAppPath(session.role));
+  if (session.sessionClass !== "pre_auth") {
+    throw redirect(getSessionPath(session.sessionClass, session.role));
   }
 
   const result = await loadOnboardingSnapshot(
@@ -25,9 +25,5 @@ export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {
   if (isErr(result)) {
     throw redirect("/login");
   }
-  if (result.value.onboardingCompleted) {
-    throw redirect(getDefaultAppPath(session.role));
-  }
-
   return result.value;
 }

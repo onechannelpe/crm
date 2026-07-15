@@ -1,4 +1,5 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import { resolveSessionClass } from "~/lib/auth/core/session-contract";
 
 import { requiresStrongAuthRole } from "./rules/role";
 import type { AuthProof, LoginDecision } from "./types";
@@ -15,6 +16,7 @@ export interface LoginPolicyInput {
       hasPasskey: boolean;
       hasVerifiedStrongAuth: boolean;
     };
+    recoveryCodesAcknowledgementRequired: boolean;
   };
   now?: () => Date;
 }
@@ -23,11 +25,16 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
   const now = input.now ?? (() => new Date());
   const { proof, context } = input;
   const onboardingCompleted = context.user.onboarding_completed_at !== null;
+  const sessionClass = resolveSessionClass({
+    onboardingCompleted,
+    recoveryCodesAcknowledgementRequired:
+      context.recoveryCodesAcknowledgementRequired,
+  });
 
   if (proof.kind === "passkey") {
     return {
       kind: "issue_session",
-      sessionClass: onboardingCompleted ? "app" : "pre_auth",
+      sessionClass,
       strongAuthMethod: "passkey",
       strongAuthAt: now(),
     };
@@ -36,7 +43,7 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
   if (proof.kind === "google" && proof.trustedFederatedMfa) {
     return {
       kind: "issue_session",
-      sessionClass: onboardingCompleted ? "app" : "pre_auth",
+      sessionClass,
       strongAuthMethod: "federated",
       strongAuthAt: now(),
     };
@@ -45,7 +52,7 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
   if (!requiresStrongAuthRole(context.user.role)) {
     return {
       kind: "issue_session",
-      sessionClass: onboardingCompleted ? "app" : "pre_auth",
+      sessionClass,
       strongAuthMethod: null,
       strongAuthAt: null,
     };

@@ -86,7 +86,6 @@ export function createSessionService(deps: SessionServiceDeps) {
       return {
         userId: identity.userId,
         role: identity.role,
-        onboardingCompleted: identity.onboardingCompleted,
         sessionClass: spec.sessionClass,
         primaryAuthMethod: spec.primaryAuthMethod,
         strongAuthMethod: spec.strongAuthMethod,
@@ -110,7 +109,6 @@ export function createSessionService(deps: SessionServiceDeps) {
           userId: cached.userId,
           branchId: cached.branchId,
           role: cached.role,
-          onboardingCompleted: cached.onboardingCompleted,
           sessionClass: cached.sessionClass,
           primaryAuthMethod: cached.primaryAuthMethod,
           strongAuthMethod: cached.strongAuthMethod,
@@ -189,7 +187,6 @@ export function createSessionService(deps: SessionServiceDeps) {
         userId: authSession.userId,
         branchId: authSession.branchId,
         role: authSession.role,
-        onboardingCompleted: authSession.onboardingCompleted,
         sessionClass: authSession.sessionClass,
         primaryAuthMethod: authSession.primaryAuthMethod,
         strongAuthMethod: authSession.strongAuthMethod,

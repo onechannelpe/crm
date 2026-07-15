@@ -51,10 +51,10 @@ export function useTotpEnrollment(options: TotpEnrollmentOptions) {
       setEnrollment(null);
       setCode("");
 
-      await options.refreshStatus();
-
       if (codes.length > 0) {
         options.onRecoveryCodes?.(codes);
+      } else {
+        await options.refreshStatus();
       }
 
       options.enqueueSuccessSnackBar(message);

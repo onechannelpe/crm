@@ -98,7 +98,7 @@ export interface UserSessionsTable {
   user_id: IdColumn<UserId>;
   branch_id: IdColumn<BranchId>;
   role: Role;
-  session_class: "pre_auth" | "app";
+  session_class: "pre_auth" | "recovery_setup" | "app";
   primary_auth_method: AuthMethodValue;
   strong_auth_method: "totp" | "passkey" | "federated" | "recovery" | null;
   strong_auth_at: Date | null;

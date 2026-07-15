@@ -1,8 +1,11 @@
+import { getSessionPath } from "~/lib/auth/access/route-policy";
+import { loadActiveAuthContextForUser } from "~/lib/auth/context/auth-context";
 import { authenticateGoogleAuthorizationCode } from "~/lib/auth/google/google-oauth";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
-import { submitGoogleLogin } from "~/server/auth/flows/submit-google-login";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+
+import { completePrimaryAuthProof } from "./primary-login";
 
 export type CompleteGoogleOAuthCallbackError =
   | { kind: "bad_request" }
@@ -12,11 +15,7 @@ export type CompleteGoogleOAuthCallbackError =
     };
 
 export interface CompleteGoogleOAuthCallbackSuccess {
-  redirectPath:
-    | "/"
-    | "/onboarding"
-    | `/login/verify?flow=${string}`
-    | `/login/passkey?flow=${string}`;
+  redirectPath: string;
   sessionToken: string | null;
 }
 
@@ -68,16 +67,29 @@ export async function completeGoogleOAuthCallback(
     return Err({ kind: "redirect_to_login", error: "google_not_linked" });
   }
 
-  const loginResult = await submitGoogleLogin(
-    {
+  const context = await loadActiveAuthContextForUser(
+    user,
+    deps.repos,
+    deps.now(),
+  );
+  if (!context) {
+    return Err({ kind: "redirect_to_login", error: "google_not_linked" });
+  }
+  const loginResult = await completePrimaryAuthProof({
+    proof: {
+      kind: "google",
       userId: user.id,
-      ipAddress: input.ipAddress,
-      userAgent: input.userAgent,
       trustedFederatedMfa: false,
     },
+    identifier: user.username,
+    request: {
+      ipAddress: input.ipAddress,
+      userAgent: input.userAgent,
+    },
+    context,
     deps,
     webauthnProvider,
-  );
+  });
 
   if (isErr(loginResult)) {
     return Err({
@@ -104,9 +116,10 @@ export async function completeGoogleOAuthCallback(
   }
 
   return Ok({
-    redirectPath: loginResult.value.result.onboardingCompleted
-      ? "/"
-      : "/onboarding",
+    redirectPath: getSessionPath(
+      loginResult.value.result.sessionClass,
+      loginResult.value.result.role,
+    ),
     sessionToken: loginResult.value.result.token,
   });
 }

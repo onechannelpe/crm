@@ -26,6 +26,11 @@ export interface AuthContextDeps {
   users: AuthContextUsersPort;
   passkeys: StrongAuthPasskeysPort;
   userTotpFactors: StrongAuthTotpFactorsPort;
+  userRecoveryCodes: {
+    getActiveSet(
+      userId: UserId,
+    ): Promise<{ acknowledgedAt: Date | null } | null>;
+  };
 }
 
 export interface SessionRepositoryPort {

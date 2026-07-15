@@ -4,7 +4,6 @@ import type { Role } from "~/lib/auth/access/rbac";
 import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
-import { regenerateRecoveryCodes as regenerateRecoveryCodesForUser } from "~/server/auth/recovery/issue-recovery-codes";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { auditEntityId } from "~/server/shared/audit-entity";
@@ -172,61 +171,6 @@ export async function disableTotp(): Promise<{ message: string }> {
       });
 
       return Ok({ message: "Aplicación de autenticación desactivada" });
-    },
-  });
-}
-
-export async function getRecoveryCodesStatus(): Promise<{
-  hasActiveSet: boolean;
-  total: number;
-  unused: number;
-  acknowledged: boolean;
-}> {
-  return runAction({
-    name: "settings.security.recovery_status",
-    access: { kind: "session" },
-
-    execute: async ({ actor }) => {
-      const { userRecoveryCodes } = getServerRuntime().security;
-      const active = await userRecoveryCodes.getActiveSet(actor.userId);
-      return Ok({
-        hasActiveSet: active !== null,
-        total: active?.total ?? 0,
-        unused: active?.unused ?? 0,
-        acknowledged: active?.acknowledgedAt != null,
-      });
-    },
-  });
-}
-
-export async function regenerateRecoveryCodes(): Promise<{
-  recoveryCodes: string[];
-}> {
-  return runAction({
-    name: "settings.security.regenerate_recovery",
-    access: { kind: "session" },
-
-    execute: (ctx) =>
-      getServerRuntime().auth.setup.uow.run(async (repos) => {
-        const recoveryCodes = await regenerateRecoveryCodesForUser(
-          repos,
-          ctx.actor.userId,
-          ctx.now(),
-        );
-        return Ok({ recoveryCodes });
-      }),
-  });
-}
-
-export async function acknowledgeRecoveryCodes(): Promise<{ message: string }> {
-  return runAction({
-    name: "settings.security.acknowledge_recovery",
-    access: { kind: "session" },
-
-    execute: async ({ actor, now }) => {
-      const { userRecoveryCodes } = getServerRuntime().security;
-      await userRecoveryCodes.acknowledgeActiveSet(actor.userId, now());
-      return Ok({ message: "Códigos de recuperación guardados" });
     },
   });
 }

@@ -65,7 +65,8 @@ export async function completeFactorEnrollment(
     const sessionToken = await replaceSession(repos, {
       current: ctx.actor,
       user,
-      sessionClass: ctx.actor.sessionClass,
+      sessionClass:
+        recoveryCodes.length > 0 ? "recovery_setup" : ctx.actor.sessionClass,
       strongAuthMethod: factor.method,
       strongAuthAt: enrolledAt,
       ipAddress: ctx.ipAddress,

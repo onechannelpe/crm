@@ -15,7 +15,6 @@ function makeContext(): AppContext {
       userId: UserId.trust("user-10"),
       branchId: BranchId.trust("branch-1"),
       role: "back_office",
-      onboardingCompleted: true,
       sessionClass: "app",
       primaryAuthMethod: "password",
       strongAuthMethod: null,

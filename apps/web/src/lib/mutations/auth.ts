@@ -1,10 +1,6 @@
 import { action } from "@solidjs/router";
 import { redirect } from "@solidjs/router";
 
-import type {
-  PasskeyStartSubmissionResult,
-  PasswordLoginSubmissionResult,
-} from "~/actions/auth/contracts";
 import {
   acceptInvitePasswordStep,
   type AcceptInviteResult,
@@ -19,6 +15,10 @@ import {
   requestPasswordReset,
   resetPassword,
 } from "~/actions/auth/reset-password";
+import type {
+  PasskeyStartSubmissionResult,
+  PasswordLoginSubmissionResult,
+} from "~/contracts/auth";
 
 export const passwordLoginMutation = action(
   async (formData: FormData): Promise<PasswordLoginSubmissionResult> =>

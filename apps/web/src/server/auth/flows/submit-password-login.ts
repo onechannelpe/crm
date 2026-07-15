@@ -2,7 +2,7 @@ import { loadActiveAuthContextForUser } from "~/lib/auth/context/auth-context";
 import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
-} from "~/server/auth/application/contracts";
+} from "~/server/auth/application/login-contracts";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { authenticatePassword } from "~/server/auth/factors/password";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";

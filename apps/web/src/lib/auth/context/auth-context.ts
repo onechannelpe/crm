@@ -28,6 +28,7 @@ export type AuthContextUser = Pick<
 export interface AuthContext {
   user: AuthContextUser;
   strongAuthStatus: StrongAuthStatus;
+  recoveryCodesAcknowledgementRequired: boolean;
 }
 
 export async function loadActiveAuthContextForUser(
@@ -43,9 +44,16 @@ export async function loadActiveAuthContextForUser(
     return null;
   }
 
+  const [strongAuthStatus, recoveryCodeSet] = await Promise.all([
+    getStrongAuthStatus(user.id, deps),
+    deps.userRecoveryCodes.getActiveSet(user.id),
+  ]);
+
   return {
     user,
-    strongAuthStatus: await getStrongAuthStatus(user.id, deps),
+    strongAuthStatus,
+    recoveryCodesAcknowledgementRequired:
+      recoveryCodeSet !== null && recoveryCodeSet.acknowledgedAt === null,
   };
 }
 

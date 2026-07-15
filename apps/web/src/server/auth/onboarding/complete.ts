@@ -1,4 +1,5 @@
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { resolveSessionClass } from "~/lib/auth/core/session-contract";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { parsePhone } from "~/lib/phone/pe-mobile";
 import {
@@ -132,7 +133,10 @@ export async function completeOnboarding(
     const sessionToken = await replaceSession(repos, {
       current: ctx.actor,
       user: completedUser,
-      sessionClass: "app",
+      sessionClass: resolveSessionClass({
+        onboardingCompleted: true,
+        recoveryCodesAcknowledgementRequired: recoveryCodes.length > 0,
+      }),
       strongAuthMethod,
       strongAuthAt,
       ipAddress: ctx.ipAddress,

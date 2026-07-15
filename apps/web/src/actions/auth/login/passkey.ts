@@ -1,6 +1,6 @@
 "use server";
 
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { getSessionPath } from "~/lib/auth/access/route-policy";
 import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
 import { isAuthenticationResponse } from "~/lib/auth/passkey/credential-response";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
@@ -81,9 +81,10 @@ export async function finishPasskeyLogin(
     setSessionCookie(completed.value.token);
 
     return {
-      redirectTo: completed.value.onboardingCompleted
-        ? getDefaultAppPath(completed.value.role)
-        : "/onboarding",
+      redirectTo: getSessionPath(
+        completed.value.sessionClass,
+        completed.value.role,
+      ),
     };
   });
 }

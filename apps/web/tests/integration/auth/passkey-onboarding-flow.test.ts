@@ -9,6 +9,7 @@ import { hashSessionToken } from "~/lib/auth/session/tokens";
 import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
+import { acknowledgeRecoverySetup } from "~/server/auth/recovery/recovery-setup";
 import { isErr } from "~/server/shared/result";
 
 describe("passkey onboarding flow", () => {
@@ -43,7 +44,6 @@ describe("passkey onboarding flow", () => {
       userId,
       branchId: user.branch_id,
       role: user.role,
-      onboardingCompleted: false,
       sessionClass: "pre_auth",
       primaryAuthMethod: "password",
       strongAuthMethod: null,
@@ -71,7 +71,6 @@ describe("passkey onboarding flow", () => {
       userId,
       branchId: user.branch_id,
       role: user.role,
-      onboardingCompleted: false,
       sessionClass: "pre_auth",
       primaryAuthMethod: "password",
       strongAuthMethod: null,
@@ -131,7 +130,7 @@ describe("passkey onboarding flow", () => {
         hashSessionToken(result.value.sessionToken),
       ),
     ).toMatchObject({
-      session_class: "app",
+      session_class: "recovery_setup",
       strong_auth_method: "passkey",
       strong_auth_at: now,
     });
@@ -152,5 +151,36 @@ describe("passkey onboarding flow", () => {
         .where("type", "=", "onboarding_completed")
         .executeTakeFirst(),
     ).toEqual({ type: "onboarding_completed" });
+
+    const recoverySessionId = hashSessionToken(result.value.sessionToken);
+    const acknowledged = await acknowledgeRecoverySetup(
+      {
+        actor: {
+          ...currentSession,
+          id: recoverySessionId,
+          sessionClass: "recovery_setup",
+          strongAuthMethod: "passkey",
+          strongAuthAt: now,
+        },
+        requestId: "request-2",
+        traceId: "trace-2",
+        ipAddress: "198.51.100.10",
+        userAgent: "integration-test",
+        publicOrigin: "https://crm.example.test",
+        now: () => now,
+      },
+      setup,
+    );
+    expect(isErr(acknowledged)).toBe(false);
+    if (isErr(acknowledged)) throw new Error("expected acknowledged codes");
+    expect(await setup.repos.sessions.findById(recoverySessionId)).toBeNull();
+    expect(
+      await setup.repos.sessions.findById(
+        hashSessionToken(acknowledged.value.sessionToken),
+      ),
+    ).toMatchObject({ session_class: "app" });
+    expect(
+      await setup.repos.userRecoveryCodes.getActiveSet(userId),
+    ).toMatchObject({ acknowledgedAt: now });
   });
 });

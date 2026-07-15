@@ -15,7 +15,6 @@ function createSnapshot(
       role: "executive",
       phone: null,
     },
-    onboardingCompleted: false,
     passwordChangeRequired: false,
     strongAuthRequired: false,
     hasPasskey: false,
@@ -57,11 +56,5 @@ describe("onboarding flow", () => {
     });
 
     expect(resolveOnboardingStep(snapshot, "totp")).toBe("totp");
-  });
-
-  it("finishes once onboarding is complete", () => {
-    const snapshot = createSnapshot({ onboardingCompleted: true });
-
-    expect(resolveOnboardingStep(snapshot, null)).toBe("done");
   });
 });

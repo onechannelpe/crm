@@ -1,3 +1,4 @@
+import type { CurrentUserView } from "~/contracts/auth";
 import { resolveWorkspaceContext } from "~/lib/auth/access/workspace-context";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
@@ -6,7 +7,6 @@ import type { DomainError } from "~/server/shared/domain-error";
 import { Ok, type Result } from "~/server/shared/result";
 
 import type { AuthSessionReadContext } from "../../infrastructure/session-context";
-import type { CurrentUserView } from "../contracts";
 
 export async function getCurrentUser(
   ctx: AppContext,

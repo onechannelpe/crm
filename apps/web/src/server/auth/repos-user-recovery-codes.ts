@@ -123,15 +123,19 @@ export function createUserRecoveryCodesRepo(db: DatabaseExecutor) {
       return consumed !== undefined;
     },
 
-    acknowledgeActiveSet(userId: UserId, acknowledgedAt: Date): Promise<void> {
-      return db
+    async acknowledgeActiveSet(
+      userId: UserId,
+      acknowledgedAt: Date,
+    ): Promise<boolean> {
+      const acknowledged = await db
         .updateTable("recovery_code_set")
         .set({ acknowledged_at: acknowledgedAt })
         .where("user_id", "=", userId)
         .where("revoked_at", "is", null)
         .where("acknowledged_at", "is", null)
-        .execute()
-        .then(() => undefined);
+        .returning("id")
+        .executeTakeFirst();
+      return acknowledged !== undefined;
     },
 
     deleteAllByUser(userId: UserId): Promise<void> {

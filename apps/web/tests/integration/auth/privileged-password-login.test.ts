@@ -55,7 +55,7 @@ describe("privileged password login", () => {
     }
 
     expect(result.value.result.role).toBe("superuser");
-    expect(result.value.result.onboardingCompleted).toBe(false);
+    expect(result.value.result.sessionClass).toBe("pre_auth");
     const sessions = await scenario.ctx.repos.sessions.listForUser(user.userId);
     expect(sessions[0]?.session_class).toBe("pre_auth");
     expect(sessions[0]?.primary_auth_method).toBe("password");

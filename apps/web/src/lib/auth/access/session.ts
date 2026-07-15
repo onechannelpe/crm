@@ -25,7 +25,7 @@ export async function authenticate(): Promise<
   if (!session) {
     return Err(unauthenticated());
   }
-  if (session.sessionClass !== "app" || !session.onboardingCompleted) {
+  if (session.sessionClass !== "app") {
     return Err(fail("onboarding_required"));
   }
   return Ok(session);
