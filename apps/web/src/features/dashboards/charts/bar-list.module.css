@@ -26,8 +26,10 @@
   white-space: nowrap;
 }
 
-/* The row is a link to the seller's record. app.css resets link decoration to
-   inherit, so the affordance has to be stated here. */
+/*
+  The row is a link to the seller's record. app.css resets link decoration to
+  inherit, so the affordance has to be stated here.
+*/
 .labelLink {
   text-decoration: none;
 }

@@ -12,7 +12,7 @@
 
 /*
   touch-action: none so a drag across the chart reads values instead of
-   scrolling the page. The tooltip is reachable by touch, not hover-only.
+  scrolling the page. The tooltip is reachable by touch, not hover-only.
 */
 .svg {
   display: block;
