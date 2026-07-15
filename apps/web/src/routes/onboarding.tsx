@@ -243,6 +243,7 @@ function OnboardingContent() {
           <Switch>
             <Match when={step() === "password"}>
               <OnboardingPasswordStep
+                email={current.user.email}
                 password={password()}
                 confirmPassword={confirmPassword()}
                 submitting={submitting()}

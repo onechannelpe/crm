@@ -245,7 +245,7 @@
   --t-background-primary: var(--background);
   --t-background-secondary: var(--secondary);
   --t-background-transparent-lighter: var(--background-transparent-lighter);
-  --t-background-transparent-light: var(--background-transparent-light);
+  --t-background-transparent-light: color(display-p3 0 0 0 / 0.039);
   --t-background-transparent-medium: var(--background-transparent-medium);
   --t-background-transparent-primary: var(--background-transparent-light);
   --t-border-color-strong: color(display-p3 0.839 0.839 0.839);
@@ -363,7 +363,7 @@
   --t-background-primary: var(--background);
   --t-background-secondary: var(--secondary);
   --t-background-transparent-lighter: var(--background-transparent-lighter);
-  --t-background-transparent-light: var(--background-transparent-light);
+  --t-background-transparent-light: color(display-p3 1 1 1 / 0.059);
   --t-background-transparent-medium: var(--background-transparent-medium);
   --t-background-transparent-primary: var(--background-transparent-light);
   --t-border-color-strong: color(display-p3 0.282 0.282 0.282);

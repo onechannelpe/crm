@@ -11,6 +11,7 @@ const FORM_ID = "onboarding-password-form";
 const MIN_LENGTH = 8;
 
 interface OnboardingPasswordStepProps {
+  email: string;
   password: string;
   confirmPassword: string;
   submitting: boolean;
@@ -45,6 +46,14 @@ export function OnboardingPasswordStep(props: OnboardingPasswordStepProps) {
           if (canSubmit()) props.onSubmit();
         }}
       >
+        <input
+          type="email"
+          autocomplete="username"
+          value={props.email}
+          readonly
+          class={styles.hiddenUsername}
+        />
+
         <OnboardingStepAnimatedItem index={2}>
           <div class={styles.fields}>
             <label class={styles.field}>

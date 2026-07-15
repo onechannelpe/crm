@@ -96,6 +96,16 @@
   line-height: 1.4;
 }
 
+/* 
+ * Chromium expects a username field alongside password inputs so it can
+ * associate the new password with the right account; the account is
+ * already known here, so the field carries it without showing UI for it.
+ * https://www.chromium.org/developers/design-documents/create-amazing-password-forms/
+*/
+.hiddenUsername {
+  display: none;
+}
+
 .infoList {
   display: flex;
   flex-direction: column;

@@ -1,29 +1,68 @@
-import { Show } from "solid-js";
+import { useSubmission } from "@solidjs/router";
+import { createEffect, createSignal, onMount, Show } from "solid-js";
 
 import Google from "~/components/icons/brands/google";
 import { Button } from "~/components/ui/input/button";
-import { ButtonLink } from "~/components/ui/input/button-link";
+import { Input } from "~/components/ui/input/input";
 import { useLoginFlow } from "~/features/auth/services/use-login-flow";
 import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
+import { passwordLoginMutation } from "~/lib/mutations/auth";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import { LastUsedPill } from "./last-used-pill";
 import { LegalFooter } from "./legal-footer";
+import { LoginFeedback } from "./login-feedback";
 
-import shellStyles from "./auth-flow-shell.module.css";
 import linkStyles from "./auth-links.module.css";
-import styles from "./auth-shell.module.css";
+import fullStyles from "./auth-shell.module.css";
 import pageStyles from "./login-page.module.css";
 
 export function LoginHome() {
   const loginMethods = useLoginFlow();
+  const passwordSubmission = useSubmission(passwordLoginMutation);
   const passkeyLogin = usePasskeyLogin();
+
+  const [username, setUsername] = createSignal("");
+  const [handledPasskeyFlowId, setHandledPasskeyFlowId] = createSignal<
+    string | null
+  >(null);
+
+  let usernameInputRef: HTMLInputElement | undefined;
+
+  onMount(() => {
+    usernameInputRef?.focus();
+  });
+
+  const passwordError = () =>
+    passwordSubmission.error
+      ? actionErrorMessage(passwordSubmission.error)
+      : undefined;
+
+  // Password login may hand back a passkey flow when the account requires a
+  // step-up factor; continue it here instead of navigating away.
+  createEffect(() => {
+    const result = passwordSubmission.result;
+
+    if (!result || handledPasskeyFlowId() === result.flow.id) {
+      return;
+    }
+
+    setHandledPasskeyFlowId(result.flow.id);
+    void passkeyLogin.continueFlow(result.flow);
+  });
+
+  function handleUsernameInput(value: string) {
+    setUsername(value);
+    passkeyLogin.clear();
+    setHandledPasskeyFlowId(null);
+  }
 
   return (
     <div class={pageStyles.formStack}>
       <div class={pageStyles.ssoButtonContainer}>
         <Button
-          variant="primary"
-          class={styles.full}
+          variant="secondary"
+          class={fullStyles.full}
           onClick={() => {
             loginMethods.markUsed("google");
             window.location.href = "/api/auth/google";
@@ -37,12 +76,10 @@ export function LoginHome() {
         </Show>
       </div>
 
-      <hr class={pageStyles.separator} />
-
       <div class={pageStyles.ssoButtonContainer}>
         <Button
-          variant="outline"
-          class={styles.full}
+          variant="secondary"
+          class={fullStyles.full}
           loading={passkeyLogin.busy()}
           onClick={() => {
             loginMethods.markUsed("passkey");
@@ -80,16 +117,65 @@ export function LoginHome() {
         </Show>
       </div>
 
-      <div class={pageStyles.ssoButtonContainer}>
-        <ButtonLink href="/login/user" variant="outline" class={styles.full}>
-          Continuar con usuario
-        </ButtonLink>
-        <Show when={loginMethods.lastUsedMethod() === "password"}>
-          <LastUsedPill />
-        </Show>
-      </div>
+      <div class={pageStyles.separator} />
 
-      <div class={shellStyles.footerNote}>
+      <form
+        class={pageStyles.credentialForm}
+        action={passwordLoginMutation}
+        method="post"
+        onSubmit={() => {
+          loginMethods.markUsed("password");
+        }}
+      >
+        <LoginFeedback message={passwordError()} />
+
+        <Input
+          id="auth-username"
+          type="text"
+          placeholder="Usuario"
+          name="identifier"
+          autocomplete="username"
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck={false}
+          value={username()}
+          onInput={(event) => {
+            handleUsernameInput(event.currentTarget.value);
+          }}
+          ref={(element) => {
+            usernameInputRef = element;
+          }}
+          required
+        />
+
+        <Input
+          id="current-password"
+          type="password"
+          placeholder="Contraseña"
+          name="password"
+          autocomplete="current-password"
+          required
+        />
+
+        <div class={pageStyles.ssoButtonContainer}>
+          <Button
+            type="submit"
+            variant="primary"
+            class={fullStyles.full}
+            loading={passwordSubmission.pending}
+          >
+            Iniciar sesión
+          </Button>
+          <Show when={loginMethods.lastUsedMethod() === "password"}>
+            <LastUsedPill />
+          </Show>
+        </div>
+      </form>
+
+      <div class={pageStyles.loginFooter}>
+        <a href="/reset-password" class={linkStyles.forgotLink}>
+          ¿Olvidaste tu contraseña?
+        </a>
         <LegalFooter />
       </div>
     </div>
