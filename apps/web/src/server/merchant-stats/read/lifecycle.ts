@@ -9,13 +9,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { creditFilter } from "./filter";
 
-// Lifecycle signals derived from columns the source has always carried and the
-// dashboards never read.
-//
-// Aggregated in Postgres rather than in memory. This is the one read with no
-// natural LIMIT -- it describes the whole book -- so fetching a row per device
-// to count four numbers would grow with every import until a dashboard load
-// dragged the entire sales table over the wire.
 export async function getLifecycle(
   db: DatabaseExecutor,
   filter: BookFilter,
@@ -40,13 +33,11 @@ export async function getLifecycle(
     .select((eb) => [
       eb.fn.countAll<number>().as("sales_total"),
       eb.fn.count<number>("s.activated_at").as("activated_count"),
-      // Median, not mean: a handful of merchants activate months late and drag
-      // an average somewhere no real merchant sits.
+      // Late activations skew a mean; the median describes a typical merchant.
       sql<number | null>`percentile_cont(0.5) within group (
         order by (s.activated_at - s.sold_at)
       ) filter (where s.activated_at is not null)`.as("median_days"),
-      // A sale that never transacted is not dormant, it is unactivated; counting
-      // it here would charge the same row against two different problems.
+      // A sale that never transacted is unactivated, not dormant.
       eb.fn
         .count<number>("s.last_transaction_at")
         .filterWhere("s.last_transaction_at", "<", cutoff)

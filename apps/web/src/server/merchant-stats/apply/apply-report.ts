@@ -15,8 +15,6 @@ export interface ReportForJob {
   cutAt: Date;
 }
 
-// The provenance a job needs to replay its own file: where the bytes are and
-// which cut they were taken at. Both were settled when the upload was accepted.
 export async function findReportForJob(
   db: DatabaseExecutor,
   jobId: IntegrationJobId,
@@ -36,8 +34,6 @@ export async function findReportForJob(
 }
 
 export interface ApplyReportInput {
-  // The report row was created when the file was accepted, so it already holds
-  // the provenance. Only what the writes actually need is passed down.
   reportId: MerchantReportId;
   cutAt: Date;
   parsed: ParsedReport;
@@ -56,13 +52,8 @@ export interface ApplyReportPorts {
   now: Date;
 }
 
-// Applies one snapshot in a single transaction: rejections, sales, gpv, credit.
-//
-// No rollup step (the monthly view derives it) and no target step (the dealer
-// file carries no projection). No duplicate check either: the same bytes cannot
-// reach here twice, because merchant_reports.content_sha256 is UNIQUE and the
-// row is inserted when the upload is accepted. Re-running a job is harmless --
-// every write below is an upsert keyed on the same identity.
+// Applies one accepted snapshot atomically. Device facts are upserted, GPV keeps
+// the newest cut, and unresolved attribution can gain newly available evidence.
 export async function applyReport(
   input: ApplyReportInput,
   ports: ApplyReportPorts,
@@ -119,8 +110,6 @@ async function applyInTransaction(
 
 const REJECTION_CHUNK = 1000;
 
-// Only the rows that did not land. The valid ones are already in merchant_sales,
-// and the stored .xlsx is the archival copy of the whole file.
 async function insertRejections(
   db: DatabaseExecutor,
   reportId: MerchantReportId,
@@ -139,8 +128,6 @@ async function insertRejections(
   }));
 
   for (const chunk of chunks(values, REJECTION_CHUNK)) {
-    // One transaction, one connection: awaiting here is not a cost, it is the
-    // only option.
     // eslint-disable-next-line no-await-in-loop
     await db
       .insertInto("merchant_report_rejections")

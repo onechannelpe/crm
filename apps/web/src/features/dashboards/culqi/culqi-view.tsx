@@ -19,13 +19,6 @@ interface CulqiViewProps {
   options: FilterOptions;
 }
 
-// Culqi's own answer to "who sold this", straight off the `vendedor` column.
-//
-// This is a reconciliation surface and it is labelled as one on purpose. The
-// usuario is who the sale was registered under at Culqi, and it is not the
-// seller: matched against the team's hand-kept real-seller column across 1,324
-// rows it agreed 0% of the time, and the same usuario maps to different real
-// people. It exists to square our book against Culqi's, never to rank anyone.
 export function CulqiView(props: CulqiViewProps) {
   const [filter, setFilter] = createSignal<BookFilter>({});
 
@@ -62,9 +55,8 @@ export function CulqiView(props: CulqiViewProps) {
           <WidgetGrid>
             <WidgetGridItem span="full">
               <p class={styles.note}>
-                El <strong>usuario de Culqi</strong> es quien registró la venta
-                en su sistema, no el vendedor real. Sirve para cuadrar contra el
-                reporte de Culqi; la atribución del CRM vive en la pestaña
+                El <strong>usuario de Culqi</strong> solo se usa para comparar
+                con el reporte de Culqi. La atribución real está en la pestaña
                 Rendimiento.
               </p>
             </WidgetGridItem>

@@ -24,8 +24,6 @@ const FALLBACK_WIDTH = 640;
 const TOOLTIP_WIDTH = 128;
 const TOOLTIP_GAP = 12;
 
-// Callers cap the series count: a cohort chart with more than a handful of
-// lines is unreadable regardless of colour.
 const SERIES_COLORS = [
   "var(--color-blue-11)",
   "var(--color-turquoise-11)",
@@ -34,12 +32,7 @@ const SERIES_COLORS = [
   "var(--color-pink-11)",
 ];
 
-// The x axis is the cohort's own month offset. Each cohort starts at the same
-// origin so their shapes can be compared, which is the whole point of this
-// chart: the calendar view of the same facts lives on the attainment surface,
-// which reads merchant_monthly_gpv.
-//
-// A series renders only the points it has. Young cohorts are short lines.
+// Cohorts share an offset axis, not calendar months, so their ramp shapes compare.
 export function RampChart(props: RampChartProps) {
   const height = () => props.height ?? 240;
 
@@ -119,7 +112,6 @@ export function RampChart(props: RampChartProps) {
     return { offset, items };
   });
 
-  // Clamped so the card never hangs off either edge of the widget.
   const tooltipLeft = () => {
     const raw = xOf(tooltip()?.offset ?? 0) + TOOLTIP_GAP;
     return Math.min(raw, Math.max(0, width() - TOOLTIP_WIDTH));

@@ -1,5 +1,5 @@
 import { revalidate } from "@solidjs/router";
-import { createMemo, createResource, createSignal, Show } from "solid-js";
+import { createMemo, createResource, createSignal } from "solid-js";
 
 import {
   resolveAttribution,
@@ -9,6 +9,7 @@ import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import User from "~/components/icons/user";
+import { Present } from "~/components/ui/control-flow/present";
 import { Badge } from "~/components/ui/display/badge";
 import {
   InlineFieldEditor,
@@ -33,15 +34,14 @@ import { RecordFilterBar } from "./record-filter-bar";
 
 import styles from "./grid-surface.module.css";
 
-const PAGE = 60;
+const PAGE_SIZE = 60;
 const UNASSIGNED = "Sin asignar";
 
-type Row = CohortSaleRow & { id: string };
+type Row = CohortSaleRow & {
+  id: string;
+};
 
-// Attribution edits move the numbers every other surface reads and shift the
-// seller option list, so the whole dashboard is revalidated rather than just
-// this grid.
-async function commit(): Promise<void> {
+async function revalidateAttributionData(): Promise<void> {
   await Promise.all([
     revalidate(cohortRowsQuery.key),
     revalidate(attainmentQuery.key),
@@ -50,27 +50,31 @@ async function commit(): Promise<void> {
   ]);
 }
 
-// The attribution surface, at the grain credit is decided: RUC x month. Editing
-// here is a correction of one month, not a rewrite of the merchant's history.
 export function AttributionGrid(props: { options: FilterOptions }) {
   const [filter, setFilter] = createSignal<BookFilter>({});
-  const [limit, setLimit] = createSignal(PAGE);
+  const [limit, setLimit] = createSignal(PAGE_SIZE);
 
-  const [page] = createResource(
-    () => ({ filter: filter(), limit: limit() }),
+  const [cohortRows] = createResource(
+    () => ({
+      filter: filter(),
+      limit: limit(),
+    }),
     (input) =>
       cohortRowsQuery({
         filter: input.filter,
-        page: { limit: input.limit, offset: 0 },
+        page: {
+          limit: input.limit,
+          offset: 0,
+        },
       }),
   );
 
   const rows = createMemo<Row[]>(() =>
-    // The grid keys on `id`, which the read contract has no business
-    // carrying. These rows are the cached query result, so a copy is the
-    // only correct way to add it.
     // eslint-disable-next-line oxc/no-map-spread
-    (page.latest ?? []).map((row) => ({ ...row, id: row.saleId })),
+    (cohortRows.latest ?? []).map((row) => ({
+      ...row,
+      id: row.saleId,
+    })),
   );
 
   const columns = createMemo<ReadonlyArray<DataGridColumn<Row>>>(() => [
@@ -110,13 +114,15 @@ export function AttributionGrid(props: { options: FilterOptions }) {
               const seller = props.options.sellers.find(
                 (candidate) => candidate.name === name,
               );
+
               await resolveAttribution({
                 ruc: editor.row.ruc,
                 month: editor.row.saleMonth,
                 sellerUserId: seller?.userId ?? null,
                 branchId: null,
               });
-              await commit();
+
+              await revalidateAttributionData();
             }}
             onClose={editor.close}
           />
@@ -124,9 +130,6 @@ export function AttributionGrid(props: { options: FilterOptions }) {
       },
     },
     {
-      // Culqi's usuario, shown next to the real seller on purpose: it is the
-      // best hint available when deciding an unattributed row, and seeing the
-      // two disagree is the point. Never a substitute for the verdict.
       key: "culqiUser",
       label: "Usuario Culqi",
       icon: User,
@@ -141,20 +144,17 @@ export function AttributionGrid(props: { options: FilterOptions }) {
       renderCell: (row) => row.branchName ?? "—",
     },
     {
-      // The projection is per merchant, not per month: "este RUC debería rondar
-      // los 60k". Editing writes a version effective from this row's month, so
-      // earlier months keep the number they were measured against.
       key: "projected",
       label: "Proyectado",
       icon: ChartColumn,
       width: 170,
       renderCell: (row) => (
-        <Show
-          when={row.projectedGpv != null}
+        <Present
+          when={row.projectedGpv}
           fallback={<Badge variant="warning">Sin proyectado</Badge>}
         >
-          {formatSoles(row.projectedGpv ?? 0)}
-        </Show>
+          {(projectedGpv) => formatSoles(projectedGpv())}
+        </Present>
       ),
       edit: {
         ariaLabel: "Editar proyectado",
@@ -166,12 +166,19 @@ export function AttributionGrid(props: { options: FilterOptions }) {
             initialValue={editor.row.projectedGpv?.toString() ?? ""}
             onSubmit={async (value) => {
               const trimmed = value.trim();
+              const projectedGpv = trimmed === "" ? null : Number(trimmed);
+
+              if (projectedGpv !== null && !Number.isFinite(projectedGpv)) {
+                throw new Error("Ingresa un proyectado numérico válido");
+              }
+
               await setMerchantTarget({
                 ruc: editor.row.ruc,
                 effectiveFrom: editor.row.saleMonth,
-                projectedGpv: trimmed === "" ? null : Number(trimmed),
+                projectedGpv,
               });
-              await commit();
+
+              await revalidateAttributionData();
             }}
             onClose={editor.close}
           />
@@ -193,21 +200,28 @@ export function AttributionGrid(props: { options: FilterOptions }) {
         options={props.options}
         filter={filter()}
         onChange={(patch) => {
-          setFilter((current) => ({ ...current, ...patch }));
-          setLimit(PAGE);
+          setFilter((current) => ({
+            ...current,
+            ...patch,
+          }));
+          setLimit(PAGE_SIZE);
         }}
       />
+
       <DataGrid
         ariaLabel="Atribución por RUC y mes"
         columns={columns()}
         emptyState="No hay ventas para los filtros actuales."
         loadMore={{
           hasMore: rows().length >= limit(),
-          loading: page.state === "pending" || page.state === "refreshing",
-          onLoadMore: () => void setLimit((value) => value + PAGE),
+          loading:
+            cohortRows.state === "pending" || cohortRows.state === "refreshing",
+          onLoadMore: () => {
+            setLimit((current) => current + PAGE_SIZE);
+          },
         }}
         source={{
-          status: page.state === "errored" ? "error" : "ready",
+          status: cohortRows.state === "errored" ? "error" : "ready",
           rows: rows(),
         }}
       />

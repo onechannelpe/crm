@@ -3,8 +3,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { displayName } from "./names";
 
-// Options for the filter bar. Every list is drawn from the table the filter
-// actually applies to, so an option can never select an empty result.
 export async function getFilterOptions(
   db: DatabaseExecutor,
 ): Promise<FilterOptions> {
@@ -16,9 +14,6 @@ export async function getFilterOptions(
       .distinct()
       .orderBy("b.name")
       .execute(),
-    // Inner join: a seller is a CRM user or the row is unassigned, and
-    // "unassigned" is not something you filter to -- it is the bucket you look
-    // at on the board, or a queue on Calidad de datos.
     db
       .selectFrom("merchant_monthly_attribution as a")
       .innerJoin("users as u", "u.id", "a.seller_user_id")

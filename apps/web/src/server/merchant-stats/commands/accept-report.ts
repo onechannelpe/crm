@@ -21,17 +21,8 @@ export type AcceptReportResult =
   | { kind: "accepted"; reportId: MerchantReportId; jobId: IntegrationJobId }
   | { kind: "duplicate"; reportId: MerchantReportId };
 
-// Takes a file the boundary has already validated and stored, and books it for
-// processing: one report row, one job, atomically.
-//
-// The report row is created here rather than when the job runs, because
-// content_sha256 is UNIQUE and that index is the real duplicate guard -- a file
-// that was already accepted cannot be accepted twice, and the second upload
-// costs a hash and a select instead of a parse and a queue slot.
-//
-// Both writes share a transaction so a rejected duplicate cannot leave a job
-// behind, and so the queue's NOTIFY is buffered until the report it refers to is
-// actually visible.
+// Atomically create the report and its job. The report's content hash is the
+// duplicate guard, and the queued job is not visible until it has committed.
 export async function acceptReport(
   db: DatabaseExecutor,
   input: AcceptReportInput,

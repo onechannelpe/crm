@@ -15,14 +15,8 @@ export interface WriteGpvInput {
   saleIds: SaleIdByIdentity;
 }
 
-// Writes the current GPV for every (sale, cohort offset) the report carries.
-//
-// The whole "latest snapshot wins" rule is the where clause below. Because a
-// stale file is rejected at write time, reads are a plain select: no CTE, no
-// DISTINCT ON, no per-request resolution of which snapshot is freshest.
-//
-// Ties on cut_at resolve to the incoming row (>=), so re-cutting at the same
-// instant with corrected numbers lands rather than being silently ignored.
+// Keeps the newest cut for each sale and cohort offset. Equal cuts replace the
+// stored values so a corrected re-export is applied.
 export async function upsertGpv(
   db: DatabaseExecutor,
   input: WriteGpvInput,
@@ -35,9 +29,6 @@ export async function upsertGpv(
     return row.gpv.map((observation) => ({
       sale_id: saleId,
       month_offset: observation.offset,
-      // Copied from the sale so realized_month can be generated in the schema.
-      // The composite foreign key pins it to the sale's own month, so the two
-      // cannot disagree.
       sale_month: row.saleMonth,
       gpv: observation.gpv,
       trx: observation.trx,
@@ -47,8 +38,6 @@ export async function upsertGpv(
   });
 
   for (const chunk of chunks(dedupe(values), GPV_CHUNK)) {
-    // One transaction, one connection: awaiting here is not a cost, it is the
-    // only option.
     // eslint-disable-next-line no-await-in-loop
     await db
       .insertInto("merchant_sale_gpv")
@@ -62,15 +51,14 @@ export async function upsertGpv(
             cut_at: eb.ref("excluded.cut_at"),
             report_id: eb.ref("excluded.report_id"),
           }))
-          // A late upload of an older snapshot must not shadow a newer one.
+          // An older cut must not replace a newer snapshot.
           .whereRef("excluded.cut_at", ">=", "merchant_sale_gpv.cut_at"),
       )
       .execute();
   }
 }
 
-// The same conflict target cannot appear twice in one statement. A file should
-// not repeat a (sale, offset), but a repeated identity row would produce one.
+// Postgres cannot upsert the same conflict target twice in one statement.
 function dedupe<T extends { sale_id: string; month_offset: number }>(
   values: readonly T[],
 ): T[] {

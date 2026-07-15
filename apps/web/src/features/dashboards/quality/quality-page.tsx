@@ -43,8 +43,6 @@ const TITLES: Record<QualityIssue, string> = {
 
 type Row = QualityRow & { id: string };
 
-// Resolving a row moves the numbers every other surface reads, so the whole
-// dashboard is revalidated rather than just this queue.
 async function commit(): Promise<void> {
   await Promise.all([
     revalidate(qualityRowsQuery.key),
@@ -79,9 +77,6 @@ export function QualityPage() {
   );
 
   const rows = createMemo<Row[]>(() =>
-    // The grid keys on `id`, which the read contract has no business
-    // carrying. These rows are the cached query result, so a copy is the
-    // only correct way to add it.
     // eslint-disable-next-line oxc/no-map-spread
     (page.latest ?? []).map((row) => ({
       ...row,

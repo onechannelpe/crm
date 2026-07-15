@@ -26,13 +26,11 @@ import {
   validationFail,
   type Reader,
 } from "~/server/shared/parsing";
-import { Ok, type Result } from "~/server/shared/result";
+import { Ok } from "~/server/shared/result";
 
-const DEFAULT_PAGE = 60;
-const MAX_PAGE = 200;
+const DEFAULT_PAGE_SIZE = 60;
+const MAX_PAGE_SIZE = 200;
 
-// Filters arrive from our own option list, but they arrive over the wire, so
-// they are read as unknown and narrowed here rather than trusted as a shape.
 function readFilter(r: Reader<DomainError>): BookFilter {
   return {
     branchId: r.optStr("branchId") ?? undefined,
@@ -42,38 +40,31 @@ function readFilter(r: Reader<DomainError>): BookFilter {
   };
 }
 
-// The client picks the page size, so it is bounded here rather than passed
-// straight into .limit(): an unbounded limit is a database-sized foot-gun on a
-// public boundary.
 function readPage(r: Reader<DomainError>): Page {
   return {
-    limit: r.optIntRange("limit", { min: 1, max: MAX_PAGE }) ?? DEFAULT_PAGE,
-    offset: r.optIntRange("offset", { min: 0, max: 1_000_000 }) ?? 0,
+    limit:
+      r.optIntRange("limit", {
+        min: 1,
+        max: MAX_PAGE_SIZE,
+      }) ?? DEFAULT_PAGE_SIZE,
+    offset:
+      r.optIntRange("offset", {
+        min: 0,
+        max: 1_000_000,
+      }) ?? 0,
   };
-}
-
-function parseFilterAndMonth(
-  raw: unknown,
-): Result<{ filter: BookFilter; month: string }, DomainError> {
-  return parseObject(raw, validationFail, (r) => ({
-    filter: r.obj("filter", readFilter),
-    month: r.str("month"),
-  }));
-}
-
-function parseFilter(
-  raw: unknown,
-): Result<{ filter: BookFilter }, DomainError> {
-  return parseObject(raw, validationFail, (r) => ({
-    filter: r.obj("filter", readFilter),
-  }));
 }
 
 export async function getAttainment(raw: unknown): Promise<Attainment> {
   return runAction({
     name: "dashboards.attainment.read",
     access: { kind: "permission", permission: "dashboards:read" },
-    parse: () => parseFilterAndMonth(raw),
+
+    parse: () =>
+      parseObject(raw, validationFail, (r) => ({
+        filter: r.obj("filter", readFilter),
+        month: r.str("month"),
+      })),
 
     execute: async (_ctx, input) =>
       Ok(
@@ -86,14 +77,18 @@ export async function getAttainment(raw: unknown): Promise<Attainment> {
   });
 }
 
-// Culqi's own view of who sold what. A reconciliation surface, not a board.
 export async function getCulqiUserGpv(
   raw: unknown,
 ): Promise<CulqiUserGpvRow[]> {
   return runAction({
     name: "dashboards.culqiUsers.read",
     access: { kind: "permission", permission: "dashboards:read" },
-    parse: () => parseFilterAndMonth(raw),
+
+    parse: () =>
+      parseObject(raw, validationFail, (r) => ({
+        filter: r.obj("filter", readFilter),
+        month: r.str("month"),
+      })),
 
     execute: async (_ctx, input) =>
       Ok(
@@ -110,7 +105,11 @@ export async function getRamp(raw: unknown): Promise<CohortRampSeries[]> {
   return runAction({
     name: "dashboards.ramp.read",
     access: { kind: "permission", permission: "dashboards:read" },
-    parse: () => parseFilter(raw),
+
+    parse: () =>
+      parseObject(raw, validationFail, (r) => ({
+        filter: r.obj("filter", readFilter),
+      })),
 
     execute: async (_ctx, input) =>
       Ok(await getCohortRamp(getServerRuntime().infra.db, input.filter)),
@@ -123,7 +122,11 @@ export async function getLifecycleSummary(
   return runAction({
     name: "dashboards.lifecycle.read",
     access: { kind: "permission", permission: "dashboards:read" },
-    parse: () => parseFilter(raw),
+
+    parse: () =>
+      parseObject(raw, validationFail, (r) => ({
+        filter: r.obj("filter", readFilter),
+      })),
 
     execute: async (ctx, input) =>
       Ok(

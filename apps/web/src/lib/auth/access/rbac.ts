@@ -48,10 +48,7 @@ export type Permission =
   | "quotation:policy:manage"
   | "integration:manage"
   | "fulfillment:manage"
-  // Client-facing fulfillment steps the executive performs on their own leads.
   | "fulfillment:client-step"
-  // Business (Culqi GPV) dashboards. manage = upload dealer reports and edit
-  // per-RUC enrichment.
   | "dashboards:read"
   | "dashboards:read:own"
   | "dashboards:manage";
@@ -83,8 +80,6 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:create",
     "lead:sale:upload-proof",
     "fulfillment:client-step",
-    // Their own clients' GPV on the record, not the org-wide book. Plain
-    // dashboards:read would also open /dashboards via the route manifest.
     "dashboards:read:own",
   ],
   supervisor: [

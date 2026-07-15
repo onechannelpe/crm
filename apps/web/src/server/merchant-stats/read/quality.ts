@@ -20,7 +20,6 @@ type SaleContext = ExpressionBuilder<
   "s"
 >;
 
-// Every serial fulfillment recorded for the RUC this device belongs to.
 function fulfilledSerials(eb: SaleContext) {
   return eb
     .selectFrom("lead_fulfillment_units as unit")
@@ -31,10 +30,7 @@ function fulfilledSerials(eb: SaleContext) {
     .whereRef("org.ruc", "=", "s.ruc");
 }
 
-// Culqi shipped this RUC a device whose serial fulfillment never recorded --
-// but only where fulfillment recorded something for the RUC at all. A
-// dealer-only merchant has no CRM record to disagree with, and counting it here
-// would drown the real mismatches in merchants we simply never touched.
+// Flag a serial only when the RUC has fulfillment serials to contradict it.
 function serialMismatched(eb: SaleContext): Expression<SqlBool> {
   return eb.and([
     eb("s.serial_number", "is not", null),
@@ -51,9 +47,6 @@ function serialMismatched(eb: SaleContext): Expression<SqlBool> {
   ]);
 }
 
-// The three issues that are simply a confidence value on the row itself, named
-// identically on both sides. The other two are cross-checks no single row can
-// carry, so they are counted separately below.
 const CONFIDENCE_ISSUES = [
   "conflict",
   "late",
@@ -76,8 +69,6 @@ const DETAIL: Record<QualityIssue, string> = {
     "El serial de Culqi no está entre los que registró fulfillment para este cliente.",
 };
 
-// Deliberately unfiltered: every check counts rows missing the very data the
-// filters read from, so a filter would hide the rows the reader is looking for.
 export async function getQualitySummary(
   db: DatabaseExecutor,
 ): Promise<QualitySummary> {
@@ -85,7 +76,6 @@ export async function getQualitySummary(
     db
       .selectFrom("merchant_monthly_attribution")
       .select((eb) => ["confidence", eb.fn.countAll<number>().as("count")])
-      // A row a human ruled on is not a work item, whatever it says.
       .where("resolved_by", "is", null)
       .groupBy("confidence")
       .execute(),
@@ -111,7 +101,6 @@ export async function getQualitySummary(
   };
 
   for (const row of byConfidence) {
-    // exact and inferred are settled; they are not queues.
     if (isConfidenceIssue(row.confidence)) counts[row.confidence] = row.count;
   }
   counts.no_target = noTarget?.count ?? 0;
@@ -168,8 +157,6 @@ async function confidenceRows(
       "s.trade_name",
       "s.culqi_user_name",
     ])
-    // The queue is permanent, so its order is the feature: resolving the RUC
-    // with S/800k at stake matters more than the one with S/5k.
     .orderBy("m.gpv", "desc")
     .limit(page.limit)
     .offset(page.offset)
@@ -247,8 +234,6 @@ async function noTargetRows(
   }));
 }
 
-// Culqi's serial should agree with the one fulfillment keyed in by hand. A
-// disagreement means one of the two is about the wrong device.
 async function serialMismatchRows(
   db: DatabaseExecutor,
   page: Page,

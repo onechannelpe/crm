@@ -73,8 +73,6 @@ const GPV_TABS: ReadonlyArray<TabItem<GpvTabId>> = [
   { id: "culqi", label: "Vista Culqi" },
 ];
 
-// More lines and the cohort curve stops being readable. Newest cohorts are the
-// ones anyone is asking about.
 const MAX_RAMP_SERIES = 5;
 
 export function MerchantGpvDashboard() {
@@ -86,8 +84,6 @@ export function MerchantGpvDashboard() {
     initialValue: EMPTY_OPTIONS,
   });
 
-  // Attainment is a calendar-month question: the target is a flat monthly
-  // number, so the newest month with data is the one worth landing on.
   const month = createMemo(() => filter().month ?? options().months[0] ?? null);
 
   const attainment = createAsync(
@@ -110,8 +106,6 @@ export function MerchantGpvDashboard() {
     initialValue: EMPTY_QUALITY,
   });
 
-  // Newest cohorts last so the ramp reads left-to-right oldest-to-newest,
-  // matching how the legend is scanned.
   const rampSeries = createMemo(() =>
     ramp()
       .slice(-MAX_RAMP_SERIES)
@@ -130,13 +124,14 @@ export function MerchantGpvDashboard() {
     return current ? formatMonth(current) : "—";
   });
 
-  // From coverage, not from summing the board: the board only holds RUC-months
-  // the ladder could attribute, and that is never all of them. Summing it would
-  // report a smaller book than the dealer actually sold.
+  // Seller rows exclude unattributed volume; coverage is the full monthly GPV.
   const monthGpv = createMemo(() => attainment().coverage.totalGpv);
   const attributedGpv = createMemo(() => attainment().coverage.attributedGpv);
   const monthTarget = createMemo(() =>
-    attainment().sellers.reduce((total, row) => total + row.projectedGpv, 0),
+    attainment().sellers.reduce(
+      (total, row) => total + (row.projectedGpv ?? 0),
+      0,
+    ),
   );
   const monthDevices = createMemo(() =>
     attainment().sellers.reduce((total, row) => total + row.deviceCount, 0),
@@ -261,7 +256,7 @@ export function MerchantGpvDashboard() {
                       label: row.label,
                       sublabel: row.sublabel ?? undefined,
                       value: row.gpv,
-                      target: row.projectedGpv || null,
+                      target: row.projectedGpv,
                       href: row.id
                         ? `/settings/members/${row.id}?tab=capacity`
                         : undefined,
@@ -275,7 +270,7 @@ export function MerchantGpvDashboard() {
                     key: row.id ?? "unassigned",
                     label: row.label,
                     value: row.gpv,
-                    target: row.projectedGpv || null,
+                    target: row.projectedGpv,
                   }))}
                 />
 

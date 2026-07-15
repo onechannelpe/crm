@@ -13,9 +13,7 @@ interface GaugeProps {
 }
 
 export function Gauge(props: GaugeProps) {
-  // A target of zero is a real target ("we expect nothing here"), but it cannot
-  // be attained against, so the bar and the percentage need a positive one while
-  // the label below only needs it to exist.
+  // Zero is displayed as a target but cannot supply an attainment ratio.
   const positiveTarget = () =>
     props.target != null && props.target > 0 ? props.target : null;
 

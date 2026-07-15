@@ -1,6 +1,8 @@
 import { A } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
+import { Present } from "~/components/ui/control-flow/present";
+
 import { formatRatio, formatSoles } from "../format";
 
 import styles from "./bar-list.module.css";
@@ -54,13 +56,13 @@ export function BarList(props: BarListProps) {
                   )}
                 </Show>
                 <span class={styles.value}>{formatSoles(row.value)}</span>
-                <Show when={row.target}>
+                <Present when={row.target}>
                   {(target) => (
                     <span class={styles.ratio}>
                       {formatRatio(row.value, target())}
                     </span>
                   )}
-                </Show>
+                </Present>
               </div>
               <div class={styles.track}>
                 <div

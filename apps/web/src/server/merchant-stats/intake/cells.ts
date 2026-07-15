@@ -1,9 +1,5 @@
 import type { GpvCellValue } from "./types";
 
-// The workbook is read with cellDates:true, so cells arrive as Date | number |
-// string | null. These coercers narrow each cell to the shape a column needs
-// and keep RUC/serial values as digit strings (never scientific notation).
-
 export function cellText(value: GpvCellValue): string {
   if (value == null) return "";
   if (value instanceof Date) return isoDate(value);
@@ -43,7 +39,6 @@ export function cellDateOrNull(value: GpvCellValue): string | null {
   return parseFlexibleDate(text);
 }
 
-// anomes_vta like 202605 -> first day of that month (2026-05-01).
 export function saleMonthFromAnomes(value: GpvCellValue): string | null {
   const text = cellText(value).replace(/\D/g, "");
   if (text.length !== 6) return null;
@@ -77,15 +72,10 @@ function isoDate(date: Date): string {
     .padStart(2, "0")}-${date.getUTCDate().toString().padStart(2, "0")}`;
 }
 
-// The dealer export writes ultima_trx / dia_activo / dia_prueba as ISO and
-// fecha_venta as d/m/y. Measured across the sample: of 1,340 fecha_venta cells,
-// 1,013 are provably d/m/y (a first part above 12) and none are provably m/d/y,
-// so the d/m/y default below is right for every one of the 327 that could be
-// read either way.
-//
-// The m/d/y branch is a guard, not a live path: if Culqi ever flips the export's
-// locale, an unambiguous cell steers the whole cell rather than silently
-// transposing the day and the month.
+// Dealer columns ultima_trx, dia_activo, and dia_prueba use ISO dates.
+// fecha_venta uses d/m/y. In sampled exports, 1,013 of 1,340 cells prove
+// d/m/y and none prove m/d/y, so the 327 ambiguous cells default to d/m/y.
+// A cell whose second part exceeds 12 identifies m/d/y if the export changes locale.
 function parseFlexibleDate(text: string): string | null {
   const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (iso) return buildDate(iso[1], Number(iso[2]), Number(iso[3]));

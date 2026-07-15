@@ -6,12 +6,8 @@ interface PresentProps<T> {
   children: (value: Accessor<T>) => JSX.Element;
 }
 
-// <Show> narrows to NonNullable<T> in its types but checks truthiness at
-// runtime. For a number that is a trap: 0 is present, and `<Show when={gpv}>`
-// renders the fallback for a merchant that simply billed nothing.
-//
-// Present keys on `!= null` instead. The value is boxed so the underlying Show
-// always sees a truthy object, which is what lets 0, "" and false through.
+// Solid's Show checks truthiness, but 0, false, and "" are present values here.
+// Box values after a null check so its type guard and runtime behavior agree.
 export function Present<T>(props: PresentProps<T>): JSX.Element {
   return (
     <Show

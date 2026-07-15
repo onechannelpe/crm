@@ -10,11 +10,6 @@ export interface ResolveAttributionInput {
   now: Date;
 }
 
-// The sales manager's verdict on a RUC-month the ladder could not settle.
-// Terminal: method 'manual' is never revisited by an import.
-//
-// Returns the number of rows changed so the caller can tell "resolved" from
-// "that RUC-month does not exist".
 export async function resolveAttribution(
   db: DatabaseExecutor,
   input: ResolveAttributionInput,

@@ -16,8 +16,6 @@ import type {
   UserId,
 } from "~/server/shared/ids";
 
-// Vocab kept as string unions so the intake maps raw file values onto them and
-// the boundary validates. Unknown products are stored raw rather than rejected.
 export type MerchantProduct = "CULQIFULL" | "CULQILINK" | "CULQIONLINE";
 
 export interface MerchantReportsTable {
@@ -28,8 +26,6 @@ export interface MerchantReportsTable {
   storage_key: string;
   source_filename: string;
   uploaded_by: IdColumn<UserId>;
-  // Default 0 and filled in when the job applies the file: the row is created
-  // the moment the upload is accepted, before anything has been counted.
   rows_total: Generated<number>;
   rows_valid: Generated<number>;
   rows_rejected: Generated<number>;
@@ -80,7 +76,6 @@ export interface MerchantSaleGpvTable {
   sale_id: IdColumn<MerchantSaleId>;
   month_offset: number;
   sale_month: string;
-  // GENERATED ALWAYS AS (sale_month + month_offset months). Never written.
   realized_month: Generated<string>;
   gpv: number;
   trx: number;
@@ -88,7 +83,6 @@ export interface MerchantSaleGpvTable {
   report_id: IdColumn<MerchantReportId>;
 }
 
-// A view over merchant_sale_gpv. Read-only: nothing inserts into it.
 export interface MerchantMonthlyGpvTable {
   ruc: string;
   month: string;
@@ -113,8 +107,6 @@ export interface MerchantMonthlyAttributionTable {
 export interface MerchantTargetsTable {
   ruc: string;
   effective_from: string;
-  // Null means "no projection from this date on", which is not the same claim
-  // as a projection of zero: only the first leaves the attainment denominator.
   projected_gpv: number | null;
   set_by: IdColumn<UserId>;
   set_at: Date;

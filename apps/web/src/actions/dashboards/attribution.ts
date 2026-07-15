@@ -10,8 +10,6 @@ import { parseObject, validationFail } from "~/server/shared/parsing";
 import { createEventsRepo } from "~/server/shared/repos-events";
 import { Ok } from "~/server/shared/result";
 
-// The sales manager's verdict on a RUC-month the ladder could not settle.
-// Terminal: an import never revisits a row a human decided.
 export async function resolveAttribution(raw: unknown): Promise<{ ok: true }> {
   return runAction({
     name: "dashboards.attribution.resolve",
@@ -25,33 +23,37 @@ export async function resolveAttribution(raw: unknown): Promise<{ ok: true }> {
         branchId: r.optId("branchId", BranchId) ?? null,
       })),
 
-    audit: (input) => ({ ruc: input.ruc, month: input.month }),
+    audit: ({ ruc, month }) => ({ ruc, month }),
 
-    execute: async (ctx, input) => {
+    execute: async ({ actor, now }, input) => {
       const db = getServerRuntime().infra.db;
-      const now = ctx.now();
+      const events = createEventsRepo(db);
+      const occurredAt = now();
 
-      const updated = await writeResolution(db, {
+      const updatedCount = await writeResolution(db, {
         ruc: input.ruc,
         month: input.month,
         sellerUserId: input.sellerUserId,
         branchId: input.branchId,
-        resolvedBy: ctx.actor.userId,
-        now,
+        resolvedBy: actor.userId,
+        now: occurredAt,
       });
 
-      if (updated === 0) throwDomain(fail("merchant_attribution_not_found"));
+      if (updatedCount === 0) {
+        throwDomain(fail("merchant_attribution_not_found"));
+      }
 
-      // The telemetry hook above records that an edit happened; only an event
-      // records what it changed to, and only an event reaches the timeline.
-      await createEventsRepo(db).append({
+      await events.append({
         entityType: "merchant_ruc",
         entityId: input.ruc,
         type: "merchant_attribution_resolved",
-        actorUserId: ctx.actor.userId,
+        actorUserId: actor.userId,
         subjectUserId: input.sellerUserId,
-        payload: { month: input.month, branchId: input.branchId },
-        occurredAt: now,
+        payload: {
+          month: input.month,
+          branchId: input.branchId,
+        },
+        occurredAt,
       });
 
       return Ok({ ok: true as const });
@@ -59,11 +61,6 @@ export async function resolveAttribution(raw: unknown): Promise<{ ok: true }> {
   });
 }
 
-// The merchant's projection: one number, "debería rondar los 60k".
-//
-// Effective-dated, so this is a new version rather than an edit. Months before
-// effectiveFrom keep reading the number they were measured against, which is
-// what stops a raise today from making a closed month retroactively a miss.
 export async function setMerchantTarget(raw: unknown): Promise<{ ok: true }> {
   return runAction({
     name: "dashboards.target.set",
@@ -73,35 +70,34 @@ export async function setMerchantTarget(raw: unknown): Promise<{ ok: true }> {
       parseObject(raw, validationFail, (r) => ({
         ruc: r.str("ruc"),
         effectiveFrom: r.str("effectiveFrom"),
-        // Null records "no projection from here on", which is not the same claim
-        // as a projection of zero: only the first leaves the denominator.
         projectedGpv: r.optNum("projectedGpv"),
       })),
 
-    audit: (input) => ({ ruc: input.ruc, effectiveFrom: input.effectiveFrom }),
+    audit: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
 
-    execute: async (ctx, input) => {
+    execute: async ({ actor, now }, input) => {
       const db = getServerRuntime().infra.db;
-      const now = ctx.now();
+      const events = createEventsRepo(db);
+      const occurredAt = now();
 
       await setTarget(db, {
         ruc: input.ruc,
         effectiveFrom: input.effectiveFrom,
         projectedGpv: input.projectedGpv,
-        setBy: ctx.actor.userId,
-        now,
+        setBy: actor.userId,
+        now: occurredAt,
       });
 
-      await createEventsRepo(db).append({
+      await events.append({
         entityType: "merchant_ruc",
         entityId: input.ruc,
         type: "merchant_target_set",
-        actorUserId: ctx.actor.userId,
+        actorUserId: actor.userId,
         payload: {
           effectiveFrom: input.effectiveFrom,
           projectedGpv: input.projectedGpv,
         },
-        occurredAt: now,
+        occurredAt,
       });
 
       return Ok({ ok: true as const });

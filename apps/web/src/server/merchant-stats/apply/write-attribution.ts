@@ -14,44 +14,31 @@ import { addMonths } from "../intake/cells";
 import type { SourceRow } from "../intake/types";
 import { chunks } from "./chunks";
 
-const ATTRIBUTION_CHUNK = 1000;
+const ATTRIBUTION_CHUNK_SIZE = 1000;
 
-// The insert shape, taken from the table rather than restated, so a schema
-// change surfaces here instead of at the call site.
-type AttributionValues = Insertable<Database["merchant_monthly_attribution"]>;
+type AttributionInsert = Insertable<Database["merchant_monthly_attribution"]>;
 
 export interface StampedAttribution {
   conflicts: number;
   needsReview: number;
 }
 
-// Stamps credit for every (ruc, month) the report realizes.
-//
-// Immutability rule: a month that already credits someone is never re-decided by
-// an import. That is what stops a rep leaving in July from rewriting May.
-//
-// A month with NO seller is a different case. It is an absence, not a decision,
-// and filling it in is not a rewrite. The CRM's own evidence arrives on its own
-// schedule -- a serial keyed into fulfillment after the first import should be
-// able to turn `none` into `exact` on the next one. The guard stays narrow:
-// never touch a row a human resolved, never touch a row that already credits
-// someone.
 export async function stampAttribution(
   db: DatabaseExecutor,
   ctx: AttributionContext,
   rows: readonly SourceRow[],
   now: Date,
 ): Promise<StampedAttribution> {
-  const values: AttributionValues[] = [];
+  const attributions: AttributionInsert[] = [];
   let conflicts = 0;
-  let review = 0;
+  let needsReviewCount = 0;
 
-  for (const [, month] of groupByRucMonth(ctx, rows)) {
+  for (const month of groupByRucMonth(ctx, rows).values()) {
     const verdict = attributeMonth(month.sales, (userId) =>
       branchOfUser(ctx, userId),
     );
 
-    values.push({
+    attributions.push({
       ruc: month.ruc,
       month: month.month,
       seller_user_id: verdict.sellerUserId,
@@ -64,13 +51,16 @@ export async function stampAttribution(
       stamped_at: now,
     });
 
-    if (verdict.confidence === "conflict") conflicts++;
-    if (needsReview(verdict.confidence)) review++;
+    if (verdict.confidence === "conflict") {
+      conflicts++;
+    }
+
+    if (needsReview(verdict.confidence)) {
+      needsReviewCount++;
+    }
   }
 
-  for (const chunk of chunks(values, ATTRIBUTION_CHUNK)) {
-    // One transaction, one connection: awaiting here is not a cost, it is the
-    // only option.
+  for (const chunk of chunks(attributions, ATTRIBUTION_CHUNK_SIZE)) {
     // eslint-disable-next-line no-await-in-loop
     await db
       .insertInto("merchant_monthly_attribution")
@@ -86,14 +76,17 @@ export async function stampAttribution(
             evidence: eb.ref("excluded.evidence"),
             stamped_at: eb.ref("excluded.stamped_at"),
           }))
-          // Only an uncredited month nobody has ruled on.
+          // Imports may fill missing credit, but never replace a decision or manual verdict.
           .where("merchant_monthly_attribution.seller_user_id", "is", null)
           .where("merchant_monthly_attribution.resolved_by", "is", null),
       )
       .execute();
   }
 
-  return { conflicts, needsReview: review };
+  return {
+    conflicts,
+    needsReview: needsReviewCount,
+  };
 }
 
 interface RucMonth {
@@ -102,9 +95,6 @@ interface RucMonth {
   sales: SaleEvidence[];
 }
 
-// A RUC-month is decided from every device whose volume lands in it, so the
-// grouping is the grain. A device contributes its evidence to each of the four
-// months it reports.
 function groupByRucMonth(
   ctx: AttributionContext,
   rows: readonly SourceRow[],
@@ -113,15 +103,22 @@ function groupByRucMonth(
 
   for (const row of rows) {
     const evidence = saleEvidenceOf(ctx, row);
+
     for (const observation of row.gpv) {
       const month = addMonths(row.saleMonth, observation.offset);
       const key = `${row.ruc}:${month}`;
       const existing = byKey.get(key);
+
       if (existing) {
         existing.sales.push(evidence);
         continue;
       }
-      byKey.set(key, { ruc: row.ruc, month, sales: [evidence] });
+
+      byKey.set(key, {
+        ruc: row.ruc,
+        month,
+        sales: [evidence],
+      });
     }
   }
 

@@ -34,8 +34,6 @@ const POLL_INTERVAL_MS = 1500;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// An import can introduce new months, products, sellers and zones, so the filter
-// options are revalidated alongside the data they describe.
 async function refreshDashboards(): Promise<void> {
   await Promise.all([
     revalidate(attainmentQuery.key),
@@ -49,17 +47,12 @@ async function refreshDashboards(): Promise<void> {
 
 export function UploadReport(props: { onClose?: () => void }) {
   const [phase, setPhase] = createSignal<Phase>({ kind: "idle" });
-  // Optional. The dealer names every export with its cut, so this stays empty
-  // unless the file was renamed on the way here.
   const [cutAt, setCutAt] = createSignal("");
   let cancelled = false;
   onCleanup(() => {
     cancelled = true;
   });
 
-  // One accessor per kind. Narrowing inside a function body is something
-  // TypeScript does natively from the discriminant, so the Switch below needs no
-  // casts to read a phase's own fields.
   const processing = () => {
     const current = phase();
     return current.kind === "processing" ? current : null;
@@ -87,14 +80,10 @@ export function UploadReport(props: { onClose?: () => void }) {
       }
 
       const jobId = upload.jobId;
-      // The row count is not known yet: the upload only stores and books the
-      // file, and the worker reports the total once it has decoded it.
       setPhase({ kind: "processing", applied: 0, total: 0 });
 
       for (;;) {
         if (cancelled) return;
-        // A status poll is sequential by nature: there is nothing to run in
-        // parallel with, and the next read depends on this one.
         // eslint-disable-next-line no-await-in-loop
         const job = await getMerchantReportJob(jobId);
         if (job.status === "COMPLETED") {

@@ -17,7 +17,6 @@ import { Ok } from "~/server/shared/result";
 const DEFAULT_PAGE = 60;
 const MAX_PAGE = 200;
 
-// The counters everyone with dashboards:read sees on the panel.
 export async function getQualitySummary(): Promise<QualitySummary> {
   return runAction({
     name: "dashboards.quality.summary",
@@ -29,8 +28,6 @@ export async function getQualitySummary(): Promise<QualitySummary> {
   });
 }
 
-// The rows behind a counter. Gated tighter than the summary: this is the work
-// queue, and only the people who can resolve a row need to read it.
 export async function getQualityRows(raw: unknown): Promise<QualityRow[]> {
   return runAction({
     name: "dashboards.quality.rows",

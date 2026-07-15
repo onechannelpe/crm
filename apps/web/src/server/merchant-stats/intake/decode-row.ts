@@ -28,14 +28,9 @@ export interface DecodeRowInput {
   rowNumber: number;
   headers: readonly string[];
   cells: readonly GpvCellValue[];
-  // First of the cut's month. Anything past it is a structural zero, not a
-  // realized zero, and would fill in on a later snapshot.
   cutMonth: string;
 }
 
-// Reads raw cells for one worksheet row, validates identity, and projects onto
-// SourceRow. Pure: no DB, no clock, no IO. Everything the pipeline knows about
-// interpreting the file lives here and is replayable from the stored .xlsx.
 export function decodeRow(input: DecodeRowInput): Result<SourceRow, Rejection> {
   const cells = toCells(input.headers, input.cells);
   const raw = toRawRecord(input.headers, input.cells);

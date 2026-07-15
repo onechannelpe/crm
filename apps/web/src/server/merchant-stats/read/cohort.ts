@@ -13,10 +13,6 @@ import { creditFilter } from "./filter";
 import { displayName } from "./names";
 import { targetAsOfSaleMonth } from "./target-as-of";
 
-// The ramp curve: one line per sale-month cohort, tracking that cohort across
-// its own months (m0 = the sale month, m1 the next). This is the one surface
-// where the cohort axis is the point, so it reads gpv rows by offset rather than
-// the calendar view.
 export async function getCohortRamp(
   db: DatabaseExecutor,
   filter: BookFilter,
@@ -24,8 +20,6 @@ export async function getCohortRamp(
   const rows = await db
     .selectFrom("merchant_sale_gpv as g")
     .innerJoin("merchant_sales as s", "s.id", "g.sale_id")
-    // Credit is a property of the RUC's sale month, so the cohort's own month is
-    // the one that decides whose line this is.
     .innerJoin("merchant_monthly_attribution as a", (join) =>
       join.onRef("a.ruc", "=", "s.ruc").onRef("a.month", "=", "s.sale_month"),
     )
@@ -67,9 +61,7 @@ export async function getCohortRamp(
   return [...byCohort.values()];
 }
 
-// A cohort's projection is the sum of its RUCs' projections, counted once per
-// RUC however many devices it bought. Read at sale grain and de-duplicated by
-// RUC, since the projection is per merchant and not per device.
+// Targets are per RUC, so a cohort counts each RUC once regardless of device count.
 async function cohortTargets(
   db: DatabaseExecutor,
   filter: BookFilter,
@@ -99,13 +91,6 @@ async function cohortTargets(
   return byMonth;
 }
 
-// One row per sale, with its cohort measures pivoted back onto it. The intake
-// un-pivots gpv_m0..m3 into per-offset facts so the months are addressable; this
-// puts them back into the M0/M1/M2/M3 shape a reader scans across.
-//
-// The pivot is done here rather than in SQL: eight conditional aggregates and a
-// dynamic row key were how the old version needed an unsafe cast to read its own
-// output. Mapping COHORT_OFFSETS over long rows cannot drift from the schema.
 export async function getCohortRows(
   db: DatabaseExecutor,
   filter: BookFilter,

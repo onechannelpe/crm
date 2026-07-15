@@ -3,12 +3,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { displayName } from "./names";
 
-// The GPV picture on a merchant's own record, keyed by RUC, the grain at which
-// merchant data is stored.
-//
-// Nothing here needs the organization to exist: the RUC is the key, so a client
-// registered long after the dealer sold to them lights up immediately rather
-// than waiting for the next import to backfill a link.
 export async function getMerchantStatsByRuc(
   db: DatabaseExecutor,
   ruc: string,
@@ -33,8 +27,7 @@ export async function getMerchantStatsByRuc(
   const [target, attribution] = await Promise.all([
     latestMonth === null
       ? undefined
-      : // The projection in force for the newest month, which is what the gauge
-        // measures that month's GPV against. A later version does not apply to it.
+      : // Read the target in force for the latest realized month.
         db
           .selectFrom("merchant_targets")
           .select("projected_gpv")

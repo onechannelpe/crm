@@ -7,18 +7,7 @@ import { saleIdentityKey } from "../intake/sale-identity";
 import type { SourceRow } from "../intake/types";
 import { chunks } from "./chunks";
 
-// Columns every snapshot restates. Identity (merchant_id, product,
-// serial_number), the cohort anchor (sale_month) and provenance
-// (first_seen_report_id, created_at) are absent on purpose: a reimport must not
-// rewrite them.
-//
-// `ruc` IS refreshed. A merchant can re-register, and the monthly rollup is a
-// view, so it simply follows -- there is no cached key left behind holding the
-// old RUC's volume.
-//
-// Attribution is not here and never will be: credit is stamped per (ruc, month)
-// in merchant_monthly_attribution, not recomputed from current CRM state on
-// every import.
+// Snapshot fields. Identity, sale month, and first-seen provenance are immutable.
 const REFRESHED_COLUMNS = [
   "ruc",
   "sold_at",
@@ -46,12 +35,6 @@ const SALES_CHUNK = 1000;
 
 export type SaleIdByIdentity = Map<string, MerchantSaleId>;
 
-// Upserts on the (merchant_id, product, coalesce(serial_number,'')) identity.
-// Returns the id for every source row, inserted or updated, so gpv rows can
-// reference it.
-//
-// Callers must pass rows already cleared by partitionBySaleMonth: a row whose
-// sale_month moved is rejected, not written.
 export async function upsertSales(
   db: DatabaseExecutor,
   reportId: MerchantReportId,
@@ -62,8 +45,6 @@ export async function upsertSales(
 
   for (const chunk of chunks(dedupeByIdentity(rows), SALES_CHUNK)) {
     const values = chunk.map((row) => toSaleValues(row, reportId, now));
-    // One transaction, one connection: awaiting here is not a cost, it is the
-    // only option. Promise.all would queue on the same connection anyway.
     // eslint-disable-next-line no-await-in-loop
     const returned = await db
       .insertInto("merchant_sales")
@@ -128,8 +109,7 @@ function toSaleValues(row: SourceRow, reportId: MerchantReportId, now: Date) {
 }
 
 function dedupeByIdentity(rows: readonly SourceRow[]): SourceRow[] {
-  // A multi-row upsert cannot touch the same conflict target twice, so keep the
-  // last occurrence when a file repeats an identity (it should not, but be safe).
+  // A multi-row upsert cannot touch one conflict target twice.
   const byKey = new Map<string, SourceRow>();
   for (const row of rows) {
     byKey.set(

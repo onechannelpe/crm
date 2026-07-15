@@ -1,12 +1,6 @@
 import { normalizeCsvHeader } from "~/server/csv/core";
 
-// Canonical (accent-stripped, snake_cased) header names that normalizeGpvHeader
-// maps source columns onto.
-//
-// The only input is the raw dealer export (planning-report__dealer-*.xlsx). The
-// team's hand-edited "GPV AL" workbook is not an input: it carried ZONAL /
-// VENDEDOR R / PROYECTADO columns typed by a human, and replacing that manual
-// step is the point of this pipeline.
+// Raw dealer exports
 export const GPV_COLUMNS = {
   saleMonth: "anomes_vta",
   ruc: "identificador_tributario",
@@ -16,8 +10,7 @@ export const GPV_COLUMNS = {
   soldAt: "fecha_venta",
   tradeName: "nbr_comercial",
   legalName: "nbr_razon_social",
-  // Culqi's "usuario": who the sale was registered under at Culqi. Reference
-  // and reconciliation only, never the real seller.
+  // Culqi's registered usuario IS NOT the registered seller in the crm.
   culqiUserCode: "cod_vendedor",
   culqiUserName: "vendedor",
   mesa: "mesa",
@@ -36,7 +29,6 @@ export const GPV_COLUMNS = {
   m0Plus15dTrx: "trx_m0_15d",
 } as const;
 
-// Minimal set that marks a worksheet as a GPV report.
 export const GPV_REQUIRED_HEADERS = [
   GPV_COLUMNS.saleMonth,
   GPV_COLUMNS.ruc,

@@ -24,32 +24,38 @@ export interface UploadedReport {
 
 interface Upload {
   file: File;
-  // The cut the export was taken at. Proposed from the filename in the panel and
-  // submitted back, so the operator confirms it rather than the decoder guessing
-  // it from the data and reading a clock to sanity-check the guess.
   cutAt: Date;
 }
 
 function getExtension(filename: string): string | null {
   const dot = filename.lastIndexOf(".");
-  if (dot === -1) return null;
+
+  if (dot === -1) {
+    return null;
+  }
+
   return filename.slice(dot + 1).toLowerCase() || null;
 }
 
 function parseUpload(formData: FormData): Result<Upload, DomainError> {
   const file = formData.get("file");
-  if (!(file instanceof File)) return Err(fail("file_required"));
+
+  if (!(file instanceof File)) {
+    return Err(fail("file_required"));
+  }
+
   if (getExtension(file.name) !== "xlsx") {
     return Err(fail("unsupported_file_type"));
   }
+
   if (file.size > maxUploadBytesForFilePurpose("integration_import")) {
     return Err(fail("file_too_large"));
   }
 
-  const raw = formData.get("cutAt");
+  const rawCutAt = formData.get("cutAt");
   const cutAt =
-    typeof raw === "string" && raw.length > 0
-      ? new Date(raw)
+    typeof rawCutAt === "string" && rawCutAt.length > 0
+      ? new Date(rawCutAt)
       : cutAtFromFilename(file.name);
 
   if (!cutAt || Number.isNaN(cutAt.getTime())) {
@@ -59,12 +65,6 @@ function parseUpload(formData: FormData): Result<Upload, DomainError> {
   return Ok({ file, cutAt });
 }
 
-// Validates, stores and books the file. It does not parse it: a 1,300-row
-// workbook costs ~400ms to decode and that is the queue's job.
-//
-// The storage key is the content hash, so re-uploading the same bytes rewrites
-// the same object instead of leaving a copy behind, and the duplicate is caught
-// by merchant_reports.content_sha256 before a job is ever created.
 export async function uploadMerchantReport(
   formData: FormData,
 ): Promise<UploadedReport> {
@@ -72,6 +72,7 @@ export async function uploadMerchantReport(
     name: "dashboards.import.upload",
     access: { kind: "permission", permission: "dashboards:manage" },
     parse: () => parseUpload(formData),
+
     audit: ({ file, cutAt }) => ({
       fileName: file.name,
       fileSize: file.size,
@@ -86,7 +87,7 @@ export async function uploadMerchantReport(
 
       await runtime.files.storage.putBytes(storageKey, bytes);
 
-      const accepted = await acceptReport(runtime.infra.db, {
+      const acceptance = await acceptReport(runtime.infra.db, {
         contentSha256: sha256,
         cutAt,
         storageKey,
@@ -96,9 +97,9 @@ export async function uploadMerchantReport(
       });
 
       return Ok({
-        jobId: accepted.kind === "accepted" ? accepted.jobId : null,
+        jobId: acceptance.kind === "accepted" ? acceptance.jobId : null,
         cutAt: cutAt.toISOString(),
-        duplicate: accepted.kind === "duplicate",
+        duplicate: acceptance.kind === "duplicate",
       });
     },
   });
@@ -116,14 +117,16 @@ export async function getMerchantReportJob(
         jobId: r.id("jobId", IntegrationJobId),
       })),
 
-    audit: (query) => ({ jobId: query.jobId }),
+    audit: ({ jobId }) => ({ jobId }),
 
-    execute: async (_ctx, query) => {
+    execute: async (_ctx, { jobId }) => {
       const { integration } = getServerRuntime().integrations;
-      const job = await integration.jobs.findById(query.jobId);
+      const job = await integration.jobs.findById(jobId);
+
       if (!job || job.type !== "import_gpv") {
         throwDomain(fail("import_job_not_found"));
       }
+
       return Ok(job);
     },
   });

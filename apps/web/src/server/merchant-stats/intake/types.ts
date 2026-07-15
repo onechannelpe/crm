@@ -1,13 +1,7 @@
-// The decoder's vocabulary. Everything here is plain data: no DB rows, no ids,
-// no clock. A SourceRow is what one worksheet row means, nothing more.
-
 export type GpvCellValue = string | number | Date | boolean | null | undefined;
 
 export type GpvRawRecord = Record<string, string>;
 
-// One realized cohort step. The calendar month is deliberately absent: the
-// schema derives it from sale_month + offset, so there is no second copy here
-// to disagree with it.
 export interface GpvObservation {
   offset: number;
   gpv: number;
@@ -51,8 +45,6 @@ export interface Rejection {
   raw: GpvRawRecord;
 }
 
-// What one workbook means. Pure: the same bytes and the same cut always decode
-// to the same value, which is what makes a stored report replayable.
 export interface ParsedReport {
   rows: SourceRow[];
   rejections: Rejection[];

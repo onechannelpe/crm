@@ -18,17 +18,9 @@ interface ExtractedSheet {
 }
 
 export interface ParseReportInput {
-  // The cut the export was taken at, read from the filename at the boundary and
-  // confirmed by the uploader. An input rather than an inference: the decoder
-  // must not read a clock or guess from the data, or the same bytes stop
-  // decoding to the same rows and a stored report stops being replayable.
   cutAt: Date;
 }
 
-// Turns one workbook into rows and rejections. Pure: no clock, no DB, no IO.
-//
-// A row that cannot be read becomes a Rejection rather than failing the file;
-// only a workbook with no GPV worksheet at all is an error.
 export function parseReport(
   buffer: ArrayBuffer,
   input: ParseReportInput,
@@ -62,8 +54,7 @@ function isoDay(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-// The dealer export carries a single worksheet, but it is named inconsistently
-// enough that matching on columns beats matching on a name. Ties break on row
+// The dealer export carries a single worksheet. Ties break on row
 // count so a summary tab can never outrank the data.
 function selectGpvSheet(
   workbook: WorkBook,
