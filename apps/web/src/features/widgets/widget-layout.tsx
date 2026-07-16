@@ -8,6 +8,10 @@ export function WidgetGrid(props: { children: JSX.Element }) {
   return <div class={styles.grid}>{props.children}</div>;
 }
 
+export function WidgetStatGrid(props: { children: JSX.Element }) {
+  return <div class={styles.statGrid}>{props.children}</div>;
+}
+
 export function WidgetGridItem(props: {
   span: WidgetSpan;
   children: JSX.Element;

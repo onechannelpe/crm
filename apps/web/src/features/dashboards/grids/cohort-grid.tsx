@@ -1,27 +1,24 @@
-import { createMemo, createResource, createSignal } from "solid-js";
+import { ErrorBoundary, Suspense } from "solid-js";
 
 import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
-import type {
-  BookFilter,
-  CohortSaleRow,
-  FilterOptions,
-} from "~/contracts/merchant-stats/views";
+import type { CohortSaleRow } from "~/contracts/merchant-stats/views";
 import { COHORT_OFFSETS } from "~/contracts/merchant-stats/vocabulary";
 import { DataGrid } from "~/features/data-grid/components/grid";
+import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { cohortRowsQuery } from "~/lib/queries/dashboards";
 
 import { formatInteger, formatMonth, formatSolesCompact } from "../format";
-import { RecordFilterBar } from "./record-filter-bar";
+import { GpvFilterBar } from "../gpv-filter-bar";
+import type { GpvView } from "../gpv-view";
+import { GPV_GRID_PAGE_SIZE, useDashboardGrid } from "./use-dashboard-grid";
 
 import styles from "./grid-surface.module.css";
-
-const PAGE = 60;
 
 type Row = CohortSaleRow & { id: string };
 
@@ -111,23 +108,14 @@ const COLUMNS = [
   },
 ] satisfies ReadonlyArray<DataGridColumn<Row>>;
 
-export function CohortGrid(props: { options: FilterOptions }) {
-  const [filter, setFilter] = createSignal<BookFilter>({});
-  const [limit, setLimit] = createSignal(PAGE);
-
-  const [page] = createResource(
-    () => ({ filter: filter(), limit: limit() }),
-    (input) =>
-      cohortRowsQuery({
-        filter: input.filter,
-        page: { limit: input.limit, offset: 0 },
-      }),
-  );
-
-  const rows = createMemo<Row[]>(() =>
+export function CohortGrid(props: { view: GpvView }) {
+  const grid = useDashboardGrid<CohortSaleRow, Row>({
+    pageSize: GPV_GRID_PAGE_SIZE,
+    resetOn: props.view.filter,
+    load: (page) => cohortRowsQuery({ filter: props.view.filter(), page }),
     // eslint-disable-next-line oxc/no-map-spread
-    (page.latest ?? []).map((row) => ({ ...row, id: row.saleId })),
-  );
+    toRow: (row) => ({ ...row, id: row.saleId }),
+  });
 
   const rowOpen = useSidePanelRowOpen<Row>((row) =>
     createDataGridDetailSidePanelPage({
@@ -163,32 +151,30 @@ export function CohortGrid(props: { options: FilterOptions }) {
     }),
   );
 
+  const renderGrid = (source: DataGridSource<Row>) => (
+    <DataGrid
+      ariaLabel="Cohortes de ventas"
+      columns={COLUMNS}
+      emptyState="No hay ventas para los filtros actuales."
+      onRowOpen={rowOpen}
+      rowOpenIndicator="panel"
+      loadMore={{
+        hasMore: grid.hasMore(),
+        loading: grid.loading(),
+        onLoadMore: grid.onLoadMore,
+      }}
+      source={source}
+    />
+  );
+
   return (
     <div class={styles.surface}>
-      <RecordFilterBar
-        options={props.options}
-        filter={filter()}
-        onChange={(patch) => {
-          setFilter((current) => ({ ...current, ...patch }));
-          setLimit(PAGE);
-        }}
-      />
-      <DataGrid
-        ariaLabel="Cohortes de ventas"
-        columns={COLUMNS}
-        emptyState="No hay ventas para los filtros actuales."
-        onRowOpen={rowOpen}
-        rowOpenIndicator="panel"
-        loadMore={{
-          hasMore: rows().length >= limit(),
-          loading: page.state === "pending" || page.state === "refreshing",
-          onLoadMore: () => void setLimit((value) => value + PAGE),
-        }}
-        source={{
-          status: page.state === "errored" ? "error" : "ready",
-          rows: rows(),
-        }}
-      />
+      <GpvFilterBar view={props.view} />
+      <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
+        <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
+          {renderGrid({ status: "ready", rows: grid.rows() })}
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }

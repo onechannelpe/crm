@@ -10,14 +10,13 @@ import { formatInteger } from "../format";
 
 import styles from "./quality-panel.module.css";
 
-// Quality queues are standing reconciliation work, ordered by GPV.
 export function QualityPanel(props: { summary: QualitySummary }) {
   return (
     <ul class={styles.list}>
       <For each={QUALITY_ISSUES}>
         {(issue) => (
           <li class={styles.row}>
-            <A href={`/dashboards/calidad/${issue}`} class={styles.link}>
+            <A href={`/dashboards/quality/${issue}`} class={styles.link}>
               <span class={styles.label}>
                 {QUALITY_ISSUE_COPY[issue].label}
               </span>

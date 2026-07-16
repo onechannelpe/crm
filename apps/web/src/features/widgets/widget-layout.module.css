@@ -5,6 +5,15 @@
   padding: var(--spacing-2);
 }
 
+.statGrid {
+  /* Stat tiles need independent rows so charts cannot stretch them. */
+  display: grid;
+  gap: var(--spacing-2);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  padding: var(--spacing-2);
+  padding-bottom: 0;
+}
+
 .item {
   min-width: 0;
 }

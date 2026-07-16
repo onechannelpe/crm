@@ -61,10 +61,9 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
 
 export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
   { pattern: /^\/records\/[^/]+$/ },
-  // Gated tighter than the panel below: a queue is for the people who can
-  // resolve a row, not everyone who can read the counters.
+  // Resolving quality rows requires dashboards:manage; the summary requires dashboards:read.
   {
-    pattern: /^\/dashboards\/calidad\/[^/]+$/,
+    pattern: /^\/dashboards\/quality\/[^/]+$/,
     permission: "dashboards:manage",
   },
   { pattern: /^\/dashboards\/[^/]+$/, permission: "dashboards:read" },

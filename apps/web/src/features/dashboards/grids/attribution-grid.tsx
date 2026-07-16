@@ -1,5 +1,5 @@
-import { revalidate } from "@solidjs/router";
-import { createMemo, createResource, createSignal } from "solid-js";
+import { createAsync } from "@solidjs/router";
+import { ErrorBoundary, Suspense } from "solid-js";
 
 import {
   resolveAttribution,
@@ -15,69 +15,40 @@ import {
   InlineFieldEditor,
   InlineOptionsEditor,
 } from "~/components/ui/input/inline-field-editor";
-import type {
-  BookFilter,
-  CohortSaleRow,
-  FilterOptions,
-} from "~/contracts/merchant-stats/views";
+import type { CohortSaleRow } from "~/contracts/merchant-stats/views";
 import { DataGrid } from "~/features/data-grid/components/grid";
+import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
-  attainmentQuery,
   cohortRowsQuery,
   merchantFilterOptionsQuery,
-  qualitySummaryQuery,
 } from "~/lib/queries/dashboards";
 
 import { formatMonth, formatSoles } from "../format";
-import { RecordFilterBar } from "./record-filter-bar";
+import { GpvFilterBar } from "../gpv-filter-bar";
+import type { GpvView } from "../gpv-view";
+import { revalidateGpvData } from "../revalidate";
+import { GPV_GRID_PAGE_SIZE, useDashboardGrid } from "./use-dashboard-grid";
 
 import styles from "./grid-surface.module.css";
 
-const PAGE_SIZE = 60;
 const UNASSIGNED = "Sin asignar";
 
-type Row = CohortSaleRow & {
-  id: string;
-};
+type Row = CohortSaleRow & { id: string };
 
-async function revalidateAttributionData(): Promise<void> {
-  await Promise.all([
-    revalidate(cohortRowsQuery.key),
-    revalidate(attainmentQuery.key),
-    revalidate(merchantFilterOptionsQuery.key),
-    revalidate(qualitySummaryQuery.key),
-  ]);
-}
+export function AttributionGrid(props: { view: GpvView }) {
+  const options = createAsync(() => merchantFilterOptionsQuery());
+  const sellers = () => options()?.sellers ?? [];
 
-export function AttributionGrid(props: { options: FilterOptions }) {
-  const [filter, setFilter] = createSignal<BookFilter>({});
-  const [limit, setLimit] = createSignal(PAGE_SIZE);
-
-  const [cohortRows] = createResource(
-    () => ({
-      filter: filter(),
-      limit: limit(),
-    }),
-    (input) =>
-      cohortRowsQuery({
-        filter: input.filter,
-        page: {
-          limit: input.limit,
-          offset: 0,
-        },
-      }),
-  );
-
-  const rows = createMemo<Row[]>(() =>
+  const grid = useDashboardGrid<CohortSaleRow, Row>({
+    pageSize: GPV_GRID_PAGE_SIZE,
+    resetOn: props.view.filter,
+    load: (page) => cohortRowsQuery({ filter: props.view.filter(), page }),
     // eslint-disable-next-line oxc/no-map-spread
-    (cohortRows.latest ?? []).map((row) => ({
-      ...row,
-      id: row.saleId,
-    })),
-  );
+    toRow: (row) => ({ ...row, id: row.saleId }),
+  });
 
-  const columns = createMemo<ReadonlyArray<DataGridColumn<Row>>>(() => [
+  const columns: ReadonlyArray<DataGridColumn<Row>> = [
     {
       key: "ruc",
       label: "Comercio",
@@ -105,13 +76,10 @@ export function AttributionGrid(props: { options: FilterOptions }) {
         renderEditor: (editor) => (
           <InlineOptionsEditor
             ariaLabel="Vendedor real"
-            options={[
-              UNASSIGNED,
-              ...props.options.sellers.map((seller) => seller.name),
-            ]}
+            options={[UNASSIGNED, ...sellers().map((seller) => seller.name)]}
             selected={editor.row.sellerName ?? UNASSIGNED}
             onSubmit={async (name) => {
-              const seller = props.options.sellers.find(
+              const seller = sellers().find(
                 (candidate) => candidate.name === name,
               );
 
@@ -122,7 +90,7 @@ export function AttributionGrid(props: { options: FilterOptions }) {
                 branchId: null,
               });
 
-              await revalidateAttributionData();
+              await revalidateGpvData();
             }}
             onClose={editor.close}
           />
@@ -178,53 +146,37 @@ export function AttributionGrid(props: { options: FilterOptions }) {
                 projectedGpv,
               });
 
-              await revalidateAttributionData();
+              await revalidateGpvData();
             }}
             onClose={editor.close}
           />
         ),
       },
     },
-    {
-      key: "product",
-      label: "Producto",
-      icon: ChartColumn,
-      width: 130,
-      renderCell: (row) => row.product,
-    },
-  ]);
+  ];
+
+  const renderGrid = (source: DataGridSource<Row>) => (
+    <DataGrid
+      ariaLabel="Atribución por RUC y mes"
+      columns={columns}
+      emptyState="No hay ventas para los filtros actuales."
+      loadMore={{
+        hasMore: grid.hasMore(),
+        loading: grid.loading(),
+        onLoadMore: grid.onLoadMore,
+      }}
+      source={source}
+    />
+  );
 
   return (
     <div class={styles.surface}>
-      <RecordFilterBar
-        options={props.options}
-        filter={filter()}
-        onChange={(patch) => {
-          setFilter((current) => ({
-            ...current,
-            ...patch,
-          }));
-          setLimit(PAGE_SIZE);
-        }}
-      />
-
-      <DataGrid
-        ariaLabel="Atribución por RUC y mes"
-        columns={columns()}
-        emptyState="No hay ventas para los filtros actuales."
-        loadMore={{
-          hasMore: rows().length >= limit(),
-          loading:
-            cohortRows.state === "pending" || cohortRows.state === "refreshing",
-          onLoadMore: () => {
-            setLimit((current) => current + PAGE_SIZE);
-          },
-        }}
-        source={{
-          status: cohortRows.state === "errored" ? "error" : "ready",
-          rows: rows(),
-        }}
-      />
+      <GpvFilterBar view={props.view} />
+      <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
+        <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
+          {renderGrid({ status: "ready", rows: grid.rows() })}
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 }

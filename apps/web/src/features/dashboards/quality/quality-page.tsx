@@ -1,5 +1,5 @@
-import { createAsync, revalidate, useParams } from "@solidjs/router";
-import { createMemo, createResource, createSignal } from "solid-js";
+import { createAsync, useParams } from "@solidjs/router";
+import { createMemo, ErrorBoundary, Suspense } from "solid-js";
 
 import { resolveAttribution } from "~/actions/dashboards/attribution";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
@@ -19,31 +19,25 @@ import {
 import type { QualityRow } from "~/contracts/merchant-stats/views";
 import { isQualityIssue } from "~/contracts/merchant-stats/vocabulary";
 import { DataGrid } from "~/features/data-grid/components/grid";
+import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
-  attainmentQuery,
   merchantFilterOptionsQuery,
   qualityRowsQuery,
-  qualitySummaryQuery,
 } from "~/lib/queries/dashboards";
 
 import { formatMonth, formatSoles } from "../format";
+import {
+  GPV_GRID_PAGE_SIZE,
+  useDashboardGrid,
+} from "../grids/use-dashboard-grid";
+import { revalidateGpvData } from "../revalidate";
 
 import styles from "./quality-page.module.css";
 
-const PAGE = 60;
 const UNASSIGNED = "Sin asignar";
 
 type Row = QualityRow & { id: string };
-
-async function commit(): Promise<void> {
-  await Promise.all([
-    revalidate(qualityRowsQuery.key),
-    revalidate(qualitySummaryQuery.key),
-    revalidate(attainmentQuery.key),
-    revalidate(merchantFilterOptionsQuery.key),
-  ]);
-}
 
 export function QualityPage() {
   const params = useParams<{ issue: string }>();
@@ -51,40 +45,30 @@ export function QualityPage() {
     isQualityIssue(params.issue) ? params.issue : null,
   );
 
-  const options = createAsync(() => merchantFilterOptionsQuery(), {
-    initialValue: { branches: [], sellers: [], months: [], products: [] },
+  const options = createAsync(() => merchantFilterOptionsQuery());
+  const sellers = () => options()?.sellers ?? [];
+
+  const grid = useDashboardGrid<QualityRow, Row>({
+    pageSize: GPV_GRID_PAGE_SIZE,
+    resetOn: issue,
+    load: (page) => {
+      const current = issue();
+      return current
+        ? qualityRowsQuery({ issue: current, page })
+        : Promise.resolve([]);
+    },
+    // eslint-disable-next-line oxc/no-map-spread
+    toRow: (row) => ({ ...row, id: `${row.ruc}:${row.month}` }),
   });
 
-  const [limit, setLimit] = createSignal(PAGE);
-
-  const [page] = createResource(
-    () => {
-      const current = issue();
-      return current ? { issue: current, limit: limit() } : null;
-    },
-    (input) =>
-      qualityRowsQuery({
-        issue: input.issue,
-        page: { limit: input.limit, offset: 0 },
-      }),
-  );
-
-  const rows = createMemo<Row[]>(() =>
-    // eslint-disable-next-line oxc/no-map-spread
-    (page.latest ?? []).map((row) => ({
-      ...row,
-      id: `${row.ruc}:${row.month}`,
-    })),
-  );
-
-  const columns = createMemo<ReadonlyArray<DataGridColumn<Row>>>(() => [
+  const columns: ReadonlyArray<DataGridColumn<Row>> = [
     {
       key: "ruc",
       label: "Comercio",
       icon: Building2,
-      minWidth: 200,
+      minWidth: 180,
+      maxWidth: 260,
       sticky: true,
-      grow: true,
       renderCell: (row) => row.organizationName ?? row.tradeName ?? row.ruc,
     },
     {
@@ -112,13 +96,10 @@ export function QualityPage() {
         renderEditor: (editor) => (
           <InlineOptionsEditor
             ariaLabel="Vendedor real"
-            options={[
-              UNASSIGNED,
-              ...options().sellers.map((seller) => seller.name),
-            ]}
+            options={[UNASSIGNED, ...sellers().map((seller) => seller.name)]}
             selected={editor.row.sellerName ?? UNASSIGNED}
             onSubmit={async (name) => {
-              const seller = options().sellers.find(
+              const seller = sellers().find(
                 (candidate) => candidate.name === name,
               );
               await resolveAttribution({
@@ -127,7 +108,7 @@ export function QualityPage() {
                 sellerUserId: seller?.userId ?? null,
                 branchId: null,
               });
-              await commit();
+              await revalidateGpvData();
             }}
             onClose={editor.close}
           />
@@ -156,7 +137,21 @@ export function QualityPage() {
         </span>
       ),
     },
-  ]);
+  ];
+
+  const renderGrid = (label: string, source: DataGridSource<Row>) => (
+    <DataGrid
+      ariaLabel={label}
+      columns={columns}
+      emptyState="No hay comercios pendientes en esta cola."
+      loadMore={{
+        hasMore: grid.hasMore(),
+        loading: grid.loading(),
+        onLoadMore: grid.onLoadMore,
+      }}
+      source={source}
+    />
+  );
 
   return (
     <AppPage>
@@ -170,28 +165,29 @@ export function QualityPage() {
             />
           }
         >
-          {(current) => (
-            <>
-              <h1 class={styles.title}>
-                {QUALITY_ISSUE_COPY[current()].label}
-              </h1>
-              <DataGrid
-                ariaLabel={QUALITY_ISSUE_COPY[current()].label}
-                columns={columns()}
-                emptyState="No hay comercios pendientes en esta cola."
-                loadMore={{
-                  hasMore: rows().length >= limit(),
-                  loading:
-                    page.state === "pending" || page.state === "refreshing",
-                  onLoadMore: () => void setLimit((value) => value + PAGE),
-                }}
-                source={{
-                  status: page.state === "errored" ? "error" : "ready",
-                  rows: rows(),
-                }}
-              />
-            </>
-          )}
+          {(current) => {
+            const label = () => QUALITY_ISSUE_COPY[current()].label;
+            return (
+              <>
+                <h1 class={styles.title}>{label()}</h1>
+                <ErrorBoundary
+                  fallback={renderGrid(label(), { status: "error", rows: [] })}
+                >
+                  <Suspense
+                    fallback={renderGrid(label(), {
+                      status: "pending",
+                      rows: [],
+                    })}
+                  >
+                    {renderGrid(label(), {
+                      status: "ready",
+                      rows: grid.rows(),
+                    })}
+                  </Suspense>
+                </ErrorBoundary>
+              </>
+            );
+          }}
         </Present>
       </AppPageSection>
     </AppPage>

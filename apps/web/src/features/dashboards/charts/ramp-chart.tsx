@@ -22,7 +22,13 @@ interface RampChartProps {
 const PAD = { top: 20, right: 16, bottom: 30, left: 16 };
 const FALLBACK_WIDTH = 640;
 const TOOLTIP_WIDTH = 128;
+const TOOLTIP_FALLBACK_HEIGHT = 96;
 const TOOLTIP_GAP = 12;
+const TOOLTIP_BOUNDARY_PAD = 8;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
 
 const SERIES_COLORS = [
   "var(--color-blue-11)",
@@ -37,8 +43,10 @@ export function RampChart(props: RampChartProps) {
   const height = () => props.height ?? 240;
 
   const [container, setContainer] = createSignal<HTMLDivElement>();
+  const [tooltipEl, setTooltipEl] = createSignal<HTMLDivElement>();
   const [activeOffset, setActiveOffset] = createSignal<number | null>(null);
   const size = createElementSize(container);
+  const tooltipSize = createElementSize(tooltipEl);
   const width = () => size.width ?? FALLBACK_WIDTH;
 
   const maxOffset = createMemo(() =>
@@ -112,9 +120,40 @@ export function RampChart(props: RampChartProps) {
     return { offset, items };
   });
 
+  const anchor = createMemo(() => {
+    const active = tooltip();
+    if (!active) return null;
+    const ys = geometry()
+      .lines.flatMap((line) =>
+        line.coords.filter((coord) => coord.offset === active.offset),
+      )
+      .map((coord) => coord.y);
+    return { x: xOf(active.offset), y: ys.length ? Math.min(...ys) : PAD.top };
+  });
+
   const tooltipLeft = () => {
-    const raw = xOf(tooltip()?.offset ?? 0) + TOOLTIP_GAP;
-    return Math.min(raw, Math.max(0, width() - TOOLTIP_WIDTH));
+    const point = anchor();
+    if (!point) return 0;
+    const tipWidth = tooltipSize.width ?? TOOLTIP_WIDTH;
+    const leftPlaced = point.x - tipWidth - TOOLTIP_GAP;
+    const placed =
+      leftPlaced >= TOOLTIP_BOUNDARY_PAD ? leftPlaced : point.x + TOOLTIP_GAP;
+    return clamp(
+      placed,
+      TOOLTIP_BOUNDARY_PAD,
+      width() - tipWidth - TOOLTIP_BOUNDARY_PAD,
+    );
+  };
+
+  const tooltipTop = () => {
+    const point = anchor();
+    if (!point) return 0;
+    const tipHeight = tooltipSize.height ?? TOOLTIP_FALLBACK_HEIGHT;
+    return clamp(
+      point.y - tipHeight / 2,
+      TOOLTIP_BOUNDARY_PAD,
+      height() - tipHeight - TOOLTIP_BOUNDARY_PAD,
+    );
   };
 
   const offsetFromPointer = (event: PointerEvent, svg: SVGSVGElement) => {
@@ -161,8 +200,10 @@ export function RampChart(props: RampChartProps) {
                 x2={xOf(active().offset)}
                 y1={PAD.top}
                 y2={PAD.top + geometry().innerH}
-                stroke="var(--border)"
+                stroke="var(--foreground)"
                 stroke-width="1"
+                stroke-opacity="0.5"
+                stroke-dasharray="4 4"
               />
             )}
           </Show>
@@ -181,6 +222,7 @@ export function RampChart(props: RampChartProps) {
                 <For each={line.coords}>
                   {(coord) => (
                     <circle
+                      class={styles.dot}
                       cx={coord.x}
                       cy={coord.y}
                       r={activeOffset() === coord.offset ? 4 : 3}
@@ -211,7 +253,11 @@ export function RampChart(props: RampChartProps) {
 
         <Show when={tooltip()}>
           {(active) => (
-            <div class={styles.tooltip} style={{ left: `${tooltipLeft()}px` }}>
+            <div
+              ref={setTooltipEl}
+              class={styles.tooltip}
+              style={{ left: `${tooltipLeft()}px`, top: `${tooltipTop()}px` }}
+            >
               <span class={styles.tooltipHeader}>M{active().offset}</span>
               <For each={active().items}>
                 {(item) => (

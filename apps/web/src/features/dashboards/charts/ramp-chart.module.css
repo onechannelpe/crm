@@ -10,11 +10,8 @@
   width: 100%;
 }
 
-/*
-  touch-action: none so a drag across the chart reads values instead of
-  scrolling the page. The tooltip is reachable by touch, not hover-only.
-*/
 .svg {
+  /* Keep touch drags on the chart instead of scrolling the page. */
   display: block;
   font-family: inherit;
   touch-action: none;
@@ -32,7 +29,22 @@
   padding: var(--spacing-2);
   pointer-events: none;
   position: absolute;
+  top: 0;
+  transition:
+    left 160ms ease,
+    top 160ms ease,
+    opacity 120ms ease;
   z-index: 1;
+}
+
+@starting-style {
+  .tooltip {
+    opacity: 0;
+  }
+}
+
+.dot {
+  transition: r 120ms ease;
 }
 
 .tooltipHeader {

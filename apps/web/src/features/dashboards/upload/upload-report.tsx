@@ -1,4 +1,3 @@
-import { revalidate } from "@solidjs/router";
 import { createSignal, Match, onCleanup, Show, Switch } from "solid-js";
 
 import {
@@ -9,16 +8,9 @@ import { FileDropzone } from "~/components/ui/input/file-dropzone";
 import { InputHint } from "~/components/ui/input/input-hint";
 import { InputLabel } from "~/components/ui/input/input-label";
 import { TextInput } from "~/components/ui/input/text-input";
-import {
-  attainmentQuery,
-  cohortRowsQuery,
-  lifecycleQuery,
-  merchantFilterOptionsQuery,
-  qualitySummaryQuery,
-  rampQuery,
-} from "~/lib/queries/dashboards";
 
 import { formatInteger } from "../format";
+import { revalidateGpvData } from "../revalidate";
 
 import styles from "./upload-report.module.css";
 
@@ -33,17 +25,6 @@ type Phase =
 const POLL_INTERVAL_MS = 1500;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-async function refreshDashboards(): Promise<void> {
-  await Promise.all([
-    revalidate(attainmentQuery.key),
-    revalidate(rampQuery.key),
-    revalidate(lifecycleQuery.key),
-    revalidate(cohortRowsQuery.key),
-    revalidate(merchantFilterOptionsQuery.key),
-    revalidate(qualitySummaryQuery.key),
-  ]);
-}
 
 export function UploadReport(props: { onClose?: () => void }) {
   const [phase, setPhase] = createSignal<Phase>({ kind: "idle" });
@@ -88,7 +69,7 @@ export function UploadReport(props: { onClose?: () => void }) {
         const job = await getMerchantReportJob(jobId);
         if (job.status === "COMPLETED") {
           // eslint-disable-next-line no-await-in-loop
-          await refreshDashboards();
+          await revalidateGpvData();
           setPhase({
             kind: "done",
             matched: job.rows_applied ?? 0,
