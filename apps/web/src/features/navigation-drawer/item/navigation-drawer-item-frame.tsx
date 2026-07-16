@@ -72,13 +72,13 @@ export function NavigationDrawerItemFrame(
 
       {isSoon() ? (
         <NavigationDrawerAnimatedCollapseWrapper>
-          <span class={styles.itemPill}>Soon</span>
+          <span class={styles.itemPill}>Próximamente</span>
         </NavigationDrawerAnimatedCollapseWrapper>
       ) : null}
 
       {isNew() ? (
         <NavigationDrawerAnimatedCollapseWrapper>
-          <span class={styles.itemPill}>New</span>
+          <span class={styles.itemPill}>Nuevo</span>
         </NavigationDrawerAnimatedCollapseWrapper>
       ) : null}
 

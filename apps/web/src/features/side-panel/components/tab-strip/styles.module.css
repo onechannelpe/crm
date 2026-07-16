@@ -1,10 +1,23 @@
+/* 
+  padding-left is load-bearing: it lines the tab's hover/active box up with
+  the widget grid's own spacing-2 padding below, so the strip and the cards
+  share a left edge.
+*/
 .tabs {
   box-sizing: border-box;
   display: flex;
   height: var(--spacing-10);
+  padding-left: var(--spacing-2);
   position: relative;
   user-select: none;
   width: 100%;
+}
+
+.rightSlot {
+  align-items: center;
+  display: flex;
+  margin-left: auto;
+  padding-right: var(--spacing-2);
 }
 
 .hiddenMeasure {

@@ -50,7 +50,7 @@ export function ExtensionStatusIndicator(props: ExtensionStatusIndicatorProps) {
     if (state.syncHealth === "error") {
       return {
         color: "error",
-        label: "Sincronización falló",
+        label: "No se pudo sincronizar",
         tooltip: "La extensión reportó un error de sincronización.",
       };
     }

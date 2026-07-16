@@ -1,6 +1,6 @@
 import { createEffect, createSignal, on, type Accessor } from "solid-js";
 
-import type { CurrentUserView } from "~/actions/auth/contracts";
+import type { CurrentUserView } from "~/contracts/auth";
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 import {

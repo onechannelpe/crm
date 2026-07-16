@@ -18,7 +18,7 @@
 }
 
 .groupTitle {
-  font-size: var(--font-size-md, 14px);
+  font-size: var(--font-14);
   font-weight: var(--font-weight-semibold, 600);
   color: var(--foreground, #111827);
 }
@@ -70,7 +70,7 @@
 
 /* Aged items get a subtle background warning color and highlight border. */
 .row[data-state="stale"] {
-  border-left: 4px solid var(--red, #dc2626);
+  border-left: 4px solid var(--color-red-11);
   background: rgba(220, 38, 38, 0.01);
 }
 
@@ -127,7 +127,7 @@
 }
 
 .row[data-state="stale"] .waiting {
-  color: var(--red, #dc2626);
+  color: var(--color-red-11);
   font-weight: var(--font-weight-semibold, 600);
 }
 

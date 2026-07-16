@@ -10,7 +10,11 @@ import {
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import type { ExecutiveCapacityDetailView } from "~/contracts/capacity";
+import type {
+  CapacityRequestStatus,
+  ExecutiveCapacityDetailView,
+  PolicySource,
+} from "~/contracts/capacity";
 import {
   grantMoreLeadRefillMutation,
   grantMoreSearchesMutation,
@@ -20,6 +24,20 @@ import { executiveCapacityDetailQuery } from "~/lib/queries/capacity";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-members.module.css";
+
+const POLICY_SOURCE_LABEL: Record<PolicySource, string> = {
+  system: "Límite del sistema",
+  branch: "Límite de sucursal",
+  team: "Límite del equipo",
+  user: "Límite personalizado",
+};
+
+const REQUEST_STATUS_LABEL: Record<CapacityRequestStatus, string> = {
+  pending: "Pendiente",
+  approved: "Aprobada",
+  rejected: "Rechazada",
+  canceled: "Cancelada",
+};
 
 export function MemberCapacityTab(props: { userId: string }) {
   const detail = createAsync(() => executiveCapacityDetailQuery(props.userId), {
@@ -86,7 +104,7 @@ function MemberCapacityEditor(props: {
   async function handleGrantRefill() {
     try {
       await grantRefill(executiveId(), Number(leadGrant()), "Ajuste manual");
-      enqueueSuccessSnackBar("Refills otorgados");
+      enqueueSuccessSnackBar("Asignaciones otorgadas");
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
@@ -101,7 +119,7 @@ function MemberCapacityEditor(props: {
         dailyRefillLimit: Number(override.dailyRefillLimit),
         expiresAt: null,
       });
-      enqueueSuccessSnackBar("Override actualizado");
+      enqueueSuccessSnackBar("Límite personalizado actualizado");
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
@@ -120,17 +138,19 @@ function MemberCapacityEditor(props: {
               {props.detail().searchStatus.policy.monthlyLimit} por mes
             </span>
             <span class={styles.capacityCardMeta}>
-              Fuente: {props.detail().searchStatus.policy.source}
+              Fuente:{" "}
+              {POLICY_SOURCE_LABEL[props.detail().searchStatus.policy.source]}
             </span>
           </div>
           <div class={styles.capacityCard}>
-            <span class={styles.capacityCardLabel}>Leads</span>
+            <span class={styles.capacityCardLabel}>Clientes activos</span>
             <span class={styles.capacityCardValue}>
-              Buffer {props.detail().leadStatus.policy.bufferTarget} · Refill{" "}
-              {props.detail().leadStatus.policy.dailyLimit}
+              Límite {props.detail().leadStatus.policy.bufferTarget} ·
+              Asignaciones diarias {props.detail().leadStatus.policy.dailyLimit}
             </span>
             <span class={styles.capacityCardMeta}>
-              Fuente: {props.detail().leadStatus.policy.source}
+              Fuente:{" "}
+              {POLICY_SOURCE_LABEL[props.detail().leadStatus.policy.source]}
             </span>
           </div>
         </div>
@@ -153,13 +173,13 @@ function MemberCapacityEditor(props: {
             </span>
           </div>
           <div class={styles.capacityCard}>
-            <span class={styles.capacityCardLabel}>Capacidad de leads</span>
+            <span class={styles.capacityCardLabel}>Clientes activos</span>
             <span class={styles.capacityCardValue}>
               {props.detail().leadStatus.activeAssignments}/
               {props.detail().leadStatus.policy.bufferTarget} activos
             </span>
             <span class={styles.capacityCardMeta}>
-              {props.detail().leadStatus.remaining} refills disponibles hoy
+              {props.detail().leadStatus.remaining} asignaciones disponibles hoy
             </span>
           </div>
         </div>
@@ -167,7 +187,7 @@ function MemberCapacityEditor(props: {
 
       <SettingsSection
         title="Otorgar capacidad"
-        description="Concede búsquedas o refills adicionales de forma puntual."
+        description="Concede búsquedas o asignaciones adicionales por única vez."
       >
         <div class={styles.capacityGrantGrid}>
           <form
@@ -204,7 +224,9 @@ function MemberCapacityEditor(props: {
               void handleGrantRefill();
             }}
           >
-            <span class={styles.capacityCardLabel}>Refills extra</span>
+            <span class={styles.capacityCardLabel}>
+              Asignaciones adicionales
+            </span>
             <Input
               type="number"
               label="Cantidad"
@@ -227,8 +249,8 @@ function MemberCapacityEditor(props: {
       </SettingsSection>
 
       <SettingsSection
-        title="Override de política"
-        description="Fija límites propios para este usuario, por encima del default de su equipo."
+        title="Límite personalizado"
+        description="Fija límites para este usuario por encima del límite de su equipo."
       >
         <form
           class={styles.capacityForm}
@@ -248,7 +270,7 @@ function MemberCapacityEditor(props: {
               variant="secondary"
               loading={overrideSubmission.pending}
             >
-              Guardar override
+              Guardar límite
             </Button>
           </div>
         </form>
@@ -268,11 +290,11 @@ function MemberCapacityEditor(props: {
                   <span class={styles.requestTitle}>
                     {request.kind === "search_extra"
                       ? "Más búsquedas"
-                      : "Más refills"}{" "}
+                      : "Más asignaciones"}{" "}
                     · {request.requestedAmount}
                   </span>
                   <span class={styles.requestMeta}>
-                    {request.status} · {request.reason}
+                    {REQUEST_STATUS_LABEL[request.status]} · {request.reason}
                   </span>
                 </div>
               )}

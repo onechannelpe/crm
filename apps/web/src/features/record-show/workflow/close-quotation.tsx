@@ -10,10 +10,7 @@ import {
   isCloseReason,
   type CloseReason,
 } from "~/contracts/workflow/vocabulary";
-import {
-  RecordDetailSection,
-  RecordDetailSectionBody,
-} from "~/features/side-panel/components/record-detail-section";
+import { WidgetCard, WidgetCardContent } from "~/features/widgets/widget-card";
 import { closeLeadMutation } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import { actionErrorMessage } from "~/lib/wire-error";
@@ -78,8 +75,8 @@ export function CloseQuotationSection(props: { leadId: string }) {
         </div>
       }
     >
-      <RecordDetailSection>
-        <RecordDetailSectionBody>
+      <WidgetCard variant="side-column">
+        <WidgetCardContent>
           <form class={styles.closeForm} onSubmit={(e) => void handleSubmit(e)}>
             <p class={styles.closeTitle}>Cerrar cotización</p>
             <Select
@@ -130,8 +127,8 @@ export function CloseQuotationSection(props: { leadId: string }) {
               </Button>
             </div>
           </form>
-        </RecordDetailSectionBody>
-      </RecordDetailSection>
+        </WidgetCardContent>
+      </WidgetCard>
     </Show>
   );
 }

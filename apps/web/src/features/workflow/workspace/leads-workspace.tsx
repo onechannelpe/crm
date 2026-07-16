@@ -148,7 +148,7 @@ export function LeadsWorkspace() {
     emptyState: {
       icon: Building2,
       title: "No hay clientes",
-      description: "No existen resultados para esta vista.",
+      description: "No hay clientes que coincidan con los filtros actuales.",
     },
     createAction: canRegister ? createAction : undefined,
     views: {

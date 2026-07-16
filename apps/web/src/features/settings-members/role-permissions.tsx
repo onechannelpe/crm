@@ -2,6 +2,7 @@ import { For } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import Activity from "~/components/icons/activity";
+import ChartColumn from "~/components/icons/chart-column";
 import List from "~/components/icons/list";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
@@ -26,6 +27,7 @@ const GROUP_ICON: Record<PermissionGroupId, typeof Activity> = {
   capacidad: Activity,
   entregas: Package,
   equipo: Users,
+  negocio: ChartColumn,
   administracion: Settings,
 };
 

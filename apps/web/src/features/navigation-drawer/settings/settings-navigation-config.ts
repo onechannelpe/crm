@@ -61,7 +61,7 @@ export function createSettingsNavigationSections(
       items: [
         {
           id: "sales-policies",
-          label: "Politicas comerciales",
+          label: "Políticas comerciales",
           href: "/settings/capacity-policies",
           icon: Settings,
           section: "operations",
@@ -69,7 +69,7 @@ export function createSettingsNavigationSections(
         },
         {
           id: "quotation-policies",
-          label: "Politicas de cotizacion",
+          label: "Políticas de cotización",
           href: "/settings/quotation-policies",
           icon: Settings,
           section: "operations",
@@ -95,7 +95,7 @@ export function createSettingsNavigationSections(
         },
         {
           id: "login-protection",
-          label: "Proteccion de inicio de sesion",
+          label: "Protección de inicio de sesión",
           href: "/settings/login-protection",
           icon: ShieldCheck,
           section: "administration",
@@ -104,7 +104,7 @@ export function createSettingsNavigationSections(
         },
         {
           id: "security-policies",
-          label: "Politicas de riesgo",
+          label: "Políticas de riesgo",
           href: "/settings/security-policies",
           icon: ShieldCheck,
           section: "administration",
@@ -135,7 +135,7 @@ export function createSettingsNavigationSections(
         },
         {
           id: "logout",
-          label: "Cerrar sesion",
+          label: "Cerrar sesión",
           icon: LogOut,
           section: "other",
           onClick: options.onLogout,

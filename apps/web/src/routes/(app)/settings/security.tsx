@@ -1,5 +1,10 @@
-import { Show, createSignal } from "solid-js";
+import { Show, Suspense, createResource, createSignal } from "solid-js";
 
+import {
+  acknowledgeRecoveryCodes,
+  getRecoveryCodesStatus,
+  regenerateRecoveryCodes,
+} from "~/actions/auth/recovery-codes";
 import {
   changePassword,
   disableTotp,
@@ -113,15 +118,32 @@ export default function SecurityPage() {
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const removePasskeysDialog = useConfirmDialog();
   const disableTotpDialog = useConfirmDialog();
+  const regenerateRecoveryDialog = useConfirmDialog();
+  const [recoveryStatus, { refetch: refetchRecoveryStatus }] = createResource(
+    getRecoveryCodesStatus,
+  );
+  // Keep newly issued codes visible until acknowledgement; stored codes are
+  // never returned.
+  const [freshRecoveryCodes, setFreshRecoveryCodes] = createSignal<string[]>(
+    [],
+  );
+
+  function showFreshRecoveryCodes(codes: string[]) {
+    setFreshRecoveryCodes(codes);
+    void refetchRecoveryStatus();
+  }
+
   const passkeyEnrollment = usePasskeyEnrollment({
     enqueueSuccessSnackBar,
     enqueueErrorSnackBar,
     refreshStatus: refreshCurrentUser,
+    onRecoveryCodes: showFreshRecoveryCodes,
   });
   const totpEnrollment = useTotpEnrollment({
     enqueueSuccessSnackBar,
     enqueueErrorSnackBar,
     refreshStatus: refreshCurrentUser,
+    onRecoveryCodes: showFreshRecoveryCodes,
   });
   const [handleRemovePasskeys, isRemovingPasskeys] = useAsyncAction(
     async () => {
@@ -152,6 +174,31 @@ export default function SecurityPage() {
     await navigator.clipboard.writeText(setupKey);
     enqueueSuccessSnackBar("Clave de configuración copiada");
   };
+
+  const [handleRegenerateRecovery, isRegeneratingRecovery] = useAsyncAction(
+    async () => {
+      try {
+        const { recoveryCodes } = await regenerateRecoveryCodes();
+        showFreshRecoveryCodes(recoveryCodes);
+      } catch (caught: unknown) {
+        enqueueErrorSnackBar(actionErrorMessage(caught));
+      }
+      regenerateRecoveryDialog.close();
+    },
+  );
+
+  const [handleAcknowledgeRecovery, isAcknowledgingRecovery] = useAsyncAction(
+    async () => {
+      try {
+        await acknowledgeRecoveryCodes();
+        setFreshRecoveryCodes([]);
+        await refreshCurrentUser();
+        await refetchRecoveryStatus();
+      } catch (caught: unknown) {
+        enqueueErrorSnackBar(actionErrorMessage(caught));
+      }
+    },
+  );
 
   const [handleChangePassword, isChangingPassword] = useAsyncAction(
     async (e: Event) => {
@@ -194,6 +241,15 @@ export default function SecurityPage() {
         loading={isDisablingTotp()}
         onConfirm={() => void handleDisableTotp()}
         onClose={disableTotpDialog.close}
+      />
+      <ConfirmDialog
+        isOpen={regenerateRecoveryDialog.isOpen()}
+        title="Regenerar códigos de recuperación"
+        description="Los códigos actuales dejarán de funcionar. Recibirás nuevos códigos."
+        confirmLabel="Regenerar"
+        loading={isRegeneratingRecovery()}
+        onConfirm={() => void handleRegenerateRecovery()}
+        onClose={regenerateRecoveryDialog.close}
       />
 
       <SettingsSection
@@ -318,16 +374,61 @@ export default function SecurityPage() {
               />
             </div>
           </Show>
-
-          <Show when={totpEnrollment.recoveryCodes().length > 0}>
-            <RecoveryCodesPanel
-              title="Códigos de recuperación"
-              description="Guárdalos en un lugar seguro."
-              codes={totpEnrollment.recoveryCodes()}
-            />
-          </Show>
         </div>
       </SettingsSection>
+
+      <Suspense>
+        <Show
+          when={
+            freshRecoveryCodes().length > 0 || recoveryStatus()?.hasActiveSet
+          }
+        >
+          <SettingsSection title="Códigos de recuperación">
+            <div class={styles.securityStack}>
+              <Show
+                when={freshRecoveryCodes().length > 0}
+                fallback={
+                  <div class={styles.block}>
+                    <p class={styles.title}>Códigos de recuperación</p>
+                    <p class={styles.sectionDescription}>
+                      Te quedan {recoveryStatus()?.unused ?? 0} de{" "}
+                      {recoveryStatus()?.total ?? 0} códigos. Úsalos para entrar
+                      si pierdes tu método de autenticación.
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={regenerateRecoveryDialog.open}
+                    >
+                      Regenerar
+                    </Button>
+                  </div>
+                }
+              >
+                <div class={styles.block}>
+                  <p class={styles.title}>Guarda estos códigos</p>
+                  <p class={styles.sectionDescription}>
+                    Guárdalos en un lugar seguro. No volverás a verlos.
+                  </p>
+                </div>
+                <RecoveryCodesPanel codes={freshRecoveryCodes()} />
+                <div class={styles.inlineActions}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    loading={isAcknowledgingRecovery()}
+                    onClick={() => void handleAcknowledgeRecovery()}
+                  >
+                    Ya los guardé
+                  </Button>
+                </div>
+              </Show>
+            </div>
+          </SettingsSection>
+        </Show>
+      </Suspense>
     </>
   );
 }

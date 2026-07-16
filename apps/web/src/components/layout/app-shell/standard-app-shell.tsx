@@ -11,7 +11,7 @@ export function StandardAppShell(props: RouteSectionProps) {
     <SidePanelProvider>
       <div class={shellStyles.main}>
         <AppHeader />
-        <main class={shellStyles.body}>
+        <main class={shellStyles.fixedBody}>
           <MainContainerWithSidePanel>
             {props.children}
           </MainContainerWithSidePanel>

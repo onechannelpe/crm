@@ -16,10 +16,7 @@ import {
 
 export const LEAD_PAGE_SIZE = 100;
 
-// Raw route inputs (search params + page) that determine which slice of leads to
-// fetch. Kept as the untrusted, un-defaulted shape so both the route preload and
-// the in-component createAsync feed the exact same builder and land on one
-// leadListQuery cache key.
+// Keep raw route inputs un-defaulted so every caller resolves the same cache key.
 type LeadListQueryParams = {
   view: string | undefined;
   filter: string | undefined;
@@ -33,9 +30,7 @@ export function parseLeadPageIndex(value: string | undefined): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
 }
 
-// Single owner of the route-params -> leadListQuery input mapping. The view's own
-// filters apply first so an explicit filter param can still override the view's
-// stage (e.g. the "review" view seeds stage=QUALIFYING, a status filter narrows it).
+// Explicit URL filters override the selected view's defaults.
 export function resolveLeadListQueryInput(
   params: LeadListQueryParams,
   user: { id: string; role: string },

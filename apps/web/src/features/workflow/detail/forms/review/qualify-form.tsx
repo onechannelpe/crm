@@ -16,14 +16,14 @@ import {
   FieldInputValue,
   FieldRow,
   FieldTable,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
 import {
-  RecordDetailSection,
-  RecordDetailSectionActions,
-  RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSectionTitle,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCard,
+  WidgetCardActions,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
 import { capitalize } from "~/lib/utils";
 import { actionErrorMessage } from "~/lib/wire-error";
 
@@ -40,9 +40,7 @@ function coercePriority(value: string): LeadPriority | "" {
   return LEAD_PRIORITIES.find((priority) => priority === value) ?? "";
 }
 
-// CARTERIZADO and STOCK are the statuses that route the lead to DISQUALIFIED
-// (see resolveReviewTransition); surfacing that up front avoids a surprising
-// terminal transition after the reviewer clicks save.
+// CARTERIZADO and STOCK end qualification instead of entering pricing.
 function statusDisqualifies(status: LeadStatus | ""): boolean {
   return status === "CARTERIZADO" || status === "STOCK";
 }
@@ -88,12 +86,12 @@ export function QualifyForm(props: { leadId: string }) {
   }
 
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Calificar disponibilidad" />
-      </RecordDetailSectionHeader>
+    <WidgetCard variant="side-column">
+      <WidgetCardHeader>
+        <WidgetCardTitle text="Calificar disponibilidad" />
+      </WidgetCardHeader>
 
-      <RecordDetailSectionBody>
+      <WidgetCardContent>
         <form onSubmit={(event) => void handleSubmit(event)}>
           <FieldTable>
             <FieldRow label="Estado" icon={Package}>
@@ -156,7 +154,7 @@ export function QualifyForm(props: { leadId: string }) {
 
           {errorMessage() && <p class={styles.error}>{errorMessage()}</p>}
 
-          <RecordDetailSectionActions>
+          <WidgetCardActions>
             <Button
               type="submit"
               variant="primary"
@@ -165,9 +163,9 @@ export function QualifyForm(props: { leadId: string }) {
             >
               Guardar calificación
             </Button>
-          </RecordDetailSectionActions>
+          </WidgetCardActions>
         </form>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }

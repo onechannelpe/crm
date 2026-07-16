@@ -27,7 +27,7 @@ export function buildVenueSubmitInput(
   if (!form.tradeName().trim() || !form.address().trim()) {
     return {
       ok: false,
-      error: "Nombre comercial y direccion son obligatorios",
+      error: "El nombre comercial y la dirección son obligatorios.",
     };
   }
   if (!form.addressReference().trim()) {

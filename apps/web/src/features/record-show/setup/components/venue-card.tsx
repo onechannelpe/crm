@@ -8,16 +8,17 @@ import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
 import type { LeadDetailVenueView } from "~/contracts/workflow/views";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "~/features/side-panel/components/card";
-import {
   FieldTable,
   FieldTextValue,
   RecordInlineCell,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
+import {
+  WidgetCard,
+  WidgetCardActions,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
 
 type IconComponent = (props: { size?: number }) => JSX.Element;
 
@@ -40,14 +41,16 @@ export function VenueCard(props: {
 }) {
   const venue = () => props.venue;
   return (
-    <Card fullWidth>
-      <CardHeader>{venue().tradeName}</CardHeader>
-      <CardContent>
+    <WidgetCard>
+      <WidgetCardHeader>
+        <WidgetCardTitle text={venue().tradeName} />
+      </WidgetCardHeader>
+      <WidgetCardContent>
         <FieldTable>
           <VenueDetailRow label="Cantidad POS" icon={Package}>
             {venue().posQuantity}
           </VenueDetailRow>
-          <VenueDetailRow label="Direccion" icon={MapIcon}>
+          <VenueDetailRow label="Dirección" icon={MapIcon}>
             {venue().address}
           </VenueDetailRow>
           <Show when={venue().addressReference}>
@@ -123,19 +126,19 @@ export function VenueCard(props: {
             </VenueDetailRow>
           </Show>
         </FieldTable>
-      </CardContent>
-      <Show when={props.canEdit}>
-        <CardFooter>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={props.onEdit}
-          >
-            Editar sede
-          </Button>
-        </CardFooter>
-      </Show>
-    </Card>
+        <Show when={props.canEdit}>
+          <WidgetCardActions align="start">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={props.onEdit}
+            >
+              Editar sede
+            </Button>
+          </WidgetCardActions>
+        </Show>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }

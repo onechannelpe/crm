@@ -7,6 +7,7 @@ import {
   createSignal,
   onCleanup,
   onMount,
+  type JSX,
 } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -32,6 +33,7 @@ type TabStripProps<TId extends string> = {
   tabs: ReadonlyArray<TabItem<TId>>;
   activeTab: TId;
   onTabSelect: (id: TId) => void;
+  rightComponent?: JSX.Element;
 };
 
 export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
@@ -105,7 +107,6 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
 
   return (
     <div class={styles.tabs} ref={setContainerRef}>
-      {/* Hidden measurement row gives ResizeObserver each tab's natural width. */}
       <div class={styles.hiddenMeasure}>
         <For each={props.tabs}>
           {(tab) => {
@@ -181,6 +182,10 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
             </div>
           </Show>
         </div>
+      </Show>
+
+      <Show when={props.rightComponent}>
+        {(right) => <div class={styles.rightSlot}>{right()}</div>}
       </Show>
     </div>
   );

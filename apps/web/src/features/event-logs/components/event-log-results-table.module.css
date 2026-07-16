@@ -4,9 +4,3 @@
   min-height: 0;
   overflow: hidden;
 }
-
-.empty {
-  color: var(--foreground-tertiary);
-  font-size: var(--font-size-sm);
-  padding: var(--spacing-4) var(--spacing-3);
-}

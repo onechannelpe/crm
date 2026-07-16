@@ -76,7 +76,8 @@ function QuotationPolicyEditor(props: {
         </div>
 
         <p class={styles.helperText}>
-          Default del sistema: {props.snapshot().defaultValidityDays} días.
+          Límite predeterminado del sistema:{" "}
+          {props.snapshot().defaultValidityDays} días.
           <Show when={props.snapshot().updatedAt}>
             {(updatedAt) => (
               <> Última actualización: {formatDateTime(updatedAt())}.</>

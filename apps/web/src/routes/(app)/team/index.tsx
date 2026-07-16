@@ -1,4 +1,4 @@
-import { A, createAsync, useNavigate } from "@solidjs/router";
+import { createAsync, useNavigate } from "@solidjs/router";
 import { createMemo, createSignal } from "solid-js";
 
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
@@ -8,10 +8,13 @@ import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Input } from "~/components/ui/input/input";
+import { FilterBar } from "~/components/ui/layout/filter-bar";
 import type { ManagedExecutiveView } from "~/contracts/capacity";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
+
+import styles from "./team-page.module.css";
 
 type ManagedExecutiveGridRow = ManagedExecutiveView & {
   id: string;
@@ -27,9 +30,9 @@ const TEAM_COLUMNS = [
     grow: true,
     sticky: true,
     renderCell: (executive) => (
-      <div class="space-y-1">
-        <div class="font-medium">{executive.fullName}</div>
-        <div class="text-xs text-muted-foreground">{executive.email}</div>
+      <div class={styles.stackedCell}>
+        <div class={styles.executiveName}>{executive.fullName}</div>
+        <div class={styles.executiveEmail}>{executive.email}</div>
       </div>
     ),
   },
@@ -39,7 +42,7 @@ const TEAM_COLUMNS = [
     icon: CircleQuestionMark,
     width: 220,
     renderCell: (executive) => (
-      <div class="space-y-1">
+      <div class={styles.stackedCell}>
         <div>
           {executive.searchStatus.committed}/
           {executive.searchStatus.policy.monthlyLimit +
@@ -53,11 +56,11 @@ const TEAM_COLUMNS = [
   },
   {
     key: "leadStatus",
-    label: "Leads",
+    label: "Clientes",
     icon: List,
     width: 220,
     renderCell: (executive) => (
-      <div class="space-y-1">
+      <div class={styles.stackedCell}>
         <div>
           {executive.leadStatus.activeAssignments}/
           {executive.leadStatus.policy.bufferTarget} activos
@@ -78,7 +81,7 @@ const TEAM_COLUMNS = [
   },
   {
     key: "executiveCategory",
-    label: "Categoria",
+    label: "Categoría",
     icon: UserRound,
     width: 130,
     renderCell: (executive) =>
@@ -114,50 +117,28 @@ export default function TeamPage() {
 
   return (
     <AppPage width="wide">
-      <div class="space-y-6">
-        <div class="flex items-end justify-between gap-4">
-          <div>
-            <h2 class="text-2xl font-semibold">Capacidad del equipo</h2>
-            <p class="text-sm text-muted-foreground">
-              Gestiona políticas, uso y excepciones por ejecutivo.
-            </p>
-          </div>
-          <div class="flex gap-2">
-            <A href="/team/requests" class="underline">
-              Solicitudes pendientes
-            </A>
-            <A href="/settings/capacity-policies" class="underline">
-              Políticas
-            </A>
-            <A href="/settings/event-logs" class="underline">
-              Eventos
-            </A>
-          </div>
+      <FilterBar>
+        <div class={styles.search}>
+          <Input
+            label="Buscar ejecutivo"
+            value={filter()}
+            onInput={(event) => setFilter(event.currentTarget.value)}
+            placeholder="Nombre o correo"
+          />
         </div>
+      </FilterBar>
 
-        <Input
-          label="Buscar ejecutivo"
-          value={filter()}
-          onInput={(event) => setFilter(event.currentTarget.value)}
-          placeholder="Nombre o correo"
-        />
-
-        <DataGrid
-          ariaLabel="Equipo"
-          columns={TEAM_COLUMNS}
-          emptyState={
-            <p class="px-3 py-4 text-sm text-muted-foreground">
-              No hay ejecutivos visibles.
-            </p>
-          }
-          onRowOpen={openExecutive}
-          rowOpenIndicator="route"
-          source={{
-            status: isLoading() ? "pending" : "ready",
-            rows: filtered(),
-          }}
-        />
-      </div>
+      <DataGrid
+        ariaLabel="Equipo"
+        columns={TEAM_COLUMNS}
+        emptyState="No hay ejecutivos visibles."
+        onRowOpen={openExecutive}
+        rowOpenIndicator="route"
+        source={{
+          status: isLoading() ? "pending" : "ready",
+          rows: filtered(),
+        }}
+      />
     </AppPage>
   );
 }

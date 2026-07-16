@@ -72,9 +72,7 @@ export function ResultTable(props: ResultTableProps) {
       <Match when={props.tab === "people"}>
         <Show
           when={props.people.length > 0}
-          fallback={
-            <p class="text-sm text-muted-foreground">No people found.</p>
-          }
+          fallback={<p class={styles.emptyResults}>No people found.</p>}
         >
           <Table class={styles.resultsTable}>
             <TableHeader>
@@ -133,9 +131,7 @@ export function ResultTable(props: ResultTableProps) {
       <Match when={props.tab === "companies"}>
         <Show
           when={props.companies.length > 0}
-          fallback={
-            <p class="text-sm text-muted-foreground">No companies found.</p>
-          }
+          fallback={<p class={styles.emptyResults}>No companies found.</p>}
         >
           <Table class={styles.resultsTable}>
             <TableHeader>

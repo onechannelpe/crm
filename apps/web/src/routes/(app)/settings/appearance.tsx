@@ -58,15 +58,14 @@ export default function AppearanceSettingsPage() {
 
       <SettingsSection
         title="Idioma y región"
-        description="El idioma en el que opera el sistema."
+        description="Elige el idioma de la aplicación."
       >
         <div class={styles.stack}>
           <div class={styles.formGrid}>
             <Input label="Idioma" value="Español (Perú)" disabled />
           </div>
           <p class={styles.helperText}>
-            El sistema opera en español (Perú). Otros idiomas aún no están
-            disponibles.
+            La aplicación está disponible en español (Perú).
           </p>
         </div>
       </SettingsSection>

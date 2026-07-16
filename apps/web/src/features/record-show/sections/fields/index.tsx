@@ -10,11 +10,8 @@ import {
   FieldTable,
   FieldTextValue,
   RecordInlineCell,
-} from "~/features/side-panel/components/field-table";
-import {
-  RecordDetailSection,
-  RecordDetailSectionBody,
-} from "~/features/side-panel/components/record-detail-section";
+} from "~/features/widgets/field-table";
+import { WidgetCard, WidgetCardContent } from "~/features/widgets/widget-card";
 import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import { CommercialScopeFields } from "~/features/workflow/forms/commercial-scope/fields";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
@@ -67,22 +64,18 @@ function PriorityRow(props: { data: LeadDetailView }) {
   );
 }
 
-// The Datos view is Twenty's Fields widget: one short, flat property box of the
-// deal's own working attributes, then the registry (reference data) collapsed
-// below. Stage lives in the header Tag, the pending step in Tareas, and audit
-// metadata (updated by/at) is dropped — none of them belong in the field list.
 export function DetailFieldsSection(props: { data: LeadDetailView }) {
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionBody>
+    <WidgetCard>
+      <WidgetCardContent>
         <FieldTable>
           <CommercialFields data={props.data} />
           <PriorityRow data={props.data} />
           <ManagedByRow data={props.data} />
         </FieldTable>
         <RegistrySection data={props.data} />
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }
 
@@ -90,8 +83,8 @@ export function CreateFieldsSection(props: {
   commercialScope: CommercialScopeBinding;
 }) {
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionBody>
+    <WidgetCard>
+      <WidgetCardContent>
         <FieldTable>
           <CommercialScopeFields
             values={props.commercialScope.values}
@@ -104,7 +97,7 @@ export function CreateFieldsSection(props: {
             <FieldTextValue>{leadStageLabel("QUALIFYING")}</FieldTextValue>
           </RecordInlineCell>
         </FieldTable>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }

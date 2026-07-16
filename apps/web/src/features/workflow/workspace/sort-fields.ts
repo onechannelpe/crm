@@ -12,7 +12,7 @@ export const LEAD_WORKSPACE_SORT_FIELDS = [
   },
   {
     prefix: "updatedAt",
-    label: "Ultima modificacion",
+    label: "Última modificación",
     icon: CalendarClock,
   },
   {

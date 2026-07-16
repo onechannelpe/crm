@@ -27,7 +27,7 @@ export function CapacityLimitFields(props: {
       />
       <Input
         type="number"
-        label="Buffer activo"
+        label="Límite de clientes activos"
         value={props.draft.bufferTarget}
         onInput={(event) =>
           props.setValue("bufferTarget", event.currentTarget.value)
@@ -37,7 +37,7 @@ export function CapacityLimitFields(props: {
       />
       <Input
         type="number"
-        label="Refill diario"
+        label="Límite diario de asignaciones"
         value={props.draft.dailyRefillLimit}
         onInput={(event) =>
           props.setValue("dailyRefillLimit", event.currentTarget.value)

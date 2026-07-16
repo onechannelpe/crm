@@ -156,3 +156,22 @@
   font-size: var(--font-size-caption);
   color: var(--destructive);
 }
+
+/*
+  Filter-bar controls are sized to their content, not stretched by the bar's
+  flex. Widths are per-field because the labels differ in length.
+*/
+.filterAction {
+  width: 13rem;
+}
+
+.filterRiskLevel {
+  width: 9rem;
+}
+
+@media (max-width: 768px) {
+  .filterAction,
+  .filterRiskLevel {
+    width: 100%;
+  }
+}

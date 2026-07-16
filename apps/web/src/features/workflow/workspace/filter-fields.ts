@@ -29,7 +29,7 @@ const LEAD_STATUS_FILTER_OPTIONS = [
 export const LEAD_WORKSPACE_FILTER_FIELDS = [
   {
     id: "modified",
-    label: "Ultima modificacion",
+    label: "Última modificación",
     icon: CalendarClock,
     options: LEAD_MODIFIED_FILTER_OPTIONS,
   },

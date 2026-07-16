@@ -65,6 +65,12 @@
   min-height: 360px;
 }
 
+.surfaceMessage {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
 .headerRow,
 .bodyRow,
 .actionRow {
@@ -511,9 +517,10 @@
   }
 }
 
-/* Inline cell editor portal. This layer is positioning-only: it places the editor
-   over the editing cell and nothing else. Each editor paints its own surface, so a
-   self-surfaced editor (e.g. UserPicker) does not get a double border/shadow. */
+/*
+  Positioning only: editors paint their own surface, so a self-surfaced one
+  does not get a double border/shadow.
+*/
 .cellEditor {
   z-index: 40;
 }

@@ -1,0 +1,14 @@
+.filter {
+  width: 11rem;
+}
+
+.refreshing {
+  color: var(--muted-foreground);
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: 768px) {
+  .filter {
+    width: 100%;
+  }
+}

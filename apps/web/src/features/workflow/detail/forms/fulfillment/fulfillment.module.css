@@ -58,7 +58,7 @@
 }
 
 .stepName {
-  font-size: var(--font-size-md, 14px);
+  font-size: var(--font-14);
   font-weight: var(--font-weight-semibold, 600);
   color: var(--foreground, #111827);
 }
@@ -240,7 +240,7 @@
 }
 
 .errorText {
-  color: var(--red, #dc2626);
+  color: var(--color-red-11);
   font-size: var(--font-size-sm, 13px);
   margin: 0;
 }

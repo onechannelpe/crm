@@ -2,7 +2,6 @@ import { revalidate, useSearchParams } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
 
 import { searchDirect } from "~/actions/search/run";
-import Search from "~/components/icons/search";
 import { AppPage } from "~/components/layout/page";
 import {
   isSearchIntent,
@@ -15,7 +14,6 @@ import {
 } from "~/features/search/model/display";
 import { createSearchViewModel } from "~/features/search/model/search-view-model";
 import { SearchLayout } from "~/features/search/ui/search-layout";
-import { PageHeader } from "~/features/settings-shell/page/page-header";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import {
   createSearchCompanyDetailSidePanelPage,
@@ -95,17 +93,7 @@ export default function SearchPage() {
 
   return (
     <AppPage class={pageStyles.page}>
-      <PageHeader
-        class={pageStyles.header}
-        icon={
-          <div class={pageStyles.headerIcon}>
-            <Search size={16} />
-          </div>
-        }
-        title={<span class={pageStyles.headerTitle}>Search</span>}
-      />
-
-      <div class="space-y-6">
+      <div class={pageStyles.body}>
         <SearchLayout
           tab={tab()}
           tabs={["people", "companies"]}
@@ -148,7 +136,7 @@ export default function SearchPage() {
         />
 
         <Show when={searchErrorMessage()}>
-          {(message) => <p class="text-sm text-destructive">{message()}</p>}
+          {(message) => <p class={pageStyles.error}>{message()}</p>}
         </Show>
       </div>
     </AppPage>

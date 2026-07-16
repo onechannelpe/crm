@@ -14,14 +14,14 @@ import {
   FieldTable,
   FieldTextValue,
   RecordInlineCell,
-} from "~/features/side-panel/components/field-table";
+} from "~/features/widgets/field-table";
 import {
-  RecordDetailSectionActions,
-  RecordDetailSection,
-  RecordDetailSectionBody,
-  RecordDetailSectionHeader,
-  RecordDetailSectionTitle,
-} from "~/features/side-panel/components/record-detail-section";
+  WidgetCardActions,
+  WidgetCard,
+  WidgetCardContent,
+  WidgetCardHeader,
+  WidgetCardTitle,
+} from "~/features/widgets/widget-card";
 import { recordRepLegalMutation } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
 import { actionErrorMessage } from "~/lib/wire-error";
@@ -76,11 +76,11 @@ export function RepLegalSection(props: {
   }
 
   return (
-    <RecordDetailSection>
-      <RecordDetailSectionHeader>
-        <RecordDetailSectionTitle text="Representante legal" />
-      </RecordDetailSectionHeader>
-      <RecordDetailSectionBody>
+    <WidgetCard>
+      <WidgetCardHeader>
+        <WidgetCardTitle text="Representante legal" />
+      </WidgetCardHeader>
+      <WidgetCardContent>
         <Show
           when={canEdit()}
           fallback={
@@ -107,7 +107,7 @@ export function RepLegalSection(props: {
                     <FieldTextValue>{rl().dni}</FieldTextValue>
                   </RecordInlineCell>
                   <RecordInlineCell
-                    label="Telefono"
+                    label="Teléfono"
                     icon={Phone}
                     empty={!rl().telefono}
                   >
@@ -167,7 +167,7 @@ export function RepLegalSection(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow label="Telefono" icon={Phone}>
+              <FieldRow label="Teléfono" icon={Phone}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"
@@ -193,7 +193,7 @@ export function RepLegalSection(props: {
               {(msg) => <p class={formStyles.error}>{msg()}</p>}
             </Show>
 
-            <RecordDetailSectionActions align="start">
+            <WidgetCardActions align="start">
               <Button
                 type="submit"
                 variant="secondary"
@@ -202,10 +202,10 @@ export function RepLegalSection(props: {
               >
                 Guardar datos
               </Button>
-            </RecordDetailSectionActions>
+            </WidgetCardActions>
           </form>
         </Show>
-      </RecordDetailSectionBody>
-    </RecordDetailSection>
+      </WidgetCardContent>
+    </WidgetCard>
   );
 }

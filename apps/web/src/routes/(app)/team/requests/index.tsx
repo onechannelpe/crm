@@ -15,6 +15,8 @@ import {
 } from "~/lib/mutations/capacity";
 import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
 
+import styles from "./requests-page.module.css";
+
 type PendingCapacityRequestGridRow = Omit<PendingCapacityRequestView, "id"> & {
   id: string;
   requestId: string;
@@ -49,7 +51,7 @@ export default function TeamRequestsPage() {
       icon: List,
       width: 160,
       renderCell: (request) =>
-        request.kind === "search_extra" ? "Más búsquedas" : "Más refills",
+        request.kind === "search_extra" ? "Más búsquedas" : "Más asignaciones",
     },
     {
       key: "requestedAmount",
@@ -72,7 +74,7 @@ export default function TeamRequestsPage() {
       icon: CircleQuestionMark,
       width: 240,
       renderCell: (request) => (
-        <div class="flex gap-2">
+        <div class={styles.rowActions}>
           <Button type="button" onClick={() => void approve(request.requestId)}>
             Aprobar
           </Button>
@@ -92,27 +94,15 @@ export default function TeamRequestsPage() {
 
   return (
     <AppPage width="wide">
-      <div class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-semibold">Solicitudes pendientes</h2>
-          <p class="text-sm text-muted-foreground">
-            Aprueba o rechaza pedidos de capacidad.
-          </p>
-        </div>
-        <DataGrid
-          ariaLabel="Solicitudes del equipo"
-          columns={columns}
-          emptyState={
-            <p class="px-3 py-4 text-sm text-muted-foreground">
-              No hay solicitudes pendientes.
-            </p>
-          }
-          source={{
-            status: isLoading() ? "pending" : "ready",
-            rows: rows(),
-          }}
-        />
-      </div>
+      <DataGrid
+        ariaLabel="Solicitudes del equipo"
+        columns={columns}
+        emptyState="No hay solicitudes pendientes."
+        source={{
+          status: isLoading() ? "pending" : "ready",
+          rows: rows(),
+        }}
+      />
     </AppPage>
   );
 }

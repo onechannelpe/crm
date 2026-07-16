@@ -1,7 +1,7 @@
 import { createAsync, useAction } from "@solidjs/router";
 import { createSignal } from "solid-js";
 
-import { AppPage } from "~/components/layout/page";
+import { AppPage, AppPageSection } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import {
@@ -11,98 +11,98 @@ import {
 import { myContactAssignmentCapacityQuery } from "~/lib/queries/contact-assignment-capacity";
 import { mySearchAllowanceQuery } from "~/lib/queries/search";
 
+import styles from "./capacity-page.module.css";
+
+function CapacityStatus(props: {
+  title: string;
+  value: string;
+  caption: string;
+}) {
+  return (
+    <AppPageSection>
+      <div class={styles.status}>
+        <span class={styles.statusTitle}>{props.title}</span>
+        <span class={styles.statusValue}>{props.value}</span>
+        <span class={styles.statusCaption}>{props.caption}</span>
+      </div>
+    </AppPageSection>
+  );
+}
+
+function CapacityRequestForm(props: {
+  title: string;
+  initialAmount: string;
+  onRequest: (amount: number, reason: string) => void;
+}) {
+  const [amount, setAmount] = createSignal(props.initialAmount);
+  const [reason, setReason] = createSignal("");
+
+  return (
+    <AppPageSection>
+      <form
+        class={styles.form}
+        onSubmit={(event) => {
+          event.preventDefault();
+          props.onRequest(Number(amount()), reason());
+        }}
+      >
+        <h3 class={styles.formTitle}>{props.title}</h3>
+        <Input
+          type="number"
+          label="Cantidad"
+          value={amount()}
+          onInput={(event) => setAmount(event.currentTarget.value)}
+          required
+        />
+        <Input
+          label="Motivo"
+          value={reason()}
+          onInput={(event) => setReason(event.currentTarget.value)}
+          required
+        />
+        <div class={styles.formActions}>
+          <Button type="submit">Enviar solicitud</Button>
+        </div>
+      </form>
+    </AppPageSection>
+  );
+}
+
 export default function MyCapacityPage() {
   const searchStatus = createAsync(() => mySearchAllowanceQuery());
   const leadStatus = createAsync(() => myContactAssignmentCapacityQuery());
   const requestSearches = useAction(requestMoreSearchesMutation);
   const requestRefill = useAction(requestMoreLeadRefillMutation);
-  const [searchAmount, setSearchAmount] = createSignal("25");
-  const [searchReason, setSearchReason] = createSignal("");
-  const [leadAmount, setLeadAmount] = createSignal("10");
-  const [leadReason, setLeadReason] = createSignal("");
+
+  const searchLimit = () =>
+    (searchStatus()?.policy.monthlyLimit ?? 0) + (searchStatus()?.granted ?? 0);
 
   return (
     <AppPage width="medium">
-      <div class="space-y-8">
-        <div>
-          <h2 class="text-2xl font-semibold">Mi capacidad</h2>
-          <p class="text-sm text-muted-foreground">
-            Revisa tus límites efectivos y solicita capacidad adicional.
-          </p>
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-2">
-          <div class="rounded border p-4">
-            <p class="font-medium">Búsquedas del mes</p>
-            <p>
-              {searchStatus()?.committed ?? 0}/
-              {(searchStatus()?.policy.monthlyLimit ?? 0) +
-                (searchStatus()?.granted ?? 0)}
-            </p>
-            <p class="text-sm text-muted-foreground">
-              {searchStatus()?.remaining ?? 0} restantes
-            </p>
-          </div>
-          <div class="rounded border p-4">
-            <p class="font-medium">Capacidad de leads</p>
-            <p>
-              {leadStatus()?.activeAssignments ?? 0}/
-              {leadStatus()?.policy.bufferTarget ?? 0} activos
-            </p>
-            <p class="text-sm text-muted-foreground">
-              {leadStatus()?.remaining ?? 0} refills hoy
-            </p>
-          </div>
-        </div>
-
-        <form
-          class="space-y-3 rounded border p-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void requestSearches(Number(searchAmount()), searchReason());
-          }}
-        >
-          <h3 class="text-lg font-medium">Solicitar más búsquedas</h3>
-          <Input
-            type="number"
-            label="Cantidad"
-            value={searchAmount()}
-            onInput={(event) => setSearchAmount(event.currentTarget.value)}
-            required
-          />
-          <Input
-            label="Motivo"
-            value={searchReason()}
-            onInput={(event) => setSearchReason(event.currentTarget.value)}
-            required
-          />
-          <Button type="submit">Enviar solicitud</Button>
-        </form>
-
-        <form
-          class="space-y-3 rounded border p-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void requestRefill(Number(leadAmount()), leadReason());
-          }}
-        >
-          <h3 class="text-lg font-medium">Solicitar más refills</h3>
-          <Input
-            type="number"
-            label="Cantidad"
-            value={leadAmount()}
-            onInput={(event) => setLeadAmount(event.currentTarget.value)}
-            required
-          />
-          <Input
-            label="Motivo"
-            value={leadReason()}
-            onInput={(event) => setLeadReason(event.currentTarget.value)}
-            required
-          />
-          <Button type="submit">Enviar solicitud</Button>
-        </form>
+      <div class={styles.statusGrid}>
+        <CapacityStatus
+          title="Búsquedas del mes"
+          value={`${searchStatus()?.committed ?? 0}/${searchLimit()}`}
+          caption={`${searchStatus()?.remaining ?? 0} restantes`}
+        />
+        <CapacityStatus
+          title="Clientes activos"
+          value={`${leadStatus()?.activeAssignments ?? 0}/${leadStatus()?.policy.bufferTarget ?? 0} activos`}
+          caption={`${leadStatus()?.remaining ?? 0} asignaciones disponibles hoy`}
+        />
       </div>
+
+      <CapacityRequestForm
+        title="Solicitar más búsquedas"
+        initialAmount="25"
+        onRequest={(amount, reason) => void requestSearches(amount, reason)}
+      />
+
+      <CapacityRequestForm
+        title="Solicitar más asignaciones"
+        initialAmount="10"
+        onRequest={(amount, reason) => void requestRefill(amount, reason)}
+      />
     </AppPage>
   );
 }

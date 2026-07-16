@@ -122,9 +122,6 @@ const CREATED_BY_COLUMN: DataGridColumn<LeadListRowView> = {
   renderCell: (lead) => <RecordChip name={lead.createdByName} shape="round" />,
 };
 
-// Assigned executive. Inline-editable for roles that can reassign; reassignment
-// runs through the same ExecutivePicker the record detail uses, so the list and
-// the detail share one editor and one mutation.
 function executiveColumn(
   canReassign: boolean,
 ): DataGridColumn<LeadListRowView> {
@@ -136,6 +133,7 @@ function executiveColumn(
     renderCell: (lead) => (
       <RecordChip name={lead.executiveName} shape="round" />
     ),
+    // Reassignment uses the same editor and mutation as record detail.
     edit: canReassign
       ? {
           ariaLabel: "Reasignar ejecutivo",

@@ -59,7 +59,7 @@ export function MainNavigationDrawer() {
   };
 
   return (
-    <NavigationDrawer title="Navegacion">
+    <NavigationDrawer title="Navegación">
       <NavigationDrawerScrollableContent>
         <NavigationDrawerSection>
           <NavigationDrawerItemsCollapsableContainer>
