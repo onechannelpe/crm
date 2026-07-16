@@ -18,11 +18,13 @@ export async function getRecoveryCodesStatus(): Promise<{
   return runAction({
     name: "auth.recovery.status",
     access: { kind: "session" },
+
     execute: async ({ actor }) => {
-      const active =
-        await getServerRuntime().auth.setup.repos.userRecoveryCodes.getActiveSet(
-          actor.userId,
-        );
+      const recoveryCodes =
+        getServerRuntime().auth.setup.repos.userRecoveryCodes;
+
+      const active = await recoveryCodes.getActiveSet(actor.userId);
+
       return Ok({
         hasActiveSet: active !== null,
         total: active?.total ?? 0,
@@ -39,12 +41,16 @@ export async function regenerateRecoveryCodes(): Promise<{
   const result = await runAction({
     name: "auth.recovery.regenerate",
     access: { kind: "session" },
+
     execute: (ctx) =>
       regenerateRecoverySetup(ctx, getServerRuntime().auth.setup),
   });
 
   setSessionCookie(result.sessionToken);
-  return { recoveryCodes: result.recoveryCodes };
+
+  return {
+    recoveryCodes: result.recoveryCodes,
+  };
 }
 
 export async function acknowledgeRecoveryCodes(): Promise<{
@@ -53,10 +59,14 @@ export async function acknowledgeRecoveryCodes(): Promise<{
   const result = await runAction({
     name: "auth.recovery.acknowledge",
     access: { kind: "session" },
+
     execute: (ctx) =>
       acknowledgeRecoverySetup(ctx, getServerRuntime().auth.setup),
   });
 
   setSessionCookie(result.sessionToken);
-  return { redirectTo: result.redirectTo };
+
+  return {
+    redirectTo: result.redirectTo,
+  };
 }
