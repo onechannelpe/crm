@@ -1,0 +1,89 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.label,
+.labelLink {
+  font-size: var(--font-size-body);
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+  The row is a link to the seller's record. app.css resets link decoration to
+  inherit, so the affordance has to be stated here.
+*/
+.labelLink {
+  text-decoration: none;
+}
+
+.labelLink:hover {
+  text-decoration: underline;
+}
+
+.labelLink:focus-visible {
+  border-radius: var(--radius-sm);
+  box-shadow: var(--focus-ring-shadow);
+  outline: none;
+}
+
+.value {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.ratio {
+  color: var(--foreground-tertiary);
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+
+.fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: 999px;
+  background: var(--color-blue-11);
+  min-width: 4px;
+  transition: width 0.2s ease;
+}
+
+.fillHit {
+  background: var(--color-green-11);
+}
+
+.target {
+  position: absolute;
+  inset-block: 0;
+  width: 1px;
+  background: var(--foreground-tertiary);
+  transform: translateX(-0.5px);
+}

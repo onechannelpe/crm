@@ -1,0 +1,61 @@
+.gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.figures {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.actual {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.target {
+  font-size: var(--font-size-body);
+  color: var(--muted-foreground);
+}
+
+.track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--muted);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-blue-11);
+  min-width: 4px;
+  transition: width 0.25s ease;
+}
+
+.fillHit {
+  background: var(--color-green-11);
+}
+
+.legend {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
+.hitText {
+  color: var(--color-green-11);
+  font-weight: 600;
+}
+
+.caption {
+  color: var(--muted-foreground);
+}

@@ -12,7 +12,8 @@ export type RouteIcon =
   | "capacity"
   | "profile"
   | "schedule"
-  | "monitoring";
+  | "monitoring"
+  | "dashboards";
 
 export type SidebarSection = "primary" | "secondary";
 
@@ -55,6 +56,7 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
   { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
   { match: "/records", header: { label: "Registros", icon: "leads" } },
+  { match: "/search", header: { label: "Búsqueda", icon: "search" } },
   {
     match: "/rate-simulator",
     header: { label: "Simulador de tasas", icon: "rate-simulator" },
@@ -74,6 +76,11 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Solicitudes", icon: "team" },
   },
   { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
+  {
+    match: /^\/dashboards\/[^/]+$/,
+    header: { label: "GPV de comercios", icon: "dashboards" },
+  },
+  { match: "/dashboards", header: { label: "Paneles", icon: "dashboards" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
   {
     match: "/settings/capacity-policies",
@@ -182,6 +189,18 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
       { href: "/team", label: "Capacidad", order: 1 },
       { href: "/team/requests", label: "Solicitudes", order: 2 },
     ],
+  },
+  {
+    id: "dashboards",
+    href: "/dashboards",
+    activePrefixes: ["/dashboards"],
+    label: "Paneles",
+    navLabel: "Paneles",
+    icon: "dashboards",
+    tileColor: "green",
+    section: "secondary",
+    order: 7,
+    group: "Negocio",
   },
   {
     id: "monitoring",

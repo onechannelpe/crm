@@ -1,0 +1,13 @@
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+}
+
+.tabActions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.uploadBand {
+  padding: var(--spacing-2);
+}

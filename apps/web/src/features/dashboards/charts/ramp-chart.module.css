@@ -1,0 +1,102 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  width: 100%;
+}
+
+.canvas {
+  position: relative;
+  width: 100%;
+}
+
+.svg {
+  /* Keep touch drags on the chart instead of scrolling the page. */
+  display: block;
+  font-family: inherit;
+  touch-action: none;
+}
+
+.tooltip {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevation-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 8rem;
+  padding: var(--spacing-2);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  transition:
+    left 160ms ease,
+    top 160ms ease,
+    opacity 120ms ease;
+  z-index: 1;
+}
+
+@starting-style {
+  .tooltip {
+    opacity: 0;
+  }
+}
+
+.dot {
+  transition: r 120ms ease;
+}
+
+.tooltipHeader {
+  color: var(--foreground);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+.tooltipRow {
+  align-items: center;
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.tooltipLabel {
+  color: var(--foreground-tertiary);
+  flex: 1;
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+
+.tooltipValue {
+  color: var(--foreground);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1) var(--spacing-3);
+}
+
+.legendItem {
+  align-items: center;
+  color: var(--foreground-secondary);
+  display: flex;
+  font-size: var(--font-size-caption);
+  gap: var(--spacing-1);
+}
+
+.legendSwatch {
+  border-radius: 999px;
+  flex-shrink: 0;
+  height: 8px;
+  width: 8px;
+}
+
+.legendValue {
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-medium);
+}

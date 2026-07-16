@@ -3,6 +3,7 @@ export type RecordTabId =
   | "datos"
   | "tareas"
   | "afiliacion"
+  | "gpv"
   | "notas"
   | "actividad"
   | "archivos";

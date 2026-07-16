@@ -1,6 +1,7 @@
 import type { JSX } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
+import ChartColumn from "~/components/icons/chart-column";
 import Checkbox from "~/components/icons/checkbox";
 import HomeTabler from "~/components/icons/home-tabler";
 import MessageSquare from "~/components/icons/message-square";
@@ -11,6 +12,7 @@ import type { LeadStage } from "~/contracts/workflow/vocabulary";
 import { ActividadTab } from "~/features/record-show/actividad/actividad-tab";
 import { AfiliacionTab } from "~/features/record-show/afiliacion/afiliacion-tab";
 import { DatosTab } from "~/features/record-show/datos/datos-tab";
+import { GpvTab } from "~/features/record-show/gpv/gpv-tab";
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 import { NotasTab } from "~/features/record-show/notas/notas-tab";
@@ -76,6 +78,13 @@ const RECORD_TABS: readonly RecordTabDefinition[] = [
     visibleForKinds: LEAD,
     isVisibleAtStage: inAfiliacion,
     component: AfiliacionTab,
+  },
+  {
+    id: "gpv",
+    icon: ChartColumn,
+    label: "GPV",
+    visibleForKinds: LEAD,
+    component: GpvTab,
   },
   {
     id: "notas",
