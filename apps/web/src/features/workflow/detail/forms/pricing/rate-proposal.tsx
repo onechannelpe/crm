@@ -270,10 +270,10 @@ export function RateProposalSection(props: RateProposalSectionProps) {
             </FieldTextValue>
           </RecordInlineCell>
           <RecordInlineCell
-            label="T. debito"
+            label="T. débito"
             icon={Target}
             edit={numberFieldEdit(
-              "T. debito",
+              "T. débito",
               props.proposal.proposedDebitRate,
               (value) => ({ proposedDebitRate: value }),
             )}
@@ -283,10 +283,10 @@ export function RateProposalSection(props: RateProposalSectionProps) {
             </FieldTextValue>
           </RecordInlineCell>
           <RecordInlineCell
-            label="T. credito"
+            label="T. crédito"
             icon={Target}
             edit={numberFieldEdit(
-              "T. credito",
+              "T. crédito",
               props.proposal.proposedCreditRate,
               (value) => ({ proposedCreditRate: value }),
             )}
@@ -296,10 +296,10 @@ export function RateProposalSection(props: RateProposalSectionProps) {
             </FieldTextValue>
           </RecordInlineCell>
           <RecordInlineCell
-            label="T. foraneo"
+            label="T. foráneo"
             icon={Target}
             edit={numberFieldEdit(
-              "T. foraneo",
+              "T. foráneo",
               props.proposal.proposedForeignRate,
               (value) => ({ proposedForeignRate: value }),
             )}

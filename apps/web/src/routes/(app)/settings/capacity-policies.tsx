@@ -71,8 +71,8 @@ function TeamPolicyRow(props: {
       <div class={styles.teamCardHeader}>
         <span class={styles.teamName}>{props.team().teamName}</span>
         <span class={styles.teamMeta}>
-          Búsquedas {props.team().searchLimit ?? "(hereda)"} · Buffer{" "}
-          {props.team().activeBufferTarget ?? "(hereda)"} · Refill{" "}
+          Búsquedas {props.team().searchLimit ?? "(hereda)"} · Clientes activos{" "}
+          {props.team().activeBufferTarget ?? "(hereda)"} · Asignaciones diarias{" "}
           {props.team().dailyRefillLimit ?? "(hereda)"}
         </span>
       </div>
@@ -123,7 +123,7 @@ function CapacityPoliciesEditor(props: {
         activeBufferTarget: Number(branchDraft.bufferTarget),
         dailyRefillLimit: Number(branchDraft.dailyRefillLimit),
       });
-      enqueueSuccessSnackBar("Defaults de sucursal actualizados");
+      enqueueSuccessSnackBar("Límites de sucursal actualizados");
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
@@ -133,7 +133,7 @@ function CapacityPoliciesEditor(props: {
     <>
       <SettingsSection
         title="Sucursal"
-        description="Defaults de búsquedas y leads para toda la sucursal. Los equipos los heredan salvo que definan el suyo."
+        description="Define los límites de búsquedas, clientes activos y asignaciones diarias de la sucursal. Los equipos los heredan salvo que definan los suyos."
         actions={
           <Button
             type="submit"
@@ -162,7 +162,7 @@ function CapacityPoliciesEditor(props: {
 
       <SettingsSection
         title="Equipos"
-        description="Ajusta los límites por equipo. Deja el valor heredado para seguir el default de la sucursal."
+        description="Ajusta los límites por equipo. Deja el valor heredado para usar el límite de la sucursal."
       >
         <div class={styles.teamList}>
           {/* Key by teamId: a row stays mounted across revalidation (new

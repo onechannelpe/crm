@@ -86,9 +86,9 @@ export default function MyCapacityPage() {
           caption={`${searchStatus()?.remaining ?? 0} restantes`}
         />
         <CapacityStatus
-          title="Capacidad de leads"
+          title="Clientes activos"
           value={`${leadStatus()?.activeAssignments ?? 0}/${leadStatus()?.policy.bufferTarget ?? 0} activos`}
-          caption={`${leadStatus()?.remaining ?? 0} refills hoy`}
+          caption={`${leadStatus()?.remaining ?? 0} asignaciones disponibles hoy`}
         />
       </div>
 
@@ -99,7 +99,7 @@ export default function MyCapacityPage() {
       />
 
       <CapacityRequestForm
-        title="Solicitar más refills"
+        title="Solicitar más asignaciones"
         initialAmount="10"
         onRequest={(amount, reason) => void requestRefill(amount, reason)}
       />

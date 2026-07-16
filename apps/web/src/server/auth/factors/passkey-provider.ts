@@ -13,7 +13,7 @@ import {
 import type { UserId } from "~/server/shared/ids";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
-const rpName = "CRM OneChannel";
+const rpName = "Culqi360";
 
 export interface WebauthnRelyingParty {
   rpID: string;

@@ -56,7 +56,7 @@ const TEAM_COLUMNS = [
   },
   {
     key: "leadStatus",
-    label: "Leads",
+    label: "Clientes",
     icon: List,
     width: 220,
     renderCell: (executive) => (
@@ -81,7 +81,7 @@ const TEAM_COLUMNS = [
   },
   {
     key: "executiveCategory",
-    label: "Categoria",
+    label: "Categoría",
     icon: UserRound,
     width: 130,
     renderCell: (executive) =>

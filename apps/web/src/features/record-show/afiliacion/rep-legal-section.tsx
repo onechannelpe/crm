@@ -107,7 +107,7 @@ export function RepLegalSection(props: {
                     <FieldTextValue>{rl().dni}</FieldTextValue>
                   </RecordInlineCell>
                   <RecordInlineCell
-                    label="Telefono"
+                    label="Teléfono"
                     icon={Phone}
                     empty={!rl().telefono}
                   >
@@ -167,7 +167,7 @@ export function RepLegalSection(props: {
                   />
                 </FieldInputValue>
               </FieldRow>
-              <FieldRow label="Telefono" icon={Phone}>
+              <FieldRow label="Teléfono" icon={Phone}>
                 <FieldInputValue>
                   <TextInput
                     sizeVariant="sm"

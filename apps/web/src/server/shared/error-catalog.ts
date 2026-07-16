@@ -1,7 +1,7 @@
 import type { DomainErrorKind } from "~/server/shared/domain-error";
 
 export const ERROR_CATALOG = {
-  lead_not_found: { kind: "not_found", message: "No se encontró el lead." },
+  lead_not_found: { kind: "not_found", message: "No se encontró el cliente." },
   executive_not_found: {
     kind: "not_found",
     message: "No se encontró el ejecutivo.",
@@ -75,11 +75,11 @@ export const ERROR_CATALOG = {
   },
   lead_organization_not_found: {
     kind: "not_found",
-    message: "No se encontró la organización del lead.",
+    message: "No se encontró la organización del cliente.",
   },
   lead_commercial_scope_missing: {
     kind: "not_found",
-    message: "No se encontró el alcance comercial del lead.",
+    message: "No se encontró el alcance comercial del cliente.",
   },
   file_storage_missing: {
     kind: "not_found",
@@ -134,11 +134,11 @@ export const ERROR_CATALOG = {
   },
   lead_exhausted: {
     kind: "conflict",
-    message: "Se agotó la capacidad de leads.",
+    message: "Se agotó la capacidad para asignar clientes.",
   },
   ruc_conflict: {
     kind: "conflict",
-    message: "Ya existe un lead con este RUC.",
+    message: "Ya existe un cliente con este RUC.",
   },
   phone_in_use: {
     kind: "conflict",
@@ -151,11 +151,11 @@ export const ERROR_CATALOG = {
   lead_not_in_pricing: {
     kind: "conflict",
     message:
-      "Los archivos de revisión solo pueden subirse cuando el lead está en etapa de tarifa.",
+      "Los archivos de revisión solo pueden subirse cuando el cliente está en etapa de tarifa.",
   },
   rate_proposal_not_found: {
     kind: "conflict",
-    message: "No hay una propuesta de tarifa para este lead.",
+    message: "No hay una propuesta de tarifa para este cliente.",
   },
   rate_proposal_not_pending: {
     kind: "conflict",
@@ -176,11 +176,11 @@ export const ERROR_CATALOG = {
   lead_not_live: {
     kind: "conflict",
     message:
-      "Los comprobantes de venta solo se permiten cuando el lead está activo.",
+      "Los comprobantes de venta solo se permiten cuando el cliente está activo.",
   },
   concurrency_conflict: {
     kind: "conflict",
-    message: "El lead fue modificado por otra persona. Vuelve a intentarlo.",
+    message: "Otra persona modificó el cliente. Vuelve a intentarlo.",
   },
   assignment_inactive: {
     kind: "conflict",
@@ -373,7 +373,7 @@ export const ERROR_CATALOG = {
   },
   invalid_stage: {
     kind: "validation",
-    message: "El lead no está en la etapa requerida.",
+    message: "El cliente no está en la etapa requerida.",
   },
   invalid_settlement_account: {
     kind: "validation",
@@ -496,11 +496,11 @@ export const ERROR_CATALOG = {
   },
   invalid_buffer_target: {
     kind: "validation",
-    message: "El objetivo de buffer debe ser mayor que cero.",
+    message: "El límite de clientes activos debe ser mayor que cero.",
   },
   buffer_target_exceeds_max: {
     kind: "validation",
-    message: "El objetivo de buffer supera el máximo permitido.",
+    message: "El límite de clientes activos supera el máximo permitido.",
   },
   invalid_daily_refill: {
     kind: "validation",

@@ -41,7 +41,7 @@ export function MobileNavigationBar() {
   const items = createMemo<NavigationBarItemDef[]>(() => [
     {
       name: "main",
-      label: "Abrir navegacion",
+      label: "Abrir navegación",
       Icon: List,
       onClick: () => {
         setCurrentMobileDrawer("main");

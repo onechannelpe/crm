@@ -21,7 +21,7 @@ export default function LoginInvitePage() {
   return (
     <AuthFlowShell
       title="Activar cuenta"
-      description="Define tu contraseña para activar la cuenta. El perfil ya fue provisionado por RR.HH."
+      description="Define tu contraseña para activar la cuenta. Tu perfil ya está listo."
     >
       <Switch>
         <Match when={inviteInfo() === null}>

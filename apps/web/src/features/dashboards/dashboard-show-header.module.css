@@ -1,0 +1,71 @@
+.drawerExpandButton {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--foreground-secondary);
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 28px;
+  justify-content: center;
+  transition:
+    background var(--motion-fast) ease,
+    color var(--motion-fast) ease;
+  width: 28px;
+}
+
+.drawerExpandButton:hover {
+  background: var(--background-transparent-light);
+  color: var(--foreground);
+}
+
+.breadcrumb {
+  align-items: center;
+  display: flex;
+  gap: var(--spacing-2);
+  overflow: hidden;
+}
+
+.breadcrumbLink {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.breadcrumbLink:hover {
+  color: var(--foreground);
+}
+
+.breadcrumbPrefix {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--spacing-2);
+}
+
+.objectIconBadge {
+  align-items: center;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  display: inline-flex;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+.breadcrumbSep {
+  color: var(--foreground-tertiary);
+  flex-shrink: 0;
+}
+
+.breadcrumbCurrent {
+  color: var(--foreground);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -12,11 +12,12 @@ import { AppPage, AppPageSection } from "~/components/layout/page";
 import { Present } from "~/components/ui/control-flow/present";
 import { Badge } from "~/components/ui/display/badge";
 import { InlineOptionsEditor } from "~/components/ui/input/inline-field-editor";
-import type { QualityRow } from "~/contracts/merchant-stats/views";
 import {
-  isQualityIssue,
-  type QualityIssue,
-} from "~/contracts/merchant-stats/vocabulary";
+  ATTRIBUTION_CONFIDENCE_LABEL,
+  QUALITY_ISSUE_COPY,
+} from "~/contracts/merchant-stats/quality-copy";
+import type { QualityRow } from "~/contracts/merchant-stats/views";
+import { isQualityIssue } from "~/contracts/merchant-stats/vocabulary";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
@@ -32,14 +33,6 @@ import styles from "./quality-page.module.css";
 
 const PAGE = 60;
 const UNASSIGNED = "Sin asignar";
-
-const TITLES: Record<QualityIssue, string> = {
-  conflict: "Atribución en conflicto",
-  late: "Registrado después de la venta",
-  none: "Sin evidencia en el CRM",
-  no_target: "Meses sin proyectado",
-  serial_mismatch: "Series que no cuadran con entregas",
-};
 
 type Row = QualityRow & { id: string };
 
@@ -156,7 +149,9 @@ export function QualityPage() {
       grow: true,
       renderCell: (row) => (
         <span class={styles.detail}>
-          <Badge variant="warning">{row.confidence}</Badge>
+          <Badge variant="warning">
+            {ATTRIBUTION_CONFIDENCE_LABEL[row.confidence]}
+          </Badge>
           <span>{row.detail}</span>
         </span>
       ),
@@ -177,11 +172,13 @@ export function QualityPage() {
         >
           {(current) => (
             <>
-              <h1 class={styles.title}>{TITLES[current()]}</h1>
+              <h1 class={styles.title}>
+                {QUALITY_ISSUE_COPY[current()].label}
+              </h1>
               <DataGrid
-                ariaLabel={TITLES[current()]}
+                ariaLabel={QUALITY_ISSUE_COPY[current()].label}
                 columns={columns()}
-                emptyState="No hay filas pendientes en esta cola."
+                emptyState="No hay comercios pendientes en esta cola."
                 loadMore={{
                   hasMore: rows().length >= limit(),
                   loading:

@@ -49,10 +49,7 @@ export default function FulfillmentQueuePage() {
           when={queue().rows.length > 0}
           fallback={
             <div class={styles.empty}>
-              <EmptyState
-                title="No hay entregas pendientes"
-                description="Todas las entregas han sido completadas o gestionadas."
-              />
+              <EmptyState title="No hay entregas pendientes" />
             </div>
           }
         >

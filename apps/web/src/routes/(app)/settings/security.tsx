@@ -245,7 +245,7 @@ export default function SecurityPage() {
       <ConfirmDialog
         isOpen={regenerateRecoveryDialog.isOpen()}
         title="Regenerar códigos de recuperación"
-        description="Los códigos actuales dejarán de funcionar y se generará un juego nuevo."
+        description="Los códigos actuales dejarán de funcionar. Recibirás nuevos códigos."
         confirmLabel="Regenerar"
         loading={isRegeneratingRecovery()}
         onConfirm={() => void handleRegenerateRecovery()}

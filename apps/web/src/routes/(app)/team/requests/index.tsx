@@ -51,7 +51,7 @@ export default function TeamRequestsPage() {
       icon: List,
       width: 160,
       renderCell: (request) =>
-        request.kind === "search_extra" ? "Más búsquedas" : "Más refills",
+        request.kind === "search_extra" ? "Más búsquedas" : "Más asignaciones",
     },
     {
       key: "requestedAmount",

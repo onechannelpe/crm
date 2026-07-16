@@ -45,9 +45,9 @@ export default function DashboardPage() {
         amount: capacity.policy.bufferTarget,
         cards: [
           {
-            title: "Buffer de leads",
+            title: "Clientes activos",
             value: `${capacity.activeAssignments}/${capacity.policy.bufferTarget}`,
-            detail: `${capacity.remaining} refills hoy`,
+            detail: `${capacity.remaining} asignaciones disponibles hoy`,
             href: "/me/capacity",
           },
         ],

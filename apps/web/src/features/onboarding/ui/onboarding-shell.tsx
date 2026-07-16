@@ -32,7 +32,7 @@ export function OnboardingShell(props: OnboardingShellProps) {
         <div class={styles.headerCenter}>
           <ResponsiveImage
             sources={logo}
-            alt="CRM"
+            alt="Culqi360"
             width="24"
             height="24"
             class={styles.headerLogo}

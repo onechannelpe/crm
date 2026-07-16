@@ -50,7 +50,7 @@ export function VenueCard(props: {
           <VenueDetailRow label="Cantidad POS" icon={Package}>
             {venue().posQuantity}
           </VenueDetailRow>
-          <VenueDetailRow label="Direccion" icon={MapIcon}>
+          <VenueDetailRow label="Dirección" icon={MapIcon}>
             {venue().address}
           </VenueDetailRow>
           <Show when={venue().addressReference}>

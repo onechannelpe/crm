@@ -1,5 +1,6 @@
 import type { Expression, ExpressionBuilder, SqlBool } from "kysely";
 
+import { QUALITY_ISSUE_COPY } from "~/contracts/merchant-stats/quality-copy";
 import type {
   Page,
   QualityRow,
@@ -58,16 +59,6 @@ type ConfidenceIssue = (typeof CONFIDENCE_ISSUES)[number];
 function isConfidenceIssue(value: string): value is ConfidenceIssue {
   return CONFIDENCE_ISSUES.some((issue) => issue === value);
 }
-
-const DETAIL: Record<QualityIssue, string> = {
-  conflict:
-    "Los dispositivos de este RUC apuntan a vendedores distintos. Uno de los registros describe otro dispositivo.",
-  late: "El cliente se registró después de la venta, así que no hereda el crédito automáticamente.",
-  none: "No hay evidencia en el CRM para este RUC: ni serial de fulfillment ni lead vigente.",
-  no_target: "El RUC facturó este mes pero no tiene proyectado.",
-  serial_mismatch:
-    "El serial de Culqi no está entre los que registró fulfillment para este cliente.",
-};
 
 export async function getQualitySummary(
   db: DatabaseExecutor,
@@ -172,7 +163,7 @@ async function confidenceRows(
     gpvAtStake: row.gpv ?? 0,
     method: row.method,
     confidence: row.confidence,
-    detail: DETAIL[issue],
+    detail: QUALITY_ISSUE_COPY[issue].detail,
     evidence: row.evidence,
   }));
 }
@@ -229,7 +220,7 @@ async function noTargetRows(
     gpvAtStake: row.gpv ?? 0,
     method: row.method ?? "none",
     confidence: row.confidence ?? "none",
-    detail: DETAIL.no_target,
+    detail: QUALITY_ISSUE_COPY.no_target.detail,
     evidence: row.evidence ?? null,
   }));
 }
@@ -269,7 +260,7 @@ async function serialMismatchRows(
     gpvAtStake: row.gpv ?? 0,
     method: "none" as const,
     confidence: "none" as const,
-    detail: DETAIL.serial_mismatch,
+    detail: QUALITY_ISSUE_COPY.serial_mismatch.detail,
     evidence: { culqiSerial: row.serial_number },
   }));
 }
