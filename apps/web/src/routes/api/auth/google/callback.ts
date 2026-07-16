@@ -43,8 +43,7 @@ export async function GET(event: ApiRequestEvent): Promise<Response> {
       ipAddress,
       userAgent,
     },
-    runtime.repos,
-    runtime.privilegedLoginAlertSender,
+    runtime,
     createRequestPasskeyProvider(runtime.repos),
   );
   if (isErr(result)) {

@@ -25,6 +25,21 @@ export function createSessionRepository(db: Kysely<Database>) {
       return session ?? null;
     },
 
+    async hasRecentForUserAndIp(
+      userId: UserId,
+      ipAddress: string,
+      since: Date,
+    ): Promise<boolean> {
+      const session = await db
+        .selectFrom("user_sessions")
+        .select("id")
+        .where("user_id", "=", userId)
+        .where("ip_address", "=", ipAddress)
+        .where("created_at", ">=", since)
+        .executeTakeFirst();
+      return session !== undefined;
+    },
+
     async updateActivity(id: string, lastActivity: Date): Promise<void> {
       await db
         .updateTable("user_sessions")
@@ -49,6 +64,14 @@ export function createSessionRepository(db: Kysely<Database>) {
       await db
         .deleteFrom("user_sessions")
         .where("user_id", "=", userId)
+        .execute();
+    },
+
+    async deleteOtherForUser(userId: UserId, currentSessionId: string) {
+      await db
+        .deleteFrom("user_sessions")
+        .where("user_id", "=", userId)
+        .where("id", "!=", currentSessionId)
         .execute();
     },
 

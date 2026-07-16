@@ -1,11 +1,11 @@
-import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
+import { loadActiveAuthContextForUser } from "~/lib/auth/context/auth-context";
 import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
-} from "~/server/auth/application/contracts";
+} from "~/server/auth/application/login-contracts";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { authenticatePassword } from "~/server/auth/factors/password";
-import type { AuthLoginDeps } from "~/server/auth/flows/login-deps";
+import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { Err, isErr, type Result } from "~/server/shared/result";
 
 import { completePrimaryAuthProof } from "./primary-login";
@@ -17,32 +17,40 @@ export async function submitPasswordLogin(
     ipAddress: string;
     userAgent: string | null;
   },
-  deps: AuthLoginDeps,
-  sendPrivilegedLoginAlert: SendPrivilegedLoginAlert,
+  deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
 ): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const safeIdentifier = input.identifier.trim();
-  const proof = await authenticatePassword(
+  const authenticated = await authenticatePassword(
     {
       identifier: safeIdentifier,
       password: input.password,
       ipAddress: input.ipAddress,
     },
-    deps,
+    { ...deps.repos, now: deps.now },
   );
-  if (isErr(proof)) {
-    return Err(proof.error);
+  if (isErr(authenticated)) {
+    return Err(authenticated.error);
+  }
+
+  const context = await loadActiveAuthContextForUser(
+    authenticated.value.user,
+    deps.repos,
+    deps.now(),
+  );
+  if (!context) {
+    return Err({ kind: "invalid_credentials" });
   }
 
   return completePrimaryAuthProof({
-    proof: proof.value,
+    proof: authenticated.value.proof,
     identifier: safeIdentifier,
     request: {
       ipAddress: input.ipAddress,
       userAgent: input.userAgent,
     },
+    context,
     deps,
-    sendPrivilegedLoginAlert,
     webauthnProvider,
   });
 }

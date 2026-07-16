@@ -16,8 +16,8 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
       challenge_id?: WebauthnChallengeId | null;
       state: "totp" | "passkey";
       expires_at: Date;
+      created_at: Date;
     }): Promise<AuthLoginFlowId> {
-      const now = new Date();
       const inserted = await db
         .insertInto("login_flows")
         .values({
@@ -27,8 +27,8 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
           challenge_id: values.challenge_id ?? null,
           state: values.state,
           expires_at: values.expires_at,
-          created_at: now,
-          updated_at: now,
+          created_at: values.created_at,
+          updated_at: values.created_at,
         })
         .returning("id")
         .executeTakeFirstOrThrow();
@@ -41,6 +41,15 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
         .selectFrom("login_flows")
         .selectAll()
         .where("id", "=", id)
+        .executeTakeFirst();
+    },
+
+    findByIdForUpdate(id: AuthLoginFlowId) {
+      return db
+        .selectFrom("login_flows")
+        .selectAll()
+        .where("id", "=", id)
+        .forUpdate()
         .executeTakeFirst();
     },
 

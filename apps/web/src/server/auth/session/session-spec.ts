@@ -39,7 +39,6 @@ export interface SessionSpec {
 export interface IssuedSession {
   userId: UserId;
   role: Role;
-  onboardingCompleted: boolean;
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
@@ -69,6 +68,7 @@ export interface SessionRepositoryPort {
   extendExpiry(id: string, expiresAt: Date): Promise<void>;
   delete(id: string): Promise<void>;
   deleteAllForUser(userId: UserId): Promise<void>;
+  deleteOtherForUser(userId: UserId, retainedSessionId: string): Promise<void>;
 }
 
 export interface SessionUsersPort {

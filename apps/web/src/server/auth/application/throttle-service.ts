@@ -178,6 +178,27 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
     ): Promise<void> {
       return clearFailureState("totp_verify", identifier, ipAddress);
     },
+
+    checkRecoveryVerifyThrottle(
+      identifier: string,
+      ipAddress: string,
+    ): Promise<CheckResult> {
+      return checkThrottle("recovery_verify", identifier, ipAddress);
+    },
+
+    recordRecoveryVerifyFailure(
+      identifier: string,
+      ipAddress: string,
+    ): Promise<void> {
+      return recordFailure("recovery_verify", identifier, ipAddress);
+    },
+
+    clearRecoveryVerifyFailureState(
+      identifier: string,
+      ipAddress: string,
+    ): Promise<void> {
+      return clearFailureState("recovery_verify", identifier, ipAddress);
+    },
   };
 }
 

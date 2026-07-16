@@ -1,6 +1,6 @@
 "use server";
 
-import type { CurrentUserView } from "~/actions/auth/contracts";
+import type { CurrentUserView } from "~/contracts/auth";
 import { getCurrentUser } from "~/server/auth/application/queries/get-current-user";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { logoutUser } from "~/server/auth/flows/logout-user";

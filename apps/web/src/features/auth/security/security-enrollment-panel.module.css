@@ -133,28 +133,13 @@
   display: grid;
   gap: 12px;
   padding: 16px;
-  border-radius: 16px;
-  border: 1px solid
-    color-mix(in oklab, var(--border) 65%, var(--foreground) 35%);
-  background: color-mix(in oklab, var(--surface) 88%, white 12%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--secondary);
 }
 
-.recoveryHeader {
-  display: grid;
-  gap: 4px;
-}
-
-.recoveryTitle {
-  margin: 0;
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
-  color: var(--foreground);
-}
-
-.recoveryDescription {
-  margin: 0;
-  color: var(--muted-foreground);
-  line-height: 1.5;
+.recoveryCopy {
+  justify-self: end;
 }
 
 .recoveryList {
@@ -167,9 +152,9 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   color: var(--foreground);
-  background: color-mix(in oklab, var(--surface) 90%, white 10%);
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 8px 10px;
   text-align: center;
 }

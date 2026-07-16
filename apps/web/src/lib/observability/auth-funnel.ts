@@ -14,7 +14,6 @@ export type AuthFunnelEventName = (typeof AUTH_FUNNEL_EVENT_NAMES)[number];
 
 const AUTH_FUNNEL_SCREENS = [
   "login",
-  "login_user",
   "login_verify",
   "login_passkey",
   "reset_password",

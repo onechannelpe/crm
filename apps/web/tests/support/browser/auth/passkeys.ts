@@ -1,5 +1,6 @@
 import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
-import { createPasskeyLoginStartAuthService } from "~/server/auth/factors/passkey/service";
+import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
+import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { isErr } from "~/server/shared/result";
 
 import { createTestPasskeyProvider } from "../../passkey/api";
@@ -23,6 +24,7 @@ export async function ensurePasskey(
     ),
     counter: 0,
     transports: JSON.stringify(["internal"]),
+    created_at: new Date(),
   });
 }
 
@@ -31,13 +33,16 @@ export async function createPasskeyFlow(
   identity: BrowserIdentity,
 ): Promise<PasskeyLoginFlowState> {
   await ensurePasskey(runtime, identity);
-  const result = await createPasskeyLoginStartAuthService(runtime.repos, {
-    webauthnProvider: createTestPasskeyProvider(runtime.repos),
-  }).beginLogin({
-    identifier: identity.username,
-    ipAddress: "127.0.0.1",
-    mode: "identified",
-  });
+  const login = createAuthLoginContext(runtime.db);
+  const result = await startPasskeyLogin(
+    {
+      identifier: identity.username,
+      ipAddress: "127.0.0.1",
+      mode: "identified",
+    },
+    login,
+    createTestPasskeyProvider(login.repos),
+  );
 
   if (isErr(result)) {
     throw new Error(`Could not create passkey flow for ${identity.username}`);

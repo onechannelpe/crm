@@ -55,7 +55,7 @@ describe("privileged password login", () => {
     }
 
     expect(result.value.result.role).toBe("superuser");
-    expect(result.value.result.onboardingCompleted).toBe(false);
+    expect(result.value.result.sessionClass).toBe("pre_auth");
     const sessions = await scenario.ctx.repos.sessions.listForUser(user.userId);
     expect(sessions[0]?.session_class).toBe("pre_auth");
     expect(sessions[0]?.primary_auth_method).toBe("password");
@@ -115,6 +115,12 @@ describe("privileged password login", () => {
     ) {
       throw new Error("expected totp verification step");
     }
+    expect(
+      await scenario.ctx.db
+        .selectFrom("notification_intents")
+        .select("id")
+        .execute(),
+    ).toHaveLength(0);
 
     const flowId = AuthLoginFlowId.trust(passwordResult.value.flow.id);
     const result = await scenario.loginTotp(flowId, code, requestMeta);
@@ -126,6 +132,12 @@ describe("privileged password login", () => {
     expect(sessions[0]?.primary_auth_method).toBe("password");
     expect(sessions[0]?.strong_auth_method).toBe("totp");
     expect(sessions[0]?.strong_auth_at).toBeInstanceOf(Date);
+    expect(
+      await scenario.ctx.db
+        .selectFrom("notification_intents")
+        .select("event_type")
+        .execute(),
+    ).toEqual([{ event_type: "security.privileged_login" }]);
   });
 
   it("rejects invalid totp code for privileged user", async () => {

@@ -8,16 +8,14 @@ export class LoginPage {
     await this.page.goto("/login");
   }
 
-  async expectEntryActions() {
+  async expectLoginOptions() {
     await expect(
       this.page.getByRole("button", { name: "Continuar con Google" }),
     ).toBeVisible();
     await expect(
       this.page.getByRole("button", { name: "Entrar con llave de acceso" }),
     ).toBeVisible();
-    await expect(
-      this.page.getByRole("link", { name: "Continuar con usuario" }),
-    ).toBeVisible();
+    await this.expectPasswordForm();
   }
 
   async startDiscoverablePasskeyLogin() {
@@ -33,23 +31,7 @@ export class LoginPage {
     ).toHaveCount(1);
   }
 
-  async openUsernameLogin() {
-    const usernameButton = this.page.getByRole("link", {
-      name: "Continuar con usuario",
-    });
-    const passwordInput = this.page.getByRole("textbox", {
-      name: "Contraseña",
-    });
-
-    await expect(usernameButton).toBeVisible();
-    await Promise.all([
-      this.page.waitForURL(/\/login\/user$/),
-      usernameButton.click(),
-    ]);
-    await expect(passwordInput).toBeVisible();
-  }
-
-  async expectPasswordStep() {
+  private async expectPasswordForm() {
     const form = this.passwordForm();
     await expect(form.getByRole("textbox", { name: /Usuario/ })).toBeVisible();
     await expect(
@@ -68,20 +50,6 @@ export class LoginPage {
     const form = this.passwordForm();
     await form.getByRole("textbox", { name: "Contraseña" }).fill(password);
     await form.getByRole("button", { name: "Iniciar sesión" }).click();
-  }
-
-  async startPasskeyLogin(username: string) {
-    await this.fillUsername(username);
-    await this.page
-      .getByRole("button", { name: "Usar clave de acceso" })
-      .click();
-  }
-
-  async expectStayedOnLoginAfterPasskeyStart() {
-    await expect(this.page).toHaveURL(/\/login\/user$/);
-    await expect(
-      this.page.getByRole("button", { name: "Usar clave de acceso" }),
-    ).toHaveCount(1);
   }
 
   private passwordForm() {

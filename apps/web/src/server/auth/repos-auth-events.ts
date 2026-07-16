@@ -54,24 +54,6 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .then((row) => row?.total ?? 0);
     },
 
-    async hasRecentSuccessFromIp(
-      userId: UserId,
-      ipHash: string,
-      since: Date,
-    ): Promise<boolean> {
-      const row = await db
-        .selectFrom("auth_events")
-        .select("id")
-        .where("user_id", "=", userId)
-        .where("stage", "in", ["login", "verify", "recovery"])
-        .where("outcome", "=", "success")
-        .where("ip_hash", "=", ipHash)
-        .where("created_at", ">=", since)
-        .limit(1)
-        .executeTakeFirst();
-      return Boolean(row);
-    },
-
     findLastByIdentifier(
       identifierHash: string,
     ): Promise<AuthEventRow | undefined> {

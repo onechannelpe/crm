@@ -6,6 +6,7 @@ describe("env validation", () => {
   const baseEnv = {
     SESSION_SECRET: "temp_secret_for_initial_import_32_chars_long",
     TOTP_ENCRYPTION_KEY: "temp_secret_for_initial_import_32_chars_long",
+    RECOVERY_CODE_PEPPER: "temp_recovery_pepper_for_tests_32_chars_long",
     ENGINE_HMAC_KEY_ID: "web",
     ENGINE_HMAC_SECRET: "temp_secret_for_initial_import_32_chars_long",
     GOOGLE_CLIENT_ID: "google-client-id",

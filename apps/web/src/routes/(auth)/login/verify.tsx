@@ -119,6 +119,12 @@ export default function LoginVerifyPage() {
                       Iniciar sesión
                     </Button>
                   </div>
+                  <a
+                    href={`/login/recovery?flow=${flow().id}`}
+                    class={linkStyles.helpLink}
+                  >
+                    Usar un código de recuperación
+                  </a>
                 </form>
               </EnterTransition>
             )}

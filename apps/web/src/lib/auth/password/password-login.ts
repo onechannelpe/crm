@@ -29,10 +29,11 @@ export interface PasswordCredentialInput {
 
 export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
-  deps: { repos: Deps },
+  deps: { repos: Deps; now: () => Date },
 ): Promise<Result<UserRow, InvalidCredentialsError>> {
   const safeUsername = input.username.trim();
   const safePassword = input.password;
+  const occurredAt = deps.now();
   if (safeUsername.length === 0 || safePassword.length === 0) {
     return Err({ kind: "invalid_credentials" });
   }
@@ -59,6 +60,7 @@ export async function verifyPasswordLoginCredentials(
       stage: "login",
       outcome: "throttled",
       reason: "threshold_exceeded",
+      occurredAt,
     });
     return Err({ kind: "invalid_credentials" });
   }
@@ -76,6 +78,7 @@ export async function verifyPasswordLoginCredentials(
       stage: "login",
       outcome: "failure",
       reason: user ? "inactive_user" : "user_not_found",
+      occurredAt,
     });
     return Err({ kind: "invalid_credentials" });
   }
@@ -90,18 +93,10 @@ export async function verifyPasswordLoginCredentials(
       stage: "login",
       outcome: "failure",
       reason: "invalid_password",
+      occurredAt,
     });
     return Err({ kind: "invalid_credentials" });
   }
 
-  await throttleService.clearLoginFailureState(safeUsername, input.ipAddress);
-  await recordAuthEvent(resolvedDeps, {
-    userId: user.id,
-    identifier: safeUsername,
-    ipAddress: input.ipAddress,
-    method: "password",
-    stage: "login",
-    outcome: "success",
-  });
   return Ok(user);
 }

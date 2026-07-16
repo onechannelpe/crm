@@ -19,7 +19,6 @@ vi.mock("~/server/platform/container", () => ({
     auth: {
       login: {
         repos: {},
-        privilegedLoginAlertSender: vi.fn<() => Promise<void>>(),
       },
     },
   }),

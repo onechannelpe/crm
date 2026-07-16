@@ -10,8 +10,8 @@ import {
   vi,
 } from "vitest";
 
-import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
+import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { Err, Ok, isErr } from "~/server/shared/result";
 
 const mocks = vi.hoisted(() => ({
@@ -22,8 +22,6 @@ vi.mock("~/lib/auth/google/google-oauth", () => ({
   authenticateGoogleAuthorizationCode:
     mocks.authenticateGoogleAuthorizationCode,
 }));
-const sendPrivilegedLoginAlert: SendPrivilegedLoginAlert = async () => {};
-
 describe("google oauth callback login", () => {
   const scenario = createAuthScenario("google-oauth-callback-login", {
     freezeAtMs: 1_700_000_000_000,
@@ -56,8 +54,7 @@ describe("google oauth callback login", () => {
         ...request,
         state: "wrong-state",
       },
-      scenario.ctx.repos,
-      sendPrivilegedLoginAlert,
+      createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
     );
 
@@ -80,8 +77,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      scenario.ctx.repos,
-      sendPrivilegedLoginAlert,
+      createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
     );
 
@@ -108,8 +104,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      scenario.ctx.repos,
-      sendPrivilegedLoginAlert,
+      createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
     );
 
@@ -137,8 +132,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      scenario.ctx.repos,
-      sendPrivilegedLoginAlert,
+      createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
     );
 
@@ -146,7 +140,7 @@ describe("google oauth callback login", () => {
     if (isErr(result)) {
       throw new Error("expected successful callback result");
     }
-    expect(result.value.redirectPath).toBe("/");
+    expect(result.value.redirectPath).toBe("/records");
     expect(result.value.sessionToken).toBeTruthy();
 
     const sessions = await scenario.ctx.repos.sessions.listForUser(
@@ -172,8 +166,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      scenario.ctx.repos,
-      sendPrivilegedLoginAlert,
+      createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
     );
 
@@ -197,8 +190,7 @@ describe("google oauth callback login", () => {
 
     const result = await completeGoogleOAuthCallback(
       request,
-      scenario.ctx.repos,
-      sendPrivilegedLoginAlert,
+      createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
     );
 

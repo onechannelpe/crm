@@ -2,37 +2,115 @@
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { getMe } from "~/actions/auth/session";
-import { parsePhone } from "~/lib/phone/pe-mobile";
-import { fail, throwDomain } from "~/server/shared/domain-error";
+import { isRegistrationResponse } from "~/lib/auth/passkey/credential-response";
+import { setSessionCookie } from "~/lib/auth/session/cookies";
+import { isPlainRecord } from "~/lib/type-guards";
+import { verifyPasskeyEnrollment } from "~/server/auth/factors/passkey/service";
+import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
+import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
+import { completeOnboarding } from "~/server/auth/onboarding/complete";
+import { runAction } from "~/server/platform/action";
+import { getServerRuntime } from "~/server/platform/container";
+import { fail, type DomainError } from "~/server/shared/domain-error";
 import { WebauthnChallengeId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { completeOnboarding, completePasskeyOnboarding } from "./index";
+type ParsedCompleteOnboardingInput =
+  | { method: "none" }
+  | {
+      method: "passkey";
+      challengeId: WebauthnChallengeId;
+      response: RegistrationResponseJSON;
+    }
+  | { method: "totp"; code: string };
 
-async function requireCurrentUserPhone() {
-  const currentUser = await getMe();
-  const phone = parsePhone(currentUser?.phone);
-  if (!phone) {
-    throwDomain(fail("invalid_phone"));
-  }
-
-  return phone;
-}
-
-export async function completeOnboardingFromCurrentSession(): Promise<{
+interface CompletionResult {
   redirectTo: string;
-}> {
-  return completeOnboarding(await requireCurrentUserPhone());
+  recoveryCodes: string[];
 }
 
-export async function completeOnboardingWithPasskey(input: {
-  challengeId: string;
-  response: RegistrationResponseJSON;
-}): Promise<{ redirectTo: string }> {
-  const phone = await requireCurrentUserPhone();
-  const challengeId = WebauthnChallengeId.parse(input.challengeId);
-  if (isErr(challengeId)) throwDomain(challengeId.error);
+function parseCompletionInput(
+  input: unknown,
+): Result<ParsedCompleteOnboardingInput, DomainError> {
+  if (!isPlainRecord(input)) return Err(fail("invalid_input"));
 
-  return completePasskeyOnboarding(phone, challengeId.value, input.response);
+  switch (input.method) {
+    case "none":
+      return Ok({ method: input.method });
+    case "passkey": {
+      const challengeId = WebauthnChallengeId.parse(input.challengeId);
+      if (isErr(challengeId)) return challengeId;
+      if (!isRegistrationResponse(input.response)) {
+        return Err(fail("invalid_passkey_request"));
+      }
+      return Ok({
+        method: input.method,
+        challengeId: challengeId.value,
+        response: input.response,
+      });
+    }
+    case "totp":
+      return typeof input.code === "string" && /^\d{6}$/.test(input.code)
+        ? Ok({ method: input.method, code: input.code })
+        : Err(fail("totp_code_invalid"));
+    default:
+      return Err(fail("invalid_input"));
+  }
+}
+
+export async function completeOnboardingAction(
+  input: unknown,
+): Promise<CompletionResult> {
+  const result = await runAction({
+    name: "auth.onboarding.complete",
+    access: { kind: "session" },
+    parse: () => parseCompletionInput(input),
+    execute: async (ctx, command) => {
+      const setup = getServerRuntime().auth.setup;
+
+      switch (command.method) {
+        case "none":
+          return completeOnboarding(ctx, setup, command);
+        case "passkey": {
+          const verified = await verifyPasskeyEnrollment(
+            setup.repos,
+            createRequestPasskeyProvider(setup.repos),
+            {
+              userId: ctx.actor.userId,
+              challengeId: command.challengeId,
+              response: command.response,
+              ipAddress: ctx.ipAddress,
+              verifiedAt: ctx.now(),
+            },
+          );
+          if (isErr(verified)) return verified;
+
+          return completeOnboarding(ctx, setup, {
+            method: command.method,
+            enrollment: verified.value,
+          });
+        }
+        case "totp": {
+          const verified = await verifyTotpEnrollment(setup.repos, {
+            userId: ctx.actor.userId,
+            code: command.code,
+          });
+          if (isErr(verified)) return verified;
+
+          return completeOnboarding(ctx, setup, {
+            method: command.method,
+            enrollment: verified.value,
+          });
+        }
+        default:
+          return command satisfies never;
+      }
+    },
+  });
+
+  setSessionCookie(result.sessionToken);
+  return {
+    redirectTo: result.redirectTo,
+    recoveryCodes: result.recoveryCodes,
+  };
 }

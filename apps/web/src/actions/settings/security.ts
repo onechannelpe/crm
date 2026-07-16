@@ -53,7 +53,7 @@ export async function changePassword(
 ): Promise<{ message: string }> {
   return runAction({
     name: "settings.security.change_password",
-    access: { kind: "session" },
+    access: { kind: "auth" },
 
     parse: () =>
       parseObject({ currentPassword, newPassword }, validationFail, (r) => ({
@@ -104,7 +104,8 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
 
     execute: async ({ actor }) => {
       const userId = actor.userId;
-      const { passkeys, events } = getServerRuntime().security;
+      const { passkeys, userRecoveryCodes, events } =
+        getServerRuntime().security;
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
 
@@ -117,6 +118,10 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
       });
 
       await passkeys.deleteAllByUser(userId);
+      // Delete recovery codes only after the account loses its last strong factor.
+      if (!strongAuthStatus.hasTotp) {
+        await userRecoveryCodes.deleteAllByUser(userId);
+      }
 
       await events.append({
         type: "passkeys_removed",
@@ -138,7 +143,7 @@ export async function disableTotp(): Promise<{ message: string }> {
 
     execute: async ({ actor }) => {
       const userId = actor.userId;
-      const { userTotpFactors, userTotpRecoveryCodes, events } =
+      const { userTotpFactors, userRecoveryCodes, events } =
         getServerRuntime().security;
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
@@ -151,8 +156,11 @@ export async function disableTotp(): Promise<{ message: string }> {
         hasPasskey: strongAuthStatus.hasPasskey,
       });
 
-      await userTotpFactors.disable(userId);
-      await userTotpRecoveryCodes.deleteAllByUser(userId);
+      await userTotpFactors.disable(userId, new Date());
+      // Delete recovery codes only after the account loses its last strong factor.
+      if (!strongAuthStatus.hasPasskey) {
+        await userRecoveryCodes.deleteAllByUser(userId);
+      }
 
       await events.append({
         type: "totp_disabled",

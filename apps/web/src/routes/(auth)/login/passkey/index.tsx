@@ -110,6 +110,12 @@ export default function LoginPasskeyPage() {
                     Reintentar con clave de acceso
                   </Button>
                 </Show>
+                <a
+                  href={`/login/recovery?flow=${flow().id}`}
+                  class={linkStyles.helpLink}
+                >
+                  Usar un código de recuperación
+                </a>
               </div>
             </EnterTransition>
           )}

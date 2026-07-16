@@ -15,20 +15,19 @@ import {
 } from "@tests/support/runtime/db";
 import { vi } from "vitest";
 
-import type { SendPrivilegedLoginAlert } from "~/lib/auth/security/privileged-login-alert";
 import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
 import { generateCurrentTotpCode } from "~/lib/auth/totp/totp";
+import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
-import { submitTotpForLoginFlow } from "~/server/auth/flows/submit-totp-login";
-
-const NOOP_PRIVILEGED_ALERT: SendPrivilegedLoginAlert = async () => {};
+import { verifyTotpLoginProof } from "~/server/auth/flows/verify-pending-login";
+import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
+import type { AuthLoginFlowId } from "~/server/shared/ids";
+import { Err, isErr, Ok } from "~/server/shared/result";
 
 interface RequestMeta {
   ipAddress: string;
   userAgent: string;
 }
-
-type TotpFlowId = Parameters<typeof submitTotpForLoginFlow>[0]["flowId"];
 
 export function createAuthScenario(
   dbName: string,
@@ -112,10 +111,9 @@ export function createAuthScenario(
       name: SeededIdentityName,
       password: string,
       meta: RequestMeta,
-      reposOverride?: TestDbContext["repos"],
     ) {
       const identity = getSeededIdentity(name);
-      const repos = reposOverride ?? ctx.repos;
+      const login = createAuthLoginContext(ctx.db);
 
       return submitPasswordLogin(
         {
@@ -124,9 +122,8 @@ export function createAuthScenario(
           ipAddress: meta.ipAddress,
           userAgent: meta.userAgent,
         },
-        repos,
-        NOOP_PRIVILEGED_ALERT,
-        createTestPasskeyProvider(repos),
+        login,
+        createTestPasskeyProvider(login.repos),
       );
     },
 
@@ -134,9 +131,8 @@ export function createAuthScenario(
       identifier: string,
       password: string,
       meta: RequestMeta,
-      reposOverride?: TestDbContext["repos"],
     ) {
-      const repos = reposOverride ?? ctx.repos;
+      const login = createAuthLoginContext(ctx.db);
 
       return submitPasswordLogin(
         {
@@ -145,23 +141,35 @@ export function createAuthScenario(
           ipAddress: meta.ipAddress,
           userAgent: meta.userAgent,
         },
-        repos,
-        NOOP_PRIVILEGED_ALERT,
-        createTestPasskeyProvider(repos),
+        login,
+        createTestPasskeyProvider(login.repos),
       );
     },
 
-    async loginTotp(flowId: TotpFlowId, totpCode: string, meta: RequestMeta) {
-      return submitTotpForLoginFlow(
-        {
-          flowId,
-          totpCode,
-          ipAddress: meta.ipAddress,
-          userAgent: meta.userAgent,
-        },
-        ctx.repos,
-        NOOP_PRIVILEGED_ALERT,
-      );
+    async loginTotp(
+      flowId: AuthLoginFlowId,
+      totpCode: string,
+      meta: RequestMeta,
+    ) {
+      const login = createAuthLoginContext(ctx.db);
+      const occurredAt = login.now();
+      const verified = await verifyTotpLoginProof(login, {
+        flowId,
+        totpCode,
+        ipAddress: meta.ipAddress,
+        occurredAt,
+      });
+      if (isErr(verified)) return verified;
+
+      const completed = await completePendingLogin(login, {
+        proof: verified.value,
+        occurredAt,
+        ipAddress: meta.ipAddress,
+        userAgent: meta.userAgent,
+      });
+      return isErr(completed)
+        ? Err({ kind: "flow_expired" } as const)
+        : Ok(completed.value);
     },
   };
 }

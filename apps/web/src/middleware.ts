@@ -65,6 +65,11 @@ export default createMiddleware({
       response.headers.set("Content-Security-Policy", csp);
       return response;
     }
+    if (decision.kind === "redirect_recovery_setup") {
+      const response = redirect("/recovery-codes");
+      response.headers.set("Content-Security-Policy", csp);
+      return response;
+    }
     if (decision.kind === "redirect_home") {
       const response = redirect(decision.to);
       response.headers.set("Content-Security-Policy", csp);

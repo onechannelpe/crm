@@ -11,7 +11,8 @@ export type AuthThrottleEndpoint =
   | "password_login"
   | "passkey_challenge"
   | "passkey_verify"
-  | "totp_verify";
+  | "totp_verify"
+  | "recovery_verify";
 
 export const AUTH_THROTTLE_POLICY: Record<
   AuthThrottleEndpoint,
@@ -80,6 +81,26 @@ export const AUTH_THROTTLE_POLICY: Record<
   totp_verify: {
     ip: {
       threshold: 20,
+      windowMs: 10 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 10 * 60_000,
+    },
+    account: {
+      threshold: 5,
+      windowMs: 15 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 15 * 60_000,
+    },
+    ip_account: {
+      threshold: 5,
+      windowMs: 10 * 60_000,
+      baseBlockMs: 60_000,
+      maxBlockMs: 10 * 60_000,
+    },
+  },
+  recovery_verify: {
+    ip: {
+      threshold: 15,
       windowMs: 10 * 60_000,
       baseBlockMs: 60_000,
       maxBlockMs: 10 * 60_000,

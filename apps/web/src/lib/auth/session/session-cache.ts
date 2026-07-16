@@ -11,7 +11,6 @@ interface CachedSession {
   userId: UserId;
   branchId: BranchId;
   role: Role;
-  onboardingCompleted: boolean;
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;
@@ -58,6 +57,14 @@ class SessionCache {
   deleteByUserId(userId: UserId): void {
     for (const [key, value] of this.cache.entries()) {
       if (value.userId === userId) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  deleteByUserIdExcept(userId: UserId, retainedSessionId: string): void {
+    for (const [key, value] of this.cache.entries()) {
+      if (value.userId === userId && key !== retainedSessionId) {
         this.cache.delete(key);
       }
     }

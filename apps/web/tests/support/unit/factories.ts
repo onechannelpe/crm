@@ -6,15 +6,12 @@ import { BranchId, UserId } from "~/server/shared/ids";
 export function makeAuthSession(
   overrides: Partial<AuthSession> = {},
 ): AuthSession {
-  const onboardingCompleted = overrides.onboardingCompleted ?? true;
-
   return {
     id: "test-session-id",
     userId: UserId.trust("unit-user"),
     branchId: BranchId.trust("unit-branch"),
     role: "executive" as Role,
-    onboardingCompleted,
-    sessionClass: onboardingCompleted ? "app" : "pre_auth",
+    sessionClass: "app",
     primaryAuthMethod: "password",
     strongAuthMethod: null,
     strongAuthAt: null,

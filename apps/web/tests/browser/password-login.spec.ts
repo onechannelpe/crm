@@ -16,7 +16,6 @@ test.describe("password login", () => {
     const verifyPage = new VerifyPage(page);
 
     await loginPage.goto();
-    await loginPage.openUsernameLogin();
     await loginPage.fillUsername(strongAuthUser.username);
     await loginPage.submitPassword(strongAuthUser.password);
 
@@ -31,7 +30,6 @@ test.describe("password login", () => {
     const loginPage = new LoginPage(page);
 
     await loginPage.goto();
-    await loginPage.openUsernameLogin();
     await loginPage.fillUsername(onboardingUser.username);
     await loginPage.submitPassword(onboardingUser.password);
 

@@ -35,7 +35,7 @@ describe("auth middleware routing", () => {
       locals: {
         nonce: "nonce",
         requestContext: createRequestContext(
-          makeAuthSession({ role: "executive", onboardingCompleted: false }),
+          makeAuthSession({ role: "executive", sessionClass: "pre_auth" }),
         ),
       },
     });
@@ -111,12 +111,33 @@ describe("auth middleware routing", () => {
       locals: {
         nonce: "nonce",
         requestContext: createRequestContext(
-          makeAuthSession({ role: "executive", onboardingCompleted: false }),
+          makeAuthSession({ role: "executive", sessionClass: "pre_auth" }),
         ),
       },
     });
 
     expect(decision.kind).toBe("allow");
+  });
+
+  it("restricts recovery-setup sessions to the recovery-code route", async () => {
+    const session = makeAuthSession({ sessionClass: "recovery_setup" });
+    const redirected = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/records"),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(session),
+      },
+    });
+    const allowed = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/recovery-codes"),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(session),
+      },
+    });
+
+    expect(redirected.kind).toBe("redirect_recovery_setup");
+    expect(allowed.kind).toBe("allow");
   });
 
   it("rejects an unauthenticated API request with 401 instead of a redirect", async () => {

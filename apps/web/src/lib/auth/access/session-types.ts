@@ -12,7 +12,6 @@ export interface AuthSession {
   userId: UserId;
   branchId: BranchId;
   role: Role;
-  onboardingCompleted: boolean;
   sessionClass: SessionClass;
   primaryAuthMethod: PrimaryAuthMethod;
   strongAuthMethod: StrongAuthMethod | null;

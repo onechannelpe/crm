@@ -28,7 +28,6 @@ export interface SessionIdentity {
   userId: UserId;
   branchId: BranchId;
   role: UserRow["role"];
-  onboardingCompleted: boolean;
 }
 
 export function mapUserToSessionIdentity(
@@ -38,7 +37,6 @@ export function mapUserToSessionIdentity(
     userId: user.id,
     branchId: user.branch_id,
     role: user.role,
-    onboardingCompleted: user.onboarding_completed_at !== null,
   };
 }
 
@@ -51,7 +49,6 @@ export function mapUserSessionRowToAuthSession(
     userId: session.user_id,
     branchId: session.branch_id,
     role: session.role,
-    onboardingCompleted: session.session_class === "app",
     sessionClass: session.session_class,
     primaryAuthMethod: session.primary_auth_method,
     strongAuthMethod: session.strong_auth_method,

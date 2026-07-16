@@ -28,24 +28,40 @@ export type AuthContextUser = Pick<
 export interface AuthContext {
   user: AuthContextUser;
   strongAuthStatus: StrongAuthStatus;
+  recoveryCodesAcknowledgementRequired: boolean;
+}
+
+export async function loadActiveAuthContextForUser(
+  user: UserRow,
+  deps: AuthContextDeps,
+  now: Date,
+): Promise<AuthContext | null> {
+  if (!user.is_active) {
+    return null;
+  }
+  if (user.expires_at !== null && user.expires_at <= now) {
+    await deps.users.deactivateIfExpired(user.id, now);
+    return null;
+  }
+
+  const [strongAuthStatus, recoveryCodeSet] = await Promise.all([
+    getStrongAuthStatus(user.id, deps),
+    deps.userRecoveryCodes.getActiveSet(user.id),
+  ]);
+
+  return {
+    user,
+    strongAuthStatus,
+    recoveryCodesAcknowledgementRequired:
+      recoveryCodeSet !== null && recoveryCodeSet.acknowledgedAt === null,
+  };
 }
 
 export async function loadActiveAuthContext(
   userId: UserId,
   deps: AuthContextDeps,
+  now: Date,
 ): Promise<AuthContext | null> {
-  const now = new Date();
   const user = await deps.users.findById(userId);
-  if (!user || !user.is_active) {
-    return null;
-  }
-  if (user.expires_at !== null && user.expires_at <= now) {
-    await deps.users.deactivateIfExpired(userId, now);
-    return null;
-  }
-
-  return {
-    user,
-    strongAuthStatus: await getStrongAuthStatus(userId, deps),
-  };
+  return user ? loadActiveAuthContextForUser(user, deps, now) : null;
 }

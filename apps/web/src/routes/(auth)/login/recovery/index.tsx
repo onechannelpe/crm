@@ -1,0 +1,148 @@
+import { createAsync, useSearchParams, useSubmission } from "@solidjs/router";
+import { createMemo, createSignal, Show, Suspense } from "solid-js";
+
+import { Loader } from "~/components/feedback/loading/loader";
+import { EnterTransition } from "~/components/ui/animation/enter-transition";
+import { Button } from "~/components/ui/input/button";
+import { Input } from "~/components/ui/input/input";
+import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
+import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
+import { LegalFooter } from "~/features/auth/ui/legal-footer";
+import { recoveryLoginMutation } from "~/lib/mutations/auth";
+import { loginFlowQuery } from "~/lib/queries/auth";
+import { parseWireError } from "~/lib/wire-error";
+import { codeIs } from "~/lib/wire-error-codes";
+
+import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
+import linkStyles from "~/features/auth/ui/auth-links.module.css";
+import styles from "~/features/auth/ui/auth-shell.module.css";
+import pageStyles from "~/features/auth/ui/login-page.module.css";
+
+export default function LoginRecoveryPage() {
+  const [searchParams] = useSearchParams();
+  const recoverySubmission = useSubmission(recoveryLoginMutation);
+  const [recoveryCode, setRecoveryCode] = createSignal("");
+  const flowId = () => parseLoginFlowId(searchParams.flow);
+  const loginFlow = createAsync(() => {
+    const currentFlowId = flowId();
+    return currentFlowId
+      ? loginFlowQuery(currentFlowId)
+      : Promise.resolve(null);
+  });
+  const submitError = () =>
+    recoverySubmission.error
+      ? parseWireError(recoverySubmission.error)
+      : undefined;
+
+  const flowExpiredAtSubmit = () => {
+    const submitFailure = submitError();
+    return submitFailure !== undefined && codeIs(submitFailure, "flow_expired");
+  };
+
+  // Allow TOTP and identified-passkey flows only; a discoverable passkey flow
+  // has no user for recovery-code redemption.
+  const recoveryFlow = createMemo(() => {
+    const flow = loginFlow();
+    if (flow === undefined && flowId()) return undefined;
+    if (flowExpiredAtSubmit()) return null;
+    if (!flow) return null;
+    if (flow.state === "totp") return flow;
+    if (flow.state === "passkey" && flow.mode === "identified") return flow;
+    return null;
+  });
+
+  const recoveryError = () => {
+    const submitFailure = submitError();
+    if (submitFailure === undefined || codeIs(submitFailure, "flow_expired")) {
+      return undefined;
+    }
+    return submitFailure.message;
+  };
+
+  return (
+    <AuthFlowShell
+      title="Código de recuperación"
+      description="Ingresa uno de los códigos que guardaste al configurar tu seguridad."
+    >
+      <div class={pageStyles.formStack}>
+        <Suspense
+          fallback={
+            <output class={pageStyles.loadingStack} aria-live="polite">
+              <p class={pageStyles.loadingLabel}>Cargando recuperación</p>
+              <Loader />
+            </output>
+          }
+        >
+          <Show
+            when={recoveryFlow()}
+            fallback={
+              <form
+                class={pageStyles.formStack}
+                aria-label="expired-login-flow"
+              >
+                <p class={pageStyles.formError} role="alert">
+                  La sesión de verificación expiró. Intenta de nuevo.
+                </p>
+                <a href="/login" class={linkStyles.passkeyLink}>
+                  Volver al inicio de sesión
+                </a>
+              </form>
+            }
+          >
+            {(flow) => (
+              <EnterTransition>
+                <form
+                  class={pageStyles.formStack}
+                  action={recoveryLoginMutation}
+                  method="post"
+                >
+                  <input type="hidden" name="flowId" value={flow().id} />
+                  <Input
+                    id="recovery-code"
+                    type="text"
+                    name="recoveryCode"
+                    placeholder="Código de recuperación"
+                    autocomplete="one-time-code"
+                    autocapitalize="characters"
+                    autocorrect="off"
+                    spellcheck={false}
+                    value={recoveryCode()}
+                    onInput={(event) =>
+                      setRecoveryCode(event.currentTarget.value)
+                    }
+                    required
+                  />
+                  <Show when={recoveryError()}>
+                    {(msg) => (
+                      <p class={pageStyles.formError} role="alert">
+                        {msg()}
+                      </p>
+                    )}
+                  </Show>
+                  <p class={pageStyles.supportText}>
+                    Usuario: {flow().identifier}
+                  </p>
+                  <div class={pageStyles.actionRow}>
+                    <a href="/login" class={linkStyles.passkeyLink}>
+                      Usar otra cuenta
+                    </a>
+                    <Button
+                      type="submit"
+                      class={styles.full}
+                      loading={recoverySubmission.pending}
+                    >
+                      Iniciar sesión
+                    </Button>
+                  </div>
+                </form>
+              </EnterTransition>
+            )}
+          </Show>
+        </Suspense>
+        <div class={shellStyles.footerNote}>
+          <LegalFooter />
+        </div>
+      </div>
+    </AuthFlowShell>
+  );
+}

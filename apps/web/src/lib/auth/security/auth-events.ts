@@ -6,9 +6,9 @@ type Deps = {
   authEvents: ReturnType<typeof createAuthEventsRepo>;
 };
 
-export type AuthEventMethod = "password" | "passkey" | "totp";
-export type AuthEventStage = "login" | "challenge" | "verify" | "recovery";
-export type AuthEventOutcome = "success" | "failure" | "throttled";
+type AuthEventMethod = "password" | "passkey" | "totp" | "recovery";
+type AuthEventStage = "login" | "challenge" | "verify" | "recovery";
+type AuthEventOutcome = "success" | "failure" | "throttled";
 
 function normalize(value: string): string {
   return value.trim().toLowerCase();
@@ -22,6 +22,7 @@ interface AuthEventInput {
   stage: AuthEventStage;
   outcome: AuthEventOutcome;
   reason?: string | null;
+  occurredAt: Date;
 }
 
 export async function recordAuthEvent(
@@ -36,6 +37,6 @@ export async function recordAuthEvent(
     reason: input.reason ?? null,
     identifier_hash: hashAuthKey(`id:${normalize(input.identifier)}`),
     ip_hash: hashAuthKey(`ip:${input.ipAddress}`),
-    created_at: new Date(),
+    created_at: input.occurredAt,
   });
 }

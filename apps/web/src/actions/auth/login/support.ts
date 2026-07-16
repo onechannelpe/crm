@@ -2,10 +2,11 @@
 
 import { redirect } from "@solidjs/router";
 
-import { installSession } from "~/actions/auth/install-session";
 import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
 import type { Role } from "~/lib/auth/access/rbac";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { getSessionPath } from "~/lib/auth/access/route-policy";
+import type { SessionClass } from "~/lib/auth/core/session-contract";
+import { setSessionCookie } from "~/lib/auth/session/cookies";
 import type { AuthLoginFlowId } from "~/server/shared/ids";
 
 export function readPasskeyStartMode(
@@ -18,7 +19,7 @@ export function readPasskeyStartMode(
 
 export function readLoginText(
   formData: FormData,
-  field: "identifier" | "password" | "totpCode",
+  field: "identifier" | "password" | "totpCode" | "recoveryCode",
   options?: { trim?: boolean },
 ): string {
   const value = formData.get(field);
@@ -39,14 +40,12 @@ export function readLoginFlowId(
   return typeof value === "string" ? parseLoginFlowId(value) : null;
 }
 
-export async function completeLoginAndRedirect(result: {
+export function completeLoginAndRedirect(result: {
   token: string;
   role: Role;
-  onboardingCompleted: boolean;
-}): Promise<never> {
-  await installSession(result.token);
+  sessionClass: SessionClass;
+}): never {
+  setSessionCookie(result.token);
 
-  throw redirect(
-    result.onboardingCompleted ? getDefaultAppPath(result.role) : "/onboarding",
-  );
+  throw redirect(getSessionPath(result.sessionClass, result.role));
 }

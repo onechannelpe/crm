@@ -15,9 +15,14 @@ export async function ensureTotp(
     return;
   }
 
-  await runtime.repos.userTotpFactors.createOrRotate(
+  const factor = await runtime.repos.userTotpFactors.createOrRotate(
     identity.userId,
     await encryptTotpSecret(generateTotpSecret()),
+    new Date(),
   );
-  await runtime.repos.userTotpFactors.markEnabled(identity.userId);
+  await runtime.repos.userTotpFactors.enableIfSecretMatches(
+    identity.userId,
+    factor.secret_encrypted,
+    new Date(),
+  );
 }

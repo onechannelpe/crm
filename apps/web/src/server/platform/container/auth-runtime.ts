@@ -2,14 +2,13 @@ import { createAuthThrottleService } from "~/server/auth/application/throttle-se
 import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
 import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { createAuthOnboardingContext } from "~/server/auth/infrastructure/onboarding-context";
 import { createPasswordResetContext } from "~/server/auth/infrastructure/password-reset-context";
 import {
   createAuthSessionLogoutContext,
   createAuthSessionReadContext,
 } from "~/server/auth/infrastructure/session-context";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
-import { createTotpEnrollmentContext } from "~/server/auth/infrastructure/totp-context";
+import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import {
@@ -46,7 +45,7 @@ export function createAuthRuntime(
     authThrottle: createAuthThrottleRepo(infra.db),
     now: infra.now,
   });
-  const onboarding = createAuthOnboardingContext(infra.db);
+  const setup = createAuthSetupContext(infra.db);
   const inviteService = createInviteServiceForExecutor(infra.db);
 
   const impersonationDeps = {
@@ -63,19 +62,16 @@ export function createAuthRuntime(
         startImpersonation(ctx, impersonationDeps, command),
       stop: (ctx: AppContext) => stopImpersonation(ctx, impersonationDeps),
     },
-    login: createAuthLoginContext(infra.db, {
-      enqueue: (intents, now) => notifications.enqueue(intents, now),
-    }),
-    onboarding,
+    login: createAuthLoginContext(infra.db, infra.now),
+    setup,
     inviteAcceptance: {
       inviteService,
       repos: {
-        users: onboarding.repos.users,
-        sessions: onboarding.repos.sessions,
-        events: onboarding.repos.events,
+        users: setup.repos.users,
+        sessions: setup.repos.sessions,
+        events: setup.repos.events,
       },
     },
-    totp: createTotpEnrollmentContext(infra.db),
     passwordReset: createPasswordResetContext({
       executor: infra.db,
       messaging: notifications.messaging,

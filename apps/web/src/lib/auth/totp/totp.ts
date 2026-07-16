@@ -28,7 +28,7 @@ export function buildTotpProvisioningUri(
   email: string,
 ): string {
   return createTOTPKeyURI(
-    "OneChannel CRM",
+    "Culqi360",
     email,
     decodeSecret(secretBase32),
     PERIOD_SECONDS,

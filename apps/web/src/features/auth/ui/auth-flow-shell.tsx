@@ -24,7 +24,7 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
           <div class={styles.logo}>
             <ResponsiveImage
               sources={logo}
-              alt="CRM"
+              alt="Culqi360"
               width="40"
               height="40"
               class={styles.logoImage}

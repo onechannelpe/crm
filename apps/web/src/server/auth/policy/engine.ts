@@ -1,10 +1,8 @@
 import type { Role } from "~/lib/auth/access/rbac";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import type { CurrentUserView } from "~/server/auth/application/contracts";
+import { resolveSessionClass } from "~/lib/auth/core/session-contract";
 
-import { resolveOnboardingSessionState } from "../state/transitions";
 import { requiresStrongAuthRole } from "./rules/role";
-import type { AuthProof, LoginDecision, OnboardingRequirements } from "./types";
+import type { AuthProof, LoginDecision } from "./types";
 
 export interface LoginPolicyInput {
   proof: AuthProof;
@@ -18,6 +16,7 @@ export interface LoginPolicyInput {
       hasPasskey: boolean;
       hasVerifiedStrongAuth: boolean;
     };
+    recoveryCodesAcknowledgementRequired: boolean;
   };
   now?: () => Date;
 }
@@ -26,11 +25,16 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
   const now = input.now ?? (() => new Date());
   const { proof, context } = input;
   const onboardingCompleted = context.user.onboarding_completed_at !== null;
+  const sessionClass = resolveSessionClass({
+    onboardingCompleted,
+    recoveryCodesAcknowledgementRequired:
+      context.recoveryCodesAcknowledgementRequired,
+  });
 
   if (proof.kind === "passkey") {
     return {
       kind: "issue_session",
-      sessionClass: onboardingCompleted ? "app" : "pre_auth",
+      sessionClass,
       strongAuthMethod: "passkey",
       strongAuthAt: now(),
     };
@@ -39,7 +43,7 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
   if (proof.kind === "google" && proof.trustedFederatedMfa) {
     return {
       kind: "issue_session",
-      sessionClass: onboardingCompleted ? "app" : "pre_auth",
+      sessionClass,
       strongAuthMethod: "federated",
       strongAuthAt: now(),
     };
@@ -48,7 +52,7 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
   if (!requiresStrongAuthRole(context.user.role)) {
     return {
       kind: "issue_session",
-      sessionClass: onboardingCompleted ? "app" : "pre_auth",
+      sessionClass,
       strongAuthMethod: null,
       strongAuthAt: null,
     };
@@ -88,49 +92,5 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
   return {
     kind: "deny",
     reason: "strong_auth_required",
-  };
-}
-
-export function deriveOnboardingRequirements(
-  user: Pick<
-    CurrentUserView,
-    "phone" | "strongAuthConfigured" | "onboardingCompletedAt" | "role"
-  >,
-): OnboardingRequirements {
-  const hasPhone = user.phone !== null;
-  const strongAuthRequired = requiresStrongAuthRole(user.role);
-  const requiredActions: Array<"set_profile" | "configure_strong_auth"> = [];
-  const reasons: string[] = [];
-
-  if (!hasPhone) {
-    requiredActions.push("set_profile");
-    reasons.push("phone_required");
-  }
-
-  if (strongAuthRequired && !user.strongAuthConfigured) {
-    requiredActions.push("configure_strong_auth");
-    reasons.push("strong_auth_required");
-  }
-
-  const optionalActions: Array<"configure_totp" | "configure_passkey"> = [];
-  if (!strongAuthRequired) {
-    optionalActions.push("configure_passkey", "configure_totp");
-  }
-
-  const sessionState = resolveOnboardingSessionState({
-    onboardingCompleted: user.onboardingCompletedAt !== null,
-    hasPhone,
-    requiresStrongAuth: strongAuthRequired,
-    strongAuthConfigured: user.strongAuthConfigured,
-  });
-  const canAccessApp = sessionState === "app_ready";
-
-  return {
-    sessionState,
-    requiredActions,
-    optionalActions,
-    canAccessApp,
-    nextRoute: canAccessApp ? getDefaultAppPath(user.role) : "/onboarding",
-    reasons,
   };
 }

@@ -45,6 +45,15 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
+    findByIdForUpdate(id: UserId) {
+      return db
+        .selectFrom("users")
+        .selectAll()
+        .where("id", "=", id)
+        .forUpdate()
+        .executeTakeFirst();
+    },
+
     findByIds(ids: UserId[]): Promise<UserNameRow[]> {
       if (ids.length === 0) {
         return Promise.resolve([]);
@@ -204,6 +213,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
           expiry_notified_at: null,
           is_active: values.is_active,
           executive_category: values.executive_category ?? null,
+          password_change_required: false,
           onboarding_completed_at: null,
           created_at: new Date(),
         })
@@ -216,6 +226,14 @@ export function createUsersRepo(db: DatabaseExecutor) {
       return db
         .updateTable("users")
         .set({ password_hash: passwordHash })
+        .where("id", "=", id)
+        .execute();
+    },
+
+    replaceInstallationPassword(id: UserId, passwordHash: string) {
+      return db
+        .updateTable("users")
+        .set({ password_hash: passwordHash, password_change_required: false })
         .where("id", "=", id)
         .execute();
     },
