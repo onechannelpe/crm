@@ -65,6 +65,12 @@ export const FulfillmentOrderId = uuidId("FulfillmentOrderId");
 export type IntegrationJobId = BrandedId<"IntegrationJobId">;
 export const IntegrationJobId = uuidId("IntegrationJobId");
 
+export type MerchantReportId = BrandedId<"MerchantReportId">;
+export const MerchantReportId = uuidId("MerchantReportId");
+
+export type MerchantSaleId = BrandedId<"MerchantSaleId">;
+export const MerchantSaleId = uuidId("MerchantSaleId");
+
 export type NotificationDeliveryId = BrandedId<"NotificationDeliveryId">;
 export const NotificationDeliveryId = uuidId("NotificationDeliveryId");
 
@@ -83,10 +89,16 @@ export const AuthLoginFlowId = uuidId("AuthLoginFlowId");
 export type WebauthnChallengeId = BrandedId<"WebauthnChallengeId">;
 export const WebauthnChallengeId = uuidId("WebauthnChallengeId");
 
+export type RecoveryCodeSetId = BrandedId<"RecoveryCodeSetId">;
+export const RecoveryCodeSetId = uuidId("RecoveryCodeSetId");
+
+export type RecoveryCodeId = BrandedId<"RecoveryCodeId">;
+export const RecoveryCodeId = uuidId("RecoveryCodeId");
+
 export type InstallationId = BrandedId<"InstallationId">;
 export const InstallationId = uuidId("InstallationId");
 
-// Deterministic idempotency key derived from (sourceEventId, discriminator).
-// Not UUID-backed: constructed via NotificationIntentId.derive(...).
+// Derive deterministic idempotency keys from (sourceEventId, discriminator)
+// instead of generating UUIDs.
 export type NotificationIntentId = BrandedId<"NotificationIntentId">;
 export const NotificationIntentId = derivedKey("NotificationIntentId");

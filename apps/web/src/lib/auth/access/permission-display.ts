@@ -8,6 +8,7 @@ export type PermissionGroupId =
   | "capacidad"
   | "entregas"
   | "equipo"
+  | "negocio"
   | "administracion";
 
 export interface PermissionGroupMeta {
@@ -23,6 +24,7 @@ export const PERMISSION_GROUPS = [
   { id: "capacidad", label: "Capacidad" },
   { id: "entregas", label: "Entregas e inventario" },
   { id: "equipo", label: "Equipo y personal" },
+  { id: "negocio", label: "Negocio" },
   { id: "administracion", label: "Administración" },
 ] as const satisfies ReadonlyArray<PermissionGroupMeta>;
 
@@ -215,6 +217,23 @@ const PERMISSION_CATALOG: Record<Permission, PermissionMeta> = {
     label: "Gestionar personal",
     description: "Administrar altas, invitaciones y datos del personal.",
     group: "equipo",
+  },
+  "dashboards:read": {
+    label: "Ver paneles de negocio",
+    description: "Consultar los paneles de GPV y estadísticas de negocio.",
+    group: "negocio",
+  },
+  "dashboards:read:own": {
+    label: "Ver GPV de sus clientes",
+    description:
+      "Consultar el GPV de los comercios que tiene asignados, desde su ficha.",
+    group: "negocio",
+  },
+  "dashboards:manage": {
+    label: "Gestionar paneles de negocio",
+    description:
+      "Importar reportes de dealers y resolver la atribución por comercio.",
+    group: "negocio",
   },
   "admin:read": {
     label: "Ver administración",

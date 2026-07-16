@@ -48,10 +48,10 @@ export type Permission =
   | "quotation:policy:manage"
   | "integration:manage"
   | "fulfillment:manage"
-  // Client-facing fulfillment steps the executive performs on their own leads
-  // (e.g. the refurbished transactions report); back office holds the broader
-  // fulfillment:manage.
-  | "fulfillment:client-step";
+  | "fulfillment:client-step"
+  | "dashboards:read"
+  | "dashboards:read:own"
+  | "dashboards:manage";
 
 export const ROLES = [
   "executive",
@@ -80,6 +80,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "lead:sale:create",
     "lead:sale:upload-proof",
     "fulfillment:client-step",
+    "dashboards:read:own",
   ],
   supervisor: [
     "lead:note:add",
@@ -101,6 +102,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "team:read",
     "team:manage",
     "audit:read",
+    "dashboards:read",
+    "dashboards:read:own",
+    "dashboards:manage",
   ],
   back_office: [
     "lead:note:add",
@@ -116,6 +120,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "integration:manage",
     "lead:sale:upload-proof",
     "fulfillment:manage",
+    "dashboards:read",
+    "dashboards:read:own",
+    "dashboards:manage",
   ],
   sales_manager: [
     "lead:note:add",
@@ -141,6 +148,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "quotation:policy:manage",
+    "dashboards:read",
+    "dashboards:read:own",
+    "dashboards:manage",
   ],
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],
@@ -178,6 +188,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "audit:read",
+    "dashboards:read",
+    "dashboards:read:own",
+    "dashboards:manage",
   ],
   superuser: [
     "lead:note:add",
@@ -216,6 +229,9 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "admin:read",
     "admin:manage",
     "audit:read",
+    "dashboards:read",
+    "dashboards:read:own",
+    "dashboards:manage",
   ],
 };
 
