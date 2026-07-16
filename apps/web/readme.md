@@ -2,11 +2,19 @@
 
 Serves the CRM UI, the CRM API routes, and the background maintenance worker.
 
+Application state lives in PostgreSQL (configured by `WEB_DB_URL` in `.env`).
+The schema is split into modules under [`src/lib/db/schema/`](src/lib/db/schema/),
+and migrations are run from [`src/lib/db/migrate-cli.ts`](src/lib/db/migrate-cli.ts).
+Background work uses a durable job store at
+[`src/lib/job-queue/`](src/lib/job-queue/) that listens to PostgreSQL
+`LISTEN`/`NOTIFY` and exposes results over server-sent events via
+[`src/lib/realtime/event-source-stream.ts`](src/lib/realtime/event-source-stream.ts).
+
 The request path starts in [`src/entry-server.tsx`](src/entry-server.tsx) and mounts the router in [`src/app.tsx`](src/app.tsx). Every request passes through [`src/middleware.ts`](src/middleware.ts). Middleware sets the CSP nonce, request tracing fields, and CSRF cookie, then delegates access control to [`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts). That auth layer handles public paths separately, validates the session cookie, redirects for login or onboarding, and stores the session on `event.locals`.
 
-Authenticated pages live under [`src/routes/(app).tsx`](src/routes/%28app%29.tsx). Public pages live under [`src/routes/(public).tsx`](src/routes/%28public%29.tsx). Server functions live under [`src/actions/`](src/actions/). Read wrappers live under [`src/lib/queries/`](src/lib/queries/). Write wrappers live under [`src/lib/mutations/`](src/lib/mutations/). Domain services and repositories live under [`src/server/`](src/server/). Action runtime wiring lives in [`src/server/shared/action-runtime/`](src/server/shared/action-runtime/). Runtime dependency assembly lives in [`src/server/runtime/`](src/server/runtime/).
+Authenticated pages live under [`src/routes/(app).tsx`](src/routes/%28app%29.tsx). Public pages live under [`src/routes/(public).tsx`](src/routes/%28public%29.tsx). Server functions live under [`src/actions/`](src/actions/). Read wrappers live under [`src/lib/queries/`](src/lib/queries/). Write wrappers live under [`src/lib/mutations/`](src/lib/mutations/). Domain services and repositories live under [`src/server/`](src/server/). Action runtime wiring lives in [`src/server/platform/action/`](src/server/platform/action/). Runtime dependency assembly lives in [`src/server/platform/container/`](src/server/platform/container/) (one `*-runtime.ts` per domain).
 
-Most feature work follows the same path. A route calls a server function in [`src/actions/`](src/actions/). The action calls a service under [`src/server/`](src/server/), and the service receives dependencies from the relevant runtime module under [`src/server/runtime/`](src/server/runtime/). Database access starts in [`src/lib/db/client.ts`](src/lib/db/client.ts) and [`src/lib/db/db.ts`](src/lib/db/db.ts). Schema modules live under [`src/lib/db/schema/`](src/lib/db/schema/).
+Most feature work follows the same path. A route calls a server function in [`src/actions/`](src/actions/). The action calls a service under [`src/server/`](src/server/), and the service receives dependencies from the relevant runtime module under [`src/server/platform/container/`](src/server/platform/container/). Database access starts in [`src/lib/db/client.ts`](src/lib/db/client.ts) and [`src/lib/db/db.ts`](src/lib/db/db.ts). Schema modules live under [`src/lib/db/schema/`](src/lib/db/schema/).
 
 Search and candidate discovery are the main cross-service dependencies. Engine
 configuration is built in
@@ -18,8 +26,7 @@ the HTTP adapter is implemented in
 Direct search flows through [`src/actions/search/run.ts`](src/actions/search/run.ts)
 and [`src/server/search-workflow/run-search.ts`](src/server/search-workflow/run-search.ts).
 Candidate assignment flows through
-[`src/server/contact-assignments/application/assign-contacts.ts`](src/server/contact-assignments/application/assign-contacts.ts)
-and [`src/server/workflow/infrastructure/engine-gateway.ts`](src/server/workflow/infrastructure/engine-gateway.ts).
+[`src/server/contact-assignments/application/assign-contacts.ts`](src/server/contact-assignments/application/assign-contacts.ts).
 Extension session and event APIs live under [`src/routes/api/extension/`](src/routes/api/extension/).
 
 ## Configuration
@@ -30,13 +37,19 @@ Configuration is loaded from env files selected by the script or passed by the c
 | ------------------- | -------------------------------------------- |
 | Core auth           | `SESSION_SECRET`                             |
 | Core auth           | `TOTP_ENCRYPTION_KEY`                        |
+| Core auth           | `RECOVERY_CODE_PEPPER`                       |
+| Core auth           | `INSTALLATION_PASSWORD`                      |
 | Core auth           | `ENGINE_HMAC_KEY_ID`                         |
 | Core auth           | `ENGINE_HMAC_SECRET`                         |
 | Engine client       | `ENGINE_CONNECT_MODE`                        |
 | Engine client       | `ENGINE_URL`                                 |
-| Storage and proxy   | `WEB_DB_PATH`                                |
+| Engine client       | `ENGINE_TIMEOUT_MS`                          |
+| Storage and proxy   | `WEB_DB_URL`                                 |
 | Storage and proxy   | `WEB_UPLOADS_ROOT`                           |
 | Storage and proxy   | `TRUSTED_PROXY`                              |
+| Storage and proxy   | `APP_PUBLIC_ORIGIN`                          |
+| WebAuthn            | `WEBAUTHN_RP_ID`                             |
+| WebAuthn            | `WEBAUTHN_ORIGIN`                            |
 | Extension and OAuth | `EXTENSION_EXPECTED_ORIGIN`                  |
 | Extension and OAuth | `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64` |
 | Extension and OAuth | `EXTENSION_HANDOFF_PUBLIC_KEY_SPKI_BASE64`   |
@@ -54,6 +67,7 @@ Configuration is loaded from env files selected by the script or passed by the c
 | Notifications       | `WHATSAPP_CLOUD_GRAPH_VERSION`               |
 | Notifications       | `WHATSAPP_WEBHOOK_VERIFY_TOKEN`              |
 | Notifications       | `KAPSO_WEBHOOK_SECRET`                       |
+| Observability       | `VITE_SENTRY_DSN`                            |
 
 The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http://127.0.0.1:3001`. Local mode requires a loopback `http` endpoint so the engine stays private to the host. Remote mode requires an `https` endpoint. The WebAuthn relying party is derived per request from the public origin (`requestContext.publicOrigin`). Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).
 
@@ -62,13 +76,14 @@ The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http:/
 Run from the repo root:
 
 ```sh
+bun run dev:infra:setup # one-time: initialize the local PostgreSQL data dir
 bun run dev
 bun run dev:web
 bun run dev:worker
 ```
 
-From the repo root, `bun run dev` starts engine, web, and worker.
-Web startup runs migrations, provisions an empty installation, and adds development fixtures before Vite starts.
+From the repo root, `bun run dev` starts the local PostgreSQL, engine, web, and worker.
+The web startup waits for PostgreSQL to accept connections, runs migrations, provisions an empty installation, and adds development fixtures before Vite starts.
 `bun run dev:worker` starts only the maintenance worker.
 
 Run from `apps/web/`:
@@ -144,9 +159,11 @@ and
 Start with [`src/middleware.ts`](src/middleware.ts) and
 [`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts) for
 request and session flow. Then read
-[`src/actions/auth/login/index.ts`](src/actions/auth/login/index.ts) and
-[`src/server/shared/action-runtime/`](src/server/shared/action-runtime/) for
-action execution. For engine-backed search or candidate assignment, continue with
+[`src/actions/auth/login/`](src/actions/auth/login/) and
+[`src/server/platform/action/`](src/server/platform/action/) for
+action execution, and the domain runtime modules under
+[`src/server/platform/container/`](src/server/platform/container/) for
+dependency assembly. For engine-backed search or candidate assignment, continue with
 [`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts),
 [`src/server/adapters/engine/client.ts`](src/server/adapters/engine/client.ts),
 [`src/server/search-workflow/run-search.ts`](src/server/search-workflow/run-search.ts),
