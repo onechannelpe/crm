@@ -1,0 +1,11 @@
+.state {
+  padding: 1.5rem 0.25rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.stateError {
+  padding: 1.5rem 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-red-11);
+}
