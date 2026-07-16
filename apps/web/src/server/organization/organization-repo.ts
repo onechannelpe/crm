@@ -6,11 +6,6 @@ import type {
   PersonId,
 } from "~/server/shared/ids";
 
-// Single system of record for companies, natural persons, their membership,
-// and the temporal roles membership carries. Other contexts (prospecting,
-// workflow, extension) read through this repo and reference rows by id; none
-// write these tables directly.
-
 export const LEGAL_REPRESENTATIVE_ROLE = "LEGAL_REPRESENTATIVE";
 
 export type OrganizationProfile = {
@@ -41,8 +36,7 @@ export type PersonView = PersonIdentity & {
   displayName: string;
 };
 
-// Embedded person identity plus the org-scoped contact channel. Contact
-// cadence is owned by contact-assignments (contact_cadence), not this row.
+// Membership stores the organization-specific contact channel.
 export type Membership = {
   id: OrganizationPersonId;
   organizationId: OrganizationId;
@@ -191,8 +185,7 @@ export function createOrganizationRepo(
         created_at: now,
         updated_at: now,
       })
-      // Keep stored surnames/email when an incoming record supplies only a
-      // display name (e.g. a prospected candidate).
+      // Preserve existing details when an incoming record only supplies a display name.
       .onConflict((oc) =>
         oc.column("dni").doUpdateSet((eb) => ({
           names: eb.ref("excluded.names"),

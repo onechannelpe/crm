@@ -24,9 +24,6 @@ function waitingLabel(since: number): string {
 
 type Group = { step: FulfillmentStep; rows: FulfillmentQueueRowView[] };
 
-// Group the inbox by the action the role must take, so the same task batches
-// together; order groups by their oldest item so the most-aged work surfaces
-// first. Rows arrive oldest-first from the query.
 function groupByStep(rows: FulfillmentQueueRowView[]): Group[] {
   const byStep = new Map<FulfillmentStep, FulfillmentQueueRowView[]>();
   for (const row of rows) {
@@ -39,9 +36,6 @@ function groupByStep(rows: FulfillmentQueueRowView[]): Group[] {
     .toSorted((a, b) => a.rows[0].waitingSince - b.rows[0].waitingSince);
 }
 
-// Back-office (and supervisor) inbox: every lead across the branch sitting on a
-// step they must act on, grouped by step and aged. The single highest-leverage
-// screen for the bottleneck role.
 export default function FulfillmentQueuePage() {
   const queue = createAsync(() => fulfillmentQueueQuery(), {
     initialValue: { rows: [] },

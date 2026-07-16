@@ -50,8 +50,7 @@ export function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
-// One decimal, collapsed to an integer when trailing-zero, and 0% on an empty
-// denominator rather than NaN.
+// Empty denominators display as 0%, not NaN.
 export function formatRatio(numerator: number, denominator: number): string {
   if (denominator === 0) return "0%";
 
@@ -62,8 +61,6 @@ export function formatRatio(numerator: number, denominator: number): string {
   return `${formatted}%`;
 }
 
-// Period-over-period movement as a whole percent. Undefined when there is no
-// comparable prior period, or when the prior period is zero.
 export function trendPercentage(
   current: number | undefined,
   prior: number | undefined,

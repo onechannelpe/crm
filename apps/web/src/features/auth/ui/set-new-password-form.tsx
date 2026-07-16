@@ -23,9 +23,6 @@ export function SetNewPasswordForm(props: { token: string }) {
   const submitError = () =>
     submission.error ? parseWireError(submission.error) : undefined;
 
-  // An invalid or expired token is terminal: no retry on this form can succeed,
-  // so route it to a "request a new link" panel rather than an inline error.
-  // The message rides on the wire (catalog copy), so render it verbatim.
   const tokenExpiredMessage = () => {
     const submitFailure = submitError();
     return submitFailure !== undefined && codeIs(submitFailure, "invalid_token")
@@ -47,6 +44,7 @@ export function SetNewPasswordForm(props: { token: string }) {
       description="Elige una contraseña segura para tu cuenta."
     >
       <Show when={!succeeded()} fallback={<PasswordResetDoneNotice />}>
+        {/* An invalid token requires a new link, not another form submission. */}
         <Show
           when={tokenExpiredMessage()}
           fallback={

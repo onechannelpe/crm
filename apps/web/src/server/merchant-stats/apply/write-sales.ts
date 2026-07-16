@@ -7,7 +7,7 @@ import { saleIdentityKey } from "../intake/sale-identity";
 import type { SourceRow } from "../intake/types";
 import { chunks } from "./chunks";
 
-// Snapshot fields. Identity, sale month, and first-seen provenance are immutable.
+// Snapshot refreshes never move a sale between its identity or sale month.
 const REFRESHED_COLUMNS = [
   "ruc",
   "sold_at",

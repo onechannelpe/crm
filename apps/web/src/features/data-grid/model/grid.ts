@@ -22,10 +22,7 @@ export type DataGridProps<T extends { id: string }> = {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
   columns: ReadonlyArray<DataGridColumn<T>>;
-  /**
-   * A sentence is styled by the grid. Pass an element only when the state
-   *  needs more than text.
-   */
+  /** The grid styles text empty states. Pass an element for richer content. */
   emptyState: JSX.Element;
   errorState?: JSX.Element;
   loadMore?: DataGridLoadMore;

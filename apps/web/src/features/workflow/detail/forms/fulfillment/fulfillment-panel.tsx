@@ -69,8 +69,6 @@ const DOCUMENT_ACTIONS = new Set<FulfillmentAction>([
   "compile_signed_pdf",
 ]);
 
-// The document a given upload step needs the actor to read before acting, plus
-// the instruction that frames the handoff.
 const DOC_STEP_CONTEXT: Partial<
   Record<
     FulfillmentAction,
@@ -472,9 +470,6 @@ function DocumentUpload(props: {
   );
 }
 
-// One batched text control over the units still missing a value. A single
-// submit walks each entered row, then revalidates once, so a multi-POS client
-// is not N separate submits with N refetches.
 function UnitTextRows(props: {
   leadId: string;
   units: Unit[];
@@ -502,6 +497,7 @@ function UnitTextRows(props: {
       await Promise.all(
         entries.map(([unitId, value]) => props.submitOne(unitId, value)),
       );
+      // Revalidate once after saving every entered unit.
       await revalidateWorkflowLead(props.leadId);
     } catch (caught) {
       state.setError(actionErrorMessage(caught));
@@ -603,8 +599,6 @@ function SaleEntry(props: { leadId: string; units: Unit[] }) {
   );
 }
 
-// The executive's job here is to send the payment link to the client, so the
-// link (registered by back office) is the primary thing on screen, with copy.
 function PaymentProofUpload(props: { leadId: string; units: Unit[] }) {
   const upload = useAction(uploadFulfillmentPaymentProofMutation);
 
@@ -623,6 +617,7 @@ function PaymentProofUpload(props: { leadId: string; units: Unit[] }) {
         {(unit) => (
           <div class={styles.unitEntry}>
             <span class={styles.unitLabel}>{unit.label}</span>
+            {/* Back office registers payment links; executives need them before proof upload. */}
             <Show
               when={unit.paymentUrl}
               fallback={

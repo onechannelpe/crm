@@ -2,8 +2,7 @@ import type { LeadDetailView } from "~/contracts/workflow/views";
 import type { LeadActionKind } from "~/features/record-show/model/lead-action-kind";
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 
-// "message" marks a stage with no actionable next step (nothing for the footer
-// CTA to offer); the record body conveys the state through the stage Tag.
+// Message stages have no footer action.
 export type NextAction =
   | { kind: "message" }
   | { kind: "qualify" }
@@ -20,7 +19,6 @@ export type NextAction =
       disqualification: LeadDetailView["disqualification"];
     };
 
-// Server-resolved actions preserve authorization while stage selects presentation.
 export function resolveNextAction(data: LeadDetailView): NextAction {
   const { stage } = data.lead;
   const actions = data.availableActions;
@@ -32,16 +30,10 @@ export function resolveNextAction(data: LeadDetailView): NextAction {
       }
       return { kind: "message" };
     case "PRICING": {
-      // Only back office holds propose-rate, and only when no proposal is
-      // active-pending (none yet, or the last was sent back for revision).
-      // Giving it priority lands back office on the compose form after a
-      // revision request instead of being stranded on the read-only proposal.
+      // Back office composes a replacement after a revision request.
       if (actions.includes("propose-rate")) {
         return { kind: "propose-rate" };
       }
-      // Everyone else keys off the latest proposal: the owning executive accepts
-      // or requests a revision, back office can still correct a live one, and
-      // read-only viewers just see the numbers (the card self-gates its actions).
       const proposal = data.rateProposals.at(-1);
       if (proposal) {
         return { kind: "decide-rate", proposal };
@@ -93,8 +85,6 @@ export function nextActionCta(data: LeadDetailView): NextActionCta | null {
         target: { kind: "action", action: "propose-rate" },
       };
     case "decide-rate": {
-      // Read-only viewers see the proposal in the body, so they get no CTA; the
-      // executive and back office (who can act) do.
       const canDecide =
         data.availableActions.includes("accept-rate") ||
         data.availableActions.includes("request-rate-revision") ||
@@ -133,15 +123,12 @@ export function nextActionCta(data: LeadDetailView): NextActionCta | null {
   }
 }
 
-// Whether an opened action page is still the lead's live next step. When it is
-// not (the action completed, or another actor advanced the stage), the page
-// returns to the record. `close` is a secondary outcome gated by its own
-// availability rather than by resolveNextAction.
 export function isLeadActionStillRelevant(
   action: LeadActionKind,
   data: LeadDetailView,
 ): boolean {
   if (action === "close") {
+    // Close is available independently of the primary stage action.
     return data.availableActions.includes("close-lead");
   }
   return resolveNextAction(data).kind === action;
@@ -149,11 +136,7 @@ export function isLeadActionStillRelevant(
 
 export type LeadTaskOwner = "executive" | "back_office";
 
-// The pending step of the pipeline, resolved independently of who is looking so
-// the Tareas tab reads the same truth for every role ("Proponer tarifa · Back
-// office" whether you are the waiting executive or the acting back office).
-// `isYourMove` layers the viewer's authorization on top: the footer CTA exists
-// (nextActionCta) exactly when the current user can perform the step.
+// Tasks describe the pending pipeline step; isYourMove applies the viewer's actions.
 export type LeadTask = {
   label: string;
   owner: LeadTaskOwner;
@@ -184,7 +167,7 @@ function resolveLeadTaskBase(
 
   switch (stage) {
     case "QUALIFYING":
-      // No LeadNextStep encodes the availability review, so it is stage-derived.
+      // Availability review has no LeadNextStep.
       return { label: "Calificar disponibilidad", owner: "back_office" };
     case "EXPIRED":
       return { label: "Reiniciar cotización", owner: "executive" };

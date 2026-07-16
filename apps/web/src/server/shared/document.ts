@@ -1,10 +1,7 @@
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-// Document identity is the currency for SUNAT enrichment: a RUC for an
-// organization, a DNI for a person. These are value objects, valid by
-// construction. A raw string becomes one only by parsing at the edge it
-// enters; every consumer past that point trusts the type and never re-checks.
+// Parse RUC and DNI at input boundaries; branded values are trusted afterward.
 
 export type Ruc = string & { readonly __brand: "Ruc" };
 export type Dni = string & { readonly __brand: "Dni" };
@@ -49,10 +46,7 @@ export function parseDocument(
   return Err(fail("invalid_document_type"));
 }
 
-// Persistence hydration: a column written through a parse boundary is trusted
-// to be well-formed. Re-parsing here is cheap and keeps the guarantee honest;
-// a failure means the row was corrupted out of band, which is a fault, not
-// user input.
+// Treat malformed persisted RUCs as database corruption, not user input.
 export function hydrateRuc(value: string): Ruc {
   const parsed = parseRuc(value);
   if (isErr(parsed)) {

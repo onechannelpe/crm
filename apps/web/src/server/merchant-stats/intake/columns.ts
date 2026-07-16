@@ -1,6 +1,5 @@
 import { normalizeCsvHeader } from "~/server/csv/core";
 
-// Dealer export headers.
 export const GPV_COLUMNS = {
   saleMonth: "anomes_vta",
   ruc: "identificador_tributario",
@@ -10,7 +9,7 @@ export const GPV_COLUMNS = {
   soldAt: "fecha_venta",
   tradeName: "nbr_comercial",
   legalName: "nbr_razon_social",
-  // Culqi's registered usuario IS NOT the registered seller in the crm.
+  // Culqi's vendedor is the provider's registered user, not the CRM seller.
   culqiUserCode: "cod_vendedor",
   culqiUserName: "vendedor",
   mesa: "mesa",
@@ -23,8 +22,7 @@ export const GPV_COLUMNS = {
   trialAt: "dia_prueba",
   activatedAt: "dia_activo",
   lastTransactionAt: "ultima_trx",
-  // Cumulative, sale month + first 15d of m1. Overlaps m0; never joins the
-  // m0..m3 series.
+  // Cumulative through day 15 of M1. It overlaps M0 and is outside the M0-M3 series.
   m0Plus15dGpv: "gpv_m0_15d",
   m0Plus15dTrx: "trx_m0_15d",
 } as const;

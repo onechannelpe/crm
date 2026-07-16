@@ -1,7 +1,5 @@
-// The union narrows out things JSON cannot carry (Function, BigInt, Symbol),
-// so consumers still have to validate the shape they need. `null` is a valid
-// JSON value, so column types that distinguish "no value" from "a JSON value"
-// should use `Json | null`.
+// Json excludes values it cannot encode but does not validate a payload shape.
+// Use `Json | null` when a column distinguishes SQL NULL from JSON null.
 export type Json =
   | string
   | number

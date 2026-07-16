@@ -179,8 +179,6 @@ export type FulfillmentQueueView = {
   rows: FulfillmentQueueRowView[];
 };
 
-// Quotations awaiting the executive's decision, against the registration cap.
-// Drives the blocked-registration affordance in the leads workspace.
 export type PendingQuotationCountView = {
   count: number;
   limit: number;

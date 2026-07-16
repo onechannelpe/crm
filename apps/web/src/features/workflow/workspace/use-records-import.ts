@@ -168,10 +168,7 @@ export function useRecordsImport() {
         const payload = parseRecordImportProgressMessage(raw);
         if (payload) handleJobEvent(s, payload);
       },
-      // The stream never established at all: fall back to polling. An
-      // established stream that later drops recovers on its own (the browser
-      // retries EventSource natively, and the route re-sends current state
-      // on every fresh connection), so this is not wired to every hiccup.
+      // Poll only when EventSource never connects. Browsers reconnect dropped streams.
       onNeverConnected: () => {
         if (session !== s) return;
         schedulePolling(s, 0);

@@ -22,9 +22,7 @@ export function LeadActionPage() {
 
   const detailData = createAsync(() => leadDetailQuery(leadId()));
 
-  // The action page returns to the record once its step is no longer live: the
-  // form completed, or another actor advanced the stage. This keeps the server
-  // stage authoritative instead of leaving a stale form open.
+  // Leave an action page after the server stage changes.
   createEffect(() => {
     const detail = detailData();
     if (!detail) {

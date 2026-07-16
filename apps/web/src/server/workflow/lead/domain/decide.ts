@@ -277,10 +277,6 @@ export function reviewLead(
   return finish(state, events, input.actor, input.now);
 }
 
-// In-app qualification: back office sets status and priority together in one
-// step. reviewLead handles the incremental import path (one row at a time); this
-// is the atomic form for the interactive "Calificar disponibilidad" panel. Both
-// share resolveReviewTransition so the DISQUALIFIED/PRICING rule stays in one place.
 export function qualifyLead(
   state: LeadState,
   input: {
@@ -376,8 +372,6 @@ export function acceptRate(
   return finish(state, events, input.actor, input.now, null);
 }
 
-// Available throughout PRICING (a client can decline before or after a rate
-// arrives). Third outcome alongside accept-rate and request-rate-revision.
 export function closeLead(
   state: LeadState,
   input: {
@@ -438,11 +432,7 @@ export function expireReservation(
   return Ok({ next: { ...next, reservationExpiresAt: null }, events });
 }
 
-// Reopens pricing for a lead whose rate reservation lapsed. The stale proposal
-// is left as-is: expireReservation already cleared the reservation, so it no
-// longer counts as an active pending proposal. Back office therefore lands on
-// propose-rate (seeded by the last numbers) instead of the executive being asked
-// to decide on an offer that already expired.
+// Reopen pricing without reviving the expired reservation. Back office proposes a replacement.
 export function restartQuotation(
   state: LeadState,
   input: { actor: Actor; now: Date },
@@ -528,8 +518,7 @@ export function addVenueAccounts(
   const completesLastVenue =
     input.totalVenues > 0 && input.fundedVenues + 1 === input.totalVenues;
 
-  // Hand off to fulfillment once affiliation is complete. LIVE later means
-  // the sale is registered, not that the form is filled.
+  // FULFILLMENT begins after affiliation. LIVE requires sale registration.
   if (completesLastVenue) {
     events.push(
       createHistoryEvent({
@@ -545,8 +534,6 @@ export function addVenueAccounts(
   return finish(state, events, input.actor, input.now);
 }
 
-// Emitted by the register-sale handoff alongside the per-unit service
-// references.
 export function completeFulfillment(
   state: LeadState,
   input: { actor: Actor; orderId: FulfillmentOrderId; now: Date },

@@ -27,10 +27,7 @@ export function createMerchantReportRunner(deps: {
   const { db, now, readFile, updateProgress } = deps;
 
   return {
-    // The worker reads the original .xlsx and decodes it. The upload only stores
-    // and books; a 1,300-row workbook takes ~400ms to parse and that belongs on
-    // a queue, not in a request. It also means a decoder fix can be replayed
-    // against the real file rather than against yesterday's decoder output.
+    // Parse the original workbook in the queue so decoder fixes can replay its bytes.
     async process(
       job: IntegrationJobRow,
       signal: AbortSignal,
@@ -87,9 +84,7 @@ export function createMerchantReportRunner(deps: {
   };
 }
 
-// bytes.buffer may be larger than bytes itself (e.g. Node's Buffer pool for
-// small reads), so the slice must stay bounded by byteOffset/byteLength
-// rather than returning the raw buffer.
+// A Node Buffer's backing store can exceed the view. Keep only this view's bytes.
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   const { buffer, byteOffset, byteLength } = bytes;
   if (buffer instanceof ArrayBuffer) {

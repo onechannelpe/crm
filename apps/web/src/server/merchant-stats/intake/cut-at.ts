@@ -1,20 +1,14 @@
-// The dealer names every export with the cut it was taken at:
+// Dealer filenames encode the snapshot cut:
 //
 //   planning-report__dealer-infinity-pay_03_07_26_C2-05_58.xlsx
 //                                        dd mm yy C#  hh mm
 //
-// Reading it here beats inferring the cut from the data. Inference used to take
-// max(ultima_trx) and cap it at today, which read the clock inside the decoder
-// (so the same bytes decoded differently on different days) and quietly fell
-// through to "today" whenever the data disagreed.
-//
-// The C# is the cut number: the dealer exports more than once a day, which is
-// why cut_at carries a time and merchant_reports.cut_at is a timestamp.
+// C# distinguishes multiple cuts on one day. The filename is the source of
+// truth because row timestamps describe individual sales, not the export.
 const CUT_PATTERN = /_(\d{2})_(\d{2})_(\d{2})_C\d+-(\d{2})_(\d{2})(?:\D|$)/;
 
-// The filename carries no timezone, so the components are read as written and
-// stored as UTC. Only ordering between cuts is load-bearing, and displaying the
-// same wall-clock the dealer named the file with is the least surprising.
+// Dealer filenames omit a timezone. Store their wall-clock components as UTC;
+// only cut ordering is load-bearing.
 export function cutAtFromFilename(filename: string): Date | null {
   const match = CUT_PATTERN.exec(filename);
   if (!match) return null;

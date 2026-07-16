@@ -2,16 +2,9 @@ import { sql } from "kysely";
 
 import type { DatabaseExecutor } from "./db-executor";
 
-// `pg_advisory_xact_lock` is transaction-scoped: Postgres releases it
-// automatically on commit or rollback, so a crash mid-transaction can never
-// leak a held lock and there is no matching unlock call to forget. `trx` must
-// be a transaction (not the bare pool), otherwise the lock would release the
-// instant this statement finishes.
-//
-// `key` is hashed with `hashtext` so callers pass a plain string instead of
-// managing Postgres's two-int advisory-lock key space themselves. Callers
-// should namespace keys as `${domain}:${subjectId}` so unrelated invariants
-// never collide on the same lock.
+// Postgres releases pg_advisory_xact_lock at transaction end. Pass a transaction,
+// not the pool, or the lock ends when this query finishes.
+// Hash the key so callers need not manage Postgres's advisory-lock integer pairs.
 export async function withAdvisoryLock<T>(
   trx: DatabaseExecutor,
   key: string,

@@ -107,10 +107,8 @@ export function parseFieldChanges(raw: unknown): FieldChange[] {
   return [];
 }
 
-// The trust boundary sits with the consumer: a non-JSON value would still be
-// passed through and break at the next read that does parse it. Accepts
-// `unknown` because callers often hold values that are JSON-shaped but not
-// statically narrowed (form data, third-party responses, etc).
+// Event payloads are schemaless. Consumers validate the fields they read;
+// this boundary preserves JSON-shaped form and provider data without narrowing it.
 export function serializeEventPayload(payload?: unknown): Json | null {
   if (payload === null || payload === undefined) return null;
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion

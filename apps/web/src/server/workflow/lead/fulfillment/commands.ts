@@ -79,8 +79,7 @@ function unitHasField(unit: FulfillmentUnit, field: UnitField): boolean {
   }
 }
 
-// Reaching COMPLETED flips the lead to LIVE in the same transaction so the
-// stage change commits atomically with the step change.
+// Completing fulfillment moves the lead to LIVE in the same transaction.
 async function advance(
   ctx: LeadTransaction,
   loaded: Loaded,
@@ -255,8 +254,6 @@ function buildUnits(
   return units;
 }
 
-// One uploaded document handoff (transactions_report, addendum_*, signed PDF)
-// that advances the order.
 export async function attachFulfillmentDocumentCommand(
   input: {
     leadId: WorkflowLeadId;
@@ -309,7 +306,7 @@ export async function attachFulfillmentDocumentCommand(
   });
 }
 
-// The step advances once every unit carries the value.
+// Advance only after every order unit has this value.
 async function recordUnitValueCommand(
   input: {
     leadId: WorkflowLeadId;
@@ -363,8 +360,6 @@ export async function recordUnitSerialCommand(
   },
   ports: Ports,
 ): Promise<LeadResult> {
-  // loadForAction picks the right step for record_serials; the action name is
-  // shared across both branches.
   const action: FulfillmentAction = "record_serials";
   return recordUnitValueCommand(
     { ...input, action },
@@ -460,8 +455,7 @@ export async function registerUnitSaleCommand(
   );
 }
 
-// Only steps in REJECT_RULES are rejectable. The reactor notifies the prior
-// actor after the rejected field is cleared.
+// Only configured document handoffs can be rejected.
 export async function rejectFulfillmentStepCommand(
   input: { leadId: WorkflowLeadId; reason: string; actor: WorkflowActor },
   ports: Ports,

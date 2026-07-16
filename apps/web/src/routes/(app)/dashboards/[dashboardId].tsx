@@ -7,8 +7,6 @@ import { MerchantGpvDashboard } from "~/features/dashboards/merchant-gpv-dashboa
 import { findDashboard } from "~/features/dashboards/registry";
 import { merchantFilterOptionsQuery } from "~/lib/queries/dashboards";
 
-// Attainment needs a month, and the month comes from the options list, so the
-// options are the only thing worth warming ahead of the component.
 export const route = {
   preload: () => void merchantFilterOptionsQuery(),
 } satisfies RouteDefinition;

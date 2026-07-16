@@ -71,8 +71,7 @@ const COLUMNS = [
     width: 110,
     renderCell: (row) => formatSolesCompact(gpvAt(row, 0)),
   },
-  // Cumulative through the first 15 days of M1, overlaps M0. Sits next to M0
-  // because that is the pair a reader compares.
+  // M0+15D includes M0 through day 15 of M1.
   {
     key: "m0_plus_15d",
     label: "M0+15D",

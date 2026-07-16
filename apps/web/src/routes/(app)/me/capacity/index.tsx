@@ -29,8 +29,6 @@ function CapacityStatus(props: {
   );
 }
 
-// Both capacity requests (searches, lead refills) are the same ask: a quantity
-// plus a justification. They move together, so they share one form.
 function CapacityRequestForm(props: {
   title: string;
   initialAmount: string;

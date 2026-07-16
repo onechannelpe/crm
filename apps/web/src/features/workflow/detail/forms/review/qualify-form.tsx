@@ -40,9 +40,7 @@ function coercePriority(value: string): LeadPriority | "" {
   return LEAD_PRIORITIES.find((priority) => priority === value) ?? "";
 }
 
-// CARTERIZADO and STOCK are the statuses that route the lead to DISQUALIFIED
-// (see resolveReviewTransition); surfacing that up front avoids a surprising
-// terminal transition after the reviewer clicks save.
+// CARTERIZADO and STOCK end qualification instead of entering pricing.
 function statusDisqualifies(status: LeadStatus | ""): boolean {
   return status === "CARTERIZADO" || status === "STOCK";
 }
