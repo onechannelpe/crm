@@ -27,7 +27,7 @@
     "migrate:prod": "bun src/lib/db/migrate-cli.ts",
     "seed": "bun --env-file=../../.env src/lib/db/seed.ts",
     "seed:test": "bun --env-file=../../.env.test src/lib/db/seed.ts",
-    "seed:prod": "bun --env-file=../../.env.production src/lib/db/seed.ts"
+    "provision:prod": "bun src/lib/db/seed.ts"
   },
   "dependencies": {
     "@crm/contracts": "workspace:*",

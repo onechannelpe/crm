@@ -1,15 +1,15 @@
-import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
-import type { Database } from "../../../types";
-import { INFINITY_BRANCH_ID } from "./branches-policies";
+import type { Database } from "../../types";
+import { stableSeedId } from "../shared/stable-id";
+import { INFINITY_BRANCH_ID } from "./persist/branches-policies";
 
-const INFINITY_LIMA_TEAM_ID = randomUUIDv7();
-const INFINITY_CHICLAYO_TEAM_ID = randomUUIDv7();
-const LUIS_BETALLELUZ_ID = randomUUIDv7();
-const JOSE_MENDOZA_ID = randomUUIDv7();
+const INFINITY_LIMA_TEAM_ID = stableSeedId("team:infinity-lima");
+const INFINITY_CHICLAYO_TEAM_ID = stableSeedId("team:infinity-chiclayo");
+const LUIS_BETALLELUZ_ID = stableSeedId("installation-user:luis.betalleluz");
+const JOSE_MENDOZA_ID = stableSeedId("installation-user:jose.mendoza");
 
-export async function persistUsersAndTeams(
+export async function persistInstallationManifest(
   db: Kysely<Database>,
   now: Date,
   realPasswordHash: string,
@@ -30,19 +30,19 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
     .insertInto("users")
     .values([
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:jorge.quezada"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "jorge.quezada",
         email: "jorge.quezada@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "JORGE ANDRES",
         first_surname: "QUEZADA",
         second_surname: "CORNEJO",
@@ -52,12 +52,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:karina.yalta"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "karina.yalta",
         email: "karina.yalta@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "KARINA",
         first_surname: "YALTA",
         second_surname: "MENDOZA",
@@ -73,6 +74,7 @@ export async function persistUsersAndTeams(
         username: "luis.betalleluz",
         email: "luis.betalleluz@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "LUIS FERNANDO",
         first_surname: "BETALLELUZ",
         second_surname: "KALINOWSKI",
@@ -82,12 +84,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:sebastian.salazar"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "sebastian.salazar",
         email: "sebastian.salazar@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "SEBASTIAN ROMMEL",
         first_surname: "SALAZAR",
         second_surname: "MESTAS",
@@ -97,12 +100,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:giancarlo.aranguri"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "giancarlo.aranguri",
         email: "giancarlo.aranguri@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "GIANCARLO ALEXANDER",
         first_surname: "ARANGURI",
         second_surname: "NUÑEZ",
@@ -112,12 +116,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:paola.lozano"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "paola.lozano",
         email: "paola.lozano@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "LIZ PAOLA",
         first_surname: "LOZANO",
         second_surname: "RUIZ",
@@ -127,12 +132,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:veronica.banquez"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "veronica.banquez",
         email: "veronica.banquez@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "VERONICA VANESA",
         first_surname: "BANQUEZ",
         second_surname: "BARRETO",
@@ -142,12 +148,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:wendy.sarmiento"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "wendy.sarmiento",
         email: "wendy.sarmiento@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "WENDY CAROLINA",
         first_surname: "SARMIENTO",
         second_surname: "RODRIGUEZ",
@@ -157,12 +164,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:victor.franco"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: null,
         username: "victor.franco",
         email: "victor.franco@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "VICTOR ROBERTO",
         first_surname: "FRANCO",
         second_surname: "SAAVEDRA",
@@ -178,6 +186,7 @@ export async function persistUsersAndTeams(
         username: "jose.mendoza",
         email: "jose.mendoza@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "JOSE GREGORIO",
         first_surname: "MENDOZA",
         second_surname: "PEREIRA",
@@ -187,12 +196,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:renato.santacruz"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "renato.santacruz",
         email: "renato.santacruz@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "RENATO",
         first_surname: "SANTA CRUZ",
         second_surname: "DURAND",
@@ -202,12 +212,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:francisco.suyon"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "francisco.suyon",
         email: "francisco.suyon@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "FRANCISCO ANDRES",
         first_surname: "SUYON",
         second_surname: "SANCHEZ",
@@ -217,12 +228,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:franco.fernandez"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "franco.fernandez",
         email: "franco.fernandez@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "ELVIS FRANCO",
         first_surname: "FERNANDEZ",
         second_surname: "FLORES",
@@ -232,12 +244,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:eber.montalvo"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "eber.montalvo",
         email: "eber.montalvo@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "EBER MOISES",
         first_surname: "MONTALVO",
         second_surname: "GUERRERO",
@@ -247,12 +260,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:pool.ortega"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "pool.ortega",
         email: "pool.ortega@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "POOL ARIEL",
         first_surname: "ORTEGA",
         second_surname: "INGA",
@@ -262,12 +276,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:jesus.avalos"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "jesus.avalos",
         email: "jesus.avalos@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "JESUS MARTIN",
         first_surname: "AVALOS",
         second_surname: "ROJAS",
@@ -277,12 +292,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:joyce.llanos"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "joyce.llanos",
         email: "joyce.llanos@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "JOYCE LICETH",
         first_surname: "LLANOS",
         second_surname: "ESPINOZA",
@@ -292,12 +308,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:junior.cardozo"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
         username: "junior.cardozo",
         email: "junior.cardozo@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "JUNIOR EDINSON",
         first_surname: "CARDOZO",
         second_surname: "AGUILAR",
@@ -307,12 +324,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:ricardo.nurena"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "ricardo.nurena",
         email: "ricardo.nurena@infinitycorp.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "RICARDO ARTURO",
         first_surname: "NUREÑA",
         second_surname: "ORTEGA",
@@ -322,12 +340,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:david.duran"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: null,
         username: "david.duran",
         email: "david.duran@onechannel.pe",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "DAVID",
         first_surname: "DURAN",
         second_surname: "",
@@ -337,12 +356,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:luisa.ramirez"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "luisa.ramirez",
         email: "luisa.ramirez@culqinegocios.com",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "LUISA ISABEL",
         first_surname: "RAMIREZ",
         second_surname: "VILCHEZ",
@@ -352,12 +372,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:erick.azucena"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "erick.azucena",
         email: "erick.azucena@culqinegocios.com",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "ERICK DIMAS",
         first_surname: "AZUCENA",
         second_surname: "CHIRRE",
@@ -367,12 +388,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:christian.arango"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "christian.arango",
         email: "christian.arango@culqinegocios.com",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "CHRISTIAN",
         first_surname: "ARANGO",
         second_surname: "CANDIOTTI",
@@ -382,12 +404,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:ray.castillo"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "ray.castillo",
         email: "ray.castillo@culqinegocios.com",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "RAY ABEL",
         first_surname: "CASTILLO",
         second_surname: "CALIXTO",
@@ -397,12 +420,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:victor.tineo"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "victor.tineo",
         email: "victor.tineo@culqinegocios.com",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "VICTOR RAUL",
         first_surname: "TINEO",
         second_surname: "AYALA",
@@ -412,12 +436,13 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
       {
-        id: randomUUIDv7(),
+        id: stableSeedId("installation-user:carlos.lazarte"),
         branch_id: INFINITY_BRANCH_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
         username: "carlos.lazarte",
         email: "carlos.lazarte@culqinegocios.com",
         password_hash: realPasswordHash,
+        password_change_required: true,
         names: "CARLOS JHONATAN",
         first_surname: "LAZARTE",
         second_surname: "ARIZOLA",
@@ -427,7 +452,6 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -439,7 +463,6 @@ export async function persistUsersAndTeams(
         created_at: now,
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -456,6 +479,5 @@ export async function persistUsersAndTeams(
         assigned_at: now,
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 }

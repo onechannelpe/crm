@@ -6,6 +6,8 @@ import type {
   GeneratedId,
   IdColumn,
   NullableIdColumn,
+  RecoveryCodeId,
+  RecoveryCodeSetId,
   UserId,
   UserInviteId,
   WebauthnChallengeId,
@@ -22,7 +24,6 @@ export type AuthFunnelEventNameValue =
   | "passkey_result";
 export type AuthFunnelScreenValue =
   | "login"
-  | "login_user"
   | "login_verify"
   | "login_passkey"
   | "reset_password";
@@ -96,9 +97,9 @@ export interface UserSessionsTable {
   user_id: IdColumn<UserId>;
   branch_id: IdColumn<BranchId>;
   role: Role;
-  session_class: "pre_auth" | "app";
+  session_class: "pre_auth" | "recovery_setup" | "app";
   primary_auth_method: AuthMethodValue;
-  strong_auth_method: "totp" | "passkey" | "federated" | null;
+  strong_auth_method: "totp" | "passkey" | "federated" | "recovery" | null;
   strong_auth_at: Date | null;
   // Holds the administrator's user id so the UI can surface the impersonation
   // and the admin session can be restored on exit.
@@ -128,12 +129,26 @@ export interface UserTotpFactorsTable {
   enabled_at: Date | null;
 }
 
-export interface UserTotpRecoveryCodesTable {
-  id: Generated<string>;
+export type RecoveryCodeSetSource = "enroll" | "regenerate";
+
+// A set owns issuance, acknowledgement, and revocation; member codes record only use.
+export interface RecoveryCodeSetTable {
+  id: GeneratedId<RecoveryCodeSetId>;
   user_id: IdColumn<UserId>;
+  source: RecoveryCodeSetSource;
+  created_at: Date;
+  acknowledged_at: Date | null;
+  revoked_at: Date | null;
+}
+
+export interface RecoveryCodeTable {
+  id: GeneratedId<RecoveryCodeId>;
+  set_id: IdColumn<RecoveryCodeSetId>;
+  // HMAC-SHA256(pepper, normalized_code). Deterministic keyed hash: redemption
+  // looks a code up by an indexed equality, and a leaked column can't be
+  // brute-forced offline without the server pepper.
   code_hash: string;
   used_at: Date | null;
-  created_at: Date;
 }
 
 export interface UserInvitesTable {

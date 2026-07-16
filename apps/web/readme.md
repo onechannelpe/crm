@@ -68,7 +68,7 @@ bun run dev:worker
 ```
 
 From the repo root, `bun run dev` starts engine, web, and worker.
-Web startup runs migrations and seeds before Vite starts.
+Web startup runs migrations, provisions an empty installation, and adds development fixtures before Vite starts.
 `bun run dev:worker` starts only the maintenance worker.
 
 Run from `apps/web/`:
@@ -88,11 +88,11 @@ bun run test:server
 bun run worker:maintenance
 bun --env-file=../../.env.production run start
 bun --env-file=../../.env.production run migrate:prod
-bun --env-file=../../.env.production run seed:prod
+bun --env-file=../../.env.production run provision:prod
 bun --env-file=../../.env.production run worker:maintenance:prod
 ```
 
-Local scripts choose their default env file automatically. Production entrypoints stay explicit through `start`, `migrate:prod`, `seed:prod`, and `worker:maintenance:prod`.
+Local scripts choose their default env file automatically. Production entrypoints stay explicit through `start`, `migrate:prod`, `provision:prod`, and `worker:maintenance:prod`.
 
 ## Validation
 

@@ -10,14 +10,20 @@ const logger = createLogger("db-client");
 function createPoolTypes(): TypeOverrides {
   const poolTypes = new TypeOverrides();
 
-  // node-postgres returns `numeric` as string to preserve arbitrary precision.
-  // This pool accepts JS floating-point precision for all `numeric` values.
+  // node-postgres returns `numeric` as string to preserve precision; this pool
+  // accepts JS floating-point precision for all `numeric` values.
   poolTypes.setTypeParser(types.builtins.NUMERIC, Number.parseFloat);
 
-  // node-postgres returns `int8` as string because it can exceed
-  // Number.MAX_SAFE_INTEGER. All `int8` values returned through this pool
-  // must remain within that limit.
+  // node-postgres returns `int8` as string because values can exceed
+  // Number.MAX_SAFE_INTEGER. All `int8` values returned through this pool must
+  // remain within that limit.
   poolTypes.setTypeParser(types.builtins.INT8, Number.parseInt);
+
+  // `date` columns are pure calendar dates. The default parser turns them
+  // into a JS Date at local midnight, which shifts across timezones, so keep
+  // the raw 'YYYY-MM-DD' string. Only `date` columns use this; `timestamptz`
+  // stays a Date.
+  poolTypes.setTypeParser(types.builtins.DATE, (value) => value);
 
   return poolTypes;
 }

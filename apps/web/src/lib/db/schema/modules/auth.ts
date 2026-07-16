@@ -160,20 +160,51 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("user_totp_recovery_codes")
+    .createTable("recovery_code_set")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("user_id", "uuid", (col) =>
       col.notNull().references("users.id").onDelete("cascade"),
     )
-    .addColumn("code_hash", "text", (col) => col.notNull())
-    .addColumn("used_at", "timestamptz")
+    .addColumn("source", "text", (col) => col.notNull())
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("acknowledged_at", "timestamptz")
+    .addColumn("revoked_at", "timestamptz")
+    .execute();
+
+  // At most one active (non-revoked) recovery-code set per user. The partial
+  // unique index makes regeneration safe: the new set can only be inserted once
+  // the prior one is revoked, so "the active set" is never ambiguous.
+  await db.schema
+    .createIndex("uq_recovery_code_set_active_user")
+    .on("recovery_code_set")
+    .column("user_id")
+    .unique()
+    .where(sql.ref("revoked_at"), "is", null)
     .execute();
 
   await db.schema
-    .createIndex("idx_totp_recovery_user_used")
-    .on("user_totp_recovery_codes")
-    .columns(["user_id", "used_at"])
+    .createTable("recovery_code")
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("set_id", "uuid", (col) =>
+      col.notNull().references("recovery_code_set.id").onDelete("cascade"),
+    )
+    .addColumn("code_hash", "text", (col) => col.notNull())
+    .addColumn("used_at", "timestamptz")
+    .execute();
+
+  // Redemption consumes by (set, hash) equality, so this unique index is both the
+  // lookup path and the guard against a duplicate hash inside one set.
+  await db.schema
+    .createIndex("uq_recovery_code_set_hash")
+    .on("recovery_code")
+    .columns(["set_id", "code_hash"])
+    .unique()
+    .execute();
+
+  await db.schema
+    .createIndex("idx_recovery_code_set_used")
+    .on("recovery_code")
+    .columns(["set_id", "used_at"])
     .execute();
 
   // OAuth

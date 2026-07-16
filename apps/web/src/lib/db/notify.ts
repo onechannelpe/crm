@@ -6,18 +6,8 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 const logger = createLogger("pg-notify");
 
-// Inside a transaction, Postgres holds the notification until commit, so the
-// consumer never wakes for work that has not landed. Outside a transaction it
-// delivers immediately. Either way the wake is best-effort: a missed NOTIFY
-// is caught by the poll floor.
-//
-// `payload` defaults to empty for queue doorbells, where persistence is
-// authoritative and the wake only says "look now". The realtime bridge
-// passes a serialized event instead, riding the NOTIFY directly (events are
-// under Postgres's 8000-byte payload ceiling). That still isn't a durable
-// transport: a listener that reconnects can miss events sent during the
-// gap, so bridges pass `onConnected` to re-sync from durable state after
-// every (re)connect instead of trusting the stream alone.
+// Postgres releases transaction notifications on commit. Polling repairs missed wakes.
+// Queue payloads only wake durable reads; realtime listeners re-sync after reconnect.
 export function notify(
   executor: DatabaseExecutor,
   channel: string,
@@ -54,12 +44,7 @@ function withJitter(delayMs: number): number {
   return delayMs * (0.5 + Math.random());
 }
 
-// A single dedicated, non-pooled `pg.Client` runs LISTEN for every channel in
-// `channels`. The channel set is fixed at creation, so there is no window
-// where a channel is registered after the client has already connected and
-// silently misses its LISTEN until the next reconnect. On connection loss it
-// reconnects with backoff and re-issues every LISTEN so no wake is
-// permanently lost.
+// LISTEN uses one dedicated client. Every reconnect reissues the fixed channel set.
 export function createPgListener(
   connectionString: string,
   channels: Record<string, PgListenerHandler[]>,
@@ -122,7 +107,7 @@ export function createPgListener(
       try {
         await old.end();
       } catch {
-        // the connection is already broken; nothing left to release.
+        // The connection is already broken.
       }
     }
     const delay = reconnectDelayMs;
@@ -134,8 +119,7 @@ export function createPgListener(
   return {
     async start() {
       stopped = false;
-      // First connect uses the same retry path as a live drop, so a boot-time
-      // blip does not silently disable NOTIFY for the process lifetime.
+      // Retry boot-time connection failures like live disconnects.
       await connect().catch(() => void reconnect());
     },
     async stop() {

@@ -12,7 +12,7 @@ import type {
 
 export interface WorkflowIntegrationJobsTable {
   id: GeneratedId<IntegrationJobId>;
-  type: "export" | "import_status" | "import_prioridad";
+  type: "export" | "import_status" | "import_prioridad" | "import_gpv";
   status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
   queue_state: "pending" | "processing" | "done" | "failed";
   requested_by_user_id: IdColumn<UserId>;

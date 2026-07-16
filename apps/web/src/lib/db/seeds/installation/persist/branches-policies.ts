@@ -1,9 +1,9 @@
-import { randomUUIDv7 } from "bun";
 import type { Kysely } from "kysely";
 
 import type { Database } from "../../../types";
+import { stableSeedId } from "../../shared/stable-id";
 
-export const INFINITY_BRANCH_ID = randomUUIDv7();
+export const INFINITY_BRANCH_ID = stableSeedId("branch:infinity");
 
 export async function persistBranchesAndPolicies(
   db: Kysely<Database>,
@@ -12,7 +12,6 @@ export async function persistBranchesAndPolicies(
   await db
     .insertInto("branches")
     .values([{ id: INFINITY_BRANCH_ID, name: "Infinity", created_at: now }])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -27,7 +26,6 @@ export async function persistBranchesAndPolicies(
         updated_at: now,
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 
   await db
@@ -42,6 +40,5 @@ export async function persistBranchesAndPolicies(
         updated_at: now,
       },
     ])
-    .onConflict((oc) => oc.doNothing())
     .execute();
 }
