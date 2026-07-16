@@ -22,7 +22,6 @@ export async function GET(
   if (
     !session ||
     session.sessionClass !== "app" ||
-    !session.onboardingCompleted ||
     !hasPermission(session.role, "integration:manage")
   ) {
     return new Response(null, { status: 401 });

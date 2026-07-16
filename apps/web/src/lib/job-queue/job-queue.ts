@@ -149,15 +149,11 @@ export function createJobQueue<TJob extends QueueJobBase>(
         return;
       }
 
-      // Reserve at claim time, not after the callback: overlapping runOnce
-      // calls (doorbell, poll, self-reschedule) would all read a stale count
-      // otherwise. Each job releases its own slot in its finally.
+      // Reserve slots before callbacks so overlapping runs cannot over-claim.
       runningCount += jobs.length;
 
       await Promise.all(jobs.map((job) => process(job)));
 
-      // A full claim means more work may be waiting; drain again without
-      // waiting for the next wake.
       if (jobs.length >= availableSlots) {
         setTimeout(() => {
           void runOnce();

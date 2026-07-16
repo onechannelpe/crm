@@ -64,13 +64,13 @@ async function sendMessage(
 ): Promise<ExtensionRuntimeResponse> {
   const extensionId = getExtensionId();
   if (!extensionId) {
-    return bridgeUnavailable("CRM extension ID is not configured.");
+    return bridgeUnavailable("La extensión no está configurada.");
   }
 
   const runtime = getChromeRuntime();
   if (!runtime) {
     return bridgeUnavailable(
-      "CRM extension runtime is unavailable in this browser.",
+      "La extensión no está disponible en este navegador.",
     );
   }
 
@@ -84,7 +84,7 @@ async function sendMessage(
 
       if (!isRuntimeResponse(response)) {
         resolve(
-          bridgeUnavailable("CRM extension returned an invalid response."),
+          bridgeUnavailable("La extensión devolvió una respuesta no válida."),
         );
         return;
       }

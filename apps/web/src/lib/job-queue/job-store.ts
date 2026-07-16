@@ -4,17 +4,11 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { JOB_TABLE_LIFECYCLE, type JobTableName } from "./registry";
 
-// Owned solely by the job-store; user-facing status columns are a separate
-// domain column the store keeps in lockstep via LifecycleColumns, never
-// something a caller hand-syncs.
 export type QueueState = "pending" | "processing" | "done" | "failed";
 
 export type { JobTableName };
 
-// Extra domain columns a handler wants written in the same statement as a
-// queue transition (rows_applied, results_json, ...). The canonical lifecycle
-// columns (queue_state, lease, attempts) and the mapped mirror columns are
-// NOT passed here; the store owns them.
+// Domain fields written atomically with a queue transition. The store owns lifecycle fields.
 export type DomainPatch = Record<
   string,
   string | number | boolean | Date | null
@@ -46,10 +40,7 @@ export interface LifecycleColumns {
   };
 }
 
-// Exported (rather than kept private to `createJobStore`) so `resetStaleLeases`
-// computes the exact same patch when it recovers a crashed lease. The mirror
-// invariant has exactly one implementation, shared by both the normal settle
-// path and stale recovery.
+// Stale-lease recovery shares this mapping so status mirrors follow queue state.
 export function mirrorPatch(
   lifecycle: LifecycleColumns,
   state: QueueState,
@@ -105,12 +96,7 @@ export interface JobStore<TId extends string | number, TRow> {
   countOutstanding(): Promise<number>;
 }
 
-// claim() uses FOR UPDATE SKIP LOCKED in a CTE so concurrent workers cannot
-// pick the same row; the stale-scanner is the only path that resets an expired
-// lease. settle() is lease-guarded: it only updates while the row is still
-// `processing` under the caller's lease_owner, so a reaped-and-reclaimed lease
-// cannot be settled by the old worker. Mirror columns are written through the
-// lifecycle map, so resetStaleLeases reuses the same mapping.
+// Claim with SKIP LOCKED. Settle only while the worker owns the processing lease.
 export function createJobStore<
   TRow,
   TId extends string | number = string | number,
@@ -242,11 +228,7 @@ export function createJobStore<
   };
 }
 
-// Crash-recovery counterpart to claim/settle: returns rows stuck in
-// `processing` past their lease deadline to `pending` in one statement. Goes
-// through the same `mirrorPatch` mapping settle uses, so a table's status
-// mirror can never disagree with `queue_state` for longer than the scanner
-// takes to run.
+// Requeue expired processing leases with the same lifecycle mapping as settle.
 export async function resetStaleLeases(
   executor: DatabaseExecutor,
   table: JobTableName,

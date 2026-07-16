@@ -58,7 +58,6 @@ export function makeApprovalContext(
       role: overrides.role ?? "superuser",
       branchId:
         overrides.branchId ?? SEEDED_APPROVAL_USERS.superuserBranchTwo.branchId,
-      onboardingCompleted: true,
       sessionClass: "app",
       primaryAuthMethod: "password",
       strongAuthMethod: null,
@@ -88,8 +87,7 @@ export function makeApprovalDeps(
       if (!options.failGrantInsert) {
         return repos;
       }
-      // Force the grant insert to fail after markApproved has already written,
-      // so the test observes the real transaction rolling back.
+      // Fail the grant insert after markApproved to exercise transaction rollback.
       return {
         ...repos,
         searchCapacityGrants: {

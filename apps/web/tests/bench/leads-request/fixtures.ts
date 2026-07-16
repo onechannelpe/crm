@@ -23,7 +23,6 @@ const ACTOR_USER_ID = UserId.trust(TEST_FIXTURES.users.backOne.id);
 export interface LeadsBench {
   branchId: BranchId;
   engine: EngineClient;
-  // Seeds a fresh user + org + capacity grant and returns the user.
   seedUnit: () => Promise<UserId>;
 }
 
@@ -130,7 +129,6 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
       legalName: `Bench Org ${index}`,
     });
 
-    // Capacity grant keeps the benchmark on assignment work.
     await ctx.repos.leadCapacityGrants.insert({
       user_id: userId,
       amount: 5,

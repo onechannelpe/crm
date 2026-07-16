@@ -6,8 +6,6 @@ import type {
 } from "~/contracts/workflow/vocabulary";
 import { FULFILLMENT_STEPS } from "~/contracts/workflow/vocabulary";
 
-// PendingOwner is the "whose turn" hint for the step; the notification reactor
-// uses it to pick the audience.
 export type PendingOwner = "executive" | "back_office";
 
 // The step completes only when every unit on the order carries a non-null
@@ -44,8 +42,7 @@ const STEP_DEFINITIONS: Record<FulfillmentStep, StepDefinition> = {
   AWAITING_TRANSACTIONS_REPORT: {
     kind: "document",
     action: "upload_transactions_report",
-    // A dedicated person produces the report offline; the executive uploads
-    // it. Back office rejects it at AWAITING_ADDENDUM if it's wrong.
+    // Executives upload reports prepared offline; back office validates them next.
     owner: "executive",
     docKind: "transactions_report",
   },
@@ -140,8 +137,7 @@ export function pendingOwnerForStep(
   return STEP_DEFINITIONS[step].owner;
 }
 
-// Multi-step actions return null here; the caller rejects when the order's
-// current step does not match the action's step.
+// Shared actions are validated against the current step by their command.
 export function stepForAction(
   action: FulfillmentAction,
 ): FulfillmentStep | null {
@@ -181,17 +177,14 @@ export function isTerminalStep(step: FulfillmentStep): boolean {
   return step === "COMPLETED";
 }
 
-// Back office owns every handoff that is not the executive's turn.
 export function backOfficeQueueSteps(): FulfillmentStep[] {
   return FULFILLMENT_STEPS.filter(
     (step) => STEP_DEFINITIONS[step].owner === "back_office",
   );
 }
 
-// Rejectable steps: the reject sends the order to `to` (re-notifying that
-// step's owner) and clears `clearField` on every unit so the prior actor
-// re-supplies it. Data-entry steps are corrected by re-entry in place, not
-// reject.
+// Rejecting a document returns it to its owner and clears the rejected unit field.
+// Data-entry steps are corrected in place.
 export type RejectRule = { to: FulfillmentStep; clearField: UnitField | null };
 
 const REJECT_RULES: Partial<Record<FulfillmentStep, RejectRule>> = {
@@ -200,7 +193,6 @@ const REJECT_RULES: Partial<Record<FulfillmentStep, RejectRule>> = {
     clearField: "payment_proof_file_asset_id",
   },
   AWAITING_PDF_COMPILE: { to: "AWAITING_SIGNATURE", clearField: null },
-  // A wrong transactions report bounces back for re-upload.
   AWAITING_ADDENDUM: { to: "AWAITING_TRANSACTIONS_REPORT", clearField: null },
 };
 

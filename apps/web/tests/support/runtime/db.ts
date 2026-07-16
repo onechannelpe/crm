@@ -4,15 +4,9 @@ import { join } from "node:path";
 import { sql, type Kysely } from "kysely";
 import { Client } from "pg";
 
-import {
-  SETTLEMENT_BANKS,
-  ACCOUNT_TYPE_KINDS,
-  COLLECTION_MODES,
-  CURRENCIES,
-} from "~/contracts/workflow/vocabulary";
 import { createDb } from "~/lib/db/client";
 import { migrateToLatest } from "~/lib/db/migrate";
-import { BOOTSTRAP_SEED_MODULES } from "~/lib/db/schema";
+import { REFERENCE_DATA_MODULES } from "~/lib/db/schema";
 import type { Database } from "~/lib/db/types";
 import {
   BranchId,
@@ -27,31 +21,19 @@ import {
   type TestRepositories,
 } from "../runtime/repos";
 
-// Postgres test isolation: build one seeded template database, then
-// `CREATE DATABASE <clone> TEMPLATE <template>` once per test FILE (not per
-// test, matching graphile-worker's own test harness pattern).
-// Individual tests within a file share that one clone and are isolated from
-// each other by `resetTestDb`, which truncates everything dynamic and
-// reseeds fixtures. No DDL, safe under Vitest's default
-// sequential-within-file execution. Cloning requires the template to have no
-// live connections, so the template pool is destroyed after seeding and
-// tests never connect to it directly.
+// Each test file clones a seeded template; resetTestDb restores fixtures between
+// cases.
 const NAMESPACE = (process.env.TEST_DB_NAMESPACE ?? "default").replace(
   /[^a-z0-9_]/gi,
   "_",
 );
 const TEMPLATE_DB_NAME = `crm_test_template_${NAMESPACE}`.toLowerCase();
 
-// Maintenance/base connection. Per-test databases are derived by swapping the
-// database segment of this URL. Points at the `postgres` admin database so we
-// can CREATE/DROP other databases.
 const BASE_URL =
   process.env.TEST_WEB_DB_URL ??
   process.env.WEB_DB_URL ??
   "postgres://postgres@localhost:5432/postgres";
 
-// Stable advisory-lock key so concurrent vitest workers serialize template
-// creation across processes.
 const TEMPLATE_LOCK_KEY = 0x6372_6d74; // "crmt"
 
 const TEST_ORG_ID_LIMA = OrganizationId.trust(
@@ -130,36 +112,6 @@ async function withMaintenanceClient<T>(
   }
 }
 
-// Vocabulary lookup tables (currency/account-type/settlement-bank/collection
-// mode). Genuinely static reference data: nothing in the app or the test
-// suite ever writes to these outside migration seeding, so they're seeded
-// once at template-build time and excluded from `resetTestDb`'s truncation.
-async function seedVocabulary(db: Kysely<Database>) {
-  await db
-    .insertInto("workflow_collection_mode_kinds")
-    .values(COLLECTION_MODES.map((value) => ({ value })))
-    .execute();
-
-  await db
-    .insertInto("workflow_currency_kinds")
-    .values(CURRENCIES.map((value) => ({ value })))
-    .execute();
-
-  await db
-    .insertInto("workflow_account_type_kinds")
-    .values(ACCOUNT_TYPE_KINDS.map((value) => ({ value })))
-    .execute();
-
-  await db
-    .insertInto("workflow_settlement_banks")
-    .values(SETTLEMENT_BANKS.map((value) => ({ value })))
-    .execute();
-}
-
-// Test-harness fixture rows (branches/users/organizations/people). Unlike
-// vocabulary data, tests can mutate these (e.g. a profile-update command), so
-// this runs both at template-build time and on every `resetTestDb` call to
-// restore the baseline before each test.
 async function seedFixtures(db: Kysely<Database>) {
   const now = new Date();
 
@@ -357,7 +309,6 @@ async function buildTemplate(): Promise<void> {
   assertSafeDbName(TEMPLATE_DB_NAME);
 
   await withMaintenanceClient(async (client) => {
-    // Serialize across vitest worker processes: only one builds the template.
     await client.query("SELECT pg_advisory_lock($1)", [TEMPLATE_LOCK_KEY]);
     try {
       if (await templateExists(client)) {
@@ -369,18 +320,13 @@ async function buildTemplate(): Promise<void> {
         const db = createDb(databaseUrl(TEMPLATE_DB_NAME));
         try {
           await migrateToLatest(db);
-          await seedVocabulary(db);
           await seedFixtures(db);
         } finally {
-          // Drop the seeding connection so the database can serve as a template.
+          // Postgres cannot clone a database with live connections.
           await db.destroy();
         }
       } catch (error) {
-        // templateExists only checks that the pg_database row exists, not
-        // that seeding actually finished. Without this, a template that dies
-        // mid-migrate/seed (crash, killed run) leaves a half-built database
-        // registered as "done", and every future run silently reuses the
-        // broken template forever. Drop it so the next run rebuilds cleanly.
+        // Rebuild a template whose migrations or fixtures failed.
         await client.query(
           `DROP DATABASE IF EXISTS "${TEMPLATE_DB_NAME}" WITH (FORCE)`,
         );
@@ -440,17 +386,8 @@ export async function createIsolatedTestDb(
   };
 }
 
-// Vocabulary tables are seeded once at template-build time and never written
-// to by app or test code (verified: only `seedVocabulary` inserts into
-// them), so they're excluded from truncation. `schema_integrity` is the
-// migration hash marker and is irrelevant post-clone.
-const STATIC_TABLES = new Set([
-  "schema_integrity",
-  "workflow_collection_mode_kinds",
-  "workflow_currency_kinds",
-  "workflow_account_type_kinds",
-  "workflow_settlement_banks",
-]);
+// Truncating schema_integrity would make migrations appear unapplied.
+const STATIC_TABLES = new Set(["schema_integrity"]);
 
 async function truncateDynamicTables(db: Kysely<Database>): Promise<void> {
   const { rows } = await sql<{ tablename: string }>`
@@ -468,13 +405,10 @@ async function truncateDynamicTables(db: Kysely<Database>): Promise<void> {
   );
 }
 
-// Isolates individual tests within a file-scoped `TestDbContext` (see
-// `createIsolatedTestDb`'s module comment). Cheap: no DDL, just a truncate +
-// a handful of inserts, restoring exactly the state a fresh clone would have
-// had. Run this in `beforeEach`, not `beforeAll`.
+// Reset each case, not once per test file.
 export async function resetTestDb(ctx: TestDbContext): Promise<void> {
   await truncateDynamicTables(ctx.db);
-  for (const module of BOOTSTRAP_SEED_MODULES) {
+  for (const module of REFERENCE_DATA_MODULES) {
     // eslint-disable-next-line no-await-in-loop
     await module.run(ctx.db);
   }
@@ -503,8 +437,7 @@ export interface FreshDbContext {
   db: Kysely<Database>;
 }
 
-// Empty, unmigrated databases are not cloned from the fixture template. Use
-// these for migration/seeding tests, not app behavior against seeded fixtures.
+// Use an unmigrated database only for migration and seeding tests.
 export async function createFreshDb(prefix: string): Promise<FreshDbContext> {
   const dbName = `crm_test_fresh_${prefix}_${Date.now()}_${Math.random()
     .toString(16)
