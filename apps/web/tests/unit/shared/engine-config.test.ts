@@ -155,7 +155,6 @@ describe("engine client config", () => {
       }),
     ).toThrow("ENGINE_TIMEOUT_MS must be a positive integer");
 
-    // Number() handles whitespace gracefully, which is good for env vars
     expect(() =>
       buildEngineClientConfig({
         ...VALID_HMAC,

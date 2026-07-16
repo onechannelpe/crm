@@ -4,7 +4,6 @@ import type { SourceRow } from "~/server/merchant-stats/intake/types";
 import type { SeedContext } from "../../shared/context";
 import { CULQI_MERCHANT_REPORT_PROFILE as PROFILE } from "./profile";
 
-// Combined into "<A> <B>" business names.
 const TRADE_HEADS = [
   "Bodega",
   "Minimarket",
@@ -179,10 +178,8 @@ function buildMerchant(
   };
 }
 
-// Culqi's usuarios are a small closed pool of dealer staff, and deliberately
-// none of them is a CRM user: in the real export the usuario named the actual
-// seller 0% of the time. The demo has to reproduce that, or the reconciliation
-// view would look like a leaderboard that happens to agree.
+// Culqi's usuarios. The demo keeps them separate so the reconciliation
+// view cannot become a seller leaderboard by accident.
 const CULQI_USERS = [
   "JULIO BENJAMIN ALLAUCA VALENCIA",
   "CLAUDIA EDITH RODRIGUEZ FLORES DE PEREZ",

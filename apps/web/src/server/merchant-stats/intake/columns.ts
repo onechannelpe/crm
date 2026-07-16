@@ -1,6 +1,6 @@
 import { normalizeCsvHeader } from "~/server/csv/core";
 
-// Raw dealer exports
+// Dealer export headers.
 export const GPV_COLUMNS = {
   saleMonth: "anomes_vta",
   ruc: "identificador_tributario",

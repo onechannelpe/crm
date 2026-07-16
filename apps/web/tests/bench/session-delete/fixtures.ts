@@ -6,11 +6,6 @@ import { BranchId, UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW, benchDate } from "../_shared/constants";
 
-// Heavy-but-plausible upper bound for one user's live sessions (many devices,
-// long-lived logins). Representative, not maximal: the previous 60-user x 800
-// = 48k seed existed only to feed a forced 60-iteration pool, which CodSpeed's
-// analysis runner ignores (it measures a single call and handles repetition
-// itself). One user's worth is the whole working set.
 export const SESSIONS_PER_USER = 800;
 
 const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
@@ -39,10 +34,7 @@ export async function seedBenchUser(ctx: TestDbContext): Promise<UserId> {
   return id;
 }
 
-// Restores a deterministic precondition: exactly `count` sessions for `userId`.
-// The delete bench calls this from beforeEach so every measured deleteAllForUser
-// removes the same volume. 800 rows is a single ~10k-param insert (well under
-// the 65k bind-param ceiling), fast enough that the reseed cost stays trivial.
+// Reseed exactly count sessions before each measured delete.
 export async function setUserSessions(
   ctx: TestDbContext,
   userId: UserId,

@@ -84,9 +84,7 @@ describe("session service caching and validation", () => {
       .execute();
   }
 
-  // Raw SQL, not the typed column setter: simulates a role value left over
-  // from a role that has since been renamed or removed, which the Role
-  // union can no longer represent.
+  // A removed role cannot pass the Role union, so seed its stale value with SQL.
   async function corruptSessionRole(sessionId: string) {
     await sql`update user_sessions set role = 'retired_role' where id = ${sessionId}`.execute(
       ctx.db,
@@ -113,8 +111,7 @@ describe("session service caching and validation", () => {
     const first = await service.resolve(token);
     expect(first?.role).toBe(IDENTITY.role);
 
-    // Mutate the persisted row directly, bypassing the service, so the only
-    // way the second resolve could see the new role is by skipping the cache.
+    // A changed second result would prove that resolve bypassed the cache.
     await ctx.db
       .updateTable("user_sessions")
       .set({ role: "supervisor" })

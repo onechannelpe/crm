@@ -17,13 +17,11 @@ interface RecordFilterBarProps {
   options: FilterOptions;
   filter: BookFilter;
   onChange: (patch: Partial<BookFilter>) => void;
-  // Grid-specific controls, e.g. the attribution queue's confidence selector.
   children?: JSX.Element;
 }
 
-// Zonal and vendedor select against credit, which lives on one table. Mes and
-// producto mean a different column at each grain, so each query applies them to
-// its own -- a filter is honored everywhere, but not by one shared expression.
+// Seller and branch filter attribution. Month and product filter the column at
+// each query's grain.
 export function RecordFilterBar(props: RecordFilterBarProps) {
   const value = (raw: string) => (raw === ALL ? undefined : raw);
 

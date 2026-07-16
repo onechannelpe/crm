@@ -89,10 +89,7 @@ describe("avatar service", () => {
     expect(Array.from(newBytes)).toEqual([1, 2, 3]);
   });
 
-  // A legacy/corrupted storage key that resolves outside the blob store's
-  // root fails deletion for real (blob-store.ts's containment check), the
-  // same way any other disk error would. Upload must still succeed: cleanup
-  // of the old blob is best-effort.
+  // An out-of-root legacy key makes the real blob store reject deletion.
   it("keeps the upload successful when deleting the previous blob fails", async () => {
     const { service } = makeService();
     await seedAvatar({
@@ -130,11 +127,7 @@ describe("avatar service", () => {
     expect(row.avatar_storage_key).toBeNull();
   });
 
-  // Forces the real update to fail (rather than faking the whole repo) to
-  // prove the newly written blob is rolled back on a genuine downstream
-  // write failure, matching the precedent in
-  // tests/support/capacity/approval-runtime.ts's failGrantInsert. putBytes is
-  // wrapped, not faked, purely to observe the key the service generated.
+  // Reject the real repository update after putBytes to exercise blob rollback.
   it("rolls back the newly written blob when the db write fails", async () => {
     const users = {
       ...createUsersRepo(ctx.db),

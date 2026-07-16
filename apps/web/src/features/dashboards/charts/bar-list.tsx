@@ -13,7 +13,6 @@ export interface BarRow {
   sublabel?: string;
   value: number;
   target?: number | null;
-  // When the row stands for a record, the row links to it.
   href?: string;
 }
 
@@ -21,7 +20,6 @@ interface BarListProps {
   rows: BarRow[];
 }
 
-// Realized and target share one axis: a dashed tick on the bar is the target.
 export function BarList(props: BarListProps) {
   const max = () =>
     Math.max(

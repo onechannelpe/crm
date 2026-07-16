@@ -33,7 +33,6 @@ type TabStripProps<TId extends string> = {
   tabs: ReadonlyArray<TabItem<TId>>;
   activeTab: TId;
   onTabSelect: (id: TId) => void;
-  // Page-level actions ride at the far end of the strip.
   rightComponent?: JSX.Element;
 };
 

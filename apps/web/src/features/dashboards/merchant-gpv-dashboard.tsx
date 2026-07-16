@@ -177,10 +177,6 @@ export function MerchantGpvDashboard() {
         </div>
       </Show>
 
-      {/*
-        Record tabs own their scroll through the data grid,
-        so they are not nested inside a second one.
-      */}
       <Switch>
         <Match when={tab() === "rendimiento"}>
           <RecordFilterBar
@@ -200,9 +196,8 @@ export function MerchantGpvDashboard() {
                   caption={`${formatInteger(monthDevices())} dispositivos activos`}
                 />
                 {/*
-                  How much of the month the board below actually accounts for.
-                  Unattributed volume is a steady state, not a backlog, so the
-                  ranking is only meaningful next to this number.
+                  Ranking excludes unattributed GPV, so show its monthly share
+                  beside it.
                 */}
                 <AggregateTile
                   title={`Atribución ${monthLabel()}`}
@@ -241,10 +236,8 @@ export function MerchantGpvDashboard() {
                 />
 
                 {/*
-                  Each RUC contributes one month of GPV and the projection in
-                  force for that month, so the sum is like-for-like. The
-                  "Sin asignar" row is one of these and is deliberately not
-                  filtered out.
+                  Each RUC contributes one month's GPV against its effective
+                  target. "Sin asignar" remains a row.
                 */}
                 <BarTile
                   title={`Cumplimiento ${monthLabel()} por vendedor`}

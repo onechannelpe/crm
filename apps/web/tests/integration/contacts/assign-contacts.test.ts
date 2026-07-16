@@ -156,8 +156,7 @@ describe("assignContacts", () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("expected success");
-    // requested reflects the buffer gap (10, from a fresh actor), not the
-    // 3 candidates the engine happened to return for this request.
+    // requested is the buffer shortfall, not the candidate count.
     expect(result.value).toEqual({ requested: BUFFER_TARGET, assigned: 2 });
 
     const activeCount =
@@ -206,12 +205,8 @@ describe("assignContacts", () => {
     expect(reservations[0].status).toBe("cancelled");
   });
 
-  // Exercises the same catch-and-cancel path an uncaught persistence failure
-  // would: executeWithUsageReservation cancels the reservation for any throw
-  // inside `run`, not just Result-typed engine errors. The engine call is the
-  // only step in that block reachable without a real downstream write, so it
-  // stands in for "something inside the reservation throws" without faking
-  // the write path itself.
+  // A thrown engine call must cancel the reservation like any failure inside
+  // the reservation callback.
   it("cancels the reservation and rethrows when a downstream step throws", async () => {
     await expect(
       runAssign(engineThrowing("engine connection lost")),

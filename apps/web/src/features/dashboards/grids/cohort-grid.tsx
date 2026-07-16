@@ -126,9 +126,6 @@ export function CohortGrid(props: { options: FilterOptions }) {
   );
 
   const rows = createMemo<Row[]>(() =>
-    // The grid keys on `id`, which the read contract has no business
-    // carrying. These rows are the cached query result, so a copy is the
-    // only correct way to add it.
     // eslint-disable-next-line oxc/no-map-spread
     (page.latest ?? []).map((row) => ({ ...row, id: row.saleId })),
   );

@@ -19,7 +19,6 @@ interface LineChartProps {
 const PAD = { top: 16, right: 16, bottom: 28, left: 16 };
 const FALLBACK_WIDTH = 640;
 
-// Max and latest points carry value labels; target is a dashed neutral line.
 export function LineChart(props: LineChartProps) {
   const height = () => props.height ?? 220;
 

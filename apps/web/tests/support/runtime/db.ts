@@ -21,27 +21,19 @@ import {
   type TestRepositories,
 } from "../runtime/repos";
 
-// One seeded template per test FILE: `CREATE DATABASE <clone> TEMPLATE
-// <template>` once, then `resetTestDb` isolates individual tests inside the
-// file by truncating dynamic tables and reseeding fixtures. Cloning requires
-// the template to have no live connections, so the template pool is destroyed
-// after seeding.
+// Each test file clones a seeded template; resetTestDb restores fixtures between
+// cases.
 const NAMESPACE = (process.env.TEST_DB_NAMESPACE ?? "default").replace(
   /[^a-z0-9_]/gi,
   "_",
 );
 const TEMPLATE_DB_NAME = `crm_test_template_${NAMESPACE}`.toLowerCase();
 
-// Maintenance/base connection. Per-test databases are derived by swapping the
-// database segment of this URL. Points at the `postgres` admin database so we
-// can CREATE/DROP other databases.
 const BASE_URL =
   process.env.TEST_WEB_DB_URL ??
   process.env.WEB_DB_URL ??
   "postgres://postgres@localhost:5432/postgres";
 
-// Stable advisory-lock key so concurrent vitest workers serialize template
-// creation across processes.
 const TEMPLATE_LOCK_KEY = 0x6372_6d74; // "crmt"
 
 const TEST_ORG_ID_LIMA = OrganizationId.trust(
@@ -120,8 +112,6 @@ async function withMaintenanceClient<T>(
   }
 }
 
-// Fixture rows tests can mutate (e.g. a profile-update command). Runs at
-// template-build time and on every `resetTestDb` call to restore the baseline.
 async function seedFixtures(db: Kysely<Database>) {
   const now = new Date();
 
@@ -319,7 +309,6 @@ async function buildTemplate(): Promise<void> {
   assertSafeDbName(TEMPLATE_DB_NAME);
 
   await withMaintenanceClient(async (client) => {
-    // Serialize across vitest worker processes: only one builds the template.
     await client.query("SELECT pg_advisory_lock($1)", [TEMPLATE_LOCK_KEY]);
     try {
       if (await templateExists(client)) {
@@ -333,11 +322,11 @@ async function buildTemplate(): Promise<void> {
           await migrateToLatest(db);
           await seedFixtures(db);
         } finally {
-          // Drop the seeding connection so the database can serve as a template.
+          // Postgres cannot clone a database with live connections.
           await db.destroy();
         }
       } catch (error) {
-        // Drop a half-built template so the next run rebuilds it cleanly.
+        // Rebuild a template whose migrations or fixtures failed.
         await client.query(
           `DROP DATABASE IF EXISTS "${TEMPLATE_DB_NAME}" WITH (FORCE)`,
         );
@@ -397,8 +386,7 @@ export async function createIsolatedTestDb(
   };
 }
 
-// The migration marker survives per-test resets. Reference tables share
-// schema preparation's ownership boundary.
+// Truncating schema_integrity would make migrations appear unapplied.
 const STATIC_TABLES = new Set(["schema_integrity"]);
 
 async function truncateDynamicTables(db: Kysely<Database>): Promise<void> {
@@ -417,8 +405,7 @@ async function truncateDynamicTables(db: Kysely<Database>): Promise<void> {
   );
 }
 
-// Cheap per-test reset: truncate dynamic tables and reseed fixtures. Run in
-// `beforeEach`, not `beforeAll`.
+// Reset each case, not once per test file.
 export async function resetTestDb(ctx: TestDbContext): Promise<void> {
   await truncateDynamicTables(ctx.db);
   for (const module of REFERENCE_DATA_MODULES) {
@@ -450,8 +437,7 @@ export interface FreshDbContext {
   db: Kysely<Database>;
 }
 
-// Unmigrated databases: for migration/seeding tests, not app behavior against
-// seeded fixtures.
+// Use an unmigrated database only for migration and seeding tests.
 export async function createFreshDb(prefix: string): Promise<FreshDbContext> {
   const dbName = `crm_test_fresh_${prefix}_${Date.now()}_${Math.random()
     .toString(16)

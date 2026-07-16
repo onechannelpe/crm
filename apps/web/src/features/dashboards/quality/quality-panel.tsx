@@ -12,12 +12,7 @@ import { formatInteger } from "../format";
 
 import styles from "./quality-panel.module.css";
 
-// Every counter is a queue, so every counter is a link. A number with nowhere to
-// go is a number nobody acts on.
-//
-// These queues never reach zero and are not meant to: the CRM will not hold a
-// lead or a serial for every RUC the dealer sells to. They are a standing work
-// list ordered by what is at stake, not a migration to finish.
+// Quality queues are standing reconciliation work, ordered by GPV.
 const LABELS: Record<QualityIssue, string> = {
   conflict: "Atribución en conflicto",
   late: "Registrado después de la venta",

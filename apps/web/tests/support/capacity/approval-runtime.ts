@@ -87,8 +87,7 @@ export function makeApprovalDeps(
       if (!options.failGrantInsert) {
         return repos;
       }
-      // Force the grant insert to fail after markApproved has already written,
-      // so the test observes the real transaction rolling back.
+      // Fail the grant insert after markApproved to exercise transaction rollback.
       return {
         ...repos,
         searchCapacityGrants: {

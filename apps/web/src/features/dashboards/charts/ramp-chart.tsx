@@ -154,7 +154,6 @@ export function RampChart(props: RampChartProps) {
             )}
           </Present>
 
-          {/* Guide at the read position, behind the lines. */}
           <Show when={tooltip()}>
             {(active) => (
               <line

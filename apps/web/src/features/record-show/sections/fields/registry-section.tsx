@@ -19,8 +19,6 @@ import {
 } from "~/features/widgets/widget-card";
 import { capitalize } from "~/lib/utils";
 
-// Stable reference data about the company. Lives in a collapsed section that
-// stays out of the way.
 export function RegistrySection(props: { data: LeadDetailView }) {
   const [isExpanded, setIsExpanded] = createSignal(false);
 

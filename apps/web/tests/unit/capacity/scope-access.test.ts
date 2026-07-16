@@ -15,7 +15,6 @@ type TargetUser = {
   teamId: TeamId | null;
 };
 
-// Roles that must never be able to manage an executive
 const NON_MANAGER_ROLES = [
   "executive",
   "back_office",
@@ -38,7 +37,6 @@ describe("canManageExecutive", () => {
       const result = await canManageExecutive(actor, UserId.trust("1"), repos);
       expect(result).toMatchObject({ ok: false });
 
-      // Also check different branch
       const actorDiff = makeActor({ role, branchId: BranchId.trust("2") });
       const resultDiff = await canManageExecutive(
         actorDiff,
@@ -162,8 +160,6 @@ describe("canManageExecutive", () => {
       users: { findById: async () => target },
     });
     const result = await canManageExecutive(actor, UserId.trust("1"), repos);
-    // Even if it's "their team id", branch boundaries usually take precedence or
-    // are checked as primary scope.
     expect(result).toMatchObject({ ok: false });
   });
 });

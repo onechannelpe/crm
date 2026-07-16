@@ -28,7 +28,6 @@ describe("sessions.listForUser", () => {
     await db.teardown();
   });
 
-  // Read path: idempotent, so CodSpeed measures one call and repeats it itself.
   bench("list sessions for a heavy user", async () => {
     await db.ctx().repos.sessions.listForUser(userId);
   });
