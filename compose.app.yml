@@ -30,7 +30,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - ${APP_DATA_PATH:?Set APP_DATA_PATH}/postgres:/var/lib/postgresql/data
+      - ${APP_DATA_PATH:?Set APP_DATA_PATH}/postgres:/var/lib/postgresql
     expose:
       - "5432"
     healthcheck:
