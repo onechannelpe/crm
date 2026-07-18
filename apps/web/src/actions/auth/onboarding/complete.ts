@@ -4,6 +4,7 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
 import { isRegistrationResponse } from "~/lib/auth/passkey/credential-response";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
+import { createLogger } from "~/lib/observability/logger";
 import { isPlainRecord } from "~/lib/type-guards";
 import { verifyPasskeyEnrollment } from "~/server/auth/factors/passkey/service";
 import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
@@ -14,6 +15,8 @@ import { getServerRuntime } from "~/server/platform/container";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { WebauthnChallengeId } from "~/server/shared/ids";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+
+const logger = createLogger("auth-onboarding-complete-action");
 
 type ParsedCompleteOnboardingInput =
   | { method: "none" }
@@ -32,15 +35,32 @@ interface CompletionResult {
 function parseCompletionInput(
   input: unknown,
 ): Result<ParsedCompleteOnboardingInput, DomainError> {
-  if (!isPlainRecord(input)) return Err(fail("invalid_input"));
+  if (!isPlainRecord(input)) {
+    logger.warn("invalid_input: request body is not a plain record", {
+      input,
+    });
+    return Err(fail("invalid_input"));
+  }
 
   switch (input.method) {
     case "none":
       return Ok({ method: input.method });
     case "passkey": {
       const challengeId = WebauthnChallengeId.parse(input.challengeId);
-      if (isErr(challengeId)) return challengeId;
+      if (isErr(challengeId)) {
+        logger.warn("invalid_webauthn_challenge_id on onboarding complete", {
+          challengeId: input.challengeId,
+          error: challengeId.error,
+        });
+        return challengeId;
+      }
       if (!isRegistrationResponse(input.response)) {
+        logger.warn(
+          "invalid_passkey_request: malformed registration response",
+          {
+            response: input.response,
+          },
+        );
         return Err(fail("invalid_passkey_request"));
       }
       return Ok({
@@ -54,6 +74,9 @@ function parseCompletionInput(
         ? Ok({ method: input.method, code: input.code })
         : Err(fail("totp_code_invalid"));
     default:
+      logger.warn("invalid_input: unrecognized onboarding method", {
+        method: input.method,
+      });
       return Err(fail("invalid_input"));
   }
 }

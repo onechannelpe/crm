@@ -1,9 +1,11 @@
+import type { DeliveryProviderId } from "@crm/message-channels";
+
 import type { Logger } from "~/lib/observability/logger-shared";
 import { toE164Peru } from "~/lib/phone/pe-mobile";
 
 import type { MessagingGateway } from "../channels/messaging-gateway";
 import { classifySendReceipt } from "../channels/send-result";
-import type { DeliveryJob, DeliveryProviderId } from "../repos/delivery-repo";
+import type { DeliveryJob } from "../repos/delivery-repo";
 import { formatWhatsAppNotificationBody } from "./format-message";
 
 // The queue writes these fields with queue_state in one lease-guarded update.

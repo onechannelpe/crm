@@ -19,6 +19,7 @@ export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 
 export const DELIVERY_PROVIDER_CHANNELS = {
   resend: "email",
+  log: "email",
   kapso: "whatsapp",
   whatsapp_cloud: "whatsapp",
 } as const satisfies Record<string, NotificationChannel>;

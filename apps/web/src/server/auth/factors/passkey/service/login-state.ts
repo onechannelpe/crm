@@ -22,7 +22,6 @@ interface PasskeyLoginStateServiceDeps {
     getAuthenticationOptionsForChallenge(input: {
       userId: UserId;
       challenge: string;
-      userVerification: "preferred" | "required";
     }): Promise<PasskeyLoginFlowState["requestOptions"]>;
   };
 }
@@ -71,7 +70,6 @@ export function createPasskeyLoginStateService(
         await deps.webauthnProvider.getAuthenticationOptionsForChallenge({
           userId: flow.user_id,
           challenge: challenge.challenge,
-          userVerification: "preferred",
         }),
     };
   }

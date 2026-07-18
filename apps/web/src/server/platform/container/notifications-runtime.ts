@@ -1,6 +1,7 @@
 import { createEmailComposer } from "@crm/email-composer";
 import {
   createKapsoProvider,
+  createLogProvider,
   createMessageChannels,
   createResendProvider,
   createWhatsAppCloudProvider,
@@ -125,6 +126,11 @@ export function createNotificationsRuntime(
   if (config.resend) {
     providers.push(createResendProvider(config.resend));
   }
+
+  if (Object.values(config.routes).includes("log")) {
+    providers.push(createLogProvider());
+  }
+
   if (config.kapso) {
     providers.push(
       createKapsoProvider({
@@ -134,6 +140,7 @@ export function createNotificationsRuntime(
       }),
     );
   }
+
   if (config.whatsappCloud) {
     providers.push(createWhatsAppCloudProvider(config.whatsappCloud));
   }

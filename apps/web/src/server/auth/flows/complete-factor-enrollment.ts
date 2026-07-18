@@ -1,3 +1,4 @@
+import { createLogger } from "~/lib/observability/logger";
 import {
   persistVerifiedPasskeyEnrollment,
   type VerifiedPasskeyEnrollment,
@@ -13,6 +14,8 @@ import type { AppContext } from "~/server/platform/action/context";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
+const logger = createLogger("auth-factor-enrollment");
+
 type VerifiedFactorEnrollment =
   | { method: "passkey"; enrollment: VerifiedPasskeyEnrollment }
   | { method: "totp"; enrollment: VerifiedTotpEnrollment };
@@ -25,6 +28,11 @@ export async function completeFactorEnrollment(
   Result<{ recoveryCodes: string[]; sessionToken: string }, DomainError>
 > {
   if (factor.enrollment.userId !== ctx.actor.userId) {
+    logger.warn("invalid_input: enrollment userId does not match actor", {
+      method: factor.method,
+      enrollmentUserId: factor.enrollment.userId,
+      actorUserId: ctx.actor.userId,
+    });
     return Err(fail("invalid_input"));
   }
 

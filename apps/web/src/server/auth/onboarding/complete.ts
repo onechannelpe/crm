@@ -1,6 +1,7 @@
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { resolveSessionClass } from "~/lib/auth/core/session-contract";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import { createLogger } from "~/lib/observability/logger";
 import { parsePhone } from "~/lib/phone/pe-mobile";
 import {
   persistVerifiedPasskeyEnrollment,
@@ -18,6 +19,8 @@ import type { AppContext } from "~/server/platform/action/context";
 import { auditEntityId } from "~/server/shared/audit-entity";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+
+const logger = createLogger("auth-onboarding-complete");
 
 export type CompleteOnboardingCommand =
   | { method: "none" }
@@ -39,6 +42,11 @@ export async function completeOnboarding(
     command.method !== "none" &&
     command.enrollment.userId !== ctx.actor.userId
   ) {
+    logger.warn("invalid_input: enrollment userId does not match actor", {
+      method: command.method,
+      enrollmentUserId: command.enrollment.userId,
+      actorUserId: ctx.actor.userId,
+    });
     return Err(fail("invalid_input"));
   }
   const completedAt = ctx.now();
@@ -46,7 +54,14 @@ export async function completeOnboarding(
   const completed = await deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
     if (!user) return Err(fail("user_not_found"));
-    if (user.onboarding_completed_at) return Err(fail("invalid_input"));
+    if (user.onboarding_completed_at) {
+      logger.warn("invalid_input: onboarding already completed", {
+        userId: user.id,
+        onboardingCompletedAt: user.onboarding_completed_at,
+        method: command.method,
+      });
+      return Err(fail("invalid_input"));
+    }
     if (user.password_change_required) {
       return Err(fail("installation_password_change_required"));
     }

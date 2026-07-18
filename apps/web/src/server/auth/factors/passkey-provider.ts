@@ -15,6 +15,8 @@ import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
 const rpName = "Culqi360";
 
+const REQUIRED_USER_VERIFICATION = "required";
+
 export interface WebauthnRelyingParty {
   rpID: string;
   origin: string;
@@ -109,14 +111,11 @@ export function createPasskeyProvider(
   const { origin, rpID } = relyingParty;
 
   async function buildAuthenticationOptions(
-    input: {
-      userId?: UserId;
-      userVerification: "preferred" | "required";
-    },
+    userId?: UserId,
     challenge?: string,
   ): Promise<PublicKeyCredentialRequestOptionsJSON> {
-    const allowCredentials = input.userId
-      ? (await repos.passkeys.findByUser(input.userId)).map((passkey) => ({
+    const allowCredentials = userId
+      ? (await repos.passkeys.findByUser(userId)).map((passkey) => ({
           id: passkey.id,
           type: "public-key" as const,
           transports: parseStoredTransports(passkey.transports),
@@ -129,7 +128,7 @@ export function createPasskeyProvider(
         challenge,
         allowCredentials,
         timeout: 60000,
-        userVerification: input.userVerification,
+        userVerification: REQUIRED_USER_VERIFICATION,
         extensions: undefined,
       };
     }
@@ -137,7 +136,7 @@ export function createPasskeyProvider(
     return generateAuthenticationOptions({
       rpID,
       allowCredentials,
-      userVerification: input.userVerification,
+      userVerification: REQUIRED_USER_VERIFICATION,
     });
   }
 
@@ -155,7 +154,7 @@ export function createPasskeyProvider(
         })),
         authenticatorSelection: {
           residentKey: "preferred",
-          userVerification: "preferred",
+          userVerification: REQUIRED_USER_VERIFICATION,
         },
       });
 
@@ -196,19 +195,15 @@ export function createPasskeyProvider(
       return { verified: true, credential: registered };
     },
 
-    async getAuthenticationOptions(input: {
-      userId?: UserId;
-      userVerification: "preferred" | "required";
-    }) {
-      return buildAuthenticationOptions(input);
+    async getAuthenticationOptions(userId?: UserId) {
+      return buildAuthenticationOptions(userId);
     },
 
     async getAuthenticationOptionsForChallenge(input: {
       userId: UserId;
       challenge: string;
-      userVerification: "preferred" | "required";
     }) {
-      return buildAuthenticationOptions(input, input.challenge);
+      return buildAuthenticationOptions(input.userId, input.challenge);
     },
 
     async verifyAuthentication(

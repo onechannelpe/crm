@@ -15,12 +15,33 @@ import { createRequestTracePlugin, resolveRequestTraceConfig } from "./tracer";
 const requestTraceConfig = resolveRequestTraceConfig(process.env);
 
 export default defineConfig({
+  // Dev and E2E use different env files, so they must not share a Vite cache.
+  cacheDir: process.env.VITE_CACHE_DIR,
+
   optimizeDeps: {
     include: ["@solid-primitives/keyed"],
   },
+
   resolve: {
     dedupe: ["solid-js", "solid-js/web"],
   },
+
+  server: {
+    // Initialize Vite's CSS-module cache for SSR environments too.
+    // Without this, a cold SSR render can fail with vitejs/vite#19606.
+    perEnvironmentStartEndDuringDev: true,
+
+    // Register server functions that may only be reached from client events.
+    // Without warmup, they may be called before their modules are imported.
+    warmup: {
+      ssrFiles: [
+        "./src/actions/**/*.ts",
+        "./src/server/auth/infrastructure/request-passkey-provider.ts",
+        "./src/server/team/infrastructure/invite-delivery.ts",
+      ],
+    },
+  },
+
   plugins: [
     ...createRequestTracePlugin(requestTraceConfig),
     {
@@ -63,6 +84,7 @@ export default defineConfig({
       project: process.env.SENTRY_PROJECT,
     }),
   ],
+
   esbuild: {
     target: "es2022",
   },
