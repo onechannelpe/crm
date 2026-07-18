@@ -2,6 +2,7 @@ import { useAction, useSubmissions } from "@solidjs/router";
 import { For, Show, createSignal } from "solid-js";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
+import Link from "~/components/icons/link";
 import Mail from "~/components/icons/mail";
 import Trash from "~/components/icons/trash";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
@@ -48,6 +49,15 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
     revokeSubmissions.some(
       (submission) => submission.pending && submission.input[0] === inviteId,
     );
+
+  async function handleCopyLink(inviteUrl: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      enqueueSuccessSnackBar("Enlace de invitación copiado");
+    } catch {
+      enqueueErrorSnackBar("No se pudo copiar el enlace");
+    }
+  }
 
   async function handleResend(inviteId: string): Promise<void> {
     try {
@@ -97,7 +107,7 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
             <col style={{ width: "50%" }} />
             <col style={{ width: "25%" }} />
             <col style={{ width: "25%" }} />
-            <col style={{ width: "88px" }} />
+            <col style={{ width: "128px" }} />
           </colgroup>
           <TableHeader>
             <TableRow>
@@ -129,6 +139,16 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
                   </TableCell>
                   <TableCell align="right">
                     <div class={styles.actions}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Copiar enlace de invitación"
+                        title="Copiar enlace"
+                        onClick={() => void handleCopyLink(invite.inviteUrl)}
+                      >
+                        <Link size={14} />
+                      </Button>
+
                       <Button
                         size="icon"
                         variant="ghost"

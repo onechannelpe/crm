@@ -1,24 +1,11 @@
 "use server";
 
-import { getRequestEvent } from "solid-js/web";
-
 import type { Role } from "~/lib/auth/access/rbac";
 import { config } from "~/lib/config";
 import { APP_LOCALE } from "~/lib/locale";
 import { getServerRuntime } from "~/server/platform/container";
 import { external, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
-
-export function buildInviteUrl(token: string): string {
-  const path = `/login/invite/${encodeURIComponent(token)}`;
-  const event = getRequestEvent();
-  const requestUrl = event?.request.url;
-  if (!requestUrl) {
-    return path;
-  }
-  const origin = new URL(requestUrl).origin;
-  return `${origin}${path}`;
-}
 
 export async function sendInviteEmail(params: {
   email: string;

@@ -16,6 +16,9 @@ import { createInviteManagementContext } from "~/server/team/infrastructure/invi
 const HR_BRANCH_ID = TEST_FIXTURES.branches.lima.id;
 const OTHER_BRANCH_ID = TEST_FIXTURES.branches.norte.id;
 const NOW = new Date("2026-07-15T12:00:00.000Z");
+// Distinct from any request origin so the assertion proves the link is built
+// from the configured origin passed in, not from the request context.
+const CONFIGURED_ORIGIN = "https://crm.example.test";
 
 function makeHrContext(): AppContext {
   return {
@@ -100,6 +103,7 @@ describe("getInviteManagement", () => {
     const result = await getInviteManagement(
       makeHrContext(),
       createInviteManagementContext(ctx.db),
+      CONFIGURED_ORIGIN,
     );
 
     expect(result.ok).toBe(true);
@@ -111,6 +115,7 @@ describe("getInviteManagement", () => {
     expect(value.pendingInvites[0]).toMatchObject({
       inviteId: ownInvite.inviteId,
       email: "pending-lima@test.local",
+      inviteUrl: `${CONFIGURED_ORIGIN}/login/invite/${ownInvite.token}`,
     });
     expect(value.assignableRoles.length).toBeGreaterThan(0);
   });

@@ -4,6 +4,7 @@ import type {
 } from "~/contracts/team/bulk-import";
 import type { Role } from "~/lib/auth/access/rbac";
 import { shortName } from "~/lib/users/display-name";
+import { inviteLink } from "~/server/invites/domain/invite-link";
 import type { AppContext } from "~/server/platform/action/context";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
@@ -12,11 +13,8 @@ import {
   parseAndValidateCsvRows,
 } from "~/server/users/service-bulk-import";
 
-import type { TeamInviteProvisioningContext } from "../infrastructure/invite-context";
-import {
-  buildInviteUrl,
-  sendInviteEmail,
-} from "../infrastructure/invite-delivery";
+import type { TeamBulkImportContext } from "../infrastructure/invite-context";
+import { sendInviteEmail } from "../infrastructure/invite-delivery";
 
 export async function previewBulkImport(
   csvContent: string,
@@ -36,7 +34,7 @@ export async function previewBulkImport(
 
 export async function applyBulkImport(
   ctx: AppContext,
-  deps: TeamInviteProvisioningContext,
+  deps: TeamBulkImportContext,
   input: {
     csvContent: string;
     role: Role;
@@ -69,7 +67,7 @@ export async function applyBulkImport(
           secondSurname: row.secondSurname,
         }),
         role: input.role,
-        inviteUrl: buildInviteUrl(token),
+        inviteUrl: inviteLink(deps.publicOrigin, token),
         expiresAt,
       });
       // Re-throw failures: applyImport's per-row loop catches into rowErrors,

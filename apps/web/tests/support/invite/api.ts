@@ -22,7 +22,7 @@ export function createInviteTestKit(
   commands: {
     create: InviteService["createInvite"];
     accept: InviteService["acceptInvite"];
-    resend: InviteService["resendInvite"];
+    redeliver: InviteService["redeliverInvite"];
     revoke: InviteService["revokeInvite"];
   };
   expect: {
@@ -63,7 +63,7 @@ export function createInviteTestKit(
     commands: {
       create: (input) => service.createInvite(input),
       accept: (input) => service.acceptInvite(input),
-      resend: (input) => service.resendInvite(input),
+      redeliver: (input) => service.redeliverInvite(input),
       revoke: (input) => service.revokeInvite(input),
     },
 

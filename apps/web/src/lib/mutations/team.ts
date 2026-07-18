@@ -10,9 +10,12 @@ import { inviteManagementQuery } from "~/lib/queries/team";
 
 export const createTeamInviteMutation = action(
   async (input: CreateTeamInviteInput) => {
-    const { message } = await createTeamInvite(input);
+    const { message, inviteUrl, delivered } = await createTeamInvite(input);
 
-    return json({ message }, { revalidate: inviteManagementQuery.key });
+    return json(
+      { message, inviteUrl, delivered },
+      { revalidate: inviteManagementQuery.key },
+    );
   },
   "createTeamInvite",
 );

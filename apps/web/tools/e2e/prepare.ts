@@ -1,8 +1,9 @@
-// Bun-only e2e provisioning. globalSetup spawns this as a `bun` child so the
-// heavy, Bun-dependent work (building the app, migrating + seeding a template
-// database) happens once, up front. Everything the Node/Playwright side needs
-// afterwards is frozen into .e2e-manifest.json as plain data, so the test runner
-// never imports application code.
+// e2e provisioning. globalSetup spawns this as its own `bun` child so the heavy,
+// one-time work (building the app, migrating + seeding a template database) runs
+// in isolation and never loads the app's module graph, or its import-time side
+// effects, into the long-lived Playwright runner. Everything the test side needs
+// afterwards is frozen into .e2e-manifest.json as plain data, the only handoff
+// Playwright offers from global setup to worker processes.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -33,6 +34,7 @@ import { TeamId, UserId } from "~/server/shared/ids";
 import { withDatabase } from "../../tests/e2e/db";
 import {
   type E2EManifest,
+  type GuardCount,
   type ResetPlan,
   writeManifest,
 } from "../../tests/e2e/manifest";
@@ -228,6 +230,12 @@ async function nonEmptyTables(
   return nonEmpty;
 }
 
+// regclass renders schema-qualified names only when ambiguous; strip a public
+// prefix and quotes so they match pg_tables.tablename.
+function cleanRegclass(name: string): string {
+  return name.replace(/^public\./, "").replace(/"/g, "");
+}
+
 async function foreignKeyEdges(
   db: Kysely<Database>,
 ): Promise<Array<{ child: string; parent: string }>> {
@@ -237,20 +245,35 @@ async function foreignKeyEdges(
     FROM pg_constraint con
     WHERE con.contype = 'f' AND con.connamespace = 'public'::regnamespace
   `.execute(db);
-  // regclass renders schema-qualified names only when ambiguous; strip a public
-  // prefix and quotes so they match pg_tables.tablename.
-  const clean = (name: string) =>
-    name.replace(/^public\./, "").replace(/"/g, "");
-  return rows.map((r) => ({ child: clean(r.child), parent: clean(r.parent) }));
+  return rows.map((r) => ({
+    child: cleanRegclass(r.child),
+    parent: cleanRegclass(r.parent),
+  }));
 }
 
-// Between tests a worker database is reset to the pristine template state. The
-// approach: TRUNCATE every table a test can dirty, then delete rows a test
-// appended to preserved identity tables. The preserve set starts as the seeded
-// (non-empty) tables and is closed under "referenced by a preserved table": if a
-// preserved table has a foreign key into an empty table (e.g. users -> teams),
-// that table must also be preserved, otherwise TRUNCATE ... CASCADE would cascade
-// back and wipe the preserved table.
+// The preserved identity tables a test legitimately appends to: invite
+// acceptance creates users, activation creates sessions, and teams is preserved
+// because users references it. The reset prunes these back to their baseline
+// rows. Every other preserved table is a guard table, expected never to change.
+const MANAGED_IDENTITY_TABLES = ["user_sessions", "users", "teams"] as const;
+type ManagedIdentityTable = (typeof MANAGED_IDENTITY_TABLES)[number];
+
+// A `DELETE` that keeps only the seeded baseline rows for a preserved identity
+// table, or clears it when the baseline is empty.
+function deleteNonBaseline(table: string, ids: string[]): string {
+  if (!ids.length) return `DELETE FROM "${table}"`;
+  const literals = ids.map((id) => `'${id.replace(/'/g, "''")}'`).join(", ");
+  return `DELETE FROM "${table}" WHERE id::text NOT IN (${literals})`;
+}
+
+// Between tests a worker database is reset to the pristine template state:
+// TRUNCATE every table a test can dirty, then delete rows a test appended to the
+// managed identity tables. The preserve set starts as the seeded (non-empty)
+// tables and is closed under "referenced by a preserved table": if a preserved
+// table has a foreign key into an empty table (e.g. users -> teams), that table
+// must also be preserved, otherwise TRUNCATE ... CASCADE would cascade back and
+// wipe the preserved table. Preserved tables outside the managed set become
+// guard counts (asserted static on the next reset).
 async function computeResetPlan(db: Kysely<Database>): Promise<ResetPlan> {
   const tables = await tableNames(db);
   const preserve = await nonEmptyTables(db, tables);
@@ -274,30 +297,33 @@ async function computeResetPlan(db: Kysely<Database>): Promise<ResetPlan> {
         .join(", ")} RESTART IDENTITY CASCADE`
     : null;
 
-  // Identity tables a test appends to (invite acceptance creates users, UI login
-  // creates sessions). Delete anything not in the seeded baseline, ordered by
-  // foreign-key dependency. teams is preserved (users references it) but seeded
-  // empty, so any row is a test artifact.
-  const baseline = async (table: "users" | "user_sessions" | "teams") => {
+  // Delete anything not in the seeded baseline, ordered by foreign-key
+  // dependency (sessions before users before teams).
+  const baseline = async (table: ManagedIdentityTable) => {
     const { rows } = await sql<{ id: string }>`
       SELECT id::text AS id FROM ${sql.table(table)}
     `.execute(db);
     return rows.map((r) => r.id);
   };
-  const literals = (ids: string[]) =>
-    ids.map((id) => `'${id.replace(/'/g, "''")}'`).join(", ");
-  const deleteNonBaseline = (table: string, ids: string[]) =>
-    ids.length
-      ? `DELETE FROM "${table}" WHERE id::text NOT IN (${literals(ids)})`
-      : `DELETE FROM "${table}"`;
 
-  const deleteSql = [
-    deleteNonBaseline("user_sessions", await baseline("user_sessions")),
-    deleteNonBaseline("users", await baseline("users")),
-    deleteNonBaseline("teams", await baseline("teams")),
-  ];
+  const deleteSql: string[] = [];
+  for (const table of MANAGED_IDENTITY_TABLES) {
+    // eslint-disable-next-line no-await-in-loop
+    deleteSql.push(deleteNonBaseline(table, await baseline(table)));
+  }
 
-  return { truncateSql, deleteSql };
+  const managed = new Set<string>(MANAGED_IDENTITY_TABLES);
+  const guardCounts: GuardCount[] = [];
+  for (const table of preserve) {
+    if (managed.has(table)) continue;
+    // eslint-disable-next-line no-await-in-loop
+    const { rows } = await sql<{ n: number }>`
+      SELECT count(*)::int AS n FROM ${sql.table(table)}
+    `.execute(db);
+    guardCounts.push({ table, count: rows[0]?.n ?? 0 });
+  }
+
+  return { truncateSql, deleteSql, guardCounts };
 }
 
 async function buildTemplate(): Promise<ResetPlan> {

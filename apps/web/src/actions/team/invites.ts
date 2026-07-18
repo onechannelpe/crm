@@ -13,9 +13,12 @@ import {
 } from "~/server/team/application/invites";
 import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
 
-export async function createTeamInvite(
-  input: unknown,
-): Promise<{ inviteId: string; message: string }> {
+export async function createTeamInvite(input: unknown): Promise<{
+  inviteId: string;
+  inviteUrl: string;
+  delivered: boolean;
+  message: string;
+}> {
   return runAction({
     name: "team.invite.create",
     access: { kind: "permission", permission: "hr:manage" },
@@ -59,7 +62,10 @@ export async function createTeamInvite(
         return result;
       }
 
-      return Ok({ ...result.value, message: "Invitación enviada" });
+      const message = result.value.delivered
+        ? "Invitación enviada"
+        : "Invitación creada. No se pudo enviar el correo; copia el enlace.";
+      return Ok({ ...result.value, message });
     },
   });
 }
@@ -89,7 +95,10 @@ export async function resendTeamInvite(
         return result;
       }
 
-      return Ok({ message: "Invitación reenviada" });
+      const message = result.value.delivered
+        ? "Invitación reenviada"
+        : "Enlace renovado. No se pudo enviar el correo; copia el enlace.";
+      return Ok({ message });
     },
   });
 }

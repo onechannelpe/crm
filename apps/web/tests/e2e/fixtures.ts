@@ -1,4 +1,3 @@
-import { type LoggedMail } from "@crm/message-channels";
 import {
   test as base,
   expect,
@@ -36,8 +35,6 @@ interface TestFixtures {
   asManager: Page;
   asAdmin: Page;
   asSuperuser: Page;
-  // Emails the log transport recorded during the test (e.g. invite emails).
-  mailbox: () => LoggedMail[];
   // Auto fixture: restore the worker database to the pristine template between
   // tests. Runs automatically during setup, before any test body.
   resetState: void;
@@ -101,11 +98,10 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   },
 
   resetState: [
-    async ({ workerDb, workerServer }, use) => {
+    async ({ workerDb }, use) => {
+      // Restore the worker database to the pristine template so the previous
+      // test does not bleed into this one.
       await workerDb.db.reset(manifest.reset);
-      // The recorded-mail buffer lives in the server wrapper, which a database
-      // reset cannot reach; clear it so a test never sees a prior test's email.
-      workerServer.clearMail();
       await use();
     },
     { auto: true },
@@ -121,12 +117,6 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     for (const page of pages) {
       await page.context().close();
     }
-  },
-
-  mailbox: async ({ workerServer }, use) => {
-    // Snapshot copy so a caller iterating the result is not disturbed by lines
-    // arriving mid-iteration; poll again to observe newly recorded mail.
-    await use(() => [...workerServer.mail]);
   },
 
   // Inline (not factory-generated) so Playwright can read each fixture's

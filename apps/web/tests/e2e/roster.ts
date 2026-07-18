@@ -5,10 +5,10 @@ import type { Role } from "~/lib/auth/access/rbac";
 // session token so the Node test side can authenticate by injecting a cookie,
 // with zero runtime hashing or UI login.
 
-// Imported from BOTH the Bun seed (which hashes each token into a
-// user_sessions row) and the Node Playwright fixtures (which set the raw token
-// as the `session` cookie). Keep this module to plain data and pure string
-// ops; a Bun-only builtin here breaks the Node side.
+// Imported from BOTH the seed (which hashes each token into a user_sessions row)
+// and the Playwright fixtures (which set the raw token as the `session` cookie).
+// Keep this module to plain data and pure string ops so both importers stay free
+// of app and runtime dependencies.
 
 // Session tokens are 20 bytes of base32lower-no-padding (32 chars, [a-z2-7]).
 // Deriving one deterministically from a seed word keeps the literal identical

@@ -1,7 +1,4 @@
 import { type ChildProcess, spawn } from "node:child_process";
-import { createInterface } from "node:readline";
-
-import { type LoggedMail, parseLoggedMail } from "@crm/message-channels";
 
 // Spawns one built SolidStart/Nitro server per Playwright worker, bound to that
 // worker's cloned database. Running the production build (not the Vite dev
@@ -13,10 +10,6 @@ const HEALTH_POLL_MS = 200;
 
 export interface RunningServer {
   baseURL: string;
-  // Emails the log transport recorded on this server's stdout since the last
-  // clearMail(). Live array: reads observe lines as they arrive.
-  mail: LoggedMail[];
-  clearMail(): void;
   stop(): Promise<void>;
 }
 
@@ -33,7 +26,7 @@ async function waitForHealth(
   while (Date.now() < deadline) {
     if (exited) {
       throw new Error(
-        `e2e server exited before becoming healthy (see piped output above)`,
+        `e2e server exited before becoming healthy (see output above)`,
       );
     }
     try {
@@ -71,25 +64,17 @@ export async function startServer(options: {
       PORT: String(options.port),
       HOST: "127.0.0.1",
       WEB_DB_URL: options.dbUrl,
-      // Record composed email to stdout instead of sending it; the invite/reset
-      // flows still run for real. `mail` recovers each message from that output.
+      // Invite links are built from this origin (not the request), so it must
+      // point at this worker's own server for the invitee's navigation to land.
+      APP_PUBLIC_ORIGIN: baseURL,
+      // Route email to the stdout log transport instead of a real provider; the
+      // invite/reset flows still run for real. Delivery is best-effort and the
+      // invite link is surfaced in the UI, so specs never read email back.
       NOTIFICATION_ROUTES: "email:log",
     },
-    stdio: ["ignore", "pipe", "inherit"],
+    // Inherit stdio so server logs surface directly in the test output.
+    stdio: ["ignore", "inherit", "inherit"],
   });
-
-  const mail: LoggedMail[] = [];
-  // stdout must be drained or the child's pipe buffer fills and blocks it. Tee
-  // every line to our own stdout for visibility, and collect the ones the log
-  // transport marked.
-  if (proc.stdout) {
-    const lines = createInterface({ input: proc.stdout });
-    lines.on("line", (line) => {
-      process.stdout.write(`${line}\n`);
-      const recorded = parseLoggedMail(line);
-      if (recorded) mail.push(recorded);
-    });
-  }
 
   try {
     await waitForHealth(baseURL, proc);
@@ -100,10 +85,6 @@ export async function startServer(options: {
 
   return {
     baseURL,
-    mail,
-    clearMail() {
-      mail.length = 0;
-    },
     async stop() {
       if (proc.exitCode !== null) {
         return;

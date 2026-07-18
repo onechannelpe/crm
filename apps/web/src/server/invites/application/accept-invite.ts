@@ -1,4 +1,3 @@
-import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { auditEntityId } from "~/server/shared/audit-entity";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -18,10 +17,9 @@ export async function acceptInvite(
 ): Promise<Result<InviteAcceptedResult, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
     const currentTime = runtime.now();
-    await transactionRepos.userInvites.expirePendingBefore(currentTime);
 
-    const invite = await transactionRepos.userInvites.findPendingByTokenHash(
-      hashInviteToken(input.token),
+    const invite = await transactionRepos.userInvites.findPendingByToken(
+      input.token,
       currentTime,
     );
 

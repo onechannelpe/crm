@@ -13,7 +13,11 @@ export async function getInviteManagement(): Promise<InviteManagement> {
     name: "team.invite_management.read",
     access: { kind: "permission", permission: "hr:manage" },
     execute: (ctx) =>
-      getInviteManagementService(ctx, getServerRuntime().team.inviteManagement),
+      getInviteManagementService(
+        ctx,
+        getServerRuntime().team.inviteManagement,
+        getServerRuntime().team.publicOrigin,
+      ),
   });
 }
 

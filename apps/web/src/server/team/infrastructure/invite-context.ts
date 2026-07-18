@@ -14,11 +14,13 @@ import type { UserId } from "~/server/shared/ids";
 interface TeamInviteContext {
   repos: TeamInviteReadRepos;
   inviteService: InviteService;
+  publicOrigin: string;
   enforceInviteCreateRateLimit(userId: UserId): Promise<void>;
 }
 
 export function createTeamInviteContext(
   executor: DatabaseExecutor,
+  publicOrigin: string,
 ): TeamInviteContext {
   const repos = bindInviteRepos(executor);
   const inviteService = createInviteServiceForExecutor(executor);
@@ -30,6 +32,7 @@ export function createTeamInviteContext(
       users: repos.users,
     },
     inviteService,
+    publicOrigin,
     async enforceInviteCreateRateLimit(userId: UserId) {
       await checkActionRateLimit("team.invite.create", userId, {
         actionRateLimits: createActionRateLimitsRepo(executor),
@@ -46,9 +49,13 @@ export type TeamInviteProvisioningContext = Pick<
 >;
 export type TeamInviteCreateContext = Pick<
   TeamInviteContext,
-  "inviteService" | "enforceInviteCreateRateLimit"
+  "inviteService" | "enforceInviteCreateRateLimit" | "publicOrigin"
 >;
 export type TeamInviteResendContext = Pick<
   TeamInviteContext,
-  "repos" | "inviteService"
+  "repos" | "inviteService" | "publicOrigin"
+>;
+export type TeamBulkImportContext = Pick<
+  TeamInviteContext,
+  "inviteService" | "publicOrigin"
 >;

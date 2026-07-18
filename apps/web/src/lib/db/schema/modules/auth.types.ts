@@ -157,14 +157,16 @@ export interface UserInvitesTable {
   branch_id: IdColumn<BranchId>;
   email: string;
   role: Role;
-  token_hash: string;
-  status: "pending" | "accepted" | "revoked" | "expired";
+  token: string;
+  // "expired" is derived at read (expires_at < now), never written: one less
+  // background write path than a status-sweep would need.
+  status: "pending" | "accepted" | "revoked";
   expires_at: Date;
   created_by_user_id: IdColumn<UserId>;
   accepted_at: Date | null;
   revoked_at: Date | null;
   created_at: Date;
-  sent_at: Date | null;
+  last_delivered_at: Date | null;
 }
 
 export interface AuthFunnelEventsTable {

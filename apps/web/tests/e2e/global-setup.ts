@@ -1,10 +1,12 @@
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 
-// Runs once before any worker. Provisioning imports application code that needs
-// Bun builtins, so it runs as an explicit `bun` child regardless of the runtime
-// Playwright chose for the runner. Everything it produces reaches the workers
-// through .e2e-manifest.json, never through a shared import.
+// Runs once before any worker. Provisioning builds the app and migrates + seeds
+// the template database: heavy, one-time work kept in its own `bun` child so the
+// long-lived Playwright runner never loads the app's module graph or its
+// import-time side effects. Everything it produces reaches the workers through
+// .e2e-manifest.json, the only channel Playwright gives from global setup to
+// worker processes.
 export default function globalSetup(): void {
   const result = spawnSync(
     "bun",

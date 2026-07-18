@@ -3,9 +3,10 @@ import { createInviteManagementContext } from "~/server/team/infrastructure/invi
 
 import type { ServerInfra } from "./infra";
 
-export function createTeamRuntime(infra: ServerInfra) {
+export function createTeamRuntime(infra: ServerInfra, publicOrigin: string) {
   return {
-    invites: createTeamInviteContext(infra.db),
+    invites: createTeamInviteContext(infra.db, publicOrigin),
     inviteManagement: createInviteManagementContext(infra.db),
+    publicOrigin,
   };
 }

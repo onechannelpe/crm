@@ -10,7 +10,7 @@ export async function markInviteDelivered(
   inviteId: UserInviteId,
 ): Promise<Result<void, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
-    await transactionRepos.userInvites.markSent(inviteId, runtime.now());
+    await transactionRepos.userInvites.markDelivered(inviteId, runtime.now());
     return Ok(undefined);
   });
 }

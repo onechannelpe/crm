@@ -1,10 +1,10 @@
 import { Client } from "pg";
 
-import type { ResetPlan } from "./manifest";
+import type { GuardCount, ResetPlan } from "./manifest";
 
-// Raw-SQL Postgres helpers for the Node test side. Deliberately depends only on
-// `pg`: cloning, dropping, and resetting databases needs no application code, so
-// the Playwright runner never imports Bun-only builtins.
+// Raw-SQL Postgres helpers for the test side. Cloning, dropping, resetting, and
+// reading a worker database needs no application code, so this stays on `pg`
+// alone and the worker fixtures pull in nothing from the app.
 
 const SAFE_DB_NAME = /^[a-z0-9_]+$/;
 
@@ -58,9 +58,8 @@ export async function dropDatabase(
   });
 }
 
-// A long-lived connection to a worker's own database, used to reset it between
-// tests and to read domain rows a spec needs (e.g. an invite token the UI never
-// surfaces).
+// A long-lived connection to a worker's own database, used to reset it to the
+// pristine template between tests and assert preserved tables stayed intact.
 export class WorkerDb {
   private constructor(readonly client: Client) {}
 
@@ -71,6 +70,10 @@ export class WorkerDb {
   }
 
   async reset(plan: ResetPlan): Promise<void> {
+    // Runs before each test, so it validates the residue of the previous one.
+    // Detection lags by a test, which still fails the run.
+    await this.assertPreservedTablesUnchanged(plan.guardCounts);
+
     if (plan.truncateSql) {
       await this.client.query(plan.truncateSql);
     }
@@ -78,6 +81,27 @@ export class WorkerDb {
       // Ordered by foreign-key dependency; run sequentially, not in parallel.
       // eslint-disable-next-line no-await-in-loop
       await this.client.query(statement);
+    }
+  }
+
+  // Preserved tables the reset does not prune must still hold exactly their
+  // seeded rows. If one grew, a prior test wrote to a table the reset cannot
+  // clean, which would bleed into later tests (and, for tables referencing
+  // users, break the users delete). Fail loudly, naming the table.
+  private async assertPreservedTablesUnchanged(
+    guards: GuardCount[],
+  ): Promise<void> {
+    for (const guard of guards) {
+      const { rows } = await this.client.query<{ n: number }>(
+        `SELECT count(*)::int AS n FROM "${guard.table}"`,
+      );
+      const actual = rows[0]?.n ?? 0;
+      if (actual !== guard.count) {
+        throw new Error(
+          `e2e reset guard: "${guard.table}" holds ${actual} rows, expected the seeded ${guard.count}. ` +
+            "A test wrote to a preserved table the reset does not prune; stop writing to it or add it to the reset's pruned set.",
+        );
+      }
     }
   }
 

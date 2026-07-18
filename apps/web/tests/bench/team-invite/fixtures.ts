@@ -2,7 +2,6 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
-import { hashInviteToken } from "~/lib/auth/invite/tokens";
 import { BranchId, UserId } from "~/server/shared/ids";
 
 import { BENCH_NOW, benchDate } from "../_shared/constants";
@@ -12,7 +11,6 @@ const CREATED_BY_USER_ID = UserId.trust(TEST_FIXTURES.users.superUser.id);
 
 export interface PendingInvite {
   token: string;
-  tokenHash: string;
 }
 
 export async function seedPendingInvite(
@@ -43,7 +41,6 @@ export async function seedPendingInvite(
     .execute();
 
   const token = `bench-team-token-${suffix}`;
-  const tokenHash = hashInviteToken(token);
 
   await ctx.db
     .insertInto("user_invites")
@@ -52,18 +49,18 @@ export async function seedPendingInvite(
       branch_id: BRANCH_ID,
       email,
       role: "executive",
-      token_hash: tokenHash,
+      token,
       status: "pending",
       expires_at: benchDate(7 * 24 * 60 * 60 * 1000),
       created_by_user_id: CREATED_BY_USER_ID,
       accepted_at: null,
       revoked_at: null,
       created_at: BENCH_NOW,
-      sent_at: null,
+      last_delivered_at: null,
     })
     .execute();
 
-  return { token, tokenHash };
+  return { token };
 }
 
 export function freshInviteEmail(): string {

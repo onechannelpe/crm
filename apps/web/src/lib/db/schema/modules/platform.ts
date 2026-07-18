@@ -12,7 +12,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("email", "text", (col) => col.notNull())
     .addColumn("role", "text", (col) => col.notNull())
-    .addColumn("token_hash", "text", (col) => col.notNull().unique())
+    // Retrievable credential, not a one-way hash: an invite is a shareable link
+    // an admin hands out and can copy back, so it must survive as a durable
+    // artifact. Unlike password-reset/session tokens (private secrets), the
+    // whole point is to resurface it. High entropy + single-use + expiry +
+    // revocable + activates only a password-less pending account is the guard.
+    .addColumn("token", "text", (col) => col.notNull().unique())
     .addColumn("status", "text", (col) => col.notNull())
     .addColumn("expires_at", "timestamptz", (col) => col.notNull())
     .addColumn("created_by_user_id", "uuid", (col) =>
@@ -21,7 +26,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("accepted_at", "timestamptz")
     .addColumn("revoked_at", "timestamptz")
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .addColumn("sent_at", "timestamptz")
+    // Last successful delivery attempt across channels; a delivery fact, not a
+    // validity fact. The invite is valid whether or not any send succeeded.
+    .addColumn("last_delivered_at", "timestamptz")
     .execute();
 
   await db.schema

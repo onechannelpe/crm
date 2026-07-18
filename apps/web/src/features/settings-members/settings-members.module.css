@@ -22,6 +22,38 @@
   justify-content: flex-end;
 }
 
+.issuedLink {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--muted);
+}
+
+.issuedLinkLabel {
+  font-size: var(--font-size-sm);
+  color: var(--muted-foreground);
+}
+
+.issuedLinkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.issuedLinkUrl {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--font-size-sm);
+  color: var(--foreground-secondary);
+}
+
 .actions {
   display: inline-flex;
   align-items: center;

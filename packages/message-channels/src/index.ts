@@ -1,8 +1,6 @@
 export { createResendProvider } from "./channels/email/resend-client";
 export {
   createLogProvider,
-  parseLoggedMail,
-  LOGGED_MAIL_MARKER,
   type LoggedMail,
 } from "./channels/email/log-provider";
 export { createKapsoProvider } from "./channels/whatsapp/kapso-proxy";
