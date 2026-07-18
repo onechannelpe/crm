@@ -69,6 +69,14 @@ export const ERROR_CATALOG = {
     message:
       "Tienes el máximo de cotizaciones pendientes de decisión. Acéptalas, solicita revisión o ciérralas antes de registrar nuevos clientes.",
   },
+  invalid_pending_quotation_limit: {
+    kind: "validation",
+    message: "El límite de cotizaciones pendientes no es válido.",
+  },
+  pending_quotation_limit_out_of_range: {
+    kind: "validation",
+    message: "El límite de cotizaciones pendientes está fuera de rango.",
+  },
   sale_proof_not_found: {
     kind: "not_found",
     message: "No se encontró el comprobante de venta.",

@@ -181,7 +181,8 @@ export type FulfillmentQueueView = {
 
 export type PendingQuotationCountView = {
   count: number;
-  limit: number;
+  // null means the branch has no cap: registration is never blocked.
+  limit: number | null;
 };
 
 export type LeadDetailFulfillmentStepView = {

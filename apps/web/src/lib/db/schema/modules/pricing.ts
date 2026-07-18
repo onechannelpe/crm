@@ -41,6 +41,21 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .execute();
 
+  // Per-branch cap on how many quotations an executive may hold awaiting their
+  // decision before new client registrations are blocked. client_limit encodes
+  // the state: absent row = system default, 0 = disabled (no cap), N = cap N.
+  await db.schema
+    .createTable("workflow_pending_quotation_policies")
+    .addColumn("branch_id", "uuid", (col) =>
+      col.primaryKey().references("branches.id").onDelete("cascade"),
+    )
+    .addColumn("client_limit", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_by_user_id", "uuid", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .execute();
+
   await db.schema
     .createTable("workflow_rate_revisions")
     .addColumn("id", "text", (col) => col.primaryKey())

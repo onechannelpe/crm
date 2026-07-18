@@ -15,6 +15,7 @@ import { createLeadRepo } from "./lead/write/lead-repo";
 import { createRateProposalRepo } from "./lead/write/rate-proposal-repo";
 import { createRateRevisionRepo } from "./lead/write/rate-revision-repo";
 import { createSourceStatusRepo } from "./lead/write/source-status-repo";
+import { createPendingQuotationPolicyRepo } from "./policy/pending-quotation-policy-repo";
 import { createRateProposalPolicyRepo } from "./policy/rate-proposal-policy-repo";
 import { createSourcingPolicyRepo } from "./policy/sourcing-policy-repo";
 
@@ -29,6 +30,7 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     events: createEventsRepo(executor),
     rateProposals: createRateProposalRepo(executor),
     rateProposalPolicies: createRateProposalPolicyRepo(executor),
+    pendingQuotationPolicies: createPendingQuotationPolicyRepo(executor),
     leadVenues: createLeadVenueRepo(executor),
     fulfillment: createFulfillmentRepo(executor),
     rateRevisions: createRateRevisionRepo(executor),

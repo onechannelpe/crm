@@ -37,6 +37,15 @@ export interface WorkflowRateProposalPoliciesTable {
   updated_by_user_id: IdColumn<UserId>;
 }
 
+// client_limit is the raw stored cap: 0 disables the cap (unlimited), a
+// positive value is the cap. Branches without a row inherit the system default.
+export interface WorkflowPendingQuotationPoliciesTable {
+  branch_id: IdColumn<BranchId>;
+  client_limit: number;
+  updated_at: Date;
+  updated_by_user_id: IdColumn<UserId>;
+}
+
 // Revision requests stay linked to the proposal round they reject.
 export interface WorkflowRateRevisionsTable {
   id: IdColumn<WorkflowRateRevisionId>;

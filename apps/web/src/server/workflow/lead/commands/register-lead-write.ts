@@ -1,5 +1,4 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
-import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { withAdvisoryLock } from "~/server/shared/db-lock";
 import { fail, type DomainError } from "~/server/shared/domain-error";
@@ -8,6 +7,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { reassignLead } from "~/server/workflow/lead/domain/decide";
 import { createHistoryEvent } from "~/server/workflow/lead/domain/history";
+import { resolvePendingQuotationPolicy } from "~/server/workflow/lead/domain/pending-quotation";
 import {
   createLeadDraft,
   type LeadCommercialScope,
@@ -63,13 +63,20 @@ export function createRegisteredLead(input: {
       ctx.tx,
       `lead-registration:${input.actor.userId}`,
       async () => {
-        const pendingDecisions =
-          await ctx.repos.leads.countPendingQuotationDecisions(
-            input.actor.userId,
-            ctx.now,
+        const branchPolicy =
+          await ctx.repos.pendingQuotationPolicies.findByBranchId(
+            input.actor.branchId,
           );
-        if (pendingDecisions >= MAX_PENDING_QUOTATION_DECISIONS) {
-          return Err(fail("pending_quotation_limit"));
+        const { limit } = resolvePendingQuotationPolicy({ branchPolicy });
+        if (limit !== null) {
+          const pendingDecisions =
+            await ctx.repos.leads.countPendingQuotationDecisions(
+              input.actor.userId,
+              ctx.now,
+            );
+          if (pendingDecisions >= limit) {
+            return Err(fail("pending_quotation_limit"));
+          }
         }
 
         const organization = await ctx.repos.organization.upsertOrganization({
