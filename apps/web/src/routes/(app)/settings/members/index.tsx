@@ -8,6 +8,7 @@ import { useAuthenticatedSession } from "~/components/providers/authenticated-se
 import { InviteTab } from "~/features/settings-members/invite-tab";
 import { RolesTab } from "~/features/settings-members/roles-tab";
 import { TeamTab } from "~/features/settings-members/team-tab";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   TabStrip,
   type TabItem,
@@ -22,50 +23,55 @@ export default function SettingsMembersPage() {
   const { currentUser } = useAuthenticatedSession();
   const [params, setParams] = useSearchParams();
 
-  // Invitations reuse the existing invite actions, which are gated on
-  // hr:manage; hide the tab for team:manage roles that lack it (e.g. sales
-  // managers) so they never open a tab the server would reject.
+  // Invite actions require hr:manage, not team:manage.
   const canInvite = createMemo(() =>
     hasPermission(currentUser().role, "hr:manage"),
   );
 
   const tabs = createMemo<TabItem<MembersTabId>[]>(() => {
-    const list: TabItem<MembersTabId>[] = [
+    const items: TabItem<MembersTabId>[] = [
       { id: "team", label: "Equipo", icon: UserRound },
     ];
+
     if (canInvite()) {
-      list.push({ id: "invite", label: "Invitaciones", icon: Mail });
+      items.push({ id: "invite", label: "Invitaciones", icon: Mail });
     }
-    list.push({ id: "roles", label: "Roles", icon: ShieldCheck });
-    return list;
+
+    items.push({ id: "roles", label: "Roles", icon: ShieldCheck });
+
+    return items;
   });
 
   const activeTab = createMemo<MembersTabId>(() => {
-    const requested = params.tab;
-    const match = tabs().find((tab) => tab.id === requested);
-    return match?.id ?? "team";
+    const requestedTab = params.tab;
+    const matchingTab = tabs().find((tab) => tab.id === requestedTab);
+
+    return matchingTab?.id ?? "team";
   });
 
   return (
-    <>
+    <SettingsPageLayout>
       <TabStrip
         tabs={tabs()}
         activeTab={activeTab()}
         onTabSelect={(id) => setParams({ tab: id })}
       />
+
       <div class={styles.tabPane}>
         <Switch>
           <Match when={activeTab() === "team"}>
             <TeamTab />
           </Match>
+
           <Match when={activeTab() === "invite"}>
             <InviteTab />
           </Match>
+
           <Match when={activeTab() === "roles"}>
             <RolesTab />
           </Match>
         </Switch>
       </div>
-    </>
+    </SettingsPageLayout>
   );
 }

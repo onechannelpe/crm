@@ -20,6 +20,7 @@ import { RecoveryCodesPanel } from "~/features/auth/security/recovery-codes-pane
 import { usePasskeyEnrollment } from "~/features/auth/security/use-passkey-enrollment";
 import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment";
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import { useAsyncAction } from "~/hooks/use-async-action";
 import { useConfirmDialog } from "~/hooks/use-confirm-dialog";
 import { actionErrorMessage } from "~/lib/wire-error";
@@ -66,6 +67,7 @@ function TotpEnrollmentPanel(props: {
                 class={styles.qrImage}
               />
             </div>
+
             <Show when={getSetupKey(enrollment().otpauthUri)}>
               {(setupKey) => (
                 <p class={styles.qrCopy}>
@@ -87,6 +89,7 @@ function TotpEnrollmentPanel(props: {
           <div class={styles.block}>
             <p class={styles.title}>Ingresa el código de verificación</p>
           </div>
+
           <div class={styles.verifyBlock}>
             <OtpSlotInput
               value={props.totp.code()}
@@ -116,14 +119,16 @@ export default function SecurityPage() {
   const [currentPassword, setCurrentPassword] = createSignal("");
   const [newPassword, setNewPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
+
   const removePasskeysDialog = useConfirmDialog();
   const disableTotpDialog = useConfirmDialog();
   const regenerateRecoveryDialog = useConfirmDialog();
+
   const [recoveryStatus, { refetch: refetchRecoveryStatus }] = createResource(
     getRecoveryCodesStatus,
   );
-  // Keep newly issued codes visible until acknowledgement; stored codes are
-  // never returned.
+
+  // Recovery codes are returned once, so keep them in memory until confirmed.
   const [freshRecoveryCodes, setFreshRecoveryCodes] = createSignal<string[]>(
     [],
   );
@@ -139,21 +144,25 @@ export default function SecurityPage() {
     refreshStatus: refreshCurrentUser,
     onRecoveryCodes: showFreshRecoveryCodes,
   });
+
   const totpEnrollment = useTotpEnrollment({
     enqueueSuccessSnackBar,
     enqueueErrorSnackBar,
     refreshStatus: refreshCurrentUser,
     onRecoveryCodes: showFreshRecoveryCodes,
   });
+
   const [handleRemovePasskeys, isRemovingPasskeys] = useAsyncAction(
     async () => {
       try {
         const { message } = await removeAllPasskeys();
+
         await refreshCurrentUser();
         enqueueSuccessSnackBar(message);
       } catch (caught: unknown) {
         enqueueErrorSnackBar(actionErrorMessage(caught));
       }
+
       removePasskeysDialog.close();
     },
   );
@@ -161,28 +170,32 @@ export default function SecurityPage() {
   const [handleDisableTotp, isDisablingTotp] = useAsyncAction(async () => {
     try {
       const { message } = await disableTotp();
+
       totpEnrollment.reset();
       await refreshCurrentUser();
       enqueueSuccessSnackBar(message);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
+
     disableTotpDialog.close();
   });
 
-  const handleCopySetupKey = async (setupKey: string) => {
+  async function handleCopySetupKey(setupKey: string) {
     await navigator.clipboard.writeText(setupKey);
     enqueueSuccessSnackBar("Clave de configuración copiada");
-  };
+  }
 
   const [handleRegenerateRecovery, isRegeneratingRecovery] = useAsyncAction(
     async () => {
       try {
         const { recoveryCodes } = await regenerateRecoveryCodes();
+
         showFreshRecoveryCodes(recoveryCodes);
       } catch (caught: unknown) {
         enqueueErrorSnackBar(actionErrorMessage(caught));
       }
+
       regenerateRecoveryDialog.close();
     },
   );
@@ -191,6 +204,7 @@ export default function SecurityPage() {
     async () => {
       try {
         await acknowledgeRecoveryCodes();
+
         setFreshRecoveryCodes([]);
         await refreshCurrentUser();
         await refetchRecoveryStatus();
@@ -201,17 +215,20 @@ export default function SecurityPage() {
   );
 
   const [handleChangePassword, isChangingPassword] = useAsyncAction(
-    async (e: Event) => {
-      e.preventDefault();
+    async (event: Event) => {
+      event.preventDefault();
+
       if (newPassword() !== confirmPassword()) {
         enqueueErrorSnackBar("Las contraseñas no coinciden");
         return;
       }
+
       try {
         const { message } = await changePassword(
           currentPassword(),
           newPassword(),
         );
+
         enqueueSuccessSnackBar(message);
         setCurrentPassword("");
         setNewPassword("");
@@ -223,7 +240,7 @@ export default function SecurityPage() {
   );
 
   return (
-    <>
+    <SettingsPageLayout>
       <ConfirmDialog
         isOpen={removePasskeysDialog.isOpen()}
         title="Eliminar claves de acceso"
@@ -233,6 +250,7 @@ export default function SecurityPage() {
         onConfirm={() => void handleRemovePasskeys()}
         onClose={removePasskeysDialog.close}
       />
+
       <ConfirmDialog
         isOpen={disableTotpDialog.isOpen()}
         title="Desactivar autenticación en dos pasos"
@@ -242,6 +260,7 @@ export default function SecurityPage() {
         onConfirm={() => void handleDisableTotp()}
         onClose={disableTotpDialog.close}
       />
+
       <ConfirmDialog
         isOpen={regenerateRecoveryDialog.isOpen()}
         title="Regenerar códigos de recuperación"
@@ -268,28 +287,28 @@ export default function SecurityPage() {
       >
         <form
           id={CHANGE_PASSWORD_FORM_ID}
-          onSubmit={(e) => void handleChangePassword(e)}
+          onSubmit={(event) => void handleChangePassword(event)}
         >
           <div class={base.formGrid}>
             <Input
               type="password"
               label="Contraseña actual"
               value={currentPassword()}
-              onInput={(e) => setCurrentPassword(e.currentTarget.value)}
+              onInput={(event) => setCurrentPassword(event.currentTarget.value)}
               required
             />
             <Input
               type="password"
               label="Nueva contraseña"
               value={newPassword()}
-              onInput={(e) => setNewPassword(e.currentTarget.value)}
+              onInput={(event) => setNewPassword(event.currentTarget.value)}
               required
             />
             <Input
               type="password"
               label="Confirmar nueva contraseña"
               value={confirmPassword()}
-              onInput={(e) => setConfirmPassword(e.currentTarget.value)}
+              onInput={(event) => setConfirmPassword(event.currentTarget.value)}
               required
             />
           </div>
@@ -304,6 +323,7 @@ export default function SecurityPage() {
               Usa tu dispositivo para iniciar sesión.
             </p>
           </div>
+
           <Show
             when={passkeyEnrollment.supported()}
             fallback={
@@ -324,6 +344,7 @@ export default function SecurityPage() {
                   ? "Agregar clave de acceso"
                   : "Configurar"}
               </Button>
+
               <Show when={currentUser().hasPasskey}>
                 <button
                   type="button"
@@ -412,7 +433,9 @@ export default function SecurityPage() {
                     Guárdalos en un lugar seguro. No volverás a verlos.
                   </p>
                 </div>
+
                 <RecoveryCodesPanel codes={freshRecoveryCodes()} />
+
                 <div class={styles.inlineActions}>
                   <Button
                     type="button"
@@ -429,6 +452,6 @@ export default function SecurityPage() {
           </SettingsSection>
         </Show>
       </Suspense>
-    </>
+    </SettingsPageLayout>
   );
 }

@@ -14,6 +14,7 @@ import { FilterBar } from "~/components/ui/layout/filter-bar";
 import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import { upsertAuditPolicyMutation } from "~/lib/mutations/audit";
 import {
   auditPolicySnapshotQuery,
@@ -67,113 +68,122 @@ const SECURITY_POLICY_COLUMNS = [
 ] satisfies ReadonlyArray<DataGridColumn<SecurityPolicyRow>>;
 
 function parseRiskLevel(value: string): PolicyRiskLevel {
-  if (value === "high" || value === "medium" || value === "low") return value;
+  if (value === "high" || value === "medium" || value === "low") {
+    return value;
+  }
+
   return "medium";
 }
 
 export default function SecurityPoliciesPage() {
-  const [policyAction, setPolicyAction] = createSignal("");
-  const [policyRiskLevel, setPolicyRiskLevel] =
-    createSignal<PolicyRiskLevel>("medium");
-  const [policyIsActive, setPolicyIsActive] = createSignal(true);
-  const [policyErrorMessage, setPolicyErrorMessage] = createSignal<
-    string | null
-  >(null);
+  const [action, setAction] = createSignal("");
+  const [riskLevel, setRiskLevel] = createSignal<PolicyRiskLevel>("medium");
+  const [isActive, setIsActive] = createSignal(true);
+  const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
 
   const policySnapshot = createAsync(() => auditPolicySnapshotQuery());
   const canManagePolicies = createAsync(() => canManageAuditPoliciesQuery(), {
     initialValue: false,
   });
 
-  const rows = createMemo<SecurityPolicyRow[]>(() =>
-    (policySnapshot()?.items ?? []).map((item, index) =>
-      Object.assign({}, item, {
-        id: `security-policy:${item.action}:${index}`,
-      }),
-    ),
-  );
-  const isLoading = () => policySnapshot() === undefined;
-
   const saveAuditPolicy = useAction(upsertAuditPolicyMutation);
-  const canSubmit = createMemo(
-    () => canManagePolicies() && policyAction().trim().length > 0,
+
+  const rows = createMemo<SecurityPolicyRow[]>(() =>
+    (policySnapshot()?.items ?? []).map((item, index) => ({
+      ...item,
+      id: `security-policy:${item.action}:${index}`,
+    })),
   );
 
-  async function savePolicy(): Promise<void> {
-    setPolicyErrorMessage(null);
+  const canSubmit = createMemo(
+    () => canManagePolicies() && action().trim().length > 0,
+  );
+
+  async function handleSave(): Promise<void> {
+    const normalizedAction = action().trim();
+
+    setErrorMessage(null);
+
     try {
       await saveAuditPolicy({
-        action: policyAction(),
-        riskLevel: policyRiskLevel(),
-        isActive: policyIsActive(),
+        action: normalizedAction,
+        riskLevel: riskLevel(),
+        isActive: isActive(),
       });
     } catch {
-      setPolicyErrorMessage(
+      setErrorMessage(
         "No se pudo guardar la política. Revisa los valores y los permisos.",
       );
     }
   }
 
   return (
-    <SettingsSection title="Políticas de riesgo de auditoría">
-      <FilterBar>
-        <div class={styles.filterAction}>
-          <Input
-            label="Acción"
-            value={policyAction()}
-            onInput={(e) => setPolicyAction(e.currentTarget.value)}
-            placeholder="leads_requested"
+    <SettingsPageLayout>
+      <SettingsSection title="Políticas de riesgo de auditoría">
+        <FilterBar>
+          <div class={styles.filterAction}>
+            <Input
+              label="Acción"
+              value={action()}
+              onInput={(event) => setAction(event.currentTarget.value)}
+              placeholder="leads_requested"
+            />
+          </div>
+
+          <div class={styles.filterRiskLevel}>
+            <Select
+              label="Nivel de riesgo"
+              value={riskLevel()}
+              onInput={(event) =>
+                setRiskLevel(parseRiskLevel(event.currentTarget.value))
+              }
+            >
+              <option value="high">alto</option>
+              <option value="medium">medio</option>
+              <option value="low">bajo</option>
+            </Select>
+          </div>
+
+          <Checkbox
+            label="Activo"
+            checked={isActive()}
+            onInput={(event) => setIsActive(event.currentTarget.checked)}
           />
-        </div>
-        <div class={styles.filterRiskLevel}>
-          <Select
-            label="Nivel de riesgo"
-            value={policyRiskLevel()}
-            onInput={(e) =>
-              setPolicyRiskLevel(parseRiskLevel(e.currentTarget.value))
-            }
-          >
-            <option value="high">alto</option>
-            <option value="medium">medio</option>
-            <option value="low">bajo</option>
-          </Select>
-        </div>
-        <Checkbox
-          label="Activo"
-          checked={policyIsActive()}
-          onInput={(e) => setPolicyIsActive(e.currentTarget.checked)}
-        />
-      </FilterBar>
-      <p class={styles.helperText}>
-        Las acciones sin política explícita se tratan como de alto riesgo para
-        evitar ocultar eventos críticos.
-      </p>
-      <p class={styles.helperText}>
-        Solo admin y superuser pueden editar políticas.
-      </p>
-      <p class={styles.errorText}>{policyErrorMessage() ?? ""}</p>
-      <DataGrid
-        ariaLabel="Políticas de seguridad"
-        columns={SECURITY_POLICY_COLUMNS}
-        emptyState="No hay políticas registradas."
-        source={{
-          status: isLoading() ? "pending" : "ready",
-          rows: rows(),
-        }}
-      />
-      <div class={styles.formActions}>
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          disabled={!canSubmit()}
-          onClick={() => {
-            void savePolicy();
+        </FilterBar>
+
+        <p class={styles.helperText}>
+          Las acciones sin política explícita se tratan como de alto riesgo para
+          evitar ocultar eventos críticos.
+        </p>
+
+        <p class={styles.helperText}>
+          Solo admin y superuser pueden editar políticas.
+        </p>
+
+        <p class={styles.errorText}>{errorMessage() ?? ""}</p>
+
+        <DataGrid
+          ariaLabel="Políticas de seguridad"
+          columns={SECURITY_POLICY_COLUMNS}
+          emptyState="No hay políticas registradas."
+          source={{
+            status: policySnapshot() === undefined ? "pending" : "ready",
+            rows: rows(),
           }}
-        >
-          Guardar política
-        </Button>
-      </div>
-    </SettingsSection>
+        />
+
+        <div class={styles.formActions}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            disabled={!canSubmit()}
+            onClick={() => void handleSave()}
+          >
+            Guardar política
+          </Button>
+        </div>
+      </SettingsSection>
+    </SettingsPageLayout>
   );
 }

@@ -5,6 +5,7 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Input } from "~/components/ui/input/input";
 import { useTheme } from "~/components/ui/theme/theme-context";
 import type { ThemeMode } from "~/components/ui/theme/theme-mode";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import { cn } from "~/lib/utils";
 
 import styles from "./settings-page.module.css";
@@ -18,40 +19,46 @@ export default function AppearanceSettingsPage() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <>
+    <SettingsPageLayout>
       <SettingsSection
         title="Tema"
         description="Elige cómo se ve la aplicación. El cambio se aplica al instante."
       >
         <div class={styles.themeGrid}>
           <For each={THEME_OPTIONS}>
-            {(option) => (
-              <button
-                type="button"
-                class={cn(
-                  styles.themeCard,
-                  theme() === option.value && styles.themeCardActive,
-                )}
-                aria-pressed={theme() === option.value}
-                onClick={() => setTheme(option.value)}
-              >
-                <span
-                  class={styles.themePreview}
-                  data-variant={option.value}
-                  aria-hidden="true"
+            {(option) => {
+              const selected = () => theme() === option.value;
+
+              return (
+                <button
+                  type="button"
+                  class={cn(
+                    styles.themeCard,
+                    selected() && styles.themeCardActive,
+                  )}
+                  aria-pressed={selected()}
+                  onClick={() => setTheme(option.value)}
                 >
-                  <span class={styles.themeBar} data-tone="strong" />
-                  <span class={styles.themeBar} data-tone="soft" />
-                  <span class={styles.themeBar} data-tone="soft" />
-                </span>
-                <span class={styles.themeCardLabel}>
-                  {option.label}
-                  <Show when={theme() === option.value}>
-                    <Check size={16} class={styles.themeCardCheck} />
-                  </Show>
-                </span>
-              </button>
-            )}
+                  <span
+                    class={styles.themePreview}
+                    data-variant={option.value}
+                    aria-hidden="true"
+                  >
+                    <span class={styles.themeBar} data-tone="strong" />
+                    <span class={styles.themeBar} data-tone="soft" />
+                    <span class={styles.themeBar} data-tone="soft" />
+                  </span>
+
+                  <span class={styles.themeCardLabel}>
+                    {option.label}
+
+                    <Show when={selected()}>
+                      <Check size={16} class={styles.themeCardCheck} />
+                    </Show>
+                  </span>
+                </button>
+              );
+            }}
           </For>
         </div>
       </SettingsSection>
@@ -64,11 +71,12 @@ export default function AppearanceSettingsPage() {
           <div class={styles.formGrid}>
             <Input label="Idioma" value="Español (Perú)" disabled />
           </div>
+
           <p class={styles.helperText}>
             La aplicación está disponible en español (Perú).
           </p>
         </div>
       </SettingsSection>
-    </>
+    </SettingsPageLayout>
   );
 }

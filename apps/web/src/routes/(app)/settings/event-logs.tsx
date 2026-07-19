@@ -7,6 +7,7 @@ import type {
 } from "~/contracts/event-logs/event-log";
 import { SettingsLogs } from "~/features/event-logs/components/settings-logs";
 import { eventLogInputFromQuery } from "~/features/event-logs/model/event-log-location";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import { eventLogsQuery } from "~/lib/queries/event-logs";
 
 export const route = {
@@ -19,7 +20,7 @@ export default function SettingsEventLogsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const input = createMemo(() => eventLogInputFromQuery(searchParams));
 
-  const onTableChange = (table: EventLogTable) => {
+  function handleTableChange(table: EventLogTable) {
     setSearchParams({
       table,
       eventType: null,
@@ -29,24 +30,26 @@ export default function SettingsEventLogsPage() {
       start: null,
       end: null,
     });
-  };
+  }
 
-  const onFiltersChange = (filters: EventLogFilters | undefined) => {
+  function handleFiltersChange(filters: EventLogFilters | undefined) {
     setSearchParams({
-      eventType: filters?.eventType || null,
-      actorUserId: filters?.actorUserId || null,
-      status: filters?.status || null,
+      eventType: filters?.eventType ?? null,
+      actorUserId: filters?.actorUserId ?? null,
+      status: filters?.status ?? null,
       onlyHighRisk: filters?.onlyHighRisk ? "true" : null,
       start: filters?.dateRange?.start ?? null,
       end: filters?.dateRange?.end ?? null,
     });
-  };
+  }
 
   return (
-    <SettingsLogs
-      input={input}
-      onTableChange={onTableChange}
-      onFiltersChange={onFiltersChange}
-    />
+    <SettingsPageLayout>
+      <SettingsLogs
+        input={input}
+        onTableChange={handleTableChange}
+        onFiltersChange={handleFiltersChange}
+      />
+    </SettingsPageLayout>
   );
 }

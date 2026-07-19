@@ -14,6 +14,7 @@ import type {
   CapacityPolicyDefaultsView,
   CapacityPolicyTeamDefaultsView,
 } from "~/contracts/capacity";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import { updateScopePolicyMutation } from "~/lib/mutations/capacity";
 import { capacityPolicyDefaultsQuery } from "~/lib/queries/capacity";
 import { actionErrorMessage } from "~/lib/wire-error";
@@ -27,12 +28,14 @@ function TeamPolicyRow(props: {
   const initialTeam = props.team();
   const initialBranchDefaults = props.branchDefaults();
   const savePolicy = useAction(updateScopePolicyMutation);
-  // Per-team submission; one mutation is shared across rows.
+
+  // Only this team's row shows the pending state.
   const submission = useSubmission(
     updateScopePolicyMutation,
     (input) =>
       input[0].scopeType === "team" && input[0].scopeId === props.team().teamId,
   );
+
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
   const [draft, setDraft] = createStore<CapacityLimitsDraft>({
     searchLimit: String(
@@ -52,6 +55,7 @@ function TeamPolicyRow(props: {
 
   async function save(event: SubmitEvent): Promise<void> {
     event.preventDefault();
+
     try {
       await savePolicy({
         scopeType: "team",
@@ -60,6 +64,7 @@ function TeamPolicyRow(props: {
         activeBufferTarget: Number(draft.bufferTarget),
         dailyRefillLimit: Number(draft.dailyRefillLimit),
       });
+
       enqueueSuccessSnackBar("Límites del equipo actualizados");
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
@@ -123,6 +128,7 @@ function CapacityPoliciesEditor(props: {
         activeBufferTarget: Number(branchDraft.bufferTarget),
         dailyRefillLimit: Number(branchDraft.dailyRefillLimit),
       });
+
       enqueueSuccessSnackBar("Límites de sucursal actualizados");
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
@@ -165,8 +171,7 @@ function CapacityPoliciesEditor(props: {
         description="Ajusta los límites por equipo. Deja el valor heredado para usar el límite de la sucursal."
       >
         <div class={styles.teamList}>
-          {/* Key by teamId: a row stays mounted across revalidation (new
-              objects, same id), so a half-typed draft is never reset. */}
+          {/* Preserve each row's draft when query results are revalidated. */}
           <Key each={props.snapshot().teams} by="teamId">
             {(team) => (
               <TeamPolicyRow team={team} branchDefaults={props.snapshot} />
@@ -184,8 +189,10 @@ export default function CapacityPoliciesPage() {
   });
 
   return (
-    <Show when={defaults()}>
-      {(snapshot) => <CapacityPoliciesEditor snapshot={snapshot} />}
-    </Show>
+    <SettingsPageLayout>
+      <Show when={defaults()}>
+        {(snapshot) => <CapacityPoliciesEditor snapshot={snapshot} />}
+      </Show>
+    </SettingsPageLayout>
   );
 }
