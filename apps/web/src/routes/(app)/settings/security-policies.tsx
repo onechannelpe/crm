@@ -10,10 +10,10 @@ import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
+import { DataTable } from "~/components/ui/layout/data-table";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import type { TableColumn } from "~/components/ui/layout/table-column";
 import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
-import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import { upsertAuditPolicyMutation } from "~/lib/mutations/audit";
 import {
@@ -24,7 +24,6 @@ import {
 import styles from "./settings-page.module.css";
 
 type PolicyRiskLevel = "high" | "medium" | "low";
-type SecurityPolicyRow = AuditActionPolicyItem & { id: string };
 
 const SECURITY_POLICY_COLUMNS = [
   {
@@ -65,7 +64,7 @@ const SECURITY_POLICY_COLUMNS = [
     renderCell: (item) =>
       item.updatedByUserId ? `#${item.updatedByUserId}` : "-",
   },
-] satisfies ReadonlyArray<DataGridColumn<SecurityPolicyRow>>;
+] satisfies ReadonlyArray<TableColumn<AuditActionPolicyItem>>;
 
 function parseRiskLevel(value: string): PolicyRiskLevel {
   if (value === "high" || value === "medium" || value === "low") {
@@ -88,12 +87,7 @@ export default function SecurityPoliciesPage() {
 
   const saveAuditPolicy = useAction(upsertAuditPolicyMutation);
 
-  const rows = createMemo<SecurityPolicyRow[]>(() =>
-    (policySnapshot()?.items ?? []).map((item, index) => ({
-      ...item,
-      id: `security-policy:${item.action}:${index}`,
-    })),
-  );
+  const rows = createMemo(() => policySnapshot()?.items ?? []);
 
   const canSubmit = createMemo(
     () => canManagePolicies() && action().trim().length > 0,
@@ -162,14 +156,12 @@ export default function SecurityPoliciesPage() {
 
         <p class={styles.errorText}>{errorMessage() ?? ""}</p>
 
-        <DataGrid
+        <DataTable
           ariaLabel="Políticas de seguridad"
           columns={SECURITY_POLICY_COLUMNS}
           emptyState="No hay políticas registradas."
-          source={{
-            status: policySnapshot() === undefined ? "pending" : "ready",
-            rows: rows(),
-          }}
+          rows={rows()}
+          status={policySnapshot() === undefined ? "pending" : "ready"}
         />
 
         <div class={styles.formActions}>

@@ -8,18 +8,13 @@ import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Badge } from "~/components/ui/display/badge";
 import { Input } from "~/components/ui/input/input";
+import { DataTable } from "~/components/ui/layout/data-table";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import type { TableColumn } from "~/components/ui/layout/table-column";
 import type { ManagedExecutiveView } from "~/contracts/capacity";
-import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
 
 import styles from "./team-page.module.css";
-
-type ManagedExecutiveGridRow = ManagedExecutiveView & {
-  id: string;
-  executiveId: string;
-};
 
 const TEAM_COLUMNS = [
   {
@@ -90,7 +85,7 @@ const TEAM_COLUMNS = [
           executive.executiveCategory.slice(1)
         : "—",
   },
-] satisfies ReadonlyArray<DataGridColumn<ManagedExecutiveGridRow>>;
+] satisfies ReadonlyArray<TableColumn<ManagedExecutiveView>>;
 
 export default function TeamPage() {
   const navigate = useNavigate();
@@ -98,21 +93,15 @@ export default function TeamPage() {
   const [filter, setFilter] = createSignal("");
   const filtered = createMemo(() => {
     const value = filter().trim().toLowerCase();
-    const rows: ManagedExecutiveGridRow[] = (executives() ?? []).map(
-      (executive) =>
-        Object.assign({}, executive, {
-          id: `team-executive:${executive.id}`,
-          executiveId: executive.id,
-        }),
-    );
+    const rows = executives() ?? [];
     if (!value) return rows;
     return rows.filter((executive) =>
       `${executive.fullName} ${executive.email}`.toLowerCase().includes(value),
     );
   });
   const isLoading = () => executives() === undefined;
-  const openExecutive = (executive: ManagedExecutiveGridRow) => {
-    navigate(`/settings/members/${executive.executiveId}?tab=capacity`);
+  const openExecutive = (executive: ManagedExecutiveView) => {
+    navigate(`/settings/members/${executive.id}?tab=capacity`);
   };
 
   return (
@@ -128,16 +117,13 @@ export default function TeamPage() {
         </div>
       </FilterBar>
 
-      <DataGrid
+      <DataTable
         ariaLabel="Equipo"
         columns={TEAM_COLUMNS}
         emptyState="No hay ejecutivos visibles."
-        onRowOpen={openExecutive}
-        rowOpenIndicator="route"
-        source={{
-          status: isLoading() ? "pending" : "ready",
-          rows: filtered(),
-        }}
+        onRowClick={openExecutive}
+        rows={filtered()}
+        status={isLoading() ? "pending" : "ready"}
       />
     </AppPage>
   );

@@ -6,9 +6,9 @@ import MessageSquare from "~/components/icons/message-square";
 import UserRound from "~/components/icons/user-round";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
+import { DataTable } from "~/components/ui/layout/data-table";
+import type { TableColumn } from "~/components/ui/layout/table-column";
 import type { PendingCapacityRequestView } from "~/contracts/capacity";
-import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   approveCapacityRequestMutation,
   rejectCapacityRequestMutation,
@@ -17,20 +17,9 @@ import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
 
 import styles from "./requests-page.module.css";
 
-type PendingCapacityRequestGridRow = Omit<PendingCapacityRequestView, "id"> & {
-  id: string;
-  requestId: string;
-};
-
 export default function TeamRequestsPage() {
   const requests = createAsync(() => pendingCapacityRequestsQuery());
-  const rows = (): PendingCapacityRequestGridRow[] =>
-    (requests() ?? []).map((request) =>
-      Object.assign({}, request, {
-        id: `capacity-request:${request.id}`,
-        requestId: request.id,
-      }),
-    );
+  const rows = () => requests() ?? [];
   const isLoading = () => requests() === undefined;
   const approve = useAction(approveCapacityRequestMutation);
   const reject = useAction(rejectCapacityRequestMutation);
@@ -75,33 +64,29 @@ export default function TeamRequestsPage() {
       width: 240,
       renderCell: (request) => (
         <div class={styles.rowActions}>
-          <Button type="button" onClick={() => void approve(request.requestId)}>
+          <Button type="button" onClick={() => void approve(request.id)}>
             Aprobar
           </Button>
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
-              void reject(request.requestId, "Rechazado desde la cola")
-            }
+            onClick={() => void reject(request.id, "Rechazado desde la cola")}
           >
             Rechazar
           </Button>
         </div>
       ),
     },
-  ] satisfies ReadonlyArray<DataGridColumn<PendingCapacityRequestGridRow>>;
+  ] satisfies ReadonlyArray<TableColumn<PendingCapacityRequestView>>;
 
   return (
     <AppPage width="wide">
-      <DataGrid
+      <DataTable
         ariaLabel="Solicitudes del equipo"
         columns={columns}
         emptyState="No hay solicitudes pendientes."
-        source={{
-          status: isLoading() ? "pending" : "ready",
-          rows: rows(),
-        }}
+        rows={rows()}
+        status={isLoading() ? "pending" : "ready"}
       />
     </AppPage>
   );

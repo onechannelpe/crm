@@ -1,8 +1,8 @@
 import { createMemo } from "solid-js";
 
+import { DataTable } from "~/components/ui/layout/data-table";
+import type { TableColumn } from "~/components/ui/layout/table-column";
 import type { EventLogRecord } from "~/contracts/event-logs/event-log";
-import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import type { EventLogColumn } from "../model/event-log-sources";
 
@@ -17,7 +17,7 @@ type ResultsProps = {
 };
 
 export function EventLogResultsTable(props: ResultsProps) {
-  const columns = createMemo<DataGridColumn<EventLogRecord>[]>(() =>
+  const columns = createMemo<TableColumn<EventLogRecord>[]>(() =>
     props.columns.map((column, index) => ({
       key: column.id,
       label: column.label,
@@ -32,7 +32,7 @@ export function EventLogResultsTable(props: ResultsProps) {
 
   return (
     <div class={styles.container}>
-      <DataGrid
+      <DataTable
         ariaLabel="Resultados del registro de eventos"
         columns={columns()}
         emptyState="No hay eventos para los filtros actuales."
@@ -41,11 +41,10 @@ export function EventLogResultsTable(props: ResultsProps) {
           loading: props.loading,
           onLoadMore: props.onLoadMore,
         }}
-        source={{
-          status:
-            props.loading && props.records.length === 0 ? "pending" : "ready",
-          rows: props.records,
-        }}
+        rows={props.records}
+        status={
+          props.loading && props.records.length === 0 ? "pending" : "ready"
+        }
       />
     </div>
   );

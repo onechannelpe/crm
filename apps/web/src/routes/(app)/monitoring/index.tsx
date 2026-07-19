@@ -9,10 +9,10 @@ import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
+import { DataTable } from "~/components/ui/layout/data-table";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
+import type { TableColumn } from "~/components/ui/layout/table-column";
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
-import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { observabilitySnapshotQuery } from "~/lib/queries/audit";
@@ -20,7 +20,7 @@ import { observabilitySnapshotQuery } from "~/lib/queries/audit";
 import styles from "./monitoring-page.module.css";
 
 type MonitoringStatus = "all" | "ok" | "error";
-type MonitoringRow = ObservabilitySnapshot["summary"][number] & { id: string };
+type MonitoringRow = ObservabilitySnapshot["summary"][number];
 
 const MONITORING_COLUMNS = [
   {
@@ -60,7 +60,7 @@ const MONITORING_COLUMNS = [
     width: 140,
     renderCell: (row) => Math.round(row.maxDurationMs),
   },
-] satisfies ReadonlyArray<DataGridColumn<MonitoringRow>>;
+] satisfies ReadonlyArray<TableColumn<MonitoringRow>>;
 
 function parseStatus(value: string): MonitoringStatus {
   if (value === "ok" || value === "error") return value;
@@ -97,7 +97,7 @@ export default function MonitoringPage() {
     }
     return new Error(String(error));
   };
-  const sourceStatus = (): "pending" | "ready" | "error" => {
+  const tableStatus = (): "pending" | "ready" | "error" => {
     if (snapshotError()) {
       return "error";
     }
@@ -107,13 +107,7 @@ export default function MonitoringPage() {
     return "ready";
   };
 
-  const rows = createMemo<MonitoringRow[]>(() =>
-    (latestSnapshot()?.summary ?? []).map((row, index) =>
-      Object.assign({}, row, {
-        id: `monitoring:${row.actionName}:${index}`,
-      }),
-    ),
-  );
+  const rows = createMemo(() => latestSnapshot()?.summary ?? []);
 
   const rowOpen = useSidePanelRowOpen<MonitoringRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -158,16 +152,14 @@ export default function MonitoringPage() {
         </Show>
       </FilterBar>
 
-      <DataGrid
+      <DataTable
         ariaLabel="Monitoreo"
         columns={MONITORING_COLUMNS}
         emptyState="No hay métricas disponibles para la ventana actual."
-        onRowOpen={rowOpen}
-        rowOpenIndicator="panel"
-        source={{
-          status: sourceStatus(),
-          rows: rows(),
-        }}
+        errorState="No se pudieron cargar las métricas."
+        onRowClick={rowOpen}
+        rows={rows()}
+        status={tableStatus()}
       />
     </AppPage>
   );

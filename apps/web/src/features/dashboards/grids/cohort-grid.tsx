@@ -4,11 +4,13 @@ import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import Package from "~/components/icons/package";
 import User from "~/components/icons/user";
+import {
+  DataTable,
+  type DataTableStatus,
+} from "~/components/ui/layout/data-table";
+import type { TableColumn } from "~/components/ui/layout/table-column";
 import type { CohortSaleRow } from "~/contracts/merchant-stats/views";
 import { COHORT_OFFSETS } from "~/contracts/merchant-stats/vocabulary";
-import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridSource } from "~/features/data-grid/model/source";
-import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { cohortRowsQuery } from "~/lib/queries/dashboards";
@@ -20,13 +22,11 @@ import { GPV_GRID_PAGE_SIZE, useDashboardGrid } from "./use-dashboard-grid";
 
 import styles from "./grid-surface.module.css";
 
-type Row = CohortSaleRow & { id: string };
-
-function gpvAt(row: Row, offset: number): number {
+function gpvAt(row: CohortSaleRow, offset: number): number {
   return row.months.find((month) => month.offset === offset)?.gpv ?? 0;
 }
 
-function trxAt(row: Row, offset: number): number {
+function trxAt(row: CohortSaleRow, offset: number): number {
   return row.months.find((month) => month.offset === offset)?.trx ?? 0;
 }
 
@@ -106,18 +106,17 @@ const COLUMNS = [
     renderCell: (row) =>
       row.projectedGpv != null ? formatSolesCompact(row.projectedGpv) : "—",
   },
-] satisfies ReadonlyArray<DataGridColumn<Row>>;
+] satisfies ReadonlyArray<TableColumn<CohortSaleRow>>;
 
 export function CohortGrid(props: { view: GpvView }) {
-  const grid = useDashboardGrid<CohortSaleRow, Row>({
+  const grid = useDashboardGrid<CohortSaleRow, CohortSaleRow>({
     pageSize: GPV_GRID_PAGE_SIZE,
     resetOn: props.view.filter,
     load: (page) => cohortRowsQuery({ filter: props.view.filter(), page }),
-    // eslint-disable-next-line oxc/no-map-spread
-    toRow: (row) => ({ ...row, id: row.saleId }),
+    toRow: (row) => row,
   });
 
-  const rowOpen = useSidePanelRowOpen<Row>((row) =>
+  const rowOpen = useSidePanelRowOpen<CohortSaleRow>((row) =>
     createDataGridDetailSidePanelPage({
       title: row.tradeName ?? row.ruc,
       subtitle: `${row.product} · ${row.ruc}`,
@@ -151,28 +150,28 @@ export function CohortGrid(props: { view: GpvView }) {
     }),
   );
 
-  const renderGrid = (source: DataGridSource<Row>) => (
-    <DataGrid
+  const renderTable = (status: DataTableStatus, rows: CohortSaleRow[]) => (
+    <DataTable
       ariaLabel="Cohortes de ventas"
       columns={COLUMNS}
       emptyState="No hay ventas para los filtros actuales."
-      onRowOpen={rowOpen}
-      rowOpenIndicator="panel"
+      onRowClick={rowOpen}
       loadMore={{
         hasMore: grid.hasMore(),
         loading: grid.loading(),
         onLoadMore: grid.onLoadMore,
       }}
-      source={source}
+      rows={rows}
+      status={status}
     />
   );
 
   return (
     <div class={styles.surface}>
       <GpvFilterBar view={props.view} />
-      <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
-        <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
-          {renderGrid({ status: "ready", rows: grid.rows() })}
+      <ErrorBoundary fallback={renderTable("error", [])}>
+        <Suspense fallback={renderTable("pending", [])}>
+          {renderTable("ready", grid.rows())}
         </Suspense>
       </ErrorBoundary>
     </div>
