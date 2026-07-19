@@ -1,4 +1,9 @@
-import { createAsync, useAction, useSubmission } from "@solidjs/router";
+import {
+  createAsync,
+  type RouteDefinition,
+  useAction,
+  useSubmission,
+} from "@solidjs/router";
 import { Show, createUniqueId, type Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -6,7 +11,6 @@ import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-b
 import {
   SettingsOptionCard,
   SettingsOptionCardRow,
-  SettingsOptionCardSeparator,
 } from "~/components/settings/settings-option-card";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
@@ -33,6 +37,13 @@ type PendingQuotationPolicySnapshot = Awaited<
   ReturnType<typeof pendingQuotationPolicyQuery>
 >;
 
+export const route = {
+  preload: () => {
+    void rateProposalPolicyQuery();
+    void pendingQuotationPolicyQuery();
+  },
+} satisfies RouteDefinition;
+
 function RateProposalPolicyEditor(props: {
   snapshot: Accessor<RateProposalPolicySnapshot>;
 }) {
@@ -47,8 +58,12 @@ function RateProposalPolicyEditor(props: {
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
+
     try {
-      await updatePolicy({ validityDays: Number(draft.validityDays) });
+      await updatePolicy({
+        validityDays: Number(draft.validityDays),
+      });
+
       enqueueSuccessSnackBar("Vigencia actualizada");
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
@@ -126,13 +141,18 @@ function PendingQuotationPolicyEditor(props: {
 
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
-    // When the cap is off we still send a valid number so the request parses;
-    // the server stores 0 (disabled) regardless of it.
+
+    // Disabled still needs a valid limit for parsing; the server stores 0.
     const limit = draft.enabled
       ? Number(draft.limit)
       : props.snapshot().suggestedLimit;
+
     try {
-      await updatePolicy({ enabled: draft.enabled, limit });
+      await updatePolicy({
+        enabled: draft.enabled,
+        limit,
+      });
+
       enqueueSuccessSnackBar(
         draft.enabled ? "Límite actualizado" : "Límite desactivado",
       );
@@ -176,7 +196,6 @@ function PendingQuotationPolicyEditor(props: {
           />
 
           <Show when={draft.enabled}>
-            <SettingsOptionCardSeparator />
             <SettingsOptionCardRow
               title="Máximo de clientes pendientes"
               description="Se bloquea el registro de nuevos clientes cuando el ejecutivo alcanza este número."
@@ -227,6 +246,7 @@ export default function QuotationPoliciesPage() {
       <Show when={rateProposalPolicy()}>
         {(snapshot) => <RateProposalPolicyEditor snapshot={snapshot} />}
       </Show>
+
       <Show when={pendingQuotationPolicy()}>
         {(snapshot) => <PendingQuotationPolicyEditor snapshot={snapshot} />}
       </Show>

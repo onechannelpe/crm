@@ -28,7 +28,3 @@ export function SettingsOptionCardRow(props: {
     </div>
   );
 }
-
-export function SettingsOptionCardSeparator() {
-  return <hr class={styles.separator} />;
-}

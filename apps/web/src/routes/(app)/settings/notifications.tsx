@@ -1,5 +1,5 @@
-import { createAsync, useAction } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createAsync, type RouteDefinition, useAction } from "@solidjs/router";
+import { createSignal, For, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import type { NotificationPreferencesView } from "~/actions/settings/notifications";
@@ -7,10 +7,11 @@ import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-b
 import BrandWhatsapp from "~/components/icons/brand-whatsapp";
 import Mail from "~/components/icons/mail";
 import {
-  SettingsToggleCard,
-  type SettingsToggleRow,
-} from "~/components/settings/settings-toggle-card";
+  SettingsOptionCard,
+  SettingsOptionCardRow,
+} from "~/components/settings/settings-option-card";
 import { SettingsSection } from "~/components/settings/SettingsSection";
+import { Toggle } from "~/components/ui/input/toggle";
 import {
   TabStrip,
   type TabIconComponent,
@@ -48,6 +49,12 @@ const isChannelAvailable = (
   channel: Channel,
 ) => data.channels.find((c) => c.channel === channel)?.available ?? false;
 
+export const route = {
+  preload: () => {
+    void notificationPreferencesQuery();
+  },
+} satisfies RouteDefinition;
+
 export default function NotificationsSettingsPage() {
   const preferences = createAsync(() => notificationPreferencesQuery());
   const { enqueueErrorSnackBar } = useSnackBar();
@@ -66,19 +73,16 @@ export default function NotificationsSettingsPage() {
     }
   };
 
-  const rowsFor = (
-    data: NotificationPreferencesView,
-    channel: Channel,
-  ): SettingsToggleRow[] =>
+  const rowsFor = (data: NotificationPreferencesView, channel: Channel) =>
     data.categories.map((category) => {
       const cell = category.channels.find((c) => c.channel === channel);
       return {
-        id: category.category,
         title: category.label,
         description: category.description,
         value: cell?.enabled ?? false,
         disabled: !cell?.controllable || !cell.available,
-        onToggle: (value) => void onToggle(category.category, channel, value),
+        onToggle: (value: boolean) =>
+          void onToggle(category.category, channel, value),
       };
     });
 
@@ -121,7 +125,25 @@ export default function NotificationsSettingsPage() {
                 </div>
               }
             >
-              <SettingsToggleCard rows={rowsFor(data(), activeChannel())} />
+              <SettingsOptionCard>
+                <For each={rowsFor(data(), activeChannel())}>
+                  {(row) => (
+                    <SettingsOptionCardRow
+                      interactive={!row.disabled}
+                      title={row.title}
+                      description={row.description}
+                      control={
+                        <Toggle
+                          value={row.value}
+                          disabled={row.disabled}
+                          ariaLabel={row.title}
+                          onChange={row.onToggle}
+                        />
+                      }
+                    />
+                  )}
+                </For>
+              </SettingsOptionCard>
             </Show>
           )}
         </Show>
