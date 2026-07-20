@@ -14,8 +14,6 @@ export interface TeamInvite {
   email: string;
   role: Role;
   teamId: string | null;
-  // Durable activation link, rebuilt from the stored token. Present for every
-  // pending invite so the UI can copy it without re-sending email.
   inviteUrl: string;
   expiresAt: number;
   createdAt: number;

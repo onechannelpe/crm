@@ -16,17 +16,20 @@ import type {
 import type { Role } from "./identity.types";
 
 export type AuthFunnelSourceValue = "client" | "server";
+
 export type AuthFunnelEventNameValue =
   | "screen_viewed"
   | "password_result"
   | "passkey_start_result"
   | "totp_result"
   | "passkey_result";
+
 export type AuthFunnelScreenValue =
   | "login"
   | "login_verify"
   | "login_passkey"
   | "reset_password";
+
 export type AuthFunnelMethodValue =
   | "password"
   | "password_totp"
@@ -101,9 +104,10 @@ export interface UserSessionsTable {
   primary_auth_method: AuthMethodValue;
   strong_auth_method: "totp" | "passkey" | "federated" | "recovery" | null;
   strong_auth_at: Date | null;
-  // Holds the administrator's user id so the UI can surface the impersonation
-  // and the admin session can be restored on exit.
+
+  // Identifies the admin session to restore after impersonation ends.
   impersonator_user_id: NullableIdColumn<UserId>;
+
   ip_address: string | null;
   user_agent: string | null;
   created_at: Date;
@@ -131,7 +135,6 @@ export interface UserTotpFactorsTable {
 
 export type RecoveryCodeSetSource = "enroll" | "regenerate";
 
-// A set owns issuance, acknowledgement, and revocation; member codes record only use.
 export interface RecoveryCodeSetTable {
   id: GeneratedId<RecoveryCodeSetId>;
   user_id: IdColumn<UserId>;
@@ -144,9 +147,6 @@ export interface RecoveryCodeSetTable {
 export interface RecoveryCodeTable {
   id: GeneratedId<RecoveryCodeId>;
   set_id: IdColumn<RecoveryCodeSetId>;
-  // HMAC-SHA256(pepper, normalized_code). Deterministic keyed hash: redemption
-  // looks a code up by an indexed equality, and a leaked column can't be
-  // brute-forced offline without the server pepper.
   code_hash: string;
   used_at: Date | null;
 }
@@ -158,8 +158,6 @@ export interface UserInvitesTable {
   email: string;
   role: Role;
   token: string;
-  // "expired" is derived at read (expires_at < now), never written: one less
-  // background write path than a status-sweep would need.
   status: "pending" | "accepted" | "revoked";
   expires_at: Date;
   created_by_user_id: IdColumn<UserId>;
