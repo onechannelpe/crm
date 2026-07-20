@@ -1,10 +1,5 @@
 import { type ChildProcess, spawn } from "node:child_process";
 
-// Spawns one built SolidStart/Nitro server per Playwright worker, bound to that
-// worker's cloned database. Running the production build (not the Vite dev
-// server) means no optimizeDeps step, so N servers boot quickly and in parallel
-// without the cold-start races that force a single shared dev server.
-
 const HEALTH_TIMEOUT_MS = 60_000;
 const HEALTH_POLL_MS = 200;
 
@@ -19,6 +14,7 @@ async function waitForHealth(
 ): Promise<void> {
   const deadline = Date.now() + HEALTH_TIMEOUT_MS;
   let exited = false;
+
   proc.once("exit", () => {
     exited = true;
   });
@@ -26,19 +22,19 @@ async function waitForHealth(
   while (Date.now() < deadline) {
     if (exited) {
       throw new Error(
-        `e2e server exited before becoming healthy (see output above)`,
+        "e2e server exited before becoming healthy (see output above)",
       );
     }
+
     try {
-      // /login renders unauthenticated and warms the SSR pipeline.
       const response = await fetch(`${baseURL}/login`);
+
       if (response.ok) {
         return;
       }
-    } catch {
-      // Connection refused until the server is listening; keep polling.
-    }
-    await new Promise((r) => setTimeout(r, HEALTH_POLL_MS));
+    } catch {}
+
+    await new Promise((resolve) => setTimeout(resolve, HEALTH_POLL_MS));
   }
 
   throw new Error(
@@ -57,22 +53,21 @@ export async function startServer(options: {
     env: {
       ...process.env,
       NODE_ENV: "test",
-      // Nitro's bun preset reads NITRO_PORT/NITRO_HOST (see compose.app.yml);
-      // PORT/HOST are set too as a fallback.
+
+      // Set both Nitro and generic server variables.
       NITRO_PORT: String(options.port),
       NITRO_HOST: "127.0.0.1",
       PORT: String(options.port),
       HOST: "127.0.0.1",
+
       WEB_DB_URL: options.dbUrl,
-      // Invite links are built from this origin (not the request), so it must
-      // point at this worker's own server for the invitee's navigation to land.
+
+      // Links are built from this value instead of the incoming request.
       APP_PUBLIC_ORIGIN: baseURL,
-      // Route email to the stdout log transport instead of a real provider; the
-      // invite/reset flows still run for real. Delivery is best-effort and the
-      // invite link is surfaced in the UI, so specs never read email back.
+
+      // Run notification flows without sending real email.
       NOTIFICATION_ROUTES: "email:log",
     },
-    // Inherit stdio so server logs surface directly in the test output.
     stdio: ["ignore", "inherit", "inherit"],
   });
 
@@ -85,14 +80,17 @@ export async function startServer(options: {
 
   return {
     baseURL,
+
     async stop() {
       if (proc.exitCode !== null) {
         return;
       }
+
       await new Promise<void>((resolve) => {
-        proc.once("exit", () => resolve());
+        proc.once("exit", resolve);
         proc.kill("SIGTERM");
-        // Nitro's bun server shuts down promptly; force-kill if it lingers.
+
+        // Prevent teardown from hanging if graceful shutdown fails.
         setTimeout(() => proc.kill("SIGKILL"), 3_000);
       });
     },

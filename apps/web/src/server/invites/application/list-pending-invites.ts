@@ -9,12 +9,9 @@ export async function listPendingInvites(
   runtime: InviteRuntime,
   branchId: BranchId,
 ): Promise<Result<PendingBranchInvite[], DomainError>> {
-  const currentTime = runtime.now();
-  // Expiry is derived here (findLatestPendingByBranch filters expires_at > now),
-  // so there is no status-sweep write before the read.
   const rows = await repos.userInvites.findLatestPendingByBranch(
     branchId,
-    currentTime,
+    runtime.now(),
   );
 
   return Ok(

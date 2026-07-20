@@ -11,9 +11,7 @@ import type {
   RedeliverInviteInput,
 } from "./types";
 
-// Re-delivers the SAME durable link and refreshes its expiry. It never mints a
-// new token, so links already handed out (email, copy-link) keep working. Token
-// rotation happens only on revoke-and-reissue, not on a routine resend.
+// Reuses the existing token. Only revoke-and-reissue rotates it.
 export async function redeliverInvite(
   repos: InviteDeps,
   runtime: InviteRuntime,
@@ -26,26 +24,33 @@ export async function redeliverInvite(
     if (!invite) {
       return Err(fail("invite_not_found"));
     }
+
     if (invite.branch_id !== input.branchId) {
       return Err(fail("cross_branch_forbidden"));
     }
+
     if (invite.status !== "pending" || invite.expires_at <= now) {
       return Err(fail("invite_not_pending"));
     }
 
     const user = await transactionRepos.users.findById(invite.user_id);
+
     if (!user || user.branch_id !== input.branchId) {
       return Err(fail("invite_target_missing"));
     }
+
     if (user.is_active) {
       return Err(fail("invite_target_active"));
     }
+
     if (!canAssignRole(input.actorRole, user.role)) {
       return Err(fail("role_not_assignable"));
     }
 
     const expiresAt = addMilliseconds(now, runtime.inviteTtlMs);
+
     await transactionRepos.userInvites.refreshExpiry(invite.id, expiresAt);
+
     await transactionRepos.events.append({
       type: "user_invite_redelivered",
       entityType: "user",
@@ -58,6 +63,10 @@ export async function redeliverInvite(
       occurredAt: now,
     });
 
-    return Ok({ inviteId: invite.id, token: invite.token, expiresAt });
+    return Ok({
+      inviteId: invite.id,
+      token: invite.token,
+      expiresAt,
+    });
   });
 }

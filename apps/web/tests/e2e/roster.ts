@@ -1,33 +1,18 @@
 import type { Role } from "~/lib/auth/access/rbac";
 
-// The fixed cast of users the e2e suite authenticates as, one per role. Seeded
-// into the template database once (tools/e2e/prepare.ts) with a deterministic
-// session token so the Node test side can authenticate by injecting a cookie,
-// with zero runtime hashing or UI login.
-
-// Imported from BOTH the seed (which hashes each token into a user_sessions row)
-// and the Playwright fixtures (which set the raw token as the `session` cookie).
-// Keep this module to plain data and pure string ops so both importers stay free
-// of app and runtime dependencies.
-
-// Session tokens are 20 bytes of base32lower-no-padding (32 chars, [a-z2-7]).
-// Deriving one deterministically from a seed word keeps the literal identical
-// across the Bun and Node sides without hand-counting characters. prepare.ts
-// asserts each result against the real isValidTokenFormat before seeding.
+// Generate a deterministic 32-character session token from a seed.
 function token32(seed: string): string {
   const base = seed.replace(/[^a-z2-7]/g, "");
+
   return base.repeat(Math.ceil(32 / base.length)).slice(0, 32);
 }
 
 export interface RosterUser {
-  /** Fixture handle, e.g. `executive`. */
   key: string;
-  /** Deterministic UUID; also the users.id primary key. */
   userId: string;
   username: string;
   email: string;
   role: Role;
-  /** Raw session cookie value; its SHA-256 is the user_sessions.id. */
   token: string;
 }
 
@@ -97,8 +82,10 @@ export type RosterKey = (typeof ROSTER)[number]["key"];
 
 export function rosterByKey(key: RosterKey): RosterUser {
   const user = ROSTER.find((entry) => entry.key === key);
+
   if (!user) {
     throw new Error(`no e2e roster user for key '${key}'`);
   }
+
   return user;
 }

@@ -2,10 +2,6 @@ import { Client } from "pg";
 
 import type { GuardCount, ResetPlan } from "./manifest";
 
-// Raw-SQL Postgres helpers for the test side. Cloning, dropping, resetting, and
-// reading a worker database needs no application code, so this stays on `pg`
-// alone and the worker fixtures pull in nothing from the app.
-
 const SAFE_DB_NAME = /^[a-z0-9_]+$/;
 
 function assertSafeDbName(name: string): void {
@@ -25,7 +21,9 @@ async function withClient<T>(
   fn: (client: Client) => Promise<T>,
 ): Promise<T> {
   const client = new Client({ connectionString: url });
+
   await client.connect();
+
   try {
     return await fn(client);
   } finally {
@@ -33,9 +31,6 @@ async function withClient<T>(
   }
 }
 
-// Cloning a seeded template needs no application code, so it is the per-worker
-// isolation primitive: every worker gets a byte-identical copy of the pristine
-// world.
 export async function cloneTemplate(
   maintenanceUrl: string,
   template: string,
@@ -43,6 +38,7 @@ export async function cloneTemplate(
 ): Promise<void> {
   assertSafeDbName(template);
   assertSafeDbName(target);
+
   await withClient(maintenanceUrl, async (client) => {
     await client.query(`CREATE DATABASE "${target}" TEMPLATE "${template}"`);
   });
@@ -53,41 +49,39 @@ export async function dropDatabase(
   target: string,
 ): Promise<void> {
   assertSafeDbName(target);
+
   await withClient(maintenanceUrl, async (client) => {
     await client.query(`DROP DATABASE IF EXISTS "${target}" WITH (FORCE)`);
   });
 }
 
-// A long-lived connection to a worker's own database, used to reset it to the
-// pristine template between tests and assert preserved tables stayed intact.
+// Keeps one connection open for resets and guard checks.
 export class WorkerDb {
   private constructor(readonly client: Client) {}
 
   static async open(url: string): Promise<WorkerDb> {
     const client = new Client({ connectionString: url });
+
     await client.connect();
+
     return new WorkerDb(client);
   }
 
   async reset(plan: ResetPlan): Promise<void> {
-    // Runs before each test, so it validates the residue of the previous one.
-    // Detection lags by a test, which still fails the run.
+    // Checks the previous test's residue before clearing the database.
     await this.assertPreservedTablesUnchanged(plan.guardCounts);
 
     if (plan.truncateSql) {
       await this.client.query(plan.truncateSql);
     }
+
     for (const statement of plan.deleteSql) {
-      // Ordered by foreign-key dependency; run sequentially, not in parallel.
+      // Foreign-key order requires sequential execution.
       // eslint-disable-next-line no-await-in-loop
       await this.client.query(statement);
     }
   }
 
-  // Preserved tables the reset does not prune must still hold exactly their
-  // seeded rows. If one grew, a prior test wrote to a table the reset cannot
-  // clean, which would bleed into later tests (and, for tables referencing
-  // users, break the users delete). Fail loudly, naming the table.
   private async assertPreservedTablesUnchanged(
     guards: GuardCount[],
   ): Promise<void> {
@@ -96,6 +90,7 @@ export class WorkerDb {
         `SELECT count(*)::int AS n FROM "${guard.table}"`,
       );
       const actual = rows[0]?.n ?? 0;
+
       if (actual !== guard.count) {
         throw new Error(
           `e2e reset guard: "${guard.table}" holds ${actual} rows, expected the seeded ${guard.count}. ` +

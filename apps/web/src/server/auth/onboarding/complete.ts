@@ -1,7 +1,6 @@
 import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
 import { resolveSessionClass } from "~/lib/auth/core/session-contract";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
-import { createLogger } from "~/lib/observability/logger";
 import { parsePhone } from "~/lib/phone/pe-mobile";
 import {
   persistVerifiedPasskeyEnrollment,
@@ -19,8 +18,6 @@ import type { AppContext } from "~/server/platform/action/context";
 import { auditEntityId } from "~/server/shared/audit-entity";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-
-const logger = createLogger("auth-onboarding-complete");
 
 export type CompleteOnboardingCommand =
   | { method: "none" }
@@ -42,30 +39,29 @@ export async function completeOnboarding(
     command.method !== "none" &&
     command.enrollment.userId !== ctx.actor.userId
   ) {
-    logger.warn("invalid_input: enrollment userId does not match actor", {
-      method: command.method,
-      enrollmentUserId: command.enrollment.userId,
-      actorUserId: ctx.actor.userId,
-    });
     return Err(fail("invalid_input"));
   }
+
   const completedAt = ctx.now();
 
-  const completed = await deps.uow.run(async (repos) => {
+  return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
-    if (!user) return Err(fail("user_not_found"));
+
+    if (!user) {
+      return Err(fail("user_not_found"));
+    }
+
     if (user.onboarding_completed_at) {
-      logger.warn("invalid_input: onboarding already completed", {
-        userId: user.id,
-        onboardingCompletedAt: user.onboarding_completed_at,
-        method: command.method,
-      });
       return Err(fail("invalid_input"));
     }
+
     if (user.password_change_required) {
       return Err(fail("installation_password_change_required"));
     }
-    if (command.method === "none" && requiresStrongAuthRole(user.role)) {
+
+    const strongAuthRequired = requiresStrongAuthRole(user.role);
+
+    if (command.method === "none" && strongAuthRequired) {
       return Err(fail("strong_auth_required"));
     }
 
@@ -73,6 +69,7 @@ export async function completeOnboarding(
       user.id,
       "whatsapp",
     );
+
     if (!phoneAddress || !parsePhone(phoneAddress.address)) {
       return Err(fail("invalid_phone"));
     }
@@ -84,24 +81,35 @@ export async function completeOnboarding(
     switch (command.method) {
       case "none":
         break;
+
       case "passkey": {
         const persisted = await persistVerifiedPasskeyEnrollment(
           repos,
           command.enrollment,
           completedAt,
         );
-        if (isErr(persisted)) return persisted;
+
+        if (isErr(persisted)) {
+          return persisted;
+        }
+
         break;
       }
+
       case "totp": {
         const persisted = await persistVerifiedTotpEnrollment(
           repos,
           command.enrollment,
           completedAt,
         );
-        if (isErr(persisted)) return persisted;
+
+        if (isErr(persisted)) {
+          return persisted;
+        }
+
         break;
       }
+
       default:
         command satisfies never;
     }
@@ -116,8 +124,9 @@ export async function completeOnboarding(
       );
     }
 
-    if (requiresStrongAuthRole(user.role)) {
+    if (strongAuthRequired) {
       const strongAuth = await getStrongAuthStatus(user.id, repos);
+
       if (!strongAuth.hasVerifiedStrongAuth) {
         return Err(fail("strong_auth_required"));
       }
@@ -134,6 +143,7 @@ export async function completeOnboarding(
     });
 
     await repos.users.completeOnboarding(user.id, { completedAt });
+
     await repos.events.append({
       type: "onboarding_completed",
       entityType: "user",
@@ -141,13 +151,13 @@ export async function completeOnboarding(
       actorUserId: user.id,
       occurredAt: completedAt,
     });
-    const completedUser = {
-      ...user,
-      onboarding_completed_at: completedAt,
-    };
+
     const sessionToken = await replaceSession(repos, {
       current: ctx.actor,
-      user: completedUser,
+      user: {
+        ...user,
+        onboarding_completed_at: completedAt,
+      },
       sessionClass: resolveSessionClass({
         onboardingCompleted: true,
         recoveryCodesAcknowledgementRequired: recoveryCodes.length > 0,
@@ -165,5 +175,4 @@ export async function completeOnboarding(
       sessionToken,
     });
   });
-  return completed;
 }

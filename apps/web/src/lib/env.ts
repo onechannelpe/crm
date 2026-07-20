@@ -10,7 +10,6 @@ import {
 const SECRET_MIN_LENGTH = 32;
 const SECRET_MIN_UNIQUE_CHARS = 10;
 
-// Used only when WEB_DB_URL is unset outside production.
 const LOCAL_DEV_DB_URL = "postgres://postgres@localhost:5432/crm";
 
 const SEQUENTIAL_CHARS =
@@ -256,7 +255,6 @@ function parseNotificationRoutes(source: EnvSource): NotificationRoutes {
       throw routeProviderMismatch(channel, provider);
     }
 
-    // Object.assign avoids an unsafe assertion for the computed channel key.
     Object.assign(routes, { [channel]: provider });
   }
 
@@ -323,8 +321,7 @@ function parseNotificationsEnv(source: EnvSource) {
       true,
     ),
 
-    // Optional. An empty secret makes signature verification always fail while
-    // still allowing the webhook handshake.
+    // Empty means signature verification always fails; the handshake still works.
     kapsoWebhookSecret: source["KAPSO_WEBHOOK_SECRET"] ?? "",
   } as const;
 }
@@ -364,7 +361,7 @@ export function loadServerEnv(source: EnvSource) {
   } as const;
 }
 
-// Tests reload env on every call. Other environments cache the parsed config.
+// Tests read process.env on every call. Other environments parse it once.
 function section<T>(parse: (source: EnvSource) => T): () => T {
   let cached: T | undefined;
 

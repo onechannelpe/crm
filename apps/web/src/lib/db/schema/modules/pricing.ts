@@ -41,9 +41,8 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .execute();
 
-  // Per-branch cap on how many quotations an executive may hold awaiting their
-  // decision before new client registrations are blocked. client_limit encodes
-  // the state: absent row = system default, 0 = disabled (no cap), N = cap N.
+  // `client_limit`: missing row uses the system default, 0 disables the cap,
+  // and a positive value sets the cap.
   await db.schema
     .createTable("workflow_pending_quotation_policies")
     .addColumn("branch_id", "uuid", (col) =>
