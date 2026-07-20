@@ -110,6 +110,7 @@
   --spacing-10: 40px;
   --spacing-11: 44px;
   --spacing-12: 48px;
+  --spacing-16: 64px;
 
   --bg-translucent-subtle: color(display-p3 0 0 0 / 0.02);
   --bg-translucent: color(display-p3 0 0 0 / 0.039);
@@ -133,6 +134,7 @@
   --t-spacing-10: var(--spacing-10);
   --t-spacing-11: var(--spacing-11);
   --t-spacing-12: var(--spacing-12);
+  --t-spacing-16: var(--spacing-16);
   --t-border-radius-xs: 2px;
   --t-border-radius-sm: var(--radius-sm);
   --t-border-radius-md: var(--radius-md);

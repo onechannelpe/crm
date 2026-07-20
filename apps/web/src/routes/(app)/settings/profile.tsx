@@ -9,6 +9,7 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { ImageInput } from "~/components/ui/input/image-input";
 import { Input } from "~/components/ui/input/input";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   removeUserAvatarMutation,
   uploadUserAvatarMutation,
@@ -138,7 +139,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <>
+    <SettingsPageLayout>
       <SettingsSection title="Foto">
         <ImageInput
           pictureUrl={avatarPreviewUrl() ?? avatarUrl()}
@@ -190,6 +191,6 @@ export default function ProfilePage() {
       >
         <Input value={user().email} disabled />
       </SettingsSection>
-    </>
+    </SettingsPageLayout>
   );
 }

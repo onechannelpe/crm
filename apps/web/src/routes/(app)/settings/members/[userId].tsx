@@ -12,6 +12,7 @@ import { MemberAdminActions } from "~/features/settings-members/member-admin-act
 import { MemberCapacityTab } from "~/features/settings-members/member-capacity-tab";
 import { MemberInfoTab } from "~/features/settings-members/member-info-tab";
 import { MemberPermissionsTab } from "~/features/settings-members/member-permissions-tab";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   TabStrip,
   type TabItem,
@@ -34,8 +35,7 @@ export default function SettingsMemberDetailPage() {
   const { currentUser } = useAuthenticatedSession();
   const detail = createAsync(() => memberDetailQuery(params.userId));
 
-  // The capacity detail is capacity:read:team-gated server-side; only surface
-  // the tab to viewers who can load it, and only for executives (who have one).
+  // Match the server permission check and hide capacity for non-executives.
   const canSeeCapacity = () =>
     hasPermission(currentUser().role, "capacity:read:team");
 
@@ -45,73 +45,86 @@ export default function SettingsMemberDetailPage() {
       { id: "info", label: "Información", icon: Info },
       { id: "permissions", label: "Permisos", icon: ShieldCheck },
     ];
+
     if (record?.role === "executive" && canSeeCapacity()) {
-      list.push({ id: "capacity", label: "Capacidad", icon: Activity });
+      list.push({
+        id: "capacity",
+        label: "Capacidad",
+        icon: Activity,
+      });
     }
+
     return list;
   });
 
   const activeTab = createMemo<MemberTabId>(() => {
     const requested = search.tab;
     const match = tabs().find((tab) => tab.id === requested);
+
     return match?.id ?? "info";
   });
 
   return (
-    // Keyed inner Show remounts tabs on member change, reseeding their drafts
-    // without clobbering them on same-member revalidation.
-    <Show when={detail()}>
-      {(record) => (
-        <Show when={record().id} keyed>
-          {(memberId) => (
-            <>
-              <header class={styles.detailHeader}>
-                <Avatar
-                  class={styles.detailAvatar}
-                  imageUrl={record().avatarUrl}
-                  fallback={getUserInitials(shortName(record()))}
-                />
-                <div class={styles.detailHeaderText}>
-                  <span class={styles.detailName}>{shortName(record())}</span>
-                  <span class={styles.detailEmail}>{record().email}</span>
-                  <div class={styles.headerBadges}>
-                    <Badge variant={getRoleBadgeVariant(record().role)}>
-                      {getRoleLabel(record().role)}
-                    </Badge>
-                    <Show
-                      when={record().isActive}
-                      fallback={<Badge variant="secondary">Inactivo</Badge>}
-                    >
-                      <Badge variant="success">Activo</Badge>
-                    </Show>
+    <SettingsPageLayout>
+      <Show when={detail()}>
+        {(record) => (
+          // Remount tabs when the member changes, but not on revalidation.
+          <Show when={record().id} keyed>
+            {(memberId) => (
+              <>
+                <header class={styles.detailHeader}>
+                  <Avatar
+                    class={styles.detailAvatar}
+                    imageUrl={record().avatarUrl}
+                    fallback={getUserInitials(shortName(record()))}
+                  />
+
+                  <div class={styles.detailHeaderText}>
+                    <span class={styles.detailName}>{shortName(record())}</span>
+                    <span class={styles.detailEmail}>{record().email}</span>
+
+                    <div class={styles.headerBadges}>
+                      <Badge variant={getRoleBadgeVariant(record().role)}>
+                        {getRoleLabel(record().role)}
+                      </Badge>
+
+                      <Show
+                        when={record().isActive}
+                        fallback={<Badge variant="secondary">Inactivo</Badge>}
+                      >
+                        <Badge variant="success">Activo</Badge>
+                      </Show>
+                    </div>
                   </div>
+                </header>
+
+                <TabStrip
+                  tabs={tabs()}
+                  activeTab={activeTab()}
+                  onTabSelect={(id) => setSearch({ tab: id })}
+                />
+
+                <div class={styles.tabPane}>
+                  <Switch>
+                    <Match when={activeTab() === "info"}>
+                      <MemberInfoTab detail={record()} />
+                      <MemberAdminActions detail={record()} />
+                    </Match>
+
+                    <Match when={activeTab() === "permissions"}>
+                      <MemberPermissionsTab detail={record()} />
+                    </Match>
+
+                    <Match when={activeTab() === "capacity"}>
+                      <MemberCapacityTab userId={memberId} />
+                    </Match>
+                  </Switch>
                 </div>
-              </header>
-
-              <TabStrip
-                tabs={tabs()}
-                activeTab={activeTab()}
-                onTabSelect={(id) => setSearch({ tab: id })}
-              />
-
-              <div class={styles.tabPane}>
-                <Switch>
-                  <Match when={activeTab() === "info"}>
-                    <MemberInfoTab detail={record()} />
-                    <MemberAdminActions detail={record()} />
-                  </Match>
-                  <Match when={activeTab() === "permissions"}>
-                    <MemberPermissionsTab detail={record()} />
-                  </Match>
-                  <Match when={activeTab() === "capacity"}>
-                    <MemberCapacityTab userId={memberId} />
-                  </Match>
-                </Switch>
-              </div>
-            </>
-          )}
-        </Show>
-      )}
-    </Show>
+              </>
+            )}
+          </Show>
+        )}
+      </Show>
+    </SettingsPageLayout>
   );
 }

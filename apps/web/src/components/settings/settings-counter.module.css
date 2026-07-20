@@ -1,0 +1,40 @@
+.counter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--t-spacing-1);
+}
+
+.input {
+  width: var(--t-spacing-16);
+  height: var(--t-spacing-8);
+  text-align: center;
+  font-weight: var(--t-font-weight-medium);
+  font-size: var(--font-size-body);
+  color: var(--t-font-color-primary);
+  background-color: var(--t-background-transparent-lighter);
+  border: 1px solid var(--t-border-color-medium);
+  border-radius: var(--t-border-radius-md);
+  padding: 0 var(--t-spacing-2);
+  outline: none;
+  transition: border-color var(--motion-fast) linear;
+}
+
+.input:focus {
+  border-color: var(--info);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* The step buttons replace the native spinners, so hide them. */
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.input[type="number"] {
+  appearance: textfield;
+}

@@ -1,5 +1,5 @@
-import { createAsync, useAction } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createAsync, type RouteDefinition, useAction } from "@solidjs/router";
+import { createSignal, For, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import type { NotificationPreferencesView } from "~/actions/settings/notifications";
@@ -7,10 +7,12 @@ import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-b
 import BrandWhatsapp from "~/components/icons/brand-whatsapp";
 import Mail from "~/components/icons/mail";
 import {
-  SettingsToggleCard,
-  type SettingsToggleRow,
-} from "~/components/settings/settings-toggle-card";
+  SettingsOptionCard,
+  SettingsOptionCardRow,
+} from "~/components/settings/settings-option-card";
 import { SettingsSection } from "~/components/settings/SettingsSection";
+import { Toggle } from "~/components/ui/input/toggle";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   TabStrip,
   type TabIconComponent,
@@ -43,10 +45,20 @@ const EMPTY_STATE: Record<Channel, { title: string; text: string }> = {
   },
 };
 
-const isChannelAvailable = (
+function isChannelAvailable(
   data: NotificationPreferencesView,
   channel: Channel,
-) => data.channels.find((c) => c.channel === channel)?.available ?? false;
+) {
+  return (
+    data.channels.find((entry) => entry.channel === channel)?.available ?? false
+  );
+}
+
+export const route = {
+  preload: () => {
+    void notificationPreferencesQuery();
+  },
+} satisfies RouteDefinition;
 
 export default function NotificationsSettingsPage() {
   const preferences = createAsync(() => notificationPreferencesQuery());
@@ -54,78 +66,99 @@ export default function NotificationsSettingsPage() {
   const savePreference = useAction(setNotificationPreferenceMutation);
   const [activeChannel, setActiveChannel] = createSignal<Channel>("email");
 
-  const onToggle = async (
+  async function handleToggle(
     category: string,
     channel: Channel,
     enabled: boolean,
-  ) => {
+  ) {
     try {
       await savePreference(category, channel, enabled);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
-  };
+  }
 
-  const rowsFor = (
-    data: NotificationPreferencesView,
-    channel: Channel,
-  ): SettingsToggleRow[] =>
-    data.categories.map((category) => {
-      const cell = category.channels.find((c) => c.channel === channel);
+  function getRows(data: NotificationPreferencesView, channel: Channel) {
+    return data.categories.map((category) => {
+      const categoryChannel = category.channels.find(
+        (entry) => entry.channel === channel,
+      );
+
       return {
-        id: category.category,
         title: category.label,
         description: category.description,
-        value: cell?.enabled ?? false,
-        disabled: !cell?.controllable || !cell.available,
-        onToggle: (value) => void onToggle(category.category, channel, value),
+        value: categoryChannel?.enabled ?? false,
+        disabled: !categoryChannel?.controllable || !categoryChannel.available,
+        onToggle: (value: boolean) =>
+          void handleToggle(category.category, channel, value),
       };
     });
+  }
 
-  const activeIcon = () =>
-    CHANNELS.find((c) => c.id === activeChannel())?.icon ?? Mail;
+  const activeChannelIcon = () =>
+    CHANNELS.find((channel) => channel.id === activeChannel())?.icon ?? Mail;
 
   return (
-    <SettingsSection
-      title="Notificaciones"
-      description="Elige cómo quieres recibir cada tipo de aviso. Las notificaciones dentro de la app siempre están activas."
-    >
-      <TabStrip
-        tabs={CHANNELS.map((channel) => ({
-          id: channel.id,
-          label: channel.label,
-          icon: channel.icon,
-        }))}
-        activeTab={activeChannel()}
-        onTabSelect={setActiveChannel}
-      />
+    <SettingsPageLayout>
+      <SettingsSection
+        title="Notificaciones"
+        description="Elige cómo quieres recibir cada tipo de aviso. Las notificaciones dentro de la app siempre están activas."
+      >
+        <TabStrip
+          tabs={CHANNELS.map((channel) => ({
+            id: channel.id,
+            label: channel.label,
+            icon: channel.icon,
+          }))}
+          activeTab={activeChannel()}
+          onTabSelect={setActiveChannel}
+        />
 
-      <div class={styles.tabPane}>
-        <Show when={preferences()}>
-          {(data) => (
-            <Show
-              when={isChannelAvailable(data(), activeChannel())}
-              fallback={
-                <div class={styles.emptyState}>
-                  <Dynamic
-                    component={activeIcon()}
-                    size={28}
-                    class={styles.emptyIcon}
-                  />
-                  <p class={styles.emptyTitle}>
-                    {EMPTY_STATE[activeChannel()].title}
-                  </p>
-                  <p class={styles.emptyText}>
-                    {EMPTY_STATE[activeChannel()].text}
-                  </p>
-                </div>
-              }
-            >
-              <SettingsToggleCard rows={rowsFor(data(), activeChannel())} />
-            </Show>
-          )}
-        </Show>
-      </div>
-    </SettingsSection>
+        <div class={styles.tabPane}>
+          <Show when={preferences()}>
+            {(data) => (
+              <Show
+                when={isChannelAvailable(data(), activeChannel())}
+                fallback={
+                  <div class={styles.emptyState}>
+                    <Dynamic
+                      component={activeChannelIcon()}
+                      size={28}
+                      class={styles.emptyIcon}
+                    />
+                    <p class={styles.emptyTitle}>
+                      {EMPTY_STATE[activeChannel()].title}
+                    </p>
+                    <p class={styles.emptyText}>
+                      {EMPTY_STATE[activeChannel()].text}
+                    </p>
+                  </div>
+                }
+              >
+                <SettingsOptionCard>
+                  <For each={getRows(data(), activeChannel())}>
+                    {(row) => (
+                      <SettingsOptionCardRow
+                        interactive={!row.disabled}
+                        title={row.title}
+                        description={row.description}
+                        control={
+                          <Toggle
+                            value={row.value}
+                            disabled={row.disabled}
+                            ariaLabel={row.title}
+                            onChange={row.onToggle}
+                          />
+                        }
+                      />
+                    )}
+                  </For>
+                </SettingsOptionCard>
+              </Show>
+            )}
+          </Show>
+        </div>
+      </SettingsSection>
+    </SettingsPageLayout>
   );
 }
