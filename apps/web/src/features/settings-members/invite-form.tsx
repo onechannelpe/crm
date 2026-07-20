@@ -38,7 +38,13 @@ export function InviteForm(props: { setup: InviteManagement }) {
     string | undefined
   >();
 
-  // Keep the selected role valid as the actor's assignable roles change.
+  // Keep the link available when email delivery fails.
+  const [issuedLink, setIssuedLink] = createSignal<{
+    url: string;
+    delivered: boolean;
+  } | null>(null);
+
+  // Reset the role if updated permissions no longer allow it.
   createEffect(
     on(
       () => props.setup,
@@ -66,8 +72,18 @@ export function InviteForm(props: { setup: InviteManagement }) {
     setExpiresAtErrorMessage(undefined);
   }
 
+  async function handleCopyLink(url: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(url);
+      enqueueSuccessSnackBar("Enlace de invitación copiado");
+    } catch {
+      enqueueErrorSnackBar("No se pudo copiar el enlace");
+    }
+  }
+
   async function handleSubmit(event: Event): Promise<void> {
     event.preventDefault();
+    setIssuedLink(null);
 
     const parsedExpiresAt = parseInviteExpiryDate(expiresAt());
 
@@ -77,7 +93,7 @@ export function InviteForm(props: { setup: InviteManagement }) {
     }
 
     try {
-      const { message } = await createInvite({
+      const result = await createInvite({
         names: names(),
         firstSurname: firstSurname(),
         secondSurname: secondSurname(),
@@ -89,7 +105,11 @@ export function InviteForm(props: { setup: InviteManagement }) {
       });
 
       resetForm();
-      enqueueSuccessSnackBar(message);
+      setIssuedLink({
+        url: result.inviteUrl,
+        delivered: result.delivered,
+      });
+      enqueueSuccessSnackBar(result.message);
     } catch (caught: unknown) {
       const wire = parseWireError(caught);
 
@@ -202,6 +222,29 @@ export function InviteForm(props: { setup: InviteManagement }) {
           Enviar invitación
         </Button>
       </div>
+
+      <Show when={issuedLink()}>
+        {(link) => (
+          <div class={styles.issuedLink}>
+            <span class={styles.issuedLinkLabel}>
+              {link().delivered
+                ? "Enlace de invitación"
+                : "Correo no enviado. Comparte este enlace directamente:"}
+            </span>
+
+            <div class={styles.issuedLinkRow}>
+              <span class={styles.issuedLinkUrl}>{link().url}</span>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => void handleCopyLink(link().url)}
+              >
+                Copiar enlace
+              </Button>
+            </div>
+          </div>
+        )}
+      </Show>
     </form>
   );
 }

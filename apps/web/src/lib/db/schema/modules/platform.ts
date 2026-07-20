@@ -12,7 +12,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("email", "text", (col) => col.notNull())
     .addColumn("role", "text", (col) => col.notNull())
-    .addColumn("token_hash", "text", (col) => col.notNull().unique())
+    .addColumn("token", "text", (col) => col.notNull().unique())
     .addColumn("status", "text", (col) => col.notNull())
     .addColumn("expires_at", "timestamptz", (col) => col.notNull())
     .addColumn("created_by_user_id", "uuid", (col) =>
@@ -21,7 +21,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("accepted_at", "timestamptz")
     .addColumn("revoked_at", "timestamptz")
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .addColumn("sent_at", "timestamptz")
+    .addColumn("last_delivered_at", "timestamptz")
     .execute();
 
   await db.schema

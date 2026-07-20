@@ -16,6 +16,7 @@ import { createInviteManagementContext } from "~/server/team/infrastructure/invi
 const HR_BRANCH_ID = TEST_FIXTURES.branches.lima.id;
 const OTHER_BRANCH_ID = TEST_FIXTURES.branches.norte.id;
 const NOW = new Date("2026-07-15T12:00:00.000Z");
+const CONFIGURED_ORIGIN = "https://crm.example.test";
 
 function makeHrContext(): AppContext {
   return {
@@ -40,12 +41,15 @@ function makeHrContext(): AppContext {
 }
 
 async function seedTeam(ctx: TestDbContext, branchId: string, name: string) {
-  const row = await ctx.db
+  return ctx.db
     .insertInto("teams")
-    .values({ branch_id: branchId, name, created_at: NOW })
+    .values({
+      branch_id: branchId,
+      name,
+      created_at: NOW,
+    })
     .returning(["id", "name"])
     .executeTakeFirstOrThrow();
-  return row;
 }
 
 describe("getInviteManagement", () => {
@@ -70,6 +74,7 @@ describe("getInviteManagement", () => {
     ]);
 
     const kit = createInviteTestKit(ctx, { now: () => NOW });
+
     const ownInvite = expectOk(
       await kit.commands.create({
         actorUserId: TEST_FIXTURES.users.superUser.id,
@@ -84,6 +89,7 @@ describe("getInviteManagement", () => {
         teamId: null,
       }),
     );
+
     await kit.commands.create({
       actorUserId: TEST_FIXTURES.users.superUser.id,
       actorRole: "superuser",
@@ -97,21 +103,24 @@ describe("getInviteManagement", () => {
       teamId: null,
     });
 
-    const result = await getInviteManagement(
-      makeHrContext(),
-      createInviteManagementContext(ctx.db),
+    const value = expectOk(
+      await getInviteManagement(
+        makeHrContext(),
+        createInviteManagementContext(ctx.db),
+        CONFIGURED_ORIGIN,
+      ),
     );
 
-    expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected success");
-    const value = result.value;
-
     expect(value.teams).toEqual([{ id: ownTeam.id, name: ownTeam.name }]);
+
     expect(value.pendingInvites).toHaveLength(1);
+
     expect(value.pendingInvites[0]).toMatchObject({
       inviteId: ownInvite.inviteId,
       email: "pending-lima@test.local",
+      inviteUrl: `${CONFIGURED_ORIGIN}/login/invite/${ownInvite.token}`,
     });
+
     expect(value.assignableRoles.length).toBeGreaterThan(0);
   });
 });

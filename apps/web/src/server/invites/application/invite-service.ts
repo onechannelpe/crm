@@ -2,7 +2,7 @@ import { acceptInvite } from "./accept-invite";
 import { createInvite } from "./create-invite";
 import { listPendingInvites } from "./list-pending-invites";
 import { markInviteDelivered } from "./mark-invite-delivered";
-import { resendInvite } from "./resend-invite";
+import { redeliverInvite } from "./redeliver-invite";
 import { revokeInvite } from "./revoke-invite";
 import { createInviteRuntime } from "./runtime";
 import type { InviteDeps, InviteService, InviteServiceDeps } from "./types";
@@ -20,8 +20,8 @@ export function createInviteService(
     createInvite(input) {
       return createInvite(deps, runtime, input);
     },
-    resendInvite(input) {
-      return resendInvite(deps, runtime, input);
+    redeliverInvite(input) {
+      return redeliverInvite(deps, runtime, input);
     },
     revokeInvite(input) {
       return revokeInvite(deps, runtime, input);

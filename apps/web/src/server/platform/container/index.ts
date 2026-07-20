@@ -56,7 +56,7 @@ function createServerRuntime() {
   const avatar = memo(() => createAvatarRuntime(infra, uploadsConfig()));
   const security = memo(() => createSecurityRuntime(infra));
   const search = memo(() => createSearchRuntime(infra));
-  const team = memo(() => createTeamRuntime(infra));
+  const team = memo(() => createTeamRuntime(infra, appConfig().publicOrigin));
   const users = memo(() =>
     createUsersRuntime(infra, auth().sessionService, avatar().avatarService),
   );

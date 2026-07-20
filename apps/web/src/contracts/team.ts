@@ -14,9 +14,10 @@ export interface TeamInvite {
   email: string;
   role: Role;
   teamId: string | null;
+  inviteUrl: string;
   expiresAt: number;
   createdAt: number;
-  sentAt: number | null;
+  lastDeliveredAt: number | null;
 }
 
 export interface TeamOption {

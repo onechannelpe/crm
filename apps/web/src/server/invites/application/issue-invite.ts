@@ -1,4 +1,4 @@
-import { generateInviteToken, hashInviteToken } from "~/lib/auth/invite/tokens";
+import { generateInviteToken } from "~/lib/auth/invite/tokens";
 import { auditEntityId } from "~/server/shared/audit-entity";
 import { addMilliseconds, epochMilliseconds } from "~/server/shared/time";
 
@@ -26,14 +26,14 @@ export async function issueInvite(
     branch_id: input.branchId,
     email: input.email,
     role: input.role,
-    token_hash: hashInviteToken(token),
+    token,
     status: "pending",
     expires_at: expiresAt,
     created_by_user_id: input.actorUserId,
     accepted_at: null,
     revoked_at: null,
     created_at: issuedAt,
-    sent_at: null,
+    last_delivered_at: null,
   });
 
   await repos.events.append({

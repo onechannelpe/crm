@@ -19,7 +19,8 @@ export interface PendingInviteWithUser {
   invite_expires_at: Date;
   invite_created_at: Date;
   invite_created_by_user_id: UserId;
-  invite_sent_at: Date | null;
+  invite_token: string;
+  invite_last_delivered_at: Date | null;
   user_id: UserId;
   user_email: string;
   user_role: UserRole;
@@ -55,7 +56,8 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
           "user_invites.expires_at as invite_expires_at",
           "user_invites.created_at as invite_created_at",
           "user_invites.created_by_user_id as invite_created_by_user_id",
-          "user_invites.sent_at as invite_sent_at",
+          "user_invites.token as invite_token",
+          "user_invites.last_delivered_at as invite_last_delivered_at",
           "users.id as user_id",
           "users.email as user_email",
           "users.role as user_role",
@@ -81,7 +83,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    findPendingByTokenHash(tokenHash: string, now: Date) {
+    findPendingByToken(token: string, now: Date) {
       return db
         .selectFrom("user_invites")
         .innerJoin("users", "users.id", "user_invites.user_id")
@@ -91,7 +93,6 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
           "user_invites.expires_at as invite_expires_at",
           "user_invites.created_at as invite_created_at",
           "user_invites.created_by_user_id as invite_created_by_user_id",
-          "user_invites.sent_at as invite_sent_at",
           "users.id as user_id",
           "users.email as user_email",
           "users.role as user_role",
@@ -103,7 +104,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
           "users.username as user_username",
           "users.is_active as user_is_active",
         ])
-        .where("user_invites.token_hash", "=", tokenHash)
+        .where("user_invites.token", "=", token)
         .where("user_invites.status", "=", "pending")
         .where("user_invites.expires_at", ">", now)
         .executeTakeFirst();
@@ -121,12 +122,12 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    expirePendingBefore(now: Date) {
+    refreshExpiry(inviteId: UserInviteId, expiresAt: Date) {
       return db
         .updateTable("user_invites")
-        .set({ status: "expired" })
+        .set({ expires_at: expiresAt })
+        .where("id", "=", inviteId)
         .where("status", "=", "pending")
-        .where("expires_at", "<=", now)
         .executeTakeFirst();
     },
 
@@ -142,10 +143,10 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    markSent(inviteId: UserInviteId, sentAt: Date) {
+    markDelivered(inviteId: UserInviteId, deliveredAt: Date) {
       return db
         .updateTable("user_invites")
-        .set({ sent_at: sentAt })
+        .set({ last_delivered_at: deliveredAt })
         .where("id", "=", inviteId)
         .executeTakeFirst();
     },

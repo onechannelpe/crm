@@ -6,23 +6,23 @@ import { seedPendingInvite } from "./fixtures";
 
 describe("team invite repository benchmark", () => {
   const db = createBenchDbFixture("bench-team-invite-repository");
-  let tokenHash: string;
+  let token: string;
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    tokenHash = (await seedPendingInvite(ctx)).tokenHash;
+    token = (await seedPendingInvite(ctx)).token;
   });
 
   afterAll(async () => {
     await db.teardown();
   });
 
-  bench("repository path: load pending invite by token hash", async () => {
+  bench("repository path: load pending invite by token", async () => {
     const row = await db
       .ctx()
-      .repos.userInvites.findPendingByTokenHash(tokenHash, BENCH_NOW);
+      .repos.userInvites.findPendingByToken(token, BENCH_NOW);
     if (!row) {
-      throw new Error("expected pending invite row for token hash");
+      throw new Error("expected pending invite row for token");
     }
   });
 });

@@ -30,11 +30,11 @@ export interface InviteDeps {
     | "create"
     | "findLatestPendingByBranch"
     | "findById"
-    | "findPendingByTokenHash"
+    | "findPendingByToken"
     | "revokePendingByUser"
-    | "expirePendingBefore"
+    | "refreshExpiry"
     | "markAccepted"
-    | "markSent"
+    | "markDelivered"
   >;
   events: Pick<EventsRepo, "append">;
 }
@@ -62,10 +62,11 @@ export interface PendingBranchInvite {
   secondSurname: string;
   role: Role;
   teamId: TeamId | null;
+  token: string;
   expiresAt: Date;
   createdAt: Date;
   createdByUserId: UserId;
-  sentAt: Date | null;
+  lastDeliveredAt: Date | null;
 }
 
 export interface CreateInviteInput {
@@ -82,7 +83,7 @@ export interface CreateInviteInput {
   expiresAt?: Date | null;
 }
 
-export interface ResendInviteInput {
+export interface RedeliverInviteInput {
   actorUserId: UserId;
   actorRole: Role;
   branchId: BranchId;
@@ -129,8 +130,8 @@ export interface InviteService {
   createInvite(
     input: CreateInviteInput,
   ): Promise<Result<InviteIssueResult, DomainError>>;
-  resendInvite(
-    input: ResendInviteInput,
+  redeliverInvite(
+    input: RedeliverInviteInput,
   ): Promise<Result<InviteIssueResult, DomainError>>;
   revokeInvite(input: RevokeInviteInput): Promise<Result<void, DomainError>>;
   markInviteDelivered(
@@ -143,6 +144,6 @@ export interface InviteService {
 
 export interface TeamInviteReadRepos {
   teams: Pick<TeamsRepo, "findByBranch">;
-  userInvites: Pick<UserInvitesRepo, "findById" | "findPendingByTokenHash">;
+  userInvites: Pick<UserInvitesRepo, "findById" | "findPendingByToken">;
   users: Pick<UsersRepo, "findById">;
 }
