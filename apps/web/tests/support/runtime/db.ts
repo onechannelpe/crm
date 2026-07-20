@@ -88,7 +88,7 @@ export const TEST_FIXTURES = {
   },
 } as const;
 
-function databaseUrl(name: string): string {
+export function databaseUrl(name: string): string {
   const url = new URL(BASE_URL);
   url.pathname = `/${name}`;
   return url.toString();

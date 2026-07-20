@@ -1,18 +1,18 @@
-# build artifacts
 .nitro
 .solid-start
 .output
 dist
 app.config.timestamp_*.js
 
-# test artifacts
-.vitest-db
+.vite*
 test-results
+playwright-report
 
-# rollup-plugin-visualizer artifacts
+# Written by tests/e2e/global-setup.ts.
+.e2e-manifest.json
+
 stats.*
 
-# data
+# SQLite databases and sidecar files.
 *.db
-# matches .db, .db-shm, .db-wal, .db-journal
 *.db*
