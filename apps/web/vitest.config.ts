@@ -1,7 +1,10 @@
 import path from "node:path";
 
 import codspeedPlugin from "@codspeed/vitest-plugin";
-import { defineConfig, type TestProjectInlineConfiguration } from "vitest/config";
+import {
+  defineConfig,
+  type TestProjectInlineConfiguration,
+} from "vitest/config";
 
 const alias = {
   "~": path.resolve(__dirname, "./src"),
