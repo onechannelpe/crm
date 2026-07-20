@@ -12,8 +12,6 @@ import type {
   WorkflowRateRevisionFileId,
 } from "~/server/shared/ids";
 
-// Each proposal round is stored separately; reads derive the current rate from
-// the latest round for the lead.
 export interface WorkflowRateProposalsTable {
   id: IdColumn<WorkflowRateProposalId>;
   lead_id: IdColumn<WorkflowLeadId>;
@@ -37,7 +35,13 @@ export interface WorkflowRateProposalPoliciesTable {
   updated_by_user_id: IdColumn<UserId>;
 }
 
-// Revision requests stay linked to the proposal round they reject.
+export interface WorkflowPendingQuotationPoliciesTable {
+  branch_id: IdColumn<BranchId>;
+  client_limit: number;
+  updated_at: Date;
+  updated_by_user_id: IdColumn<UserId>;
+}
+
 export interface WorkflowRateRevisionsTable {
   id: IdColumn<WorkflowRateRevisionId>;
   lead_id: IdColumn<WorkflowLeadId>;

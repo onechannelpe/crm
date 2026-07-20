@@ -100,6 +100,7 @@ export interface Database {
   workflow_lead_digital_policy: workflow.WorkflowLeadDigitalPolicyTable;
   workflow_rate_proposals: pricing.WorkflowRateProposalsTable;
   workflow_rate_proposal_policies: pricing.WorkflowRateProposalPoliciesTable;
+  workflow_pending_quotation_policies: pricing.WorkflowPendingQuotationPoliciesTable;
   workflow_rate_revisions: pricing.WorkflowRateRevisionsTable;
   workflow_rate_revision_files: pricing.WorkflowRateRevisionFilesTable;
   workflow_lead_assignments: workflow.WorkflowLeadAssignmentsTable;

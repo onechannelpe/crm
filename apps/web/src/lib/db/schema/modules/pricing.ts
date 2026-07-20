@@ -42,6 +42,18 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("workflow_pending_quotation_policies")
+    .addColumn("branch_id", "uuid", (col) =>
+      col.primaryKey().references("branches.id").onDelete("cascade"),
+    )
+    .addColumn("client_limit", "integer", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_by_user_id", "uuid", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .execute();
+
+  await db.schema
     .createTable("workflow_rate_revisions")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("lead_id", "text", (col) =>

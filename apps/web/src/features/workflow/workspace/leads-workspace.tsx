@@ -5,7 +5,6 @@ import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-b
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import type { LeadListRowView } from "~/contracts/workflow/views";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
@@ -94,11 +93,13 @@ export function LeadsWorkspace() {
     () =>
       canRegister
         ? pendingQuotationCountQuery()
-        : Promise.resolve({ count: 0, limit: MAX_PENDING_QUOTATION_DECISIONS }),
-    { initialValue: { count: 0, limit: MAX_PENDING_QUOTATION_DECISIONS } },
+        : Promise.resolve({ count: 0, limit: null }),
+    { initialValue: { count: 0, limit: null } },
   );
-  const isRegistrationBlocked = () =>
-    pendingQuotations().count >= pendingQuotations().limit;
+  const isRegistrationBlocked = () => {
+    const limit = pendingQuotations().limit;
+    return limit !== null && pendingQuotations().count >= limit;
+  };
 
   const createAction = useCreateLeadRecordAction({
     isBlocked: isRegistrationBlocked,

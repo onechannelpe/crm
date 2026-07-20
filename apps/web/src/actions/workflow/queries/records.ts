@@ -4,7 +4,6 @@ import {
   type ListAssignableExecutivesInput,
   type ListLeadsFiltersInput,
 } from "~/contracts/workflow/inputs";
-import { MAX_PENDING_QUOTATION_DECISIONS } from "~/contracts/workflow/limits";
 import {
   type AssignableExecutiveView,
   type FulfillmentQueueView,
@@ -23,6 +22,7 @@ import { getServerRuntime } from "~/server/platform/container";
 import { UserId, WorkflowLeadId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Ok } from "~/server/shared/result";
+import { resolvePendingQuotationPolicy } from "~/server/workflow/lead/domain/pending-quotation";
 import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 import { listAssignableExecutives } from "~/server/workflow/lead/read/queries/list-assignable-executives";
@@ -128,12 +128,16 @@ export async function queryPendingQuotationCount(): Promise<PendingQuotationCoun
 
     execute: ({ actor }) => {
       const ports = getServerRuntime().workflow.ports();
-      const { userId } = workflowActor(actor);
+      const { userId, branchId } = workflowActor(actor);
       const repos = createWorkflowRepos(ports.executor);
 
-      return repos.leads
-        .countPendingQuotationDecisions(userId, ports.now)
-        .then((count) => Ok({ count, limit: MAX_PENDING_QUOTATION_DECISIONS }));
+      return Promise.all([
+        repos.leads.countPendingQuotationDecisions(userId, ports.now),
+        repos.pendingQuotationPolicies.findByBranchId(branchId),
+      ]).then(([count, branchPolicy]) => {
+        const { limit } = resolvePendingQuotationPolicy({ branchPolicy });
+        return Ok({ count, limit });
+      });
     },
   });
 }
