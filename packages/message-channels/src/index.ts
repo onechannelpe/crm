@@ -1,4 +1,8 @@
 export { createResendProvider } from "./channels/email/resend-client";
+export {
+  createLogProvider,
+  type LoggedMail,
+} from "./channels/email/log-provider";
 export { createKapsoProvider } from "./channels/whatsapp/kapso-proxy";
 export { createWhatsAppCloudProvider } from "./channels/whatsapp/meta-cloud";
 export { createMessageChannels } from "./service";

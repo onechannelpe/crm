@@ -1,3 +1,4 @@
+import type { NotificationChannel } from "@crm/message-channels";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -8,13 +9,10 @@ import type {
   UserId,
 } from "~/server/shared/ids";
 
-export type DeliveryChannel = "email" | "whatsapp";
-export type DeliveryProviderId = "resend" | "whatsapp_cloud" | "kapso";
-
 export interface PlannedDeliveryRow {
   intent_id: NotificationIntentId;
   user_id: UserId;
-  channel: DeliveryChannel;
+  channel: NotificationChannel;
   recipient_address: string;
   title: string;
   body_text: string;
@@ -27,7 +25,7 @@ export interface DeliveryJob {
   max_attempts: number;
   intent_id: NotificationIntentId;
   user_id: UserId;
-  channel: DeliveryChannel;
+  channel: NotificationChannel;
   recipient_address: string;
   title: string;
   body_text: string;

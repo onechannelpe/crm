@@ -1,6 +1,7 @@
 import { createEmailComposer } from "@crm/email-composer";
 import {
   createKapsoProvider,
+  createLogProvider,
   createMessageChannels,
   createResendProvider,
   createWhatsAppCloudProvider,
@@ -121,10 +122,27 @@ export function createNotificationsRuntime(
   config: NotificationsConfig,
   app: AppConfig,
 ): NotificationPipeline {
+  const logger = createLogger("notifications");
   const providers: DeliveryProvider[] = [];
   if (config.resend) {
     providers.push(createResendProvider(config.resend));
   }
+
+  if (Object.values(config.routes).includes("log")) {
+    // `log` route: write the composed email to the log instead of sending it,
+    // for dev and e2e. Invite links no longer depend on capturing this output;
+    // they are retrievable from the invite record and its copy-link.
+    providers.push(
+      createLogProvider((mail) => {
+        logger.info("email.logged", {
+          to: mail.to,
+          subject: mail.subject,
+          text: mail.text,
+        });
+      }),
+    );
+  }
+
   if (config.kapso) {
     providers.push(
       createKapsoProvider({
@@ -134,6 +152,7 @@ export function createNotificationsRuntime(
       }),
     );
   }
+
   if (config.whatsappCloud) {
     providers.push(createWhatsAppCloudProvider(config.whatsappCloud));
   }
@@ -149,6 +168,6 @@ export function createNotificationsRuntime(
     messaging,
     clock: () => new Date(),
     publicOrigin: app.publicOrigin,
-    logger: createLogger("notifications"),
+    logger,
   });
 }

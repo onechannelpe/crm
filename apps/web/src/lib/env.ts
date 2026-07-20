@@ -9,7 +9,9 @@ import {
 
 const SECRET_MIN_LENGTH = 32;
 const SECRET_MIN_UNIQUE_CHARS = 10;
+
 const LOCAL_DEV_DB_URL = "postgres://postgres@localhost:5432/crm";
+
 const SEQUENTIAL_CHARS =
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -32,6 +34,7 @@ export function validateSecret(key: string, value: string): void {
   }
 
   const uniqueChars = new Set(value).size;
+
   if (uniqueChars < SECRET_MIN_UNIQUE_CHARS) {
     throw new Error(
       `${key} has too little entropy (only ${uniqueChars} unique characters)`,
@@ -43,21 +46,29 @@ type EnvSource = Record<string, string | undefined>;
 
 function required(env: EnvSource, key: string, secret = false): string {
   const value = env[key];
+
   if (!value) {
-    let msg = `Missing required env: ${key}`;
+    let message = `Missing required env: ${key}`;
+
     if (secret) {
-      msg += `. Generate one with: openssl rand -base64 32`;
+      message += ". Generate one with: openssl rand -base64 32";
     }
-    throw new Error(msg);
+
+    throw new Error(message);
   }
+
   try {
-    if (secret) validateSecret(key, value);
-  } catch (e) {
-    if (e instanceof Error) {
-      e.message += ". Generate a new one with: openssl rand -base64 32";
+    if (secret) {
+      validateSecret(key, value);
     }
-    throw e;
+  } catch (error) {
+    if (error instanceof Error) {
+      error.message += ". Generate a new one with: openssl rand -base64 32";
+    }
+
+    throw error;
   }
+
   return value;
 }
 
@@ -72,6 +83,7 @@ function optionalEnum<const T extends readonly string[]>(
   fallback: T[number],
 ): T[number] {
   const value = env[key];
+
   if (!value) {
     return fallback;
   }
@@ -137,6 +149,7 @@ function parseAppEnv(source: EnvSource) {
 
 function parsePublicOrigin(raw: string): string {
   let url: URL;
+
   try {
     url = new URL(raw);
   } catch {
@@ -168,6 +181,7 @@ function parseUploadsEnv(source: EnvSource) {
 
 function parseDatabaseEnv(source: EnvSource) {
   const configuredUrl = source["WEB_DB_URL"]?.trim();
+
   if (configuredUrl) {
     return { url: configuredUrl } as const;
   }
@@ -212,9 +226,13 @@ function parseNotificationRoutes(source: EnvSource): NotificationRoutes {
 
   for (const segment of raw.split(",")) {
     const trimmed = segment.trim();
-    if (!trimmed) continue;
+
+    if (!trimmed) {
+      continue;
+    }
 
     const [channel, provider, extra] = trimmed.split(":");
+
     if (!channel || !provider || extra !== undefined) {
       throw new Error(
         "NOTIFICATION_ROUTES entries must use channel:provider format",
@@ -233,22 +251,11 @@ function parseNotificationRoutes(source: EnvSource): NotificationRoutes {
       throw new Error(`Duplicate notification route for channel: ${channel}`);
     }
 
-    switch (channel) {
-      case "email":
-        if (provider !== "resend") {
-          throw routeProviderMismatch(channel, provider);
-        }
-        routes.email = provider;
-        break;
-      case "whatsapp":
-        if (provider === "resend") {
-          throw routeProviderMismatch(channel, provider);
-        }
-        routes.whatsapp = provider;
-        break;
-      default:
-        channel satisfies never;
+    if (deliveryProviderChannel(provider) !== channel) {
+      throw routeProviderMismatch(channel, provider);
     }
+
+    Object.assign(routes, { [channel]: provider });
   }
 
   return routes;
@@ -259,6 +266,7 @@ function routeProviderMismatch(
   provider: DeliveryProviderId,
 ): Error {
   const providerChannel = deliveryProviderChannel(provider);
+
   return new Error(
     `Notification route ${channel}:${provider} cannot use a ${providerChannel} provider`,
   );
@@ -312,10 +320,8 @@ function parseNotificationsEnv(source: EnvSource) {
       "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
       true,
     ),
-    // Optional: only required for the POST signature check. The GET handshake
-    // works without it, so a missing secret should not crash boot. The
-    // signature verifier treats an empty string as "always fail", which is
-    // the safe default until the secret is set.
+
+    // Empty means signature verification always fails; the handshake still works.
     kapsoWebhookSecret: source["KAPSO_WEBHOOK_SECRET"] ?? "",
   } as const;
 }
@@ -330,6 +336,7 @@ function sentryIngestHostFromDsn(dsn: string): string {
 
 function parseSentryEnv(source: EnvSource) {
   const sentryDsn = optional(source, "VITE_SENTRY_DSN", "");
+
   return {
     sentryDsn,
     sentryIngestHost: sentryDsn ? sentryIngestHostFromDsn(sentryDsn) : "",
@@ -354,11 +361,17 @@ export function loadServerEnv(source: EnvSource) {
   } as const;
 }
 
+// Tests read process.env on every call. Other environments parse it once.
 function section<T>(parse: (source: EnvSource) => T): () => T {
   let cached: T | undefined;
+
   return () => {
-    if (process.env.NODE_ENV === "test") return parse(process.env);
+    if (process.env.NODE_ENV === "test") {
+      return parse(process.env);
+    }
+
     cached ??= parse(process.env);
+
     return cached;
   };
 }
