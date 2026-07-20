@@ -10,7 +10,8 @@ export async function migrateToLatest(db: Kysely<any>) {
   if (stored === hash) return;
   if (stored !== null) {
     throw new Error(
-      "Schema changed since DB was built.\n  ⇢ Delete crm.db and rebuild the application",
+      "Schema changed since the database was built.\n" +
+        "  ⇢ Drop and recreate the database, then run `bun run migrate && bun run seed`",
     );
   }
 

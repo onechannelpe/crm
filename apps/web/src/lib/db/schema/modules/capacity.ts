@@ -14,6 +14,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createIndex("idx_search_policy_scope")
+    .unique()
     .on("search_policy_defaults")
     .columns(["scope_type", "scope_id"])
     .execute();
@@ -50,6 +51,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createIndex("idx_lead_policy_scope")
+    .unique()
     .on("lead_policy_defaults")
     .columns(["scope_type", "scope_id"])
     .execute();

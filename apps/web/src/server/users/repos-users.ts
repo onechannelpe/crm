@@ -11,13 +11,6 @@ type UserNameRow = {
   second_surname: string;
 };
 
-type AssignableExecutiveRow = {
-  id: UserId;
-  names: string;
-  first_surname: string;
-  second_surname: string;
-};
-
 export type MemberRosterRow = {
   id: UserId;
   names: string;
@@ -70,7 +63,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
       branchId?: BranchId;
       search?: string;
       limit: number;
-    }): Promise<AssignableExecutiveRow[]> {
+    }): Promise<UserNameRow[]> {
       let query = db
         .selectFrom("users")
         .select(["id", "names", "first_surname", "second_surname"])
@@ -83,8 +76,10 @@ export function createUsersRepo(db: DatabaseExecutor) {
       }
 
       const term = input.search?.trim().toLowerCase();
+
       if (term) {
         const pattern = `%${term}%`;
+
         query = query.where((eb) =>
           eb.or([
             eb(eb.fn("lower", ["names"]), "like", pattern),
@@ -144,8 +139,10 @@ export function createUsersRepo(db: DatabaseExecutor) {
     },
 
     findActiveIdsByBranchAndRoles(branchId: BranchId, roles: UserRole[]) {
-      if (roles.length === 0)
+      if (roles.length === 0) {
         return Promise.resolve([] as Array<{ id: UserId }>);
+      }
+
       return db
         .selectFrom("users")
         .select("id")
@@ -204,22 +201,25 @@ export function createUsersRepo(db: DatabaseExecutor) {
       role: UserRole;
       executive_category?: ExecutiveCategoryValue | null;
       is_active: boolean;
-    }): Promise<UserId> {
-      const result = await db
-        .insertInto("users")
-        .values({
-          ...values,
-          expires_at: values.expires_at ?? null,
-          expiry_notified_at: null,
-          is_active: values.is_active,
-          executive_category: values.executive_category ?? null,
-          password_change_required: false,
-          onboarding_completed_at: null,
-          created_at: new Date(),
-        })
-        .returning("id")
-        .executeTakeFirstOrThrow();
-      return result.id;
+    }) {
+      return (
+        db
+          .insertInto("users")
+          .values({
+            ...values,
+            expires_at: values.expires_at ?? null,
+            expiry_notified_at: null,
+            is_active: values.is_active,
+            executive_category: values.executive_category ?? null,
+            password_change_required: false,
+            onboarding_completed_at: null,
+            created_at: new Date(),
+          })
+          // A unique conflict must not abort the caller's transaction.
+          .onConflict((oc) => oc.doNothing())
+          .returningAll()
+          .executeTakeFirst()
+      );
     },
 
     updatePassword(id: UserId, passwordHash: string) {
@@ -233,7 +233,10 @@ export function createUsersRepo(db: DatabaseExecutor) {
     replaceInstallationPassword(id: UserId, passwordHash: string) {
       return db
         .updateTable("users")
-        .set({ password_hash: passwordHash, password_change_required: false })
+        .set({
+          password_hash: passwordHash,
+          password_change_required: false,
+        })
         .where("id", "=", id)
         .execute();
     },
@@ -316,7 +319,10 @@ export function createUsersRepo(db: DatabaseExecutor) {
     updateExpiry(id: UserId, expiresAt: Date | null) {
       return db
         .updateTable("users")
-        .set({ expires_at: expiresAt, expiry_notified_at: null })
+        .set({
+          expires_at: expiresAt,
+          expiry_notified_at: null,
+        })
         .where("id", "=", id)
         .execute();
     },
@@ -395,7 +401,8 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .where("is_active", "=", true)
         .returning("id")
         .execute();
-      return rows.map((r) => r.id);
+
+      return rows.map((row) => row.id);
     },
 
     async deactivateIfExpired(userId: UserId, now: Date): Promise<boolean> {
