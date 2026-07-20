@@ -3,6 +3,14 @@
 Culqi360 is Infinity's internal sales CRM. It combines lead management, sales
 workflows, merchant performance reporting, search, and call handling.
 
+<p align="center">
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/web.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/web.yml/badge.svg?branch=master" alt="Web workflow status"></a>
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/engine.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/engine.yml/badge.svg?branch=master" alt="Engine workflow status"></a>
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/pipeline.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/pipeline.yml/badge.svg?branch=master" alt="Pipeline workflow status"></a>
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/extension.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/extension.yml/badge.svg?branch=master" alt="Extension workflow status"></a>
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/contracts.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/contracts.yml/badge.svg?branch=master" alt="Contracts workflow status"></a>
+</p>
+
 This repository contains four main components:
 
 - [`apps/web/`](apps/web/) serves the Culqi360 UI, API routes, and maintenance
