@@ -63,7 +63,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .selectFrom("users")
         .select(["id", "names", "first_surname", "second_surname"])
         .where("id", "in", ids)
-        .execute() as Promise<UserNameRow[]>;
+        .execute();
     },
 
     findAssignableExecutives(input: {

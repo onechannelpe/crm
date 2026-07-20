@@ -19,7 +19,7 @@ async function extractEngineErrorPayload(
       return null;
     }
 
-    return json as EngineErrorPayload;
+    return json;
   } catch {
     // Malformed engine error bodies fall back to the HTTP status below.
     return null;

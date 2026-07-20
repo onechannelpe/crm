@@ -89,7 +89,7 @@ function optionalEnum<const T extends readonly string[]>(
   }
 
   if ((values as readonly string[]).includes(value)) {
-    return value as T[number];
+    return value;
   }
 
   throw new Error(`${key} must be one of: ${values.join(", ")}`);

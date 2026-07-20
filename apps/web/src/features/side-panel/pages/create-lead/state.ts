@@ -31,7 +31,7 @@ export function useCreateLeadPageState() {
     key: K,
     value: CommercialScopeFormValues[K],
   ) {
-    patchDraft({ [key]: value } as Partial<LeadRecordDraftState>);
+    patchDraft({ [key]: value });
   }
 
   const draftRuc = createMemo(() => pageState().draft.ruc);

@@ -433,7 +433,7 @@ function normalizeMaterialSettings(
 }
 
 const DEFAULT_HALFTONE_SETTINGS: HalftoneStudioSettings = {
-  sourceMode: "shape" as HalftoneSourceMode,
+  sourceMode: "shape",
   shapeKey: "torusKnot",
   lighting: { ...DEFAULT_SOLID_LIGHTING_SETTINGS },
   material: {

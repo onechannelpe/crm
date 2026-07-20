@@ -17,7 +17,7 @@ function getArgon2Module(): Promise<Argon2Module> {
     argon2ModulePromise = import(
       /* @vite-ignore */
       "@node-rs/argon2"
-    ) as Promise<Argon2Module>;
+    );
   }
   return argon2ModulePromise;
 }

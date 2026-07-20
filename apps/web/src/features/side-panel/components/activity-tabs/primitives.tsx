@@ -50,9 +50,7 @@ export function ActivityListRow(
         <button
           type="button"
           class={cn(styles.listRow, styles.listRowClickable)}
-          onClick={
-            onClick() as JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>
-          }
+          onClick={onClick()}
         >
           {props.children}
         </button>

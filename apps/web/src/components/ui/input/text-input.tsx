@@ -25,10 +25,7 @@ const SIZE_CLASS: Record<TextInputSize, string> = {
 };
 
 export function TextInput(props: TextInputProps) {
-  const withDefaults = mergeProps(
-    { sizeVariant: "lg" as TextInputSize },
-    props,
-  );
+  const withDefaults = mergeProps({ sizeVariant: "lg" as const }, props);
   const [local, native] = splitProps(withDefaults, [
     "class",
     "onChange",

@@ -157,14 +157,14 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .where("lead.id", "=", id)
         .where("lead.deleted_at", "is", null)
         .executeTakeFirst();
-      return row ? toLead(row as LeadWithOrganizationRow) : undefined;
+      return row ? toLead(row) : undefined;
     },
 
     async findByIdIncludingDeleted(id: WorkflowLeadId) {
       const row = await selectLeadWithOrganization
         .where("lead.id", "=", id)
         .executeTakeFirst();
-      return row ? toLead(row as LeadWithOrganizationRow) : undefined;
+      return row ? toLead(row) : undefined;
     },
 
     async findCommercialScope(
@@ -203,7 +203,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .where("lead.deleted_at", "is", null)
         .where("lead.stage", "!=", "EXPIRED")
         .executeTakeFirst();
-      return row ? toLead(row as LeadWithOrganizationRow) : undefined;
+      return row ? toLead(row) : undefined;
     },
 
     async findByRucMany(rucs: string[]): Promise<LeadState[]> {

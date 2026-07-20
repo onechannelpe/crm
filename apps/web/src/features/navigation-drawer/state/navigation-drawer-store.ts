@@ -76,10 +76,7 @@ export function createNavigationDrawerStore(
 
   const setExpanded: NavigationDrawerStateValue["setExpanded"] = (value) => {
     const previous = expanded();
-    const next =
-      typeof value === "function"
-        ? (value as (current: boolean) => boolean)(previous)
-        : value;
+    const next = typeof value === "function" ? value(previous) : value;
 
     setExpandedSignal(next);
   };
@@ -87,10 +84,7 @@ export function createNavigationDrawerStore(
   const setAdvancedModeEnabled: NavigationDrawerStateValue["setAdvancedModeEnabled"] =
     (value) => {
       const previous = advancedModeEnabled();
-      const next =
-        typeof value === "function"
-          ? (value as (current: boolean) => boolean)(previous)
-          : value;
+      const next = typeof value === "function" ? value(previous) : value;
       setAdvancedModeEnabledSignal(next);
     };
 

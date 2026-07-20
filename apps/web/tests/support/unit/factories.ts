@@ -1,4 +1,3 @@
-import type { Role } from "~/lib/auth/access/rbac";
 import type { AuthSession } from "~/lib/auth/access/session-types";
 import type { AppContext } from "~/server/platform/action/context";
 import { BranchId, UserId } from "~/server/shared/ids";
@@ -10,7 +9,7 @@ export function makeAuthSession(
     id: "test-session-id",
     userId: UserId.trust("unit-user"),
     branchId: BranchId.trust("unit-branch"),
-    role: "executive" as Role,
+    role: "executive",
     sessionClass: "app",
     primaryAuthMethod: "password",
     strongAuthMethod: null,
