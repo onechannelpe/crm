@@ -28,31 +28,44 @@ export async function completeFactorEnrollment(
     return Err(fail("invalid_input"));
   }
 
-  const enrolledAt = ctx.now();
+  const now = ctx.now();
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
-    if (!user) return Err(fail("user_not_found"));
+
+    if (!user) {
+      return Err(fail("user_not_found"));
+    }
 
     switch (factor.method) {
       case "passkey": {
         const persisted = await persistVerifiedPasskeyEnrollment(
           repos,
           factor.enrollment,
-          enrolledAt,
+          now,
         );
-        if (isErr(persisted)) return persisted;
+
+        if (isErr(persisted)) {
+          return persisted;
+        }
+
         break;
       }
+
       case "totp": {
         const persisted = await persistVerifiedTotpEnrollment(
           repos,
           factor.enrollment,
-          enrolledAt,
+          now,
         );
-        if (isErr(persisted)) return persisted;
+
+        if (isErr(persisted)) {
+          return persisted;
+        }
+
         break;
       }
+
       default:
         factor satisfies never;
     }
@@ -60,20 +73,24 @@ export async function completeFactorEnrollment(
     const recoveryCodes = await issueRecoveryCodesForEnrollment(
       repos,
       user.id,
-      enrolledAt,
+      now,
     );
+
     const sessionToken = await replaceSession(repos, {
       current: ctx.actor,
       user,
       sessionClass:
         recoveryCodes.length > 0 ? "recovery_setup" : ctx.actor.sessionClass,
       strongAuthMethod: factor.method,
-      strongAuthAt: enrolledAt,
+      strongAuthAt: now,
       ipAddress: ctx.ipAddress,
       userAgent: ctx.userAgent,
-      issuedAt: enrolledAt,
+      issuedAt: now,
     });
 
-    return Ok({ recoveryCodes, sessionToken });
+    return Ok({
+      recoveryCodes,
+      sessionToken,
+    });
   });
 }
