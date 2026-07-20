@@ -12,7 +12,7 @@ import type { Page } from "~/contracts/merchant-stats/views";
 
 export const GPV_GRID_PAGE_SIZE = 60;
 
-interface DashboardGridConfig<Raw, Row extends { id: string }> {
+interface DashboardGridConfig<Raw, Row> {
   pageSize: number;
   resetOn: Accessor<unknown>;
   load: (page: Page) => Promise<ReadonlyArray<Raw>>;
@@ -26,7 +26,7 @@ interface DashboardGrid<Row> {
   onLoadMore: () => void;
 }
 
-export function useDashboardGrid<Raw, Row extends { id: string }>(
+export function useDashboardGrid<Raw, Row>(
   config: DashboardGridConfig<Raw, Row>,
 ): DashboardGrid<Row> {
   const [pageCount, setPageCount] = createSignal(1);

@@ -1,10 +1,11 @@
-import type { Component, JSX } from "solid-js";
+import type { JSX } from "solid-js";
 
-type DataGridIconProps = {
-  size?: number | string;
-};
+import type {
+  TableColumn,
+  TableIcon,
+} from "~/components/ui/layout/table-column";
 
-export type DataGridIcon = Component<DataGridIconProps>;
+export type DataGridIcon = TableIcon;
 
 // Editor calls close() on commit; the grid only positions the editor and
 // tracks the open cell.
@@ -13,16 +14,7 @@ export type DataGridColumnEdit<T> = {
   renderEditor: (args: { row: T; close: () => void }) => JSX.Element;
 };
 
-export type DataGridColumn<T> = {
-  key: string;
-  label: string;
-  icon?: DataGridIcon;
-  width?: number;
-  minWidth?: number;
-  maxWidth?: number;
-  grow?: boolean;
-  sticky?: boolean;
-  renderCell: (row: T) => JSX.Element;
+export type DataGridColumn<T> = TableColumn<T> & {
   edit?: DataGridColumnEdit<T>;
 };
 
