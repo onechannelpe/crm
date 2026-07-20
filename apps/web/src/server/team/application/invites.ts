@@ -30,9 +30,6 @@ export interface CreateTeamInviteResult {
   delivered: boolean;
 }
 
-// Best-effort email delivery: a failed send never invalidates the invite. The
-// durable link is already minted and returned, so the admin can hand it over
-// with copy-link even when email bounces. Returns whether the send landed.
 async function deliverInviteEmail(
   inviteService: Pick<InviteService, "markInviteDelivered">,
   params: {
@@ -51,19 +48,26 @@ async function deliverInviteEmail(
     inviteUrl: params.inviteUrl,
     expiresAt: params.expiresAt,
   });
+
   if (isErr(sent)) {
     logger.error("invite.email_delivery_failed", {
       inviteId: params.inviteId,
       code: sent.error.code,
     });
+
     return false;
   }
 
   const marked = await inviteService.markInviteDelivered(params.inviteId);
+
   if (isErr(marked)) {
-    logger.error("invite.mark_delivered_failed", { inviteId: params.inviteId });
+    logger.error("invite.mark_delivered_failed", {
+      inviteId: params.inviteId,
+    });
+
     return false;
   }
+
   return true;
 }
 
@@ -75,9 +79,11 @@ export async function getInviteInfo(input: {
     input.token,
     new Date(),
   );
+
   if (!invite) {
     return Ok(null);
   }
+
   return Ok({
     fullName: `${invite.user_names} ${invite.user_first_surname} ${invite.user_second_surname}`,
     username: invite.user_username,
@@ -94,6 +100,7 @@ export async function getInviteManagement(
     port.listTeamsByBranch(ctx.actor.branchId),
     port.listPendingInvites(ctx.actor.branchId),
   ]);
+
   if (isErr(pendingInvites)) {
     return pendingInvites;
   }
@@ -135,7 +142,7 @@ export async function createTeamInvite(
 ): Promise<Result<CreateTeamInviteResult, DomainError>> {
   await deps.enforceInviteCreateRateLimit(ctx.actor.userId);
 
-  const result = await deps.inviteService.createInvite({
+  const created = await deps.inviteService.createInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
     branchId: ctx.actor.branchId,
@@ -148,13 +155,15 @@ export async function createTeamInvite(
     teamId: input.teamId,
     expiresAt: input.expiresAt,
   });
-  if (isErr(result)) {
-    return result;
+
+  if (isErr(created)) {
+    return created;
   }
 
-  const inviteUrl = inviteLink(deps.publicOrigin, result.value.token);
+  const inviteUrl = inviteLink(deps.publicOrigin, created.value.token);
+
   const delivered = await deliverInviteEmail(deps.inviteService, {
-    inviteId: result.value.inviteId,
+    inviteId: created.value.inviteId,
     email: input.email,
     fullName: shortName({
       names: input.names,
@@ -163,11 +172,11 @@ export async function createTeamInvite(
     }),
     role: input.role,
     inviteUrl,
-    expiresAt: result.value.expiresAt,
+    expiresAt: created.value.expiresAt,
   });
 
   return Ok({
-    inviteId: result.value.inviteId,
+    inviteId: created.value.inviteId,
     email: input.email,
     inviteUrl,
     delivered,
@@ -179,29 +188,34 @@ export async function resendTeamInvite(
   deps: TeamInviteResendContext,
   input: { inviteId: UserInviteId },
 ): Promise<Result<{ delivered: boolean }, DomainError>> {
-  const result = await deps.inviteService.redeliverInvite({
+  const redelivered = await deps.inviteService.redeliverInvite({
     actorUserId: ctx.actor.userId,
     actorRole: ctx.actor.role,
     branchId: ctx.actor.branchId,
     inviteId: input.inviteId,
   });
-  if (isErr(result)) {
-    return result;
+
+  if (isErr(redelivered)) {
+    return redelivered;
   }
 
-  const invite = await deps.repos.userInvites.findById(result.value.inviteId);
+  const invite = await deps.repos.userInvites.findById(
+    redelivered.value.inviteId,
+  );
+
   const user = invite ? await deps.repos.users.findById(invite.user_id) : null;
+
   if (!user) {
     return Err(fail("invite_target_missing"));
   }
 
   const delivered = await deliverInviteEmail(deps.inviteService, {
-    inviteId: result.value.inviteId,
+    inviteId: redelivered.value.inviteId,
     email: user.email,
     fullName: shortName(user),
     role: user.role,
-    inviteUrl: inviteLink(deps.publicOrigin, result.value.token),
-    expiresAt: result.value.expiresAt,
+    inviteUrl: inviteLink(deps.publicOrigin, redelivered.value.token),
+    expiresAt: redelivered.value.expiresAt,
   });
 
   return Ok({ delivered });
