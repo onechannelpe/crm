@@ -14,9 +14,7 @@ import type { PendingQuotationPolicyRepository } from "../pending-quotation-poli
 export async function updatePendingQuotationPolicy(
   input: {
     actor: WorkflowActor;
-    enabled: boolean;
-    limit: number;
-  },
+  } & ({ enabled: false } | { enabled: true; limit: number }),
   ports: {
     pendingQuotationPolicies: PendingQuotationPolicyRepository;
     now: Date;
@@ -26,27 +24,27 @@ export async function updatePendingQuotationPolicy(
     return Err(forbidden());
   }
 
-  // Enabling with a non-positive value is contradictory: disabling is expressed
-  // by enabled=false, which stores 0.
+  // Zero disables the policy; an enabled policy requires a positive limit.
   if (input.enabled && input.limit < 1) {
     return Err(fail("invalid_pending_quotation_limit"));
   }
 
-  const target = input.enabled ? input.limit : 0;
-  const validated = validatePendingQuotationLimit(target);
-  if (!validated.ok) {
-    return validated;
+  const targetLimit = input.enabled ? input.limit : 0;
+  const validatedLimit = validatePendingQuotationLimit(targetLimit);
+
+  if (!validatedLimit.ok) {
+    return validatedLimit;
   }
 
   await ports.pendingQuotationPolicies.upsert({
     branchId: input.actor.branchId,
-    clientLimit: validated.value,
+    clientLimit: validatedLimit.value,
     updatedAt: ports.now,
     updatedByUserId: input.actor.userId,
   });
 
   return Ok({
     branchId: input.actor.branchId,
-    clientLimit: validated.value,
+    clientLimit: validatedLimit.value,
   });
 }

@@ -15,12 +15,6 @@
   gap: 12px;
 }
 
-.topBarActions {
-  display: flex;
-  align-items: center;
-  gap: var(--t-spacing-2);
-}
-
 .numberGrid {
   display: grid;
   gap: 12px;

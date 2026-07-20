@@ -4,7 +4,7 @@ import {
   useAction,
   useSubmission,
 } from "@solidjs/router";
-import { createMemo, Show } from "solid-js";
+import { Show, createUniqueId, type Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
@@ -45,99 +45,56 @@ export const route = {
   },
 } satisfies RouteDefinition;
 
-function QuotationPoliciesForm(props: {
-  rate: RateProposalPolicySnapshot;
-  pending: PendingQuotationPolicySnapshot;
+function RateProposalPolicyEditor(props: {
+  snapshot: Accessor<RateProposalPolicySnapshot>;
 }) {
-  const updateRate = useAction(updateRateProposalPolicyMutation);
-  const updatePending = useAction(updatePendingQuotationPolicyMutation);
-  const rateSubmission = useSubmission(updateRateProposalPolicyMutation);
-  const pendingSubmission = useSubmission(updatePendingQuotationPolicyMutation);
+  const initialSnapshot = props.snapshot();
+  const updatePolicy = useAction(updateRateProposalPolicyMutation);
+  const submission = useSubmission(updateRateProposalPolicyMutation);
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
-
+  const formId = createUniqueId();
   const [draft, setDraft] = createStore({
-    validityDays: props.rate.validityDays,
-    enabled: props.pending.enabled,
-    limit: props.pending.limit,
+    validityDays: initialSnapshot.validityDays,
   });
 
-  const rateDirty = () => draft.validityDays !== props.rate.validityDays;
-  const pendingDirty = () =>
-    draft.enabled !== props.pending.enabled ||
-    draft.limit !== props.pending.limit;
-  const isDirty = () => rateDirty() || pendingDirty();
-  const isSaving = () => rateSubmission.pending || pendingSubmission.pending;
-
-  function reset() {
-    setDraft({
-      validityDays: props.rate.validityDays,
-      enabled: props.pending.enabled,
-      limit: props.pending.limit,
-    });
-  }
-
-  async function save() {
-    const updates: Promise<unknown>[] = [];
-
-    if (rateDirty()) {
-      updates.push(
-        updateRate({
-          validityDays: draft.validityDays,
-        }),
-      );
-    }
-
-    if (pendingDirty()) {
-      // Disabled still needs a valid limit for parsing; the server stores 0.
-      const limit = draft.enabled ? draft.limit : props.pending.suggestedLimit;
-
-      updates.push(
-        updatePending({
-          enabled: draft.enabled,
-          limit,
-        }),
-      );
-    }
+  async function handleSubmit(event: SubmitEvent) {
+    event.preventDefault();
 
     try {
-      await Promise.all(updates);
-      enqueueSuccessSnackBar("Cambios guardados");
+      await updatePolicy({
+        validityDays: draft.validityDays,
+      });
+
+      enqueueSuccessSnackBar("Vigencia actualizada");
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   }
 
   return (
-    <SettingsPageLayout
-      actionButton={
-        <div class={styles.topBarActions}>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            disabled={!isDirty() || isSaving()}
-            onClick={reset}
-          >
-            Cancelar
-          </Button>
-
-          <Button
-            type="button"
-            size="sm"
-            loading={isSaving()}
-            disabled={!isDirty()}
-            onClick={() => void save()}
-          >
-            Guardar
-          </Button>
-        </div>
+    <SettingsSection
+      title="Vigencia de propuestas"
+      actions={
+        <Button
+          type="submit"
+          form={formId}
+          size="sm"
+          variant="secondary"
+          loading={submission.pending}
+        >
+          Guardar
+        </Button>
       }
     >
-      <SettingsSection title="Vigencia de propuestas">
+      <form
+        id={formId}
+        class={styles.stack}
+        onSubmit={(event) => void handleSubmit(event)}
+      >
         <SettingsOptionCard>
           <SettingsOptionCardRow
             title="Vigencia de propuesta"
-            description={`Días que tiene el ejecutivo para aceptar una tarifa propuesta. Predeterminado del sistema: ${props.rate.defaultValidityDays} días.`}
+            description={`Días que tiene el ejecutivo para aceptar una tarifa propuesta. Predeterminado del sistema: ${props.snapshot().defaultValidityDays} días.`}
             control={
               <SettingsCounter
                 ariaLabel="Vigencia de propuesta (días)"
@@ -150,16 +107,74 @@ function QuotationPoliciesForm(props: {
           />
         </SettingsOptionCard>
 
-        <Show when={props.rate.updatedAt}>
+        <Show when={props.snapshot().updatedAt}>
           {(updatedAt) => (
             <p class={styles.helperText}>
               Última actualización: {formatDateTime(updatedAt())}.
             </p>
           )}
         </Show>
-      </SettingsSection>
+      </form>
+    </SettingsSection>
+  );
+}
 
-      <SettingsSection title="Clientes pendientes por ejecutivo">
+function PendingQuotationPolicyEditor(props: {
+  snapshot: Accessor<PendingQuotationPolicySnapshot>;
+}) {
+  const initialSnapshot = props.snapshot();
+  const updatePolicy = useAction(updatePendingQuotationPolicyMutation);
+  const submission = useSubmission(updatePendingQuotationPolicyMutation);
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
+  const formId = createUniqueId();
+  const [draft, setDraft] = createStore({
+    enabled: initialSnapshot.enabled,
+    limit: initialSnapshot.limit,
+  });
+
+  async function handleSubmit(event: SubmitEvent) {
+    event.preventDefault();
+
+    try {
+      await updatePolicy(
+        draft.enabled
+          ? {
+              enabled: true,
+              limit: draft.limit,
+            }
+          : {
+              enabled: false,
+            },
+      );
+
+      enqueueSuccessSnackBar(
+        draft.enabled ? "Límite actualizado" : "Límite desactivado",
+      );
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    }
+  }
+
+  return (
+    <SettingsSection
+      title="Clientes pendientes por ejecutivo"
+      actions={
+        <Button
+          type="submit"
+          form={formId}
+          size="sm"
+          variant="secondary"
+          loading={submission.pending}
+        >
+          Guardar
+        </Button>
+      }
+    >
+      <form
+        id={formId}
+        class={styles.stack}
+        onSubmit={(event) => void handleSubmit(event)}
+      >
         <SettingsOptionCard>
           <SettingsOptionCardRow
             interactive
@@ -191,46 +206,38 @@ function QuotationPoliciesForm(props: {
           </Show>
         </SettingsOptionCard>
 
-        <Show when={props.pending.updatedAt}>
+        <Show when={props.snapshot().updatedAt}>
           {(updatedAt) => (
             <p class={styles.helperText}>
               Última actualización: {formatDateTime(updatedAt())}.
             </p>
           )}
         </Show>
-      </SettingsSection>
-    </SettingsPageLayout>
+      </form>
+    </SettingsSection>
   );
 }
 
 export default function QuotationPoliciesPage() {
-  const rate = createAsync(() => rateProposalPolicyQuery(), {
+  const rateProposalPolicy = createAsync(() => rateProposalPolicyQuery(), {
     initialValue: null,
   });
-  const pending = createAsync(() => pendingQuotationPolicyQuery(), {
-    initialValue: null,
-  });
-
-  const snapshot = createMemo(() => {
-    const rateValue = rate();
-    const pendingValue = pending();
-
-    return rateValue && pendingValue
-      ? {
-          rate: rateValue,
-          pending: pendingValue,
-        }
-      : null;
-  });
+  const pendingQuotationPolicy = createAsync(
+    () => pendingQuotationPolicyQuery(),
+    {
+      initialValue: null,
+    },
+  );
 
   return (
-    <Show
-      when={snapshot()}
-      fallback={<SettingsPageLayout>{null}</SettingsPageLayout>}
-    >
-      {(data) => (
-        <QuotationPoliciesForm rate={data().rate} pending={data().pending} />
-      )}
-    </Show>
+    <SettingsPageLayout>
+      <Show when={rateProposalPolicy()}>
+        {(snapshot) => <RateProposalPolicyEditor snapshot={snapshot} />}
+      </Show>
+
+      <Show when={pendingQuotationPolicy()}>
+        {(snapshot) => <PendingQuotationPolicyEditor snapshot={snapshot} />}
+      </Show>
+    </SettingsPageLayout>
   );
 }

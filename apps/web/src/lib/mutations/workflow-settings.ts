@@ -1,6 +1,9 @@
 import { action, json } from "@solidjs/router";
 
-import { savePendingQuotationPolicy } from "~/actions/workflow/settings/pending-quotation-policy";
+import {
+  savePendingQuotationPolicy,
+  type SavePendingQuotationPolicyInput,
+} from "~/actions/workflow/settings/pending-quotation-policy";
 import { saveRateProposalPolicy } from "~/actions/workflow/settings/rate-proposal-policy";
 import {
   pendingQuotationPolicyQuery,
@@ -18,7 +21,7 @@ export const updateRateProposalPolicyMutation = action(
 );
 
 export const updatePendingQuotationPolicyMutation = action(
-  async (input: { enabled: boolean; limit: number }) => {
+  async (input: SavePendingQuotationPolicyInput) => {
     const result = await savePendingQuotationPolicy(input);
     return json(result, {
       revalidate: [pendingQuotationPolicyQuery.key],

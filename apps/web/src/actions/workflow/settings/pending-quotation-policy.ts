@@ -31,21 +31,29 @@ export async function queryPendingQuotationPolicy() {
   });
 }
 
-export async function savePendingQuotationPolicy(input: {
-  enabled: boolean;
-  limit: number;
-}) {
+// Disabled policies have no limit, so the client does not send one.
+export type SavePendingQuotationPolicyInput =
+  | { enabled: false }
+  | { enabled: true; limit: number };
+
+export async function savePendingQuotationPolicy(
+  input: SavePendingQuotationPolicyInput,
+) {
   return runAction({
     name: "workflow.update_pending_quotation_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
 
     parse: () =>
-      parseObject(input, validationFail, (r) => ({
-        enabled: r.bool("enabled"),
-        limit: r.posInt("limit"),
-      })),
+      parseObject(input, validationFail, (r) =>
+        r.bool("enabled")
+          ? { enabled: true as const, limit: r.posInt("limit") }
+          : { enabled: false as const },
+      ),
 
-    audit: ({ enabled, limit }) => ({ enabled, limit }),
+    audit: (payload) => ({
+      enabled: payload.enabled,
+      limit: payload.enabled ? payload.limit : 0,
+    }),
 
     execute: ({ actor }, payload) => {
       const workflow = getServerRuntime().workflow;
@@ -53,8 +61,7 @@ export async function savePendingQuotationPolicy(input: {
       return updatePendingQuotationPolicy(
         {
           actor: workflowActor(actor),
-          enabled: payload.enabled,
-          limit: payload.limit,
+          ...payload,
         },
         {
           pendingQuotationPolicies: workflow.repos.pendingQuotationPolicies,

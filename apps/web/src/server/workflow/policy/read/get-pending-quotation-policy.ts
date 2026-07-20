@@ -11,12 +11,8 @@ import type { PendingQuotationPolicyRepository } from "../pending-quotation-poli
 
 export type PendingQuotationPolicyView = {
   branchId: string;
-  // Whether the cap is enforced. When false, executives register without limit.
   enabled: boolean;
-  // The cap to show in the editor. When disabled, falls back to the suggested
-  // value so re-enabling starts from a sensible number.
   limit: number;
-  suggestedLimit: number;
   updatedAt: number | null;
   updatedByUserId: string | null;
 };
@@ -43,7 +39,6 @@ export async function getPendingQuotationPolicy(
     branchId: input.branchId,
     enabled: resolved.limit !== null,
     limit: resolved.limit ?? SUGGESTED_PENDING_QUOTATION_LIMIT,
-    suggestedLimit: SUGGESTED_PENDING_QUOTATION_LIMIT,
     updatedAt: current?.updatedAt.getTime() ?? null,
     updatedByUserId: current?.updatedByUserId ?? null,
   });
