@@ -37,15 +37,14 @@ export function InviteForm(props: { setup: InviteManagement }) {
   const [expiresAtErrorMessage, setExpiresAtErrorMessage] = createSignal<
     string | undefined
   >();
-  // The just-issued link, surfaced so it can be copied directly. It matters most
-  // when email delivery failed: the invite is valid regardless, and this is the
-  // admin's way to hand the link over manually.
+
+  // Keep the link available when email delivery fails.
   const [issuedLink, setIssuedLink] = createSignal<{
     url: string;
     delivered: boolean;
   } | null>(null);
 
-  // Keep the selected role valid as the actor's assignable roles change.
+  // Reset the role if updated permissions no longer allow it.
   createEffect(
     on(
       () => props.setup,
@@ -106,7 +105,10 @@ export function InviteForm(props: { setup: InviteManagement }) {
       });
 
       resetForm();
-      setIssuedLink({ url: result.inviteUrl, delivered: result.delivered });
+      setIssuedLink({
+        url: result.inviteUrl,
+        delivered: result.delivered,
+      });
       enqueueSuccessSnackBar(result.message);
     } catch (caught: unknown) {
       const wire = parseWireError(caught);
@@ -229,6 +231,7 @@ export function InviteForm(props: { setup: InviteManagement }) {
                 ? "Enlace de invitación"
                 : "Correo no enviado. Comparte este enlace directamente:"}
             </span>
+
             <div class={styles.issuedLinkRow}>
               <span class={styles.issuedLinkUrl}>{link().url}</span>
               <Button
