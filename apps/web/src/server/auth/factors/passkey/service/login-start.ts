@@ -71,9 +71,7 @@ async function prepareDiscoverableLogin(
     return Err({ kind: "invalid_credentials" });
   }
 
-  const options = await webauthnProvider.getAuthenticationOptions({
-    userVerification: "required",
-  });
+  const options = await webauthnProvider.getAuthenticationOptions();
   return Ok({
     challengeUserId: null,
     flowUserId: null,
@@ -138,10 +136,7 @@ async function prepareIdentifiedLogin(
     return Err({ kind: "invalid_credentials" });
   }
 
-  const options = await webauthnProvider.getAuthenticationOptions({
-    userId: user.id,
-    userVerification: "preferred",
-  });
+  const options = await webauthnProvider.getAuthenticationOptions(user.id);
   return Ok({
     challengeUserId: user.id,
     flowUserId: user.id,
