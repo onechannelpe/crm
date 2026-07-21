@@ -109,6 +109,7 @@ export interface Database {
   workflow_integration_jobs: integrations.WorkflowIntegrationJobsTable;
   workflow_integration_import_rows: integrations.WorkflowIntegrationImportRowsTable;
   merchant_reports: merchantStats.MerchantReportsTable;
+  merchant_report_imports: merchantStats.MerchantReportImportsTable;
   merchant_report_rejections: merchantStats.MerchantReportRejectionsTable;
   merchant_sales: merchantStats.MerchantSalesTable;
   merchant_sale_gpv: merchantStats.MerchantSaleGpvTable;

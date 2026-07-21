@@ -106,7 +106,7 @@ describe("workflow notification pipeline", () => {
       queue_state: "done",
       provider: "whatsapp_cloud",
       provider_message_id: "test-whatsapp",
-      sent_at: NOW,
+      completed_at: NOW,
     });
   });
 

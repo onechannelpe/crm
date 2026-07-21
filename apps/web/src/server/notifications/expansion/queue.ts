@@ -8,7 +8,7 @@ const LEASE_MS = 30_000;
 
 // Fan-out is pure DB, so concurrency is modest. After expansion commits its
 // deliveries, onExpanded wakes the dispatch stage so the send starts without
-// waiting for the poll floor. The store stamps expanded_at on the terminal
+// waiting for the poll floor. The store stamps completed_at on the terminal
 // transition.
 export function createIntentExpansionQueue(
   workerId: string,

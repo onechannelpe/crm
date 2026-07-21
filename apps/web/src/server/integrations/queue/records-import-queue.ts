@@ -1,4 +1,5 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
+import type { QueueState } from "~/lib/job-queue/job-store";
 import {
   buildRecordImportProgressEvent,
   publishRecordImportProgress,
@@ -25,14 +26,13 @@ interface RecordsImportQueueDeps {
   runner?: RecordImportRunner;
 }
 
-const RECORD_IMPORT_TYPES = ["import_status", "import_prioridad"] as const;
-
 export function createRecordsImportQueue(
   workerId: string,
   deps: RecordsImportQueueDeps,
 ) {
   const leaseMs = 30_000;
   const { runtime } = deps;
+
   const runner =
     deps.runner ??
     createRecordImportRunner({
@@ -45,20 +45,17 @@ export function createRecordsImportQueue(
 
   async function publishImportProgress(
     id: IntegrationJobId,
-    status: "COMPLETED" | "PENDING" | "FAILED",
+    queueState: QueueState,
     errorMessage: string | null,
   ): Promise<void> {
     const job = await runtime.jobs.findById(id);
-    if (
-      !job ||
-      (job.type !== "import_status" && job.type !== "import_prioridad")
-    ) {
-      return;
-    }
+
+    if (!job) return;
+
     publishRecordImportProgress(
       buildRecordImportProgressEvent({
         job,
-        status,
+        queueState,
         rowsApplied: job.rows_applied ?? undefined,
         rowsFailed: job.rows_failed ?? undefined,
         rowsTotal: job.rows_total ?? undefined,
@@ -73,13 +70,10 @@ export function createRecordsImportQueue(
     now: runtime.now,
     workerId,
     store: runtime.jobs.store,
-    // workflow_integration_jobs stores both import and other jobs; the claim
-    // filter restricts this worker to import types.
-    claimFilter: { column: "type", values: [...RECORD_IMPORT_TYPES] },
     handle: async (job, signal: AbortSignal) => {
       const result = await runner.process(job, signal);
-      // status/completed_at ride the store's lifecycle map; only row counts and
-      // results payload need to be in the domain patch.
+
+      // The queue store owns queue_state and completed_at. Only persist the import results here.
       return {
         kind: "done",
         patch: {
@@ -92,11 +86,11 @@ export function createRecordsImportQueue(
     },
     onSettled: async (job, outcome) => {
       if (outcome.kind === "done") {
-        await publishImportProgress(job.id, "COMPLETED", null);
+        await publishImportProgress(job.id, "done", null);
       } else if (outcome.kind === "retry") {
-        await publishImportProgress(job.id, "PENDING", null);
+        await publishImportProgress(job.id, "pending", null);
       } else {
-        await publishImportProgress(job.id, "FAILED", outcome.reason);
+        await publishImportProgress(job.id, "failed", outcome.reason);
       }
     },
   });

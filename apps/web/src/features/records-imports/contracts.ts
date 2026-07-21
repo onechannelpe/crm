@@ -1,12 +1,12 @@
 export type RecordImportType = "import_status" | "import_prioridad";
 
-type RecordImportJobStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+type RecordImportQueueState = "pending" | "processing" | "done" | "failed";
 
 export interface RecordImportProgressEvent {
   type: "job_progress";
   jobId: string;
   importType: RecordImportType;
-  status: RecordImportJobStatus;
+  queueState: RecordImportQueueState;
   rowsApplied: number;
   rowsFailed: number;
   rowsTotal: number;
@@ -48,10 +48,10 @@ function isRecordImportProgressEvent(
     typeof value.jobId === "string" &&
     (value.importType === "import_status" ||
       value.importType === "import_prioridad") &&
-    (value.status === "PENDING" ||
-      value.status === "PROCESSING" ||
-      value.status === "COMPLETED" ||
-      value.status === "FAILED") &&
+    (value.queueState === "pending" ||
+      value.queueState === "processing" ||
+      value.queueState === "done" ||
+      value.queueState === "failed") &&
     typeof value.rowsApplied === "number" &&
     typeof value.rowsFailed === "number" &&
     typeof value.rowsTotal === "number" &&

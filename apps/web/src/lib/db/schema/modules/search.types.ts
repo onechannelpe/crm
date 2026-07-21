@@ -16,10 +16,6 @@ export interface ClientSearchViewsTable {
   updated_at: Date;
 }
 
-// jsonb columns auto-parse on read and are written as stringified JSON
-// (top-level arrays must be stringified, so the write side is a string).
-// `queue_state` is the only lifecycle column; the UI lifecycle and freshness
-// derive from (queue_state, source, expires_at).
 export interface CompanyRegistryRecordTable {
   id: GeneratedId<CompanyRegistryRecordId>;
   document_type: "dni" | "ruc";
@@ -42,11 +38,11 @@ export interface CompanyRegistryRecordTable {
   expires_at: Date | null;
   queue_state: "pending" | "processing" | "done" | "failed";
   lease_owner: string | null;
-  lease_until: Date | null;
   attempt_count: ColumnType<number, number | undefined, number>;
   max_attempts: ColumnType<number, number | undefined, number>;
-  available_at: Date;
-  last_error: string | null;
+  claimable_at: Date;
+  completed_at: Date | null;
+  error_message: string | null;
   requested_by_user_id: IdColumn<UserId> | null;
   requested_at: Date;
 }

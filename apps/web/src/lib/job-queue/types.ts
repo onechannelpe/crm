@@ -1,4 +1,4 @@
-import type { ClaimFilter, DomainPatch, JobStore } from "./job-store";
+import type { DomainPatch, JobStore } from "./job-store";
 
 export interface QueueJobBase {
   id: string | number;
@@ -6,17 +6,16 @@ export interface QueueJobBase {
   max_attempts: number;
 }
 
-// Handlers classify work. The engine owns retries, leases, and queue state.
-// Throws and timeouts become retries.
+// Handlers classify work. The engine manages retries and queue state.
 export type Settlement =
   | { kind: "done"; patch?: DomainPatch }
   | { kind: "retry"; reason?: string; patch?: DomainPatch }
   | { kind: "fail"; reason: string; patch?: DomainPatch };
 
-// Retry outcomes carry the engine-computed schedule. Exhausted retries become failures.
+// Retry outcomes include the next retry time.
 export type SettleOutcome =
   | { kind: "done"; patch?: DomainPatch }
-  | { kind: "retry"; availableAt: Date; reason?: string; patch?: DomainPatch }
+  | { kind: "retry"; claimableAt: Date; reason?: string; patch?: DomainPatch }
   | { kind: "fail"; reason: string; patch?: DomainPatch };
 
 export interface JobQueueConfig<
@@ -27,18 +26,21 @@ export interface JobQueueConfig<
   leaseMs: number;
   maxConcurrency?: number;
   timeoutMs?: number;
-  // Queue time is injected so retries are reproducible under a test clock.
+
+  // Inject time so tests can control retry scheduling.
   now: () => Date;
-  // Lease-owner id scopes claim and settle writes, so a reaped-and-reclaimed
-  // lease cannot be settled by the old worker.
+
+  // Reject stale workers after a lease is reclaimed.
   workerId: string;
+
   store: JobStore<TId, TJob>;
-  claimFilter?: ClaimFilter;
   handle(job: TJob, signal: AbortSignal): Promise<Settlement>;
   onSettled?(job: TJob, outcome: SettleOutcome): void | Promise<void>;
 }
 
 export interface QueueRunner {
   name: string;
-  runOnce(): Promise<void>;
+
+  // Wait until the queue has no claimable jobs.
+  drain(): Promise<void>;
 }

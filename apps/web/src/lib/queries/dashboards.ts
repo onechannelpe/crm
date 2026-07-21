@@ -8,7 +8,6 @@ import {
   getLifecycleSummary,
   getRamp,
 } from "~/actions/dashboards/dashboard";
-import { getMerchantReportJob } from "~/actions/dashboards/imports";
 import { getMerchantStatsForRuc } from "~/actions/dashboards/org-stats";
 import {
   getQualityRows,
@@ -42,8 +41,6 @@ export const cohortRowsQuery = query(
   "merchantCohortRows",
 );
 
-// Options change only on import, never on filter input, so they are their own
-// query rather than a field refetched with every filtered read.
 export const merchantFilterOptionsQuery = query(
   () => getFilterOptions(),
   "merchantFilterOptions",
@@ -57,11 +54,6 @@ export const qualitySummaryQuery = query(
 export const qualityRowsQuery = query(
   (input: { issue: QualityIssue; page: Page }) => getQualityRows(input),
   "merchantQualityRows",
-);
-
-export const merchantReportJobQuery = query(
-  (jobId: string) => getMerchantReportJob(jobId),
-  "merchantReportJob",
 );
 
 export const merchantStatsByRucQuery = query(

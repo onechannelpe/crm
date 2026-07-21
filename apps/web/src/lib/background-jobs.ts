@@ -2,7 +2,6 @@ import { dbUrl } from "~/lib/db/db";
 import { createPgListener, type PgListenerHandler } from "~/lib/db/notify";
 import { uploadsConfig } from "~/lib/env";
 import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
-import { startStaleScanner } from "~/lib/job-queue/stale-scanner";
 import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { readStoredFile } from "~/server/files/storage";
@@ -13,24 +12,22 @@ import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecyc
 import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/lead-reservation-maintenance";
 
 const WORKER_ID = `bg-${process.pid}`;
+const POLL_FLOOR_MS = 1_000; // LISTEN/NOTIFY failures are recovered by polling within this interval.
+
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
-// A lost LISTEN/NOTIFY wake is recovered within POLL_FLOOR_MS.
-const POLL_FLOOR_MS = 1_000;
-
-// Coalesces a queue's wakeups (NOTIFY bursts plus the poll floor) into at
-// most one in-flight `runOnce` with at most one queued behind it, so a
-// burst of notifications for the same queue collapses into a single fetch.
 function makeWaker(run: () => Promise<void>): () => void {
   let running = false;
   let pending = false;
 
-  const tick = async () => {
+  const tick = async (): Promise<void> => {
     if (running) {
       pending = true;
       return;
     }
+
     running = true;
+
     try {
       await run();
     } catch (error: unknown) {
@@ -39,6 +36,8 @@ function makeWaker(run: () => Promise<void>): () => void {
       });
     } finally {
       running = false;
+
+      // Collapse every wake received during the drain into one more drain.
       if (pending) {
         pending = false;
         void tick();
@@ -46,37 +45,38 @@ function makeWaker(run: () => Promise<void>): () => void {
     }
   };
 
-  return () => void tick();
+  return () => {
+    void tick();
+  };
 }
 
-// Reads the storage root per call rather than closing over it, so a config
-// change does not require a worker restart to take effect.
 const readFile = (filePath: string) =>
   readStoredFile(uploadsConfig().storageRoot, filePath);
 
-export function startBackgroundJobs() {
+export function startBackgroundJobs(): void {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
 
-  const { integration } = getServerRuntime().integrations;
+  const runtime = getServerRuntime();
+  const { integration } = runtime.integrations;
 
   const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
     runtime: integration,
     readFile,
   });
+
   const merchantReportsQueue = createMerchantReportsQueue(WORKER_ID, {
-    runtime: integration,
+    db: integration.executor,
+    now: integration.now,
     readFile,
   });
-  const enrichmentQueue =
-    getServerRuntime().clientSearch.createEnrichmentQueue(WORKER_ID);
-  const notificationQueues =
-    getServerRuntime().notifications.createQueues(WORKER_ID);
+
+  const enrichmentQueue = runtime.clientSearch.createEnrichmentQueue(WORKER_ID);
+
+  const notificationQueues = runtime.notifications.createQueues(WORKER_ID);
 
   const queuesByChannel: Record<string, QueueRunner[]> = {
-    [JOB_TABLE_CHANNELS.workflow_integration_jobs]: [
-      recordsImportQueue,
-      merchantReportsQueue,
-    ],
+    [JOB_TABLE_CHANNELS.workflow_integration_jobs]: [recordsImportQueue],
+    [JOB_TABLE_CHANNELS.merchant_report_imports]: [merchantReportsQueue],
     [JOB_TABLE_CHANNELS.company_registry_record]: [enrichmentQueue],
     [JOB_TABLE_CHANNELS.notification_intents]: [notificationQueues.expansion],
     [JOB_TABLE_CHANNELS.notification_deliveries]: [notificationQueues.dispatch],
@@ -90,10 +90,12 @@ export function startBackgroundJobs() {
 
   const wakers = new Map<string, () => void>();
   const channels: Record<string, PgListenerHandler[]> = {};
+
   for (const [channel, queues] of Object.entries(queuesByChannel)) {
-    const wake = makeWaker(() =>
-      Promise.all(queues.map((queue) => queue.runOnce())).then(() => undefined),
-    );
+    const wake = makeWaker(async () => {
+      await Promise.all(queues.map((queue) => queue.drain()));
+    });
+
     wakers.set(channel, wake);
     channels[channel] = [wake];
   }
@@ -105,21 +107,20 @@ export function startBackgroundJobs() {
   };
 
   startAccountLifecycleMaintenance({
-    executor: getServerRuntime().infra.db,
-    messaging: getServerRuntime().notifications.messaging,
+    executor: runtime.infra.db,
+    messaging: runtime.notifications.messaging,
     invalidateUserSessions: (userId) =>
-      getServerRuntime().auth.sessionService.revokeAllForUser(userId),
+      runtime.auth.sessionService.revokeAllForUser(userId),
   });
 
   startLeadReservationMaintenance({
-    executor: getServerRuntime().infra.db,
+    executor: runtime.infra.db,
   });
-
-  startStaleScanner(30_000);
 
   setInterval(wakeAll, POLL_FLOOR_MS);
 
   const listener = createPgListener(dbUrl, channels);
+
   void listener.start();
 
   wakeAll();

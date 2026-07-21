@@ -1,10 +1,13 @@
 "use server";
 
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
-import type { IntegrationJobRow } from "~/server/integrations/types";
 import { acceptReport } from "~/server/merchant-stats/commands/accept-report";
 import { contentSha256 } from "~/server/merchant-stats/intake/content-hash";
 import { cutAtFromFilename } from "~/server/merchant-stats/intake/cut-at";
+import {
+  createMerchantReportImportRepo,
+  type MerchantReportImportRow,
+} from "~/server/merchant-stats/queue/import-repo";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import {
@@ -12,12 +15,12 @@ import {
   throwDomain,
   type DomainError,
 } from "~/server/shared/domain-error";
-import { IntegrationJobId } from "~/server/shared/ids";
+import { MerchantReportImportId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 export interface UploadedReport {
-  jobId: string | null;
+  importId: string | null;
   cutAt: string;
   duplicate: boolean;
 }
@@ -27,16 +30,6 @@ interface Upload {
   cutAt: Date;
 }
 
-function getExtension(filename: string): string | null {
-  const dot = filename.lastIndexOf(".");
-
-  if (dot === -1) {
-    return null;
-  }
-
-  return filename.slice(dot + 1).toLowerCase() || null;
-}
-
 function parseUpload(formData: FormData): Result<Upload, DomainError> {
   const file = formData.get("file");
 
@@ -44,7 +37,7 @@ function parseUpload(formData: FormData): Result<Upload, DomainError> {
     return Err(fail("file_required"));
   }
 
-  if (getExtension(file.name) !== "xlsx") {
+  if (!file.name.toLowerCase().endsWith(".xlsx")) {
     return Err(fail("unsupported_file_type"));
   }
 
@@ -71,6 +64,7 @@ export async function uploadMerchantReport(
   return runAction({
     name: "dashboards.import.upload",
     access: { kind: "permission", permission: "dashboards:manage" },
+
     parse: () => parseUpload(formData),
 
     audit: ({ file, cutAt }) => ({
@@ -79,7 +73,7 @@ export async function uploadMerchantReport(
       cutAt: cutAt.toISOString(),
     }),
 
-    execute: async (ctx, { file, cutAt }) => {
+    execute: async ({ actor, now }, { file, cutAt }) => {
       const runtime = getServerRuntime();
       const bytes = new Uint8Array(await file.arrayBuffer());
       const sha256 = contentSha256(bytes);
@@ -92,12 +86,12 @@ export async function uploadMerchantReport(
         cutAt,
         storageKey,
         sourceFilename: file.name,
-        uploadedBy: ctx.actor.userId,
-        now: ctx.now(),
+        uploadedBy: actor.userId,
+        now: now(),
       });
 
       return Ok({
-        jobId: acceptance.kind === "accepted" ? acceptance.jobId : null,
+        importId: acceptance.kind === "accepted" ? acceptance.importId : null,
         cutAt: cutAt.toISOString(),
         duplicate: acceptance.kind === "duplicate",
       });
@@ -105,29 +99,30 @@ export async function uploadMerchantReport(
   });
 }
 
-export async function getMerchantReportJob(
-  rawJobId: string,
-): Promise<IntegrationJobRow> {
+export async function getMerchantReportImport(
+  rawImportId: string,
+): Promise<MerchantReportImportRow> {
   return runAction({
     name: "dashboards.import.get_job",
     access: { kind: "permission", permission: "dashboards:read" },
 
     parse: () =>
-      parseObject({ jobId: rawJobId }, validationFail, (r) => ({
-        jobId: r.id("jobId", IntegrationJobId),
+      parseObject({ importId: rawImportId }, validationFail, (r) => ({
+        importId: r.id("importId", MerchantReportImportId),
       })),
 
-    audit: ({ jobId }) => ({ jobId }),
+    audit: ({ importId }) => ({ importId }),
 
-    execute: async (_ctx, { jobId }) => {
-      const { integration } = getServerRuntime().integrations;
-      const job = await integration.jobs.findById(jobId);
+    execute: async (_ctx, { importId }) => {
+      const runtime = getServerRuntime();
+      const imports = createMerchantReportImportRepo(runtime.infra.db);
+      const row = await imports.findById(importId);
 
-      if (!job || job.type !== "import_gpv") {
+      if (!row) {
         throwDomain(fail("import_job_not_found"));
       }
 
-      return Ok(job);
+      return Ok(row);
     },
   });
 }

@@ -1,5 +1,7 @@
 import { sql, type Kysely } from "kysely";
 
+import { CLAIMABLE_STATES } from "~/lib/job-queue/registry";
+
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("user_channel_addresses")
@@ -31,8 +33,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
-  // A row means this user disabled this category on this channel. No row means
-  // enabled.
   await db.schema
     .createTable("notification_opt_outs")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
@@ -72,19 +72,16 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("claimable_at", "timestamptz", (col) => col.notNull())
     .addColumn("lease_owner", "text")
-    .addColumn("lease_until", "timestamptz")
     .addColumn("provider", "text")
     .addColumn("provider_message_id", "text")
     .addColumn("error_code", "text")
     .addColumn("error_message", "text")
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .addColumn("sent_at", "timestamptz")
+    .addColumn("completed_at", "timestamptz")
     .execute();
 
-  // Idempotency: re-expanding an intent never creates a second delivery for the
-  // same recipient and channel.
   await db.schema
     .createIndex("idx_notification_deliveries_recipient")
     .on("notification_deliveries")
@@ -92,19 +89,11 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .unique()
     .execute();
 
-  // Covers pending deliveries and lets claims filter by available_at.
   await db.schema
     .createIndex("idx_notification_deliveries_claim")
     .on("notification_deliveries")
-    .column("available_at")
-    .where(sql.ref("queue_state"), "=", "pending")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_deliveries_stale")
-    .on("notification_deliveries")
-    .column("lease_until")
-    .where(sql.ref("queue_state"), "=", "processing")
+    .column("claimable_at")
+    .where(CLAIMABLE_STATES)
     .execute();
 
   await db.schema
@@ -139,8 +128,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
 
   await db.schema
     .createTable("notification_intents")
-    // The caller supplies id as a deterministic idempotency key. Text preserves it
-    // when the intent is expanded again.
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("event_type", "text", (col) => col.notNull())
     .addColumn("audience_json", "jsonb", (col) => col.notNull())
@@ -154,26 +141,18 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("claimable_at", "timestamptz", (col) => col.notNull())
     .addColumn("lease_owner", "text")
-    .addColumn("lease_until", "timestamptz")
-    .addColumn("error", "text")
+    .addColumn("error_message", "text")
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .addColumn("expanded_at", "timestamptz")
+    .addColumn("completed_at", "timestamptz")
     .execute();
 
   await db.schema
     .createIndex("idx_notification_intents_claim")
     .on("notification_intents")
-    .column("available_at")
-    .where(sql.ref("queue_state"), "=", "pending")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_notification_intents_stale")
-    .on("notification_intents")
-    .column("lease_until")
-    .where(sql.ref("queue_state"), "=", "processing")
+    .column("claimable_at")
+    .where(CLAIMABLE_STATES)
     .execute();
 
   await db.schema
@@ -212,27 +191,19 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("claimable_at", "timestamptz", (col) => col.notNull())
     .addColumn("lease_owner", "text")
-    .addColumn("lease_until", "timestamptz")
     .addColumn("outcome", "text")
-    .addColumn("error", "text")
+    .addColumn("error_message", "text")
     .addColumn("received_at", "timestamptz", (col) => col.notNull())
-    .addColumn("processed_at", "timestamptz")
+    .addColumn("completed_at", "timestamptz")
     .execute();
 
   await db.schema
     .createIndex("idx_whatsapp_inbound_events_claim")
     .on("whatsapp_inbound_events")
-    .column("available_at")
-    .where(sql.ref("queue_state"), "=", "pending")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_whatsapp_inbound_events_stale")
-    .on("whatsapp_inbound_events")
-    .column("lease_until")
-    .where(sql.ref("queue_state"), "=", "processing")
+    .column("claimable_at")
+    .where(CLAIMABLE_STATES)
     .execute();
 
   await db.schema
@@ -245,28 +216,20 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     )
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
-    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("claimable_at", "timestamptz", (col) => col.notNull())
     .addColumn("lease_owner", "text")
-    .addColumn("lease_until", "timestamptz")
     .addColumn("provider", "text")
     .addColumn("provider_message_id", "text")
     .addColumn("error_code", "text")
     .addColumn("error_message", "text")
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .addColumn("sent_at", "timestamptz")
+    .addColumn("completed_at", "timestamptz")
     .execute();
 
   await db.schema
     .createIndex("idx_outbound_whatsapp_messages_claim")
     .on("outbound_whatsapp_messages")
-    .column("available_at")
-    .where(sql.ref("queue_state"), "=", "pending")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_outbound_whatsapp_messages_stale")
-    .on("outbound_whatsapp_messages")
-    .column("lease_until")
-    .where(sql.ref("queue_state"), "=", "processing")
+    .column("claimable_at")
+    .where(CLAIMABLE_STATES)
     .execute();
 }

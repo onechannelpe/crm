@@ -20,8 +20,7 @@ type ReceiptError =
   | "missing-idempotency-key"
   | "unsupported-payload-version";
 
-// "ignored" is an event type we don't handle: acknowledged so the provider stops
-// retrying, but nothing is captured. Distinct from an error, which is a 4xx.
+// Ignored events are acknowledged without being stored so Kapso does not retry.
 export type KapsoWebhookReceipt = "accepted" | "duplicate" | "ignored";
 
 function toEventRows(
@@ -33,9 +32,8 @@ function toEventRows(
     delivery_key: idempotencyKey,
     attempt_count: 0,
     max_attempts: DEFAULT_MAX_ATTEMPTS,
-    available_at: now,
+    claimable_at: now,
     lease_owner: null,
-    lease_until: null,
     received_at: now,
   };
 
@@ -50,11 +48,10 @@ function toEventRows(
     payload_json: event.payloadJson,
     queue_state: "pending" as const,
     outcome: null,
-    error: null,
-    processed_at: null,
+    error_message: null,
+    completed_at: null,
   }));
 
-  // Quarantined rows land terminal (failed) and are never claimed.
   const quarantined = envelope.quarantined.map((event) => ({
     ...base,
     id: event.id,
@@ -66,8 +63,8 @@ function toEventRows(
     payload_json: event.payloadJson,
     queue_state: "failed" as const,
     outcome: event.reason,
-    error: event.reason,
-    processed_at: now,
+    error_message: event.reason,
+    completed_at: now,
   }));
 
   return [...accepted, ...quarantined];
@@ -84,15 +81,26 @@ export async function receiveKapsoWebhook(
   },
 ): Promise<Result<KapsoWebhookReceipt, ReceiptError>> {
   const idempotencyKey = input.idempotencyKey?.trim();
+
   if (!idempotencyKey || idempotencyKey.length > 256) {
     return Err("missing-idempotency-key");
   }
+
   const { eventType, payloadVersion } = input;
-  if (eventType !== INBOUND_EVENT) return Ok("ignored" as const);
-  if (payloadVersion !== "v2") return Err("unsupported-payload-version");
+
+  if (eventType !== INBOUND_EVENT) {
+    return Ok("ignored");
+  }
+
+  if (payloadVersion !== "v2") {
+    return Err("unsupported-payload-version");
+  }
 
   const envelope = parseKapsoEnvelope(input.rawBody, idempotencyKey);
-  if (!envelope.ok) return envelope;
+
+  if (!envelope.ok) {
+    return envelope;
+  }
 
   const rows = toEventRows(envelope.value, idempotencyKey, input.now);
 
@@ -110,12 +118,13 @@ export async function receiveKapsoWebhook(
       .onConflict((oc) => oc.column("idempotency_key").doNothing())
       .returning("idempotency_key")
       .executeTakeFirst();
-    if (!inserted) return Ok("duplicate" as const);
+
+    if (!inserted) {
+      return Ok("duplicate");
+    }
 
     if (rows.length > 0) {
-      // Dedup on the WhatsApp message id (PK) protects against Kapso's
-      // documented batch-to-individual fallback re-delivering the same message
-      // under a new idempotency key.
+      // Message IDs also deduplicate batch fallback deliveries that use a new key.
       await trx
         .insertInto("whatsapp_inbound_events")
         .values(rows)
@@ -126,6 +135,7 @@ export async function receiveKapsoWebhook(
     if (envelope.value.accepted.length > 0) {
       notify(trx, JOB_TABLE_CHANNELS.whatsapp_inbound_events);
     }
-    return Ok("accepted" as const);
+
+    return Ok("accepted");
   });
 }

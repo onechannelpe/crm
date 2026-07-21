@@ -1,7 +1,7 @@
 import { createSignal, Match, onCleanup, Show, Switch } from "solid-js";
 
 import {
-  getMerchantReportJob,
+  getMerchantReportImport,
   uploadMerchantReport,
 } from "~/actions/dashboards/imports";
 import { FileDropzone } from "~/components/ui/input/file-dropzone";
@@ -29,7 +29,9 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export function UploadReport(props: { onClose?: () => void }) {
   const [phase, setPhase] = createSignal<Phase>({ kind: "idle" });
   const [cutAt, setCutAt] = createSignal("");
+
   let cancelled = false;
+
   onCleanup(() => {
     cancelled = true;
   });
@@ -38,70 +40,89 @@ export function UploadReport(props: { onClose?: () => void }) {
     const current = phase();
     return current.kind === "processing" ? current : null;
   };
+
   const done = () => {
     const current = phase();
     return current.kind === "done" ? current : null;
   };
-  const errored = () => {
+
+  const error = () => {
     const current = phase();
     return current.kind === "error" ? current : null;
   };
 
+  const busy = () => {
+    const current = phase();
+    return current.kind === "uploading" || current.kind === "processing";
+  };
+
   async function handleFile(file: File): Promise<void> {
     setPhase({ kind: "uploading" });
+
     try {
       const form = new FormData();
       form.append("file", file);
-      if (cutAt()) form.append("cutAt", new Date(cutAt()).toISOString());
+
+      if (cutAt()) {
+        form.append("cutAt", new Date(cutAt()).toISOString());
+      }
 
       const upload = await uploadMerchantReport(form);
-      if (upload.duplicate || !upload.jobId) {
+
+      if (upload.duplicate || !upload.importId) {
         setPhase({ kind: "duplicate" });
         return;
       }
 
-      const jobId = upload.jobId;
       setPhase({ kind: "processing", applied: 0, total: 0 });
 
       for (;;) {
-        if (cancelled) return;
-        // eslint-disable-next-line no-await-in-loop
-        const job = await getMerchantReportJob(jobId);
-        if (job.status === "COMPLETED") {
-          // eslint-disable-next-line no-await-in-loop
-          await revalidateGpvData();
-          setPhase({
-            kind: "done",
-            matched: job.rows_applied ?? 0,
-            total: job.rows_total ?? 0,
-          });
+        if (cancelled) {
           return;
         }
-        if (job.status === "FAILED") {
-          setPhase({
-            kind: "error",
-            message: job.error_message ?? "La importación falló",
-          });
-          return;
-        }
-        setPhase({
-          kind: "processing",
-          applied: job.rows_applied ?? 0,
-          total: job.rows_total ?? 0,
-        });
+
         // eslint-disable-next-line no-await-in-loop
-        await sleep(POLL_INTERVAL_MS);
+        const job = await getMerchantReportImport(upload.importId);
+
+        switch (job.queue_state) {
+          case "done":
+            // eslint-disable-next-line no-await-in-loop
+            await revalidateGpvData();
+
+            setPhase({
+              kind: "done",
+              matched: job.rows_applied ?? 0,
+              total: job.rows_total ?? 0,
+            });
+
+            return;
+
+          case "failed":
+            setPhase({
+              kind: "error",
+              message: job.error_message ?? "La importación falló",
+            });
+
+            return;
+
+          default:
+            setPhase({
+              kind: "processing",
+              applied: job.rows_applied ?? 0,
+              total: job.rows_total ?? 0,
+            });
+
+            // eslint-disable-next-line no-await-in-loop
+            await sleep(POLL_INTERVAL_MS);
+        }
       }
-    } catch (error) {
+    } catch (err) {
       setPhase({
         kind: "error",
-        message: error instanceof Error ? error.message : "Error al subir",
+        message: err instanceof Error ? err.message : "Error al subir",
       });
     }
   }
-
-  const busy = () =>
-    phase().kind === "uploading" || phase().kind === "processing";
 
   return (
     <div class={styles.panel}>
@@ -109,7 +130,9 @@ export function UploadReport(props: { onClose?: () => void }) {
         accept=".xlsx"
         disabled={busy()}
         onFiles={(files) => {
-          if (files[0]) void handleFile(files[0]);
+          if (files[0]) {
+            void handleFile(files[0]);
+          }
         }}
       >
         {(state) => (
@@ -129,6 +152,7 @@ export function UploadReport(props: { onClose?: () => void }) {
 
       <div class={styles.cutField}>
         <InputLabel for="gpv-cut-at">Fecha de corte</InputLabel>
+
         <TextInput
           id="gpv-cut-at"
           type="datetime-local"
@@ -136,6 +160,7 @@ export function UploadReport(props: { onClose?: () => void }) {
           disabled={busy()}
           onChange={setCutAt}
         />
+
         <InputHint>
           Se lee del nombre del archivo. Indícala solo si fue renombrado.
         </InputHint>
@@ -145,11 +170,13 @@ export function UploadReport(props: { onClose?: () => void }) {
         <Match when={phase().kind === "uploading"}>
           <p class={styles.status}>Subiendo archivo…</p>
         </Match>
+
         <Match when={phase().kind === "duplicate"}>
           <p class={styles.statusDone}>
             Este archivo ya se importó. No se cambió nada.
           </p>
         </Match>
+
         <Match when={processing()}>
           {(current) => (
             <div>
@@ -158,6 +185,7 @@ export function UploadReport(props: { onClose?: () => void }) {
                   ? "Leyendo el archivo…"
                   : `Procesando ${formatInteger(current().applied)} de ${formatInteger(current().total)} filas...`}
               </p>
+
               <div class={styles.bar}>
                 <div
                   class={styles.barFill}
@@ -173,6 +201,7 @@ export function UploadReport(props: { onClose?: () => void }) {
             </div>
           )}
         </Match>
+
         <Match when={done()}>
           {(current) => (
             <p class={styles.statusDone}>
@@ -181,7 +210,8 @@ export function UploadReport(props: { onClose?: () => void }) {
             </p>
           )}
         </Match>
-        <Match when={errored()}>
+
+        <Match when={error()}>
           {(current) => <p class={styles.statusError}>{current().message}</p>}
         </Match>
       </Switch>

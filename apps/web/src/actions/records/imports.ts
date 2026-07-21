@@ -27,6 +27,11 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 const IMPORT_JOB_MAX_ATTEMPTS = 3;
 
+type ImportUpload = {
+  file: File;
+  extension: "csv" | "xlsx";
+};
+
 function getExtension(filename: string): string | null {
   const dot = filename.lastIndexOf(".");
 
@@ -36,11 +41,6 @@ function getExtension(filename: string): string | null {
 
   return filename.slice(dot + 1).toLowerCase() || null;
 }
-
-type ImportUpload = {
-  file: File;
-  extension: "csv" | "xlsx";
-};
 
 function parseImportUpload(
   formData: FormData,
@@ -73,7 +73,6 @@ async function getAuthorizedRecordImportJob(
   jobId: IntegrationJobId,
 ): Promise<IntegrationJobRow> {
   const { integration } = getServerRuntime().integrations;
-
   const job = await integration.jobs.findById(jobId);
 
   if (
@@ -83,9 +82,9 @@ async function getAuthorizedRecordImportJob(
     throwDomain(fail("import_job_not_found"));
   }
 
-  const authorized = await canAccessRecordImportJob(actor, job, integration);
+  const canAccess = await canAccessRecordImportJob(actor, job, integration);
 
-  if (!authorized) {
+  if (!canAccess) {
     throwDomain(fail("import_job_not_found"));
   }
 
@@ -100,30 +99,34 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
   return runAction({
     name: "records.import.upload",
     access: { kind: "permission", permission: "integration:manage" },
+
     parse: () => parseImportUpload(formData),
-    audit: ({ file }) => ({ fileName: file.name, fileSize: file.size }),
+
+    audit: ({ file }) => ({
+      fileName: file.name,
+      fileSize: file.size,
+    }),
 
     execute: async (ctx, { file, extension }) => {
       const runtime = getServerRuntime();
       const { storage } = runtime.files;
       const { integration } = runtime.integrations;
-
       const buffer = await file.arrayBuffer();
 
-      let parsed;
+      let parsedImport: ReturnType<typeof parseImportFile>;
 
       try {
-        parsed = parseImportFile(buffer, extension);
-      } catch (err) {
+        parsedImport = parseImportFile(buffer, extension);
+      } catch (error) {
         throwDomain(
           invalid({
             code: "invalid_import_file",
-            details: err instanceof Error ? err.message : err,
+            details: error instanceof Error ? error.message : error,
           }),
         );
       }
 
-      const { importType, validRows, invalidRows } = parsed;
+      const { importType, validRows, invalidRows } = parsedImport;
       const rowsTotal = validRows.length + invalidRows.length;
       const storageKey = `imports/${randomUUID()}.json`;
       const storagePayload = new TextEncoder().encode(
@@ -134,7 +137,6 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
 
       const jobId = await integration.jobs.insert({
         type: importType,
-        status: "PENDING",
         requested_by_user_id: ctx.actor.userId,
         file_path: storageKey,
         max_attempts: IMPORT_JOB_MAX_ATTEMPTS,
@@ -152,7 +154,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
           job: {
             id: jobId,
             type: importType,
-            status: "PENDING",
+            queue_state: "pending",
             rows_applied: 0,
             rows_failed: 0,
             rows_total: rowsTotal,
@@ -174,14 +176,14 @@ export async function getRecordImportJob(
     access: { kind: "permission", permission: "integration:manage" },
 
     parse: () =>
-      parseObject({ jobId: rawJobId }, validationFail, (r) => ({
-        jobId: r.id("jobId", IntegrationJobId),
+      parseObject({ jobId: rawJobId }, validationFail, (reader) => ({
+        jobId: reader.id("jobId", IntegrationJobId),
       })),
 
-    audit: (query) => ({ jobId: query.jobId }),
+    audit: ({ jobId }) => ({ jobId }),
 
-    execute: async (ctx, query) => {
-      const job = await getAuthorizedRecordImportJob(ctx.actor, query.jobId);
+    execute: async (ctx, { jobId }) => {
+      const job = await getAuthorizedRecordImportJob(ctx.actor, jobId);
 
       return Ok(job);
     },

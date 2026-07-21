@@ -17,7 +17,7 @@ import {
 import { actionErrorMessage } from "~/lib/wire-error";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
-const IMPORT_COMPLETED_DURATION_MS = 4000;
+const IMPORT_COMPLETED_DURATION_MS = 4_000;
 const POLL_BASE_MS = 2_000;
 const POLL_MAX_MS = 15_000;
 const RECONNECT_JITTER_MS = 300;
@@ -33,11 +33,15 @@ type ImportSession = {
 
 function importTypeLabel(type: RecordImportType): string {
   if (type === "import_status") return "estados";
+
   return "prioridades";
 }
 
 function importTypeUnit(type: RecordImportType, count: number): string {
-  if (type === "import_status") return count === 1 ? "estado" : "estados";
+  if (type === "import_status") {
+    return count === 1 ? "estado" : "estados";
+  }
+
   return count === 1 ? "prioridad" : "prioridades";
 }
 
@@ -50,7 +54,9 @@ function buildProgressMessage(event: {
   if (event.rowsTotal <= 0) {
     return `Procesando ${importTypeLabel(event.importType)}...`;
   }
+
   const processed = event.rowsApplied + event.rowsFailed;
+
   return `Procesando ${importTypeUnit(event.importType, event.rowsTotal)}: ${processed} de ${event.rowsTotal}`;
 }
 
@@ -61,14 +67,17 @@ function buildCompletedMessage(event: {
   rowsTotal: number;
 }): string {
   const unit = importTypeUnit(event.importType, event.rowsTotal);
+
   if (event.rowsFailed > 0) {
     return `Procesados ${event.rowsTotal} ${unit} (${event.rowsFailed} con error)`;
   }
+
   return `Procesados ${event.rowsTotal} ${unit}`;
 }
 
 function isSupportedFile(file: File): boolean {
   const name = file.name.toLowerCase();
+
   return name.endsWith(".csv") || name.endsWith(".xlsx");
 }
 
@@ -87,95 +96,146 @@ export function useRecordsImport() {
   let fileInputRef: HTMLInputElement | undefined;
   let session: ImportSession | null = null;
 
-  function stopSession(): void {
-    if (!session) return;
-    const s = session;
+  function stopSession(expectedSession?: ImportSession): void {
+    if (!session || (expectedSession && session !== expectedSession)) {
+      return;
+    }
+
+    const activeSession = session;
     session = null;
-    if (s.pollTimer !== null) window.clearTimeout(s.pollTimer);
-    s.stream?.disconnect();
+
+    if (activeSession.pollTimer !== null) {
+      window.clearTimeout(activeSession.pollTimer);
+    }
+
+    activeSession.stream?.disconnect();
   }
 
   function handleJobEvent(
-    s: ImportSession,
+    currentSession: ImportSession,
     event: RecordImportProgressEvent,
   ): void {
-    if (event.status === "COMPLETED") {
-      updateSnackBar(s.toastId, {
+    if (session !== currentSession) {
+      return;
+    }
+
+    if (event.queueState === "done") {
+      updateSnackBar(currentSession.toastId, {
         message: buildCompletedMessage(event),
         variant: event.rowsFailed > 0 ? "warning" : "success",
         duration: IMPORT_COMPLETED_DURATION_MS,
       });
-      stopSession();
+
+      stopSession(currentSession);
       return;
     }
 
-    if (event.status === "FAILED") {
-      updateSnackBar(s.toastId, {
+    if (event.queueState === "failed") {
+      updateSnackBar(currentSession.toastId, {
         message: event.errorMessage ?? "La importación falló",
         variant: "error",
         duration: IMPORT_COMPLETED_DURATION_MS,
       });
-      stopSession();
+
+      stopSession(currentSession);
       return;
     }
 
-    updateSnackBar(s.toastId, { message: buildProgressMessage(event) });
+    updateSnackBar(currentSession.toastId, {
+      message: buildProgressMessage(event),
+    });
   }
 
-  async function pollOnce(s: ImportSession): Promise<"ok" | "retry"> {
+  async function pollOnce(
+    currentSession: ImportSession,
+  ): Promise<"ok" | "retry" | "stale"> {
     try {
-      const job = await getRecordImportJob(s.jobId);
-      handleJobEvent(s, {
+      const job = await getRecordImportJob(currentSession.jobId);
+
+      if (session !== currentSession) {
+        return "stale";
+      }
+
+      handleJobEvent(currentSession, {
         type: "job_progress",
-        jobId: s.jobId,
-        importType: s.importType,
-        status: job.status,
+        jobId: currentSession.jobId,
+        importType: currentSession.importType,
+        queueState: job.queue_state,
         rowsApplied: job.rows_applied ?? 0,
         rowsFailed: job.rows_failed ?? 0,
         rowsTotal: job.rows_total ?? 0,
         errorMessage: job.error_message ?? null,
       });
+
       return "ok";
     } catch {
-      return "retry";
+      return session === currentSession ? "retry" : "stale";
     }
   }
 
-  function schedulePolling(s: ImportSession, delayMs: number): void {
-    if (s.pollTimer !== null) window.clearTimeout(s.pollTimer);
-    s.pollTimer = window.setTimeout(() => {
+  function schedulePolling(
+    currentSession: ImportSession,
+    delayMs: number,
+  ): void {
+    if (currentSession.pollTimer !== null) {
+      window.clearTimeout(currentSession.pollTimer);
+    }
+
+    currentSession.pollTimer = window.setTimeout(() => {
       void (async () => {
-        if (session !== s) return;
-        const result = await pollOnce(s);
-        if (session !== s) return;
-        if (result === "retry") {
-          s.pollFailureCount++;
-        } else {
-          s.pollFailureCount = 0;
+        if (session !== currentSession) {
+          return;
         }
+
+        const result = await pollOnce(currentSession);
+
+        if (result === "stale" || session !== currentSession) {
+          return;
+        }
+
+        if (result === "retry") {
+          currentSession.pollFailureCount++;
+        } else {
+          currentSession.pollFailureCount = 0;
+        }
+
         const delay = withJitter(
-          Math.min(POLL_BASE_MS * 2 ** s.pollFailureCount, POLL_MAX_MS),
+          Math.min(
+            POLL_BASE_MS * 2 ** currentSession.pollFailureCount,
+            POLL_MAX_MS,
+          ),
         );
-        schedulePolling(s, delay);
+
+        schedulePolling(currentSession, delay);
       })();
     }, delayMs);
   }
 
-  function connectStream(s: ImportSession): void {
+  function connectStream(currentSession: ImportSession): void {
     const stream = createEventSourceStream({
       onMessage: (raw) => {
-        if (session !== s) return;
-        const payload = parseRecordImportProgressMessage(raw);
-        if (payload) handleJobEvent(s, payload);
+        if (session !== currentSession) {
+          return;
+        }
+
+        const event = parseRecordImportProgressMessage(raw);
+
+        if (event) {
+          handleJobEvent(currentSession, event);
+        }
       },
-      // Poll only when EventSource never connects. Browsers reconnect dropped streams.
+      // EventSource reconnects dropped streams; polling handles initial failure.
       onNeverConnected: () => {
-        if (session !== s) return;
-        schedulePolling(s, 0);
+        if (session !== currentSession) {
+          return;
+        }
+
+        schedulePolling(currentSession, 0);
       },
     });
-    s.stream = stream;
-    stream.connect(recordImportStreamUrl(s.jobId));
+
+    currentSession.stream = stream;
+    stream.connect(recordImportStreamUrl(currentSession.jobId));
   }
 
   async function importFile(file: File): Promise<void> {
@@ -201,7 +261,8 @@ export function useRecordsImport() {
       );
 
       stopSession();
-      session = {
+
+      const currentSession: ImportSession = {
         jobId: result.jobId,
         toastId,
         importType: result.importType,
@@ -210,22 +271,24 @@ export function useRecordsImport() {
         pollFailureCount: 0,
       };
 
-      connectStream(session);
+      session = currentSession;
+      connectStream(currentSession);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
   }
 
-  function bindFileInput(el: HTMLInputElement) {
-    fileInputRef = el;
+  function bindFileInput(element: HTMLInputElement): void {
+    fileInputRef = element;
   }
 
-  function openFilePicker() {
+  function openFilePicker(): void {
     fileInputRef?.click();
   }
 
-  function onFileInputChange(event: Event) {
+  function onFileInputChange(event: Event): void {
     const target = event.currentTarget;
+
     if (
       !(target instanceof HTMLInputElement) ||
       !target.files ||
@@ -235,6 +298,7 @@ export function useRecordsImport() {
     }
 
     const file = target.files.item(0);
+
     if (file) {
       void importFile(file);
     }

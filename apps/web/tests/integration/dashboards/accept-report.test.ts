@@ -7,7 +7,6 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createIntegrationJobRepo } from "~/server/integrations/infrastructure/integration-job-repo";
 import { acceptReport } from "~/server/merchant-stats/commands/accept-report";
 
 const UPLOADER = TEST_FIXTURES.users.superUser.id;
@@ -23,10 +22,9 @@ function reportInput(overrides: { contentSha256: string; now?: Date }) {
   };
 }
 
-function countJobs(ctx: TestDbContext) {
+function countImports(ctx: TestDbContext) {
   return ctx.db
-    .selectFrom("workflow_integration_jobs")
-    .where("type", "=", "import_gpv")
+    .selectFrom("merchant_report_imports")
     .select((eb) => eb.fn.countAll<number>().as("count"))
     .executeTakeFirstOrThrow();
 }
@@ -46,14 +44,14 @@ describe("accept report", () => {
     await resetTestDb(ctx);
   });
 
-  it("accepts the first upload of a content hash", async () => {
+  it("queues an import for the first upload of a content hash", async () => {
     const result = await acceptReport(
       ctx.db,
       reportInput({ contentSha256: "a".repeat(64) }),
     );
 
     expect(result.kind).toBe("accepted");
-    expect((await countJobs(ctx)).count).toBe(1);
+    expect((await countImports(ctx)).count).toBe(1);
   });
 
   it("reports a re-upload as a duplicate without queuing a second import", async () => {
@@ -72,29 +70,19 @@ describe("accept report", () => {
       reportId: first.kind === "accepted" ? first.reportId : null,
     });
 
-    expect((await countJobs(ctx)).count).toBe(1);
+    expect((await countImports(ctx)).count).toBe(1);
   });
 
   it("treats a report committed mid-flight as a duplicate", async () => {
     const contentSha256 = "e".repeat(64);
 
-    // Keep the competing insert uncommitted so acceptReport passes its read
-    // before blocking on the unique constraint.
+    // Keep the competing insert uncommitted so acceptReport blocks on the
+    // unique constraint instead of seeing the row during its initial read.
     const competitor = await ctx.db.startTransaction().execute();
-
-    const competingJobId = await createIntegrationJobRepo(competitor).insert({
-      type: "import_gpv",
-      status: "PENDING",
-      requested_by_user_id: UPLOADER,
-      file_path: `imports/${contentSha256}.xlsx`,
-      max_attempts: 3,
-      created_at: new Date("2026-07-02T00:00:00.000Z"),
-    });
 
     await competitor
       .insertInto("merchant_reports")
       .values({
-        job_id: competingJobId,
         content_sha256: contentSha256,
         cut_at: new Date("2026-07-01T00:00:00.000Z"),
         storage_key: `imports/${contentSha256}.xlsx`,
@@ -110,10 +98,10 @@ describe("accept report", () => {
     await competitor.commit().execute();
 
     expect((await accepting).kind).toBe("duplicate");
-    expect((await countJobs(ctx)).count).toBe(1);
+    expect((await countImports(ctx)).count).toBe(0);
   });
 
-  it("rolls only its own work back when the caller owns the transaction", async () => {
+  it("leaves a caller-owned transaction usable after a duplicate", async () => {
     await acceptReport(ctx.db, reportInput({ contentSha256: "c".repeat(64) }));
 
     const outcome = await ctx.db.transaction().execute(async (trx) => {
@@ -132,6 +120,21 @@ describe("accept report", () => {
 
     expect(outcome.duplicate.kind).toBe("duplicate");
     expect(outcome.accepted.kind).toBe("accepted");
-    expect((await countJobs(ctx)).count).toBe(2);
+    expect((await countImports(ctx)).count).toBe(2);
+  });
+
+  it("cascades the import away when its report is deleted", async () => {
+    const accepted = await acceptReport(
+      ctx.db,
+      reportInput({ contentSha256: "f".repeat(64) }),
+    );
+
+    await ctx.db
+      .deleteFrom("merchant_reports")
+      .where("content_sha256", "=", "f".repeat(64))
+      .execute();
+
+    expect(accepted.kind).toBe("accepted");
+    expect((await countImports(ctx)).count).toBe(0);
   });
 });

@@ -21,7 +21,7 @@ export function createEnrichmentQuery(
         lifecycle: resolveLifecycle(record),
         freshness: resolveFreshness(record, now),
         overlay: toOverlay(record),
-        lastError: record?.last_error ?? null,
+        lastError: record?.error_message ?? null,
         requestedAt: record?.requested_at ?? null,
       };
     },
@@ -35,6 +35,7 @@ function resolveFreshness(
   if (!record || record.expires_at === null) {
     return "none";
   }
+
   return record.expires_at > now ? "fresh" : "stale";
 }
 
@@ -60,8 +61,6 @@ function resolveLifecycle(
   }
 }
 
-// No result exists until a provider fills the record: queue may be pending or
-// processing with all result columns null.
 function toOverlay(record: RegistryRow | null | undefined): Overlay | null {
   if (
     !record ||
@@ -92,8 +91,7 @@ function toOverlay(record: RegistryRow | null | undefined): Overlay | null {
   };
 }
 
-// jsonb auto-parses on read; narrow defensively at this boundary rather than
-// trusting the stored shape.
+// Validate the stored JSON before exposing it as typed data.
 function normalizeEconomicActivities(value: unknown): SunatEconomicActivity[] {
   if (!Array.isArray(value)) return [];
 
@@ -106,6 +104,7 @@ function normalizeEconomicActivities(value: unknown): SunatEconomicActivity[] {
       const label = Reflect.get(entry, "label");
       const code = Reflect.get(entry, "code");
       const description = Reflect.get(entry, "description");
+
       if (
         (role !== "principal" && role !== "secondary") ||
         (order !== null && typeof order !== "number") ||

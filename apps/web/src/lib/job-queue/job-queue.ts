@@ -1,6 +1,6 @@
 import { createLogger } from "~/lib/observability/logger";
 
-import { nextAvailableAt } from "./backoff";
+import { nextClaimableAt } from "./backoff";
 import type {
   JobQueueConfig,
   QueueJobBase,
@@ -16,20 +16,19 @@ function errorMessage(error: unknown): string {
 export function createJobQueue<TJob extends QueueJobBase>(
   config: JobQueueConfig<TJob>,
 ): QueueRunner {
-  const { name, leaseMs, store, workerId, claimFilter, now } = config;
+  const { name, leaseMs, store, workerId, now } = config;
   const maxConcurrency = config.maxConcurrency ?? 1;
   const timeoutMs = config.timeoutMs ?? 120_000;
 
   let runningCount = 0;
   const logger = createLogger(`queue:${name}`);
 
-  // A retry with no attempts left is demoted to a fail. `attempt_count` was
-  // already incremented at claim time, so the row's value reflects the
-  // attempt that just ran.
+  // Retries become failures after the last attempt.
   function resolve(job: TJob, settlement: Settlement): SettleOutcome {
     if (settlement.kind !== "retry") {
       return settlement;
     }
+
     if (job.attempt_count >= job.max_attempts) {
       return {
         kind: "fail",
@@ -37,29 +36,31 @@ export function createJobQueue<TJob extends QueueJobBase>(
         patch: settlement.patch,
       };
     }
+
     return {
       kind: "retry",
-      availableAt: nextAvailableAt(job.attempt_count, now()),
+      claimableAt: nextClaimableAt(job.attempt_count, now()),
       reason: settlement.reason,
       patch: settlement.patch,
     };
   }
 
-  // settle patches queue_state + lease + mirror columns; the handler's `patch`
-  // is the only place for extra domain columns.
+  // Queue state is managed here
   function settle(jobId: TJob["id"], outcome: SettleOutcome): Promise<boolean> {
     if (outcome.kind === "done") {
       return store.markDone(jobId, workerId, now(), outcome.patch);
     }
+
     if (outcome.kind === "retry") {
       return store.scheduleRetry(
         jobId,
         workerId,
-        outcome.availableAt,
+        outcome.claimableAt,
         outcome.reason ?? null,
         outcome.patch,
       );
     }
+
     return store.markFailed(
       jobId,
       workerId,
@@ -72,6 +73,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
   async function renewLease(jobId: TJob["id"], controller: AbortController) {
     try {
       const ok = await store.extendLease(jobId, workerId, leaseMs, now());
+
       if (!ok) {
         logger.error("lease_stolen", { jobId });
         controller.abort();
@@ -94,8 +96,10 @@ export function createJobQueue<TJob extends QueueJobBase>(
 
     try {
       let settlement: Settlement;
+
       try {
         settlement = await config.handle(job, controller.signal);
+
         if (controller.signal.aborted) {
           throw new Error("Job aborted after processing");
         }
@@ -104,18 +108,23 @@ export function createJobQueue<TJob extends QueueJobBase>(
         const reason = aborted
           ? "Timeout or lease stolen"
           : errorMessage(error);
+
         logger.error(aborted ? "job_timeout_or_stolen" : "job_failed", {
           jobId: job.id,
           error: reason,
         });
+
         settlement = { kind: "retry", reason };
       }
 
       const outcome = resolve(job, settlement);
+
       await settle(job.id, outcome);
+
       if (config.onSettled) {
         await config.onSettled(job, outcome);
       }
+
       if (outcome.kind === "done") {
         logger.info("job_completed", { jobId: job.id });
       }
@@ -131,38 +140,42 @@ export function createJobQueue<TJob extends QueueJobBase>(
     }
   }
 
-  async function runOnce() {
-    const availableSlots = maxConcurrency - runningCount;
-    if (availableSlots <= 0) {
-      return;
-    }
-
+  // Drain every due job before returning. Each claim depends on the previous
+  // settlement, so the loop is intentionally sequential.
+  /* eslint-disable no-await-in-loop */
+  async function drain() {
     try {
-      const jobs = await store.claim(
-        workerId,
-        now(),
-        availableSlots,
-        leaseMs,
-        claimFilter,
-      );
-      if (jobs.length === 0) {
-        return;
-      }
+      for (;;) {
+        const availableSlots = maxConcurrency - runningCount;
 
-      // Reserve slots before callbacks so overlapping runs cannot over-claim.
-      runningCount += jobs.length;
+        if (availableSlots <= 0) {
+          return;
+        }
 
-      await Promise.all(jobs.map((job) => process(job)));
+        const jobs = await store.claim(
+          workerId,
+          now(),
+          availableSlots,
+          leaseMs,
+        );
 
-      if (jobs.length >= availableSlots) {
-        setTimeout(() => {
-          void runOnce();
-        }, 0);
+        if (jobs.length === 0) {
+          return;
+        }
+
+        runningCount += jobs.length;
+
+        await Promise.all(jobs.map((job) => process(job)));
+
+        if (jobs.length < availableSlots) {
+          return;
+        }
       }
     } catch (error: unknown) {
       logger.error("claim_failed", { error: errorMessage(error) });
     }
   }
+  /* eslint-enable no-await-in-loop */
 
-  return { name, runOnce };
+  return { name, drain };
 }

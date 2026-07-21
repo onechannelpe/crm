@@ -12,7 +12,7 @@ import type { IntegrationJobId } from "~/server/shared/ids";
 const JOB_COLUMNS = [
   "id",
   "type",
-  "status",
+  "queue_state",
   "created_at",
   "completed_at",
   "error_message",
@@ -20,9 +20,8 @@ const JOB_COLUMNS = [
   "rows_applied",
   "rows_failed",
   "results_json",
-  "available_at",
+  "claimable_at",
   "lease_owner",
-  "lease_until",
   "file_path",
   "requested_by_user_id",
   "attempt_count",
@@ -32,8 +31,6 @@ const JOB_COLUMNS = [
 export function createIntegrationJobRepo(
   db: DatabaseExecutor,
 ): IntegrationJobsPort {
-  // `status` mirrors queue_state 1:1 via JOB_TABLE_LIFECYCLE; the store stamps
-  // completed_at and error_message on settle.
   const store = createJobStore<IntegrationJobRow, IntegrationJobRow["id"]>(
     db,
     "workflow_integration_jobs",
@@ -42,20 +39,20 @@ export function createIntegrationJobRepo(
 
   return {
     store,
+
     async insert(values: NewIntegrationJob): Promise<IntegrationJobRow["id"]> {
       const row = await db
         .insertInto("workflow_integration_jobs")
         .values({
           ...values,
           queue_state: "pending",
-          available_at: values.created_at,
+          claimable_at: values.created_at,
         })
         .returning("id")
         .executeTakeFirstOrThrow();
 
-      // Wake the records-import queue on the same executor the job was written
-      // on, so a wrapping transaction buffers the NOTIFY until commit.
       notify(db, JOB_TABLE_CHANNELS.workflow_integration_jobs);
+
       return row.id;
     },
 
@@ -90,17 +87,25 @@ export function createIntegrationJobRepo(
         rows_applied?: number;
         rows_failed?: number;
       } = {};
+
+      let hasUpdates = false;
+
       if (progress.rowsTotal !== undefined) {
         values.rows_total = progress.rowsTotal;
-      }
-      if (progress.rowsApplied !== undefined) {
-        values.rows_applied = progress.rowsApplied;
-      }
-      if (progress.rowsFailed !== undefined) {
-        values.rows_failed = progress.rowsFailed;
+        hasUpdates = true;
       }
 
-      if (Object.keys(values).length === 0) {
+      if (progress.rowsApplied !== undefined) {
+        values.rows_applied = progress.rowsApplied;
+        hasUpdates = true;
+      }
+
+      if (progress.rowsFailed !== undefined) {
+        values.rows_failed = progress.rowsFailed;
+        hasUpdates = true;
+      }
+
+      if (!hasUpdates) {
         return Promise.resolve();
       }
 

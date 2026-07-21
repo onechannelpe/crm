@@ -1,26 +1,53 @@
 import { sql, type Kysely } from "kysely";
 
-// Dealer snapshots provide device facts. Attribution decisions are preserved per
-// RUC-month, targets are effective-dated, and monthly GPV follows RUC changes.
+import { CLAIMABLE_STATES } from "~/lib/job-queue/registry";
+
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("merchant_reports")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
-    .addColumn("job_id", "uuid", (col) =>
-      col.notNull().references("workflow_integration_jobs.id"),
-    )
     .addColumn("content_sha256", "text", (col) => col.notNull().unique())
-    // The filename includes a time because the dealer can issue multiple cuts daily.
     .addColumn("cut_at", "timestamptz", (col) => col.notNull())
     .addColumn("storage_key", "text", (col) => col.notNull())
     .addColumn("source_filename", "text", (col) => col.notNull())
     .addColumn("uploaded_by", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .addColumn("rows_total", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("rows_valid", "integer", (col) => col.notNull().defaultTo(0))
-    .addColumn("rows_rejected", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createTable("merchant_report_imports")
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    // Retries reuse the same import row.
+    .addColumn("report_id", "uuid", (col) =>
+      col
+        .notNull()
+        .unique()
+        .references("merchant_reports.id")
+        .onDelete("cascade"),
+    )
+    .addColumn("queue_state", "text", (col) =>
+      col.notNull().defaultTo("pending"),
+    )
+    .addColumn("rows_total", "integer")
+    .addColumn("rows_applied", "integer")
+    .addColumn("rows_failed", "integer")
+    .addColumn("results_json", "jsonb")
+    .addColumn("error_message", "text")
+    .addColumn("lease_owner", "text")
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(3))
+    .addColumn("claimable_at", "timestamptz", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("completed_at", "timestamptz")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_merchant_report_imports_claim")
+    .on("merchant_report_imports")
+    .column("claimable_at")
+    .where(CLAIMABLE_STATES)
     .execute();
 
   await db.schema
@@ -76,7 +103,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addUniqueConstraint("merchant_sales_id_sale_month", ["id", "sale_month"])
     .execute();
 
-  // Link and online sales lack a serial. Coalescing makes their identities unique.
+  // Sales without a serial still need a stable unique identity.
   await sql`
     create unique index idx_merchant_sales_identity
       on merchant_sales (merchant_id, product, coalesce(serial_number, ''))
@@ -87,11 +114,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("merchant_sales")
     .column("ruc")
     .execute();
+
   await db.schema
     .createIndex("idx_merchant_sales_sale_month")
     .on("merchant_sales")
     .column("sale_month")
     .execute();
+
   await db.schema
     .createIndex("idx_merchant_sales_serial")
     .on("merchant_sales")
@@ -123,7 +152,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
       "sale_id",
       "month_offset",
     ])
-    // Prevent a GPV row from claiming a different sale month than its sale.
     .addForeignKeyConstraint(
       "merchant_sale_gpv_sale_month_fkey",
       ["sale_id", "sale_month"],
@@ -175,11 +203,13 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("merchant_monthly_attribution")
     .column("confidence")
     .execute();
+
   await db.schema
     .createIndex("idx_merchant_monthly_attribution_seller")
     .on("merchant_monthly_attribution")
     .column("seller_user_id")
     .execute();
+
   await db.schema
     .createIndex("idx_merchant_monthly_attribution_branch")
     .on("merchant_monthly_attribution")
@@ -190,7 +220,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("merchant_targets")
     .addColumn("ruc", "text", (col) => col.notNull())
     .addColumn("effective_from", "date", (col) => col.notNull())
-    // Null means no projection from effective_from onward; zero remains a target.
     .addColumn("projected_gpv", "numeric")
     .addColumn("set_by", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("set_at", "timestamptz", (col) => col.notNull())

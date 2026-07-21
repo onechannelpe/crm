@@ -42,10 +42,6 @@ export function createRecordImportRunner(deps: {
         throw new Error("Missing file path for import job");
       }
 
-      if (job.type !== "import_status" && job.type !== "import_prioridad") {
-        throw new Error(`Unsupported import type: ${job.type}`);
-      }
-
       const bytes = await readFile(job.file_path);
       const { validRows, invalidRows }: StoredRows = JSON.parse(
         new TextDecoder().decode(bytes),
@@ -61,7 +57,7 @@ export function createRecordImportRunner(deps: {
       publishRecordImportProgress(
         buildRecordImportProgressEvent({
           job,
-          status: "PROCESSING",
+          queueState: "processing",
           rowsTotal,
           rowsApplied: 0,
           rowsFailed: 0,
@@ -82,7 +78,7 @@ export function createRecordImportRunner(deps: {
             publishRecordImportProgress(
               buildRecordImportProgressEvent({
                 job,
-                status: "PROCESSING",
+                queueState: "processing",
                 rowsTotal: progress.rowsTotal,
                 rowsApplied: progress.rowsApplied,
                 rowsFailed: progress.rowsFailed,

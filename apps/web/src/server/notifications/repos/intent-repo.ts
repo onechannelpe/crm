@@ -23,8 +23,6 @@ export interface IntentRepository {
 }
 
 export function createIntentRepository(db: Kysely<Database>): IntentRepository {
-  // expanded_at is the terminal marker for both success and failure; there is
-  // no separate done_at. error carries the reason when the outcome is fail.
   const store = createJobStore<IntentJob, NotificationIntentId>(
     db,
     "notification_intents",

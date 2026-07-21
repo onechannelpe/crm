@@ -12,8 +12,7 @@ import type {
 
 export interface WorkflowIntegrationJobsTable {
   id: GeneratedId<IntegrationJobId>;
-  type: "export" | "import_status" | "import_prioridad" | "import_gpv";
-  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+  type: "import_status" | "import_prioridad";
   queue_state: "pending" | "processing" | "done" | "failed";
   requested_by_user_id: IdColumn<UserId>;
   file_path: string | null;
@@ -23,10 +22,9 @@ export interface WorkflowIntegrationJobsTable {
   rows_failed: number | null;
   results_json: Json | null;
   lease_owner: string | null;
-  lease_until: Date | null;
   attempt_count: ColumnType<number, number | undefined, number>;
   max_attempts: number;
-  available_at: Date;
+  claimable_at: Date;
   created_at: Date;
   completed_at: Date | null;
 }

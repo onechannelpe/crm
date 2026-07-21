@@ -1,5 +1,5 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { IntegrationJobId, MerchantReportId } from "~/server/shared/ids";
+import type { MerchantReportId } from "~/server/shared/ids";
 
 import { loadAttributionContext } from "../attribution/context";
 import type { ParsedReport, Rejection } from "../intake/types";
@@ -8,30 +8,6 @@ import { partitionBySaleMonth } from "./sale-month-guard";
 import { stampAttribution } from "./write-attribution";
 import { upsertGpv } from "./write-gpv";
 import { upsertSales } from "./write-sales";
-
-export interface ReportForJob {
-  id: MerchantReportId;
-  storageKey: string;
-  cutAt: Date;
-}
-
-export async function findReportForJob(
-  db: DatabaseExecutor,
-  jobId: IntegrationJobId,
-): Promise<ReportForJob | null> {
-  const report = await db
-    .selectFrom("merchant_reports")
-    .select(["id", "storage_key", "cut_at"])
-    .where("job_id", "=", jobId)
-    .executeTakeFirst();
-
-  if (!report) return null;
-  return {
-    id: report.id,
-    storageKey: report.storage_key,
-    cutAt: report.cut_at,
-  };
-}
 
 export interface ApplyReportInput {
   reportId: MerchantReportId;
@@ -52,13 +28,13 @@ export interface ApplyReportPorts {
   now: Date;
 }
 
-// Applies one accepted snapshot atomically. Device facts are upserted, GPV keeps
-// the newest cut, and unresolved attribution can gain newly available evidence.
 export async function applyReport(
   input: ApplyReportInput,
   ports: ApplyReportPorts,
 ): Promise<ApplyReportResult> {
-  if (ports.db.isTransaction) return applyInTransaction(input, ports);
+  if (ports.db.isTransaction) {
+    return applyInTransaction(input, ports);
+  }
 
   return ports.db
     .transaction()
@@ -69,8 +45,9 @@ async function applyInTransaction(
   input: ApplyReportInput,
   ports: ApplyReportPorts,
 ): Promise<ApplyReportResult> {
+  const { reportId, cutAt, parsed } = input;
   const { db, now } = ports;
-  const { parsed, reportId } = input;
+
   const rowsTotal = parsed.rows.length + parsed.rejections.length;
 
   const { accepted, rejected } = await partitionBySaleMonth(db, parsed.rows);
@@ -79,25 +56,16 @@ async function applyInTransaction(
   await insertRejections(db, reportId, rejections);
 
   const saleIds = await upsertSales(db, reportId, accepted, now);
+
   await upsertGpv(db, {
     reportId,
-    cutAt: input.cutAt,
+    cutAt,
     rows: accepted,
     saleIds,
   });
 
   const ctx = await loadAttributionContext(db, accepted);
   const stamped = await stampAttribution(db, ctx, accepted, now);
-
-  await db
-    .updateTable("merchant_reports")
-    .set({
-      rows_total: rowsTotal,
-      rows_valid: accepted.length,
-      rows_rejected: rejections.length,
-    })
-    .where("id", "=", reportId)
-    .execute();
 
   return {
     rowsTotal,
@@ -115,7 +83,9 @@ async function insertRejections(
   reportId: MerchantReportId,
   rejections: readonly Rejection[],
 ): Promise<void> {
-  if (rejections.length === 0) return;
+  if (rejections.length === 0) {
+    return;
+  }
 
   const values = rejections.map((row) => ({
     report_id: reportId,

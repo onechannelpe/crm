@@ -1,4 +1,4 @@
-import type { Generated } from "kysely";
+import type { ColumnType, Generated } from "kysely";
 
 import type { Json } from "~/contracts/json";
 import type {
@@ -9,8 +9,8 @@ import type {
   BranchId,
   GeneratedId,
   IdColumn,
-  IntegrationJobId,
   MerchantReportId,
+  MerchantReportImportId,
   MerchantSaleId,
   NullableIdColumn,
   UserId,
@@ -20,16 +20,29 @@ export type MerchantProduct = "CULQIFULL" | "CULQILINK" | "CULQIONLINE";
 
 export interface MerchantReportsTable {
   id: GeneratedId<MerchantReportId>;
-  job_id: IdColumn<IntegrationJobId>;
   content_sha256: string;
   cut_at: Date;
   storage_key: string;
   source_filename: string;
   uploaded_by: IdColumn<UserId>;
-  rows_total: Generated<number>;
-  rows_valid: Generated<number>;
-  rows_rejected: Generated<number>;
   created_at: Date;
+}
+
+export interface MerchantReportImportsTable {
+  id: GeneratedId<MerchantReportImportId>;
+  report_id: IdColumn<MerchantReportId>;
+  queue_state: Generated<"pending" | "processing" | "done" | "failed">;
+  rows_total: number | null;
+  rows_applied: number | null;
+  rows_failed: number | null;
+  results_json: Json | null;
+  error_message: string | null;
+  lease_owner: string | null;
+  attempt_count: ColumnType<number, number | undefined, number>;
+  max_attempts: number;
+  claimable_at: Date;
+  created_at: Date;
+  completed_at: Date | null;
 }
 
 export interface MerchantReportRejectionsTable {

@@ -1,18 +1,17 @@
 import type { Json } from "~/contracts/json";
 import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
-import type { JobStore } from "~/lib/job-queue/job-store";
+import type { JobStore, QueueState } from "~/lib/job-queue/job-store";
 import type { QueueJobBase } from "~/lib/job-queue/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { IntegrationJobId, UserId } from "~/server/shared/ids";
 import type { LeadQueries } from "~/server/workflow/lead/read/lead-queries";
 
 export type IntegrationJobType = WorkflowIntegrationJobsTable["type"];
-export type IntegrationJobStatus = WorkflowIntegrationJobsTable["status"];
 
 export interface IntegrationJobRow extends QueueJobBase {
   id: IntegrationJobId;
   type: IntegrationJobType;
-  status: IntegrationJobStatus;
+  queue_state: QueueState;
   created_at: Date;
   completed_at: Date | null;
   error_message: string | null;
@@ -20,16 +19,14 @@ export interface IntegrationJobRow extends QueueJobBase {
   rows_applied: number | null;
   rows_failed: number | null;
   results_json: Json | null;
-  available_at: Date;
+  claimable_at: Date;
   lease_owner: string | null;
-  lease_until: Date | null;
   file_path: string | null;
   requested_by_user_id: UserId;
 }
 
 export interface NewIntegrationJob {
   type: IntegrationJobType;
-  status: IntegrationJobStatus;
   requested_by_user_id: UserId;
   file_path: string | null;
   max_attempts: number;

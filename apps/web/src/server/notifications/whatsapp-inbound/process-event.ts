@@ -14,6 +14,7 @@ const VERIFY_REPLY_BODY = [
   "Listo, este número queda verificado para recibir notificaciones de la plataforma.",
   "Te avisaremos por WhatsApp cuando un cliente acepte una tarifa o quede listo para afiliación.",
 ].join("\n");
+
 const OPT_OUT_REPLY_BODY = [
   "Listo, no recibirás más notificaciones por WhatsApp.",
   "Puedes volver a activarlas cuando quieras desde Configuración > Notificaciones.",
@@ -28,8 +29,6 @@ export type InboundEventOutcome =
   | "unknown-sender"
   | "invalid-sender";
 
-// Only verification or opt-out inserts an outbound row. enqueuedReply tells the
-// caller whether to notify that queue.
 export type InboundEventResult = {
   outcome: InboundEventOutcome;
   enqueuedReply: boolean;
@@ -42,7 +41,7 @@ async function enqueueReply(
   recipient: Phone,
   body: string,
   now: Date,
-) {
+): Promise<void> {
   await db
     .insertInto("outbound_whatsapp_messages")
     .values({
@@ -52,15 +51,14 @@ async function enqueueReply(
       queue_state: "pending",
       attempt_count: 0,
       max_attempts: 5,
-      available_at: now,
+      claimable_at: now,
       lease_owner: null,
-      lease_until: null,
       provider: null,
       provider_message_id: null,
       error_code: null,
       error_message: null,
       created_at: now,
-      sent_at: null,
+      completed_at: null,
     })
     .onConflict((oc) => oc.column("id").doNothing())
     .execute();
@@ -72,7 +70,10 @@ export async function processInboundWhatsAppEvent(
   now: Date,
 ): Promise<InboundEventResult> {
   const sender = parsePhone(event.sender_address);
-  if (!sender) return { outcome: "invalid-sender", enqueuedReply: false };
+
+  if (!sender) {
+    return { outcome: "invalid-sender", enqueuedReply: false };
+  }
 
   return db.transaction().execute(async (trx) => {
     const claim = await trx
@@ -81,12 +82,16 @@ export async function processInboundWhatsAppEvent(
       .where("channel", "=", "whatsapp")
       .where("address", "=", sender)
       .executeTakeFirst();
-    if (!claim) return { outcome: "unknown-sender", enqueuedReply: false };
+
+    if (!claim) {
+      return { outcome: "unknown-sender", enqueuedReply: false };
+    }
 
     const command = classifyInboundMessage(event.body);
 
     if (command === "opt-out") {
       const categories = categoriesControllableOn("whatsapp");
+
       const inserted =
         categories.length > 0
           ? await trx
@@ -105,7 +110,9 @@ export async function processInboundWhatsAppEvent(
               .returning("id")
               .execute()
           : [];
+
       const changed = inserted.length > 0;
+
       if (changed) {
         await enqueueReply(
           trx,
@@ -116,20 +123,27 @@ export async function processInboundWhatsAppEvent(
           now,
         );
       }
+
       return { outcome: "opted-out", enqueuedReply: changed };
     }
 
     if (command === "verify" && !claim.is_verified) {
       const won = await trx
         .updateTable("user_channel_addresses")
-        .set({ is_verified: true, verified_at: now, updated_at: now })
+        .set({
+          is_verified: true,
+          verified_at: now,
+          updated_at: now,
+        })
         .where("user_id", "=", claim.user_id)
         .where("channel", "=", "whatsapp")
         .where("address", "=", claim.address)
         .where("is_verified", "=", false)
         .returning("user_id")
         .executeTakeFirst();
+
       await openSession(trx, claim.user_id, event.provider_timestamp);
+
       if (won) {
         await enqueueReply(
           trx,
@@ -139,8 +153,10 @@ export async function processInboundWhatsAppEvent(
           VERIFY_REPLY_BODY,
           now,
         );
+
         return { outcome: "verified", enqueuedReply: true };
       }
+
       return { outcome: "already-verified", enqueuedReply: false };
     }
 
@@ -149,6 +165,7 @@ export async function processInboundWhatsAppEvent(
     }
 
     await openSession(trx, claim.user_id, event.provider_timestamp);
+
     return {
       outcome: command === "verify" ? "already-verified" : "session-opened",
       enqueuedReply: false,

@@ -1,8 +1,6 @@
-// Delay grows as initialDelay * 2^(attempt-1), capped, then equal jitter lands
-// in [base/2, base]. Jitter spreads retries so a provider outage does not
-// stampede the queue in lockstep. `now` is injected so scheduled `available_at`
-// is reachable under a test clock.
-export function nextAvailableAt(attemptCount: number, now: Date): Date {
+// Exponential backoff with equal jitter. `now` is injected so tests can control
+// the scheduled retry time.
+export function nextClaimableAt(attemptCount: number, now: Date): Date {
   if (attemptCount <= 0) return now;
 
   const INITIAL_DELAY_MS = 5_000;

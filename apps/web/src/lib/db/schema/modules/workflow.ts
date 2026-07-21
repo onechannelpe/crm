@@ -1,5 +1,7 @@
 import { sql, type Kysely } from "kysely";
 
+import { CLAIMABLE_STATES } from "~/lib/job-queue/registry";
+
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("workflow_collection_mode_kinds")
@@ -42,9 +44,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .addColumn("updated_at", "timestamptz", (col) => col.notNull())
     .addColumn("deleted_at", "timestamptz")
-    // When set, the lead holds its RUC until this timestamp.
-    // Null for stages that are not time-boxed (pre-quotation QUALIFYING,
-    // won SETUP/LIVE, and terminal stages).
     .addColumn("reservation_expires_at", "timestamptz")
     .addColumn("version", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("current_provider", "text", (col) => col.notNull())
@@ -58,45 +57,47 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("pos_count", "integer", (col) => col.notNull())
     .execute();
 
-  // Only one *active* lead may hold a given RUC at a time. Released leads
-  // (EXPIRED) and soft-deleted leads drop out of the constraint so the RUC can
-  // be registered fresh while the old lead and its evidence stay as history.
   await db.schema
     .createIndex("idx_workflow_leads_organization")
     .on("workflow_leads")
     .column("organization_id")
     .unique()
-    // sql.ref bypasses createIndex().where typing, which only accepts the
-    // indexed column literal.
+    // Kysely only accepts the indexed column here, so other columns use sql.ref.
     .where(sql.ref("deleted_at"), "is", null)
     .where(sql.ref("stage"), "!=", "EXPIRED")
     .execute();
+
   await db.schema
     .createIndex("idx_workflow_leads_reservation")
     .on("workflow_leads")
     .column("reservation_expires_at")
     .where("reservation_expires_at", "is not", null)
     .execute();
+
   await db.schema
     .createIndex("idx_workflow_leads_executive")
     .on("workflow_leads")
     .column("executive_id")
     .execute();
+
   await db.schema
     .createIndex("idx_workflow_leads_status")
     .on("workflow_leads")
     .column("status")
     .execute();
+
   await db.schema
     .createIndex("idx_workflow_leads_priority")
     .on("workflow_leads")
     .column("priority")
     .execute();
+
   await db.schema
     .createIndex("idx_workflow_leads_stage")
     .on("workflow_leads")
     .column("stage")
     .execute();
+
   await db.schema
     .createIndex("idx_workflow_leads_deleted_at")
     .on("workflow_leads")
@@ -199,7 +200,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("workflow_integration_jobs")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("type", "text", (col) => col.notNull())
-    .addColumn("status", "text", (col) => col.notNull())
     .addColumn("queue_state", "text", (col) =>
       col.notNull().defaultTo("pending"),
     )
@@ -213,10 +213,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("rows_failed", "integer")
     .addColumn("results_json", "jsonb")
     .addColumn("lease_owner", "text")
-    .addColumn("lease_until", "timestamptz")
     .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
     .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(3))
-    .addColumn("available_at", "timestamptz", (col) => col.notNull())
+    .addColumn("claimable_at", "timestamptz", (col) => col.notNull())
     .addColumn("created_at", "timestamptz", (col) => col.notNull())
     .addColumn("completed_at", "timestamptz")
     .execute();
@@ -224,14 +223,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createIndex("idx_workflow_integration_jobs_claim")
     .on("workflow_integration_jobs")
-    .column("available_at")
-    .where(sql.ref("queue_state"), "=", "pending")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_integration_jobs_stale")
-    .on("workflow_integration_jobs")
-    .column("lease_until")
-    .where(sql.ref("queue_state"), "=", "processing")
+    .column("claimable_at")
+    .where(CLAIMABLE_STATES)
     .execute();
 }

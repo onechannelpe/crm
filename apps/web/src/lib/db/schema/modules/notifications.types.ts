@@ -47,15 +47,14 @@ export interface NotificationDeliveriesTable {
   queue_state: "pending" | "processing" | "done" | "failed";
   attempt_count: number;
   max_attempts: number;
-  available_at: Date;
+  claimable_at: Date;
   lease_owner: string | null;
-  lease_until: Date | null;
   provider: "resend" | "whatsapp_cloud" | "kapso" | null;
   provider_message_id: string | null;
   error_code: string | null;
   error_message: string | null;
   created_at: Date;
-  sent_at: Date | null;
+  completed_at: Date | null;
 }
 
 export interface AppNotificationsTable {
@@ -84,12 +83,11 @@ export interface NotificationIntentsTable {
   queue_state: "pending" | "processing" | "done" | "failed";
   attempt_count: number;
   max_attempts: number;
-  available_at: Date;
+  claimable_at: Date;
   lease_owner: string | null;
-  lease_until: Date | null;
-  error: string | null;
+  error_message: string | null;
   created_at: Date;
-  expanded_at: Date | null;
+  completed_at: Date | null;
 }
 
 export interface KapsoWebhookDeliveriesTable {
@@ -113,13 +111,12 @@ export interface WhatsAppInboundEventsTable {
   queue_state: "pending" | "processing" | "done" | "failed";
   attempt_count: number;
   max_attempts: number;
-  available_at: Date;
+  claimable_at: Date;
   lease_owner: string | null;
-  lease_until: Date | null;
   outcome: string | null;
-  error: string | null;
+  error_message: string | null;
   received_at: Date;
-  processed_at: Date | null;
+  completed_at: Date | null;
 }
 
 export interface OutboundWhatsAppMessagesTable {
@@ -129,13 +126,12 @@ export interface OutboundWhatsAppMessagesTable {
   queue_state: "pending" | "processing" | "done" | "failed";
   attempt_count: number;
   max_attempts: number;
-  available_at: Date;
+  claimable_at: Date;
   lease_owner: string | null;
-  lease_until: Date | null;
   provider: "whatsapp_cloud" | "kapso" | null;
   provider_message_id: string | null;
   error_code: string | null;
   error_message: string | null;
   created_at: Date;
-  sent_at: Date | null;
+  completed_at: Date | null;
 }

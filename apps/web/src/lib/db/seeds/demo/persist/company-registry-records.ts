@@ -38,8 +38,8 @@ export async function persistCompanyRegistryRecords(
             now - spec.org.registryAgeDays * day + overlayTtl,
           ),
           queue_state: "done" as const,
-          available_at: fetchedAt,
-          last_error: null,
+          claimable_at: fetchedAt,
+          error_message: null,
           requested_by_user_id: null,
           requested_at: fetchedAt,
         };

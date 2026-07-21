@@ -1,55 +1,46 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
-import type {
-  IntegrationJobRow,
-  IntegrationRuntime,
-} from "~/server/integrations/types";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-import { createMerchantReportRunner } from "./runner";
-
-interface MerchantReportRunner {
-  process(
-    job: IntegrationJobRow,
-    signal: AbortSignal,
-  ): Promise<{
-    rowsTotal: number;
-    rowsApplied: number;
-    rowsFailed: number;
-    resultsJson: string;
-  }>;
-}
+import {
+  createMerchantReportImportRepo,
+  type MerchantReportImportRow,
+} from "./import-repo";
+import {
+  createMerchantReportRunner,
+  type MerchantReportRunner,
+} from "./runner";
 
 interface MerchantReportsQueueDeps {
-  runtime: IntegrationRuntime;
+  db: DatabaseExecutor;
+  now: () => Date;
   readFile: (filePath: string) => Promise<Uint8Array>;
   runner?: MerchantReportRunner;
 }
 
-// Shares workflow_integration_jobs with the records-import queue but claims only
-// import_gpv rows, so the two runners never contend for each other's jobs.
 export function createMerchantReportsQueue(
   workerId: string,
   deps: MerchantReportsQueueDeps,
 ) {
-  const { runtime } = deps;
+  const repo = createMerchantReportImportRepo(deps.db);
+
   const runner =
     deps.runner ??
     createMerchantReportRunner({
-      db: runtime.executor,
-      now: runtime.now,
+      db: deps.db,
+      now: deps.now,
       readFile: deps.readFile,
-      updateProgress: (progress) =>
-        runtime.jobs.updateProgress(progress.jobId, progress),
+      updateProgress: (id, progress) => repo.updateProgress(id, progress),
     });
 
-  return createJobQueue<IntegrationJobRow>({
+  return createJobQueue<MerchantReportImportRow>({
     name: "merchant-reports-import",
     leaseMs: 60_000,
-    now: runtime.now,
+    now: deps.now,
     workerId,
-    store: runtime.jobs.store,
-    claimFilter: { column: "type", values: ["import_gpv"] },
-    handle: async (job, signal: AbortSignal) => {
+    store: repo.store,
+    handle: async (job, signal) => {
       const result = await runner.process(job, signal);
+
       return {
         kind: "done",
         patch: {
