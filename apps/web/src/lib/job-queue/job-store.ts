@@ -4,8 +4,6 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { CLAIMABLE_STATES, type JobTableName } from "./registry";
 
-export type { JobTableName };
-
 export type DomainPatch = Record<
   string,
   string | number | boolean | Date | null
