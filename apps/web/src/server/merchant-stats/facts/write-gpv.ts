@@ -1,12 +1,12 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { MerchantReportId } from "~/server/shared/ids";
 
+import { chunks } from "../chunks";
 import { saleIdentityKey } from "../intake/sale-identity";
 import type { SourceRow } from "../intake/types";
-import { chunks } from "./chunks";
 import type { SaleIdByIdentity } from "./write-sales";
 
-const GPV_CHUNK = 4000;
+const GPV_CHUNK_SIZE = 4000;
 
 export interface WriteGpvInput {
   reportId: MerchantReportId;
@@ -15,8 +15,7 @@ export interface WriteGpvInput {
   saleIds: SaleIdByIdentity;
 }
 
-// Keeps the newest cut for each sale and cohort offset. Equal cuts replace the
-// stored values so a corrected re-export is applied.
+// Newer cuts win. Equal cuts overwrite so corrected re-exports are applied.
 export async function upsertGpv(
   db: DatabaseExecutor,
   input: WriteGpvInput,
@@ -25,7 +24,11 @@ export async function upsertGpv(
     const saleId = input.saleIds.get(
       saleIdentityKey(row.merchantId, row.product, row.serialNumber),
     );
-    if (!saleId) return [];
+
+    if (!saleId) {
+      return [];
+    }
+
     return row.gpv.map((observation) => ({
       sale_id: saleId,
       month_offset: observation.offset,
@@ -37,7 +40,7 @@ export async function upsertGpv(
     }));
   });
 
-  for (const chunk of chunks(dedupe(values), GPV_CHUNK)) {
+  for (const chunk of chunks(dedupe(values), GPV_CHUNK_SIZE)) {
     // eslint-disable-next-line no-await-in-loop
     await db
       .insertInto("merchant_sale_gpv")
@@ -51,7 +54,6 @@ export async function upsertGpv(
             cut_at: eb.ref("excluded.cut_at"),
             report_id: eb.ref("excluded.report_id"),
           }))
-          // An older cut must not replace a newer snapshot.
           .whereRef("excluded.cut_at", ">=", "merchant_sale_gpv.cut_at"),
       )
       .execute();
@@ -63,8 +65,10 @@ function dedupe<T extends { sale_id: string; month_offset: number }>(
   values: readonly T[],
 ): T[] {
   const byKey = new Map<string, T>();
+
   for (const value of values) {
     byKey.set(`${value.sale_id}:${value.month_offset}`, value);
   }
+
   return [...byKey.values()];
 }

@@ -2,6 +2,7 @@ import type {
   FulfillmentAction,
   ProductKind,
 } from "~/contracts/workflow/vocabulary";
+import { enqueueAttributionForSerials } from "~/server/merchant-stats/attribution/invalidate";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type {
@@ -29,14 +30,19 @@ import {
   type UnitField,
 } from "./steps";
 
-type Ports = { executor: DatabaseExecutor; now: Date };
+type Ports = {
+  executor: DatabaseExecutor;
+  now: Date;
+};
+
 type LeadResult = Result<{ leadId: string }, DomainError>;
 
-type Loaded = { state: LeadState; details: FulfillmentOrderDetails };
+type Loaded = {
+  state: LeadState;
+  details: FulfillmentOrderDetails;
+};
 
-// Reads the order's persisted step rather than the action's, because
-// record_serials maps to two steps (refurbished AWAITING_SERIALS and new-POS
-// AWAITING_SERIAL_ENTRY).
+// `record_serials` maps to different steps for refurbished and new POS orders.
 async function loadForAction(
   ctx: LeadTransaction,
   input: {
@@ -46,18 +52,28 @@ async function loadForAction(
   },
 ): Promise<Result<Loaded, DomainError>> {
   const state = await ctx.repos.leads.findById(input.leadId);
-  if (!state) return Err(fail("lead_not_found"));
+
+  if (!state) {
+    return Err(fail("lead_not_found"));
+  }
 
   const details = await ctx.repos.fulfillment.findByLeadId(input.leadId);
-  if (!details) return Err(fail("fulfillment_not_started"));
+
+  if (!details) {
+    return Err(fail("fulfillment_not_started"));
+  }
 
   const currentStep = details.order.currentStep;
+
   if (stepDefinition(currentStep).action !== input.action) {
     return Err(fail("invalid_fulfillment_step"));
   }
 
   const authz = authorizeFulfillmentStep(currentStep, input.actor, state);
-  if (!authz.ok) return authz;
+
+  if (!authz.ok) {
+    return authz;
+  }
 
   return Ok({ state, details });
 }
@@ -79,7 +95,7 @@ function unitHasField(unit: FulfillmentUnit, field: UnitField): boolean {
   }
 }
 
-// Completing fulfillment moves the lead to LIVE in the same transaction.
+// Completing fulfillment also moves the lead to LIVE.
 async function advance(
   ctx: LeadTransaction,
   loaded: Loaded,
@@ -93,10 +109,9 @@ async function advance(
   const { order } = loaded.details;
   const from = order.currentStep;
   const to = nextStep(input.productKind, from);
+  const extra = input.extraEvents ?? [];
 
   await ctx.repos.fulfillment.setStep(order.id, to, ctx.now);
-
-  const extra = input.extraEvents ?? [];
 
   if (to === "COMPLETED") {
     const transition = completeFulfillment(loaded.state, {
@@ -104,15 +119,25 @@ async function advance(
       orderId: order.id,
       now: ctx.now,
     });
-    if (!transition.ok) return transition;
+
+    if (!transition.ok) {
+      return transition;
+    }
 
     const committed = await ctx.commitTransition(transition.value);
-    if (!committed.ok) return committed;
+
+    if (!committed.ok) {
+      return committed;
+    }
 
     if (extra.length > 0) {
       const facts = await ctx.appendFacts(extra);
-      if (!facts.ok) return facts;
+
+      if (!facts.ok) {
+        return facts;
+      }
     }
+
     return Ok({ leadId: loaded.state.id });
   }
 
@@ -121,12 +146,20 @@ async function advance(
       leadId: loaded.state.id,
       eventType: "fulfillment_step_advanced",
       actorUserId: input.actor.userId,
-      payload: { orderId: order.id, from, to, action: input.action },
+      payload: {
+        orderId: order.id,
+        from,
+        to,
+        action: input.action,
+      },
       occurredAt: ctx.now,
     }),
     ...extra,
   ]);
-  if (!facts.ok) return facts;
+
+  if (!facts.ok) {
+    return facts;
+  }
 
   return Ok({ leadId: loaded.state.id });
 }
@@ -137,6 +170,7 @@ function requireProductKind(
   if (details.order.productKind === null) {
     return Err(fail("fulfillment_product_required"));
   }
+
   return Ok(details.order.productKind);
 }
 
@@ -154,9 +188,13 @@ export async function chooseFulfillmentProductCommand(
       actor: input.actor,
       action: "choose_product",
     });
-    if (!loaded.ok) return loaded;
+
+    if (!loaded.ok) {
+      return loaded;
+    }
 
     const { order } = loaded.value.details;
+
     await ctx.repos.fulfillment.setProductKind(
       order.id,
       input.productKind,
@@ -164,14 +202,20 @@ export async function chooseFulfillmentProductCommand(
     );
 
     const venuesResult = await ctx.repos.leadVenues.listByLeadId(input.leadId);
-    if (!venuesResult.ok) return venuesResult;
+
+    if (!venuesResult.ok) {
+      return venuesResult;
+    }
+
     const units = buildUnits(input.productKind, venuesResult.value, {
       orderId: order.id,
       now: ctx.now,
     });
+
     await ctx.repos.fulfillment.createUnits(units);
 
     const to = nextStep(input.productKind, "CHOOSE_PRODUCT");
+
     await ctx.repos.fulfillment.setStep(order.id, to, ctx.now);
 
     const facts = await ctx.appendFacts([
@@ -179,7 +223,10 @@ export async function chooseFulfillmentProductCommand(
         leadId: input.leadId,
         eventType: "fulfillment_product_chosen",
         actorUserId: input.actor.userId,
-        payload: { orderId: order.id, productKind: input.productKind },
+        payload: {
+          orderId: order.id,
+          productKind: input.productKind,
+        },
         occurredAt: ctx.now,
       }),
       createHistoryEvent({
@@ -195,7 +242,10 @@ export async function chooseFulfillmentProductCommand(
         occurredAt: ctx.now,
       }),
     ]);
-    if (!facts.ok) return facts;
+
+    if (!facts.ok) {
+      return facts;
+    }
 
     return Ok({ leadId: input.leadId });
   });
@@ -208,7 +258,10 @@ function buildUnits(
     tradeName: string;
     posQuantity: number;
   }>,
-  context: { orderId: FulfillmentOrderId; now: Date },
+  context: {
+    orderId: FulfillmentOrderId;
+    now: Date;
+  },
 ): Array<{
   orderId: FulfillmentOrderId;
   venueId: WorkflowVenueId | null;
@@ -232,17 +285,20 @@ function buildUnits(
     label: string;
     now: Date;
   }> = [];
+
   for (const venue of venues) {
     const count = Math.max(1, venue.posQuantity);
-    for (let i = 1; i <= count; i += 1) {
+
+    for (let index = 1; index <= count; index += 1) {
       units.push({
         orderId: context.orderId,
         venueId: venue.id,
-        label: `${venue.tradeName} POS ${i}`,
+        label: `${venue.tradeName} POS ${index}`,
         now: context.now,
       });
     }
   }
+
   if (units.length === 0) {
     units.push({
       orderId: context.orderId,
@@ -251,6 +307,7 @@ function buildUnits(
       now: context.now,
     });
   }
+
   return units;
 }
 
@@ -269,17 +326,26 @@ export async function attachFulfillmentDocumentCommand(
       actor: input.actor,
       action: input.action,
     });
-    if (!loaded.ok) return loaded;
+
+    if (!loaded.ok) {
+      return loaded;
+    }
 
     const productKind = requireProductKind(loaded.value.details);
-    if (!productKind.ok) return productKind;
 
-    const def = stepDefinition(loaded.value.details.order.currentStep);
-    if (def.kind !== "document") return Err(fail("invalid_fulfillment_step"));
+    if (!productKind.ok) {
+      return productKind;
+    }
+
+    const definition = stepDefinition(loaded.value.details.order.currentStep);
+
+    if (definition.kind !== "document") {
+      return Err(fail("invalid_fulfillment_step"));
+    }
 
     await ctx.repos.fulfillment.addDocument({
       orderId: loaded.value.details.order.id,
-      docKind: def.docKind,
+      docKind: definition.docKind,
       fileAssetId: input.fileAssetId,
       uploadedByUserId: input.actor.userId,
       now: ctx.now,
@@ -296,7 +362,7 @@ export async function attachFulfillmentDocumentCommand(
           actorUserId: input.actor.userId,
           payload: {
             orderId: loaded.value.details.order.id,
-            docKind: def.docKind,
+            docKind: definition.docKind,
             fileAssetId: input.fileAssetId,
           },
           occurredAt: ctx.now,
@@ -306,7 +372,7 @@ export async function attachFulfillmentDocumentCommand(
   });
 }
 
-// Advance only after every order unit has this value.
+// Advance only after every unit has the required value.
 async function recordUnitValueCommand(
   input: {
     leadId: WorkflowLeadId;
@@ -327,21 +393,38 @@ async function recordUnitValueCommand(
       actor: input.actor,
       action: input.action,
     });
-    if (!loaded.ok) return loaded;
+
+    if (!loaded.ok) {
+      return loaded;
+    }
 
     const productKind = requireProductKind(loaded.value.details);
-    if (!productKind.ok) return productKind;
 
-    const unit = loaded.value.details.units.find((u) => u.id === input.unitId);
-    if (!unit) return Err(fail("fulfillment_unit_not_found"));
+    if (!productKind.ok) {
+      return productKind;
+    }
+
+    const unit = loaded.value.details.units.find(
+      (candidate) => candidate.id === input.unitId,
+    );
+
+    if (!unit) {
+      return Err(fail("fulfillment_unit_not_found"));
+    }
 
     const applied = await apply(unit, ctx);
-    if (!applied.ok) return applied;
 
-    const allFilled = loaded.value.details.units.every((u) =>
-      u.id === input.unitId ? true : unitHasField(u, field),
+    if (!applied.ok) {
+      return applied;
+    }
+
+    const allFilled = loaded.value.details.units.every((candidate) =>
+      candidate.id === input.unitId ? true : unitHasField(candidate, field),
     );
-    if (!allFilled) return Ok({ leadId: input.leadId });
+
+    if (!allFilled) {
+      return Ok({ leadId: input.leadId });
+    }
 
     return advance(ctx, loaded.value, {
       actor: input.actor,
@@ -360,9 +443,11 @@ export async function recordUnitSerialCommand(
   },
   ports: Ports,
 ): Promise<LeadResult> {
-  const action: FulfillmentAction = "record_serials";
   return recordUnitValueCommand(
-    { ...input, action },
+    {
+      ...input,
+      action: "record_serials",
+    },
     ports,
     async (unit, ctx) => {
       await ctx.repos.fulfillment.setUnitField(
@@ -370,6 +455,10 @@ export async function recordUnitSerialCommand(
         "serial_number",
         input.serial,
       );
+
+      // A serial can move attribution from a different lead.
+      await enqueueAttributionForSerials(ctx.tx, [input.serial], ctx.now);
+
       return Ok(undefined);
     },
     "serial_number",
@@ -386,7 +475,10 @@ export async function registerUnitPaymentLinkCommand(
   ports: Ports,
 ): Promise<LeadResult> {
   return recordUnitValueCommand(
-    { ...input, action: "register_payment_link" },
+    {
+      ...input,
+      action: "register_payment_link",
+    },
     ports,
     async (unit, ctx) => {
       await ctx.repos.fulfillment.setUnitField(
@@ -394,6 +486,7 @@ export async function registerUnitPaymentLinkCommand(
         "payment_url",
         input.paymentUrl,
       );
+
       return Ok(undefined);
     },
     "payment_url",
@@ -410,7 +503,10 @@ export async function uploadUnitPaymentProofCommand(
   ports: Ports,
 ): Promise<LeadResult> {
   return recordUnitValueCommand(
-    { ...input, action: "upload_payment_proof" },
+    {
+      ...input,
+      action: "upload_payment_proof",
+    },
     ports,
     async (unit, ctx) => {
       await ctx.repos.fulfillment.setUnitField(
@@ -418,6 +514,7 @@ export async function uploadUnitPaymentProofCommand(
         "payment_proof_file_asset_id",
         input.fileAssetId,
       );
+
       await ctx.repos.fulfillment.addDocument({
         orderId: unit.orderId,
         docKind: "payment_proof",
@@ -425,6 +522,7 @@ export async function uploadUnitPaymentProofCommand(
         uploadedByUserId: input.actor.userId,
         now: ctx.now,
       });
+
       return Ok(undefined);
     },
     "payment_proof_file_asset_id",
@@ -441,7 +539,10 @@ export async function registerUnitSaleCommand(
   ports: Ports,
 ): Promise<LeadResult> {
   return recordUnitValueCommand(
-    { ...input, action: "register_sale" },
+    {
+      ...input,
+      action: "register_sale",
+    },
     ports,
     async (unit, ctx) => {
       await ctx.repos.fulfillment.setUnitField(
@@ -449,23 +550,33 @@ export async function registerUnitSaleCommand(
         "service_a_ref",
         input.serviceRef,
       );
+
       return Ok(undefined);
     },
     "service_a_ref",
   );
 }
 
-// Only configured document handoffs can be rejected.
 export async function rejectFulfillmentStepCommand(
-  input: { leadId: WorkflowLeadId; reason: string; actor: WorkflowActor },
+  input: {
+    leadId: WorkflowLeadId;
+    reason: string;
+    actor: WorkflowActor;
+  },
   ports: Ports,
 ): Promise<LeadResult> {
   return runLeadTransaction(ports, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     const details = await ctx.repos.fulfillment.findByLeadId(input.leadId);
-    if (!details) return Err(fail("fulfillment_not_started"));
+
+    if (!details) {
+      return Err(fail("fulfillment_not_started"));
+    }
 
     if (input.reason.trim().length === 0) {
       return Err(fail("reject_reason_required"));
@@ -473,17 +584,33 @@ export async function rejectFulfillmentStepCommand(
 
     const from = details.order.currentStep;
     const rule = rejectRuleForStep(from);
-    if (rule === null) return Err(fail("invalid_fulfillment_step"));
+
+    if (rule === null) {
+      return Err(fail("invalid_fulfillment_step"));
+    }
 
     const authz = authorizeFulfillmentStep(from, input.actor, state);
-    if (!authz.ok) return authz;
+
+    if (!authz.ok) {
+      return authz;
+    }
 
     if (rule.clearField) {
+      if (rule.clearField === "serial_number") {
+        // Read the serials before clearing the only stored references to them.
+        await enqueueAttributionForSerials(
+          ctx.tx,
+          details.units.flatMap((unit) => (unit.serial ? [unit.serial] : [])),
+          ctx.now,
+        );
+      }
+
       await ctx.repos.fulfillment.clearUnitField(
         details.order.id,
         rule.clearField,
       );
     }
+
     await ctx.repos.fulfillment.setStep(details.order.id, rule.to, ctx.now);
 
     const facts = await ctx.appendFacts([
@@ -500,14 +627,20 @@ export async function rejectFulfillmentStepCommand(
         occurredAt: ctx.now,
       }),
     ]);
-    if (!facts.ok) return facts;
+
+    if (!facts.ok) {
+      return facts;
+    }
 
     return Ok({ leadId: input.leadId });
   });
 }
 
 export async function validateFulfillmentPaymentCommand(
-  input: { leadId: WorkflowLeadId; actor: WorkflowActor },
+  input: {
+    leadId: WorkflowLeadId;
+    actor: WorkflowActor;
+  },
   ports: Ports,
 ): Promise<LeadResult> {
   return runLeadTransaction(ports, async (ctx) => {
@@ -516,10 +649,16 @@ export async function validateFulfillmentPaymentCommand(
       actor: input.actor,
       action: "validate_payment",
     });
-    if (!loaded.ok) return loaded;
+
+    if (!loaded.ok) {
+      return loaded;
+    }
 
     const productKind = requireProductKind(loaded.value.details);
-    if (!productKind.ok) return productKind;
+
+    if (!productKind.ok) {
+      return productKind;
+    }
 
     await ctx.repos.fulfillment.markPaymentsValidated(
       loaded.value.details.order.id,

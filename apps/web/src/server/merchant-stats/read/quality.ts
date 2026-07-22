@@ -65,7 +65,7 @@ export async function getQualitySummary(
 ): Promise<QualitySummary> {
   const [byConfidence, noTarget, serialMismatch] = await Promise.all([
     db
-      .selectFrom("merchant_monthly_attribution")
+      .selectFrom("merchant_month_credit")
       .select((eb) => ["confidence", eb.fn.countAll<number>().as("count")])
       .where("resolved_by", "is", null)
       .groupBy("confidence")
@@ -116,7 +116,7 @@ async function confidenceRows(
   page: Page,
 ): Promise<QualityRow[]> {
   const rows = await db
-    .selectFrom("merchant_monthly_attribution as a")
+    .selectFrom("merchant_month_credit as a")
     .innerJoin("merchant_monthly_gpv as m", (join) =>
       join.onRef("m.ruc", "=", "a.ruc").onRef("m.month", "=", "a.month"),
     )
@@ -175,7 +175,7 @@ async function noTargetRows(
   const rows = await db
     .selectFrom("merchant_monthly_gpv as m")
     .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
-    .leftJoin("merchant_monthly_attribution as a", (join) =>
+    .leftJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
     )
     .leftJoin("organizations as o", "o.ruc", "m.ruc")

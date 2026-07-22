@@ -3,11 +3,11 @@ import { sql } from "kysely";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { MerchantReportId, MerchantSaleId } from "~/server/shared/ids";
 
+import { chunks } from "../chunks";
 import { saleIdentityKey } from "../intake/sale-identity";
 import type { SourceRow } from "../intake/types";
-import { chunks } from "./chunks";
 
-// Snapshot refreshes never move a sale between its identity or sale month.
+// A refresh cannot change the sale identity or sale month.
 const REFRESHED_COLUMNS = [
   "ruc",
   "sold_at",
@@ -45,21 +45,22 @@ export async function upsertSales(
 
   for (const chunk of chunks(dedupeByIdentity(rows), SALES_CHUNK)) {
     const values = chunk.map((row) => toSaleValues(row, reportId, now));
+
     // eslint-disable-next-line no-await-in-loop
     const returned = await db
       .insertInto("merchant_sales")
       .values(values)
       .onConflict((oc) =>
         oc
-          // Kysely wraps the index expression in parentheses, so the target
-          // must not include its own outer parens (that yields ((...)), a row
-          // constructor Postgres rejects).
+          // Kysely adds the outer parentheses around this expression.
           .expression(sql`merchant_id, product, coalesce(serial_number, '')`)
           .doUpdateSet((eb) => {
             const set: Record<string, unknown> = {};
+
             for (const column of REFRESHED_COLUMNS) {
               set[column] = eb.ref(`excluded.${column}`);
             }
+
             return set;
           }),
       )
@@ -109,13 +110,15 @@ function toSaleValues(row: SourceRow, reportId: MerchantReportId, now: Date) {
 }
 
 function dedupeByIdentity(rows: readonly SourceRow[]): SourceRow[] {
-  // A multi-row upsert cannot touch one conflict target twice.
+  // PostgreSQL rejects a multi-row upsert that hits the same target twice.
   const byKey = new Map<string, SourceRow>();
+
   for (const row of rows) {
     byKey.set(
       saleIdentityKey(row.merchantId, row.product, row.serialNumber),
       row,
     );
   }
+
   return [...byKey.values()];
 }

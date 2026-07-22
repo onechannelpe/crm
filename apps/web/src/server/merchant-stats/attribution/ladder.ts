@@ -7,20 +7,34 @@ import type { BranchId, UserId, WorkflowLeadId } from "~/server/shared/ids";
 export interface SaleEvidence {
   soldAt: string;
   culqiUserName: string | null;
-  serial: { userId: UserId; leadId: WorkflowLeadId } | null;
-  rucLead: { userId: UserId; leadId: WorkflowLeadId; createdAt: string } | null;
+  serial: {
+    userId: UserId;
+    leadId: WorkflowLeadId;
+  } | null;
+}
+
+export interface RucLeadEvidence {
+  userId: UserId;
+  leadId: WorkflowLeadId;
+  createdAt: string;
+}
+
+export interface MonthInput {
+  sales: readonly SaleEvidence[];
+  // Every sale belongs to the same RUC and therefore shares this lead.
+  rucLead: RucLeadEvidence | null;
 }
 
 export interface MonthEvidence {
-  serialUserIds: string[];
+  serialUserIds: UserId[];
   rucLead: {
-    userId: string;
-    leadId: string;
+    userId: UserId;
+    leadId: WorkflowLeadId;
     createdAt: string;
     postdatesASale: boolean;
   } | null;
   culqiUserNames: string[];
-  contenders: string[];
+  contenders: UserId[];
 }
 
 export interface AttributionVerdict {
@@ -31,30 +45,32 @@ export interface AttributionVerdict {
   evidence: MonthEvidence;
 }
 
-// Credit a RUC-month only when its device evidence names one seller. Conflicting
-// or late crm evidence remains unassigned for a manager to resolve.
+// Assign the month only when its evidence identifies one seller.
 export function attributeMonth(
-  sales: readonly SaleEvidence[],
+  month: MonthInput,
   branchOf: (userId: UserId) => BranchId | null,
 ): AttributionVerdict {
+  const { sales, rucLead } = month;
+
   const serialUserIds = distinct(
     sales.flatMap((sale) => (sale.serial ? [sale.serial.userId] : [])),
   );
-  const rucLead = sales.find((sale) => sale.rucLead !== null)?.rucLead ?? null;
 
-  // A lead opened after any contributing sale cannot claim this whole month.
   const postdatesASale =
     rucLead !== null &&
     sales.some((sale) => rucLead.createdAt.slice(0, 10) > sale.soldAt);
 
   const evidence: MonthEvidence = {
-    serialUserIds: [...serialUserIds],
-    rucLead: rucLead && {
-      userId: rucLead.userId,
-      leadId: rucLead.leadId,
-      createdAt: rucLead.createdAt,
-      postdatesASale,
-    },
+    serialUserIds,
+    rucLead:
+      rucLead === null
+        ? null
+        : {
+            userId: rucLead.userId,
+            leadId: rucLead.leadId,
+            createdAt: rucLead.createdAt,
+            postdatesASale,
+          },
     culqiUserNames: distinct(
       sales.flatMap((sale) => (sale.culqiUserName ? [sale.culqiUserName] : [])),
     ),
@@ -67,14 +83,15 @@ export function attributeMonth(
     confidence: AttributionConfidence,
   ): AttributionVerdict => ({
     sellerUserId,
-    branchId: sellerUserId ? branchOf(sellerUserId) : null,
+    branchId: sellerUserId === null ? null : branchOf(sellerUserId),
     method,
     confidence,
     evidence,
   });
 
   if (serialUserIds.length > 1) {
-    evidence.contenders = [...serialUserIds];
+    evidence.contenders = serialUserIds;
+
     return decide(null, "none", "conflict");
   }
 
@@ -84,8 +101,10 @@ export function attributeMonth(
   if (serialUserId !== null) {
     if (claimingLead !== null && claimingLead.userId !== serialUserId) {
       evidence.contenders = [serialUserId, claimingLead.userId];
+
       return decide(null, "none", "conflict");
     }
+
     return decide(serialUserId, "serial", "exact");
   }
 
@@ -93,7 +112,9 @@ export function attributeMonth(
     return decide(claimingLead.userId, "ruc_lead", "inferred");
   }
 
-  if (rucLead !== null) return decide(null, "none", "late");
+  if (rucLead !== null) {
+    return decide(null, "none", "late");
+  }
 
   return decide(null, "none", "none");
 }

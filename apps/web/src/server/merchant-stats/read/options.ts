@@ -8,14 +8,14 @@ export async function getFilterOptions(
 ): Promise<FilterOptions> {
   const [branches, sellers, months, products] = await Promise.all([
     db
-      .selectFrom("merchant_monthly_attribution as a")
+      .selectFrom("merchant_month_credit as a")
       .innerJoin("branches as b", "b.id", "a.branch_id")
       .select(["b.id", "b.name"])
       .distinct()
       .orderBy("b.name")
       .execute(),
     db
-      .selectFrom("merchant_monthly_attribution as a")
+      .selectFrom("merchant_month_credit as a")
       .innerJoin("users as u", "u.id", "a.seller_user_id")
       .select(["u.id", "u.names", "u.first_surname"])
       .distinct()

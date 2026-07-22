@@ -8,7 +8,6 @@ export interface SaleMonthPartition {
   rejected: Rejection[];
 }
 
-// A changed sale month moves every cohort offset into a different calendar month.
 export async function partitionBySaleMonth(
   db: DatabaseExecutor,
   rows: readonly SourceRow[],
@@ -40,7 +39,6 @@ export async function partitionBySaleMonth(
   return { accepted, rejected };
 }
 
-// coalesce(serial_number) is part of the identity, so it cannot be queried with IN.
 async function loadKnownSaleMonths(
   db: DatabaseExecutor,
   rows: readonly SourceRow[],

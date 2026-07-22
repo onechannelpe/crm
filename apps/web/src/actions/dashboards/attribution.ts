@@ -1,14 +1,13 @@
 "use server";
 
-import { resolveAttribution as writeResolution } from "~/server/merchant-stats/commands/resolve-attribution";
 import { setTarget } from "~/server/merchant-stats/commands/set-target";
+import { resolveAttribution as writeResolution } from "~/server/merchant-stats/overlay/resolve-attribution";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail, throwDomain } from "~/server/shared/domain-error";
 import { BranchId, UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { createEventsRepo } from "~/server/shared/repos-events";
-import { Ok } from "~/server/shared/result";
+import { isErr, Ok } from "~/server/shared/result";
 
 export async function resolveAttribution(raw: unknown): Promise<{ ok: true }> {
   return runAction({
@@ -30,7 +29,7 @@ export async function resolveAttribution(raw: unknown): Promise<{ ok: true }> {
       const events = createEventsRepo(db);
       const occurredAt = now();
 
-      const updatedCount = await writeResolution(db, {
+      const resolved = await writeResolution(db, {
         ruc: input.ruc,
         month: input.month,
         sellerUserId: input.sellerUserId,
@@ -39,9 +38,7 @@ export async function resolveAttribution(raw: unknown): Promise<{ ok: true }> {
         now: occurredAt,
       });
 
-      if (updatedCount === 0) {
-        throwDomain(fail("merchant_attribution_not_found"));
-      }
+      if (isErr(resolved)) return resolved;
 
       await events.append({
         entityType: "merchant_ruc",

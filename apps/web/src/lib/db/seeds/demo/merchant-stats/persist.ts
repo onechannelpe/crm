@@ -3,9 +3,14 @@ import { createHash } from "node:crypto";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
-import { applyReport } from "~/server/merchant-stats/apply/apply-report";
+import { recomputeAttribution } from "~/server/merchant-stats/attribution/recompute";
 import { acceptReport } from "~/server/merchant-stats/commands/accept-report";
 import { setTarget } from "~/server/merchant-stats/commands/set-target";
+import { batchByRuc } from "~/server/merchant-stats/facts/batch-by-ruc";
+import {
+  insertRejections,
+  writeFactsBatch,
+} from "~/server/merchant-stats/facts/write-batch";
 import type {
   ParsedReport,
   SourceRow,
@@ -17,6 +22,8 @@ import { VALERIA } from "../demo-ids";
 import { LEAD_SPECS, MERCHANT_STATS_SERIAL_LINKS } from "../scenario";
 import { generateMerchants, toSourceRow, type MerchantSpec } from "./generator";
 import { CULQI_MERCHANT_REPORT_PROFILE as PROFILE } from "./profile";
+
+const SEED_BATCH_TARGET_ROWS = 2000;
 
 export async function persistDemoMerchantStats(
   db: Kysely<Database>,
@@ -73,29 +80,42 @@ async function applySnapshot(
     return;
   }
 
-  const result = await applyReport(
-    {
+  let rowsApplied = 0;
+  let rowsFailed = parsed.rejections.length;
+  let conflicts = 0;
+  let needsReview = 0;
+
+  await insertRejections(db, accepted.reportId, parsed.rejections);
+
+  for (const batch of batchByRuc(parsed.rows, SEED_BATCH_TARGET_ROWS)) {
+    // eslint-disable-next-line no-await-in-loop
+    const written = await writeFactsBatch(db, {
       reportId: accepted.reportId,
       cutAt: input.cutAt,
-      parsed,
-    },
-    {
-      db,
+      rows: batch,
       now: input.now,
-    },
-  );
+    });
+
+    // eslint-disable-next-line no-await-in-loop
+    const derived = await recomputeAttribution(db, written.touched, input.now);
+
+    rowsApplied += written.rowsApplied;
+    rowsFailed += written.rowsRejected;
+    conflicts += derived.conflicts;
+    needsReview += derived.needsReview;
+  }
 
   await db
     .updateTable("merchant_report_imports")
     .set({
       queue_state: "done",
-      rows_total: result.rowsTotal,
-      rows_applied: result.rowsValid,
-      rows_failed: result.rowsRejected,
+      rows_total: parsed.rows.length + parsed.rejections.length,
+      rows_applied: rowsApplied,
+      rows_failed: rowsFailed,
       results_json: JSON.stringify({
         reportId: accepted.reportId,
-        conflicts: result.conflicts,
-        needsReview: result.needsReview,
+        conflicts,
+        needsReview,
       }),
       completed_at: input.now,
     })
@@ -118,7 +138,7 @@ async function persistTargets(
   }
 
   for (const merchant of byRuc.values()) {
-    // Start at the sale month so ramping months are not classified as no_target.
+    // Start at the sale month so ramping months are not marked as no_target.
     // eslint-disable-next-line no-await-in-loop
     await setTarget(db, {
       ruc: merchant.ruc,
@@ -154,7 +174,7 @@ const SERIAL_OVERRIDES_BY_LEAD_KEY: Record<string, string> = {
   "live-andes": MERCHANT_STATS_SERIAL_LINKS.ANDES,
   "live-aurora": MERCHANT_STATS_SERIAL_LINKS.AURORA,
 
-  // Intentionally differs from the fulfillment serial to produce a mismatch.
+  // Different from the fulfillment serial to produce a mismatch.
   "live-boreal-norte": MERCHANT_STATS_SERIAL_LINKS.BOREAL_NORTE_CULQI,
 };
 

@@ -19,7 +19,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("merchant_report_imports")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
-    // Retries reuse the same import row.
     .addColumn("report_id", "uuid", (col) =>
       col
         .notNull()
@@ -103,7 +102,7 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addUniqueConstraint("merchant_sales_id_sale_month", ["id", "sale_month"])
     .execute();
 
-  // Sales without a serial still need a stable unique identity.
+  // Missing serial numbers still need a stable identity.
   await sql`
     create unique index idx_merchant_sales_identity
       on merchant_sales (merchant_id, product, coalesce(serial_number, ''))
@@ -181,39 +180,93 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   `.execute(db);
 
   await db.schema
-    .createTable("merchant_monthly_attribution")
+    .createTable("merchant_month_attribution")
     .addColumn("ruc", "text", (col) => col.notNull())
     .addColumn("month", "date", (col) => col.notNull())
+    .addColumn("organization_id", "uuid", (col) =>
+      col.references("organizations.id"),
+    )
     .addColumn("seller_user_id", "uuid", (col) => col.references("users.id"))
     .addColumn("branch_id", "uuid", (col) => col.references("branches.id"))
     .addColumn("method", "text", (col) => col.notNull())
     .addColumn("confidence", "text", (col) => col.notNull())
     .addColumn("evidence", "jsonb", (col) => col.notNull())
-    .addColumn("resolved_by", "uuid", (col) => col.references("users.id"))
-    .addColumn("resolved_at", "timestamptz")
-    .addColumn("stamped_at", "timestamptz", (col) => col.notNull())
-    .addPrimaryKeyConstraint("merchant_monthly_attribution_pkey", [
+    .addColumn("derived_at", "timestamptz", (col) => col.notNull())
+    .addPrimaryKeyConstraint("merchant_month_attribution_pkey", [
       "ruc",
       "month",
     ])
     .execute();
 
   await db.schema
-    .createIndex("idx_merchant_monthly_attribution_confidence")
-    .on("merchant_monthly_attribution")
-    .column("confidence")
+    .createTable("merchant_month_attribution_override")
+    .addColumn("ruc", "text", (col) => col.notNull())
+    .addColumn("month", "date", (col) => col.notNull())
+    .addColumn("seller_user_id", "uuid", (col) => col.references("users.id"))
+    .addColumn("branch_id", "uuid", (col) => col.references("branches.id"))
+    .addColumn("resolved_by", "uuid", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("resolved_at", "timestamptz", (col) => col.notNull())
+    .addPrimaryKeyConstraint("merchant_month_attribution_override_pkey", [
+      "ruc",
+      "month",
+    ])
+    .addForeignKeyConstraint(
+      "merchant_month_attribution_override_month_fkey",
+      ["ruc", "month"],
+      "merchant_month_attribution",
+      ["ruc", "month"],
+      (cb) => cb.onDelete("cascade"),
+    )
+    .execute();
+
+  await sql`
+    create view merchant_month_credit as
+      select
+        d.ruc,
+        d.month,
+        d.organization_id,
+        case when o.ruc is null then d.seller_user_id else o.seller_user_id end as seller_user_id,
+        case when o.ruc is null then d.branch_id else o.branch_id end as branch_id,
+        case when o.ruc is null then d.method else 'manual' end as method,
+        case
+          when o.ruc is null then d.confidence
+          when o.seller_user_id is null then 'none'
+          else 'exact'
+        end as confidence,
+        d.evidence,
+        d.derived_at,
+        o.resolved_by,
+        o.resolved_at
+      from merchant_month_attribution d
+      left join merchant_month_attribution_override o
+        on o.ruc = d.ruc and o.month = d.month
+  `.execute(db);
+
+  await db.schema
+    .createTable("merchant_attribution_jobs")
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("ruc", "text", (col) => col.notNull())
+    .addColumn("month", "date", (col) => col.notNull())
+    .addColumn("queue_state", "text", (col) =>
+      col.notNull().defaultTo("pending"),
+    )
+    .addColumn("error_message", "text")
+    .addColumn("lease_owner", "text")
+    .addColumn("attempt_count", "integer", (col) => col.notNull().defaultTo(0))
+    .addColumn("max_attempts", "integer", (col) => col.notNull().defaultTo(5))
+    .addColumn("claimable_at", "timestamptz", (col) => col.notNull())
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("completed_at", "timestamptz")
+    .addUniqueConstraint("merchant_attribution_jobs_month", ["ruc", "month"])
     .execute();
 
   await db.schema
-    .createIndex("idx_merchant_monthly_attribution_seller")
-    .on("merchant_monthly_attribution")
-    .column("seller_user_id")
-    .execute();
-
-  await db.schema
-    .createIndex("idx_merchant_monthly_attribution_branch")
-    .on("merchant_monthly_attribution")
-    .column("branch_id")
+    .createIndex("idx_merchant_attribution_jobs_claim")
+    .on("merchant_attribution_jobs")
+    .column("claimable_at")
+    .where(CLAIMABLE_STATES)
     .execute();
 
   await db.schema

@@ -74,6 +74,9 @@ export const MerchantReportImportId = uuidId("MerchantReportImportId");
 export type MerchantSaleId = BrandedId<"MerchantSaleId">;
 export const MerchantSaleId = uuidId("MerchantSaleId");
 
+export type MerchantAttributionJobId = BrandedId<"MerchantAttributionJobId">;
+export const MerchantAttributionJobId = uuidId("MerchantAttributionJobId");
+
 export type NotificationDeliveryId = BrandedId<"NotificationDeliveryId">;
 export const NotificationDeliveryId = uuidId("NotificationDeliveryId");
 

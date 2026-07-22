@@ -29,7 +29,7 @@ const IMPORT_COLUMNS = [
   "completed_at",
 ] as const;
 
-export interface NewMerchantReportImport {
+interface NewMerchantReportImport {
   report_id: MerchantReportId;
   max_attempts: number;
   created_at: Date;
@@ -54,7 +54,6 @@ export function createMerchantReportImportRepo(db: DatabaseExecutor) {
         .returning("id")
         .executeTakeFirstOrThrow();
 
-      // Notify on the same executor so transactions defer delivery until commit.
       notify(db, JOB_TABLE_CHANNELS.merchant_report_imports);
 
       return row.id;
@@ -68,10 +67,11 @@ export function createMerchantReportImportRepo(db: DatabaseExecutor) {
         .executeTakeFirst();
     },
 
+    // Return the stored row so callers publish what was committed.
     updateProgress(
       id: MerchantReportImportId,
       progress: { rowsTotal: number; rowsApplied: number; rowsFailed: number },
-    ) {
+    ): Promise<MerchantReportImportRow> {
       return db
         .updateTable("merchant_report_imports")
         .set({
@@ -80,11 +80,8 @@ export function createMerchantReportImportRepo(db: DatabaseExecutor) {
           rows_failed: progress.rowsFailed,
         })
         .where("id", "=", id)
-        .execute();
+        .returningAll()
+        .executeTakeFirstOrThrow();
     },
   };
 }
-
-export type MerchantReportImportRepo = ReturnType<
-  typeof createMerchantReportImportRepo
->;

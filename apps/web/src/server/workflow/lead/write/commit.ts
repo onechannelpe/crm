@@ -1,3 +1,4 @@
+import { enqueueAttributionForLead } from "~/server/merchant-stats/attribution/invalidate";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
@@ -71,8 +72,14 @@ export async function commitTransition(
   }
 
   if (assignment) {
-    await replaceActiveAssignment(tx, { ...assignment, leadId: next.id });
+    await replaceActiveAssignment(tx, {
+      ...assignment,
+      leadId: next.id,
+    });
   }
+
+  // Any transition can affect attribution, so always queue a recalculation.
+  await enqueueAttributionForLead(tx, next.id, next.updatedAt);
 
   const eventIds = await createEventsRepo(tx).append(
     events.map(toLeadEventAppend),
@@ -81,18 +88,23 @@ export async function commitTransition(
   return Ok({ eventIds });
 }
 
-// Timeline facts avoid the version lock so concurrent activity can coexist.
 export async function appendFacts(
   tx: DatabaseExecutor,
   events: LeadHistoryEventDraft[],
   now: Date,
 ): Promise<Result<{ eventIds: string[] }, DomainError>> {
   const leadId = events[0]?.leadId;
-  if (!leadId) return Ok({ eventIds: [] });
+
+  if (!leadId) {
+    return Ok({ eventIds: [] });
+  }
 
   const updateResult = await tx
     .updateTable("workflow_leads")
-    .set({ updated_at: now, updated_by: events[0].actorUserId })
+    .set({
+      updated_at: now,
+      updated_by: events[0].actorUserId,
+    })
     .where("id", "=", leadId)
     .where("deleted_at", "is", null)
     .executeTakeFirst();

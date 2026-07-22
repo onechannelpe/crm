@@ -31,7 +31,7 @@ async function sellerRows(
 ): Promise<AttainmentRow[]> {
   const rows = await db
     .selectFrom("merchant_monthly_gpv as m")
-    .innerJoin("merchant_monthly_attribution as a", (join) =>
+    .innerJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
     )
     .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
@@ -45,7 +45,6 @@ async function sellerRows(
       "u.first_surname",
       "b.name as branch_name",
       eb.fn.sum<number>("m.gpv").as("gpv"),
-      // Preserve null when no attributed RUC has a target.
       eb.fn.sum<number | null>("t.projected_gpv").as("projected_gpv"),
       eb.fn.count<number>("m.ruc").distinct().as("ruc_count"),
       eb.fn.sum<number>("m.device_count").as("device_count"),
@@ -73,7 +72,7 @@ async function branchRows(
 ): Promise<AttainmentRow[]> {
   const rows = await db
     .selectFrom("merchant_monthly_gpv as m")
-    .innerJoin("merchant_monthly_attribution as a", (join) =>
+    .innerJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
     )
     .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
@@ -84,7 +83,6 @@ async function branchRows(
       "a.branch_id",
       "b.name as branch_name",
       eb.fn.sum<number>("m.gpv").as("gpv"),
-      // Preserve null when no attributed RUC has a target.
       eb.fn.sum<number | null>("t.projected_gpv").as("projected_gpv"),
       eb.fn.count<number>("m.ruc").distinct().as("ruc_count"),
       eb.fn.sum<number>("m.device_count").as("device_count"),
@@ -105,14 +103,13 @@ async function branchRows(
     .toSorted((a, b) => b.gpv - a.gpv);
 }
 
-// Coverage ignores the selected seller or branch, otherwise it would always be 100%.
 async function monthCoverage(
   db: DatabaseExecutor,
   month: string,
 ): Promise<AttainmentCoverage> {
   const row = await db
     .selectFrom("merchant_monthly_gpv as m")
-    .leftJoin("merchant_monthly_attribution as a", (join) =>
+    .leftJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
     )
     .where("m.month", "=", month)
@@ -132,10 +129,10 @@ async function monthCoverage(
         )
         .as("attributed_gpv"),
     ])
-    .executeTakeFirst();
+    .executeTakeFirstOrThrow();
 
   return {
-    attributedGpv: row?.attributed_gpv ?? 0,
-    totalGpv: row?.total_gpv ?? 0,
+    attributedGpv: row.attributed_gpv,
+    totalGpv: row.total_gpv,
   };
 }

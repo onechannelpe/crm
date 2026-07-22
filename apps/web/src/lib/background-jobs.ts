@@ -6,13 +6,16 @@ import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { readStoredFile } from "~/server/files/storage";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
-import { createMerchantReportsQueue } from "~/server/merchant-stats/queue/merchant-reports-queue";
+import { createMerchantAttributionQueue } from "~/server/merchant-stats/attribution/queue";
+import { createMerchantReportsQueue } from "~/server/merchant-stats/report-import/queue";
 import { getServerRuntime } from "~/server/platform/container";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
 import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/lead-reservation-maintenance";
 
 const WORKER_ID = `bg-${process.pid}`;
-const POLL_FLOOR_MS = 1_000; // LISTEN/NOTIFY failures are recovered by polling within this interval.
+
+// Polling recovers jobs missed when LISTEN/NOTIFY fails.
+const POLL_FLOOR_MS = 1_000;
 
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
@@ -37,7 +40,7 @@ function makeWaker(run: () => Promise<void>): () => void {
     } finally {
       running = false;
 
-      // Collapse every wake received during the drain into one more drain.
+      // Multiple wakes during a drain trigger one additional drain.
       if (pending) {
         pending = false;
         void tick();
@@ -70,13 +73,18 @@ export function startBackgroundJobs(): void {
     readFile,
   });
 
-  const enrichmentQueue = runtime.clientSearch.createEnrichmentQueue(WORKER_ID);
+  const merchantAttributionQueue = createMerchantAttributionQueue(WORKER_ID, {
+    db: integration.executor,
+    now: integration.now,
+  });
 
+  const enrichmentQueue = runtime.clientSearch.createEnrichmentQueue(WORKER_ID);
   const notificationQueues = runtime.notifications.createQueues(WORKER_ID);
 
   const queuesByChannel: Record<string, QueueRunner[]> = {
     [JOB_TABLE_CHANNELS.workflow_integration_jobs]: [recordsImportQueue],
     [JOB_TABLE_CHANNELS.merchant_report_imports]: [merchantReportsQueue],
+    [JOB_TABLE_CHANNELS.merchant_attribution_jobs]: [merchantAttributionQueue],
     [JOB_TABLE_CHANNELS.company_registry_record]: [enrichmentQueue],
     [JOB_TABLE_CHANNELS.notification_intents]: [notificationQueues.expansion],
     [JOB_TABLE_CHANNELS.notification_deliveries]: [notificationQueues.dispatch],

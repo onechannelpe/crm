@@ -1,0 +1,55 @@
+import type { MerchantReportProgressEvent } from "~/features/dashboards/imports/contracts";
+import { db } from "~/lib/db/db";
+import { notify } from "~/lib/db/notify";
+import { MERCHANT_REPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
+import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { MerchantReportImportId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
+
+import type { MerchantReportImportRow } from "./repo";
+
+export async function findMerchantReportImport(
+  executor: DatabaseExecutor,
+  importId: string,
+): Promise<MerchantReportImportRow | null> {
+  const parsed = MerchantReportImportId.parse(importId);
+
+  if (isErr(parsed)) return null;
+
+  const row = await executor
+    .selectFrom("merchant_report_imports")
+    .selectAll()
+    .where("id", "=", parsed.value)
+    .executeTakeFirst();
+
+  return row ?? null;
+}
+
+export function buildMerchantReportProgressEvent(
+  job: Pick<
+    MerchantReportImportRow,
+    | "id"
+    | "queue_state"
+    | "rows_applied"
+    | "rows_failed"
+    | "rows_total"
+    | "error_message"
+  >,
+): MerchantReportProgressEvent {
+  return {
+    type: "merchant_report_progress",
+    importId: job.id,
+    queueState: job.queue_state,
+    rowsApplied: job.rows_applied ?? 0,
+    rowsFailed: job.rows_failed ?? 0,
+    rowsTotal: job.rows_total ?? 0,
+    errorMessage: job.error_message,
+  };
+}
+
+export function publishMerchantReportProgress(
+  event: MerchantReportProgressEvent,
+): void {
+  // Publish outside the batch transaction so progress is delivered immediately.
+  notify(db, MERCHANT_REPORT_PROGRESS_CHANNEL, JSON.stringify(event));
+}

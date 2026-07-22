@@ -1,13 +1,12 @@
 "use server";
 
+import type { MerchantReportProgressEvent } from "~/features/dashboards/imports/contracts";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import { acceptReport } from "~/server/merchant-stats/commands/accept-report";
 import { contentSha256 } from "~/server/merchant-stats/intake/content-hash";
 import { cutAtFromFilename } from "~/server/merchant-stats/intake/cut-at";
-import {
-  createMerchantReportImportRepo,
-  type MerchantReportImportRow,
-} from "~/server/merchant-stats/queue/import-repo";
+import { buildMerchantReportProgressEvent } from "~/server/merchant-stats/report-import/progress";
+import { createMerchantReportImportRepo } from "~/server/merchant-stats/report-import/repo";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import {
@@ -99,11 +98,12 @@ export async function uploadMerchantReport(
   });
 }
 
-export async function getMerchantReportImport(
+// Used when the progress stream is unavailable.
+export async function getMerchantReportProgress(
   rawImportId: string,
-): Promise<MerchantReportImportRow> {
+): Promise<MerchantReportProgressEvent> {
   return runAction({
-    name: "dashboards.import.get_job",
+    name: "dashboards.import.progress",
     access: { kind: "permission", permission: "dashboards:read" },
 
     parse: () =>
@@ -122,7 +122,7 @@ export async function getMerchantReportImport(
         throwDomain(fail("import_job_not_found"));
       }
 
-      return Ok(row);
+      return Ok(buildMerchantReportProgressEvent(row));
     },
   });
 }

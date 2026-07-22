@@ -9,10 +9,12 @@ import type {
   BranchId,
   GeneratedId,
   IdColumn,
+  MerchantAttributionJobId,
   MerchantReportId,
   MerchantReportImportId,
   MerchantSaleId,
   NullableIdColumn,
+  OrganizationId,
   UserId,
 } from "~/server/shared/ids";
 
@@ -104,17 +106,53 @@ export interface MerchantMonthlyGpvTable {
   device_count: number;
 }
 
-export interface MerchantMonthlyAttributionTable {
+export interface MerchantMonthAttributionTable {
   ruc: string;
   month: string;
+  organization_id: NullableIdColumn<OrganizationId>;
   seller_user_id: NullableIdColumn<UserId>;
   branch_id: NullableIdColumn<BranchId>;
   method: AttributionMethod;
   confidence: AttributionConfidence;
   evidence: Json;
+  derived_at: Date;
+}
+
+export interface MerchantMonthAttributionOverrideTable {
+  ruc: string;
+  month: string;
+  seller_user_id: NullableIdColumn<UserId>;
+  branch_id: NullableIdColumn<BranchId>;
+  resolved_by: IdColumn<UserId>;
+  resolved_at: Date;
+}
+
+export interface MerchantMonthCreditTable {
+  ruc: string;
+  month: string;
+  organization_id: NullableIdColumn<OrganizationId>;
+  seller_user_id: NullableIdColumn<UserId>;
+  branch_id: NullableIdColumn<BranchId>;
+  method: AttributionMethod;
+  confidence: AttributionConfidence;
+  evidence: Json;
+  derived_at: Date;
   resolved_by: NullableIdColumn<UserId>;
   resolved_at: Date | null;
-  stamped_at: Date;
+}
+
+export interface MerchantAttributionJobsTable {
+  id: GeneratedId<MerchantAttributionJobId>;
+  ruc: string;
+  month: string;
+  queue_state: Generated<"pending" | "processing" | "done" | "failed">;
+  error_message: string | null;
+  lease_owner: string | null;
+  attempt_count: ColumnType<number, number | undefined, number>;
+  max_attempts: number;
+  claimable_at: Date;
+  created_at: Date;
+  completed_at: Date | null;
 }
 
 export interface MerchantTargetsTable {

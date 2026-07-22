@@ -6,8 +6,7 @@ import type {
   WorkflowLeadId,
 } from "~/server/shared/ids";
 
-import type { SourceRow } from "../intake/types";
-import type { SaleEvidence } from "./ladder";
+import type { RucLeadEvidence, SaleEvidence } from "./ladder";
 
 interface LeadRef {
   leadId: WorkflowLeadId;
@@ -15,20 +14,27 @@ interface LeadRef {
   createdAt: string;
 }
 
+export interface AttributedSale {
+  ruc: string;
+  serialNumber: string | null;
+  soldAt: string;
+  culqiUserName: string | null;
+}
+
 export interface AttributionContext {
   leadBySerial: Map<string, LeadRef>;
   orgByRuc: Map<string, OrganizationId>;
-  leadByOrg: Map<string, LeadRef>;
-  branchByUser: Map<string, BranchId | null>;
+  leadByOrg: Map<OrganizationId, LeadRef>;
+  branchByUser: Map<UserId, BranchId | null>;
 }
 
 export async function loadAttributionContext(
   db: DatabaseExecutor,
-  rows: readonly SourceRow[],
+  sales: readonly AttributedSale[],
 ): Promise<AttributionContext> {
-  const rucs = unique(rows.map((row) => row.ruc));
+  const rucs = unique(sales.map((sale) => sale.ruc));
   const serials = unique(
-    rows.flatMap((row) => (row.serialNumber ? [row.serialNumber] : [])),
+    sales.flatMap((sale) => (sale.serialNumber ? [sale.serialNumber] : [])),
   );
 
   const [orgByRuc, leadBySerial] = await Promise.all([
@@ -53,33 +59,39 @@ export async function loadAttributionContext(
 
 export function saleEvidenceOf(
   ctx: AttributionContext,
-  row: SourceRow,
+  sale: AttributedSale,
 ): SaleEvidence {
-  const serialLead = row.serialNumber
-    ? ctx.leadBySerial.get(row.serialNumber)
-    : undefined;
-
-  const organizationId = ctx.orgByRuc.get(row.ruc);
-  const rucLead = organizationId
-    ? ctx.leadByOrg.get(organizationId)
+  const serialLead = sale.serialNumber
+    ? ctx.leadBySerial.get(sale.serialNumber)
     : undefined;
 
   return {
-    soldAt: row.soldAt,
-    culqiUserName: row.culqiUserName,
+    soldAt: sale.soldAt,
+    culqiUserName: sale.culqiUserName,
     serial: serialLead
       ? {
           userId: serialLead.executiveId,
           leadId: serialLead.leadId,
         }
       : null,
-    rucLead: rucLead
-      ? {
-          userId: rucLead.executiveId,
-          leadId: rucLead.leadId,
-          createdAt: rucLead.createdAt,
-        }
-      : null,
+  };
+}
+
+export function rucLeadOf(
+  ctx: AttributionContext,
+  ruc: string,
+): RucLeadEvidence | null {
+  const organizationId = ctx.orgByRuc.get(ruc);
+  const lead = organizationId ? ctx.leadByOrg.get(organizationId) : undefined;
+
+  if (!lead) {
+    return null;
+  }
+
+  return {
+    userId: lead.executiveId,
+    leadId: lead.leadId,
+    createdAt: lead.createdAt,
   };
 }
 

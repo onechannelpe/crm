@@ -1,7 +1,7 @@
 import { type RecordImportProgressEvent } from "~/features/records-imports/contracts";
 import { db } from "~/lib/db/db";
 import { notify } from "~/lib/db/notify";
-import type { QueueState } from "~/lib/job-queue/job-store";
+import type { QueueState } from "~/lib/job-queue/queue-state";
 import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
 import type {
   IntegrationJobRow,

@@ -1,12 +1,12 @@
-export type RecordImportType = "import_status" | "import_prioridad";
+import { isQueueState, type QueueState } from "~/lib/job-queue/queue-state";
 
-type RecordImportQueueState = "pending" | "processing" | "done" | "failed";
+export type RecordImportType = "import_status" | "import_prioridad";
 
 export interface RecordImportProgressEvent {
   type: "job_progress";
   jobId: string;
   importType: RecordImportType;
-  queueState: RecordImportQueueState;
+  queueState: QueueState;
   rowsApplied: number;
   rowsFailed: number;
   rowsTotal: number;
@@ -48,10 +48,7 @@ function isRecordImportProgressEvent(
     typeof value.jobId === "string" &&
     (value.importType === "import_status" ||
       value.importType === "import_prioridad") &&
-    (value.queueState === "pending" ||
-      value.queueState === "processing" ||
-      value.queueState === "done" ||
-      value.queueState === "failed") &&
+    isQueueState(value.queueState) &&
     typeof value.rowsApplied === "number" &&
     typeof value.rowsFailed === "number" &&
     typeof value.rowsTotal === "number" &&

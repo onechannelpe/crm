@@ -20,7 +20,7 @@ export async function getCohortRamp(
   const rows = await db
     .selectFrom("merchant_sale_gpv as g")
     .innerJoin("merchant_sales as s", "s.id", "g.sale_id")
-    .innerJoin("merchant_monthly_attribution as a", (join) =>
+    .innerJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "s.ruc").onRef("a.month", "=", "s.sale_month"),
     )
     .where((eb) => creditFilter(eb, filter))
@@ -68,7 +68,7 @@ async function cohortTargets(
 ): Promise<Map<string, number>> {
   const rows = await db
     .selectFrom("merchant_sales as s")
-    .innerJoin("merchant_monthly_attribution as a", (join) =>
+    .innerJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "s.ruc").onRef("a.month", "=", "s.sale_month"),
     )
     .leftJoinLateral(targetAsOfSaleMonth, (join) => join.onTrue())
@@ -98,7 +98,7 @@ export async function getCohortRows(
 ): Promise<CohortSaleRow[]> {
   const sales = await db
     .selectFrom("merchant_sales as s")
-    .innerJoin("merchant_monthly_attribution as a", (join) =>
+    .innerJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "s.ruc").onRef("a.month", "=", "s.sale_month"),
     )
     .leftJoinLateral(targetAsOfSaleMonth, (join) => join.onTrue())

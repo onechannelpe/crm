@@ -1,5 +1,5 @@
 import { createJobQueue } from "~/lib/job-queue/job-queue";
-import type { QueueState } from "~/lib/job-queue/job-store";
+import type { QueueState } from "~/lib/job-queue/queue-state";
 import {
   buildRecordImportProgressEvent,
   publishRecordImportProgress,

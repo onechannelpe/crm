@@ -2,9 +2,13 @@ import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import {
+  buildMerchantReportProgressEvent,
+  publishMerchantReportProgress,
+} from "./progress";
+import {
   createMerchantReportImportRepo,
   type MerchantReportImportRow,
-} from "./import-repo";
+} from "./repo";
 import {
   createMerchantReportRunner,
   type MerchantReportRunner,
@@ -29,7 +33,13 @@ export function createMerchantReportsQueue(
       db: deps.db,
       now: deps.now,
       readFile: deps.readFile,
-      updateProgress: (id, progress) => repo.updateProgress(id, progress),
+      reportProgress: async (id, progress) => {
+        const persisted = await repo.updateProgress(id, progress);
+
+        publishMerchantReportProgress(
+          buildMerchantReportProgressEvent(persisted),
+        );
+      },
     });
 
   return createJobQueue<MerchantReportImportRow>({
@@ -38,7 +48,7 @@ export function createMerchantReportsQueue(
     now: deps.now,
     workerId,
     store: repo.store,
-    handle: async (job, signal) => {
+    handle: async (job, signal: AbortSignal) => {
       const result = await runner.process(job, signal);
 
       return {
@@ -50,6 +60,13 @@ export function createMerchantReportsQueue(
           results_json: result.resultsJson,
         },
       };
+    },
+    onSettled: async (job) => {
+      const settled = await repo.findById(job.id);
+
+      if (!settled) return;
+
+      publishMerchantReportProgress(buildMerchantReportProgressEvent(settled));
     },
   });
 }

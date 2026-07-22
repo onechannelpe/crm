@@ -39,7 +39,7 @@ export async function getMerchantStatsByRuc(
     latestMonth === null
       ? undefined
       : db
-          .selectFrom("merchant_monthly_attribution as a")
+          .selectFrom("merchant_month_credit as a")
           .innerJoin("users as u", "u.id", "a.seller_user_id")
           .select(["u.names", "u.first_surname"])
           .where("a.ruc", "=", ruc)

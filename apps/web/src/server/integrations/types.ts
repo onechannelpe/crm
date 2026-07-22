@@ -1,6 +1,7 @@
 import type { Json } from "~/contracts/json";
 import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
-import type { JobStore, QueueState } from "~/lib/job-queue/job-store";
+import type { JobStore } from "~/lib/job-queue/job-store";
+import type { QueueState } from "~/lib/job-queue/queue-state";
 import type { QueueJobBase } from "~/lib/job-queue/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { IntegrationJobId, UserId } from "~/server/shared/ids";

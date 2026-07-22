@@ -114,7 +114,10 @@ export interface Database {
   merchant_sales: merchantStats.MerchantSalesTable;
   merchant_sale_gpv: merchantStats.MerchantSaleGpvTable;
   merchant_monthly_gpv: merchantStats.MerchantMonthlyGpvTable;
-  merchant_monthly_attribution: merchantStats.MerchantMonthlyAttributionTable;
+  merchant_month_attribution: merchantStats.MerchantMonthAttributionTable;
+  merchant_month_attribution_override: merchantStats.MerchantMonthAttributionOverrideTable;
+  merchant_month_credit: merchantStats.MerchantMonthCreditTable;
+  merchant_attribution_jobs: merchantStats.MerchantAttributionJobsTable;
   merchant_targets: merchantStats.MerchantTargetsTable;
   file_assets: files.FileAssetsTable;
   file_download_tokens: files.FileDownloadTokensTable;

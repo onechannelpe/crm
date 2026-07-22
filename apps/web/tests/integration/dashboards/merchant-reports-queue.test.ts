@@ -8,8 +8,8 @@ import {
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { acceptReport } from "~/server/merchant-stats/commands/accept-report";
-import type { MerchantReportImportRow } from "~/server/merchant-stats/queue/import-repo";
-import { createMerchantReportsQueue } from "~/server/merchant-stats/queue/merchant-reports-queue";
+import { createMerchantReportsQueue } from "~/server/merchant-stats/report-import/queue";
+import type { MerchantReportImportRow } from "~/server/merchant-stats/report-import/repo";
 
 const NOW = new Date("2026-07-02T00:00:00.000Z");
 
@@ -62,7 +62,7 @@ describe("merchant reports queue", () => {
     const contentSha256 = "1".repeat(64);
     const accepted = await queueUpload(ctx, contentSha256);
 
-    const claimed: MerchantReportImportRow[] = [];
+    let claimed: MerchantReportImportRow | undefined;
 
     const queue = createMerchantReportsQueue("worker-test", {
       db: ctx.db,
@@ -70,7 +70,7 @@ describe("merchant reports queue", () => {
       readFile: () => Promise.reject(new Error("unused")),
       runner: {
         process(job) {
-          claimed.push(job);
+          claimed = job;
 
           return Promise.resolve({
             rowsTotal: 10,
@@ -84,8 +84,7 @@ describe("merchant reports queue", () => {
 
     await queue.drain();
 
-    // The runner identifies the upload by report_id.
-    expect(claimed[0]?.report_id).toBe(accepted.reportId);
+    expect(claimed?.report_id).toBe(accepted.reportId);
 
     const settled = await readImport(ctx, contentSha256);
 
@@ -97,6 +96,7 @@ describe("merchant reports queue", () => {
 
   it("records the failure reason when the runner throws", async () => {
     const contentSha256 = "2".repeat(64);
+
     await queueUpload(ctx, contentSha256);
 
     const queue = createMerchantReportsQueue("worker-test", {
@@ -113,8 +113,6 @@ describe("merchant reports queue", () => {
     const settled = await readImport(ctx, contentSha256);
 
     expect(settled.error_message).toContain("Unreadable GPV workbook");
-
-    // First failed attempt; the import will be retried.
     expect(settled.queue_state).toBe("pending");
     expect(settled.attempt_count).toBe(1);
   });

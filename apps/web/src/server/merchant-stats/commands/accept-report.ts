@@ -5,7 +5,7 @@ import type {
   UserId,
 } from "~/server/shared/ids";
 
-import { createMerchantReportImportRepo } from "../queue/import-repo";
+import { createMerchantReportImportRepo } from "../report-import/repo";
 
 const GPV_IMPORT_MAX_ATTEMPTS = 3;
 
