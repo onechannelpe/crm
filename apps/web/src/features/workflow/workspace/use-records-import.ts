@@ -1,7 +1,7 @@
 import { onCleanup } from "solid-js";
 
 import {
-  getRecordImportJob,
+  getRecordImportProgress,
   uploadRecordImportFile,
 } from "~/actions/records/imports";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
@@ -11,28 +11,18 @@ import {
   type RecordImportType,
 } from "~/features/records-imports/contracts";
 import {
-  createEventSourceStream,
-  type EventSourceStream,
-} from "~/lib/realtime/event-source-stream";
+  subscribeState,
+  type StateSubscription,
+} from "~/lib/realtime/subscribe-state";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 4_000;
-const POLL_BASE_MS = 2_000;
-const POLL_MAX_MS = 15_000;
-const RECONNECT_JITTER_MS = 300;
-
-type ImportSession = {
-  jobId: string;
-  toastId: string;
-  importType: RecordImportType;
-  stream: EventSourceStream | null;
-  pollTimer: number | null;
-  pollFailureCount: number;
-};
 
 function importTypeLabel(type: RecordImportType): string {
-  if (type === "import_status") return "estados";
+  if (type === "import_status") {
+    return "estados";
+  }
 
   return "prioridades";
 }
@@ -81,12 +71,8 @@ function isSupportedFile(file: File): boolean {
   return name.endsWith(".csv") || name.endsWith(".xlsx");
 }
 
-function recordImportStreamUrl(jobId: string): string {
-  return `/api/records/imports/${jobId}/stream`;
-}
-
-function withJitter(ms: number): number {
-  return ms + Math.floor(Math.random() * (RECONNECT_JITTER_MS + 1));
+function isTerminal(event: RecordImportProgressEvent): boolean {
+  return event.queueState === "done" || event.queueState === "failed";
 }
 
 export function useRecordsImport() {
@@ -94,148 +80,40 @@ export function useRecordsImport() {
     useSnackBar();
 
   let fileInputRef: HTMLInputElement | undefined;
-  let session: ImportSession | null = null;
+  let subscription: StateSubscription | null = null;
 
-  function stopSession(expectedSession?: ImportSession): void {
-    if (!session || (expectedSession && session !== expectedSession)) {
-      return;
-    }
-
-    const activeSession = session;
-    session = null;
-
-    if (activeSession.pollTimer !== null) {
-      window.clearTimeout(activeSession.pollTimer);
-    }
-
-    activeSession.stream?.disconnect();
+  function stopSubscription(): void {
+    subscription?.stop();
+    subscription = null;
   }
 
-  function handleJobEvent(
-    currentSession: ImportSession,
+  function updateImportSnackBar(
+    toastId: string,
     event: RecordImportProgressEvent,
   ): void {
-    if (session !== currentSession) {
-      return;
-    }
-
     if (event.queueState === "done") {
-      updateSnackBar(currentSession.toastId, {
+      updateSnackBar(toastId, {
         message: buildCompletedMessage(event),
         variant: event.rowsFailed > 0 ? "warning" : "success",
         duration: IMPORT_COMPLETED_DURATION_MS,
       });
 
-      stopSession(currentSession);
       return;
     }
 
     if (event.queueState === "failed") {
-      updateSnackBar(currentSession.toastId, {
+      updateSnackBar(toastId, {
         message: event.errorMessage ?? "La importación falló",
         variant: "error",
         duration: IMPORT_COMPLETED_DURATION_MS,
       });
 
-      stopSession(currentSession);
       return;
     }
 
-    updateSnackBar(currentSession.toastId, {
+    updateSnackBar(toastId, {
       message: buildProgressMessage(event),
     });
-  }
-
-  async function pollOnce(
-    currentSession: ImportSession,
-  ): Promise<"ok" | "retry" | "stale"> {
-    try {
-      const job = await getRecordImportJob(currentSession.jobId);
-
-      if (session !== currentSession) {
-        return "stale";
-      }
-
-      handleJobEvent(currentSession, {
-        type: "job_progress",
-        jobId: currentSession.jobId,
-        importType: currentSession.importType,
-        queueState: job.queue_state,
-        rowsApplied: job.rows_applied ?? 0,
-        rowsFailed: job.rows_failed ?? 0,
-        rowsTotal: job.rows_total ?? 0,
-        errorMessage: job.error_message ?? null,
-      });
-
-      return "ok";
-    } catch {
-      return session === currentSession ? "retry" : "stale";
-    }
-  }
-
-  function schedulePolling(
-    currentSession: ImportSession,
-    delayMs: number,
-  ): void {
-    if (currentSession.pollTimer !== null) {
-      window.clearTimeout(currentSession.pollTimer);
-    }
-
-    currentSession.pollTimer = window.setTimeout(() => {
-      void (async () => {
-        if (session !== currentSession) {
-          return;
-        }
-
-        const result = await pollOnce(currentSession);
-
-        if (result === "stale" || session !== currentSession) {
-          return;
-        }
-
-        if (result === "retry") {
-          currentSession.pollFailureCount++;
-        } else {
-          currentSession.pollFailureCount = 0;
-        }
-
-        const delay = withJitter(
-          Math.min(
-            POLL_BASE_MS * 2 ** currentSession.pollFailureCount,
-            POLL_MAX_MS,
-          ),
-        );
-
-        schedulePolling(currentSession, delay);
-      })();
-    }, delayMs);
-  }
-
-  function connectStream(currentSession: ImportSession): void {
-    const stream = createEventSourceStream({
-      onMessage: (raw) => {
-        if (session !== currentSession) {
-          return;
-        }
-
-        const event = parseRecordImportProgressMessage(raw);
-
-        if (event) {
-          handleJobEvent(currentSession, event);
-        }
-      },
-      // EventSource reconnects dropped streams; polling handles initial failure.
-      onNeverConnected: () => {
-        if (session !== currentSession) {
-          return;
-        }
-
-        schedulePolling(currentSession, 0);
-      },
-    });
-
-    currentSession.stream = stream;
-    stream.connect(recordImportStreamUrl(currentSession.jobId));
   }
 
   async function importFile(file: File): Promise<void> {
@@ -260,19 +138,15 @@ export function useRecordsImport() {
         { duration: IMPORT_PROGRESS_DURATION_MS },
       );
 
-      stopSession();
+      stopSubscription();
 
-      const currentSession: ImportSession = {
-        jobId: result.jobId,
-        toastId,
-        importType: result.importType,
-        stream: null,
-        pollTimer: null,
-        pollFailureCount: 0,
-      };
-
-      session = currentSession;
-      connectStream(currentSession);
+      subscription = subscribeState({
+        streamUrl: `/api/records/imports/${result.jobId}/stream`,
+        parse: parseRecordImportProgressMessage,
+        fetchLatest: () => getRecordImportProgress(result.jobId),
+        onEvent: (event) => updateImportSnackBar(toastId, event),
+        until: isTerminal,
+      });
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
@@ -306,7 +180,7 @@ export function useRecordsImport() {
     target.value = "";
   }
 
-  onCleanup(stopSession);
+  onCleanup(stopSubscription);
 
   return {
     bindFileInput,

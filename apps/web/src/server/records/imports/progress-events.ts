@@ -1,7 +1,6 @@
-import { type RecordImportProgressEvent } from "~/features/records-imports/contracts";
+import type { RecordImportProgressEvent } from "~/features/records-imports/contracts";
 import { db } from "~/lib/db/db";
 import { notify } from "~/lib/db/notify";
-import type { QueueState } from "~/lib/job-queue/queue-state";
 import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
 import type {
   IntegrationJobRow,
@@ -16,12 +15,14 @@ export async function findRecordImportJob(
 ): Promise<IntegrationJobRow | null> {
   const parsedJobId = IntegrationJobId.parse(jobId);
 
-  if (isErr(parsedJobId)) return null;
+  if (isErr(parsedJobId)) {
+    return null;
+  }
 
   return (await jobs.findById(parsedJobId.value)) ?? null;
 }
 
-export function buildRecordImportProgressEvent(input: {
+export function buildRecordImportProgressEvent(
   job: Pick<
     IntegrationJobRow,
     | "id"
@@ -31,22 +32,17 @@ export function buildRecordImportProgressEvent(input: {
     | "rows_failed"
     | "rows_total"
     | "error_message"
-  >;
-  rowsApplied?: number;
-  rowsFailed?: number;
-  rowsTotal?: number;
-  queueState?: QueueState;
-  errorMessage?: string | null;
-}): RecordImportProgressEvent {
+  >,
+): RecordImportProgressEvent {
   return {
     type: "job_progress",
-    jobId: input.job.id,
-    importType: input.job.type,
-    queueState: input.queueState ?? input.job.queue_state,
-    rowsApplied: input.rowsApplied ?? input.job.rows_applied ?? 0,
-    rowsFailed: input.rowsFailed ?? input.job.rows_failed ?? 0,
-    rowsTotal: input.rowsTotal ?? input.job.rows_total ?? 0,
-    errorMessage: input.errorMessage ?? input.job.error_message,
+    jobId: job.id,
+    importType: job.type,
+    queueState: job.queue_state,
+    rowsApplied: job.rows_applied ?? 0,
+    rowsFailed: job.rows_failed ?? 0,
+    rowsTotal: job.rows_total ?? 0,
+    errorMessage: job.error_message,
   };
 }
 

@@ -19,14 +19,16 @@ export function createRecordImportRunner(deps: {
   executor: DatabaseExecutor;
   now: () => Date;
   readFile: (filePath: string) => Promise<Uint8Array>;
-  updateProgress: (input: {
-    jobId: IntegrationJobId;
-    rowsTotal?: number;
-    rowsApplied?: number;
-    rowsFailed?: number;
-  }) => Promise<unknown>;
+  reportProgress: (
+    jobId: IntegrationJobId,
+    progress: {
+      rowsTotal: number;
+      rowsApplied: number;
+      rowsFailed: number;
+    },
+  ) => Promise<unknown>;
 }) {
-  const { executor, now, readFile, updateProgress } = deps;
+  const { executor, now, readFile, reportProgress } = deps;
 
   return {
     async process(
@@ -48,24 +50,15 @@ export function createRecordImportRunner(deps: {
       );
       const rowsTotal = validRows.length + invalidRows.length;
 
-      await updateProgress({
-        jobId: job.id,
+      await reportProgress(job.id, {
         rowsTotal,
         rowsApplied: 0,
         rowsFailed: 0,
       });
-      publishRecordImportProgress(
-        buildRecordImportProgressEvent({
-          job,
-          queueState: "processing",
-          rowsTotal,
-          rowsApplied: 0,
-          rowsFailed: 0,
-          errorMessage: null,
-        }),
-      );
 
-      if (signal.aborted) throw new Error("Job aborted");
+      if (signal.aborted) {
+        throw new Error("Job aborted");
+      }
 
       const startedAt = now();
       const applied = await applyImportRows(
@@ -74,30 +67,23 @@ export function createRecordImportRunner(deps: {
           actorId: job.requested_by_user_id,
           validRows,
           invalidRows,
+
+          // Stream in-flight counts; only the initial and final counts are persisted.
           onProgress: (progress) => {
-            publishRecordImportProgress(
-              buildRecordImportProgressEvent({
-                job,
-                queueState: "processing",
-                rowsTotal: progress.rowsTotal,
-                rowsApplied: progress.rowsApplied,
-                rowsFailed: progress.rowsFailed,
-                errorMessage: null,
-              }),
-            );
+            publishRecordImportProgress({
+              ...buildRecordImportProgressEvent(job),
+              ...progress,
+            });
           },
         },
         { executor, now: startedAt },
       );
 
-      await updateProgress({
-        jobId: job.id,
+      await reportProgress(job.id, {
         rowsTotal,
         rowsApplied: applied.applied,
         rowsFailed: applied.failed,
       });
-
-      if (signal.aborted) throw new Error("Job aborted after processing");
 
       return {
         rowsTotal,

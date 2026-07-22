@@ -1,4 +1,4 @@
-import { createSignal, Match, Show, Switch } from "solid-js";
+import { createMemo, createSignal, Match, Show, Switch } from "solid-js";
 
 import { FileDropzone } from "~/components/ui/input/file-dropzone";
 import { InputHint } from "~/components/ui/input/input-hint";
@@ -32,11 +32,11 @@ export function UploadReport(props: { onClose?: () => void }) {
     return current.kind === "error" ? current : null;
   };
 
-  const busy = () => {
+  const busy = createMemo(() => {
     const current = phase();
 
     return current.kind === "uploading" || current.kind === "processing";
-  };
+  });
 
   return (
     <div class={styles.panel}>

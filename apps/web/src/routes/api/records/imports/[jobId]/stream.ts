@@ -16,9 +16,13 @@ export async function GET(
   event: Pick<APIEvent, "params" | "nativeEvent">,
 ): Promise<Response | BodyInit> {
   const jobId = event.params.jobId;
-  if (!jobId) return new Response("Invalid job", { status: 400 });
+
+  if (!jobId) {
+    return new Response("Invalid job", { status: 400 });
+  }
 
   const session = await getSession();
+
   if (
     !session ||
     session.sessionClass !== "app" ||
@@ -27,26 +31,37 @@ export async function GET(
     return new Response(null, { status: 401 });
   }
 
-  await recordImportsRealtime.ensure();
-
   const { integration } = getServerRuntime().integrations;
   const job = await findRecordImportJob(integration.jobs, jobId);
-  if (!job) return new Response("Not found", { status: 404 });
+
+  if (!job) {
+    return new Response("Not found", { status: 404 });
+  }
 
   const canAccess = await canAccessRecordImportJob(
-    { userId: session.userId, branchId: session.branchId, role: session.role },
+    {
+      userId: session.userId,
+      branchId: session.branchId,
+      role: session.role,
+    },
     job,
     integration,
   );
-  if (!canAccess) return new Response("Not found", { status: 404 });
 
-  const stream = openTopicStream(
+  if (!canAccess) {
+    return new Response("Not found", { status: 404 });
+  }
+
+  await recordImportsRealtime.ensure();
+
+  const stream = await openTopicStream(
     event.nativeEvent,
     recordImportsRealtime.hub,
-    recordImportTopic(jobId),
+    recordImportTopic.of(jobId),
+    {
+      snapshot: JSON.stringify(buildRecordImportProgressEvent(job)),
+    },
   );
-
-  await stream.push(JSON.stringify(buildRecordImportProgressEvent({ job })));
 
   return stream.send();
 }

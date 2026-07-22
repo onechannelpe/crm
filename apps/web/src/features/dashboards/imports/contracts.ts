@@ -1,4 +1,5 @@
 import { isQueueState, type QueueState } from "~/lib/job-queue/queue-state";
+import { defineTopic } from "~/lib/realtime/topic";
 
 export interface MerchantReportProgressEvent {
   type: "merchant_report_progress";
@@ -10,28 +11,10 @@ export interface MerchantReportProgressEvent {
   errorMessage: string | null;
 }
 
-const MERCHANT_REPORT_TOPIC_PREFIX = "merchant.report.import";
+export const merchantReportTopic = defineTopic("merchant.report.import");
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
-}
-
-export function merchantReportTopic(importId: string): string {
-  return `${MERCHANT_REPORT_TOPIC_PREFIX}.${importId}`;
-}
-
-export function parseMerchantReportTopic(topic: string): string | null {
-  if (!topic.startsWith(`${MERCHANT_REPORT_TOPIC_PREFIX}.`)) {
-    return null;
-  }
-
-  const importId = topic.slice(`${MERCHANT_REPORT_TOPIC_PREFIX}.`.length);
-
-  if (importId.trim().length === 0) {
-    return null;
-  }
-
-  return importId;
 }
 
 function isMerchantReportProgressEvent(

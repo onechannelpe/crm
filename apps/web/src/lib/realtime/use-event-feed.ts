@@ -8,10 +8,13 @@ import {
 
 import { createEventSourceStream } from "./event-source-stream";
 
-export function useEventSourceRecords<T>(
+export function useEventFeed<T>(
   url: Accessor<string | null>,
   parse: (raw: string) => T | null,
-  options?: { limit?: number; resetKey?: Accessor<unknown> },
+  options?: {
+    limit?: number;
+    resetKey?: Accessor<unknown>;
+  },
 ): Accessor<T[]> {
   const [records, setRecords] = createSignal<T[]>([]);
 
@@ -22,20 +25,30 @@ export function useEventSourceRecords<T>(
   createEffect(() => {
     const currentUrl = url();
 
-    if (currentUrl === null || typeof window === "undefined") return;
+    if (currentUrl === null || typeof window === "undefined") {
+      return;
+    }
 
     const stream = createEventSourceStream({
       onMessage: (raw) => {
         const parsed = parse(raw);
-        if (!parsed) return;
+
+        if (parsed === null) {
+          return;
+        }
+
         setRecords((previous) => {
           const next = [parsed, ...previous];
-          return options?.limit ? next.slice(0, options.limit) : next;
+
+          return options?.limit === undefined
+            ? next
+            : next.slice(0, options.limit);
         });
       },
     });
 
     stream.connect(currentUrl);
+
     onCleanup(() => stream.disconnect());
   });
 

@@ -48,8 +48,12 @@ export interface IntegrationJobsPort {
   list(limit: number, offset: number): Promise<IntegrationJobRow[]>;
   updateProgress(
     id: IntegrationJobId,
-    progress: { rowsTotal?: number; rowsApplied?: number; rowsFailed?: number },
-  ): Promise<unknown>;
+    progress: {
+      rowsTotal: number;
+      rowsApplied: number;
+      rowsFailed: number;
+    },
+  ): Promise<IntegrationJobRow>;
   setFilePath(id: IntegrationJobId, filePath: string): Promise<unknown>;
 }
 
@@ -68,7 +72,7 @@ export interface IntegrationRuntime {
   };
 }
 
-export interface ExportJobProcessResult extends IntegrationJobCompletion {}
+export type ExportJobProcessResult = IntegrationJobCompletion;
 
 export interface ImportJobProcessResult extends IntegrationJobCompletion {
   resultsJson: string;

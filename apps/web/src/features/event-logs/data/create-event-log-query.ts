@@ -15,7 +15,7 @@ import {
   type EventLogRecord,
 } from "~/contracts/event-logs/event-log";
 import { eventLogsQuery } from "~/lib/queries/event-logs";
-import { useEventSourceRecords } from "~/lib/realtime/use-event-source-records";
+import { useEventFeed } from "~/lib/realtime/use-event-feed";
 
 import { hasEventLogFilters } from "../model/event-log-location";
 
@@ -85,7 +85,7 @@ export function createEventLogQuery(options: {
     if (!options.liveEnabled() || hasEventLogFilters(input)) return null;
     return `/api/event-logs/stream?table=${input.table}`;
   });
-  const liveRecords = useEventSourceRecords(
+  const liveRecords = useEventFeed(
     streamUrl,
     (raw) => {
       const result = parseEventLogRecordText(raw);

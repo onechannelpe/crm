@@ -59,7 +59,7 @@ export function createIntegrationJobRepo(
     findById(id: IntegrationJobId) {
       return db
         .selectFrom("workflow_integration_jobs")
-        .selectAll()
+        .select(JOB_COLUMNS)
         .where("id", "=", id)
         .executeTakeFirst();
     },
@@ -67,7 +67,7 @@ export function createIntegrationJobRepo(
     list(limit: number, offset: number) {
       return db
         .selectFrom("workflow_integration_jobs")
-        .selectAll()
+        .select(JOB_COLUMNS)
         .orderBy("created_at", "desc")
         .limit(limit)
         .offset(offset)
@@ -77,51 +77,33 @@ export function createIntegrationJobRepo(
     updateProgress(
       id: IntegrationJobId,
       progress: {
-        rowsTotal?: number;
-        rowsApplied?: number;
-        rowsFailed?: number;
+        rowsTotal: number;
+        rowsApplied: number;
+        rowsFailed: number;
       },
     ) {
-      const values: {
-        rows_total?: number;
-        rows_applied?: number;
-        rows_failed?: number;
-      } = {};
-
-      let hasUpdates = false;
-
-      if (progress.rowsTotal !== undefined) {
-        values.rows_total = progress.rowsTotal;
-        hasUpdates = true;
-      }
-
-      if (progress.rowsApplied !== undefined) {
-        values.rows_applied = progress.rowsApplied;
-        hasUpdates = true;
-      }
-
-      if (progress.rowsFailed !== undefined) {
-        values.rows_failed = progress.rowsFailed;
-        hasUpdates = true;
-      }
-
-      if (!hasUpdates) {
-        return Promise.resolve();
-      }
-
       return db
         .updateTable("workflow_integration_jobs")
-        .set(values)
+        .set({
+          rows_total: progress.rowsTotal,
+          rows_applied: progress.rowsApplied,
+          rows_failed: progress.rowsFailed,
+        })
         .where("id", "=", id)
-        .execute();
+        .returning(JOB_COLUMNS)
+        .executeTakeFirstOrThrow();
     },
 
-    setFilePath(id: IntegrationJobId, filePath: string) {
-      return db
+    async setFilePath(id: IntegrationJobId, filePath: string): Promise<void> {
+      const result = await db
         .updateTable("workflow_integration_jobs")
         .set({ file_path: filePath })
         .where("id", "=", id)
-        .execute();
+        .executeTakeFirst();
+
+      if (result.numUpdatedRows !== 1n) {
+        throw new Error(`integration job '${id}' was not found`);
+      }
     },
   };
 }

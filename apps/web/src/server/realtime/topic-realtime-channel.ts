@@ -1,3 +1,5 @@
+import type { Topic } from "~/lib/realtime/topic";
+
 import { createPgTopicBridge } from "./bridge";
 import { TopicHub } from "./topic-hub";
 
@@ -16,5 +18,34 @@ export function createTopicRealtimeChannel<TEvent>(
   const hub = new TopicHub();
   const bridge = createPgTopicBridge({ ...config, hub });
 
-  return { hub, ensure: () => bridge.start() };
+  return {
+    hub,
+    ensure: () => bridge.start(),
+  };
+}
+
+// LISTEN can miss events while reconnecting, so refresh every subscribed topic.
+export function snapshotReconciler(
+  topic: Topic,
+  snapshotOf: (id: string) => Promise<string | null>,
+): (hub: TopicHub) => Promise<void> {
+  return async (hub) => {
+    await Promise.all(
+      hub.topics().map(async (subscribedTopic) => {
+        const id = topic.parse(subscribedTopic);
+
+        if (id === null) {
+          return;
+        }
+
+        const snapshot = await snapshotOf(id);
+
+        if (snapshot === null) {
+          return;
+        }
+
+        hub.broadcast(subscribedTopic, snapshot);
+      }),
+    );
+  };
 }

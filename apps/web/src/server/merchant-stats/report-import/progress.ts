@@ -6,7 +6,10 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { MerchantReportImportId } from "~/server/shared/ids";
 import { isErr } from "~/server/shared/result";
 
-import type { MerchantReportImportRow } from "./repo";
+import {
+  createMerchantReportImportRepo,
+  type MerchantReportImportRow,
+} from "./repo";
 
 export async function findMerchantReportImport(
   executor: DatabaseExecutor,
@@ -14,13 +17,13 @@ export async function findMerchantReportImport(
 ): Promise<MerchantReportImportRow | null> {
   const parsed = MerchantReportImportId.parse(importId);
 
-  if (isErr(parsed)) return null;
+  if (isErr(parsed)) {
+    return null;
+  }
 
-  const row = await executor
-    .selectFrom("merchant_report_imports")
-    .selectAll()
-    .where("id", "=", parsed.value)
-    .executeTakeFirst();
+  const row = await createMerchantReportImportRepo(executor).findById(
+    parsed.value,
+  );
 
   return row ?? null;
 }
@@ -50,6 +53,6 @@ export function buildMerchantReportProgressEvent(
 export function publishMerchantReportProgress(
   event: MerchantReportProgressEvent,
 ): void {
-  // Publish outside the batch transaction so progress is delivered immediately.
+  // Use a separate connection so the notification is not delayed by the batch transaction.
   notify(db, MERCHANT_REPORT_PROGRESS_CHANNEL, JSON.stringify(event));
 }

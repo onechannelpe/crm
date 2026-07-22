@@ -2,7 +2,10 @@
 
 import { randomUUID } from "node:crypto";
 
-import type { RecordImportType } from "~/features/records-imports/contracts";
+import type {
+  RecordImportProgressEvent,
+  RecordImportType,
+} from "~/features/records-imports/contracts";
 import type { Role } from "~/lib/auth/access/rbac";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
@@ -143,36 +146,25 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         created_at: ctx.now(),
       });
 
-      await integration.jobs.updateProgress(jobId, {
+      const persisted = await integration.jobs.updateProgress(jobId, {
         rowsTotal,
         rowsApplied: 0,
         rowsFailed: 0,
       });
 
-      publishRecordImportProgress(
-        buildRecordImportProgressEvent({
-          job: {
-            id: jobId,
-            type: importType,
-            queue_state: "pending",
-            rows_applied: 0,
-            rows_failed: 0,
-            rows_total: rowsTotal,
-            error_message: null,
-          },
-        }),
-      );
+      publishRecordImportProgress(buildRecordImportProgressEvent(persisted));
 
       return Ok({ jobId, importType, rowsTotal });
     },
   });
 }
 
-export async function getRecordImportJob(
+// Fallback when the progress stream is unavailable.
+export async function getRecordImportProgress(
   rawJobId: string,
-): Promise<IntegrationJobRow> {
+): Promise<RecordImportProgressEvent> {
   return runAction({
-    name: "records.import.get_job",
+    name: "records.import.progress",
     access: { kind: "permission", permission: "integration:manage" },
 
     parse: () =>
@@ -185,7 +177,7 @@ export async function getRecordImportJob(
     execute: async (ctx, { jobId }) => {
       const job = await getAuthorizedRecordImportJob(ctx.actor, jobId);
 
-      return Ok(job);
+      return Ok(buildRecordImportProgressEvent(job));
     },
   });
 }

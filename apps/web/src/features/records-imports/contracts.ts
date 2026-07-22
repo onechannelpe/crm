@@ -1,4 +1,5 @@
 import { isQueueState, type QueueState } from "~/lib/job-queue/queue-state";
+import { defineTopic } from "~/lib/realtime/topic";
 
 export type RecordImportType = "import_status" | "import_prioridad";
 
@@ -13,27 +14,10 @@ export interface RecordImportProgressEvent {
   errorMessage: string | null;
 }
 
-const RECORD_IMPORT_TOPIC_PREFIX = "records.import.job";
+export const recordImportTopic = defineTopic("records.import.job");
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
-}
-
-export function recordImportTopic(jobId: string): string {
-  return `${RECORD_IMPORT_TOPIC_PREFIX}.${jobId}`;
-}
-
-export function parseRecordImportTopic(topic: string): string | null {
-  if (!topic.startsWith(`${RECORD_IMPORT_TOPIC_PREFIX}.`)) {
-    return null;
-  }
-
-  const rawJobId = topic.slice(`${RECORD_IMPORT_TOPIC_PREFIX}.`.length);
-  if (rawJobId.trim().length < 1) {
-    return null;
-  }
-
-  return rawJobId;
 }
 
 function isRecordImportProgressEvent(
@@ -60,6 +44,7 @@ export function parseRecordImportProgressMessage(
   raw: string,
 ): RecordImportProgressEvent | null {
   let parsed: unknown;
+
   try {
     parsed = JSON.parse(raw);
   } catch {

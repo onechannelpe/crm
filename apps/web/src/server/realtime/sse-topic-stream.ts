@@ -4,26 +4,29 @@ import type { RealtimePeer, TopicHub } from "./topic-hub";
 
 type EventStream = ReturnType<typeof createEventStream>;
 
-// Adapts one h3 EventStream into a TopicHub peer: subscribes immediately (so
-// no broadcast is missed while a caller replays history afterward) and
-// unsubscribes when the request ends. `push` on a closed writer rejects
-// asynchronously, which TopicHub's synchronous try/catch can't observe, so a
-// failed push removes the peer itself instead of leaking an unhandled
-// rejection.
-export function openTopicStream(
+interface TopicStreamOptions {
+  /* Sent after subscribing so broadcasts cannot land before the snapshot */
+  snapshot?: string;
+  /* Added to each event so clients can resume with Last-Event-ID */
+  eventId?: (rawMessage: string) => string | undefined;
+}
+
+// Remove the peer when an asynchronous stream push fails.
+export async function openTopicStream(
   h3Event: H3Event,
   hub: TopicHub,
   topic: string,
-  eventId?: (rawMessage: string) => string | undefined,
-): EventStream {
+  options: TopicStreamOptions = {},
+): Promise<EventStream> {
   const stream = createEventStream(h3Event);
 
   const peer: RealtimePeer = {
     send: (message) => {
-      const id = eventId?.(message);
+      const id = options.eventId?.(message);
       const pushed = id
         ? stream.push({ id, data: message })
         : stream.push(message);
+
       return pushed.catch(() => {
         hub.removePeer(peer);
       });
@@ -32,6 +35,10 @@ export function openTopicStream(
 
   hub.subscribe(peer, topic);
   stream.onClosed(() => hub.removePeer(peer));
+
+  if (options.snapshot !== undefined) {
+    await stream.push(options.snapshot);
+  }
 
   return stream;
 }

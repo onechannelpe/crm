@@ -8,7 +8,7 @@ import { insertRejections, writeFactsBatch } from "../facts/write-batch";
 import { parseReport } from "../intake/parse-report";
 import type { MerchantReportImportRow } from "./repo";
 
-// Commit whole RUC groups in bounded batches.
+// Keep each RUC in one transaction while limiting batch size.
 const FACTS_BATCH_TARGET_ROWS = 2000;
 
 export interface MerchantReportProgress {
@@ -44,9 +44,7 @@ export function createMerchantReportRunner(deps: {
         .executeTakeFirstOrThrow();
 
       const bytes = await readFile(report.storage_key);
-      const parsed = parseReport(toArrayBuffer(bytes), {
-        cutAt: report.cut_at,
-      });
+      const parsed = parseReport(bytes, { cutAt: report.cut_at });
 
       if (isErr(parsed)) {
         throw new Error(`Unreadable GPV workbook: ${parsed.error.code}`);
@@ -54,7 +52,7 @@ export function createMerchantReportRunner(deps: {
 
       const { rows, rejections } = parsed.value;
 
-      // Rejected rows are not tied to a RUC batch.
+      // Rejections have no RUC, so they are written outside the batch loop.
       await insertRejections(db, report.id, rejections);
 
       const progress: MerchantReportProgress = {
@@ -119,16 +117,3 @@ export function createMerchantReportRunner(deps: {
 export type MerchantReportRunner = ReturnType<
   typeof createMerchantReportRunner
 >;
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  const { buffer, byteOffset, byteLength } = bytes;
-
-  if (buffer instanceof ArrayBuffer) {
-    return buffer.slice(byteOffset, byteOffset + byteLength);
-  }
-
-  const copy = new Uint8Array(byteLength);
-  copy.set(bytes);
-
-  return copy.buffer;
-}

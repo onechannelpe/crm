@@ -11,5 +11,5 @@ export const eventLogsRealtime = createTopicRealtimeChannel<EventLogRecord>({
   name: "event-logs",
   channel: EVENT_LOGS_STREAM_CHANNEL,
   parseEvent: parseEventLogStreamPayload,
-  topicForEvent: (record) => eventLogTopic(record.table),
+  topicForEvent: (record) => eventLogTopic.of(record.table),
 });

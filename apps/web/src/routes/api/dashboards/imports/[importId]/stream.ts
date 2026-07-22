@@ -30,8 +30,6 @@ export async function GET(
     return new Response(null, { status: 401 });
   }
 
-  await merchantReportsRealtime.ensure();
-
   const db = getServerRuntime().infra.db;
   const job = await findMerchantReportImport(db, importId);
 
@@ -39,14 +37,16 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  const stream = openTopicStream(
+  await merchantReportsRealtime.ensure();
+
+  const stream = await openTopicStream(
     event.nativeEvent,
     merchantReportsRealtime.hub,
-    merchantReportTopic(importId),
+    merchantReportTopic.of(importId),
+    {
+      snapshot: JSON.stringify(buildMerchantReportProgressEvent(job)),
+    },
   );
-
-  // Subscribe before sending the initial snapshot.
-  await stream.push(JSON.stringify(buildMerchantReportProgressEvent(job)));
 
   return stream.send();
 }
