@@ -9,11 +9,19 @@ import {
   createTopicRealtimeChannel,
   snapshotReconciler,
 } from "~/server/realtime/topic-realtime-channel";
+import { IntegrationJobId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
-import {
-  buildRecordImportProgressEvent,
-  findRecordImportJob,
-} from "./progress-events";
+import { buildRecordImportProgressEvent } from "./progress-events";
+
+export async function recordImportSnapshot(
+  jobId: IntegrationJobId,
+): Promise<string | null> {
+  const { integration } = getServerRuntime().integrations;
+  const job = await integration.jobs.findById(jobId);
+
+  return job ? JSON.stringify(buildRecordImportProgressEvent(job)) : null;
+}
 
 export const recordImportsRealtime =
   createTopicRealtimeChannel<RecordImportProgressEvent>({
@@ -21,10 +29,13 @@ export const recordImportsRealtime =
     channel: RECORDS_IMPORT_PROGRESS_CHANNEL,
     parseEvent: parseRecordImportProgressMessage,
     topicForEvent: (event) => recordImportTopic.of(event.jobId),
-    reconcile: snapshotReconciler(recordImportTopic, async (jobId) => {
-      const { integration } = getServerRuntime().integrations;
-      const job = await findRecordImportJob(integration.jobs, jobId);
+    reconcile: snapshotReconciler(recordImportTopic, async (raw) => {
+      const jobId = IntegrationJobId.parse(raw);
 
-      return job ? JSON.stringify(buildRecordImportProgressEvent(job)) : null;
+      if (isErr(jobId)) {
+        return null;
+      }
+
+      return recordImportSnapshot(jobId.value);
     }),
   });

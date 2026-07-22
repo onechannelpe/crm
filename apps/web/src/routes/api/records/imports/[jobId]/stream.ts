@@ -7,17 +7,18 @@ import { getServerRuntime } from "~/server/platform/container";
 import { openTopicStream } from "~/server/realtime/sse-topic-stream";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
 import {
-  buildRecordImportProgressEvent,
-  findRecordImportJob,
-} from "~/server/records/imports/progress-events";
-import { recordImportsRealtime } from "~/server/records/imports/realtime";
+  recordImportSnapshot,
+  recordImportsRealtime,
+} from "~/server/records/imports/realtime";
+import { IntegrationJobId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 export async function GET(
   event: Pick<APIEvent, "params" | "nativeEvent">,
 ): Promise<Response | BodyInit> {
-  const jobId = event.params.jobId;
+  const parsedJobId = IntegrationJobId.parse(event.params.jobId);
 
-  if (!jobId) {
+  if (isErr(parsedJobId)) {
     return new Response("Invalid job", { status: 400 });
   }
 
@@ -31,22 +32,15 @@ export async function GET(
     return new Response(null, { status: 401 });
   }
 
+  const jobId = parsedJobId.value;
   const { integration } = getServerRuntime().integrations;
-  const job = await findRecordImportJob(integration.jobs, jobId);
+  const job = await integration.jobs.findById(jobId);
 
   if (!job) {
     return new Response("Not found", { status: 404 });
   }
 
-  const canAccess = await canAccessRecordImportJob(
-    {
-      userId: session.userId,
-      branchId: session.branchId,
-      role: session.role,
-    },
-    job,
-    integration,
-  );
+  const canAccess = await canAccessRecordImportJob(session, job, integration);
 
   if (!canAccess) {
     return new Response("Not found", { status: 404 });
@@ -59,7 +53,7 @@ export async function GET(
     recordImportsRealtime.hub,
     recordImportTopic.of(jobId),
     {
-      snapshot: JSON.stringify(buildRecordImportProgressEvent(job)),
+      snapshot: () => recordImportSnapshot(jobId),
     },
   );
 

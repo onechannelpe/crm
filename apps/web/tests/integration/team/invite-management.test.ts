@@ -106,7 +106,7 @@ describe("getInviteManagement", () => {
     const value = expectOk(
       await getInviteManagement(
         makeHrContext(),
-        createInviteManagementContext(ctx.db),
+        createInviteManagementContext(ctx.db, () => NOW),
         CONFIGURED_ORIGIN,
       ),
     );

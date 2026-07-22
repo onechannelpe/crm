@@ -2,31 +2,8 @@ import type { MerchantReportProgressEvent } from "~/features/dashboards/imports/
 import { db } from "~/lib/db/db";
 import { notify } from "~/lib/db/notify";
 import { MERCHANT_REPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { MerchantReportImportId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
 
-import {
-  createMerchantReportImportRepo,
-  type MerchantReportImportRow,
-} from "./repo";
-
-export async function findMerchantReportImport(
-  executor: DatabaseExecutor,
-  importId: string,
-): Promise<MerchantReportImportRow | null> {
-  const parsed = MerchantReportImportId.parse(importId);
-
-  if (isErr(parsed)) {
-    return null;
-  }
-
-  const row = await createMerchantReportImportRepo(executor).findById(
-    parsed.value,
-  );
-
-  return row ?? null;
-}
+import type { MerchantReportImportRow } from "./repo";
 
 export function buildMerchantReportProgressEvent(
   job: Pick<

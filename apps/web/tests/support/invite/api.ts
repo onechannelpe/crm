@@ -53,7 +53,7 @@ export function createInviteTestKit(
         );
       },
     },
-    now: options.now,
+    now: options.now ?? (() => new Date()),
     hashPassword: options.hashPassword,
   });
 

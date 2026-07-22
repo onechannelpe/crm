@@ -98,10 +98,6 @@ export function createMerchantReportRunner(deps: {
         await reportProgress(job.id, progress);
       }
 
-      if (signal.aborted) {
-        throw new Error("Job aborted after processing");
-      }
-
       return {
         ...progress,
         resultsJson: JSON.stringify({

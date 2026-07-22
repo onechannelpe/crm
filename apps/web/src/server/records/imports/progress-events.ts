@@ -2,25 +2,7 @@ import type { RecordImportProgressEvent } from "~/features/records-imports/contr
 import { db } from "~/lib/db/db";
 import { notify } from "~/lib/db/notify";
 import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
-import type {
-  IntegrationJobRow,
-  IntegrationJobsPort,
-} from "~/server/integrations/types";
-import { IntegrationJobId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
-
-export async function findRecordImportJob(
-  jobs: Pick<IntegrationJobsPort, "findById">,
-  jobId: string,
-): Promise<IntegrationJobRow | null> {
-  const parsedJobId = IntegrationJobId.parse(jobId);
-
-  if (isErr(parsedJobId)) {
-    return null;
-  }
-
-  return (await jobs.findById(parsedJobId.value)) ?? null;
-}
+import type { IntegrationJobRow } from "~/server/integrations/types";
 
 export function buildRecordImportProgressEvent(
   job: Pick<

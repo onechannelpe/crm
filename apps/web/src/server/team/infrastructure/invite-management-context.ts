@@ -9,8 +9,9 @@ import type { InviteManagementQueryPort } from "../application/ports";
 
 export function createInviteManagementContext(
   executor: DatabaseExecutor,
+  now: () => Date,
 ): InviteManagementQueryPort {
-  const inviteService = createInviteServiceForExecutor(executor);
+  const inviteService = createInviteServiceForExecutor(executor, now);
   const repos = {
     events: createEventsRepo(executor),
     teams: createTeamsRepo(executor),

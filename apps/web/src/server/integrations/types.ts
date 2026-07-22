@@ -5,7 +5,6 @@ import type { QueueState } from "~/lib/job-queue/queue-state";
 import type { QueueJobBase } from "~/lib/job-queue/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { IntegrationJobId, UserId } from "~/server/shared/ids";
-import type { LeadQueries } from "~/server/workflow/lead/read/lead-queries";
 
 export type IntegrationJobType = WorkflowIntegrationJobsTable["type"];
 
@@ -30,20 +29,14 @@ export interface NewIntegrationJob {
   type: IntegrationJobType;
   requested_by_user_id: UserId;
   file_path: string | null;
+  rows_total: number;
   max_attempts: number;
   created_at: Date;
 }
 
-export interface IntegrationJobCompletion {
-  rowsTotal: number;
-  rowsApplied: number;
-  rowsFailed: number;
-  resultsJson: string | null;
-}
-
 export interface IntegrationJobsPort {
   store: JobStore<IntegrationJobId, IntegrationJobRow>;
-  insert(values: NewIntegrationJob): Promise<IntegrationJobId>;
+  insert(values: NewIntegrationJob): Promise<IntegrationJobRow>;
   findById(id: IntegrationJobId): Promise<IntegrationJobRow | undefined>;
   list(limit: number, offset: number): Promise<IntegrationJobRow[]>;
   updateProgress(
@@ -54,14 +47,13 @@ export interface IntegrationJobsPort {
       rowsFailed: number;
     },
   ): Promise<IntegrationJobRow>;
-  setFilePath(id: IntegrationJobId, filePath: string): Promise<unknown>;
+  setFilePath(id: IntegrationJobId, filePath: string): Promise<void>;
 }
 
 export interface IntegrationRuntime {
   executor: DatabaseExecutor;
   now: () => Date;
   jobs: IntegrationJobsPort;
-  recordExportQuery: LeadQueries;
   leads: {
     findByRucMany(
       rucs: string[],
@@ -72,22 +64,9 @@ export interface IntegrationRuntime {
   };
 }
 
-export type ExportJobProcessResult = IntegrationJobCompletion;
-
-export interface ImportJobProcessResult extends IntegrationJobCompletion {
+export interface ImportJobProcessResult {
+  rowsTotal: number;
+  rowsApplied: number;
+  rowsFailed: number;
   resultsJson: string;
-}
-
-export interface ExportBatchRunner {
-  processJob(
-    job: IntegrationJobRow,
-    signal: AbortSignal,
-  ): Promise<ExportJobProcessResult>;
-}
-
-export interface ImportBatchRunner {
-  processJob(
-    job: IntegrationJobRow,
-    signal: AbortSignal,
-  ): Promise<ImportJobProcessResult>;
 }

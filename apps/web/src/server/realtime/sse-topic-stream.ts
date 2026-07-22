@@ -5,13 +5,15 @@ import type { RealtimePeer, TopicHub } from "./topic-hub";
 type EventStream = ReturnType<typeof createEventStream>;
 
 interface TopicStreamOptions {
-  /* Sent after subscribing so broadcasts cannot land before the snapshot */
-  snapshot?: string;
-  /* Added to each event so clients can resume with Last-Event-ID */
+  // Subscribe before fetching the snapshot so broadcasts cannot land in the
+  // gap between the fetch and subscription. Events are complete snapshots, so
+  // a broadcast racing the fetch is harmless.
+  snapshot?: () => Promise<string | null>;
+
+  // Lets clients resume with Last-Event-ID.
   eventId?: (rawMessage: string) => string | undefined;
 }
 
-// Remove the peer when an asynchronous stream push fails.
 export async function openTopicStream(
   h3Event: H3Event,
   hub: TopicHub,
@@ -36,8 +38,12 @@ export async function openTopicStream(
   hub.subscribe(peer, topic);
   stream.onClosed(() => hub.removePeer(peer));
 
-  if (options.snapshot !== undefined) {
-    await stream.push(options.snapshot);
+  if (options.snapshot) {
+    const snapshot = await options.snapshot();
+
+    if (snapshot !== null) {
+      await stream.push(snapshot);
+    }
   }
 
   return stream;

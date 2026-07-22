@@ -46,7 +46,7 @@ export function createAuthRuntime(
     now: infra.now,
   });
   const setup = createAuthSetupContext(infra.db);
-  const inviteService = createInviteServiceForExecutor(infra.db);
+  const inviteService = createInviteServiceForExecutor(infra.db, infra.now);
 
   const impersonationDeps = {
     sessions: sessionService,

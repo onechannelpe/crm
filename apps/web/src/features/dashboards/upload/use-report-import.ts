@@ -42,14 +42,18 @@ export function useReportImport() {
     event: MerchantReportProgressEvent,
   ): Promise<void> {
     if (event.queueState === "done") {
-      await revalidateGpvData();
-
       setPhase({
         kind: "done",
         applied: event.rowsApplied,
         failed: event.rowsFailed,
         total: event.rowsTotal,
       });
+
+      try {
+        await revalidateGpvData();
+      } catch {
+        // The import succeeded; stale data will refresh on the next navigation.
+      }
 
       return;
     }

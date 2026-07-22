@@ -5,8 +5,8 @@ import type { ServerInfra } from "./infra";
 
 export function createTeamRuntime(infra: ServerInfra, publicOrigin: string) {
   return {
-    invites: createTeamInviteContext(infra.db, publicOrigin),
-    inviteManagement: createInviteManagementContext(infra.db),
+    invites: createTeamInviteContext(infra.db, publicOrigin, infra.now),
+    inviteManagement: createInviteManagementContext(infra.db, infra.now),
     publicOrigin,
   };
 }

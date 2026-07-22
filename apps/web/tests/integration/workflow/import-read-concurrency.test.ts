@@ -10,6 +10,8 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { createLeadQueries } from "~/server/workflow/lead/read/lead-queries";
+
 describe("integration import workflow concurrency", () => {
   let runtime: TestRuntime;
 
@@ -46,7 +48,7 @@ describe("integration import workflow concurrency", () => {
       status: "SIN RESULTADO",
       priority: "P1",
     });
-    const recordExportQuery = runtime.integrations.recordExportQuery;
+    const recordExportQuery = createLeadQueries(runtime.ctx.db);
     const superuser = actorBy("superuser");
     const concurrentExportReads = (async () => {
       for (let i = 0; i < 40; i++) {

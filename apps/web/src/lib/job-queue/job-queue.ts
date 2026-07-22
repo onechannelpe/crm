@@ -21,9 +21,9 @@ export function createJobQueue<TJob extends QueueJobBase>(
   const timeoutMs = config.timeoutMs ?? 120_000;
 
   let runningCount = 0;
+
   const logger = createLogger(`queue:${name}`);
 
-  // Retries become failures after the last attempt.
   function resolve(job: TJob, settlement: Settlement): SettleOutcome {
     if (settlement.kind !== "retry") {
       return settlement;
@@ -45,7 +45,6 @@ export function createJobQueue<TJob extends QueueJobBase>(
     };
   }
 
-  // Queue state is managed here
   function settle(jobId: TJob["id"], outcome: SettleOutcome): Promise<boolean> {
     if (outcome.kind === "done") {
       return store.markDone(jobId, workerId, now(), outcome.patch);
@@ -70,11 +69,14 @@ export function createJobQueue<TJob extends QueueJobBase>(
     );
   }
 
-  async function renewLease(jobId: TJob["id"], controller: AbortController) {
+  async function renewLease(
+    jobId: TJob["id"],
+    controller: AbortController,
+  ): Promise<void> {
     try {
-      const ok = await store.extendLease(jobId, workerId, leaseMs, now());
+      const renewed = await store.extendLease(jobId, workerId, leaseMs, now());
 
-      if (!ok) {
+      if (!renewed) {
         logger.error("lease_stolen", { jobId });
         controller.abort();
       }
@@ -83,11 +85,12 @@ export function createJobQueue<TJob extends QueueJobBase>(
         jobId,
         error: errorMessage(error),
       });
+
       controller.abort();
     }
   }
 
-  async function process(job: TJob) {
+  async function processJob(job: TJob): Promise<void> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     const renewalInterval = setInterval(() => {
@@ -119,20 +122,39 @@ export function createJobQueue<TJob extends QueueJobBase>(
 
       const outcome = resolve(job, settlement);
 
-      await settle(job.id, outcome);
+      let settled: boolean;
+
+      try {
+        settled = await settle(job.id, outcome);
+      } catch (error: unknown) {
+        logger.error("settle_failed", {
+          jobId: job.id,
+          error: errorMessage(error),
+        });
+
+        return;
+      }
+
+      if (!settled) {
+        logger.error("settle_rejected", { jobId: job.id });
+        return;
+      }
 
       if (config.onSettled) {
-        await config.onSettled(job, outcome);
+        try {
+          await config.onSettled(job, outcome);
+        } catch (error: unknown) {
+          // Settlement is committed; reconnecting clients recover from the snapshot.
+          logger.error("on_settled_failed", {
+            jobId: job.id,
+            error: errorMessage(error),
+          });
+        }
       }
 
       if (outcome.kind === "done") {
         logger.info("job_completed", { jobId: job.id });
       }
-    } catch (error: unknown) {
-      logger.error("settle_failed", {
-        jobId: job.id,
-        error: errorMessage(error),
-      });
     } finally {
       clearTimeout(timeoutId);
       clearInterval(renewalInterval);
@@ -140,10 +162,9 @@ export function createJobQueue<TJob extends QueueJobBase>(
     }
   }
 
-  // Drain every due job before returning. Each claim depends on the previous
-  // settlement, so the loop is intentionally sequential.
+  // Wait for each batch to settle before claiming more jobs.
   /* eslint-disable no-await-in-loop */
-  async function drain() {
+  async function drain(): Promise<void> {
     try {
       for (;;) {
         const availableSlots = maxConcurrency - runningCount;
@@ -165,14 +186,16 @@ export function createJobQueue<TJob extends QueueJobBase>(
 
         runningCount += jobs.length;
 
-        await Promise.all(jobs.map((job) => process(job)));
+        await Promise.all(jobs.map((job) => processJob(job)));
 
         if (jobs.length < availableSlots) {
           return;
         }
       }
     } catch (error: unknown) {
-      logger.error("claim_failed", { error: errorMessage(error) });
+      logger.error("claim_failed", {
+        error: errorMessage(error),
+      });
     }
   }
   /* eslint-enable no-await-in-loop */

@@ -23,10 +23,14 @@ export function bindInviteRepos(db: DatabaseExecutor): InviteRepos {
   };
 }
 
-export function createInviteServiceForExecutor(executor: DatabaseExecutor) {
+export function createInviteServiceForExecutor(
+  executor: DatabaseExecutor,
+  now: () => Date,
+) {
   const repos = bindInviteRepos(executor);
 
   return createInviteService(repos, {
     uow: createExecutorUow(executor, bindInviteRepos),
+    now,
   });
 }

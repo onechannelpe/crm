@@ -4,19 +4,21 @@ import { merchantReportTopic } from "~/features/dashboards/imports/contracts";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { getSession } from "~/lib/auth/access/session";
 import {
-  buildMerchantReportProgressEvent,
-  findMerchantReportImport,
-} from "~/server/merchant-stats/report-import/progress";
-import { merchantReportsRealtime } from "~/server/merchant-stats/report-import/realtime";
+  merchantReportSnapshot,
+  merchantReportsRealtime,
+} from "~/server/merchant-stats/report-import/realtime";
+import { createMerchantReportImportRepo } from "~/server/merchant-stats/report-import/repo";
 import { getServerRuntime } from "~/server/platform/container";
 import { openTopicStream } from "~/server/realtime/sse-topic-stream";
+import { MerchantReportImportId } from "~/server/shared/ids";
+import { isErr } from "~/server/shared/result";
 
 export async function GET(
   event: Pick<APIEvent, "params" | "nativeEvent">,
 ): Promise<Response | BodyInit> {
-  const importId = event.params.importId;
+  const parsedImportId = MerchantReportImportId.parse(event.params.importId);
 
-  if (!importId) {
+  if (isErr(parsedImportId)) {
     return new Response("Invalid import", { status: 400 });
   }
 
@@ -30,8 +32,9 @@ export async function GET(
     return new Response(null, { status: 401 });
   }
 
-  const db = getServerRuntime().infra.db;
-  const job = await findMerchantReportImport(db, importId);
+  const importId = parsedImportId.value;
+  const imports = createMerchantReportImportRepo(getServerRuntime().infra.db);
+  const job = await imports.findById(importId);
 
   if (!job) {
     return new Response("Not found", { status: 404 });
@@ -44,7 +47,7 @@ export async function GET(
     merchantReportsRealtime.hub,
     merchantReportTopic.of(importId),
     {
-      snapshot: JSON.stringify(buildMerchantReportProgressEvent(job)),
+      snapshot: () => merchantReportSnapshot(importId),
     },
   );
 

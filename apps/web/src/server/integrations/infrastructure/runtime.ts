@@ -1,6 +1,5 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { createUsersRepo } from "~/server/users/repos-users";
-import { createLeadQueries } from "~/server/workflow/lead/read/lead-queries";
 import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 
 import type { IntegrationRuntime } from "../types";
@@ -17,7 +16,6 @@ export function createIntegrationRuntime(input: {
     now: input.now,
     jobs: createIntegrationJobRepo(executor),
     leads: createLeadRepo(executor),
-    recordExportQuery: createLeadQueries(executor),
     users: createUsersRepo(executor),
   };
 }

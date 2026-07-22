@@ -41,7 +41,7 @@ export interface InviteDeps {
 
 export interface InviteServiceDeps {
   inviteTtlMs?: number;
-  now?: () => Date;
+  now: () => Date;
   uow: AppUow<InviteDeps>;
   hashPassword?: (password: string) => Promise<string>;
 }

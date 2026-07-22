@@ -138,23 +138,22 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
 
       await storage.putBytes(storageKey, storagePayload);
 
-      const jobId = await integration.jobs.insert({
+      const job = await integration.jobs.insert({
         type: importType,
         requested_by_user_id: ctx.actor.userId,
         file_path: storageKey,
+        rows_total: rowsTotal,
         max_attempts: IMPORT_JOB_MAX_ATTEMPTS,
         created_at: ctx.now(),
       });
 
-      const persisted = await integration.jobs.updateProgress(jobId, {
+      publishRecordImportProgress(buildRecordImportProgressEvent(job));
+
+      return Ok({
+        jobId: job.id,
+        importType,
         rowsTotal,
-        rowsApplied: 0,
-        rowsFailed: 0,
       });
-
-      publishRecordImportProgress(buildRecordImportProgressEvent(persisted));
-
-      return Ok({ jobId, importType, rowsTotal });
     },
   });
 }

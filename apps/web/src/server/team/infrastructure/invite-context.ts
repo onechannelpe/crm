@@ -21,9 +21,10 @@ interface TeamInviteContext {
 export function createTeamInviteContext(
   executor: DatabaseExecutor,
   publicOrigin: string,
+  now: () => Date,
 ): TeamInviteContext {
   const repos = bindInviteRepos(executor);
-  const inviteService = createInviteServiceForExecutor(executor);
+  const inviteService = createInviteServiceForExecutor(executor, now);
 
   return {
     repos: {

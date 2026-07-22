@@ -59,7 +59,7 @@ function isoDay(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-// Prefer the matching worksheet with the most data rows.
+// Prefer the matching sheet with the most data rows over summary sheets.
 function selectGpvSheet(
   workbook: WorkBook,
 ): Result<ExtractedSheet, DomainError> {

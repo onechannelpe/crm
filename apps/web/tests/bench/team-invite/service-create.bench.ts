@@ -18,7 +18,10 @@ describe("team invite create benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const inviteService = createInviteServiceForExecutor(ctx.db);
+    const inviteService = createInviteServiceForExecutor(
+      ctx.db,
+      () => new Date(),
+    );
     inviteCreate = (input) => inviteService.createInvite(input);
   });
 

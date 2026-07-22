@@ -40,7 +40,7 @@ export function createIntegrationJobRepo(
   return {
     store,
 
-    async insert(values: NewIntegrationJob): Promise<IntegrationJobRow["id"]> {
+    async insert(values: NewIntegrationJob): Promise<IntegrationJobRow> {
       const row = await db
         .insertInto("workflow_integration_jobs")
         .values({
@@ -48,12 +48,12 @@ export function createIntegrationJobRepo(
           queue_state: "pending",
           claimable_at: values.created_at,
         })
-        .returning("id")
+        .returning(JOB_COLUMNS)
         .executeTakeFirstOrThrow();
 
       notify(db, JOB_TABLE_CHANNELS.workflow_integration_jobs);
 
-      return row.id;
+      return row;
     },
 
     findById(id: IntegrationJobId) {

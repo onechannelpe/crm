@@ -11,6 +11,7 @@ import {
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { WorkflowRateProposalId } from "~/server/shared/ids";
+import { createLeadQueries } from "~/server/workflow/lead/read/lead-queries";
 
 describe("integration record export columns", () => {
   let runtime: TestRuntime;
@@ -84,7 +85,7 @@ describe("integration record export columns", () => {
       decidedAt: null,
     });
 
-    const rows = await runtime.integrations.recordExportQuery.export({
+    const rows = await createLeadQueries(runtime.ctx.db).export({
       actorUserId: executiveId,
       actorRole: "superuser",
       actorBranchId: actorBy("execOne").branchId,
