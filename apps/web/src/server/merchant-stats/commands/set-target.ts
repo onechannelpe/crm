@@ -1,9 +1,13 @@
+import {
+  calendarMonthStart,
+  type CalendarMonth,
+} from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { UserId } from "~/server/shared/ids";
 
 export interface SetTargetInput {
   ruc: string;
-  effectiveFrom: string;
+  effectiveFrom: CalendarMonth;
   projectedGpv: number | null;
   setBy: UserId;
   now: Date;
@@ -18,7 +22,7 @@ export async function setTarget(
     .insertInto("merchant_targets")
     .values({
       ruc: input.ruc,
-      effective_from: input.effectiveFrom,
+      effective_from: calendarMonthStart(input.effectiveFrom),
       projected_gpv: input.projectedGpv,
       set_by: input.setBy,
       set_at: input.now,

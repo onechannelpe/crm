@@ -9,7 +9,6 @@
 @layer reset, base;
 
 :root {
-  --background-noisy: url(/images/light-noise.png);
   --border-medium: var(--quaternary);
 
   --font-sans:
@@ -112,13 +111,10 @@
   --spacing-12: 48px;
   --spacing-16: 64px;
 
-  --bg-translucent-subtle: color(display-p3 0 0 0 / 0.02);
-  --bg-translucent: color(display-p3 0 0 0 / 0.039);
-  --bg-translucent-medium: color(display-p3 0 0 0 / 0.078);
-
-  --background-transparent-lighter: var(--bg-translucent-subtle);
-  --background-transparent-light: color(display-p3 1 1 1 / 0.5);
-  --background-transparent-medium: var(--bg-translucent-medium);
+  --background-transparent-lighter: color(display-p3 0 0 0 / 0.02);
+  --background-transparent-light: color(display-p3 0 0 0 / 0.039);
+  --background-transparent-medium: color(display-p3 0 0 0 / 0.078);
+  --background-transparent-primary: color(display-p3 1 1 1 / 0.5);
   --background-transparent-blue: color(display-p3 0.008 0.239 0.886 / 0.067);
 
   --t-spacing-0: 0px;
@@ -247,9 +243,9 @@
   --t-background-primary: var(--background);
   --t-background-secondary: var(--secondary);
   --t-background-transparent-lighter: var(--background-transparent-lighter);
-  --t-background-transparent-light: color(display-p3 0 0 0 / 0.039);
+  --t-background-transparent-light: var(--background-transparent-light);
   --t-background-transparent-medium: var(--background-transparent-medium);
-  --t-background-transparent-primary: var(--background-transparent-light);
+  --t-background-transparent-primary: var(--background-transparent-primary);
   --t-border-color-strong: color(display-p3 0.839 0.839 0.839);
   --t-border-color-medium: color(display-p3 0.922 0.922 0.922);
   --t-border-color-light: color(display-p3 0.945 0.945 0.945);
@@ -281,8 +277,6 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-
-  --background-noisy: url(/images/dark-noise.jpg);
 
   --background: color(display-p3 0.09 0.09 0.09);
   --background-app: color(display-p3 0.098 0.098 0.098);
@@ -364,10 +358,15 @@
 
   --t-background-primary: var(--background);
   --t-background-secondary: var(--secondary);
+  --background-transparent-lighter: color(display-p3 1 1 1 / 0.031);
+  --background-transparent-light: color(display-p3 1 1 1 / 0.059);
+  --background-transparent-medium: color(display-p3 1 1 1 / 0.102);
+  --background-transparent-primary: color(display-p3 0 0 0 / 0.5);
+
   --t-background-transparent-lighter: var(--background-transparent-lighter);
-  --t-background-transparent-light: color(display-p3 1 1 1 / 0.059);
+  --t-background-transparent-light: var(--background-transparent-light);
   --t-background-transparent-medium: var(--background-transparent-medium);
-  --t-background-transparent-primary: var(--background-transparent-light);
+  --t-background-transparent-primary: var(--background-transparent-primary);
   --t-border-color-strong: color(display-p3 0.282 0.282 0.282);
   --t-border-color-medium: color(display-p3 0.133 0.133 0.133);
   --t-border-color-light: color(display-p3 0.114 0.114 0.114);
@@ -390,9 +389,6 @@
     2px 4px 16px 0px color(display-p3 0 0 0 / 0.12),
     0px 2px 4px 0px color(display-p3 0 0 0 / 0.04);
   --shadow-elevation-4: var(--shadow-elevation-3);
-  --bg-translucent-subtle: color(display-p3 1 1 1 / 0.031);
-  --bg-translucent: color(display-p3 1 1 1 / 0.059);
-  --bg-translucent-medium: color(display-p3 1 1 1 / 0.102);
   --avatar-bg: color(display-p3 0.298 0.298 0.298);
   --avatar-fg: color(display-p3 0.922 0.922 0.922);
 }
@@ -411,11 +407,12 @@
     --t-border-radius-xxl: 80px;
   }
 
-  /* Zero specificity on purpose: any component rule can override it. */
+  /* Zero specificity on purpose: any component rule can override it with a
+     plain corner-shape declaration (e.g. round). */
   *,
   *::before,
   *::after {
-    corner-shape: var(--t-corner-shape, squircle);
+    corner-shape: squircle;
   }
 }
 

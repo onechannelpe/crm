@@ -35,6 +35,15 @@ describe("validateUploadFile - extension checks", () => {
     expect(result).toMatchObject({ ok: true });
   });
 
+  it("accepts xlsx for merchant_gpv_export", () => {
+    const result = validateUploadFile(
+      "merchant_gpv_export",
+      "GPV AL 03-07-2026.xlsx",
+      XLSX_MAGIC,
+    );
+    expect(result).toMatchObject({ ok: true });
+  });
+
   it("rejects file without extension", () => {
     const result = validateUploadFile("integration_import", "noext", CSV_BYTES);
     expect(result).toMatchObject({ ok: false, reason: "missing_extension" });

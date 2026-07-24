@@ -9,6 +9,7 @@ import {
   culqiUserGpvQuery,
   merchantFilterOptionsQuery,
 } from "~/lib/queries/dashboards";
+import type { CalendarMonth } from "~/lib/time/calendar-date";
 
 import { AsyncTiles } from "../async-tiles";
 import { formatMonth, formatSolesCompact } from "../format";
@@ -74,7 +75,7 @@ function CulqiContent(props: { view: GpvView }) {
 
 function CulqiBar(props: {
   filter: Accessor<BookFilter>;
-  month: Accessor<string>;
+  month: Accessor<CalendarMonth>;
 }) {
   const rows = createAsync(() =>
     culqiUserGpvQuery({ filter: props.filter(), month: props.month() }),

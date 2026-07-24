@@ -8,7 +8,6 @@ import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import CircleAlert from "~/components/icons/circle-alert";
 import User from "~/components/icons/user";
-import { AppPage, AppPageSection } from "~/components/layout/page";
 import { Present } from "~/components/ui/control-flow/present";
 import { Badge } from "~/components/ui/display/badge";
 import { InlineOptionsEditor } from "~/components/ui/input/inline-field-editor";
@@ -37,8 +36,6 @@ import styles from "./quality-page.module.css";
 
 const UNASSIGNED = "Sin asignar";
 
-type Row = QualityRow & { id: string };
-
 export function QualityPage() {
   const params = useParams<{ issue: string }>();
   const issue = createMemo(() =>
@@ -48,7 +45,7 @@ export function QualityPage() {
   const options = createAsync(() => merchantFilterOptionsQuery());
   const sellers = () => options()?.sellers ?? [];
 
-  const grid = useDashboardGrid<QualityRow, Row>({
+  const grid = useDashboardGrid<QualityRow>({
     pageSize: GPV_GRID_PAGE_SIZE,
     resetOn: issue,
     load: (page) => {
@@ -57,11 +54,9 @@ export function QualityPage() {
         ? qualityRowsQuery({ issue: current, page })
         : Promise.resolve([]);
     },
-    // eslint-disable-next-line oxc/no-map-spread
-    toRow: (row) => ({ ...row, id: `${row.ruc}:${row.month}` }),
   });
 
-  const columns: ReadonlyArray<DataGridColumn<Row>> = [
+  const columns: ReadonlyArray<DataGridColumn<QualityRow>> = [
     {
       key: "ruc",
       label: "Comercio",
@@ -139,7 +134,7 @@ export function QualityPage() {
     },
   ];
 
-  const renderGrid = (label: string, source: DataGridSource<Row>) => (
+  const renderGrid = (label: string, source: DataGridSource<QualityRow>) => (
     <DataGrid
       ariaLabel={label}
       columns={columns}
@@ -149,47 +144,46 @@ export function QualityPage() {
         loading: grid.loading(),
         onLoadMore: grid.onLoadMore,
       }}
+      rowId={(row) => `${row.ruc}:${row.month}`}
       source={source}
     />
   );
 
   return (
-    <AppPage>
-      <AppPageSection>
-        <Present
-          when={issue()}
-          fallback={
-            <EmptyState
-              title="Esta cola no existe"
-              description="Revisa el enlace o vuelve al panel de GPV."
-            />
-          }
-        >
-          {(current) => {
-            const label = () => QUALITY_ISSUE_COPY[current()].label;
-            return (
-              <>
-                <h1 class={styles.title}>{label()}</h1>
-                <ErrorBoundary
-                  fallback={renderGrid(label(), { status: "error", rows: [] })}
+    <div class={styles.page}>
+      <Present
+        when={issue()}
+        fallback={
+          <EmptyState
+            title="Esta cola no existe"
+            description="Revisa el enlace o vuelve al panel de GPV."
+          />
+        }
+      >
+        {(current) => {
+          const label = () => QUALITY_ISSUE_COPY[current()].label;
+          return (
+            <>
+              <h1 class={styles.title}>{label()}</h1>
+              <ErrorBoundary
+                fallback={renderGrid(label(), { status: "error", rows: [] })}
+              >
+                <Suspense
+                  fallback={renderGrid(label(), {
+                    status: "pending",
+                    rows: [],
+                  })}
                 >
-                  <Suspense
-                    fallback={renderGrid(label(), {
-                      status: "pending",
-                      rows: [],
-                    })}
-                  >
-                    {renderGrid(label(), {
-                      status: "ready",
-                      rows: grid.rows(),
-                    })}
-                  </Suspense>
-                </ErrorBoundary>
-              </>
-            );
-          }}
-        </Present>
-      </AppPageSection>
-    </AppPage>
+                  {renderGrid(label(), {
+                    status: "ready",
+                    rows: grid.rows(),
+                  })}
+                </Suspense>
+              </ErrorBoundary>
+            </>
+          );
+        }}
+      </Present>
+    </div>
   );
 }

@@ -19,8 +19,9 @@ import { sendInviteEmail } from "../infrastructure/invite-delivery";
 export async function previewBulkImport(
   csvContent: string,
   role: Role,
+  now: Date,
 ): Promise<Result<BulkParseResult, DomainError>> {
-  const parsed = parseAndValidateCsvRows(csvContent, role);
+  const parsed = parseAndValidateCsvRows(csvContent, role, now);
   if (!parsed.ok) {
     return Err(
       invalid({
@@ -40,7 +41,11 @@ export async function applyBulkImport(
     role: Role;
   },
 ): Promise<Result<BulkApplyResult, DomainError>> {
-  const parsed = await previewBulkImport(input.csvContent, input.role);
+  const parsed = await previewBulkImport(
+    input.csvContent,
+    input.role,
+    ctx.now(),
+  );
   if (!parsed.ok) {
     return parsed;
   }

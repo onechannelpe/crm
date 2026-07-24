@@ -19,6 +19,7 @@ import {
   qualitySummaryQuery,
   rampQuery,
 } from "~/lib/queries/dashboards";
+import type { CalendarMonth } from "~/lib/time/calendar-date";
 
 import { AsyncTiles } from "./async-tiles";
 import {
@@ -109,7 +110,7 @@ function PerformanceContent(props: { view: GpvView }) {
 
 function AttainmentAggregates(props: {
   filter: Accessor<BookFilter>;
-  month: Accessor<string>;
+  month: Accessor<CalendarMonth>;
 }) {
   const attainment = createAsync(() =>
     attainmentQuery({ filter: props.filter(), month: props.month() }),
@@ -213,7 +214,7 @@ function RampWidget(props: { filter: Accessor<BookFilter> }) {
 
 function AttainmentBars(props: {
   filter: Accessor<BookFilter>;
-  month: Accessor<string>;
+  month: Accessor<CalendarMonth>;
 }) {
   const attainment = createAsync(() =>
     attainmentQuery({ filter: props.filter(), month: props.month() }),

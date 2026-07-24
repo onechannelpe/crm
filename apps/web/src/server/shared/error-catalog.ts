@@ -148,6 +148,30 @@ export const ERROR_CATALOG = {
     kind: "conflict",
     message: "Ya existe un cliente con este RUC.",
   },
+  inquiry_exists: {
+    kind: "conflict",
+    message: "Ya tienes una consulta activa para este RUC.",
+  },
+  inquiry_lead_registered: {
+    kind: "conflict",
+    message: "Ya registraste un cliente con este RUC.",
+  },
+  inquiry_not_found: {
+    kind: "not_found",
+    message: "No se encontró la consulta.",
+  },
+  inquiry_not_owned: {
+    kind: "forbidden",
+    message: "La consulta pertenece a otro ejecutivo.",
+  },
+  inquiry_converted: {
+    kind: "conflict",
+    message: "Esta consulta ya fue registrada como cliente.",
+  },
+  inquiry_ruc_mismatch: {
+    kind: "conflict",
+    message: "El RUC no coincide con el de la consulta.",
+  },
   phone_in_use: {
     kind: "conflict",
     message: "Este número de WhatsApp ya está en uso.",
@@ -483,6 +507,10 @@ export const ERROR_CATALOG = {
     message: "La fecha de expiración es inválida.",
   },
   expires_at_too_soon: {
+    kind: "validation",
+    message: "La expiración debe ser al menos 7 días en el futuro.",
+  },
+  expires_on_too_soon: {
     kind: "validation",
     message: "La expiración debe ser al menos 7 días en el futuro.",
   },

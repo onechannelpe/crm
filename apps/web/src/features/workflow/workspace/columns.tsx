@@ -19,7 +19,8 @@ import {
   leadStageLabel,
 } from "~/features/workflow/presentation/lead-display";
 import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { capitalize, formatDate } from "~/lib/utils";
+import { formatAppDate } from "~/lib/time/app-time";
+import { capitalize } from "~/lib/utils";
 
 import styles from "./styles.module.css";
 
@@ -109,7 +110,7 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     icon: CalendarDays,
     width: 140,
     renderCell: (lead) => (
-      <span class={styles.mutedCellText}>{formatDate(lead.updatedAt)}</span>
+      <span class={styles.mutedCellText}>{formatAppDate(lead.updatedAt)}</span>
     ),
   },
 ];

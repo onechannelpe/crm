@@ -147,7 +147,7 @@
 }
 
 .columnAction:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   border-color: var(--foreground);
   color: var(--foreground);
 }

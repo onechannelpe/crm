@@ -2,6 +2,7 @@ import { createElementSize } from "@solid-primitives/resize-observer";
 import { createMemo, createSignal, For, Show } from "solid-js";
 
 import { Present } from "~/components/ui/control-flow/present";
+import type { CalendarMonth } from "~/lib/time/calendar-date";
 
 import { formatMonth, formatSolesCompact } from "../format";
 
@@ -9,7 +10,7 @@ import styles from "./ramp-chart.module.css";
 
 export interface RampSeries {
   key: string;
-  label: string;
+  label: CalendarMonth;
   points: Array<{ offset: number; value: number }>;
 }
 

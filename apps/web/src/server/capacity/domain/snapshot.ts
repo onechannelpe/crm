@@ -17,8 +17,6 @@ export interface SearchCapacitySnapshot {
   committed: number;
   pending: number;
   remaining: number;
-  periodStart: string;
-  periodEnd: string;
 }
 
 export interface LeadCapacitySnapshot {
@@ -35,8 +33,6 @@ export function buildSearchCapacitySnapshot(input: {
   grants: GrantRow[];
   commits: CommitRow[];
   reservations: ReservationRow[];
-  periodStart: string;
-  periodEnd: string;
 }): SearchCapacitySnapshot {
   const granted = sumAmount(input.grants);
   const committed = sumAmount(input.commits);
@@ -54,8 +50,6 @@ export function buildSearchCapacitySnapshot(input: {
     committed,
     pending,
     remaining,
-    periodStart: input.periodStart,
-    periodEnd: input.periodEnd,
   };
 }
 

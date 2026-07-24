@@ -60,6 +60,7 @@ export function LeadActionPage() {
                     leadId={detail().lead.id}
                     proposal={proposal()}
                     reservationExpiresAt={detail().lead.reservationExpiresAt}
+                    evaluatedAt={detail().evaluatedAt}
                     rateRevisions={detail().rateRevisions}
                     canAccept={detail().availableActions.includes(
                       "accept-rate",

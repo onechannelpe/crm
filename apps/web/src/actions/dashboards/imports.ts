@@ -4,7 +4,10 @@ import type { MerchantReportProgressEvent } from "~/features/dashboards/imports/
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import { acceptReport } from "~/server/merchant-stats/commands/accept-report";
 import { contentSha256 } from "~/server/merchant-stats/intake/content-hash";
-import { cutAtFromFilename } from "~/server/merchant-stats/intake/cut-at";
+import {
+  cutAtFromFilename,
+  cutAtFromInput,
+} from "~/server/merchant-stats/intake/cut-at";
 import { buildMerchantReportProgressEvent } from "~/server/merchant-stats/report-import/progress";
 import { createMerchantReportImportRepo } from "~/server/merchant-stats/report-import/repo";
 import { runAction } from "~/server/platform/action";
@@ -47,10 +50,10 @@ function parseUpload(formData: FormData): Result<Upload, DomainError> {
   const rawCutAt = formData.get("cutAt");
   const cutAt =
     typeof rawCutAt === "string" && rawCutAt.length > 0
-      ? new Date(rawCutAt)
+      ? cutAtFromInput(rawCutAt)
       : cutAtFromFilename(file.name);
 
-  if (!cutAt || Number.isNaN(cutAt.getTime())) {
+  if (!cutAt) {
     return Err(fail("gpv_cut_required"));
   }
 

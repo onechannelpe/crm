@@ -4,11 +4,11 @@ import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import List from "~/components/icons/list";
 import MessageSquare from "~/components/icons/message-square";
 import UserRound from "~/components/icons/user-round";
-import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
-import { DataTable } from "~/components/ui/layout/data-table";
-import type { TableColumn } from "~/components/ui/layout/table-column";
 import type { PendingCapacityRequestView } from "~/contracts/capacity";
+import { DataGrid } from "~/features/data-grid/components/grid";
+import type { DataGridSource } from "~/features/data-grid/model/source";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   approveCapacityRequestMutation,
   rejectCapacityRequestMutation,
@@ -19,17 +19,21 @@ import styles from "./requests-page.module.css";
 
 export default function TeamRequestsPage() {
   const requests = createAsync(() => pendingCapacityRequestsQuery());
-  const rows = () => requests() ?? [];
-  const isLoading = () => requests() === undefined;
   const approve = useAction(approveCapacityRequestMutation);
   const reject = useAction(rejectCapacityRequestMutation);
+  const source = (): DataGridSource<PendingCapacityRequestView> => {
+    const rows = requests();
+    if (rows === undefined) {
+      return { status: "pending", rows: [] };
+    }
+    return { status: "ready", rows };
+  };
   const columns = [
     {
       key: "names",
       label: "Ejecutivo",
       icon: UserRound,
       minWidth: 240,
-      grow: true,
       sticky: true,
       renderCell: (request) =>
         `${request.names} ${request.firstSurname} ${request.secondSurname}`,
@@ -64,12 +68,18 @@ export default function TeamRequestsPage() {
       width: 240,
       renderCell: (request) => (
         <div class={styles.rowActions}>
-          <Button type="button" onClick={() => void approve(request.id)}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => void approve(request.id)}
+          >
             Aprobar
           </Button>
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => void reject(request.id, "Rechazado desde la cola")}
           >
             Rechazar
@@ -77,17 +87,17 @@ export default function TeamRequestsPage() {
         </div>
       ),
     },
-  ] satisfies ReadonlyArray<TableColumn<PendingCapacityRequestView>>;
+  ] satisfies ReadonlyArray<DataGridColumn<PendingCapacityRequestView>>;
 
   return (
-    <AppPage width="wide">
-      <DataTable
+    <div class={styles.page}>
+      <DataGrid
         ariaLabel="Solicitudes del equipo"
         columns={columns}
         emptyState="No hay solicitudes pendientes."
-        rows={rows()}
-        status={isLoading() ? "pending" : "ready"}
+        rowId={(row) => row.id}
+        source={source()}
       />
-    </AppPage>
+    </div>
   );
 }

@@ -5,6 +5,8 @@ import type {
   LifecycleSummary,
 } from "~/contracts/merchant-stats/views";
 import { DORMANT_AFTER_DAYS } from "~/contracts/merchant-stats/vocabulary";
+import { appCalendarDateAt } from "~/lib/time/app-time";
+import { addCalendarDays, calendarMonthStart } from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { creditFilter } from "./filter";
@@ -14,10 +16,8 @@ export async function getLifecycle(
   filter: BookFilter,
   now: Date,
 ): Promise<LifecycleSummary> {
-  const dormantCutoff = new Date(now);
-  dormantCutoff.setDate(dormantCutoff.getDate() - DORMANT_AFTER_DAYS);
-
-  const cutoff = dormantCutoff.toISOString().slice(0, 10);
+  const selectedMonth = filter.month ? calendarMonthStart(filter.month) : null;
+  const cutoff = addCalendarDays(appCalendarDateAt(now), -DORMANT_AFTER_DAYS);
 
   const row = await db
     .selectFrom("merchant_sales as s")
@@ -25,8 +25,8 @@ export async function getLifecycle(
       join.onRef("a.ruc", "=", "s.ruc").onRef("a.month", "=", "s.sale_month"),
     )
     .where((eb) => creditFilter(eb, filter))
-    .$if(filter.month != null, (qb) =>
-      qb.where("s.sale_month", "=", filter.month ?? ""),
+    .$if(selectedMonth !== null, (qb) =>
+      qb.where("s.sale_month", "=", selectedMonth ?? ""),
     )
     .$if(filter.product != null, (qb) =>
       qb.where("s.product", "=", filter.product ?? ""),

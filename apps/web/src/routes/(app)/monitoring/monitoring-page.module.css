@@ -1,14 +1,23 @@
-.filter {
-  width: 11rem;
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-2);
+}
+
+.control {
+  width: 8.5rem;
 }
 
 .refreshing {
-  color: var(--muted-foreground);
-  font-size: var(--font-size-xs);
-}
-
-@media (max-width: 768px) {
-  .filter {
-    width: 100%;
-  }
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-caption);
 }

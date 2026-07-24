@@ -78,7 +78,7 @@
 
 .optionsMenu {
   backdrop-filter: var(--t-blur-medium);
-  background: var(--background-transparent-light);
+  background: var(--background-transparent-primary);
   border: 1px solid var(--background-transparent-medium);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-elevation-2);
@@ -86,7 +86,7 @@
   min-width: 232px;
   overflow: hidden;
   position: fixed;
-  z-index: var(--z-overlay, 1000);
+  z-index: var(--z-modal);
 }
 
 .optionsMenuItem {

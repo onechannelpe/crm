@@ -1,10 +1,16 @@
-import { APP_LOCALE } from "~/lib/locale";
+import { APP_MONTH_NAMES } from "~/lib/time/app-time";
+import {
+  addCalendarDays,
+  calendarDateFromParts,
+  calendarDateParts,
+  type CalendarDate,
+} from "~/lib/time/calendar-date";
 
 export const DAY_NAMES = ["L", "M", "X", "J", "V", "S", "D"] as const;
 const CALENDAR_START_DAY = 1;
 
 export interface CalendarCell {
-  date: Date;
+  date: CalendarDate;
   label: number;
   isCurrentMonth: boolean;
   isSelected: boolean;
@@ -18,121 +24,82 @@ export interface VisibleMonth {
 
 export function buildCalendarCells(
   visibleMonth: VisibleMonth,
-  selectedDate: Date | null,
-  minDate: Date | null,
+  selectedDate: CalendarDate | null,
+  minDate: CalendarDate | null,
 ): CalendarCell[] {
-  const monthStart = toMonthDate(visibleMonth);
-  const firstVisibleDate = getStartOfWeek(monthStart);
+  const monthStart = calendarDateFromParts({ ...visibleMonth, day: 1 });
+  const firstVisibleDate = addCalendarDays(
+    monthStart,
+    -weekdayOffset(monthStart),
+  );
 
   return Array.from({ length: 42 }, (_, index) => {
-    const date = new Date(
-      firstVisibleDate.getFullYear(),
-      firstVisibleDate.getMonth(),
-      firstVisibleDate.getDate() + index,
-    );
+    const date = addCalendarDays(firstVisibleDate, index);
+    const parts = calendarDateParts(date);
 
     return {
       date,
-      label: date.getDate(),
+      label: parts.day,
       isCurrentMonth:
-        date.getFullYear() === visibleMonth.year &&
-        date.getMonth() === visibleMonth.month,
-      isSelected: selectedDate ? isSameDate(date, selectedDate) : false,
-      isDisabled: minDate ? date.getTime() < minDate.getTime() : false,
+        parts.year === visibleMonth.year && parts.month === visibleMonth.month,
+      isSelected: date === selectedDate,
+      isDisabled: minDate ? date < minDate : false,
     };
   });
 }
 
-export function parseIsoDate(value: string): Date | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return null;
-  }
-
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return null;
-  }
-
-  date.setHours(0, 0, 0, 0);
-  return date;
+export function getVisibleMonth(date: CalendarDate): VisibleMonth {
+  const { year, month } = calendarDateParts(date);
+  return { year, month };
 }
 
-export function formatIsoDate(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
+export function shiftVisibleMonth(
+  visibleMonth: VisibleMonth,
+  amount: number,
+): VisibleMonth {
+  const date = new Date(0);
+  date.setUTCFullYear(visibleMonth.year, visibleMonth.month - 1 + amount, 1);
 
-export function todayLocalDate(): Date {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
-
-export function getVisibleMonth(date: Date): VisibleMonth {
   return {
-    year: date.getFullYear(),
-    month: date.getMonth(),
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
   };
 }
 
-export function getMonthOptions(visibleMonth: VisibleMonth): Array<{
-  label: string;
-  value: number;
-}> {
-  const formatter = new Intl.DateTimeFormat(APP_LOCALE, { month: "long" });
+// Month names are year-independent, so the option list is a constant. Values
+// are 1-based month numbers; labels capitalize the locale-natural name.
+export const MONTH_OPTIONS: ReadonlyArray<{ label: string; value: number }> =
+  APP_MONTH_NAMES.map((name, index) => ({
+    label: name.charAt(0).toUpperCase() + name.slice(1),
+    value: index + 1,
+  }));
 
-  return Array.from({ length: 12 }, (_, monthIndex) => {
-    const label = formatter.format(new Date(visibleMonth.year, monthIndex, 1));
-
-    return {
-      label: label.charAt(0).toUpperCase() + label.slice(1),
-      value: monthIndex,
-    };
-  });
-}
-
-export function getYearOptions(minDate: Date | null): number[] {
-  const minYear = minDate?.getFullYear() ?? new Date().getFullYear();
+export function getYearOptions(
+  visibleMonth: VisibleMonth,
+  minDate: CalendarDate | null,
+): number[] {
+  const minYear = minDate ? calendarDateParts(minDate).year : visibleMonth.year;
   return Array.from({ length: 51 }, (_, index) => minYear + 50 - index);
 }
 
 export function isPreviousMonthDisabled(
   visibleMonth: VisibleMonth,
-  minDate: Date | null,
+  minDate: CalendarDate | null,
 ): boolean {
   if (!minDate) return false;
   const minMonth = getVisibleMonth(minDate);
   return compareVisibleMonth(visibleMonth, minMonth) <= 0;
 }
 
-function getStartOfWeek(date: Date): Date {
-  const normalized = new Date(date);
-  normalized.setHours(0, 0, 0, 0);
-  const weekday = normalized.getDay();
-  const offset = (weekday - CALENDAR_START_DAY + 7) % 7;
-  normalized.setDate(normalized.getDate() - offset);
-  return normalized;
-}
-
-function isSameDate(left: Date, right: Date): boolean {
-  return (
-    left.getFullYear() === right.getFullYear() &&
-    left.getMonth() === right.getMonth() &&
-    left.getDate() === right.getDate()
-  );
+function weekdayOffset(date: CalendarDate): number {
+  const parts = calendarDateParts(date);
+  const instant = new Date(0);
+  instant.setUTCFullYear(parts.year, parts.month - 1, parts.day);
+  const weekday = instant.getUTCDay();
+  return (weekday - CALENDAR_START_DAY + 7) % 7;
 }
 
 function compareVisibleMonth(left: VisibleMonth, right: VisibleMonth): number {
-  if (left.year !== right.year) {
-    return left.year - right.year;
-  }
+  if (left.year !== right.year) return left.year - right.year;
   return left.month - right.month;
-}
-
-function toMonthDate(visibleMonth: VisibleMonth): Date {
-  return new Date(visibleMonth.year, visibleMonth.month, 1);
 }

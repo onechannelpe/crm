@@ -1,7 +1,6 @@
 import { type RouteDefinition } from "@solidjs/router";
 
 import { getMe } from "~/actions/auth/session";
-import { AppPage } from "~/components/layout/page";
 import { leadListQuery } from "~/features/workflow/data/queries";
 import {
   parseLeadPageIndex,
@@ -45,9 +44,5 @@ function firstQueryValue(value: unknown): string | undefined {
 }
 
 export default function RecordsPage() {
-  return (
-    <AppPage>
-      <LeadsWorkspace />
-    </AppPage>
-  );
+  return <LeadsWorkspace />;
 }

@@ -2,30 +2,14 @@ import { A } from "@solidjs/router";
 import { type ParentProps } from "solid-js";
 
 import LayoutDashboard from "~/components/icons/layout-dashboard";
-import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
-import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
-import { PageHeader } from "~/features/settings-shell/page/page-header";
+import { PageCardHeader } from "~/components/ui/layout/page-card/page-card-header";
 
 import styles from "./dashboard-show-header.module.css";
 
 export function DashboardShowHeader(props: ParentProps<{ title: string }>) {
-  const { expanded, isMobile, setExpanded } = useNavigationDrawerState();
-
   return (
-    <PageHeader
-      leading={
-        !isMobile() && !expanded() ? (
-          <button
-            type="button"
-            class={styles.drawerExpandButton}
-            onClick={() => setExpanded(true)}
-            aria-label="Expandir barra lateral"
-          >
-            <LayoutSidebarRightCollapse size={14} />
-          </button>
-        ) : undefined
-      }
-      title={
+    <PageCardHeader
+      breadcrumb={
         <span class={styles.breadcrumb}>
           <A href="/dashboards" class={styles.breadcrumbLink}>
             <span class={styles.breadcrumbPrefix}>
@@ -41,8 +25,7 @@ export function DashboardShowHeader(props: ParentProps<{ title: string }>) {
           </span>
         </span>
       }
-    >
-      {props.children}
-    </PageHeader>
+      actionButton={props.children}
+    />
   );
 }

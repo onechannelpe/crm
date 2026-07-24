@@ -9,14 +9,11 @@ import {
 
 import CalendarDays from "~/components/icons/calendar-days";
 import { useHotkey } from "~/lib/hotkey/use-hotkey";
+import { appCalendarDateAt } from "~/lib/time/app-time";
+import { parseCalendarDate } from "~/lib/time/calendar-date";
 import { cn } from "~/lib/utils";
 
-import {
-  formatIsoDate,
-  getVisibleMonth,
-  parseIsoDate,
-  todayLocalDate,
-} from "./date-picker-model";
+import { getVisibleMonth, shiftVisibleMonth } from "./date-picker-model";
 import { DatePickerPopover } from "./date-picker-popover";
 
 import styles from "./date-picker.module.css";
@@ -39,10 +36,10 @@ export function DatePicker(props: DatePickerProps) {
   const inputId = props.id || createUniqueId();
   const messageId = `${inputId}-message`;
   const [isOpen, setIsOpen] = createSignal(false);
-  const selectedDate = createMemo(() => parseIsoDate(props.value));
-  const minDate = createMemo(() => parseIsoDate(props.min ?? ""));
+  const selectedDate = createMemo(() => parseCalendarDate(props.value));
+  const minDate = createMemo(() => parseCalendarDate(props.min ?? ""));
   const initialViewDate = createMemo(
-    () => selectedDate() ?? minDate() ?? todayLocalDate(),
+    () => selectedDate() ?? minDate() ?? appCalendarDateAt(Date.now()),
   );
   const [viewMonth, setViewMonth] = createSignal(
     getVisibleMonth(initialViewDate()),
@@ -188,17 +185,13 @@ export function DatePicker(props: DatePickerProps) {
           }))
         }
         onPreviousMonth={() =>
-          setViewMonth((current) =>
-            getVisibleMonth(new Date(current.year, current.month - 1, 1)),
-          )
+          setViewMonth((current) => shiftVisibleMonth(current, -1))
         }
         onNextMonth={() =>
-          setViewMonth((current) =>
-            getVisibleMonth(new Date(current.year, current.month + 1, 1)),
-          )
+          setViewMonth((current) => shiftVisibleMonth(current, 1))
         }
         onSelect={(date) => {
-          props.onInput(formatIsoDate(date));
+          props.onInput(date);
           closePicker();
         }}
         onPopoverMount={(element) => {

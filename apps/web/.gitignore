@@ -8,6 +8,9 @@ app.config.timestamp_*.js
 test-results
 playwright-report
 
+# dev artifacts
+.local-storage
+
 # Written by tests/e2e/global-setup.ts.
 .e2e-manifest.json
 

@@ -59,6 +59,7 @@ function buildLeadUsageReservationPorts(
       const snapshot = await getLeadCapacitySnapshot(
         actorUserId,
         buildRepos(trx),
+        new Date(),
       );
       if (isErr(snapshot)) return snapshot;
       return Ok(snapshot.value.remaining);

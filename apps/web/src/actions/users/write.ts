@@ -137,17 +137,16 @@ export async function updateMemberExpiry(
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         userId: r.id("userId", UserId),
-        expiresAt: r.optNum("expiresAt"),
+        expiresOn: r.optCalendarDate("expiresOn"),
       })),
 
     audit: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await getServerRuntime().users.members.updateExpiry(ctx, {
-        userId: command.userId,
-        expiresAt:
-          command.expiresAt !== null ? new Date(command.expiresAt) : null,
-      });
+      const result = await getServerRuntime().users.members.updateExpiry(
+        ctx,
+        command,
+      );
       if (isErr(result)) return result;
       return Ok({ message: "Vencimiento actualizado" });
     },

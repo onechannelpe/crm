@@ -40,6 +40,9 @@ export const EventId = uuidId("EventId");
 export type WorkflowLeadId = BrandedId<"WorkflowLeadId">;
 export const WorkflowLeadId = uuidId("WorkflowLeadId");
 
+export type WorkflowInquiryId = BrandedId<"WorkflowInquiryId">;
+export const WorkflowInquiryId = uuidId("WorkflowInquiryId");
+
 export type WorkflowRateProposalId = BrandedId<"WorkflowRateProposalId">;
 export const WorkflowRateProposalId = uuidId("WorkflowRateProposalId");
 

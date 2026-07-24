@@ -2,10 +2,14 @@ import type { CreateLeadInput } from "~/contracts/workflow/inputs";
 import type { OrganizationEnrichment } from "~/server/organization/enrichment";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { parseRuc } from "~/server/shared/document";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import type { Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/server/shared/domain-error";
+import type { WorkflowInquiryId, WorkflowLeadId } from "~/server/shared/ids";
+import { Err, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import {
+  createInquiryRepo,
+  type InquiryRow,
+} from "~/server/workflow/inquiry/repo";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
@@ -24,6 +28,7 @@ import {
 export async function registerLead(
   input: CreateLeadInput & {
     actor: WorkflowActor;
+    inquiryId?: WorkflowInquiryId;
   },
   ports: {
     executor: DatabaseExecutor;
@@ -45,6 +50,21 @@ export async function registerLead(
 
   if (!ruc.ok) {
     return ruc;
+  }
+
+  // A registration born from an inquiry converts it in the same transaction;
+  // validate the link up front so a bad reference fails before any write.
+  let inquiry: InquiryRow | undefined;
+  if (input.inquiryId !== undefined) {
+    const found = await createInquiryRepo(ports.executor).findById(
+      input.inquiryId,
+    );
+    if (!found) return Err(fail("inquiry_not_found"));
+    if (found.executiveId !== actor.userId)
+      return Err(fail("inquiry_not_owned"));
+    if (found.state === "CONVERTED") return Err(fail("inquiry_converted"));
+    if (found.ruc !== ruc.value) return Err(fail("inquiry_ruc_mismatch"));
+    inquiry = found;
   }
 
   const activeExecutive = await ensureActiveExecutive({
@@ -90,6 +110,7 @@ export async function registerLead(
     return reassignRegisteredLead({
       leadId: resolution.value.lead.id,
       actor,
+      inquiry,
       ports: { executor: ports.executor, now },
     });
   }
@@ -117,6 +138,7 @@ export async function registerLead(
     ruc: ruc.value,
     commercialScope,
     enrichment: overlay,
+    inquiry,
     ports: { executor: ports.executor, now },
   });
 }

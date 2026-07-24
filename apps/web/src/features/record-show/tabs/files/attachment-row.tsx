@@ -9,7 +9,7 @@ import {
   ActivityRowIcon,
   ActivityRowTitle,
 } from "~/features/side-panel/components/activity-tabs/primitives";
-import { formatDateTime } from "~/lib/utils";
+import { formatAppDateTime } from "~/lib/time/app-time";
 
 import { AttachmentActionsMenu } from "./attachment-actions-menu";
 import {
@@ -64,7 +64,7 @@ export function AttachmentRow(props: AttachmentRowProps) {
           <div class={styles.rowRightContent}>
             <div class={styles.rowDate}>
               <CalendarDays size={14} />
-              <span>{formatDateTime(props.file.uploadedAt)}</span>
+              <span>{formatAppDateTime(props.file.uploadedAt)}</span>
             </div>
             <AttachmentActionsMenu
               file={props.file}

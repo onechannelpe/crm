@@ -187,7 +187,10 @@ type CreateLeadRecordDetailSidePanelPageInput = {
   subtitle?: string;
 };
 
-export function createLeadRecordCreateSidePanelPage(): SidePanelPageDefinition {
+export function createLeadRecordCreateSidePanelPage(input?: {
+  ruc?: string;
+  inquiryId?: string;
+}): SidePanelPageDefinition {
   const pageId = createSidePanelPageId();
 
   return {
@@ -202,7 +205,11 @@ export function createLeadRecordCreateSidePanelPage(): SidePanelPageDefinition {
       recordType: "lead",
       title: "Nuevo cliente",
       subtitle: "Borrador",
-      draft: DEFAULT_LEAD_RECORD_DRAFT_STATE,
+      draft: {
+        ...DEFAULT_LEAD_RECORD_DRAFT_STATE,
+        ruc: input?.ruc ?? "",
+        inquiryId: input?.inquiryId ?? null,
+      },
     },
   };
 }

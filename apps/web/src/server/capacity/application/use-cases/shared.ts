@@ -33,11 +33,11 @@ export type CapacityManageTx = {
 export type CapacityGrantTx = {
   searchCapacityGrants: Pick<
     SearchCapacityGrantsRepo,
-    "insert" | "findByUserAndPeriod"
+    "insert" | "findByUserAndRange"
   >;
   leadCapacityGrants: Pick<
     LeadCapacityGrantsRepo,
-    "insert" | "findByUserAndDate"
+    "insert" | "findByUserAndRange"
   >;
 };
 

@@ -25,7 +25,7 @@ import {
   pendingQuotationPolicyQuery,
   rateProposalPolicyQuery,
 } from "~/lib/queries/workflow-settings";
-import { formatDateTime } from "~/lib/utils";
+import { formatAppDateTime } from "~/lib/time/app-time";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-page.module.css";
@@ -110,7 +110,7 @@ function RateProposalPolicyEditor(props: {
         <Show when={props.snapshot().updatedAt}>
           {(updatedAt) => (
             <p class={styles.helperText}>
-              Última actualización: {formatDateTime(updatedAt())}.
+              Última actualización: {formatAppDateTime(updatedAt())}.
             </p>
           )}
         </Show>
@@ -209,7 +209,7 @@ function PendingQuotationPolicyEditor(props: {
         <Show when={props.snapshot().updatedAt}>
           {(updatedAt) => (
             <p class={styles.helperText}>
-              Última actualización: {formatDateTime(updatedAt())}.
+              Última actualización: {formatAppDateTime(updatedAt())}.
             </p>
           )}
         </Show>

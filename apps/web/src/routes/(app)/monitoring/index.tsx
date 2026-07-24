@@ -1,18 +1,16 @@
 import { revalidate } from "@solidjs/router";
-import { Show, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, createMemo, createResource, createSignal } from "solid-js";
 
-import { WindowSelect } from "~/components/features/audit/window-select";
 import Activity from "~/components/icons/activity";
 import CircleAlert from "~/components/icons/circle-alert";
 import CircleCheckBig from "~/components/icons/circle-check-big";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
-import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
-import { DataTable } from "~/components/ui/layout/data-table";
-import { FilterBar } from "~/components/ui/layout/filter-bar";
-import type { TableColumn } from "~/components/ui/layout/table-column";
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
+import { DataGrid } from "~/features/data-grid/components/grid";
+import type { DataGridSource } from "~/features/data-grid/model/source";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { observabilitySnapshotQuery } from "~/lib/queries/audit";
@@ -21,6 +19,13 @@ import styles from "./monitoring-page.module.css";
 
 type MonitoringStatus = "all" | "ok" | "error";
 type MonitoringRow = ObservabilitySnapshot["summary"][number];
+
+const WINDOW_OPTIONS = [
+  { value: 15, label: "15 min" },
+  { value: 60, label: "1 hora" },
+  { value: 240, label: "4 horas" },
+  { value: 1440, label: "24 horas" },
+] as const;
 
 const MONITORING_COLUMNS = [
   {
@@ -60,7 +65,7 @@ const MONITORING_COLUMNS = [
     width: 140,
     renderCell: (row) => Math.round(row.maxDurationMs),
   },
-] satisfies ReadonlyArray<TableColumn<MonitoringRow>>;
+] satisfies ReadonlyArray<DataGridColumn<MonitoringRow>>;
 
 function parseStatus(value: string): MonitoringStatus {
   if (value === "ok" || value === "error") return value;
@@ -97,17 +102,18 @@ export default function MonitoringPage() {
     }
     return new Error(String(error));
   };
-  const tableStatus = (): "pending" | "ready" | "error" => {
+  const rows = createMemo<ReadonlyArray<MonitoringRow>>(
+    () => latestSnapshot()?.summary ?? [],
+  );
+  const source = (): DataGridSource<MonitoringRow> => {
     if (snapshotError()) {
-      return "error";
+      return { status: "error", rows: [] };
     }
     if (isInitialLoading()) {
-      return "pending";
+      return { status: "pending", rows: [] };
     }
-    return "ready";
+    return { status: "ready", rows: rows() };
   };
-
-  const rows = createMemo(() => latestSnapshot()?.summary ?? []);
 
   const rowOpen = useSidePanelRowOpen<MonitoringRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -126,12 +132,22 @@ export default function MonitoringPage() {
   );
 
   return (
-    <AppPage>
-      <FilterBar>
-        <WindowSelect value={windowMinutes()} onInput={setWindowMinutes} />
-        <div class={styles.filter}>
+    <div class={styles.page}>
+      <div class={styles.toolbar}>
+        <div class={styles.control}>
           <Select
-            label="Estado"
+            aria-label="Ventana de tiempo"
+            value={windowMinutes()}
+            onInput={(e) => setWindowMinutes(Number(e.currentTarget.value))}
+          >
+            <For each={WINDOW_OPTIONS}>
+              {(option) => <option value={option.value}>{option.label}</option>}
+            </For>
+          </Select>
+        </div>
+        <div class={styles.control}>
+          <Select
+            aria-label="Estado"
             value={status()}
             onInput={(e) => setStatus(parseStatus(e.currentTarget.value))}
           >
@@ -141,6 +157,8 @@ export default function MonitoringPage() {
           </Select>
         </div>
         <Button
+          variant="secondary"
+          size="sm"
           onClick={() => {
             void revalidate(observabilitySnapshotQuery.key);
           }}
@@ -150,17 +168,18 @@ export default function MonitoringPage() {
         <Show when={isRefreshing() && !isInitialLoading()}>
           <span class={styles.refreshing}>Actualizando...</span>
         </Show>
-      </FilterBar>
+      </div>
 
-      <DataTable
+      <DataGrid
         ariaLabel="Monitoreo"
         columns={MONITORING_COLUMNS}
         emptyState="No hay métricas disponibles para la ventana actual."
         errorState="No se pudieron cargar las métricas."
-        onRowClick={rowOpen}
-        rows={rows()}
-        status={tableStatus()}
+        onRowOpen={rowOpen}
+        rowId={(row) => row.actionName}
+        rowOpenIndicator="panel"
+        source={source()}
       />
-    </AppPage>
+    </div>
   );
 }

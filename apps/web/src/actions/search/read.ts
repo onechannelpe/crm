@@ -13,6 +13,7 @@ export async function getMySearchAllowance() {
       getSearchCapacitySnapshot(
         ctx.actor.userId,
         getServerRuntime().search.repos,
+        ctx.now(),
       ),
   });
 }

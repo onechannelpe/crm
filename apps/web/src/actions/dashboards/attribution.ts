@@ -17,7 +17,7 @@ export async function resolveAttribution(raw: unknown): Promise<{ ok: true }> {
     parse: () =>
       parseObject(raw, validationFail, (r) => ({
         ruc: r.str("ruc"),
-        month: r.str("month"),
+        month: r.calendarMonth("month"),
         sellerUserId: r.optId("sellerUserId", UserId) ?? null,
         branchId: r.optId("branchId", BranchId) ?? null,
       })),
@@ -66,7 +66,7 @@ export async function setMerchantTarget(raw: unknown): Promise<{ ok: true }> {
     parse: () =>
       parseObject(raw, validationFail, (r) => ({
         ruc: r.str("ruc"),
-        effectiveFrom: r.str("effectiveFrom"),
+        effectiveFrom: r.calendarMonth("effectiveFrom"),
         projectedGpv: r.optNum("projectedGpv"),
       })),
 

@@ -4,6 +4,10 @@ import type {
   AttainmentRow,
   BookFilter,
 } from "~/contracts/merchant-stats/views";
+import {
+  calendarMonthStart,
+  type CalendarMonth,
+} from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { creditFilter } from "./filter";
@@ -13,7 +17,7 @@ import { targetAsOfMonth } from "./target-as-of";
 export async function getAttainment(
   db: DatabaseExecutor,
   filter: BookFilter,
-  month: string,
+  month: CalendarMonth,
 ): Promise<Attainment> {
   const [sellers, branches, coverage] = await Promise.all([
     sellerRows(db, filter, month),
@@ -27,7 +31,7 @@ export async function getAttainment(
 async function sellerRows(
   db: DatabaseExecutor,
   filter: BookFilter,
-  month: string,
+  month: CalendarMonth,
 ): Promise<AttainmentRow[]> {
   const rows = await db
     .selectFrom("merchant_monthly_gpv as m")
@@ -37,7 +41,7 @@ async function sellerRows(
     .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
     .leftJoin("users as u", "u.id", "a.seller_user_id")
     .leftJoin("branches as b", "b.id", "a.branch_id")
-    .where("m.month", "=", month)
+    .where("m.month", "=", calendarMonthStart(month))
     .where((eb) => creditFilter(eb, filter))
     .select((eb) => [
       "a.seller_user_id",
@@ -68,7 +72,7 @@ async function sellerRows(
 async function branchRows(
   db: DatabaseExecutor,
   filter: BookFilter,
-  month: string,
+  month: CalendarMonth,
 ): Promise<AttainmentRow[]> {
   const rows = await db
     .selectFrom("merchant_monthly_gpv as m")
@@ -77,7 +81,7 @@ async function branchRows(
     )
     .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
     .leftJoin("branches as b", "b.id", "a.branch_id")
-    .where("m.month", "=", month)
+    .where("m.month", "=", calendarMonthStart(month))
     .where((eb) => creditFilter(eb, filter))
     .select((eb) => [
       "a.branch_id",
@@ -105,14 +109,14 @@ async function branchRows(
 
 async function monthCoverage(
   db: DatabaseExecutor,
-  month: string,
+  month: CalendarMonth,
 ): Promise<AttainmentCoverage> {
   const row = await db
     .selectFrom("merchant_monthly_gpv as m")
     .leftJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
     )
-    .where("m.month", "=", month)
+    .where("m.month", "=", calendarMonthStart(month))
     .select((eb) => [
       eb.fn.coalesce(eb.fn.sum<number>("m.gpv"), eb.lit(0)).as("total_gpv"),
       eb.fn

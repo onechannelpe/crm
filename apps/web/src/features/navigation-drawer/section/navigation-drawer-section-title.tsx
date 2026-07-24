@@ -1,8 +1,4 @@
 import ChevronRight from "~/components/icons/chevron-right";
-import { cn } from "~/lib/utils";
-
-import { useIsSettingsPage } from "../hooks/use-is-settings-page";
-import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 import styles from "./navigation-drawer-section.module.css";
 
@@ -15,18 +11,8 @@ interface NavigationDrawerSectionTitleProps {
 export function NavigationDrawerSectionTitle(
   props: NavigationDrawerSectionTitleProps,
 ) {
-  const { expanded } = useNavigationDrawerState();
-  const isSettingsPage = useIsSettingsPage();
-  const collapsedMain = () => !expanded() && !isSettingsPage();
-  const isInteractive = () => Boolean(props.onClick) && !collapsedMain();
-  const rootClass = () =>
-    cn(
-      styles.sectionTitle,
-      isInteractive() && styles.sectionTitleClickable,
-      collapsedMain() && styles.sectionTitleCollapsed,
-    );
   const content = (
-    <>
+    <span class={styles.sectionTitleLabelContainer}>
       <span class={styles.sectionTitleLabel}>{props.label}</span>
       {props.isOpen !== undefined ? (
         <span class={styles.sectionTitleChevron}>
@@ -38,7 +24,7 @@ export function NavigationDrawerSectionTitle(
           />
         </span>
       ) : null}
-    </>
+    </span>
   );
 
   return (
@@ -46,7 +32,7 @@ export function NavigationDrawerSectionTitle(
       {props.onClick ? (
         <button
           type="button"
-          class={rootClass()}
+          class={styles.sectionTitle}
           onClick={() => {
             props.onClick?.();
           }}
@@ -55,7 +41,7 @@ export function NavigationDrawerSectionTitle(
           {content}
         </button>
       ) : (
-        <div class={rootClass()}>{content}</div>
+        <div class={styles.sectionTitle}>{content}</div>
       )}
     </>
   );

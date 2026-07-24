@@ -19,8 +19,6 @@ export type SearchCapacitySnapshot = {
   committed: number;
   pending: number;
   remaining: number;
-  periodStart: string;
-  periodEnd: string;
 };
 
 export type LeadCapacitySnapshot = {

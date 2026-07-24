@@ -2,11 +2,12 @@ import { createElementSize } from "@solid-primitives/resize-observer";
 import { createMemo, createSignal, For, Show } from "solid-js";
 
 import { Present } from "~/components/ui/control-flow/present";
+import type { CalendarMonth } from "~/lib/time/calendar-date";
 
 import { formatMonth, formatSolesCompact } from "../format";
 
 export interface LinePoint {
-  label: string; // ISO month
+  label: CalendarMonth;
   value: number;
 }
 

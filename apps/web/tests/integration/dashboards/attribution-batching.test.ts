@@ -7,6 +7,10 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import {
+  parseCalendarDate,
+  parseCalendarMonth,
+} from "~/lib/time/calendar-date";
 import { enqueueAttributionForLead } from "~/server/merchant-stats/attribution/invalidate";
 import { createMerchantAttributionQueue } from "~/server/merchant-stats/attribution/queue";
 import { recomputeAttribution } from "~/server/merchant-stats/attribution/recompute";
@@ -24,6 +28,18 @@ const LIMA = TEST_FIXTURES.organizations.lima;
 const NORTE = TEST_FIXTURES.organizations.norte;
 const EXEC = TEST_FIXTURES.users.execOne;
 
+function date(value: string) {
+  const parsed = parseCalendarDate(value);
+  if (!parsed) throw new Error(`Invalid test date: ${value}`);
+  return parsed;
+}
+
+function month(value: string) {
+  const parsed = parseCalendarMonth(value);
+  if (!parsed) throw new Error(`Invalid test month: ${value}`);
+  return parsed;
+}
+
 function sourceRow(
   overrides: Partial<SourceRow> & { rowNumber: number },
 ): SourceRow {
@@ -32,8 +48,8 @@ function sourceRow(
     merchantId: `M${overrides.rowNumber}`,
     serialNumber: null,
     product: "POS",
-    soldAt: "2026-02-01",
-    saleMonth: "2026-02-01",
+    soldAt: date("2026-02-01"),
+    saleMonth: month("2026-02"),
     tradeName: null,
     legalName: null,
     culqiUserCode: null,
@@ -60,8 +76,8 @@ function sourceRow(
 // the attribution verdict, so they must remain in the same RUC batch.
 function straddlingRucRows(): SourceRow[] {
   return [
-    sourceRow({ rowNumber: 1, soldAt: "2026-02-01" }),
-    sourceRow({ rowNumber: 2, soldAt: "2026-04-10" }),
+    sourceRow({ rowNumber: 1, soldAt: date("2026-02-01") }),
+    sourceRow({ rowNumber: 2, soldAt: date("2026-04-10") }),
   ];
 }
 
@@ -216,7 +232,7 @@ describe("attribution batching", () => {
     await applyInBatches(
       ctx,
       reportId,
-      [sourceRow({ rowNumber: 1, soldAt: "2026-04-10" })],
+      [sourceRow({ rowNumber: 1, soldAt: date("2026-04-10") })],
       2000,
     );
 
@@ -273,7 +289,7 @@ describe("attribution batching", () => {
 
     await recomputeAttribution(
       ctx.db,
-      [{ ruc: LIMA.ruc, month: "2026-02-01" }],
+      [{ ruc: LIMA.ruc, month: month("2026-02") }],
       NOW,
     );
 

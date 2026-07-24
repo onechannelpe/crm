@@ -1,4 +1,5 @@
 import type { LeadListView } from "~/contracts/workflow/views";
+import { appCalendarDateAt, appDayRange } from "~/lib/time/app-time";
 import type { DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
@@ -33,6 +34,7 @@ export async function listLeads(
     actorRole: ListLeadsInput["actor"]["role"];
     actorBranchId: BranchId;
     filters: ListLeadsInput["filters"];
+    evaluatedAt: Date;
   },
 ): Promise<Result<LeadListView, DomainError>> {
   const canRead = requireCapability("view", { role: input.actorRole });
@@ -49,6 +51,9 @@ export async function listLeads(
   const sortDirection: LeadSortDirection =
     input.filters.sortDirection ?? "desc";
 
+  const updatedRange = input.filters.updatedToday
+    ? appDayRange(appCalendarDateAt(input.evaluatedAt))
+    : undefined;
   const filters: LeadListFilters = {
     actorUserId: input.actorUserId,
     actorRole: input.actorRole,
@@ -62,14 +67,8 @@ export async function listLeads(
     status: input.filters.status,
     priority: input.filters.priority,
     anyFieldSearch: normalizeLeadAnyFieldSearch(input.filters.anyFieldSearch),
-    updatedSince:
-      input.filters.updatedSinceMs === undefined
-        ? undefined
-        : new Date(input.filters.updatedSinceMs),
-    updatedUntil:
-      input.filters.updatedUntilMs === undefined
-        ? undefined
-        : new Date(input.filters.updatedUntilMs),
+    updatedSince: updatedRange?.start,
+    updatedUntil: updatedRange?.endExclusive,
     sortBy,
     sortDirection,
     limit: page.value.limit,

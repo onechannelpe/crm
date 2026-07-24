@@ -1,5 +1,7 @@
 import { For } from "solid-js";
 
+import { calendarMonthParts } from "~/lib/time/calendar-date";
+
 import type { Group } from "../../model/group";
 import { EventRow } from "../event-row";
 
@@ -15,7 +17,8 @@ export function EventGroup(props: EventGroupProps) {
   return (
     <section class={styles.group}>
       <div class={styles.monthSeparator}>
-        {props.monthLabel} {props.showYear ? props.group.year : ""}
+        {props.monthLabel}{" "}
+        {props.showYear ? calendarMonthParts(props.group.month).year : ""}
         <div class={styles.monthSeparatorLine} />
       </div>
 

@@ -2,9 +2,14 @@ import type { Insertable } from "kysely";
 
 import { needsReview } from "~/contracts/merchant-stats/vocabulary";
 import type { Database } from "~/lib/db/types";
+import {
+  calendarMonthStart,
+  type CalendarMonth,
+} from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { chunks } from "../chunks";
+import { monthFromStorageDate } from "../storage-month";
 import {
   branchOfUser,
   loadAttributionContext,
@@ -23,7 +28,7 @@ type AttributionInsert = Insertable<Database["merchant_month_attribution"]>;
 
 export interface RucMonth {
   ruc: string;
-  month: string;
+  month: CalendarMonth;
 }
 
 export interface RecomputeResult {
@@ -99,7 +104,7 @@ export async function recomputeAttribution(
 
     rows.push({
       ruc: group.pair.ruc,
-      month: group.pair.month,
+      month: calendarMonthStart(group.pair.month),
       organization_id: ctx.orgByRuc.get(group.pair.ruc) ?? null,
       seller_user_id: verdict.sellerUserId,
       branch_id: verdict.branchId,
@@ -152,7 +157,7 @@ async function upsertDerived(
 }
 
 type ContributingSale = AttributedSale & {
-  month: string;
+  month: CalendarMonth;
 };
 
 // Match exact (RUC, month) pairs. Separate RUC and month filters would load
@@ -172,7 +177,9 @@ async function loadContributingSales(
         eb(
           eb.refTuple("s.ruc", "g.realized_month"),
           "in",
-          chunk.map((pair) => eb.tuple(pair.ruc, pair.month)),
+          chunk.map((pair) =>
+            eb.tuple(pair.ruc, calendarMonthStart(pair.month)),
+          ),
         ),
       )
       .select([
@@ -187,7 +194,7 @@ async function loadContributingSales(
     for (const row of rows) {
       sales.push({
         ruc: row.ruc,
-        month: row.month,
+        month: monthFromStorageDate(row.month),
         serialNumber: row.serial_number,
         soldAt: row.sold_at,
         culqiUserName: row.culqi_user_name,

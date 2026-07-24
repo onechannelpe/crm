@@ -7,6 +7,8 @@ import {
 } from "solid-js";
 import { Portal } from "solid-js/web";
 
+import type { CalendarDate } from "~/lib/time/calendar-date";
+
 import { DatePickerCalendar } from "./date-picker-calendar";
 import {
   isPreviousMonthDisabled,
@@ -22,14 +24,14 @@ const POPOVER_FALLBACK_HEIGHT = 320;
 interface DatePickerPopoverProps {
   isOpen: Accessor<boolean>;
   anchor: Accessor<HTMLElement | undefined>;
-  selectedDate: Date | null;
-  minDate: Date | null;
+  selectedDate: CalendarDate | null;
+  minDate: CalendarDate | null;
   visibleMonth: VisibleMonth;
   onMonthChange: (month: number) => void;
   onYearChange: (year: number) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
-  onSelect: (date: Date) => void;
+  onSelect: (date: CalendarDate) => void;
   onPopoverMount: (element: HTMLDialogElement | undefined) => void;
 }
 

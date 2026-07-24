@@ -20,16 +20,17 @@ export function NavigationDrawerItemsCollapsableContainer(
     <div
       class={styles.collapseWrapper}
       style={{
-        width: isExpanded() ? "auto" : "24px",
+        width: isExpanded() ? "auto" : "var(--spacing-6)",
         "background-color":
           !isExpanded() && props.isGroup
-            ? "var(--bg-translucent)"
+            ? "var(--background-transparent-lighter)"
             : "transparent",
         border:
           !isExpanded() && props.isGroup
-            ? "1px solid var(--bg-translucent)"
+            ? "1px solid var(--background-transparent-lighter)"
             : "none",
-        "border-radius": !isExpanded() && props.isGroup ? "4px" : undefined,
+        "border-radius":
+          !isExpanded() && props.isGroup ? "var(--radius-md)" : undefined,
         transition:
           "width var(--motion-normal) var(--ease-standard), background-color var(--motion-normal) var(--ease-standard), border var(--motion-normal) var(--ease-standard)",
       }}

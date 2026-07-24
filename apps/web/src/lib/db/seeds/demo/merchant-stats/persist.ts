@@ -3,6 +3,10 @@ import { createHash } from "node:crypto";
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import {
+  calendarDateFromParts,
+  type CalendarDate,
+} from "~/lib/time/calendar-date";
 import { recomputeAttribution } from "~/server/merchant-stats/attribution/recompute";
 import { acceptReport } from "~/server/merchant-stats/commands/accept-report";
 import { setTarget } from "~/server/merchant-stats/commands/set-target";
@@ -152,7 +156,7 @@ async function persistTargets(
 
 function snapshot(
   merchants: readonly MerchantSpec[],
-  cutDate: string,
+  cutDate: CalendarDate,
 ): ParsedReport {
   const rows: SourceRow[] = [];
 
@@ -205,6 +209,10 @@ function cutFilenamePart(cutAt: Date): string {
   ].join("_");
 }
 
-function isoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+function isoDate(date: Date): CalendarDate {
+  return calendarDateFromParts({
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  });
 }

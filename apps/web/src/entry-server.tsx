@@ -31,7 +31,6 @@ export default createHandler(
                 content="width=device-width, initial-scale=1"
               />
               <RequestMeta />
-              <title>Culqi360</title>
               <link rel="icon" type="image/x-icon" href={favicon} />
               {assets}
             </head>

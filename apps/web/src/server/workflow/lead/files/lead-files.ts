@@ -7,6 +7,7 @@ import type {
   FulfillmentDocKind,
 } from "~/contracts/workflow/vocabulary";
 import { hasPermission } from "~/lib/auth/access/rbac";
+import { appCalendarDateAt } from "~/lib/time/app-time";
 import type { FileRepos } from "~/server/files/service/contracts";
 import { issueDownloadToken } from "~/server/files/service/issue-download-token";
 import { storeGeneratedFile } from "~/server/files/service/store-generated-file";
@@ -26,6 +27,10 @@ import type {
   WorkflowRateRevisionFileId,
 } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
+import {
+  exportPendingInquiries,
+  type InquiryExportRow,
+} from "~/server/workflow/inquiry/inquiry-queries";
 import { authorizeLeadAction } from "~/server/workflow/lead/domain/policy";
 import {
   attachFulfillmentDocumentCommand,
@@ -39,29 +44,67 @@ import type {
 } from "~/server/workflow/lead/read/lead-queries";
 import type { LeadReader } from "~/server/workflow/lead/read/ports";
 
+// Leads awaiting review and pending availability inquiries ride the same CSV
+// through the external availability platform, which keys on RUC. Inquiry rows
+// carry the sentinel stage CONSULTA so back office can tell them apart from
+// quotation work at a glance.
 const LEAD_EXPORT_COLUMNS: {
   header: string;
-  value: (row: RecordExportRow) => unknown;
+  lead: (row: RecordExportRow) => unknown;
+  inquiry: (row: InquiryExportRow) => unknown;
 }[] = [
-  { header: "RUC", value: (row) => row.ruc },
-  { header: "Razón social", value: (row) => row.legalName ?? "" },
-  { header: "ID ejecutivo", value: (row) => row.executiveId },
-  { header: "Ejecutivo", value: (row) => row.executiveName },
+  { header: "RUC", lead: (row) => row.ruc, inquiry: (row) => row.ruc },
+  {
+    header: "Razón social",
+    lead: (row) => row.legalName ?? "",
+    inquiry: (row) => row.legalName ?? "",
+  },
+  {
+    header: "ID ejecutivo",
+    lead: (row) => row.executiveId,
+    inquiry: (row) => row.executiveId,
+  },
+  {
+    header: "Ejecutivo",
+    lead: (row) => row.executiveName,
+    inquiry: (row) => row.executiveName,
+  },
   {
     header: "Fecha de registro",
-    value: (row) => new Date(row.createdAt).toISOString().slice(0, 10),
+    lead: (row) => appCalendarDateAt(row.createdAt),
+    inquiry: (row) => appCalendarDateAt(row.createdAt),
   },
-  { header: "Etapa", value: (row) => row.stage },
-  { header: "Dirección", value: (row) => row.address ?? "" },
-  { header: "Estado", value: (row) => row.status ?? "" },
-  { header: "Prioridad", value: (row) => row.priority ?? "" },
-  { header: "Competencia", value: (row) => row.currentProvider ?? "" },
-  { header: "Tasa comp. TD", value: (row) => row.currentDebitRate ?? "" },
-  { header: "Tasa comp. TC", value: (row) => row.currentCreditRate ?? "" },
-  { header: "Tasa Culqi TD", value: (row) => row.proposedDebitRate ?? "" },
-  { header: "Tasa Culqi TC", value: (row) => row.proposedCreditRate ?? "" },
-  { header: "Proyectado", value: (row) => row.gpv ?? "" },
-  { header: "Observación", value: () => "" },
+  { header: "Etapa", lead: (row) => row.stage, inquiry: () => "CONSULTA" },
+  { header: "Dirección", lead: (row) => row.address ?? "", inquiry: () => "" },
+  { header: "Estado", lead: (row) => row.status ?? "", inquiry: () => "" },
+  { header: "Prioridad", lead: (row) => row.priority ?? "", inquiry: () => "" },
+  {
+    header: "Competencia",
+    lead: (row) => row.currentProvider ?? "",
+    inquiry: () => "",
+  },
+  {
+    header: "Tasa comp. TD",
+    lead: (row) => row.currentDebitRate ?? "",
+    inquiry: () => "",
+  },
+  {
+    header: "Tasa comp. TC",
+    lead: (row) => row.currentCreditRate ?? "",
+    inquiry: () => "",
+  },
+  {
+    header: "Tasa Culqi TD",
+    lead: (row) => row.proposedDebitRate ?? "",
+    inquiry: () => "",
+  },
+  {
+    header: "Tasa Culqi TC",
+    lead: (row) => row.proposedCreditRate ?? "",
+    inquiry: () => "",
+  },
+  { header: "Proyectado", lead: (row) => row.gpv ?? "", inquiry: () => "" },
+  { header: "Observación", lead: () => "", inquiry: () => "" },
 ];
 
 type LeadFilesDeps = {
@@ -205,17 +248,27 @@ export function createLeadFilesService(deps: LeadFilesDeps) {
         return Err(forbidden());
       }
 
-      const rows = await deps.leadQueries.export({
+      const filters = {
         actorUserId: input.ctx.actor.userId,
         actorRole: input.ctx.actor.role,
         actorBranchId: input.ctx.actor.branchId,
-      });
+      };
+      const rows = await deps.leadQueries.export(filters);
+      const inquiryRows = await exportPendingInquiries(
+        deps.workflowPorts().executor,
+        filters,
+      );
 
       const csv = buildRecordExportCsv(
         LEAD_EXPORT_COLUMNS.map((column) => column.header),
-        rows.map((row) =>
-          LEAD_EXPORT_COLUMNS.map((column) => column.value(row)),
-        ),
+        [
+          ...rows.map((row) =>
+            LEAD_EXPORT_COLUMNS.map((column) => column.lead(row)),
+          ),
+          ...inquiryRows.map((row) =>
+            LEAD_EXPORT_COLUMNS.map((column) => column.inquiry(row)),
+          ),
+        ],
       );
 
       const storedFile = await storeGeneratedFile(

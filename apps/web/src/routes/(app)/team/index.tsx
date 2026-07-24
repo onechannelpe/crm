@@ -4,15 +4,15 @@ import { createMemo, createSignal } from "solid-js";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import List from "~/components/icons/list";
 import Mail from "~/components/icons/mail";
+import Plus from "~/components/icons/plus";
 import UserRound from "~/components/icons/user-round";
-import { AppPage } from "~/components/layout/page";
-import { Badge } from "~/components/ui/display/badge";
-import { Input } from "~/components/ui/input/input";
-import { DataTable } from "~/components/ui/layout/data-table";
-import { FilterBar } from "~/components/ui/layout/filter-bar";
-import type { TableColumn } from "~/components/ui/layout/table-column";
+import { SearchInput } from "~/components/ui/input/search-input";
 import type { ManagedExecutiveView } from "~/contracts/capacity";
+import { DataGrid } from "~/features/data-grid/components/grid";
+import type { DataGridSource } from "~/features/data-grid/model/source";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { managedExecutivesQuery } from "~/lib/queries/capacity";
+import { capitalize } from "~/lib/utils";
 
 import styles from "./team-page.module.css";
 
@@ -21,50 +21,9 @@ const TEAM_COLUMNS = [
     key: "fullName",
     label: "Ejecutivo",
     icon: UserRound,
-    minWidth: 240,
-    grow: true,
+    minWidth: 200,
     sticky: true,
-    renderCell: (executive) => (
-      <div class={styles.stackedCell}>
-        <div class={styles.executiveName}>{executive.fullName}</div>
-        <div class={styles.executiveEmail}>{executive.email}</div>
-      </div>
-    ),
-  },
-  {
-    key: "searchStatus",
-    label: "Búsquedas",
-    icon: CircleQuestionMark,
-    width: 220,
-    renderCell: (executive) => (
-      <div class={styles.stackedCell}>
-        <div>
-          {executive.searchStatus.committed}/
-          {executive.searchStatus.policy.monthlyLimit +
-            executive.searchStatus.granted}
-        </div>
-        <Badge variant="outline">
-          {executive.searchStatus.remaining} restantes
-        </Badge>
-      </div>
-    ),
-  },
-  {
-    key: "leadStatus",
-    label: "Clientes",
-    icon: List,
-    width: 220,
-    renderCell: (executive) => (
-      <div class={styles.stackedCell}>
-        <div>
-          {executive.leadStatus.activeAssignments}/
-          {executive.leadStatus.policy.bufferTarget} activos
-        </div>
-        <Badge variant="outline">
-          {executive.leadStatus.remaining} refills restantes
-        </Badge>
-      </div>
-    ),
+    renderCell: (executive) => executive.fullName,
   },
   {
     key: "email",
@@ -75,17 +34,42 @@ const TEAM_COLUMNS = [
     renderCell: (executive) => executive.email,
   },
   {
+    key: "searchStatus",
+    label: "Búsquedas",
+    icon: CircleQuestionMark,
+    width: 110,
+    renderCell: (executive) =>
+      `${executive.searchStatus.committed}/${
+        executive.searchStatus.policy.monthlyLimit +
+        executive.searchStatus.granted
+      }`,
+  },
+  {
+    key: "leadStatus",
+    label: "Clientes",
+    icon: List,
+    width: 100,
+    renderCell: (executive) =>
+      `${executive.leadStatus.activeAssignments}/${executive.leadStatus.policy.bufferTarget}`,
+  },
+  {
+    key: "refills",
+    label: "Refills",
+    icon: Plus,
+    width: 90,
+    renderCell: (executive) => executive.leadStatus.remaining,
+  },
+  {
     key: "executiveCategory",
     label: "Categoría",
     icon: UserRound,
-    width: 130,
+    width: 120,
     renderCell: (executive) =>
       executive.executiveCategory
-        ? executive.executiveCategory.charAt(0).toUpperCase() +
-          executive.executiveCategory.slice(1)
+        ? capitalize(executive.executiveCategory)
         : "—",
   },
-] satisfies ReadonlyArray<TableColumn<ManagedExecutiveView>>;
+] satisfies ReadonlyArray<DataGridColumn<ManagedExecutiveView>>;
 
 export default function TeamPage() {
   const navigate = useNavigate();
@@ -99,32 +83,36 @@ export default function TeamPage() {
       `${executive.fullName} ${executive.email}`.toLowerCase().includes(value),
     );
   });
-  const isLoading = () => executives() === undefined;
+  const source = (): DataGridSource<ManagedExecutiveView> => {
+    if (executives() === undefined) {
+      return { status: "pending", rows: [] };
+    }
+    return { status: "ready", rows: filtered() };
+  };
   const openExecutive = (executive: ManagedExecutiveView) => {
     navigate(`/settings/members/${executive.id}?tab=capacity`);
   };
 
   return (
-    <AppPage width="wide">
-      <FilterBar>
-        <div class={styles.search}>
-          <Input
-            label="Buscar ejecutivo"
-            value={filter()}
-            onInput={(event) => setFilter(event.currentTarget.value)}
-            placeholder="Nombre o correo"
-          />
-        </div>
-      </FilterBar>
+    <div class={styles.page}>
+      <div class={styles.searchRow}>
+        <SearchInput
+          value={filter()}
+          onValueChange={setFilter}
+          placeholder="Buscar ejecutivo..."
+          aria-label="Buscar ejecutivo"
+        />
+      </div>
 
-      <DataTable
+      <DataGrid
         ariaLabel="Equipo"
         columns={TEAM_COLUMNS}
         emptyState="No hay ejecutivos visibles."
-        onRowClick={openExecutive}
-        rows={filtered()}
-        status={isLoading() ? "pending" : "ready"}
+        onRowOpen={openExecutive}
+        rowId={(row) => row.id}
+        rowOpenIndicator="route"
+        source={source()}
       />
-    </AppPage>
+    </div>
   );
 }

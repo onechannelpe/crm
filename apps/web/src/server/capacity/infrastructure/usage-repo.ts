@@ -1,15 +1,12 @@
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
+import type { InstantRange } from "~/lib/time/app-time";
 import type {
   LeadReservationId,
   SearchReservationId,
   UserId,
 } from "~/server/shared/ids";
-
-function dayEnd(date: string): Date {
-  return new Date(`${date}T23:59:59.999Z`);
-}
 
 export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
   return {
@@ -26,17 +23,13 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    findByUserAndPeriod(
-      userId: UserId,
-      periodStart: string,
-      periodEnd: string,
-    ) {
+    findByUserAndRange(userId: UserId, range: InstantRange) {
       return db
         .selectFrom("search_capacity_grants")
         .selectAll()
         .where("user_id", "=", userId)
-        .where("created_at", ">=", new Date(periodStart))
-        .where("created_at", "<=", dayEnd(periodEnd))
+        .where("created_at", ">=", range.start)
+        .where("created_at", "<", range.endExclusive)
         .execute();
     },
   };
@@ -94,17 +87,13 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    findByUserAndPeriod(
-      userId: UserId,
-      periodStart: string,
-      periodEnd: string,
-    ) {
+    findByUserAndRange(userId: UserId, range: InstantRange) {
       return db
         .selectFrom("search_usage_reservations")
         .selectAll()
         .where("user_id", "=", userId)
-        .where("created_at", ">=", new Date(periodStart))
-        .where("created_at", "<=", dayEnd(periodEnd))
+        .where("created_at", ">=", range.start)
+        .where("created_at", "<", range.endExclusive)
         .execute();
     },
   };
@@ -131,18 +120,14 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findByUserAndPeriod(
-      userId: UserId,
-      periodStart: string,
-      periodEnd: string,
-    ) {
+    findByUserAndRange(userId: UserId, range: InstantRange) {
       return db
         .selectFrom("search_usage_commits as c")
         .innerJoin("search_usage_reservations as r", "r.id", "c.reservation_id")
         .select(["c.id", "c.reservation_id", "c.amount", "c.created_at"])
         .where("r.user_id", "=", userId)
-        .where("c.created_at", ">=", new Date(periodStart))
-        .where("c.created_at", "<=", dayEnd(periodEnd))
+        .where("c.created_at", ">=", range.start)
+        .where("c.created_at", "<", range.endExclusive)
         .execute();
     },
   };
@@ -163,13 +148,13 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    findByUserAndDate(userId: UserId, date: string) {
+    findByUserAndRange(userId: UserId, range: InstantRange) {
       return db
         .selectFrom("lead_capacity_grants")
         .selectAll()
         .where("user_id", "=", userId)
-        .where("created_at", ">=", new Date(date))
-        .where("created_at", "<=", dayEnd(date))
+        .where("created_at", ">=", range.start)
+        .where("created_at", "<", range.endExclusive)
         .execute();
     },
   };
@@ -224,13 +209,13 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
         .then(() => undefined);
     },
 
-    findByUserAndDate(userId: UserId, date: string) {
+    findByUserAndRange(userId: UserId, range: InstantRange) {
       return db
         .selectFrom("lead_usage_reservations")
         .selectAll()
         .where("user_id", "=", userId)
-        .where("created_at", ">=", new Date(date))
-        .where("created_at", "<=", dayEnd(date))
+        .where("created_at", ">=", range.start)
+        .where("created_at", "<", range.endExclusive)
         .execute();
     },
   };
@@ -257,14 +242,14 @@ export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findByUserAndDate(userId: UserId, date: string) {
+    findByUserAndRange(userId: UserId, range: InstantRange) {
       return db
         .selectFrom("lead_usage_commits as c")
         .innerJoin("lead_usage_reservations as r", "r.id", "c.reservation_id")
         .select(["c.id", "c.reservation_id", "c.amount", "c.created_at"])
         .where("r.user_id", "=", userId)
-        .where("c.created_at", ">=", new Date(date))
-        .where("c.created_at", "<=", dayEnd(date))
+        .where("c.created_at", ">=", range.start)
+        .where("c.created_at", "<", range.endExclusive)
         .execute();
     },
   };

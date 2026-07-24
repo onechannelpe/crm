@@ -1,3 +1,4 @@
+import { appDayRange } from "~/lib/time/app-time";
 import type { AppContext } from "~/server/platform/action/context";
 import { type DomainError } from "~/server/shared/domain-error";
 import { isErr, Ok, type Result } from "~/server/shared/result";
@@ -20,7 +21,10 @@ export async function updateMemberExpiry(
   );
   if (isErr(target)) return target;
 
-  await deps.users.updateExpiry(command.userId, command.expiresAt);
+  const expiresAt = command.expiresOn
+    ? appDayRange(command.expiresOn).endExclusive
+    : null;
+  await deps.users.updateExpiry(command.userId, expiresAt);
 
   return Ok(undefined);
 }

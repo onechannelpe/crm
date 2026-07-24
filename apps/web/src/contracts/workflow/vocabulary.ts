@@ -70,6 +70,11 @@ export const FULFILLMENT_ACTIONS = [
   "register_sale",
 ] as const;
 
+// Availability inquiry lifecycle: an executive asks for a RUC's status and
+// priority without registering a lead. PENDING rides the back-office export
+// until an import answers it; CONVERTED links it to the lead it became.
+export const INQUIRY_STATES = ["PENDING", "ANSWERED", "CONVERTED"] as const;
+
 export const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;
 export const LEAD_STATUSES = [
   "DISPONIBLE",
@@ -103,6 +108,7 @@ export const COLLECTION_MODES = [
 ] as const;
 export const ACCOUNT_TYPE_KINDS = ["AHORROS", "CORRIENTE"] as const;
 
+export type InquiryState = (typeof INQUIRY_STATES)[number];
 export type ProductScope = (typeof PRODUCT_SCOPES)[number];
 export type LeadStage = (typeof LEAD_STAGES)[number];
 export type CloseReason = (typeof CLOSE_REASONS)[number];

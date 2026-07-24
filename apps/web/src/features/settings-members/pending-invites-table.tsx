@@ -29,7 +29,10 @@ import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-members.module.css";
 
-export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
+export function PendingInvitesTable(props: {
+  invites: TeamInvite[];
+  evaluatedAt: number;
+}) {
   const resendInvite = useAction(resendTeamInviteMutation);
   const revokeInvite = useAction(revokeTeamInviteMutation);
   const resendSubmissions = useSubmissions(resendTeamInviteMutation);
@@ -134,7 +137,7 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
                   </TableCell>
                   <TableCell align="center">
                     <Badge variant="secondary">
-                      {getExpiresAtText(invite.expiresAt)}
+                      {getExpiresAtText(invite.expiresAt, props.evaluatedAt)}
                     </Badge>
                   </TableCell>
                   <TableCell align="right">
@@ -182,14 +185,12 @@ export function PendingInvitesTable(props: { invites: TeamInvite[] }) {
   );
 }
 
-function getExpiresAtText(expiresAt: number): string {
-  const now = Date.now();
-
-  if (expiresAt <= now) {
+function getExpiresAtText(expiresAt: number, evaluatedAt: number): string {
+  if (expiresAt <= evaluatedAt) {
     return "Expirada";
   }
 
-  const minutes = Math.floor((expiresAt - now) / (1000 * 60));
+  const minutes = Math.floor((expiresAt - evaluatedAt) / (1000 * 60));
 
   if (minutes < 60) {
     return `En ${minutes} min`;

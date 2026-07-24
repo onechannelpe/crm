@@ -1,9 +1,9 @@
+import { addCalendarMonths } from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { MerchantReportId } from "~/server/shared/ids";
 
 import type { RucMonth } from "../attribution/recompute";
 import { chunks } from "../chunks";
-import { addMonths } from "../intake/cells";
 import type { Rejection, SourceRow } from "../intake/types";
 import { partitionBySaleMonth } from "./sale-month-guard";
 import { upsertGpv } from "./write-gpv";
@@ -81,7 +81,7 @@ function rucMonthsOf(rows: readonly SourceRow[]): RucMonth[] {
 
   for (const row of rows) {
     for (const observation of row.gpv) {
-      const month = addMonths(row.saleMonth, observation.offset);
+      const month = addCalendarMonths(row.saleMonth, observation.offset);
       byKey.set(`${row.ruc}:${month}`, { ruc: row.ruc, month });
     }
   }

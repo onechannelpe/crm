@@ -21,6 +21,7 @@ export const EXTERNAL_CHANNELS = [
 export const EVENT_CATEGORY = {
   "lead.ready_for_quotation": "lead_handoffs",
   "lead.ready_for_sale": "lead_handoffs",
+  "inquiry.answered": "lead_handoffs",
   "lead.fulfillment_handoff": "fulfillment",
   "lead.fulfillment_completed": "fulfillment",
   "security.privileged_login": "security",

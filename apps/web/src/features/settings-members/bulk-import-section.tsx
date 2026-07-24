@@ -21,8 +21,8 @@ import type {
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
 import { readFileText } from "~/lib/file/read-file-text";
-import { APP_LOCALE } from "~/lib/locale";
 import { bulkImportSetupQuery } from "~/lib/queries/team";
+import { formatCalendarDate } from "~/lib/time/app-time";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-members.module.css";
@@ -194,15 +194,8 @@ export function BulkImportSection() {
                               <TableCell ellipsis>{row.names}</TableCell>
                               <TableCell ellipsis>{row.email}</TableCell>
                               <TableCell>
-                                {row.expiresAt
-                                  ? new Date(row.expiresAt).toLocaleDateString(
-                                      APP_LOCALE,
-                                      {
-                                        year: "numeric",
-                                        month: "short",
-                                        day: "numeric",
-                                      },
-                                    )
+                                {row.expiresOn
+                                  ? formatCalendarDate(row.expiresOn)
                                   : "—"}
                               </TableCell>
                               <TableCell>

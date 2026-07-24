@@ -1,3 +1,4 @@
+import { appCalendarDateAt, appDayRange } from "~/lib/time/app-time";
 import {
   buildLeadCapacitySnapshot,
   type LeadCapacitySnapshot,
@@ -10,7 +11,6 @@ import type {
 import type { DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Ok, type Result } from "~/server/shared/result";
-import { currentDailyPeriod } from "~/server/shared/time";
 
 import type { ActorScope } from "../actor-scope";
 import { getEffectiveLeadPolicy } from "../resolve-lead-policy";
@@ -34,15 +34,16 @@ interface SnapshotRepos {
 export async function getLeadCapacitySnapshot(
   userId: UserId,
   repos: SnapshotRepos,
+  evaluatedAt: Date,
 ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
   const policyResult = await getEffectiveLeadPolicy(userId, repos);
   if (!policyResult.ok) return policyResult;
 
-  const { date } = currentDailyPeriod(new Date());
+  const range = appDayRange(appCalendarDateAt(evaluatedAt));
   const [grants, reservations, commits, activeAssignments] = await Promise.all([
-    repos.leadCapacityGrants.findByUserAndDate(userId, date),
-    repos.leadUsageReservations.findByUserAndDate(userId, date),
-    repos.leadUsageCommits.findByUserAndDate(userId, date),
+    repos.leadCapacityGrants.findByUserAndRange(userId, range),
+    repos.leadUsageReservations.findByUserAndRange(userId, range),
+    repos.leadUsageCommits.findByUserAndRange(userId, range),
     repos.contactAssignments.countActiveByUser(userId),
   ]);
 

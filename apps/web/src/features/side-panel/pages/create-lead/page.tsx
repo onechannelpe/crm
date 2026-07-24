@@ -1,7 +1,8 @@
-import { useAction } from "@solidjs/router";
+import { useAction, useNavigate } from "@solidjs/router";
 import { createMemo, createResource, Show } from "solid-js";
 
 import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/records";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
@@ -18,11 +19,18 @@ import styles from "../record-page/page.module.css";
 
 export function CreateLeadPage() {
   const { currentUser } = useAuthenticatedSession();
-  const { navigateTo } = useSidePanel();
+  const { navigateTo, closePanel } = useSidePanel();
+  const navigate = useNavigate();
   const createLead = useAction(createLeadMutation);
 
-  const { draftRuc, draftScope, activeTab, setScopeField, setActiveTab } =
-    useCreateLeadPageState();
+  const {
+    draftRuc,
+    draftInquiryId,
+    draftScope,
+    activeTab,
+    setScopeField,
+    setActiveTab,
+  } = useCreateLeadPageState();
 
   const validRuc = createMemo(() => {
     const value = draftRuc().trim();
@@ -48,6 +56,7 @@ export function CreateLeadPage() {
 
   const { errorMessage, submitting, submit } = createCreateLeadController({
     draftRuc,
+    inquiryId: draftInquiryId,
     validRuc,
     previewName: previewLegalName,
     scope: draftScope,
@@ -105,6 +114,29 @@ export function CreateLeadPage() {
             onClick: () => void submit(),
             disabled: submitting(),
           }}
+          options={
+            // The fork to a probe: an inquiry asks for the RUC's availability
+            // without registering. Hidden when this draft already converts an
+            // inquiry, where the question is answered.
+            draftInquiryId() === null
+              ? [
+                  {
+                    id: "inquiry-fork",
+                    label: "Solo consultar estado",
+                    icon: CircleQuestionMark,
+                    onSelect: () => {
+                      const ruc = draftRuc().trim();
+                      closePanel();
+                      navigate(
+                        ruc
+                          ? `/inquiries?ruc=${encodeURIComponent(ruc)}`
+                          : "/inquiries",
+                      );
+                    },
+                  },
+                ]
+              : undefined
+          }
         />
       }
     >

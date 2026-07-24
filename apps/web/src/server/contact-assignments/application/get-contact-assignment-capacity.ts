@@ -12,5 +12,5 @@ export function getContactAssignmentCapacity(
   actorUserId: UserId,
   repos: AssignmentPlanRepos,
 ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
-  return getLeadCapacitySnapshot(actorUserId, repos);
+  return getLeadCapacitySnapshot(actorUserId, repos, new Date());
 }

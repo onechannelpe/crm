@@ -1,6 +1,7 @@
 import type { FilterOptions } from "~/contracts/merchant-stats/views";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+import { monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";
 
 export async function getFilterOptions(
@@ -39,7 +40,7 @@ export async function getFilterOptions(
     sellers: sellers
       .map((row) => ({ userId: row.id, name: displayName(row) ?? row.id }))
       .toSorted((a, b) => a.name.localeCompare(b.name)),
-    months: months.map((row) => row.month),
+    months: months.map((row) => monthFromStorageDate(row.month)),
     products: products.map((row) => row.product),
   };
 }

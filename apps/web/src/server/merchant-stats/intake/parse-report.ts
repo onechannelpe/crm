@@ -1,9 +1,12 @@
 import { read, utils, type WorkBook, type WorkSheet } from "xlsx";
 
+import {
+  calendarDateFromParts,
+  calendarMonthFromDate,
+} from "~/lib/time/calendar-date";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 
-import { firstOfMonth } from "./cells";
 import {
   GPV_REQUIRED_HEADERS,
   headerSetHasAll,
@@ -32,7 +35,12 @@ export function parseReport(
     return sheet;
   }
 
-  const cutMonth = firstOfMonth(isoDay(input.cutAt));
+  const cutDate = calendarDateFromParts({
+    year: input.cutAt.getUTCFullYear(),
+    month: input.cutAt.getUTCMonth() + 1,
+    day: input.cutAt.getUTCDate(),
+  });
+  const cutMonth = calendarMonthFromDate(cutDate);
   const rows: SourceRow[] = [];
   const rejections: Rejection[] = [];
 
@@ -53,10 +61,6 @@ export function parseReport(
   });
 
   return Ok({ rows, rejections });
-}
-
-function isoDay(date: Date): string {
-  return date.toISOString().slice(0, 10);
 }
 
 // Prefer the matching sheet with the most data rows over summary sheets.

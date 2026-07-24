@@ -1,0 +1,19 @@
+.wrapper {
+  display: block;
+  interpolate-size: allow-keywords;
+  overflow: hidden;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  transition:
+    opacity var(--motion-normal) ease-in-out,
+    width var(--motion-normal) ease-in-out,
+    height var(--motion-normal) ease-in-out;
+}
+
+.wrapperCollapsed {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}

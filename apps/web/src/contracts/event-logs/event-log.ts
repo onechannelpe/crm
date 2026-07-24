@@ -1,5 +1,6 @@
 import { isFieldChange, type FieldChange } from "~/contracts/events";
 import type { Json } from "~/contracts/json";
+import type { CalendarDate } from "~/lib/time/calendar-date";
 
 export const EVENT_LOG_TABLES = [
   "DOMAIN_EVENT",
@@ -65,7 +66,7 @@ export interface EventLogFilters {
   actorUserId?: string;
   status?: EventLogStatus;
   onlyHighRisk?: boolean;
-  dateRange?: { start?: number; end?: number };
+  dateRange?: { start?: CalendarDate; end?: CalendarDate };
 }
 
 export interface EventLogQueryInput {

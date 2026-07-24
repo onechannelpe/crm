@@ -1,5 +1,6 @@
 import { query } from "@solidjs/router";
 
+import { queryMyInquiries } from "~/actions/workflow/queries/inquiries";
 import {
   queryAssignableExecutives,
   queryFulfillmentQueue,
@@ -14,6 +15,7 @@ import {
 import {
   type AssignableExecutiveView,
   type FulfillmentQueueView,
+  type InquiryListView,
   type LeadDetailView,
   type LeadListView,
   type PendingQuotationCountView,
@@ -28,8 +30,7 @@ function normalizeLeadListFilters(
     priority: filters.priority,
     executiveId: filters.executiveId,
     anyFieldSearch: filters.anyFieldSearch,
-    updatedSinceMs: filters.updatedSinceMs,
-    updatedUntilMs: filters.updatedUntilMs,
+    updatedToday: filters.updatedToday,
     sortBy: filters.sortBy,
     sortDirection: filters.sortDirection,
     limit: filters.limit,
@@ -44,7 +45,12 @@ export const leadListQuery = query(
 );
 
 export const leadDetailQuery = query(
-  (leadId: string): Promise<LeadDetailView> => queryLeadDetail(leadId),
+  async (
+    leadId: string,
+  ): Promise<LeadDetailView & { evaluatedAt: number }> => ({
+    ...(await queryLeadDetail(leadId)),
+    evaluatedAt: Date.now(),
+  }),
   "workflow.leadDetail",
 );
 
@@ -55,11 +61,19 @@ export const assignableExecutivesQuery = query(
 );
 
 export const fulfillmentQueueQuery = query(
-  (): Promise<FulfillmentQueueView> => queryFulfillmentQueue(),
+  async (): Promise<FulfillmentQueueView & { evaluatedAt: number }> => ({
+    ...(await queryFulfillmentQueue()),
+    evaluatedAt: Date.now(),
+  }),
   "workflow.fulfillmentQueue",
 );
 
 export const pendingQuotationCountQuery = query(
   (): Promise<PendingQuotationCountView> => queryPendingQuotationCount(),
   "workflow.pendingQuotationCount",
+);
+
+export const inquiryListQuery = query(
+  (): Promise<InquiryListView> => queryMyInquiries(),
+  "workflow.inquiryList",
 );

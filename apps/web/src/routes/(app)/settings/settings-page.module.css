@@ -158,9 +158,16 @@
 }
 
 /*
-  Filter-bar controls are sized to their content, not stretched by the bar's
-  flex. Widths are per-field because the labels differ in length.
+  Policy editor controls are sized to their content, not stretched by the
+  row's flex. Widths are per-field because the labels differ in length.
 */
+.policyForm {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
 .filterAction {
   width: 13rem;
 }

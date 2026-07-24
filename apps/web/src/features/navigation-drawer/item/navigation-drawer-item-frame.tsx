@@ -1,4 +1,4 @@
-import type { Accessor, JSX } from "solid-js";
+import { children, type Accessor, type JSX } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
 import { TintedIconTile } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
@@ -24,11 +24,12 @@ export interface NavigationDrawerItemFrameProps extends NavigationDrawerItemFram
 export function NavigationDrawerItemFrame(
   props: NavigationDrawerItemFrameProps,
 ) {
+  const rightOptions = children(() => props.rightOptions);
   const isSoon = () => props.modifier === "soon";
   const isNew = () => props.modifier === "new";
   const showBreadcrumb = () => props.indentationLevel === 2;
   const hasRightOptions = () =>
-    Boolean(props.rightOptions) || Boolean(props.showChevron);
+    Boolean(rightOptions()) || Boolean(props.showChevron);
   const shouldShowRightOptions = () =>
     props.isMobile || Boolean(props.alwaysShowRightOptions);
 
@@ -62,12 +63,16 @@ export function NavigationDrawerItemFrame(
 
       <span
         class={cn(
-          styles.itemLabel,
+          styles.itemLabelParent,
           props.collapsedMain && styles.itemLabelCollapsed,
         )}
       >
-        {props.label}
-        {props.secondaryLabel ? ` · ${props.secondaryLabel}` : ""}
+        <span class={styles.itemLabel}>{props.label}</span>
+        {props.secondaryLabel ? (
+          <span class={styles.itemSecondaryLabel}>
+            {` · ${props.secondaryLabel}`}
+          </span>
+        ) : null}
       </span>
 
       {isSoon() ? (
@@ -101,7 +106,7 @@ export function NavigationDrawerItemFrame(
                   />
                 </span>
               ) : (
-                (props.rightOptions ?? null)
+                rightOptions()
               )}
             </span>
           </span>
@@ -112,8 +117,11 @@ export function NavigationDrawerItemFrame(
 
   const style = () =>
     ({
-      "--item-width-base": props.collapsedMain ? "40px" : "100%",
-      "--item-padding-right": hasRightOptions() ? "2px" : "4px",
+      "--item-width-base": props.collapsedMain
+        ? "var(--nav-drawer-collapsed-width)"
+        : "100%",
+      "--item-width-offset": props.collapsedMain ? "var(--spacing-6)" : "6px",
+      "--item-padding-right": hasRightOptions() ? "2px" : "var(--spacing-1)",
       cursor: isSoon() ? "default" : "pointer",
       "pointer-events": isSoon() ? "none" : "auto",
     }) satisfies JSX.CSSProperties;

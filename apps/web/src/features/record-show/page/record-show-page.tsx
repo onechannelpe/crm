@@ -39,7 +39,7 @@ export function RecordShowPage(props: RecordShowPageProps) {
     <Show when={data()}>
       {(detail) => (
         <div class={styles.layout}>
-          <RecordLeftPanel data={detail()} />
+          <RecordLeftPanel data={detail()} evaluatedAt={detail().evaluatedAt} />
           <RecordRightPanel data={detail()} />
         </div>
       )}

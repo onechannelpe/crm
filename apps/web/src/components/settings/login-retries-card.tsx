@@ -16,14 +16,10 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { useAsyncAction } from "~/hooks/use-async-action";
-import { APP_LOCALE } from "~/lib/locale";
+import { formatAppDateTime } from "~/lib/time/app-time";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./login-retries-card.module.css";
-
-function formatDate(value: number): string {
-  return new Date(value).toLocaleString(APP_LOCALE);
-}
 
 function labelFor(stage: string): string {
   if (stage === "challenge") return "Desafío de clave de acceso";
@@ -100,7 +96,9 @@ export function LoginRetriesCard() {
                 <For each={data().recentRetries}>
                   {(event) => (
                     <TableRow>
-                      <TableCell>{formatDate(event.createdAt)}</TableCell>
+                      <TableCell>
+                        {formatAppDateTime(event.createdAt)}
+                      </TableCell>
                       <TableCell>{labelFor(event.stage)}</TableCell>
                       <TableCell>{event.outcome}</TableCell>
                       <TableCell>{event.reason ?? "-"}</TableCell>

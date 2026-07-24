@@ -17,8 +17,7 @@ export type ListLeadsFiltersInput = {
   priority?: LeadPriority;
   executiveId?: string;
   anyFieldSearch?: string;
-  updatedSinceMs?: number;
-  updatedUntilMs?: number;
+  updatedToday?: boolean;
   sortBy?: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
   sortDirection?: "asc" | "desc";
   limit?: number;
@@ -42,7 +41,15 @@ export type CommercialScope = {
   posCount: number;
 };
 
-export type CreateLeadInput = { ruc: string } & CommercialScope;
+// inquiryId links the registration back to the availability inquiry it came
+// from: the server marks it converted and, when the answer is fresh, carries
+// the imported status/priority onto the new lead.
+export type CreateLeadInput = {
+  ruc: string;
+  inquiryId?: string;
+} & CommercialScope;
+
+export type CreateInquiryInput = { ruc: string };
 
 export type EditCommercialScopeInput = { leadId: string } & CommercialScope;
 

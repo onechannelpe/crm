@@ -1,7 +1,9 @@
+import type { CalendarMonth } from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 import { saleIdentityKey } from "../intake/sale-identity";
 import type { Rejection, SourceRow } from "../intake/types";
+import { monthFromStorageDate } from "../storage-month";
 
 export interface SaleMonthPartition {
   accepted: SourceRow[];
@@ -42,8 +44,8 @@ export async function partitionBySaleMonth(
 async function loadKnownSaleMonths(
   db: DatabaseExecutor,
   rows: readonly SourceRow[],
-): Promise<Map<string, string>> {
-  const byIdentity = new Map<string, string>();
+): Promise<Map<string, CalendarMonth>> {
+  const byIdentity = new Map<string, CalendarMonth>();
   const merchantIds = [...new Set(rows.map((row) => row.merchantId))];
 
   if (merchantIds.length === 0) {
@@ -63,7 +65,7 @@ async function loadKnownSaleMonths(
       sale.serial_number,
     );
 
-    byIdentity.set(key, sale.sale_month);
+    byIdentity.set(key, monthFromStorageDate(sale.sale_month));
   }
 
   return byIdentity;

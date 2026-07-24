@@ -38,7 +38,7 @@ export default createMiddleware({
       default-src 'self';
       script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval';
       style-src 'self' 'unsafe-inline';
-      img-src 'self' data: https:;
+      img-src 'self' data: blob: https:;
       font-src 'self' data:;
       connect-src 'self'${sentryConnectSrc};
       object-src 'none';

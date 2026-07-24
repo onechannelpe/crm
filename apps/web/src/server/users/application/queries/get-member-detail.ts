@@ -6,11 +6,11 @@ import {
 } from "~/lib/auth/access/member-management";
 import { getPermissions } from "~/lib/auth/access/rbac";
 import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
+import { appCalendarDateBefore } from "~/lib/time/app-time";
 import type { AppContext } from "~/server/platform/action/context";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { epochMilliseconds } from "~/server/shared/time";
 
 import { memberAvatarUrl } from "../member-view";
 import type { MemberReadDeps } from "../ports";
@@ -52,7 +52,7 @@ export async function getMemberDetail(
       user.avatar_storage_key !== null,
       user.avatar_version,
     ),
-    expiresAt: user.expires_at ? epochMilliseconds(user.expires_at) : null,
+    expiresOn: user.expires_at ? appCalendarDateBefore(user.expires_at) : null,
     permissions: getPermissions(user.role),
     assignableRoles: getAssignableRoleOptions(actorRole),
     teams: branchTeams.map((branchTeam) => ({

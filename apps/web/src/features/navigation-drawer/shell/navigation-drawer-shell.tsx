@@ -7,8 +7,8 @@ import Search from "~/components/icons/search";
 import X from "~/components/icons/x";
 import { AccountMenu } from "~/components/layout/account-menu";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
-import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
@@ -48,14 +48,6 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
 
   const [resizing, setResizing] = createSignal(false);
 
-  let drawerPanelRef: HTMLDivElement | undefined;
-
-  useDismissibleLayer({
-    enabled: () => isMobile() && expanded(),
-    onDismiss: () => setExpanded(false),
-    getContainer: () => drawerPanelRef,
-  });
-
   const onPointerDown = useResizablePanel({
     side: "right",
     constraints: NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
@@ -92,17 +84,11 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
           expanded() && !isMobile() && styles.drawerExpandedDesktop,
           !expanded() && !isMobile() && styles.drawerCollapsedDesktop,
           isMobile() && expanded() && styles.drawerOpenMobile,
-          isMobile() && !expanded() && styles.drawerClosedMobile,
         )}
       >
-        <div
-          ref={(element) => {
-            drawerPanelRef = element;
-          }}
-          class={styles.drawerInner}
-        >
+        <div class={styles.drawerInner}>
           <Show
-            when={isSettingsDrawer()}
+            when={!isMobile() && isSettingsDrawer()}
             fallback={
               <header
                 class={cn(styles.header, !expanded() && styles.headerCollapsed)}
@@ -117,41 +103,37 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
 
                 <div class={styles.headerActions}>
                   <Show when={!isMobile()}>
-                    <button
-                      type="button"
-                      class={styles.searchButton}
+                    <LightIconButton
+                      Icon={Search}
+                      accent="secondary"
                       onClick={() => navigate("/search")}
                       aria-label="Buscar"
-                    >
-                      <Search size={16} />
-                    </button>
+                    />
                   </Show>
                   <Show when={expanded()}>
-                    <button
-                      type="button"
-                      class={styles.collapseButton}
-                      onClick={() => setExpanded((value) => !value)}
-                      aria-label="Contraer barra lateral"
-                    >
-                      <LayoutSidebarLeftCollapse size={14} />
-                    </button>
+                    <div class={styles.collapseButtonContainer}>
+                      <LightIconButton
+                        Icon={LayoutSidebarLeftCollapse}
+                        accent="secondary"
+                        onClick={() => setExpanded((value) => !value)}
+                        aria-label="Contraer barra lateral"
+                      />
+                    </div>
                   </Show>
                 </div>
               </header>
             }
           >
-            <Show when={!isMobile()}>
-              <header class={styles.settingsBackHeader}>
-                <button
-                  type="button"
-                  class={styles.settingsBackButton}
-                  onClick={closeSettings}
-                >
-                  <X size={16} />
-                  <span>{props.title}</span>
-                </button>
-              </header>
-            </Show>
+            <header class={styles.settingsBackHeader}>
+              <button
+                type="button"
+                class={styles.settingsBackButton}
+                onClick={closeSettings}
+              >
+                <X size={16} />
+                <span>{props.title}</span>
+              </button>
+            </header>
           </Show>
 
           {props.children}

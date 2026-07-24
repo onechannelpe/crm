@@ -1,3 +1,9 @@
+import {
+  parseCalendarDate,
+  parseCalendarMonth,
+  type CalendarDate,
+  type CalendarMonth,
+} from "~/lib/time/calendar-date";
 import { isPlainRecord } from "~/lib/type-guards";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import type { IdCodec } from "~/server/shared/ids";
@@ -33,6 +39,10 @@ export interface Reader<E> {
     field: string,
     options: readonly T[],
   ): T | undefined;
+  calendarDate(field: string): CalendarDate;
+  optCalendarDate(field: string): CalendarDate | null;
+  calendarMonth(field: string): CalendarMonth;
+  optCalendarMonth(field: string): CalendarMonth | null;
   obj<T>(field: string, build: (reader: Reader<E>) => T): T;
   optObj<T>(field: string, build: (reader: Reader<E>) => T): T | undefined;
 }
@@ -189,6 +199,34 @@ class RecordReader<E> implements Reader<E> {
     const match = options.find((option) => option === value);
     if (match === undefined) this.reject(field, "invalid");
     return match;
+  }
+
+  calendarDate(field: string): CalendarDate {
+    const value = parseCalendarDate(this.str(field));
+    if (!value) this.reject(field, "invalid");
+    return value;
+  }
+
+  optCalendarDate(field: string): CalendarDate | null {
+    const raw = this.optStr(field);
+    if (raw === null) return null;
+    const value = parseCalendarDate(raw);
+    if (!value) this.reject(field, "invalid");
+    return value;
+  }
+
+  calendarMonth(field: string): CalendarMonth {
+    const value = parseCalendarMonth(this.str(field));
+    if (!value) this.reject(field, "invalid");
+    return value;
+  }
+
+  optCalendarMonth(field: string): CalendarMonth | null {
+    const raw = this.optStr(field);
+    if (raw === null) return null;
+    const value = parseCalendarMonth(raw);
+    if (!value) this.reject(field, "invalid");
+    return value;
   }
 
   obj<T>(field: string, build: (reader: Reader<E>) => T): T {

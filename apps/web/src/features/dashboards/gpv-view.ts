@@ -2,6 +2,7 @@ import { useSearchParams } from "@solidjs/router";
 import { createMemo, type Accessor } from "solid-js";
 
 import type { BookFilter } from "~/contracts/merchant-stats/views";
+import { parseCalendarMonth } from "~/lib/time/calendar-date";
 
 export const GPV_TAB_IDS = [
   "rendimiento",
@@ -29,7 +30,7 @@ export function readGpvFilter(query: GpvQuery): BookFilter {
   return {
     branchId: first(query.branch) || undefined,
     sellerUserId: first(query.seller) || undefined,
-    month: first(query.month) || undefined,
+    month: parseCalendarMonth(first(query.month)) ?? undefined,
     product: first(query.product) || undefined,
   };
 }

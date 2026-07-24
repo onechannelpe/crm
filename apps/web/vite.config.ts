@@ -31,6 +31,12 @@ export default defineConfig({
     // Without this, a cold SSR render can fail with vitejs/vite#19606.
     perEnvironmentStartEndDuringDev: true,
 
+    // Uploaded files are runtime data. Watching them restarts SolidStart's
+    // route handler while the browser is requesting the newly stored file.
+    watch: {
+      ignored: ["**/.local-storage/**"],
+    },
+
     // Register server functions that may only be reached from client events.
     // Without warmup, they may be called before their modules are imported.
     warmup: {

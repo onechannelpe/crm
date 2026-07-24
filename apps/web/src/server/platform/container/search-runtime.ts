@@ -37,6 +37,7 @@ export function createSearchUsageReservationPorts(
       const snapshot = await getSearchCapacitySnapshot(
         actorUserId,
         buildSearchUsageRepos(trx),
+        new Date(),
       );
       if (isErr(snapshot)) return snapshot;
       return Ok(snapshot.value.remaining);

@@ -1,3 +1,10 @@
+import {
+  calendarDateFromParts,
+  parseCalendarMonth,
+  type CalendarDate,
+  type CalendarMonth,
+} from "~/lib/time/calendar-date";
+
 import type { GpvCellValue } from "./types";
 
 export function cellText(value: GpvCellValue): string {
@@ -26,7 +33,7 @@ export function cellNumber(value: GpvCellValue): number {
   return cellNumberOrNull(value) ?? 0;
 }
 
-export function cellDateOrNull(value: GpvCellValue): string | null {
+export function cellDateOrNull(value: GpvCellValue): CalendarDate | null {
   if (value instanceof Date) return isoDate(value);
   if (typeof value === "number") {
     // Excel serial date (days since 1899-12-30).
@@ -39,44 +46,25 @@ export function cellDateOrNull(value: GpvCellValue): string | null {
   return parseFlexibleDate(text);
 }
 
-export function saleMonthFromAnomes(value: GpvCellValue): string | null {
+export function saleMonthFromAnomes(value: GpvCellValue): CalendarMonth | null {
   const text = cellText(value).replace(/\D/g, "");
   if (text.length !== 6) return null;
-  const year = Number(text.slice(0, 4));
-  const month = Number(text.slice(4, 6));
-  if (month < 1 || month > 12) return null;
-  return `${year.toString().padStart(4, "0")}-${month
-    .toString()
-    .padStart(2, "0")}-01`;
+  return parseCalendarMonth(`${text.slice(0, 4)}-${text.slice(4, 6)}`);
 }
 
-export function firstOfMonth(iso: string): string {
-  return `${iso.slice(0, 7)}-01`;
-}
-
-export function addMonths(isoFirstOfMonth: string, months: number): string {
-  const [year, month] = isoFirstOfMonth.split("-").map(Number);
-  const zeroBased = month - 1 + months;
-  const newYear = year + Math.floor(zeroBased / 12);
-  const newMonth = ((zeroBased % 12) + 12) % 12;
-  return `${newYear.toString().padStart(4, "0")}-${(newMonth + 1)
-    .toString()
-    .padStart(2, "0")}-01`;
-}
-
-function isoDate(date: Date): string {
-  return `${date.getUTCFullYear().toString().padStart(4, "0")}-${(
-    date.getUTCMonth() + 1
-  )
-    .toString()
-    .padStart(2, "0")}-${date.getUTCDate().toString().padStart(2, "0")}`;
+function isoDate(date: Date): CalendarDate {
+  return calendarDateFromParts({
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  });
 }
 
 // Dealer columns ultima_trx, dia_activo, and dia_prueba use ISO dates.
 // fecha_venta uses d/m/y. In sampled exports, 1,013 of 1,340 cells prove
 // d/m/y and none prove m/d/y, so the 327 ambiguous cells default to d/m/y.
 // A cell whose second part exceeds 12 identifies m/d/y if the export changes locale.
-function parseFlexibleDate(text: string): string | null {
+function parseFlexibleDate(text: string): CalendarDate | null {
   const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (iso) return buildDate(iso[1], Number(iso[2]), Number(iso[3]));
 
@@ -93,13 +81,17 @@ function parseFlexibleDate(text: string): string | null {
     return buildDate(parts[3], month, day);
   }
 
-  const parsed = new Date(text);
-  return Number.isNaN(parsed.getTime()) ? null : isoDate(parsed);
+  return null;
 }
 
-function buildDate(year: string, month: number, day: number): string | null {
-  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-  return `${year.padStart(4, "0")}-${month.toString().padStart(2, "0")}-${day
-    .toString()
-    .padStart(2, "0")}`;
+function buildDate(
+  year: string,
+  month: number,
+  day: number,
+): CalendarDate | null {
+  try {
+    return calendarDateFromParts({ year: Number(year), month, day });
+  } catch {
+    return null;
+  }
 }

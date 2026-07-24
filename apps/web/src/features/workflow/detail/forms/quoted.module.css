@@ -1,16 +1,16 @@
 .roundBadge {
-  background: var(--background-secondary);
+  background: var(--secondary);
   border: 1px solid var(--border);
-  border-radius: var(--radius-full);
+  border-radius: var(--t-border-radius-pill);
   color: var(--foreground-secondary);
   font-size: var(--font-size-label);
   padding: 2px var(--spacing-2);
 }
 
 .negotiationForm {
-  background: var(--background-secondary);
+  background: var(--secondary);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   margin-top: var(--spacing-3);
   padding: var(--spacing-3);
 }
@@ -30,7 +30,7 @@
 }
 
 .justificationTextarea {
-  background: var(--background-primary);
+  background: var(--background);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   box-sizing: border-box;
@@ -65,7 +65,7 @@
 
 .dropZone {
   align-items: center;
-  background: var(--background-primary);
+  background: var(--background);
   border: 1px dashed var(--border);
   border-radius: var(--radius-sm);
   color: var(--foreground-tertiary);
@@ -79,7 +79,7 @@
 }
 
 .dropZone:hover {
-  border-color: var(--border-hover);
+  border-color: var(--border-medium);
   color: var(--foreground-secondary);
 }
 
@@ -97,7 +97,7 @@
 
 .stagedFile {
   align-items: center;
-  background: var(--background-primary);
+  background: var(--background);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   display: flex;

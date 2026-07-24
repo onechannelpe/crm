@@ -40,6 +40,7 @@ export interface SidebarEntry {
 export interface HeaderDescriptor {
   label: string;
   icon: RouteIcon;
+  tileColor?: TileColor;
 }
 
 export interface PageHeaderRule {
@@ -47,35 +48,67 @@ export interface PageHeaderRule {
   header: HeaderDescriptor;
 }
 
-// More specific rules must appear before broader patterns.
+// More specific rules must appear before broader patterns. tileColor mirrors
+// the sidebar entry for the same destination so the page header tile matches
+// the navigation tile.
 export const PAGE_HEADERS: PageHeaderRule[] = [
   {
     match: /^\/records\/[^/]+$/,
-    header: { label: "Registros", icon: "leads" },
+    header: { label: "Registros", icon: "leads", tileColor: "blue" },
   },
-  { match: "/dashboard", header: { label: "Inicio", icon: "dashboard" } },
-  { match: "/schedule", header: { label: "Agenda", icon: "schedule" } },
-  { match: "/records", header: { label: "Registros", icon: "leads" } },
+  {
+    match: "/dashboard",
+    header: { label: "Inicio", icon: "dashboard", tileColor: "blue" },
+  },
+  {
+    match: "/schedule",
+    header: { label: "Agenda", icon: "schedule", tileColor: "purple" },
+  },
+  {
+    match: "/records",
+    header: { label: "Registros", icon: "leads", tileColor: "blue" },
+  },
+  {
+    match: "/inquiries",
+    header: { label: "Consultas", icon: "search", tileColor: "yellow" },
+  },
   { match: "/search", header: { label: "Búsqueda", icon: "search" } },
   {
     match: "/rate-simulator",
-    header: { label: "Simulador de tasas", icon: "rate-simulator" },
+    header: {
+      label: "Simulador de tasas",
+      icon: "rate-simulator",
+      tileColor: "green",
+    },
   },
   {
     match: "/me/capacity",
-    header: { label: "Mi capacidad", icon: "capacity" },
+    header: { label: "Mi capacidad", icon: "capacity", tileColor: "turquoise" },
   },
-  { match: "/inventory", header: { label: "Inventario", icon: "inventory" } },
+  {
+    match: "/inventory",
+    header: { label: "Inventario", icon: "inventory", tileColor: "orange" },
+  },
   {
     match: "/fulfillment",
-    header: { label: "Entregas", icon: "inventory" },
+    header: { label: "Entregas", icon: "inventory", tileColor: "orange" },
   },
-  { match: "/team", header: { label: "Capacidad del equipo", icon: "team" } },
+  {
+    match: "/team",
+    header: {
+      label: "Capacidad del equipo",
+      icon: "team",
+      tileColor: "turquoise",
+    },
+  },
   {
     match: "/team/requests",
-    header: { label: "Solicitudes", icon: "team" },
+    header: { label: "Solicitudes", icon: "team", tileColor: "turquoise" },
   },
-  { match: "/monitoring", header: { label: "Monitoreo", icon: "monitoring" } },
+  {
+    match: "/monitoring",
+    header: { label: "Monitoreo", icon: "monitoring", tileColor: "yellow" },
+  },
   {
     match: /^\/dashboards\/[^/]+$/,
     header: { label: "GPV de comercios", icon: "dashboards" },
@@ -127,6 +160,18 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     group: "Comercial",
   },
   {
+    id: "inquiries",
+    href: "/inquiries",
+    activePrefixes: ["/inquiries"],
+    label: "Consultas",
+    navLabel: "Consultas",
+    icon: "search",
+    tileColor: "yellow",
+    section: "secondary",
+    order: 2,
+    group: "Comercial",
+  },
+  {
     id: "rate-simulator",
     href: "/rate-simulator",
     activePrefixes: ["/rate-simulator"],
@@ -135,7 +180,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     icon: "rate-simulator",
     tileColor: "green",
     section: "secondary",
-    order: 2,
+    order: 3,
     group: "Comercial",
   },
   {
@@ -147,7 +192,7 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     icon: "capacity",
     tileColor: "turquoise",
     section: "secondary",
-    order: 3,
+    order: 4,
     group: "Comercial",
   },
   {

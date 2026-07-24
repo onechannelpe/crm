@@ -1,5 +1,7 @@
 import { createSignal, Match, Show, Switch } from "solid-js";
 
+import { requestMerchantGpvExportDownloadToken } from "~/actions/dashboards/dashboard";
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { AppPage } from "~/components/layout/page";
 import { Button } from "~/components/ui/input/button";
 import {
@@ -7,6 +9,8 @@ import {
   type TabItem,
 } from "~/features/side-panel/components/tab-strip";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
+import { downloadWithToken } from "~/lib/files/client";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import { CulqiView } from "./culqi/culqi-view";
 import { type GpvTabId, useGpvView } from "./gpv-view";
@@ -28,6 +32,22 @@ const GPV_TABS: ReadonlyArray<TabItem<GpvTabId>> = [
 export function MerchantGpvDashboard() {
   const view = useGpvView();
   const [showUpload, setShowUpload] = createSignal(false);
+  const [exporting, setExporting] = createSignal(false);
+  const { enqueueErrorSnackBar } = useSnackBar();
+
+  const exportReport = async () => {
+    setExporting(true);
+    try {
+      const { token } = await requestMerchantGpvExportDownloadToken({
+        filter: view.filter(),
+      });
+      downloadWithToken(token);
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <AppPage>
@@ -37,6 +57,13 @@ export function MerchantGpvDashboard() {
         onTabSelect={view.setTab}
         rightComponent={
           <div class={styles.tabActions}>
+            <Button
+              variant="secondary"
+              loading={exporting()}
+              onClick={() => void exportReport()}
+            >
+              Exportar resultado
+            </Button>
             <Button
               variant="secondary"
               onClick={() => setShowUpload((v) => !v)}

@@ -1,3 +1,7 @@
+import {
+  calendarMonthStart,
+  type CalendarMonth,
+} from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { BranchId, UserId } from "~/server/shared/ids";
@@ -5,7 +9,7 @@ import { Err, Ok, type Result } from "~/server/shared/result";
 
 export interface ResolveAttributionInput {
   ruc: string;
-  month: string;
+  month: CalendarMonth;
   sellerUserId: UserId | null;
   branchId: BranchId | null;
   resolvedBy: UserId;
@@ -20,7 +24,7 @@ export async function resolveAttribution(
     .selectFrom("merchant_month_attribution")
     .select("ruc")
     .where("ruc", "=", input.ruc)
-    .where("month", "=", input.month)
+    .where("month", "=", calendarMonthStart(input.month))
     .executeTakeFirst();
 
   if (!derived) {
@@ -31,7 +35,7 @@ export async function resolveAttribution(
     .insertInto("merchant_month_attribution_override")
     .values({
       ruc: input.ruc,
-      month: input.month,
+      month: calendarMonthStart(input.month),
       seller_user_id: input.sellerUserId,
       branch_id: input.branchId,
       resolved_by: input.resolvedBy,

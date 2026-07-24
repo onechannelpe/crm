@@ -82,7 +82,7 @@ export function useReportImport() {
     form.append("file", file);
 
     if (cutAt) {
-      form.append("cutAt", new Date(cutAt).toISOString());
+      form.append("cutAt", cutAt);
     }
 
     try {

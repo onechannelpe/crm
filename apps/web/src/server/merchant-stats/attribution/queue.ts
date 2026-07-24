@@ -6,6 +6,7 @@ import { createJobStore } from "~/lib/job-queue/job-store";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { MerchantAttributionJobId } from "~/server/shared/ids";
 
+import { monthFromStorageDate } from "../storage-month";
 import { recomputeAttribution } from "./recompute";
 
 type MerchantAttributionJobRow = Selectable<MerchantAttributionJobsTable>;
@@ -48,7 +49,7 @@ export function createMerchantAttributionQueue(
     handle: async (job) => {
       await recomputeAttribution(
         deps.db,
-        [{ ruc: job.ruc, month: job.month }],
+        [{ ruc: job.ruc, month: monthFromStorageDate(job.month) }],
         deps.now(),
       );
 

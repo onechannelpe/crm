@@ -1,3 +1,4 @@
+import { calendarMonthStart } from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { MerchantReportId } from "~/server/shared/ids";
 
@@ -32,7 +33,7 @@ export async function upsertGpv(
     return row.gpv.map((observation) => ({
       sale_id: saleId,
       month_offset: observation.offset,
-      sale_month: row.saleMonth,
+      sale_month: calendarMonthStart(row.saleMonth),
       gpv: observation.gpv,
       trx: observation.trx,
       cut_at: input.cutAt,

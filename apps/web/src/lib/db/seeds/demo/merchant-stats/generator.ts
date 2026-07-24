@@ -1,4 +1,12 @@
-import { addMonths, firstOfMonth } from "~/server/merchant-stats/intake/cells";
+import {
+  addCalendarDays,
+  addCalendarMonths,
+  calendarDateFromParts,
+  calendarDateParts,
+  calendarMonthFromDate,
+  type CalendarDate,
+  type CalendarMonth,
+} from "~/lib/time/calendar-date";
 import type { SourceRow } from "~/server/merchant-stats/intake/types";
 
 import type { SeedContext } from "../../shared/context";
@@ -39,8 +47,8 @@ export interface MerchantSpec {
   merchantId: string;
   serialNumber: string | null;
   product: string;
-  saleMonth: string;
-  soldAt: string;
+  saleMonth: CalendarMonth;
+  soldAt: CalendarDate;
   tradeName: string;
   legalName: string;
   mesa: string;
@@ -49,9 +57,9 @@ export interface MerchantSpec {
   stockType: string;
   offerAmount: number;
   promotion: string;
-  trialAt: string | null;
-  activatedAt: string | null;
-  lastTransactionAt: string | null;
+  trialAt: CalendarDate | null;
+  activatedAt: CalendarDate | null;
+  lastTransactionAt: CalendarDate | null;
   m0Plus15dGpv: number;
   m0Plus15dTrx: number;
   series: Array<{ gpv: number; trx: number }>;
@@ -118,8 +126,8 @@ export function generateMerchants(input: GenerateInput): MerchantSpec[] {
 function buildMerchant(
   rng: () => number,
   input: GenerateInput,
-  saleMonths: readonly string[],
-  requiredCaseMonth: string,
+  saleMonths: readonly CalendarMonth[],
+  requiredCaseMonth: CalendarMonth,
   ruc: string,
   index: number,
   linkedOrganization: GenerateInput["linkedOrganizations"][number] | undefined,
@@ -138,9 +146,12 @@ function buildMerchant(
   const series = buildSeries(rng);
   const trade = `${pick(rng, TRADE_HEADS)} ${pick(rng, TRADE_TAILS)}`;
   const activated = index !== 3 && chance(rng, PROFILE.activationRate);
-  const anchorDate = input.context.anchorDate.toISOString().slice(0, 10);
-  const trialAt = addDays(soldAt, 2 + Math.floor(rng() * 8));
-  const activationCandidate = addDays(trialAt, 2 + Math.floor(rng() * 16));
+  const anchorDate = calendarDateFromInstant(input.context.anchorDate);
+  const trialAt = addCalendarDays(soldAt, 2 + Math.floor(rng() * 8));
+  const activationCandidate = addCalendarDays(
+    trialAt,
+    2 + Math.floor(rng() * 16),
+  );
   const activatedAt =
     activated && activationCandidate <= anchorDate ? activationCandidate : null;
 
@@ -233,11 +244,11 @@ function tailedScale(rng: () => number): number {
 export function toSourceRow(
   merchant: MerchantSpec,
   rowNumber: number,
-  cutDate: string,
+  cutDate: CalendarDate,
 ): SourceRow {
-  const cutMonth = firstOfMonth(cutDate);
+  const cutMonth = calendarMonthFromDate(cutDate);
   const gpv = merchant.series.flatMap((point, offset) => {
-    if (addMonths(merchant.saleMonth, offset) > cutMonth) return [];
+    if (addCalendarMonths(merchant.saleMonth, offset) > cutMonth) return [];
     return [{ offset, gpv: point.gpv, trx: point.trx }];
   });
 
@@ -345,7 +356,10 @@ function weightedPick<T extends { weight: number }>(
   return items[0];
 }
 
-function pickMonth(rng: () => number, months: readonly string[]): string {
+function pickMonth(
+  rng: () => number,
+  months: readonly CalendarMonth[],
+): CalendarMonth {
   // Bias toward recent cohorts: square the roll so low indices are rarer.
   const skewed = 1 - rng() * rng();
   return months[
@@ -353,29 +367,47 @@ function pickMonth(rng: () => number, months: readonly string[]): string {
   ];
 }
 
-function cohortMonths(anchorDate: Date): string[] {
-  const currentMonth = firstOfMonth(anchorDate.toISOString());
+function cohortMonths(anchorDate: Date): CalendarMonth[] {
+  const currentMonth = calendarMonthFromDate(
+    calendarDateFromInstant(anchorDate),
+  );
   return Array.from({ length: PROFILE.cohortWindowMonths }, (_, index) =>
-    addMonths(currentMonth, index - PROFILE.cohortWindowMonths + 1),
+    addCalendarMonths(currentMonth, index - PROFILE.cohortWindowMonths + 1),
   );
 }
 
-function dayWithin(rng: () => number, monthIso: string): string {
+function dayWithin(rng: () => number, month: CalendarMonth): CalendarDate {
   const day = 1 + Math.floor(rng() * 27);
-  return `${monthIso.slice(0, 8)}${day.toString().padStart(2, "0")}`;
+  return calendarDateFromParts({
+    year: Number(month.slice(0, 4)),
+    month: Number(month.slice(5, 7)),
+    day,
+  });
 }
 
-function addDays(isoDate: string, days: number): string {
-  const date = new Date(`${isoDate}T00:00:00.000Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
-}
-
-function dateBetween(rng: () => number, start: string, end: string): string {
-  const startMs = Date.parse(`${start}T00:00:00.000Z`);
-  const endMs = Date.parse(`${end}T00:00:00.000Z`);
+function dateBetween(
+  rng: () => number,
+  start: CalendarDate,
+  end: CalendarDate,
+): CalendarDate {
+  const startParts = calendarDateParts(start);
+  const endParts = calendarDateParts(end);
+  const startMs = Date.UTC(
+    startParts.year,
+    startParts.month - 1,
+    startParts.day,
+  );
+  const endMs = Date.UTC(endParts.year, endParts.month - 1, endParts.day);
   const offsetDays = Math.floor(rng() * ((endMs - startMs) / 86_400_000 + 1));
-  return addDays(start, offsetDays);
+  return addCalendarDays(start, offsetDays);
+}
+
+function calendarDateFromInstant(instant: Date): CalendarDate {
+  return calendarDateFromParts({
+    year: instant.getUTCFullYear(),
+    month: instant.getUTCMonth() + 1,
+    day: instant.getUTCDate(),
+  });
 }
 
 function pick<T>(rng: () => number, items: readonly T[]): T {

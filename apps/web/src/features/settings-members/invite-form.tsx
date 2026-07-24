@@ -21,7 +21,10 @@ import {
 
 import styles from "./settings-members.module.css";
 
-export function InviteForm(props: { setup: InviteManagement }) {
+export function InviteForm(props: {
+  setup: InviteManagement;
+  evaluatedAt: number;
+}) {
   const createInvite = useAction(createTeamInviteMutation);
   const submission = useSubmission(createTeamInviteMutation);
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
@@ -33,8 +36,8 @@ export function InviteForm(props: { setup: InviteManagement }) {
   const [role, setRole] = createSignal("");
   const [executiveCategory, setExecutiveCategory] = createSignal("");
   const [teamId, setTeamId] = createSignal("");
-  const [expiresAt, setExpiresAt] = createSignal("");
-  const [expiresAtErrorMessage, setExpiresAtErrorMessage] = createSignal<
+  const [expiresOn, setExpiresOn] = createSignal("");
+  const [expiresOnErrorMessage, setExpiresOnErrorMessage] = createSignal<
     string | undefined
   >();
 
@@ -68,8 +71,8 @@ export function InviteForm(props: { setup: InviteManagement }) {
     setRole(getDefaultAssignableRole(props.setup));
     setExecutiveCategory("");
     setTeamId("");
-    setExpiresAt("");
-    setExpiresAtErrorMessage(undefined);
+    setExpiresOn("");
+    setExpiresOnErrorMessage(undefined);
   }
 
   async function handleCopyLink(url: string): Promise<void> {
@@ -85,10 +88,13 @@ export function InviteForm(props: { setup: InviteManagement }) {
     event.preventDefault();
     setIssuedLink(null);
 
-    const parsedExpiresAt = parseInviteExpiryDate(expiresAt());
+    const parsedExpiresOn = parseInviteExpiryDate(
+      expiresOn(),
+      props.evaluatedAt,
+    );
 
-    if (parsedExpiresAt.isErr) {
-      setExpiresAtErrorMessage(parsedExpiresAt.error);
+    if (parsedExpiresOn.isErr) {
+      setExpiresOnErrorMessage(parsedExpiresOn.error);
       return;
     }
 
@@ -101,7 +107,7 @@ export function InviteForm(props: { setup: InviteManagement }) {
         role: role(),
         executiveCategory: executiveCategory() || null,
         teamId: teamId() || null,
-        expiresAt: parsedExpiresAt.value,
+        expiresOn: parsedExpiresOn.value,
       });
 
       resetForm();
@@ -113,11 +119,8 @@ export function InviteForm(props: { setup: InviteManagement }) {
     } catch (caught: unknown) {
       const wire = parseWireError(caught);
 
-      if (
-        codeIs(wire, "invalid_expires_at") ||
-        codeIs(wire, "expires_at_too_soon")
-      ) {
-        setExpiresAtErrorMessage(INVITE_EXPIRY_ERROR_TEXT);
+      if (codeIs(wire, "expires_on_too_soon")) {
+        setExpiresOnErrorMessage(INVITE_EXPIRY_ERROR_TEXT);
         return;
       }
 
@@ -198,13 +201,15 @@ export function InviteForm(props: { setup: InviteManagement }) {
 
       <DatePicker
         label="Fecha de vencimiento (opcional)"
-        value={expiresAt()}
-        min={getMinInviteExpiryDate()}
+        value={expiresOn()}
+        min={getMinInviteExpiryDate(props.evaluatedAt)}
         description={INVITE_EXPIRY_HELPER_TEXT}
-        error={expiresAtErrorMessage()}
+        error={expiresOnErrorMessage()}
         onInput={(nextValue) => {
-          setExpiresAt(nextValue);
-          setExpiresAtErrorMessage(getInviteExpiryFieldError(nextValue));
+          setExpiresOn(nextValue);
+          setExpiresOnErrorMessage(
+            getInviteExpiryFieldError(nextValue, props.evaluatedAt),
+          );
         }}
       />
 
@@ -216,7 +221,7 @@ export function InviteForm(props: { setup: InviteManagement }) {
             submission.pending ||
             !role() ||
             (role() === "executive" && !executiveCategory()) ||
-            expiresAtErrorMessage() !== undefined
+            expiresOnErrorMessage() !== undefined
           }
         >
           Enviar invitación

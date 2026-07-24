@@ -16,7 +16,7 @@
 }
 
 .row:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
 }
 
 .row[data-clickable="true"] {
@@ -65,10 +65,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.list {
-  table-layout: fixed;
 }
 
 .list .row,

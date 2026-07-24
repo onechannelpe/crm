@@ -31,7 +31,7 @@ export function LightIconButton(props: LightIconButtonProps) {
       )}
       {...others}
     >
-      {local.Icon && <local.Icon size={local.size === "medium" ? 18 : 16} />}
+      {local.Icon && <local.Icon size={local.size === "medium" ? 16 : 14} />}
       {local.children}
     </button>
   );

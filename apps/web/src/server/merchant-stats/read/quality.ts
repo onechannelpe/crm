@@ -13,6 +13,7 @@ import type {
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+import { monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";
 import { targetAsOfMonth } from "./target-as-of";
 
@@ -155,7 +156,7 @@ async function confidenceRows(
 
   return rows.map((row) => ({
     ruc: row.ruc,
-    month: row.month,
+    month: monthFromStorageDate(row.month),
     organizationName: row.legal_name,
     tradeName: row.trade_name,
     sellerName: displayName(row),
@@ -212,7 +213,7 @@ async function noTargetRows(
 
   return rows.map((row) => ({
     ruc: row.ruc,
-    month: row.month,
+    month: monthFromStorageDate(row.month),
     organizationName: row.legal_name,
     tradeName: row.trade_name,
     sellerName: displayName(row),
@@ -252,7 +253,7 @@ async function serialMismatchRows(
 
   return rows.map((row) => ({
     ruc: row.ruc,
-    month: row.sale_month,
+    month: monthFromStorageDate(row.sale_month),
     organizationName: row.legal_name,
     tradeName: row.trade_name,
     sellerName: null,

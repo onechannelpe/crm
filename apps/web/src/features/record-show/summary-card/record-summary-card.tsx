@@ -9,11 +9,12 @@ import styles from "./record-summary-card.module.css";
 
 type RecordSummaryCardProps = {
   lead: LeadDetailLeadView;
+  evaluatedAt: number;
 };
 
 export function RecordSummaryCard(props: RecordSummaryCardProps) {
   const relativeDate = createMemo(() =>
-    formatPastRelativeDate(props.lead.createdAt),
+    formatPastRelativeDate(props.lead.createdAt, props.evaluatedAt),
   );
 
   return (

@@ -10,9 +10,8 @@ export function StandardAppShell(props: RouteSectionProps) {
   return (
     <SidePanelProvider>
       <div class={shellStyles.main}>
-        <AppHeader />
         <main class={shellStyles.fixedBody}>
-          <MainContainerWithSidePanel>
+          <MainContainerWithSidePanel header={<AppHeader />}>
             {props.children}
           </MainContainerWithSidePanel>
         </main>

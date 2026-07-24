@@ -48,6 +48,7 @@
     "@simplewebauthn/server": "^13.3.1",
     "@solid-primitives/keyed": "^1.5.1",
     "@solid-primitives/resize-observer": "^2.1.5",
+    "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.16.1",
     "@solidjs/start": "2.0.0-beta.7",
     "arctic": "^3.7.0",

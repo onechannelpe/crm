@@ -39,5 +39,5 @@ export interface CreateTeamInviteInput {
   role: string;
   executiveCategory: string | null;
   teamId: string | null;
-  expiresAt: number | null;
+  expiresOn: string | null;
 }

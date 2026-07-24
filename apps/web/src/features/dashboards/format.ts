@@ -1,3 +1,5 @@
+import type { CalendarMonth } from "~/lib/time/calendar-date";
+
 const SOLES = new Intl.NumberFormat("es-PE", {
   style: "currency",
   currency: "PEN",
@@ -39,9 +41,8 @@ export function formatInteger(value: number): string {
   return INTEGER.format(value);
 }
 
-// "2026-05-01" -> "May 26"
-export function formatMonth(iso: string): string {
-  const [year, month] = iso.split("-").map(Number);
+export function formatMonth(value: CalendarMonth): string {
+  const [year, month] = value.split("-").map(Number);
   const label = MONTHS_ES[(month - 1 + 12) % 12] ?? "";
   return `${label} ${String(year).slice(2)}`;
 }

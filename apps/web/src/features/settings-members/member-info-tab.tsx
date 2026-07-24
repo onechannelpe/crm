@@ -12,21 +12,12 @@ import {
   updateMemberExpiryMutation,
   updateMemberProfileMutation,
 } from "~/lib/mutations/members";
+import { parseCalendarDate } from "~/lib/time/calendar-date";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-members.module.css";
 
 const PROFILE_SAVE_DELAY_MS = 400;
-
-function toDateInputValue(epochMs: number | null): string {
-  if (epochMs === null) return "";
-  const date = new Date(epochMs);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 export function MemberInfoTab(props: { detail: MemberDetail }) {
   const initialDetail = props.detail;
   const updateProfile = useAction(updateMemberProfileMutation);
@@ -39,7 +30,7 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
     secondSurname: initialDetail.secondSurname,
     teamId: initialDetail.teamId ?? "",
     category: initialDetail.executiveCategory ?? "",
-    expiresAt: toDateInputValue(initialDetail.expiresAt),
+    expiresOn: initialDetail.expiresOn ?? "",
   });
 
   const disabled = () => !props.detail.canManage;
@@ -84,7 +75,7 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
     try {
       await updateExpiry({
         userId: props.detail.id,
-        expiresAt: value ? new Date(`${value}T23:59:59`).getTime() : null,
+        expiresOn: value || null,
       });
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
@@ -171,11 +162,13 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
       >
         <DatePicker
           label="Fecha de vencimiento"
-          value={draft.expiresAt}
+          value={draft.expiresOn}
           disabled={disabled()}
           onInput={(value) => {
-            setDraft("expiresAt", value);
-            void saveExpiry(value);
+            setDraft("expiresOn", value);
+            if (!value || parseCalendarDate(value)) {
+              void saveExpiry(value);
+            }
           }}
         />
       </SettingsSection>

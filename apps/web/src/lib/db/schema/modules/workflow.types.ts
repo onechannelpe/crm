@@ -6,14 +6,19 @@ import type {
   LeadStage,
   CollectionMode,
   ProductScope,
+  InquiryState,
+  LeadStatus,
+  LeadPriority,
 } from "~/contracts/workflow/vocabulary";
 import type {
   BranchId,
   GeneratedId,
   IdColumn,
+  IntegrationJobId,
   NullableIdColumn,
   OrganizationId,
   UserId,
+  WorkflowInquiryId,
   WorkflowLeadId,
 } from "~/server/shared/ids";
 
@@ -38,6 +43,21 @@ export interface WorkflowLeadsTable {
   ticket: number;
   settlement_bank: SettlementBank;
   pos_count: number;
+}
+
+export interface WorkflowInquiriesTable {
+  id: GeneratedId<WorkflowInquiryId>;
+  ruc: string;
+  executive_id: IdColumn<UserId>;
+  state: InquiryState;
+  status: LeadStatus | null;
+  priority: LeadPriority | null;
+  answered_at: Date | null;
+  answered_by: NullableIdColumn<UserId>;
+  answered_by_job_id: NullableIdColumn<IntegrationJobId>;
+  converted_lead_id: NullableIdColumn<WorkflowLeadId>;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface WorkflowIdempotencyKeysTable {

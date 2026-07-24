@@ -1,6 +1,7 @@
 import type { RucMerchantStats } from "~/contracts/merchant-stats/views";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
+import { dateFromStorage, monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";
 
 export async function getMerchantStatsByRuc(
@@ -53,11 +54,11 @@ export async function getMerchantStatsByRuc(
       saleId: row.id,
       product: row.product,
       serialNumber: row.serial_number,
-      soldAt: row.sold_at,
+      soldAt: dateFromStorage(row.sold_at),
       m0Plus15dGpv: row.m0_plus_15d_gpv,
     })),
     monthlyGpv: monthly.map((row) => ({
-      month: row.month,
+      month: monthFromStorageDate(row.month),
       gpv: row.gpv,
       trx: row.trx,
     })),

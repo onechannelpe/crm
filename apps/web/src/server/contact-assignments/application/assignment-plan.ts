@@ -35,7 +35,11 @@ export async function planContactAssignments(
   actorUserId: UserId,
   repos: AssignmentPlanRepos,
 ): Promise<Result<ContactAssignmentPlan, DomainError>> {
-  const snapshotResult = await getLeadCapacitySnapshot(actorUserId, repos);
+  const snapshotResult = await getLeadCapacitySnapshot(
+    actorUserId,
+    repos,
+    new Date(),
+  );
   if (isErr(snapshotResult)) {
     return snapshotResult;
   }

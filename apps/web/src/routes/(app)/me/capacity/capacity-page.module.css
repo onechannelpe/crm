@@ -1,28 +1,17 @@
-.statusGrid {
-  display: grid;
-  gap: var(--spacing-3);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .status {
+  align-items: baseline;
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-}
-
-.statusTitle {
-  color: var(--foreground);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
+  gap: var(--spacing-2);
 }
 
 .statusValue {
   color: var(--foreground);
-  font-size: var(--font-size-heading-md);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .statusCaption {
-  color: var(--muted-foreground);
+  color: var(--foreground-tertiary);
   font-size: var(--font-size-caption);
 }
 
@@ -30,13 +19,20 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
 }
 
-.formTitle {
-  color: var(--foreground);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
-  margin: 0;
+.formFields {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.amountField {
+  width: 120px;
+}
+
+.reasonField {
+  flex: 1;
 }
 
 .formActions {
@@ -45,7 +41,11 @@
 }
 
 @media (max-width: 768px) {
-  .statusGrid {
-    grid-template-columns: 1fr;
+  .formFields {
+    flex-direction: column;
+  }
+
+  .amountField {
+    width: 100%;
   }
 }

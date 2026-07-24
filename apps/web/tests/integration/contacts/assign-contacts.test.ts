@@ -7,13 +7,13 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { appCalendarDateAt, appDayRange } from "~/lib/time/app-time";
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
 import { external, type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type { RecordCandidate } from "~/server/shared/engine/record-contract";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { currentDailyPeriod } from "~/server/shared/time";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;
 const BRANCH_ID = TEST_FIXTURES.branches.lima.id;
@@ -120,9 +120,9 @@ describe("assignContacts", () => {
     expect(result.value).toEqual({ requested: 0, assigned: 0 });
     expect(engineCalled).toBe(false);
 
-    const { date } = currentDailyPeriod(new Date());
+    const range = appDayRange(appCalendarDateAt(new Date()));
     const reservations =
-      await ctx.repos.leadUsageReservations.findByUserAndDate(ACTOR_ID, date);
+      await ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range);
     expect(reservations).toHaveLength(1);
   });
 
@@ -163,10 +163,10 @@ describe("assignContacts", () => {
       await ctx.repos.contactAssignments.countActiveByUser(ACTOR_ID);
     expect(activeCount).toBe(2);
 
-    const { date } = currentDailyPeriod(new Date());
+    const range = appDayRange(appCalendarDateAt(new Date()));
     const [reservations, commits] = await Promise.all([
-      ctx.repos.leadUsageReservations.findByUserAndDate(ACTOR_ID, date),
-      ctx.repos.leadUsageCommits.findByUserAndDate(ACTOR_ID, date),
+      ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range),
+      ctx.repos.leadUsageCommits.findByUserAndRange(ACTOR_ID, range),
     ]);
     expect(reservations).toHaveLength(1);
     expect(reservations[0]).toMatchObject({ amount: 2, status: "committed" });
@@ -181,9 +181,9 @@ describe("assignContacts", () => {
     if (!result.ok) throw new Error("expected success");
     expect(result.value).toEqual({ requested: BUFFER_TARGET, assigned: 1 });
 
-    const { date } = currentDailyPeriod(new Date());
+    const range = appDayRange(appCalendarDateAt(new Date()));
     const reservations =
-      await ctx.repos.leadUsageReservations.findByUserAndDate(ACTOR_ID, date);
+      await ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range);
     expect(reservations).toHaveLength(1);
     expect(reservations[0]).toMatchObject({ amount: 1, status: "committed" });
   });
@@ -198,9 +198,9 @@ describe("assignContacts", () => {
       request_id: "req-leads-1",
     });
 
-    const { date } = currentDailyPeriod(new Date());
+    const range = appDayRange(appCalendarDateAt(new Date()));
     const reservations =
-      await ctx.repos.leadUsageReservations.findByUserAndDate(ACTOR_ID, date);
+      await ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range);
     expect(reservations).toHaveLength(1);
     expect(reservations[0].status).toBe("cancelled");
   });
@@ -212,9 +212,9 @@ describe("assignContacts", () => {
       runAssign(engineThrowing("engine connection lost")),
     ).rejects.toThrow("engine connection lost");
 
-    const { date } = currentDailyPeriod(new Date());
+    const range = appDayRange(appCalendarDateAt(new Date()));
     const reservations =
-      await ctx.repos.leadUsageReservations.findByUserAndDate(ACTOR_ID, date);
+      await ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range);
     expect(reservations).toHaveLength(1);
     expect(reservations[0].status).toBe("cancelled");
   });

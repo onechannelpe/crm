@@ -1,3 +1,5 @@
+import type { CalendarDate, CalendarMonth } from "~/lib/time/calendar-date";
+
 import type {
   AttributionConfidence,
   AttributionMethod,
@@ -7,7 +9,7 @@ import type {
 export interface BookFilter {
   branchId?: string;
   sellerUserId?: string;
-  month?: string;
+  month?: CalendarMonth;
   product?: string;
 }
 
@@ -53,7 +55,7 @@ export interface CulqiUserGpvRow {
 }
 
 export interface CohortRampSeries {
-  saleMonth: string;
+  saleMonth: CalendarMonth;
   deviceCount: number;
   projectedGpv: number;
   points: Array<GpvPoint & { offset: CohortOffset }>;
@@ -61,14 +63,15 @@ export interface CohortRampSeries {
 
 export interface CohortSaleRow {
   saleId: string;
+  merchantId: string;
   ruc: string;
   tradeName: string | null;
   serialNumber: string | null;
   product: string;
-  saleMonth: string;
-  soldAt: string;
-  activatedAt: string | null;
-  lastTransactionAt: string | null;
+  saleMonth: CalendarMonth;
+  soldAt: CalendarDate;
+  activatedAt: CalendarDate | null;
+  lastTransactionAt: CalendarDate | null;
   clientType: string | null;
   organizationId: string | null;
   sellerName: string | null;
@@ -83,14 +86,14 @@ export interface MerchantDevice {
   saleId: string;
   product: string;
   serialNumber: string | null;
-  soldAt: string;
+  soldAt: CalendarDate;
   m0Plus15dGpv: number | null;
 }
 
 export interface RucMerchantStats {
   projectedGpv: number | null;
   devices: MerchantDevice[];
-  monthlyGpv: Array<GpvPoint & { month: string }>;
+  monthlyGpv: Array<GpvPoint & { month: CalendarMonth }>;
   sellerName: string | null;
 }
 
@@ -106,7 +109,7 @@ export type QualitySummary = Record<QualityIssue, number>;
 
 export interface QualityRow {
   ruc: string;
-  month: string;
+  month: CalendarMonth;
   organizationName: string | null;
   tradeName: string | null;
   sellerName: string | null;
@@ -121,6 +124,6 @@ export interface QualityRow {
 export interface FilterOptions {
   branches: Array<{ id: string; name: string }>;
   sellers: Array<{ userId: string; name: string }>;
-  months: string[];
+  months: CalendarMonth[];
   products: string[];
 }

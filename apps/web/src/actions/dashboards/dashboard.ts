@@ -10,6 +10,7 @@ import type {
   LifecycleSummary,
   Page,
 } from "~/contracts/merchant-stats/views";
+import { requestMerchantGpvExport } from "~/server/merchant-stats/export/request-export";
 import { getAttainment as readAttainment } from "~/server/merchant-stats/read/attainment";
 import {
   getCohortRamp,
@@ -35,7 +36,7 @@ function readFilter(r: Reader<DomainError>): BookFilter {
   return {
     branchId: r.optStr("branchId") ?? undefined,
     sellerUserId: r.optStr("sellerUserId") ?? undefined,
-    month: r.optStr("month") ?? undefined,
+    month: r.optCalendarMonth("month") ?? undefined,
     product: r.optStr("product") ?? undefined,
   };
 }
@@ -63,7 +64,7 @@ export async function getAttainment(raw: unknown): Promise<Attainment> {
     parse: () =>
       parseObject(raw, validationFail, (r) => ({
         filter: r.obj("filter", readFilter),
-        month: r.str("month"),
+        month: r.calendarMonth("month"),
       })),
 
     execute: async (_ctx, input) =>
@@ -87,7 +88,7 @@ export async function getCulqiUserGpv(
     parse: () =>
       parseObject(raw, validationFail, (r) => ({
         filter: r.obj("filter", readFilter),
-        month: r.str("month"),
+        month: r.calendarMonth("month"),
       })),
 
     execute: async (_ctx, input) =>
@@ -169,5 +170,35 @@ export async function getFilterOptions(): Promise<FilterOptions> {
 
     execute: async () =>
       Ok(await readFilterOptions(getServerRuntime().infra.db)),
+  });
+}
+
+export async function requestMerchantGpvExportDownloadToken(
+  raw: unknown,
+): Promise<{ token: string }> {
+  return runAction({
+    name: "dashboards.merchantGpv.export",
+    access: { kind: "permission", permission: "dashboards:read" },
+
+    parse: () =>
+      parseObject(raw, validationFail, (r) => ({
+        filter: r.obj("filter", readFilter),
+      })),
+
+    audit: ({ filter }) => ({
+      branchId: filter.branchId ?? null,
+      sellerUserId: filter.sellerUserId ?? null,
+      month: filter.month ?? null,
+      product: filter.product ?? null,
+    }),
+
+    execute: (ctx, input) => {
+      const runtime = getServerRuntime();
+      return requestMerchantGpvExport(ctx, input.filter, {
+        db: runtime.infra.db,
+        filesRepo: runtime.files.repo,
+        filesStorage: runtime.files.storage,
+      });
+    },
   });
 }

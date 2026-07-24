@@ -2,6 +2,10 @@ import type {
   BookFilter,
   CulqiUserGpvRow,
 } from "~/contracts/merchant-stats/views";
+import {
+  calendarMonthStart,
+  type CalendarMonth,
+} from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
 // Culqi's `vendedor` is the registered usuario, not the crm seller. This is a
@@ -9,12 +13,12 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 export async function getCulqiUserGpv(
   db: DatabaseExecutor,
   filter: BookFilter,
-  month: string,
+  month: CalendarMonth,
 ): Promise<CulqiUserGpvRow[]> {
   const rows = await db
     .selectFrom("merchant_sale_gpv as g")
     .innerJoin("merchant_sales as s", "s.id", "g.sale_id")
-    .where("g.realized_month", "=", month)
+    .where("g.realized_month", "=", calendarMonthStart(month))
     .$if(filter.product != null, (qb) =>
       qb.where("s.product", "=", filter.product ?? ""),
     )

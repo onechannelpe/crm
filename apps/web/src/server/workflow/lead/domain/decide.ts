@@ -246,10 +246,7 @@ export function reviewLead(
   }
 
   if (input.status !== null && input.priority !== null) {
-    const toStage = resolveReviewTransition({
-      status: input.status,
-      priority: input.priority,
-    });
+    const toStage = resolveReviewTransition(input.status);
     events.push(
       createHistoryEvent({
         leadId: state.id,
@@ -291,10 +288,7 @@ export function qualifyLead(
   if (!authz.ok) return authz;
   if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
 
-  const toStage = resolveReviewTransition({
-    status: input.status,
-    priority: input.priority,
-  });
+  const toStage = resolveReviewTransition(input.status);
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({

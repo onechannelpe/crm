@@ -1,5 +1,6 @@
 import { sql } from "kysely";
 
+import { calendarMonthStart } from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { MerchantReportId, MerchantSaleId } from "~/server/shared/ids";
 
@@ -85,7 +86,7 @@ function toSaleValues(row: SourceRow, reportId: MerchantReportId, now: Date) {
     serial_number: row.serialNumber,
     ruc: row.ruc,
     sold_at: row.soldAt,
-    sale_month: row.saleMonth,
+    sale_month: calendarMonthStart(row.saleMonth),
     trade_name: row.tradeName,
     legal_name: row.legalName,
     culqi_user_code: row.culqiUserCode,

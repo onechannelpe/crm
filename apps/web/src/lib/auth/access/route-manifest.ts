@@ -14,6 +14,7 @@ export type AppPath =
   | "/team/requests"
   | "/inventory"
   | "/records"
+  | "/inquiries"
   | "/fulfillment"
   | "/rate-simulator"
   | "/dashboard"
@@ -48,6 +49,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/team/requests": { permission: "capacity:approve", landingPriority: 7 },
   "/inventory": { permission: "inventory:read", landingPriority: 5 },
   "/records": {},
+  "/inquiries": { permission: "lead:register" },
   "/fulfillment": { permission: "fulfillment:manage" },
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
   "/dashboard": { permission: "lead:work", landingPriority: 1 },

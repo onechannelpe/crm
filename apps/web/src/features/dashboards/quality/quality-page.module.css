@@ -1,7 +1,17 @@
+.page {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: var(--spacing-3);
+}
+
 .title {
-  margin: 0 0 var(--spacing-4);
-  font-size: var(--font-size-lg);
-  font-weight: 600;
+  margin: 0 0 var(--spacing-3);
+  padding: 0 var(--spacing-3);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .detail {

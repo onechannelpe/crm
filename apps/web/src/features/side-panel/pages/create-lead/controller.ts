@@ -7,7 +7,6 @@ import {
   addOptimisticLead,
   createOptimisticLeadRow,
 } from "~/features/workflow/data/optimistic-leads";
-import { revalidateWorkflowLeadList } from "~/features/workflow/data/revalidate-workflow";
 import {
   toCommercialScopePayload,
   type CommercialScopeFormValues,
@@ -25,6 +24,7 @@ type CreateLeadResult = {
 
 type CreateLeadControllerInput = {
   draftRuc: Accessor<string>;
+  inquiryId: Accessor<string | null>;
   validRuc: Accessor<string | null>;
   previewName: Accessor<string | null>;
   scope: Accessor<CommercialScopeFormValues>;
@@ -88,9 +88,9 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
     try {
       const result = await createCommand.run({
         ruc,
+        inquiryId: input.inquiryId() ?? undefined,
         ...scopePayload.value,
       });
-      await revalidateWorkflowLeadList();
       optimisticTransactions.commit(txId);
       input.onLeadCreated({ leadId: result.leadId, ruc });
     } catch (submitError) {

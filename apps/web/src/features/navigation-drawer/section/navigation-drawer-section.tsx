@@ -26,7 +26,10 @@ export function NavigationDrawerSection(props: NavigationDrawerSectionProps) {
       <div
         class={styles.sectionInner}
         style={{
-          width: isMobile() || isSettingsDrawer() ? "100%" : "calc(100% - 8px)",
+          width:
+            isMobile() || isSettingsDrawer()
+              ? "100%"
+              : "calc(100% - var(--spacing-2))",
         }}
       >
         {props.children}

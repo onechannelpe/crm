@@ -1,4 +1,4 @@
-import { action } from "@solidjs/router";
+import { action, json } from "@solidjs/router";
 
 import {
   chooseFulfillmentProduct,
@@ -10,6 +10,7 @@ import {
   uploadFulfillmentPaymentProof,
   validateFulfillmentPayment,
 } from "~/actions/workflow/commands/fulfillment";
+import { requestInquiryCreation } from "~/actions/workflow/commands/inquiries";
 import { addLeadNote } from "~/actions/workflow/commands/interactions";
 import {
   requestRateAcceptance,
@@ -41,6 +42,7 @@ import type {
   AddVenueAccountsInput,
   ChooseFulfillmentProductInput,
   CloseLeadInput,
+  CreateInquiryInput,
   CreateLeadInput,
   CreateVenueInput,
   EditCommercialScopeInput,
@@ -59,9 +61,20 @@ import type {
   UpdateVenueInput,
 } from "~/contracts/workflow/inputs";
 
-export const createLeadMutation = action(
-  (input: CreateLeadInput) => requestLeadCreation(input),
-  "workflow.createLead",
+import { inquiryListQuery, leadListQuery } from "./queries";
+
+export const createLeadMutation = action(async (input: CreateLeadInput) => {
+  const result = await requestLeadCreation(input);
+  const revalidate = input.inquiryId
+    ? [leadListQuery.key, inquiryListQuery.key]
+    : leadListQuery.key;
+
+  return json(result, { revalidate });
+}, "workflow.createLead");
+
+export const createInquiryMutation = action(
+  (input: CreateInquiryInput) => requestInquiryCreation(input),
+  "workflow.createInquiry",
 );
 
 export const addNoteMutation = action(

@@ -17,8 +17,11 @@ export function TeamInviteManagementSection() {
           title="Invitar por correo"
           description="Envía una invitación por correo a nuevos miembros del equipo."
         >
-          <InviteForm setup={im()} />
-          <PendingInvitesTable invites={im().pendingInvites} />
+          <InviteForm setup={im()} evaluatedAt={im().evaluatedAt} />
+          <PendingInvitesTable
+            invites={im().pendingInvites}
+            evaluatedAt={im().evaluatedAt}
+          />
         </SettingsSection>
       )}
     </Show>

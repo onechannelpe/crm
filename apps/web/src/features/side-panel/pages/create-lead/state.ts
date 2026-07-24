@@ -35,6 +35,7 @@ export function useCreateLeadPageState() {
   }
 
   const draftRuc = createMemo(() => pageState().draft.ruc);
+  const draftInquiryId = createMemo(() => pageState().draft.inquiryId);
   const draftScope = createMemo<CommercialScopeFormValues>(() => {
     const draft = pageState().draft;
     return {
@@ -55,6 +56,7 @@ export function useCreateLeadPageState() {
 
   return {
     draftRuc,
+    draftInquiryId,
     draftScope,
     activeTab,
     label,

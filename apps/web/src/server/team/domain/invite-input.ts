@@ -3,6 +3,8 @@ import {
   isExecutiveCategoryValue,
   type ExecutiveCategoryValue,
 } from "~/lib/db/types";
+import { appCalendarDateAt, appDayRange } from "~/lib/time/app-time";
+import { addCalendarDays, type CalendarDate } from "~/lib/time/calendar-date";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { TeamId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -20,14 +22,15 @@ export type TeamInviteShape = {
   role: Role;
   executiveCategory: string | null;
   teamId: TeamId | null;
-  expiresAt: number | null;
+  expiresOn: CalendarDate | null;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
+const MIN_EXPIRY_DAYS = 7;
 
 export function validateTeamInviteInput(
   input: TeamInviteShape,
+  now: Date,
 ): Result<CreateTeamInviteCommand, DomainError> {
   if (!EMAIL_PATTERN.test(input.email)) {
     return Err(fail("invalid_email"));
@@ -46,7 +49,7 @@ export function validateTeamInviteInput(
     return Err(fail("invalid_team_id"));
   }
 
-  const expiresAt = validateExpiry(input.expiresAt);
+  const expiresAt = validateExpiry(input.expiresOn, now);
 
   if (!expiresAt.ok) {
     return expiresAt;
@@ -82,19 +85,17 @@ function resolveExecutiveCategory(
 }
 
 function validateExpiry(
-  expiresAt: number | null,
+  expiresOn: CalendarDate | null,
+  now: Date,
 ): Result<Date | null, DomainError> {
-  if (expiresAt === null) {
+  if (expiresOn === null) {
     return Ok(null);
   }
 
-  if (!Number.isInteger(expiresAt) || expiresAt < 1) {
-    return Err(fail("invalid_expires_at"));
+  const minimum = addCalendarDays(appCalendarDateAt(now), MIN_EXPIRY_DAYS);
+  if (expiresOn < minimum) {
+    return Err(fail("expires_on_too_soon"));
   }
 
-  if (expiresAt <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
-    return Err(fail("expires_at_too_soon"));
-  }
-
-  return Ok(new Date(expiresAt));
+  return Ok(appDayRange(expiresOn).endExclusive);
 }

@@ -7,7 +7,7 @@ import type { RecordContext } from "~/features/record-show/model/record-context"
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import { addNoteMutation } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
-import { formatDateTime } from "~/lib/utils";
+import { formatAppDateTime } from "~/lib/time/app-time";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./notas.module.css";
@@ -101,7 +101,7 @@ function NotasView(props: { data: LeadDetailView }) {
                 <div class={styles.noteHeader}>
                   <span class={styles.noteAuthor}>{note.actorDisplayName}</span>
                   <span class={styles.noteDate}>
-                    {formatDateTime(note.occurredAt)}
+                    {formatAppDateTime(note.occurredAt)}
                   </span>
                 </div>
                 <p class={styles.noteBody}>{note.description}</p>

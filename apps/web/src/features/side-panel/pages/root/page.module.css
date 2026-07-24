@@ -25,10 +25,10 @@
 }
 
 .actionItem:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
 }
 
 .actionItem:focus {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   outline: none;
 }

@@ -18,7 +18,7 @@ export type DataGridPagination = {
   onPreviousPage: () => void;
 };
 
-export type DataGridProps<T extends { id: string }> = {
+export type DataGridProps<T> = {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
   columns: ReadonlyArray<DataGridColumn<T>>;
@@ -30,6 +30,8 @@ export type DataGridProps<T extends { id: string }> = {
   onRowOpen?: (row: T) => void;
   pagination?: DataGridPagination;
   reorder?: DataGridReorderConfig<T>;
+  /** Stable identity per row. The grid keys, selects, and reorders on this. */
+  rowId: (row: T) => string;
   rowOpenIndicator?: DataGridRowOpenIndicator;
   selection?: DataGridSelectionController;
   source: DataGridSource<T>;

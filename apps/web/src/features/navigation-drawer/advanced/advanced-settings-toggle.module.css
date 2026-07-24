@@ -27,7 +27,7 @@
   height: 16px;
   border: 0;
   border-radius: 10px;
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   padding: 0;
   display: inline-flex;
   align-items: center;

@@ -5,12 +5,18 @@ import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { WorkflowLeadId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import { convertInquiryOnRegistration } from "~/server/workflow/inquiry/convert";
+import {
+  createInquiryRepo,
+  type InquiryRow,
+} from "~/server/workflow/inquiry/repo";
 import { reassignLead } from "~/server/workflow/lead/domain/decide";
 import { createHistoryEvent } from "~/server/workflow/lead/domain/history";
 import { resolvePendingQuotationPolicy } from "~/server/workflow/lead/domain/pending-quotation";
 import {
   createLeadDraft,
   type LeadCommercialScope,
+  type LeadState,
 } from "~/server/workflow/lead/domain/state";
 
 import { runLeadTransaction } from "../write/transition";
@@ -23,6 +29,7 @@ type RegistrationPorts = {
 export function reassignRegisteredLead(input: {
   leadId: WorkflowLeadId;
   actor: WorkflowActor;
+  inquiry?: InquiryRow;
   ports: RegistrationPorts;
 }): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   return runLeadTransaction(input.ports, async (ctx) => {
@@ -43,6 +50,16 @@ export function reassignRegisteredLead(input: {
     });
     if (!committed.ok) return committed;
 
+    // The reassigned lead already carries its own status and priority, so the
+    // inquiry only links up; no answer carry-over.
+    if (input.inquiry) {
+      await createInquiryRepo(ctx.tx).markConverted(
+        input.inquiry.id,
+        state.id,
+        ctx.now,
+      );
+    }
+
     return Ok({ leadId: state.id });
   });
 }
@@ -53,6 +70,7 @@ export function createRegisteredLead(input: {
   ruc: string;
   commercialScope: LeadCommercialScope;
   enrichment: { legalName: string | null; address: string | null } | null;
+  inquiry?: InquiryRow;
   ports: RegistrationPorts;
 }): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   return runLeadTransaction(input.ports, (ctx) =>
@@ -125,6 +143,21 @@ export function createRegisteredLead(input: {
           }),
         ]);
         if (!appended.ok) return appended;
+
+        if (input.inquiry) {
+          const bornState: LeadState = {
+            ...draft.value,
+            id: leadId,
+            version: 0,
+            deletedAt: null,
+          };
+          const converted = await convertInquiryOnRegistration(ctx, {
+            inquiry: input.inquiry,
+            leadId,
+            bornState,
+          });
+          if (!converted.ok) return converted;
+        }
 
         return Ok({ leadId });
       },

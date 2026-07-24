@@ -10,6 +10,7 @@ import {
   type EventLogTable,
 } from "~/contracts/event-logs/event-log";
 import type { Database } from "~/lib/db/types";
+import { appDayRange } from "~/lib/time/app-time";
 import { invalid, type DomainError } from "~/server/shared/domain-error";
 import { EventId, UserId } from "~/server/shared/ids";
 import { parsePositiveIntegerAtMost } from "~/server/shared/query-window";
@@ -28,14 +29,14 @@ type Cursor = { timestamp: number; id: string };
 
 interface WindowBound {
   from?: Date;
-  to?: Date;
+  toExclusive?: Date;
 }
 
 function resolveWindow(filters: EventLogFilters | undefined): WindowBound {
   const range = filters?.dateRange;
   return {
-    from: range?.start !== undefined ? new Date(range.start) : undefined,
-    to: range?.end !== undefined ? new Date(range.end) : undefined,
+    from: range?.start ? appDayRange(range.start).start : undefined,
+    toExclusive: range?.end ? appDayRange(range.end).endExclusive : undefined,
   };
 }
 
@@ -67,7 +68,7 @@ export function createEventLogsService(db: Kysely<Database>) {
   ): Promise<EventLogQueryResult> {
     const window = resolveWindow(filters);
     const from = window.from;
-    const to = window.to;
+    const to = window.toExclusive;
     const eventType = filters?.eventType?.trim();
     const actorUserId = filters?.actorUserId?.trim();
     const actorId = actorUserId ? UserId.trust(actorUserId) : undefined;
@@ -96,8 +97,8 @@ export function createEventLogsService(db: Kysely<Database>) {
       countQuery = countQuery.where("events.occurred_at", ">=", from);
     }
     if (to) {
-      query = query.where("events.occurred_at", "<=", to);
-      countQuery = countQuery.where("events.occurred_at", "<=", to);
+      query = query.where("events.occurred_at", "<", to);
+      countQuery = countQuery.where("events.occurred_at", "<", to);
     }
     if (eventType) {
       const pattern = `%${eventType}%`;
@@ -161,7 +162,7 @@ export function createEventLogsService(db: Kysely<Database>) {
   ): Promise<EventLogQueryResult> {
     const window = resolveWindow(filters);
     const from = window.from;
-    const to = window.to;
+    const to = window.toExclusive;
     const eventType = filters?.eventType?.trim();
     const actorUserId = filters?.actorUserId?.trim();
     const actorId = actorUserId ? UserId.trust(actorUserId) : undefined;
@@ -178,8 +179,8 @@ export function createEventLogsService(db: Kysely<Database>) {
       countQuery = countQuery.where("created_at", ">=", from);
     }
     if (to) {
-      query = query.where("created_at", "<=", to);
-      countQuery = countQuery.where("created_at", "<=", to);
+      query = query.where("created_at", "<", to);
+      countQuery = countQuery.where("created_at", "<", to);
     }
     if (eventType) {
       const pattern = `%${eventType}%`;
@@ -228,7 +229,7 @@ export function createEventLogsService(db: Kysely<Database>) {
   ): Promise<EventLogQueryResult> {
     const window = resolveWindow(filters);
     const from = window.from;
-    const to = window.to;
+    const to = window.toExclusive;
     const eventType = filters?.eventType?.trim();
 
     let query = db.selectFrom("auth_funnel_events").selectAll();
@@ -242,8 +243,8 @@ export function createEventLogsService(db: Kysely<Database>) {
       countQuery = countQuery.where("created_at", ">=", from);
     }
     if (to) {
-      query = query.where("created_at", "<=", to);
-      countQuery = countQuery.where("created_at", "<=", to);
+      query = query.where("created_at", "<", to);
+      countQuery = countQuery.where("created_at", "<", to);
     }
     if (eventType) {
       const predicate = sql<boolean>`event_name ilike ${`%${eventType}%`}`;

@@ -27,7 +27,7 @@
 
 .pageState {
   align-items: center;
-  color: var(--foreground-muted);
+  color: var(--foreground-tertiary);
   display: flex;
   flex: 1;
   justify-content: center;

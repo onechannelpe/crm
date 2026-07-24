@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 
-import { formatDateTime } from "~/lib/utils";
+import { formatAppDateTime } from "~/lib/time/app-time";
 
 import { isLinkedEvent, type Event } from "../../model/event";
 
@@ -29,7 +29,9 @@ export function EventRowContent(props: EventRowContentProps) {
             {props.event.subject}
           </span>
         </div>
-        <div class={styles.date}>{formatDateTime(props.event.createdAt)}</div>
+        <div class={styles.date}>
+          {formatAppDateTime(props.event.createdAt)}
+        </div>
       </div>
 
       <Show when={hasDescription()}>

@@ -6,6 +6,8 @@ import type {
 } from "~/contracts/team/bulk-import";
 import type { Role } from "~/lib/auth/access/rbac";
 import { isExecutiveCategoryValue } from "~/lib/db/types";
+import { appCalendarDateAt, appDayRange } from "~/lib/time/app-time";
+import { addCalendarDays, parseCalendarDate } from "~/lib/time/calendar-date";
 import {
   parseCsvRows,
   readFirstNonEmptyCsvRow,
@@ -25,7 +27,7 @@ type BulkImportError = {
   message: string;
 };
 
-const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
+const MIN_EXPIRY_DAYS = 7;
 
 export async function applyImport(
   rows: BulkImportRow[],
@@ -59,7 +61,9 @@ export async function applyImport(
         role: safeRole,
         executiveCategory: row.executiveCategory,
         teamId: null,
-        expiresAt: row.expiresAt ? new Date(row.expiresAt) : null,
+        expiresAt: row.expiresOn
+          ? appDayRange(row.expiresOn).endExclusive
+          : null,
       });
 
       if (!result.ok) {
@@ -192,6 +196,7 @@ function readCell(
 export function parseAndValidateCsvRows(
   csv: string,
   role: Role,
+  now: Date,
 ): Result<BulkParseResult, BulkImportError> {
   if (csv.trim().length === 0) {
     return Err({ reason: "parse_error", message: "El archivo CSV está vacío" });
@@ -210,7 +215,10 @@ export function parseAndValidateCsvRows(
   const rows = parseCsvRows(csv, layout.delimiter);
   const valid: BulkImportRow[] = [];
   const errors: BulkRowError[] = [];
-  const minimumExpiresAt = Date.now() + MIN_EXPIRY_OFFSET_MS;
+  const minimumExpiresOn = addCalendarDays(
+    appCalendarDateAt(now),
+    MIN_EXPIRY_DAYS,
+  );
 
   for (const row of rows) {
     if (row.rowNumber <= layout.headerRowNumber) {
@@ -271,12 +279,12 @@ export function parseAndValidateCsvRows(
       continue;
     }
 
-    let expiresAt: number | null = null;
+    let expiresOn: BulkImportRow["expiresOn"] = null;
 
     if (rawDate) {
-      const parsed = Date.parse(rawDate);
+      const parsed = parseCalendarDate(rawDate);
 
-      if (isNaN(parsed)) {
+      if (!parsed) {
         errors.push({
           row: row.rowNumber,
           message: `Fecha inválida: ${rawDate}`,
@@ -284,7 +292,7 @@ export function parseAndValidateCsvRows(
         continue;
       }
 
-      if (parsed <= minimumExpiresAt) {
+      if (parsed < minimumExpiresOn) {
         errors.push({
           row: row.rowNumber,
           message: `La fecha de vencimiento debe ser al menos 7 días en el futuro: ${rawDate}`,
@@ -292,7 +300,7 @@ export function parseAndValidateCsvRows(
         continue;
       }
 
-      expiresAt = parsed;
+      expiresOn = parsed;
     }
 
     let executiveCategory: BulkImportRow["executiveCategory"] = null;
@@ -314,7 +322,7 @@ export function parseAndValidateCsvRows(
       secondSurname,
       names,
       email: rawEmail.trim().toLowerCase(),
-      expiresAt,
+      expiresOn,
       executiveCategory,
     });
   }

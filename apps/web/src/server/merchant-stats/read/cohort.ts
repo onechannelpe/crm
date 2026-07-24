@@ -5,10 +5,11 @@ import type {
   GpvPoint,
   Page,
 } from "~/contracts/merchant-stats/views";
-import { COHORT_OFFSETS } from "~/contracts/merchant-stats/vocabulary";
+import { calendarMonthStart } from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { MerchantSaleId } from "~/server/shared/ids";
 
+import { dateFromStorage, monthFromStorageDate } from "../storage-month";
 import { creditFilter } from "./filter";
 import { displayName } from "./names";
 import { targetAsOfSaleMonth } from "./target-as-of";
@@ -44,7 +45,7 @@ export async function getCohortRamp(
   const byCohort = new Map<string, CohortRampSeries>();
   for (const row of rows) {
     const series = byCohort.get(row.sale_month) ?? {
-      saleMonth: row.sale_month,
+      saleMonth: monthFromStorageDate(row.sale_month),
       deviceCount: 0,
       projectedGpv: targets.get(row.sale_month) ?? 0,
       points: [],
@@ -94,9 +95,10 @@ async function cohortTargets(
 export async function getCohortRows(
   db: DatabaseExecutor,
   filter: BookFilter,
-  page: Page,
+  page?: Page,
 ): Promise<CohortSaleRow[]> {
-  const sales = await db
+  const selectedMonth = filter.month ? calendarMonthStart(filter.month) : null;
+  const salesQuery = db
     .selectFrom("merchant_sales as s")
     .innerJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "s.ruc").onRef("a.month", "=", "s.sale_month"),
@@ -106,14 +108,15 @@ export async function getCohortRows(
     .leftJoin("users as u", "u.id", "a.seller_user_id")
     .leftJoin("branches as b", "b.id", "a.branch_id")
     .where((eb) => creditFilter(eb, filter))
-    .$if(filter.month != null, (qb) =>
-      qb.where("s.sale_month", "=", filter.month ?? ""),
+    .$if(selectedMonth !== null, (qb) =>
+      qb.where("s.sale_month", "=", selectedMonth ?? ""),
     )
     .$if(filter.product != null, (qb) =>
       qb.where("s.product", "=", filter.product ?? ""),
     )
     .select([
       "s.id as sale_id",
+      "s.merchant_id",
       "s.ruc",
       "s.trade_name",
       "s.serial_number",
@@ -134,9 +137,10 @@ export async function getCohortRows(
     ])
     .orderBy("s.sale_month", "desc")
     .orderBy("s.ruc")
-    .limit(page.limit)
-    .offset(page.offset)
-    .execute();
+    .orderBy("s.id");
+  const sales = page
+    ? await salesQuery.limit(page.limit).offset(page.offset).execute()
+    : await salesQuery.execute();
 
   if (sales.length === 0) return [];
 
@@ -150,25 +154,30 @@ export async function getCohortRows(
       points.get(sale.sale_id) ?? new Map<number, GpvPoint>();
     return {
       saleId: sale.sale_id,
+      merchantId: sale.merchant_id,
       ruc: sale.ruc,
       tradeName: sale.trade_name,
       serialNumber: sale.serial_number,
       product: sale.product,
-      saleMonth: sale.sale_month,
-      soldAt: sale.sold_at,
-      activatedAt: sale.activated_at,
-      lastTransactionAt: sale.last_transaction_at,
+      saleMonth: monthFromStorageDate(sale.sale_month),
+      soldAt: dateFromStorage(sale.sold_at),
+      activatedAt: sale.activated_at
+        ? dateFromStorage(sale.activated_at)
+        : null,
+      lastTransactionAt: sale.last_transaction_at
+        ? dateFromStorage(sale.last_transaction_at)
+        : null,
       clientType: sale.client_type,
       organizationId: sale.organization_id,
       sellerName: displayName(sale),
       culqiUserName: sale.culqi_user_name,
       branchName: sale.branch_name,
       projectedGpv: sale.projected_gpv,
-      months: COHORT_OFFSETS.map((offset) => ({
+      months: Array.from(bySaleOffset, ([offset, point]) => ({
         offset,
-        gpv: bySaleOffset.get(offset)?.gpv ?? 0,
-        trx: bySaleOffset.get(offset)?.trx ?? 0,
-      })),
+        gpv: point.gpv,
+        trx: point.trx,
+      })).toSorted((a, b) => a.offset - b.offset),
       m0Plus15d:
         sale.m0_plus_15d_gpv == null
           ? null

@@ -1,18 +1,19 @@
 import { createAsync, useAction } from "@solidjs/router";
-import { createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, For, Show } from "solid-js";
 
-import Activity from "~/components/icons/activity";
-import CircleQuestionMark from "~/components/icons/circle-question-mark";
-import Lock from "~/components/icons/lock";
-import UserRound from "~/components/icons/user-round";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Checkbox } from "~/components/ui/input/checkbox";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
-import { DataTable } from "~/components/ui/layout/data-table";
-import { FilterBar } from "~/components/ui/layout/filter-bar";
-import type { TableColumn } from "~/components/ui/layout/table-column";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/layout/table";
 import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import { upsertAuditPolicyMutation } from "~/lib/mutations/audit";
@@ -25,46 +26,17 @@ import styles from "./settings-page.module.css";
 
 type PolicyRiskLevel = "high" | "medium" | "low";
 
-const SECURITY_POLICY_COLUMNS = [
-  {
-    key: "action",
-    label: "Acción",
-    icon: Activity,
-    minWidth: 220,
-    grow: true,
-    sticky: true,
-    renderCell: (item) => <span class={styles.strong}>{item.action}</span>,
-  },
-  {
-    key: "riskLevel",
-    label: "Riesgo",
-    icon: CircleQuestionMark,
-    width: 120,
-    renderCell: (item) => item.riskLevel,
-  },
-  {
-    key: "isActive",
-    label: "Activo",
-    icon: Lock,
-    width: 100,
-    renderCell: (item) => (item.isActive ? "sí" : "no"),
-  },
-  {
-    key: "isProtected",
-    label: "Protegido",
-    icon: Lock,
-    width: 120,
-    renderCell: (item) => (item.isProtected ? "sí" : "no"),
-  },
-  {
-    key: "updatedByUserId",
-    label: "Actualizada por",
-    icon: UserRound,
-    width: 150,
-    renderCell: (item) =>
-      item.updatedByUserId ? `#${item.updatedByUserId}` : "-",
-  },
-] satisfies ReadonlyArray<TableColumn<AuditActionPolicyItem>>;
+const RISK_LEVEL_LABEL: Record<PolicyRiskLevel, string> = {
+  high: "Alto",
+  medium: "Medio",
+  low: "Bajo",
+};
+
+function riskLevelLabel(value: string): string {
+  return value === "high" || value === "medium" || value === "low"
+    ? RISK_LEVEL_LABEL[value]
+    : value;
+}
 
 function parseRiskLevel(value: string): PolicyRiskLevel {
   if (value === "high" || value === "medium" || value === "low") {
@@ -113,8 +85,67 @@ export default function SecurityPoliciesPage() {
 
   return (
     <SettingsPageLayout>
-      <SettingsSection title="Políticas de riesgo de auditoría">
-        <FilterBar>
+      <SettingsSection
+        title="Políticas de riesgo de auditoría"
+        description="Las acciones sin política explícita se tratan como de alto riesgo para evitar ocultar eventos críticos."
+      >
+        <Table aria-label="Políticas de seguridad" variant="list">
+          <colgroup>
+            <col />
+            <col style={{ width: "90px" }} />
+            <col style={{ width: "80px" }} />
+            <col style={{ width: "100px" }} />
+            <col style={{ width: "130px" }} />
+          </colgroup>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Acción</TableHead>
+              <TableHead>Riesgo</TableHead>
+              <TableHead>Activo</TableHead>
+              <TableHead>Protegido</TableHead>
+              <TableHead>Actualizada por</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <Show
+              when={rows().length > 0}
+              fallback={
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    <span class={styles.helperText}>
+                      {policySnapshot() === undefined
+                        ? "Cargando..."
+                        : "No hay políticas registradas."}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              }
+            >
+              <For each={rows()}>
+                {(item: AuditActionPolicyItem) => (
+                  <TableRow>
+                    <TableCell ellipsis>
+                      <span class={styles.strong}>{item.action}</span>
+                    </TableCell>
+                    <TableCell>{riskLevelLabel(item.riskLevel)}</TableCell>
+                    <TableCell>{item.isActive ? "Sí" : "No"}</TableCell>
+                    <TableCell>{item.isProtected ? "Sí" : "No"}</TableCell>
+                    <TableCell ellipsis>
+                      {item.updatedByUserId ? `#${item.updatedByUserId}` : "—"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </For>
+            </Show>
+          </TableBody>
+        </Table>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Definir política"
+        description="Solo admin y superuser pueden editar políticas."
+      >
+        <div class={styles.policyForm}>
           <div class={styles.filterAction}>
             <Input
               label="Acción"
@@ -132,9 +163,9 @@ export default function SecurityPoliciesPage() {
                 setRiskLevel(parseRiskLevel(event.currentTarget.value))
               }
             >
-              <option value="high">alto</option>
-              <option value="medium">medio</option>
-              <option value="low">bajo</option>
+              <option value="high">Alto</option>
+              <option value="medium">Medio</option>
+              <option value="low">Bajo</option>
             </Select>
           </div>
 
@@ -143,28 +174,7 @@ export default function SecurityPoliciesPage() {
             checked={isActive()}
             onInput={(event) => setIsActive(event.currentTarget.checked)}
           />
-        </FilterBar>
 
-        <p class={styles.helperText}>
-          Las acciones sin política explícita se tratan como de alto riesgo para
-          evitar ocultar eventos críticos.
-        </p>
-
-        <p class={styles.helperText}>
-          Solo admin y superuser pueden editar políticas.
-        </p>
-
-        <p class={styles.errorText}>{errorMessage() ?? ""}</p>
-
-        <DataTable
-          ariaLabel="Políticas de seguridad"
-          columns={SECURITY_POLICY_COLUMNS}
-          emptyState="No hay políticas registradas."
-          rows={rows()}
-          status={policySnapshot() === undefined ? "pending" : "ready"}
-        />
-
-        <div class={styles.formActions}>
           <Button
             type="button"
             size="sm"
@@ -175,6 +185,10 @@ export default function SecurityPoliciesPage() {
             Guardar política
           </Button>
         </div>
+
+        <Show when={errorMessage()}>
+          {(message) => <p class={styles.errorText}>{message()}</p>}
+        </Show>
       </SettingsSection>
     </SettingsPageLayout>
   );

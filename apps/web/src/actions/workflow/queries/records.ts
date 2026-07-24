@@ -49,8 +49,7 @@ export async function queryLeadList(
         priority: r.optEnum("priority", LEAD_PRIORITIES),
         executiveId: r.optId("executiveId", UserId),
         anyFieldSearch: r.optStr("anyFieldSearch") ?? undefined,
-        updatedSinceMs: r.optNum("updatedSinceMs") ?? undefined,
-        updatedUntilMs: r.optNum("updatedUntilMs") ?? undefined,
+        updatedToday: r.optBool("updatedToday") ?? undefined,
         sortBy: r.optEnum("sortBy", SORT_FIELDS),
         sortDirection: r.optEnum("sortDirection", SORT_DIRECTIONS),
         limit: r.optNum("limit") ?? undefined,
@@ -73,6 +72,7 @@ export async function queryLeadList(
           actorRole: role,
           actorBranchId: branchId,
           filters: parsedFilters,
+          evaluatedAt: new Date(),
         },
       );
     },

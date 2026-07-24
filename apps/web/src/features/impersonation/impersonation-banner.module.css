@@ -7,8 +7,8 @@
   justify-content: center;
   gap: 12px;
   padding: 8px 16px;
-  background: var(--color-orange-40, #b25000);
-  color: #fff;
+  background: var(--color-blue);
+  color: var(--primary-foreground);
   font-size: var(--font-size-sm);
   text-align: center;
 }

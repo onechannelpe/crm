@@ -7,13 +7,13 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { appMonthRange } from "~/lib/time/app-time";
 import { createSearchUsageReservationPorts } from "~/server/platform/container/search-runtime";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { external, type DomainError } from "~/server/shared/domain-error";
 import type { EngineClient } from "~/server/shared/engine/client";
 import type { SearchResult } from "~/server/shared/engine/types";
 import { Err, Ok, type Result } from "~/server/shared/result";
-import { currentMonthlyPeriod } from "~/server/shared/time";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;
 const MONTHLY_LIMIT = 250; // config.searchAccess.defaultMonthlyLimit
@@ -90,18 +90,10 @@ describe("runDirectSearch", () => {
 
     expect(result.ok).toBe(true);
 
-    const { periodStart, periodEnd } = currentMonthlyPeriod(new Date());
+    const range = appMonthRange(new Date());
     const [reservations, commits] = await Promise.all([
-      ctx.repos.searchUsageReservations.findByUserAndPeriod(
-        ACTOR_ID,
-        periodStart,
-        periodEnd,
-      ),
-      ctx.repos.searchUsageCommits.findByUserAndPeriod(
-        ACTOR_ID,
-        periodStart,
-        periodEnd,
-      ),
+      ctx.repos.searchUsageReservations.findByUserAndRange(ACTOR_ID, range),
+      ctx.repos.searchUsageCommits.findByUserAndRange(ACTOR_ID, range),
     ]);
     expect(reservations).toHaveLength(1);
     expect(reservations[0]).toMatchObject({ amount: 1, status: "committed" });
@@ -122,12 +114,11 @@ describe("runDirectSearch", () => {
       request_id: "req-search-1",
     });
 
-    const { periodStart, periodEnd } = currentMonthlyPeriod(new Date());
+    const range = appMonthRange(new Date());
     const reservations =
-      await ctx.repos.searchUsageReservations.findByUserAndPeriod(
+      await ctx.repos.searchUsageReservations.findByUserAndRange(
         ACTOR_ID,
-        periodStart,
-        periodEnd,
+        range,
       );
     expect(reservations).toHaveLength(1);
     expect(reservations[0].status).toBe("cancelled");

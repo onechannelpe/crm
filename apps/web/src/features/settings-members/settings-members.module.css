@@ -139,7 +139,7 @@
 }
 
 .detailName {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-heading-sm);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -248,7 +248,7 @@
 }
 
 .capacityCardValue {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-heading-sm);
 }
 
 .capacityCardMeta {

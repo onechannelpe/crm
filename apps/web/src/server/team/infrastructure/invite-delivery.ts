@@ -2,7 +2,7 @@
 
 import type { Role } from "~/lib/auth/access/rbac";
 import { config } from "~/lib/config";
-import { APP_LOCALE } from "~/lib/locale";
+import { formatAppLongDate } from "~/lib/time/app-time";
 import { getServerRuntime } from "~/server/platform/container";
 import { external, type DomainError } from "~/server/shared/domain-error";
 import { Err, Ok, type Result } from "~/server/shared/result";
@@ -21,11 +21,7 @@ export async function sendInviteEmail(params: {
         fullName: params.fullName,
         role: params.role,
         inviteUrl: params.inviteUrl,
-        expiresAt: params.expiresAt.toLocaleDateString(APP_LOCALE, {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
+        expiresAt: formatAppLongDate(params.expiresAt.getTime() - 1),
         platformName: config.branding.platformName,
       },
     },

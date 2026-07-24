@@ -13,11 +13,14 @@ export function RecordShowShell(props: RouteSectionProps) {
   return (
     <SidePanelProvider>
       <div class={shellStyles.main}>
-        <RecordShowHeader leadId={params.recordId}>
-          <RecordShowHeaderActions leadId={params.recordId} />
-        </RecordShowHeader>
         <main class={shellStyles.fixedBody}>
-          <MainContainerWithSidePanel>
+          <MainContainerWithSidePanel
+            header={
+              <RecordShowHeader leadId={params.recordId}>
+                <RecordShowHeaderActions leadId={params.recordId} />
+              </RecordShowHeader>
+            }
+          >
             {props.children}
           </MainContainerWithSidePanel>
         </main>

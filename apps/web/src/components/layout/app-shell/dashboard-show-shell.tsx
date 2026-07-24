@@ -1,3 +1,4 @@
+import { Title } from "@solidjs/meta";
 import { useParams, type RouteSectionProps } from "@solidjs/router";
 
 import { AppHeaderActions } from "~/components/layout/app-header/app-header-actions";
@@ -14,12 +15,16 @@ export function DashboardShowShell(props: RouteSectionProps) {
 
   return (
     <SidePanelProvider>
+      <Title>{title()}</Title>
       <div class={shellStyles.main}>
-        <DashboardShowHeader title={title()}>
-          <AppHeaderActions />
-        </DashboardShowHeader>
         <main class={shellStyles.fixedBody}>
-          <MainContainerWithSidePanel>
+          <MainContainerWithSidePanel
+            header={
+              <DashboardShowHeader title={title()}>
+                <AppHeaderActions />
+              </DashboardShowHeader>
+            }
+          >
             {props.children}
           </MainContainerWithSidePanel>
         </main>

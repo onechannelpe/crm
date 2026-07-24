@@ -1,46 +1,44 @@
+import { Title } from "@solidjs/meta";
 import { useLocation } from "@solidjs/router";
-import { createMemo } from "solid-js";
+import { Show, createMemo } from "solid-js";
+import { Dynamic } from "solid-js/web";
 
-import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
-import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
-import { PageHeader } from "~/features/settings-shell/page/page-header";
+import { TintedIconTile } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
+import { PageCardHeader } from "~/components/ui/layout/page-card/page-card-header";
 import { getHeaderRoute } from "~/lib/nav/policy";
 
 import { AppHeaderActions } from "./app-header-actions";
 
-import styles from "./app-header.module.css";
-
 export function AppHeader() {
   const location = useLocation();
   const currentRoute = createMemo(() => getHeaderRoute(location.pathname));
-  const { expanded, isMobile, setExpanded } = useNavigationDrawerState();
 
   return (
-    <PageHeader
-      leading={
-        !isMobile() && !expanded() ? (
-          <button
-            type="button"
-            class={styles.drawerExpandButton}
-            onClick={() => setExpanded(true)}
-            aria-label="Expandir barra lateral"
+    <>
+      <Title>{currentRoute().label}</Title>
+      <PageCardHeader
+        icon={
+          <Show
+            when={currentRoute().tileColor}
+            fallback={
+              <Dynamic
+                component={ICON_BY_ROUTE[currentRoute().icon]}
+                size={16}
+              />
+            }
           >
-            <LayoutSidebarRightCollapse size={14} />
-          </button>
-        ) : undefined
-      }
-      icon={
-        <div class={styles.iconContainer}>
-          {(() => {
-            const Icon = ICON_BY_ROUTE[currentRoute().icon];
-            return <Icon size={16} />;
-          })()}
-        </div>
-      }
-      title={<span class={styles.routeLabel}>{currentRoute().label}</span>}
-    >
-      <AppHeaderActions />
-    </PageHeader>
+            {(tileColor) => (
+              <TintedIconTile
+                Icon={ICON_BY_ROUTE[currentRoute().icon]}
+                color={tileColor()}
+              />
+            )}
+          </Show>
+        }
+        title={currentRoute().label}
+        actionButton={<AppHeaderActions />}
+      />
+    </>
   );
 }

@@ -22,11 +22,11 @@ export type ListLeadsInput = {
     priority?: LeadPriority;
     executiveId?: UserId;
     anyFieldSearch?: string;
-    updatedSinceMs?: number;
-    updatedUntilMs?: number;
+    updatedToday?: boolean;
     sortBy?: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
     sortDirection?: "asc" | "desc";
     limit?: number;
     offset?: number;
   };
+  evaluatedAt: Date;
 };

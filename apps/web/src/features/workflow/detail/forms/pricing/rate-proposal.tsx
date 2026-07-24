@@ -36,7 +36,7 @@ import {
   formatAmount,
   formatRate,
 } from "~/features/workflow/presentation/format";
-import { formatDate } from "~/lib/utils";
+import { formatAppDate } from "~/lib/time/app-time";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import {
@@ -58,6 +58,7 @@ type RateProposalSectionProps = {
   leadId: string;
   proposal: LeadDetailRateProposalView;
   reservationExpiresAt: number | null;
+  evaluatedAt: number;
   rateRevisions: LeadDetailRateRevisionView[];
   canRequestRevision: boolean;
   canAccept: boolean;
@@ -88,7 +89,7 @@ export function RateProposalSection(props: RateProposalSectionProps) {
   const isExpired = () =>
     props.proposal.outcome === "pending" &&
     props.reservationExpiresAt !== null &&
-    props.reservationExpiresAt <= Date.now();
+    props.reservationExpiresAt <= props.evaluatedAt;
 
   async function handleAccept() {
     setAcceptErrorMessage(null);
@@ -329,8 +330,8 @@ export function RateProposalSection(props: RateProposalSectionProps) {
               <RecordInlineCell label="Vigencia" icon={Package}>
                 <FieldTextValue>
                   {isExpired()
-                    ? `Vencio el ${formatDate(expiresAt())}`
-                    : `Hasta el ${formatDate(expiresAt())}`}
+                    ? `Vencio el ${formatAppDate(expiresAt())}`
+                    : `Hasta el ${formatAppDate(expiresAt())}`}
                 </FieldTextValue>
               </RecordInlineCell>
             )}

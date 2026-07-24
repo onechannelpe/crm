@@ -20,19 +20,20 @@ export function PageCardHeader(props: PageCardHeaderProps) {
 
   const icon = children(() => props.icon);
   const tag = children(() => props.tag);
+  const title = children(() => props.title);
   const breadcrumb = children(() => props.breadcrumb);
   const actionButton = children(() => props.actionButton);
 
   const hasTitleContent = () =>
-    !isMobile() && (Boolean(icon()) || props.title != null || Boolean(tag()));
+    !isMobile() && (Boolean(icon()) || title() != null || Boolean(tag()));
   const shouldCenterTitle = () =>
     Boolean(props.centerTitle) && hasTitleContent();
 
   const titleContent = () => (
     <>
       {icon()}
-      <Show when={props.title != null}>
-        <span>{props.title}</span>
+      <Show when={title() != null}>
+        <span>{title()}</span>
       </Show>
       {tag()}
     </>
@@ -43,7 +44,7 @@ export function PageCardHeader(props: PageCardHeaderProps) {
       class={cn(styles.header, !shouldCenterTitle() && styles.headerNoCenter)}
     >
       <div class={styles.left}>
-        <Show when={!expanded() && !isMobile()}>
+        <Show when={!expanded()}>
           <button
             type="button"
             class={styles.collapseButton}

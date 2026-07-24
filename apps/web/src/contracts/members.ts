@@ -1,6 +1,7 @@
 import type { Permission, Role } from "~/lib/auth/access/rbac";
 import type { RoleOption } from "~/lib/auth/access/role-display";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { CalendarDate } from "~/lib/time/calendar-date";
 
 import type { TeamOption } from "./team";
 
@@ -16,7 +17,6 @@ export interface MemberListItem {
   isActive: boolean;
   onboardingCompleted: boolean;
   avatarUrl: string | null;
-  expiresAt: number | null;
 }
 
 export interface MembersRoster {
@@ -37,7 +37,7 @@ export interface MemberDetail {
   isActive: boolean;
   onboardingCompleted: boolean;
   avatarUrl: string | null;
-  expiresAt: number | null;
+  expiresOn: CalendarDate | null;
   permissions: Permission[];
   // Affordances derived from the acting administrator's role and identity, so
   // the client renders only the controls the server will actually authorize.
@@ -66,5 +66,5 @@ export interface ChangeMemberRoleInput {
 
 export interface UpdateMemberExpiryInput {
   userId: string;
-  expiresAt: number | null;
+  expiresOn: string | null;
 }

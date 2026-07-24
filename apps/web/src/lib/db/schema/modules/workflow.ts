@@ -105,6 +105,42 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("workflow_inquiries")
+    .addColumn("id", "text", (col) =>
+      col.primaryKey().defaultTo(sql`uuidv7()::text`),
+    )
+    .addColumn("ruc", "text", (col) => col.notNull())
+    .addColumn("executive_id", "uuid", (col) =>
+      col.notNull().references("users.id"),
+    )
+    .addColumn("state", "text", (col) => col.notNull().defaultTo("PENDING"))
+    .addColumn("status", "text")
+    .addColumn("priority", "text")
+    .addColumn("answered_at", "timestamptz")
+    .addColumn("answered_by", "uuid", (col) => col.references("users.id"))
+    .addColumn("answered_by_job_id", "uuid")
+    .addColumn("converted_lead_id", "text", (col) =>
+      col.references("workflow_leads.id"),
+    )
+    .addColumn("created_at", "timestamptz", (col) => col.notNull())
+    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
+    .execute();
+
+  await db.schema
+    .createIndex("idx_workflow_inquiries_live_unique")
+    .on("workflow_inquiries")
+    .columns(["executive_id", "ruc"])
+    .unique()
+    .where(sql.ref("state"), "!=", "CONVERTED")
+    .execute();
+
+  await db.schema
+    .createIndex("idx_workflow_inquiries_ruc")
+    .on("workflow_inquiries")
+    .columns(["ruc", "state"])
+    .execute();
+
+  await db.schema
     .createTable("workflow_idempotency_keys")
     .addColumn("key", "text", (col) => col.primaryKey())
     .addColumn("result_json", "jsonb", (col) => col.notNull())

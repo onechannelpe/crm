@@ -22,7 +22,7 @@
 
 .link:hover,
 .link:focus-visible {
-  background: var(--background-secondary);
+  background: var(--background-transparent-light);
 }
 
 .label {

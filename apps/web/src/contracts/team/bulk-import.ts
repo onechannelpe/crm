@@ -1,11 +1,12 @@
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { CalendarDate } from "~/lib/time/calendar-date";
 
 export interface BulkImportRow {
   firstSurname: string;
   secondSurname: string;
   names: string;
   email: string;
-  expiresAt: number | null;
+  expiresOn: CalendarDate | null;
   executiveCategory: ExecutiveCategoryValue | null;
 }
 

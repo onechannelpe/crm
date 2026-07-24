@@ -15,7 +15,7 @@ import type {
 } from "~/contracts/event-logs/event-log";
 import { summarizeFieldChanges } from "~/contracts/events";
 import type { DataGridIcon } from "~/features/data-grid/model/types";
-import { formatDateTime } from "~/lib/utils";
+import { formatAppDateTime } from "~/lib/time/app-time";
 
 import { EventLogJsonCell } from "../components/event-log-json-cell";
 
@@ -49,7 +49,7 @@ const timestampColumn: EventLogColumn = {
   icon: CalendarDays,
   minWidth: 120,
   defaultWidth: 180,
-  renderCell: (record) => formatDateTime(record.timestamp),
+  renderCell: (record) => formatAppDateTime(record.timestamp),
 };
 
 const detailsColumn: EventLogColumn = {

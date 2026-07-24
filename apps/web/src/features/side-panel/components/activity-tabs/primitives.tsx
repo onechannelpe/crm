@@ -1,5 +1,5 @@
 import type { JSX, ParentProps } from "solid-js";
-import { Show } from "solid-js";
+import { children, Show } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
@@ -41,10 +41,12 @@ export function ActivityListRow(
     onClick?: JSX.EventHandlerUnion<HTMLElement, MouseEvent>;
   }>,
 ) {
+  const content = children(() => props.children);
+
   return (
     <Show
       when={props.onClick}
-      fallback={<div class={styles.listRow}>{props.children}</div>}
+      fallback={<div class={styles.listRow}>{content()}</div>}
     >
       {(onClick) => (
         <button
@@ -52,7 +54,7 @@ export function ActivityListRow(
           class={cn(styles.listRow, styles.listRowClickable)}
           onClick={onClick()}
         >
-          {props.children}
+          {content()}
         </button>
       )}
     </Show>

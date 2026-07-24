@@ -36,7 +36,8 @@ export function createOptimisticQuery<T>(
     ),
   );
 
-  const data = () => overlay() ?? asyncData();
+  const data = () =>
+    overlay() ?? asyncData.latest ?? asyncData() ?? options.initialValue;
 
   const invalidate = async () => {
     await revalidateQuery(query.key);

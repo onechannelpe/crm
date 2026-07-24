@@ -5,25 +5,16 @@ import Bell from "~/components/icons/bell";
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { APP_LOCALE } from "~/lib/locale";
 import {
   markAllNotificationsReadMutation,
   markNotificationReadMutation,
 } from "~/lib/mutations/notifications";
 import { headerNotificationsQuery } from "~/lib/queries/notifications";
+import { formatAppDateTime } from "~/lib/time/app-time";
 import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
 import { cn } from "~/lib/utils";
 
 import styles from "./header-notifications-panel.module.css";
-
-function formatTimestamp(value: number): string {
-  return new Date(value).toLocaleString(APP_LOCALE, {
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export function HeaderNotificationsPanel() {
   const [open, setOpen] = createSignal(false);
@@ -143,7 +134,7 @@ export function HeaderNotificationsPanel() {
                     <p class={styles.body}>{item.bodyText}</p>
                     <div class={styles.meta}>
                       <span class={styles.time}>
-                        {formatTimestamp(item.createdAt)}
+                        {formatAppDateTime(item.createdAt)}
                       </span>
                       <Show when={item.readAt === null}>
                         <button

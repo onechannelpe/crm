@@ -3,6 +3,7 @@ import {
   isEventLogTable,
   type EventLogQueryInput,
 } from "~/contracts/event-logs/event-log";
+import { parseCalendarDate } from "~/lib/time/calendar-date";
 
 type Query = Record<string, string | string[] | undefined>;
 const FIRST_PAGE_SIZE = 100;
@@ -11,17 +12,11 @@ function scalar(value: string | string[] | undefined): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
-function timestamp(value: string | undefined): number | undefined {
-  if (!value) return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
 export function eventLogInputFromQuery(query: Query): EventLogQueryInput {
   const rawTable = scalar(query.table);
   const rawStatus = scalar(query.status);
-  const start = timestamp(scalar(query.start));
-  const end = timestamp(scalar(query.end));
+  const start = parseCalendarDate(scalar(query.start)) ?? undefined;
+  const end = parseCalendarDate(scalar(query.end)) ?? undefined;
   return {
     table: rawTable && isEventLogTable(rawTable) ? rawTable : "DOMAIN_EVENT",
     first: FIRST_PAGE_SIZE,

@@ -1,3 +1,10 @@
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .rowActions {
   display: flex;
   gap: var(--spacing-2);

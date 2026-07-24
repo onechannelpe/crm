@@ -1,7 +1,10 @@
 import type { Role } from "~/lib/auth/access/rbac";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { IntegrationJobId, UserId } from "~/server/shared/ids";
 import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
+import { deriveInquiryAnsweredIntents } from "~/server/workflow/inquiry/notifications";
+import type { InquiryRow } from "~/server/workflow/inquiry/repo";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
 import { applyLeadMutation } from "./lead-mutation-writer";
@@ -64,6 +67,7 @@ export async function applyImportRows(
   let applied = 0;
   let failed = input.invalidRows.length;
   const committedEvents: CommittedLeadEvent[] = [];
+  const answeredInquiries: InquiryRow[] = [];
   const progressEveryRows = Math.max(1, input.progressEveryRows ?? 50);
   let lastEmittedProcessed = -1;
 
@@ -108,6 +112,7 @@ export async function applyImportRows(
         now,
       });
       results.push(mutationResult.rowResult);
+      answeredInquiries.push(...mutationResult.newlyAnsweredInquiries);
       if (!mutationResult.ok) {
         failed++;
         emitProgress(false);
@@ -121,6 +126,13 @@ export async function applyImportRows(
     /* eslint-enable no-await-in-loop */
 
     await enqueueLeadEffects(trx, committedEvents, now);
+    // Same transaction as the stamps: an executive is never notified about
+    // an answer that rolled back.
+    await enqueueNotifications(
+      trx,
+      deriveInquiryAnsweredIntents(answeredInquiries),
+      now,
+    );
   });
   emitProgress(true);
 

@@ -1,5 +1,6 @@
 import type { Role } from "~/lib/auth/access/rbac";
 import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import type { CalendarDate } from "~/lib/time/calendar-date";
 import type { TeamId, UserId } from "~/server/shared/ids";
 
 export interface UpdateMemberProfileCommand {
@@ -19,7 +20,7 @@ export interface ChangeMemberRoleCommand {
 
 export interface UpdateMemberExpiryCommand {
   userId: UserId;
-  expiresAt: Date | null;
+  expiresOn: CalendarDate | null;
 }
 
 export interface MemberIdCommand {

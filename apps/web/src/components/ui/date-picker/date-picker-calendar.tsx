@@ -2,12 +2,13 @@ import { For } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
 import ChevronRight from "~/components/icons/chevron-right";
+import type { CalendarDate } from "~/lib/time/calendar-date";
 import { cn } from "~/lib/utils";
 
 import {
   DAY_NAMES,
+  MONTH_OPTIONS,
   buildCalendarCells,
-  getMonthOptions,
   getYearOptions,
   type CalendarCell,
   type VisibleMonth,
@@ -17,19 +18,18 @@ import styles from "./date-picker.module.css";
 
 interface DatePickerCalendarProps {
   visibleMonth: VisibleMonth;
-  selectedDate: Date | null;
-  minDate: Date | null;
+  selectedDate: CalendarDate | null;
+  minDate: CalendarDate | null;
   isPreviousMonthDisabled: boolean;
   onMonthChange: (month: number) => void;
   onYearChange: (year: number) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
-  onSelect: (date: Date) => void;
+  onSelect: (date: CalendarDate) => void;
 }
 
 export function DatePickerCalendar(props: DatePickerCalendarProps) {
-  const monthOptions = () => getMonthOptions(props.visibleMonth);
-  const yearOptions = () => getYearOptions(props.minDate);
+  const yearOptions = () => getYearOptions(props.visibleMonth, props.minDate);
   const cells = () =>
     buildCalendarCells(props.visibleMonth, props.selectedDate, props.minDate);
 
@@ -43,7 +43,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
             props.onMonthChange(Number(event.currentTarget.value))
           }
         >
-          <For each={monthOptions()}>
+          <For each={MONTH_OPTIONS}>
             {(option) => (
               <option
                 value={String(option.value)}
@@ -108,7 +108,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
 
 function CalendarDayButton(props: {
   cell: CalendarCell;
-  onSelect: (date: Date) => void;
+  onSelect: (date: CalendarDate) => void;
 }) {
   return (
     <button

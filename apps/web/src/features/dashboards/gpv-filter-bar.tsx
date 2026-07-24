@@ -5,6 +5,7 @@ import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
 import type { FilterOptions } from "~/contracts/merchant-stats/views";
 import { merchantFilterOptionsQuery } from "~/lib/queries/dashboards";
+import { parseCalendarMonth } from "~/lib/time/calendar-date";
 
 import { formatMonth } from "./format";
 import type { GpvView } from "./gpv-view";
@@ -65,7 +66,11 @@ function Fields(props: { view: GpvView; children?: JSX.Element }) {
         <Select
           aria-label="Mes"
           value={filter().month ?? ALL}
-          onChange={(event) => set({ month: pick(event.currentTarget.value) })}
+          onChange={(event) =>
+            set({
+              month: parseCalendarMonth(event.currentTarget.value) ?? undefined,
+            })
+          }
         >
           <option value={ALL}>Todos los meses</option>
           <For each={opts().months}>

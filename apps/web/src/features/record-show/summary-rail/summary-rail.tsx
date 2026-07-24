@@ -3,10 +3,16 @@ import { RecordSummaryCard } from "~/features/record-show/summary-card/record-su
 
 import styles from "./summary-rail.module.css";
 
-export function SummaryRail(props: { data: LeadDetailView }) {
+export function SummaryRail(props: {
+  data: LeadDetailView;
+  evaluatedAt: number;
+}) {
   return (
     <div class={styles.rail}>
-      <RecordSummaryCard lead={props.data.lead} />
+      <RecordSummaryCard
+        lead={props.data.lead}
+        evaluatedAt={props.evaluatedAt}
+      />
     </div>
   );
 }

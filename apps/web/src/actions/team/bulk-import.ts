@@ -29,8 +29,8 @@ export async function previewBulkCsv(
 
     audit: (input) => ({ role: input.role }),
 
-    execute: (_ctx, input) =>
-      previewBulkImportService(input.csvContent, input.role),
+    execute: (ctx, input) =>
+      previewBulkImportService(input.csvContent, input.role, ctx.now()),
   });
 
   return { parsed };

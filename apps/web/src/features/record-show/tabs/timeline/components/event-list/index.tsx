@@ -1,6 +1,7 @@
 import { For } from "solid-js";
 
-import { APP_LOCALE } from "~/lib/locale";
+import { formatCalendarMonthName } from "~/lib/time/app-time";
+import { calendarMonthParts } from "~/lib/time/calendar-date";
 
 import type { Group } from "../../model/group";
 import { EventGroup } from "../event-group";
@@ -21,12 +22,12 @@ export function EventList(props: EventListProps) {
       <div class={styles.container}>
         <For each={props.groups}>
           {(group, index) => {
-            const monthLabel = new Date(
-              group.items[0]?.createdAt ?? Date.now(),
-            ).toLocaleString(APP_LOCALE, { month: "long" });
+            const monthLabel = formatCalendarMonthName(group.month);
 
             const showYear =
-              index() === 0 || props.groups[index() - 1].year !== group.year;
+              index() === 0 ||
+              calendarMonthParts(props.groups[index() - 1].month).year !==
+                calendarMonthParts(group.month).year;
 
             return (
               <EventGroup

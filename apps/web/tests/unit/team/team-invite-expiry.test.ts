@@ -12,7 +12,7 @@ describe("team invite expiry helpers", () => {
   const fixedNow = new Date(2026, 2, 24, 12, 0, 0, 0).getTime();
 
   it("computes the minimum selectable invite date", () => {
-    expect(getMinInviteExpiryDate(new Date(fixedNow))).toBe("2026-03-31");
+    expect(getMinInviteExpiryDate(fixedNow)).toBe("2026-03-31");
   });
 
   it("accepts an empty expiry value", () => {
@@ -45,7 +45,7 @@ describe("team invite expiry helpers", () => {
 
     expect(result.isErr).toBe(false);
     if (result.isErr) throw new Error("Expected success");
-    expect(result.value).toBe(new Date(2026, 2, 31, 23, 59, 59, 999).getTime());
+    expect(result.value).toBe("2026-03-31");
   });
 
   it("only shows inline field errors after a full date is present", () => {

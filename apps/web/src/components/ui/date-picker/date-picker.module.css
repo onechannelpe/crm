@@ -108,7 +108,7 @@
 
 .popover {
   position: fixed;
-  z-index: calc(var(--z-index-dialog, 50) + 1);
+  z-index: var(--z-modal);
   width: 280px;
   margin: 0;
   padding: 0 8px 8px;
@@ -161,7 +161,7 @@
 }
 
 .navButton:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }
 
@@ -213,7 +213,7 @@
 }
 
 .dayButton:hover:not(:disabled) {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground-tertiary);
 }
 

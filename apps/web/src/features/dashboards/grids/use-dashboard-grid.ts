@@ -12,11 +12,10 @@ import type { Page } from "~/contracts/merchant-stats/views";
 
 export const GPV_GRID_PAGE_SIZE = 60;
 
-interface DashboardGridConfig<Raw, Row> {
+interface DashboardGridConfig<Row> {
   pageSize: number;
   resetOn: Accessor<unknown>;
-  load: (page: Page) => Promise<ReadonlyArray<Raw>>;
-  toRow: (raw: Raw) => Row;
+  load: (page: Page) => Promise<ReadonlyArray<Row>>;
 }
 
 interface DashboardGrid<Row> {
@@ -26,8 +25,8 @@ interface DashboardGrid<Row> {
   onLoadMore: () => void;
 }
 
-export function useDashboardGrid<Raw, Row>(
-  config: DashboardGridConfig<Raw, Row>,
+export function useDashboardGrid<Row>(
+  config: DashboardGridConfig<Row>,
 ): DashboardGrid<Row> {
   const [pageCount, setPageCount] = createSignal(1);
   const [loadingMore, startLoadMore] = useTransition();
@@ -43,9 +42,7 @@ export function useDashboardGrid<Raw, Row>(
     return Promise.all(requests);
   });
 
-  const rows = createMemo<Row[]>(() =>
-    (pages() ?? []).flat().map(config.toRow),
-  );
+  const rows = createMemo<Row[]>(() => (pages() ?? []).flat());
 
   const hasMore = createMemo(() => {
     const loaded = pages();

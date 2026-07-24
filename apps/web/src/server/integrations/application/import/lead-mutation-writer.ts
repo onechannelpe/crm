@@ -5,6 +5,7 @@ import type {
   UserId,
   WorkflowLeadId,
 } from "~/server/shared/ids";
+import { createInquiryRepo } from "~/server/workflow/inquiry/repo";
 import { reviewLead } from "~/server/workflow/lead/domain/decide";
 import { commitTransition } from "~/server/workflow/lead/write/commit";
 import { createWorkflowRepos } from "~/server/workflow/repos";
@@ -38,7 +39,7 @@ async function markImportRowApplied(input: {
   executor: DatabaseExecutor;
   jobId: IntegrationJobId;
   rowNumber: number;
-  leadId: WorkflowLeadId;
+  leadId: WorkflowLeadId | null;
   changedAt: Date;
 }) {
   await input.executor
@@ -62,37 +63,68 @@ export async function applyLeadMutation(input: {
   now: Date;
 }): Promise<LeadMutationResult> {
   const repos = createWorkflowRepos(input.executor);
-  const lead = await repos.leads.findActiveByRuc(input.row.ruc);
 
-  if (!lead) {
-    await markImportRowFailed({
-      executor: input.executor,
-      jobId: input.jobId,
-      rowNumber: input.row.row,
-      reason: "RUC not found",
-      leadId: null,
-      changedAt: input.now,
-    });
-    return {
-      ok: false,
-      rowResult: { row: input.row.row, ok: false, reason: "RUC not found" },
-    };
-  }
+  // The same answer stamps every live inquiry for the RUC, whether or not a
+  // lead exists: probing executives asked exactly this question. A later lead
+  // failure does not undo the stamp; the answer is valid either way.
+  const { stamped, newlyAnswered } = await createInquiryRepo(
+    input.executor,
+  ).stampAnswer({
+    ruc: input.row.ruc,
+    status: input.row.type === "import_status" ? input.row.status : undefined,
+    priority:
+      input.row.type === "import_prioridad" ? input.row.priority : undefined,
+    answeredBy: input.actor.userId,
+    answeredByJobId: input.jobId,
+    now: input.now,
+  });
 
-  if (lead.stage !== "QUALIFYING") {
-    const reason = "Lead is not in pending external review stage";
+  async function inquiryOnlyOrFailed(
+    reason: string,
+    leadId: WorkflowLeadId | null,
+  ): Promise<LeadMutationResult> {
+    if (stamped > 0) {
+      await markImportRowApplied({
+        executor: input.executor,
+        jobId: input.jobId,
+        rowNumber: input.row.row,
+        leadId,
+        changedAt: input.now,
+      });
+      return {
+        ok: true,
+        rowResult: { row: input.row.row, ok: true },
+        committed: [],
+        newlyAnsweredInquiries: newlyAnswered,
+      };
+    }
+
     await markImportRowFailed({
       executor: input.executor,
       jobId: input.jobId,
       rowNumber: input.row.row,
       reason,
-      leadId: lead.id,
+      leadId,
       changedAt: input.now,
     });
     return {
       ok: false,
       rowResult: { row: input.row.row, ok: false, reason },
+      newlyAnsweredInquiries: newlyAnswered,
     };
+  }
+
+  const lead = await repos.leads.findActiveByRuc(input.row.ruc);
+
+  if (!lead) {
+    return inquiryOnlyOrFailed("RUC not found", null);
+  }
+
+  if (lead.stage !== "QUALIFYING") {
+    return inquiryOnlyOrFailed(
+      "Lead is not in pending external review stage",
+      lead.id,
+    );
   }
 
   const nextStatus =
@@ -114,18 +146,7 @@ export async function applyLeadMutation(input: {
       transition.error.code === "invalid_stage"
         ? "Lead is not in pending external review stage"
         : (transition.error.code ?? "Could not apply row");
-    await markImportRowFailed({
-      executor: input.executor,
-      jobId: input.jobId,
-      rowNumber: input.row.row,
-      reason,
-      leadId: lead.id,
-      changedAt: input.now,
-    });
-    return {
-      ok: false,
-      rowResult: { row: input.row.row, ok: false, reason },
-    };
+    return inquiryOnlyOrFailed(reason, lead.id);
   }
 
   const committed = await commitTransition(input.executor, transition.value);
@@ -135,22 +156,7 @@ export async function applyLeadMutation(input: {
       committed.error.code === "concurrency_conflict"
         ? "Lead changed concurrently"
         : (committed.error.code ?? "Could not apply row");
-    await markImportRowFailed({
-      executor: input.executor,
-      jobId: input.jobId,
-      rowNumber: input.row.row,
-      reason,
-      leadId: lead.id,
-      changedAt: input.now,
-    });
-    return {
-      ok: false,
-      rowResult: {
-        row: input.row.row,
-        ok: false,
-        reason,
-      },
-    };
+    return inquiryOnlyOrFailed(reason, lead.id);
   }
 
   await markImportRowApplied({
@@ -168,5 +174,6 @@ export async function applyLeadMutation(input: {
       event,
       id: committed.value.eventIds[index],
     })),
+    newlyAnsweredInquiries: newlyAnswered,
   };
 }

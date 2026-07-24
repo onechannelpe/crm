@@ -35,7 +35,7 @@ export async function createTeamInvite(input: unknown): Promise<{
           role: r.enum("role", ROLES),
           executiveCategory: r.optStr("executiveCategory"),
           teamId: teamId ? r.id("teamId", TeamId) : null,
-          expiresAt: r.optNum("expiresAt"),
+          expiresOn: r.optCalendarDate("expiresOn"),
         };
       });
 
@@ -43,7 +43,7 @@ export async function createTeamInvite(input: unknown): Promise<{
         return command;
       }
 
-      return validateTeamInviteInput(command.value);
+      return validateTeamInviteInput(command.value, new Date());
     },
 
     audit: ({ role, teamId }) => ({

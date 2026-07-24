@@ -9,7 +9,7 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { UserId, WorkflowLeadId } from "~/server/shared/ids";
+import { UserId, WorkflowInquiryId, WorkflowLeadId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, Ok } from "~/server/shared/result";
 import { addToFavoritesCommand } from "~/server/workflow/lead/commands/add-to-favorites";
@@ -40,6 +40,7 @@ export async function requestLeadCreation(input: unknown) {
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         ruc: r.str("ruc"),
+        inquiryId: r.optId("inquiryId", WorkflowInquiryId),
         currentProvider: r.str("currentProvider"),
         currentDebitRate: r.num("currentDebitRate"),
         currentCreditRate: r.num("currentCreditRate"),

@@ -34,21 +34,17 @@ import styles from "./grid-surface.module.css";
 
 const UNASSIGNED = "Sin asignar";
 
-type Row = CohortSaleRow & { id: string };
-
 export function AttributionGrid(props: { view: GpvView }) {
   const options = createAsync(() => merchantFilterOptionsQuery());
   const sellers = () => options()?.sellers ?? [];
 
-  const grid = useDashboardGrid<CohortSaleRow, Row>({
+  const grid = useDashboardGrid<CohortSaleRow>({
     pageSize: GPV_GRID_PAGE_SIZE,
     resetOn: props.view.filter,
     load: (page) => cohortRowsQuery({ filter: props.view.filter(), page }),
-    // eslint-disable-next-line oxc/no-map-spread
-    toRow: (row) => ({ ...row, id: row.saleId }),
   });
 
-  const columns: ReadonlyArray<DataGridColumn<Row>> = [
+  const columns: ReadonlyArray<DataGridColumn<CohortSaleRow>> = [
     {
       key: "ruc",
       label: "Comercio",
@@ -155,7 +151,7 @@ export function AttributionGrid(props: { view: GpvView }) {
     },
   ];
 
-  const renderGrid = (source: DataGridSource<Row>) => (
+  const renderGrid = (source: DataGridSource<CohortSaleRow>) => (
     <DataGrid
       ariaLabel="Atribución por RUC y mes"
       columns={columns}
@@ -165,6 +161,7 @@ export function AttributionGrid(props: { view: GpvView }) {
         loading: grid.loading(),
         onLoadMore: grid.onLoadMore,
       }}
+      rowId={(row) => row.saleId}
       source={source}
     />
   );

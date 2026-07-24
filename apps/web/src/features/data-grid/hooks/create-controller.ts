@@ -33,8 +33,9 @@ export type DataGridController = {
   reorder?: DataGridReorderController;
 };
 
-export function createDataGridController<T extends { id: string }>(options: {
+export function createDataGridController<T>(options: {
   rows: Accessor<ReadonlyArray<T>>;
+  rowId: (row: T) => string;
   columns: Accessor<ReadonlyArray<DataGridColumn<T>>>;
   selection?: DataGridSelectionController;
   reorder?: DataGridReorderConfig<T>;
@@ -42,7 +43,7 @@ export function createDataGridController<T extends { id: string }>(options: {
 }): DataGridController {
   const [container, setContainer] = createSignal<HTMLElement>();
   const [scrollWrapper, setScrollWrapper] = createSignal<HTMLElement>();
-  const rowIds = createMemo(() => options.rows().map((row) => row.id));
+  const rowIds = createMemo(() => options.rows().map(options.rowId));
   const columnKeys = createMemo(() =>
     options.columns().map((column) => column.key),
   );
@@ -62,7 +63,11 @@ export function createDataGridController<T extends { id: string }>(options: {
     activation: createDataGridRowActivationController(),
     selection: options.selection,
     reorder: options.reorder
-      ? createDataGridReorderController(options.rows, options.reorder)
+      ? createDataGridReorderController(
+          options.rows,
+          options.rowId,
+          options.reorder,
+        )
       : undefined,
   };
 }
