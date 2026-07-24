@@ -1,8 +1,8 @@
-import { useLocation } from "@solidjs/router";
+import { useAction, useLocation } from "@solidjs/router";
 import { For, Show, createMemo } from "solid-js";
 
-import { logout } from "~/actions/auth/session";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { logoutMutation } from "~/lib/mutations/auth";
 
 import { AdvancedSettingsWrapper } from "../advanced/advanced-settings-wrapper";
 import { getNavigationSubItemLeftAdornment } from "../item/get-navigation-sub-item-left-adornment";
@@ -18,6 +18,7 @@ export function SettingsNavigationDrawerItems() {
   const location = useLocation();
   const { currentUser } = useAuthenticatedSession();
   const { isMobile, setExpanded } = useNavigationDrawerState();
+  const logout = useAction(logoutMutation);
 
   const closeOnNavigate = () => {
     if (isMobile()) {

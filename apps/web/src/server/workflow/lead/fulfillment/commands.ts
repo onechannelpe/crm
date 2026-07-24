@@ -2,7 +2,6 @@ import type {
   FulfillmentAction,
   ProductKind,
 } from "~/contracts/workflow/vocabulary";
-import { enqueueAttributionForSerials } from "~/server/merchant-stats/attribution/invalidate";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type {
@@ -456,9 +455,6 @@ export async function recordUnitSerialCommand(
         input.serial,
       );
 
-      // A serial can move attribution from a different lead.
-      await enqueueAttributionForSerials(ctx.tx, [input.serial], ctx.now);
-
       return Ok(undefined);
     },
     "serial_number",
@@ -596,15 +592,6 @@ export async function rejectFulfillmentStepCommand(
     }
 
     if (rule.clearField) {
-      if (rule.clearField === "serial_number") {
-        // Read the serials before clearing the only stored references to them.
-        await enqueueAttributionForSerials(
-          ctx.tx,
-          details.units.flatMap((unit) => (unit.serial ? [unit.serial] : [])),
-          ctx.now,
-        );
-      }
-
       await ctx.repos.fulfillment.clearUnitField(
         details.order.id,
         rule.clearField,

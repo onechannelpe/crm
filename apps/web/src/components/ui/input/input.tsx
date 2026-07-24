@@ -31,26 +31,27 @@ export function Input(props: InputProps) {
     "id",
     "type",
   ]);
-  const inputId = local.id || createUniqueId();
-  const errorId = `${inputId}-error`;
-  const hintId = `${inputId}-hint`;
+  const generatedId = createUniqueId();
+  const inputId = () => local.id || generatedId;
+  const errorId = () => `${inputId()}-error`;
+  const hintId = () => `${inputId()}-hint`;
   const describedBy = () => {
     const existing = others["aria-describedby"];
     const ids = [
       typeof existing === "string" && existing.length > 0 ? existing : null,
-      local.error ? errorId : null,
-      !local.error && local.hint ? hintId : null,
+      local.error ? errorId() : null,
+      !local.error && local.hint ? hintId() : null,
     ].filter((value): value is string => Boolean(value));
 
     return ids.length > 0 ? ids.join(" ") : undefined;
   };
-  const isPassword = local.type === "password";
+  const isPassword = () => local.type === "password";
   const [showPassword, setShowPassword] = createSignal(false);
 
   return (
     <div class={styles.field}>
       {local.label && (
-        <InputLabel for={inputId}>
+        <InputLabel for={inputId()}>
           {local.label}
           {props.required && (
             <span aria-hidden="true" class={styles.required}>
@@ -59,22 +60,22 @@ export function Input(props: InputProps) {
           )}
         </InputLabel>
       )}
-      <div class={isPassword ? styles.inputWrap : undefined}>
+      <div class={isPassword() ? styles.inputWrap : undefined}>
         <input
-          id={inputId}
+          id={inputId()}
           aria-describedby={describedBy()}
           type={
-            isPassword ? (showPassword() ? "text" : "password") : local.type
+            isPassword() ? (showPassword() ? "text" : "password") : local.type
           }
           class={cn(
             styles.control,
-            isPassword ? styles.controlWithReveal : undefined,
+            isPassword() ? styles.controlWithReveal : undefined,
             local.error ? styles.errorControl : undefined,
             local.class,
           )}
           {...others}
         />
-        <Show when={isPassword}>
+        <Show when={isPassword()}>
           <button
             type="button"
             class={styles.revealButton}
@@ -122,10 +123,10 @@ export function Input(props: InputProps) {
         </Show>
       </div>
       <Show when={local.hint && !local.error}>
-        <InputHint id={hintId}>{local.hint}</InputHint>
+        <InputHint id={hintId()}>{local.hint}</InputHint>
       </Show>
       <Show when={local.error && !local.noErrorHelper}>
-        <InputErrorHelper id={errorId}>{local.error}</InputErrorHelper>
+        <InputErrorHelper id={errorId()}>{local.error}</InputErrorHelper>
       </Show>
     </div>
   );

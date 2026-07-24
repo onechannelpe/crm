@@ -1,12 +1,5 @@
-import type { RouteDefinition } from "@solidjs/router";
-
-import { DashboardsIndex } from "~/features/dashboards/dashboards-index";
-import { merchantFilterOptionsQuery } from "~/lib/queries/dashboards";
-
-export const route = {
-  preload: () => void merchantFilterOptionsQuery(),
-} satisfies RouteDefinition;
+import { Navigate } from "@solidjs/router";
 
 export default function DashboardsIndexRoute() {
-  return <DashboardsIndex />;
+  return <Navigate href="/dashboards/merchant-gpv" />;
 }

@@ -1,4 +1,5 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
+import { assignOrganizationOwner } from "~/server/organization/ownership";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { withAdvisoryLock } from "~/server/shared/db-lock";
 import { fail, type DomainError } from "~/server/shared/domain-error";
@@ -117,13 +118,14 @@ export function createRegisteredLead(input: {
         if (!draft.ok) return draft;
 
         const leadId = await ctx.repos.leads.insert(draft.value);
-        await ctx.repos.leadAssignments.insert({
-          leadId,
+        const assigned = await assignOrganizationOwner(ctx.tx, {
+          organizationId: organization.id,
           executiveId: input.actor.userId,
           assignedBy: input.actor.userId,
-          isActive: true,
-          assignedAt: ctx.now,
+          at: ctx.now,
+          reason: "lead_registration",
         });
+        if (!assigned.ok) return assigned;
 
         const appended = await ctx.appendFacts([
           createHistoryEvent({

@@ -20,18 +20,19 @@ export function Select(props: SelectProps) {
     "id",
     "children",
   ]);
-  const selectId = local.id || createUniqueId();
+  const generatedId = createUniqueId();
+  const selectId = () => local.id || generatedId;
 
   return (
     <div class={styles.field}>
       {local.label && (
-        <InputLabel for={selectId}>
+        <InputLabel for={selectId()}>
           {local.label}
           {props.required && <span class={styles.required}>*</span>}
         </InputLabel>
       )}
       <select
-        id={selectId}
+        id={selectId()}
         class={cn(
           styles.control,
           local.error ? styles.errorControl : undefined,

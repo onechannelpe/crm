@@ -1,6 +1,5 @@
 import type { Generated } from "kysely";
 
-import type { Json } from "~/contracts/json";
 import type {
   SettlementBank,
   LeadStage,
@@ -25,7 +24,6 @@ import type {
 export interface WorkflowLeadsTable {
   id: GeneratedId<WorkflowLeadId>;
   organization_id: IdColumn<OrganizationId>;
-  executive_id: IdColumn<UserId>;
   stage: LeadStage;
   status: "DISPONIBLE" | "SIN RESULTADO" | "CARTERIZADO" | "STOCK" | null;
   priority: "P1" | "P2" | "SIN RESULTADO" | null;
@@ -60,12 +58,6 @@ export interface WorkflowInquiriesTable {
   updated_at: Date;
 }
 
-export interface WorkflowIdempotencyKeysTable {
-  key: string;
-  result_json: Json;
-  created_at: Date;
-}
-
 export interface WorkflowLeadDigitalPolicyTable {
   lead_id: IdColumn<WorkflowLeadId>;
   link_scope: ProductScope;
@@ -79,15 +71,6 @@ export interface WorkflowLeadDigitalPolicyTable {
 
 export interface WorkflowCollectionModeKindsTable {
   value: CollectionMode;
-}
-
-export interface WorkflowLeadAssignmentsTable {
-  id: Generated<string>;
-  lead_id: IdColumn<WorkflowLeadId>;
-  executive_id: IdColumn<UserId>;
-  assigned_by: IdColumn<UserId>;
-  is_active: boolean;
-  assigned_at: Date;
 }
 
 export interface WorkflowLeadFavoritesTable {

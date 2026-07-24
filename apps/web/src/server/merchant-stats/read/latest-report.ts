@@ -1,15 +1,13 @@
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
-export async function getLatestCompletedMerchantReportCut(
+export async function getActiveGpvSnapshotCut(
   db: DatabaseExecutor,
 ): Promise<Date | null> {
-  const report = await db
-    .selectFrom("merchant_reports as r")
-    .innerJoin("merchant_report_imports as i", "i.report_id", "r.id")
-    .where("i.queue_state", "=", "done")
-    .select("r.cut_at")
-    .orderBy("r.cut_at", "desc")
+  const snapshot = await db
+    .selectFrom("gpv_snapshots")
+    .where("state", "=", "active")
+    .select("cut_at")
     .executeTakeFirst();
 
-  return report?.cut_at ?? null;
+  return snapshot?.cut_at ?? null;
 }

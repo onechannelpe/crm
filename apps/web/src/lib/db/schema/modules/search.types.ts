@@ -1,20 +1,8 @@
-import type { Generated, ColumnType } from "kysely";
+import type { ColumnType } from "kysely";
 
 import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 import type { GeneratedId, IdColumn, UserId } from "~/server/shared/ids";
 import type { CompanyRegistryRecordId } from "~/server/shared/ids";
-
-export interface ClientSearchViewsTable {
-  id: Generated<string>;
-  user_id: IdColumn<UserId>;
-  name: string;
-  search_type: "people" | "companies" | "mixed";
-  query_value: string;
-  limit_value: number;
-  is_default: boolean;
-  created_at: Date;
-  updated_at: Date;
-}
 
 export interface CompanyRegistryRecordTable {
   id: GeneratedId<CompanyRegistryRecordId>;

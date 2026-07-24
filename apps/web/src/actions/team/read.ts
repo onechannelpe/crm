@@ -3,21 +3,31 @@
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
+import { isErr, Ok } from "~/server/shared/result";
 import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,
 } from "~/server/team/application/invites";
 
-export async function getInviteManagement(): Promise<InviteManagement> {
+export async function getInviteManagement(): Promise<
+  InviteManagement & { evaluatedAt: number }
+> {
   return runAction({
     name: "team.invite_management.read",
     access: { kind: "permission", permission: "hr:manage" },
-    execute: (ctx) =>
-      getInviteManagementService(
+    execute: async (ctx) => {
+      const management = await getInviteManagementService(
         ctx,
         getServerRuntime().team.inviteManagement,
         getServerRuntime().team.publicOrigin,
-      ),
+      );
+      if (isErr(management)) return management;
+
+      return Ok({
+        ...management.value,
+        evaluatedAt: ctx.now().getTime(),
+      });
+    },
   });
 }
 

@@ -17,15 +17,17 @@ export async function persistWorkflowLeadsAndAssignments(
     .execute();
 
   await db
-    .insertInto("workflow_lead_assignments")
+    .insertInto("organization_owner_assignments")
     .values(
       leads.map((lead) => ({
         id: lead.assignmentId,
-        lead_id: lead.leadId,
+        organization_id: organizationIdFor(orgIdByRuc, lead.spec.org.ruc),
         executive_id: lead.spec.executiveId,
         assigned_by: lead.spec.createdBy,
-        is_active: true,
-        assigned_at: new Date(now - lead.spec.createdOffsetDays * day),
+        valid_from: new Date(now - lead.spec.createdOffsetDays * day),
+        valid_until: null,
+        reason: "demo_seed",
+        created_at: new Date(now - lead.spec.createdOffsetDays * day),
       })),
     )
     .execute();
@@ -38,14 +40,10 @@ function leadRow(
   orgIdByRuc: OrganizationsByRuc,
 ) {
   const { spec } = lead;
-  const organizationId = orgIdByRuc.get(spec.org.ruc);
-  if (!organizationId) {
-    throw new Error(`missing_seed_organization_id:${spec.org.ruc}`);
-  }
+  const organizationId = organizationIdFor(orgIdByRuc, spec.org.ruc);
   return {
     id: lead.leadId,
     organization_id: organizationId,
-    executive_id: spec.executiveId,
     stage: lead.projection.stage,
     status: lead.projection.status,
     priority: lead.projection.priority,
@@ -65,4 +63,16 @@ function leadRow(
     settlement_bank: spec.current.settlementBank,
     pos_count: spec.current.posCount,
   };
+}
+
+function organizationIdFor(
+  orgIdByRuc: OrganizationsByRuc,
+  ruc: string,
+): NonNullable<ReturnType<OrganizationsByRuc["get"]>> {
+  const organizationId = orgIdByRuc.get(ruc);
+  if (!organizationId) {
+    throw new Error(`missing_seed_organization_id:${ruc}`);
+  }
+
+  return organizationId;
 }

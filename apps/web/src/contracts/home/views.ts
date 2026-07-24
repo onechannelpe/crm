@@ -12,6 +12,5 @@ export interface HomeMerchantRowView {
 export interface HomeMerchantPortfolioView {
   cutDate: CalendarDate | null;
   month: CalendarMonth | null;
-  totalGpv: number;
   merchants: HomeMerchantRowView[];
 }

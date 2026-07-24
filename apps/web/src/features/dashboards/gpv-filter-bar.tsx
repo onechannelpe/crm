@@ -4,9 +4,9 @@ import { For, type JSX, Suspense } from "solid-js";
 import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
 import type { FilterOptions } from "~/contracts/merchant-stats/views";
-import { merchantFilterOptionsQuery } from "~/lib/queries/dashboards";
 import { parseCalendarMonth } from "~/lib/time/calendar-date";
 
+import { merchantFilterOptionsQuery } from "./data/queries";
 import { formatMonth } from "./format";
 import type { GpvView } from "./gpv-view";
 
@@ -24,8 +24,6 @@ export function GpvFilterBar(props: { view: GpvView; children?: JSX.Element }) {
 
 function Fields(props: { view: GpvView; children?: JSX.Element }) {
   const options = createAsync(() => merchantFilterOptionsQuery());
-  const filter = props.view.filter;
-  const set = props.view.setFilter;
   const pick = (raw: string) => (raw === ALL ? undefined : raw);
   const opts = (): FilterOptions =>
     options() ?? { branches: [], sellers: [], months: [], products: [] };
@@ -35,9 +33,11 @@ function Fields(props: { view: GpvView; children?: JSX.Element }) {
       <div class={styles.filter}>
         <Select
           aria-label="Zonal"
-          value={filter().branchId ?? ALL}
+          value={props.view.filter().branchId ?? ALL}
           onChange={(event) =>
-            set({ branchId: pick(event.currentTarget.value) })
+            props.view.setFilter({
+              branchId: pick(event.currentTarget.value),
+            })
           }
         >
           <option value={ALL}>Todos los zonales</option>
@@ -50,9 +50,11 @@ function Fields(props: { view: GpvView; children?: JSX.Element }) {
       <div class={styles.filter}>
         <Select
           aria-label="Vendedor"
-          value={filter().sellerUserId ?? ALL}
+          value={props.view.filter().sellerUserId ?? ALL}
           onChange={(event) =>
-            set({ sellerUserId: pick(event.currentTarget.value) })
+            props.view.setFilter({
+              sellerUserId: pick(event.currentTarget.value),
+            })
           }
         >
           <option value={ALL}>Todos los vendedores</option>
@@ -65,9 +67,9 @@ function Fields(props: { view: GpvView; children?: JSX.Element }) {
       <div class={styles.filter}>
         <Select
           aria-label="Mes"
-          value={filter().month ?? ALL}
+          value={props.view.filter().month ?? ALL}
           onChange={(event) =>
-            set({
+            props.view.setFilter({
               month: parseCalendarMonth(event.currentTarget.value) ?? undefined,
             })
           }
@@ -82,9 +84,11 @@ function Fields(props: { view: GpvView; children?: JSX.Element }) {
       <div class={styles.filter}>
         <Select
           aria-label="Producto"
-          value={filter().product ?? ALL}
+          value={props.view.filter().product ?? ALL}
           onChange={(event) =>
-            set({ product: pick(event.currentTarget.value) })
+            props.view.setFilter({
+              product: pick(event.currentTarget.value),
+            })
           }
         >
           <option value={ALL}>Todos los productos</option>

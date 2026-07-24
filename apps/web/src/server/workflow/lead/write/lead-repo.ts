@@ -103,7 +103,6 @@ function toCommercialColumns(scope: LeadCommercialScope) {
 function toNewLeadRow(values: LeadDraft): NewLeadRow {
   return {
     organization_id: values.organizationId,
-    executive_id: values.executiveId,
     created_by: values.createdBy,
     updated_by: values.updatedBy ?? undefined,
     stage: values.stage,
@@ -120,10 +119,15 @@ export function createLeadRepo(db: DatabaseExecutor) {
   const selectLeadWithOrganization = db
     .selectFrom("workflow_leads as lead")
     .innerJoin("organizations as org", "org.id", "lead.organization_id")
+    .innerJoin(
+      "organization_current_owners as owner",
+      "owner.organization_id",
+      "lead.organization_id",
+    )
     .select([
       "lead.id",
       "lead.organization_id",
-      "lead.executive_id",
+      "owner.executive_id",
       "lead.created_by",
       "lead.updated_by",
       "lead.stage",
@@ -223,13 +227,18 @@ export function createLeadRepo(db: DatabaseExecutor) {
     ): Promise<number> {
       const row = await db
         .selectFrom("workflow_leads as lead")
+        .innerJoin(
+          "organization_current_owners as owner",
+          "owner.organization_id",
+          "lead.organization_id",
+        )
         .innerJoin("workflow_rate_proposals as proposal", (join) =>
           join
             .onRef("proposal.lead_id", "=", "lead.id")
             .on("proposal.outcome", "=", "pending"),
         )
         .select((eb) => eb.fn.countAll<number>().as("count"))
-        .where("lead.executive_id", "=", executiveId)
+        .where("owner.executive_id", "=", executiveId)
         .where("lead.stage", "=", "PRICING")
         .where("lead.deleted_at", "is", null)
         .where("lead.reservation_expires_at", "is not", null)

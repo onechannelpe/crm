@@ -1,17 +1,13 @@
 import { createAsync } from "@solidjs/router";
-import { createMemo, Show, Suspense, type Accessor } from "solid-js";
+import { ErrorBoundary, Show, Suspense } from "solid-js";
 
+import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { ScrollWrapper } from "~/components/ui/utilities/scroll-wrapper";
-import type { BookFilter } from "~/contracts/merchant-stats/views";
+import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetGrid, WidgetGridItem } from "~/features/widgets/widget-layout";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
-import {
-  culqiUserGpvQuery,
-  merchantFilterOptionsQuery,
-} from "~/lib/queries/dashboards";
-import type { CalendarMonth } from "~/lib/time/calendar-date";
 
-import { AsyncTiles } from "../async-tiles";
+import { gpvCulqiViewQuery } from "../data/queries";
 import { formatMonth, formatSolesCompact } from "../format";
 import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";
@@ -20,88 +16,85 @@ import { BarTile } from "../tiles";
 import styles from "./culqi-view.module.css";
 
 export function CulqiView(props: { view: GpvView }) {
-  return (
-    <Suspense
-      fallback={
-        <div class={styles.scrollArea}>
-          <ScrollWrapper>
-            <WidgetGrid>
-              <WidgetGridItem span="full">
-                <WidgetSkeleton />
-              </WidgetGridItem>
-            </WidgetGrid>
-          </ScrollWrapper>
-        </div>
-      }
-    >
-      <CulqiContent view={props.view} />
-    </Suspense>
+  const culqi = createAsync(() =>
+    gpvCulqiViewQuery({ filter: props.view.filter() }),
   );
-}
-
-function CulqiContent(props: { view: GpvView }) {
-  const options = createAsync(() => merchantFilterOptionsQuery());
-  const month = createMemo(
-    () => props.view.filter().month ?? options()?.months[0] ?? null,
-  );
+  const ready = () => {
+    const view = culqi();
+    return view?.kind === "ready" ? view : null;
+  };
 
   return (
     <>
       <GpvFilterBar view={props.view} />
-      <div class={styles.scrollArea}>
-        <ScrollWrapper>
-          <WidgetGrid>
-            <WidgetGridItem span="full">
-              <p class={styles.note}>
-                El <strong>usuario de Culqi</strong> solo se usa para comparar
-                con el reporte de Culqi. La atribución real está en la pestaña
-                Rendimiento.
-              </p>
-            </WidgetGridItem>
-
-            <Show when={month()}>
-              {(activeMonth) => (
-                <AsyncTiles spans={["full"]}>
-                  <CulqiBar filter={props.view.filter} month={activeMonth} />
-                </AsyncTiles>
-              )}
-            </Show>
-          </WidgetGrid>
-        </ScrollWrapper>
-      </div>
+      <ErrorBoundary fallback={<CulqiError />}>
+        <Suspense fallback={<CulqiSkeleton />}>
+          <Show
+            when={ready()}
+            fallback={
+              <EmptyState
+                title="Sin datos de GPV"
+                description="Importa un reporte para comparar la vista de Culqi."
+              />
+            }
+          >
+            {(view) => (
+              <div class={styles.scrollArea}>
+                <ScrollWrapper>
+                  <WidgetGrid>
+                    <WidgetGridItem span="full">
+                      <p class={styles.note}>
+                        El <strong>usuario de Culqi</strong> solo se usa para
+                        comparar con el reporte de Culqi. La atribución real
+                        está en la pestaña Rendimiento.
+                      </p>
+                    </WidgetGridItem>
+                    <BarTile
+                      title={`GPV ${formatMonth(
+                        view().month,
+                      )} por usuario de Culqi · ${formatSolesCompact(
+                        view().rows.reduce((sum, row) => sum + row.gpv, 0),
+                      )}`}
+                      span="full"
+                      rows={view().rows.map((row) => ({
+                        key: row.culqiUserName ?? "sin-usuario",
+                        label: row.culqiUserName ?? "Sin usuario",
+                        sublabel: `${row.deviceCount} dispositivos`,
+                        value: row.gpv,
+                        target: null,
+                      }))}
+                    />
+                  </WidgetGrid>
+                </ScrollWrapper>
+              </div>
+            )}
+          </Show>
+        </Suspense>
+      </ErrorBoundary>
     </>
   );
 }
 
-function CulqiBar(props: {
-  filter: Accessor<BookFilter>;
-  month: Accessor<CalendarMonth>;
-}) {
-  const rows = createAsync(() =>
-    culqiUserGpvQuery({ filter: props.filter(), month: props.month() }),
-  );
-
+function CulqiSkeleton() {
   return (
-    <Show when={rows()}>
-      {(data) => {
-        const total = () => data().reduce((sum, row) => sum + row.gpv, 0);
+    <div class={styles.scrollArea}>
+      <ScrollWrapper>
+        <WidgetGrid>
+          <WidgetGridItem span="full">
+            <WidgetSkeleton />
+          </WidgetGridItem>
+        </WidgetGrid>
+      </ScrollWrapper>
+    </div>
+  );
+}
 
-        return (
-          <BarTile
-            title={`GPV ${formatMonth(props.month())} por usuario de Culqi · ${formatSolesCompact(
-              total(),
-            )}`}
-            span="full"
-            rows={data().map((row) => ({
-              key: row.culqiUserName ?? "sin-usuario",
-              label: row.culqiUserName ?? "Sin usuario",
-              sublabel: `${row.deviceCount} dispositivos`,
-              value: row.gpv,
-              target: null,
-            }))}
-          />
-        );
-      }}
-    </Show>
+function CulqiError() {
+  return (
+    <div class={styles.scrollArea}>
+      <WidgetCardShell title="Vista Culqi" status="error">
+        <span />
+      </WidgetCardShell>
+    </div>
   );
 }

@@ -1,10 +1,6 @@
-import { createAsync } from "@solidjs/router";
+import { createAsync, useAction } from "@solidjs/router";
 import { ErrorBoundary, Suspense } from "solid-js";
 
-import {
-  resolveAttribution,
-  setMerchantTarget,
-} from "~/actions/dashboards/attribution";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
@@ -19,15 +15,15 @@ import type { CohortSaleRow } from "~/contracts/merchant-stats/views";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import {
-  cohortRowsQuery,
-  merchantFilterOptionsQuery,
-} from "~/lib/queries/dashboards";
 
+import {
+  adjustMonthCreditMutation,
+  setMerchantTargetMutation,
+} from "../data/mutations";
+import { cohortRowsQuery, merchantFilterOptionsQuery } from "../data/queries";
 import { formatMonth, formatSoles } from "../format";
 import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";
-import { revalidateGpvData } from "../revalidate";
 import { GPV_GRID_PAGE_SIZE, useDashboardGrid } from "./use-dashboard-grid";
 
 import styles from "./grid-surface.module.css";
@@ -37,10 +33,12 @@ const UNASSIGNED = "Sin asignar";
 export function AttributionGrid(props: { view: GpvView }) {
   const options = createAsync(() => merchantFilterOptionsQuery());
   const sellers = () => options()?.sellers ?? [];
+  const adjustCredit = useAction(adjustMonthCreditMutation);
+  const saveTarget = useAction(setMerchantTargetMutation);
 
   const grid = useDashboardGrid<CohortSaleRow>({
     pageSize: GPV_GRID_PAGE_SIZE,
-    resetOn: props.view.filter,
+    resetKey: () => JSON.stringify(props.view.filter()),
     load: (page) => cohortRowsQuery({ filter: props.view.filter(), page }),
   });
 
@@ -74,19 +72,17 @@ export function AttributionGrid(props: { view: GpvView }) {
             ariaLabel="Vendedor real"
             options={[UNASSIGNED, ...sellers().map((seller) => seller.name)]}
             selected={editor.row.sellerName ?? UNASSIGNED}
-            onSubmit={async (name) => {
+            onSubmit={(name) => {
               const seller = sellers().find(
                 (candidate) => candidate.name === name,
               );
 
-              await resolveAttribution({
+              return adjustCredit({
                 ruc: editor.row.ruc,
                 month: editor.row.saleMonth,
                 sellerUserId: seller?.userId ?? null,
-                branchId: null,
-              });
-
-              await revalidateGpvData();
+                reason: "Corrección manual desde análisis de GPV",
+              }).then(() => undefined);
             }}
             onClose={editor.close}
           />
@@ -128,7 +124,7 @@ export function AttributionGrid(props: { view: GpvView }) {
             type="number"
             min="0"
             initialValue={editor.row.projectedGpv?.toString() ?? ""}
-            onSubmit={async (value) => {
+            onSubmit={(value) => {
               const trimmed = value.trim();
               const projectedGpv = trimmed === "" ? null : Number(trimmed);
 
@@ -136,13 +132,11 @@ export function AttributionGrid(props: { view: GpvView }) {
                 throw new Error("Ingresa un proyectado numérico válido");
               }
 
-              await setMerchantTarget({
+              return saveTarget({
                 ruc: editor.row.ruc,
                 effectiveFrom: editor.row.saleMonth,
                 projectedGpv,
-              });
-
-              await revalidateGpvData();
+              }).then(() => undefined);
             }}
             onClose={editor.close}
           />

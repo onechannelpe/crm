@@ -5,34 +5,6 @@ import { CLAIMABLE_STATES } from "~/lib/job-queue/registry";
 
 export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
-    .createTable("client_search_views")
-    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
-    .addColumn("user_id", "uuid", (col) =>
-      col.notNull().references("users.id").onDelete("cascade"),
-    )
-    .addColumn("name", "text", (col) => col.notNull())
-    .addColumn("search_type", "text", (col) => col.notNull())
-    .addColumn("query_value", "text", (col) => col.notNull())
-    .addColumn("limit_value", "integer", (col) => col.notNull().defaultTo(20))
-    .addColumn("is_default", "boolean", (col) => col.notNull().defaultTo(false))
-    .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .addColumn("updated_at", "timestamptz", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_client_search_views_user_created")
-    .on("client_search_views")
-    .columns(["user_id", "created_at"])
-    .execute();
-
-  await db.schema
-    .createIndex("idx_client_search_views_user_name")
-    .on("client_search_views")
-    .columns(["user_id", "name"])
-    .unique()
-    .execute();
-
-  await db.schema
     .createTable("company_registry_record")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("document_type", "text", (col) => col.notNull())

@@ -65,7 +65,7 @@ export const DYNAMIC_ROUTES: DynamicRouteConfig[] = [
   { pattern: /^\/records\/[^/]+$/ },
   // Resolving quality rows requires dashboards:manage; the summary requires dashboards:read.
   {
-    pattern: /^\/dashboards\/quality\/[^/]+$/,
+    pattern: /^\/dashboards\/merchant-gpv\/(?:imports|quality)\/[^/]+$/,
     permission: "dashboards:manage",
   },
   { pattern: /^\/dashboards\/[^/]+$/, permission: "dashboards:read" },

@@ -1,12 +1,12 @@
-import { useAction, useNavigate } from "@solidjs/router";
-import { createMemo, createResource, Show } from "solid-js";
+import { createAsync, useAction, useNavigate } from "@solidjs/router";
+import { createMemo, Show } from "solid-js";
 
-import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/records";
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
 import { createLeadMutation } from "~/features/workflow/data/command-mutations";
+import { leadBootstrapPreviewQuery } from "~/features/workflow/data/queries";
 
 import { SidePanelPage } from "../../components/page";
 import { SidePanelFooter } from "../../components/panel-footer";
@@ -38,9 +38,10 @@ export function CreateLeadPage() {
     return /^\d{11}$/.test(value) ? value : null;
   });
 
-  const [bootstrapPreview] = createResource(validRuc, (ruc) =>
-    queryLeadBootstrapPreview(ruc),
-  );
+  const bootstrapPreview = createAsync(() => {
+    const ruc = validRuc();
+    return ruc ? leadBootstrapPreviewQuery(ruc) : Promise.resolve(null);
+  });
 
   const latestBootstrapPreview = createMemo(
     () => bootstrapPreview.latest ?? null,
@@ -83,7 +84,7 @@ export function CreateLeadPage() {
       return "";
     }
 
-    if (bootstrapPreview.loading && preview === null) {
+    if (bootstrapPreview() === undefined && preview === null) {
       return "Buscando...";
     }
 

@@ -4,6 +4,19 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";
 
+export async function getLatestGpvMonth(
+  db: DatabaseExecutor,
+): Promise<FilterOptions["months"][number] | null> {
+  const row = await db
+    .selectFrom("merchant_monthly_gpv")
+    .select("month")
+    .orderBy("month", "desc")
+    .limit(1)
+    .executeTakeFirst();
+
+  return row ? monthFromStorageDate(row.month) : null;
+}
+
 export async function getFilterOptions(
   db: DatabaseExecutor,
 ): Promise<FilterOptions> {

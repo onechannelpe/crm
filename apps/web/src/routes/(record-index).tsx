@@ -1,8 +1,13 @@
-import type { RouteSectionProps } from "@solidjs/router";
+import type { RouteDefinition, RouteSectionProps } from "@solidjs/router";
 
 import { AuthenticatedAppFrame } from "~/components/layout/app-shell/authenticated-app-frame";
 import { RecordIndexAppShell } from "~/components/layout/app-shell/record-index-app-shell";
 import { traceDiagnostic } from "~/lib/observability/diagnostics/core";
+import { meQuery } from "~/lib/queries/auth";
+
+export const route = {
+  preload: () => meQuery(),
+} satisfies RouteDefinition;
 
 export default function RecordIndexLayout(props: RouteSectionProps) {
   traceDiagnostic("record-index-layout", "ssr", "layout_render");

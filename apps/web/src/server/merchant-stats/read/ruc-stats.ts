@@ -30,11 +30,16 @@ export async function getMerchantStatsByRuc(
       ? undefined
       : // Read the target in force for the latest realized month.
         db
-          .selectFrom("merchant_targets")
-          .select("projected_gpv")
-          .where("ruc", "=", ruc)
-          .where("effective_from", "<=", latestMonth)
-          .orderBy("effective_from", "desc")
+          .selectFrom("merchant_gpv_targets as target")
+          .innerJoin(
+            "organizations as organization",
+            "organization.id",
+            "target.organization_id",
+          )
+          .select("target.monthly_target_gpv")
+          .where("organization.ruc", "=", ruc)
+          .where("target.effective_from", "<=", latestMonth)
+          .orderBy("target.effective_from", "desc")
           .limit(1)
           .executeTakeFirst(),
     latestMonth === null
@@ -49,7 +54,7 @@ export async function getMerchantStatsByRuc(
   ]);
 
   return {
-    projectedGpv: target?.projected_gpv ?? null,
+    projectedGpv: target?.monthly_target_gpv ?? null,
     devices: devices.map((row) => ({
       saleId: row.id,
       product: row.product,

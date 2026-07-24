@@ -6,10 +6,7 @@ import type {
   QualityRow,
   QualitySummary,
 } from "~/contracts/merchant-stats/views";
-import type {
-  AttributionConfidence,
-  QualityIssue,
-} from "~/contracts/merchant-stats/vocabulary";
+import type { QualityIssue } from "~/contracts/merchant-stats/vocabulary";
 import type { Database } from "~/lib/db/types";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 
@@ -49,32 +46,24 @@ function serialMismatched(eb: SaleContext): Expression<SqlBool> {
   ]);
 }
 
-const CONFIDENCE_ISSUES = [
-  "conflict",
-  "late",
-  "none",
-] as const satisfies ReadonlyArray<QualityIssue & AttributionConfidence>;
-
-type ConfidenceIssue = (typeof CONFIDENCE_ISSUES)[number];
-
-function isConfidenceIssue(value: string): value is ConfidenceIssue {
-  return CONFIDENCE_ISSUES.some((issue) => issue === value);
-}
-
 export async function getQualitySummary(
   db: DatabaseExecutor,
 ): Promise<QualitySummary> {
-  const [byConfidence, noTarget, serialMismatch] = await Promise.all([
+  const [noOwner, noTarget, serialMismatch] = await Promise.all([
     db
-      .selectFrom("merchant_month_credit")
-      .select((eb) => ["confidence", eb.fn.countAll<number>().as("count")])
-      .where("resolved_by", "is", null)
-      .groupBy("confidence")
-      .execute(),
+      .selectFrom("merchant_monthly_gpv as m")
+      .leftJoin("merchant_month_credit as credit", (join) =>
+        join
+          .onRef("credit.ruc", "=", "m.ruc")
+          .onRef("credit.month", "=", "m.month"),
+      )
+      .where("credit.ruc", "is", null)
+      .select((eb) => eb.fn.countAll<number>().as("count"))
+      .executeTakeFirst(),
     db
       .selectFrom("merchant_monthly_gpv as m")
       .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
-      .where("t.projected_gpv", "is", null)
+      .where("t.monthly_target_gpv", "is", null)
       .select((eb) => eb.fn.countAll<number>().as("count"))
       .executeTakeFirst(),
     db
@@ -85,16 +74,11 @@ export async function getQualitySummary(
   ]);
 
   const counts: QualitySummary = {
-    conflict: 0,
-    late: 0,
-    none: 0,
+    no_owner: noOwner?.count ?? 0,
     no_target: 0,
     serial_mismatch: 0,
   };
 
-  for (const row of byConfidence) {
-    if (isConfidenceIssue(row.confidence)) counts[row.confidence] = row.count;
-  }
   counts.no_target = noTarget?.count ?? 0;
   counts.serial_mismatch = serialMismatch?.count ?? 0;
 
@@ -108,44 +92,36 @@ export async function getQualityRows(
 ): Promise<QualityRow[]> {
   if (issue === "serial_mismatch") return serialMismatchRows(db, page);
   if (issue === "no_target") return noTargetRows(db, page);
-  return confidenceRows(db, issue, page);
+  return noOwnerRows(db, page);
 }
 
-async function confidenceRows(
+async function noOwnerRows(
   db: DatabaseExecutor,
-  issue: ConfidenceIssue,
   page: Page,
 ): Promise<QualityRow[]> {
   const rows = await db
-    .selectFrom("merchant_month_credit as a")
-    .innerJoin("merchant_monthly_gpv as m", (join) =>
-      join.onRef("m.ruc", "=", "a.ruc").onRef("m.month", "=", "a.month"),
+    .selectFrom("merchant_monthly_gpv as m")
+    .leftJoin("merchant_month_credit as a", (join) =>
+      join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
     )
-    .leftJoin("organizations as o", "o.ruc", "a.ruc")
-    .leftJoin("users as u", "u.id", "a.seller_user_id")
+    .leftJoin("organizations as o", "o.ruc", "m.ruc")
     .leftJoinLateral(
       (eb) =>
         eb
           .selectFrom("merchant_sales as ms")
           .select(["ms.trade_name", "ms.culqi_user_name"])
-          .whereRef("ms.ruc", "=", "a.ruc")
+          .whereRef("ms.ruc", "=", "m.ruc")
           .orderBy("ms.sold_at", "desc")
           .limit(1)
           .as("s"),
       (join) => join.onTrue(),
     )
-    .where("a.confidence", "=", issue)
-    .where("a.resolved_by", "is", null)
+    .where("a.ruc", "is", null)
     .select([
-      "a.ruc",
-      "a.month",
-      "a.method",
-      "a.confidence",
-      "a.evidence",
+      "m.ruc",
+      "m.month",
       "m.gpv",
       "o.legal_name",
-      "u.names",
-      "u.first_surname",
       "s.trade_name",
       "s.culqi_user_name",
     ])
@@ -159,13 +135,13 @@ async function confidenceRows(
     month: monthFromStorageDate(row.month),
     organizationName: row.legal_name,
     tradeName: row.trade_name,
-    sellerName: displayName(row),
+    sellerName: null,
     culqiUserName: row.culqi_user_name,
     gpvAtStake: row.gpv ?? 0,
-    method: row.method,
-    confidence: row.confidence,
-    detail: QUALITY_ISSUE_COPY[issue].detail,
-    evidence: row.evidence,
+    method: "none",
+    confidence: "none",
+    detail: QUALITY_ISSUE_COPY.no_owner.detail,
+    evidence: null,
   }));
 }
 
@@ -192,7 +168,7 @@ async function noTargetRows(
           .as("s"),
       (join) => join.onTrue(),
     )
-    .where("t.projected_gpv", "is", null)
+    .where("t.monthly_target_gpv", "is", null)
     .select([
       "m.ruc",
       "m.month",

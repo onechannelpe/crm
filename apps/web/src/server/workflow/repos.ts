@@ -10,7 +10,6 @@ import { createLeadFavoriteRepo } from "./lead/read/lead-favorite-repo";
 import { createLeadQueries } from "./lead/read/lead-queries";
 import { createWorkflowUsersRepo } from "./lead/read/users-repo";
 import { createLeadVenueRepo } from "./lead/venue/repo";
-import { createAssignmentRepo } from "./lead/write/assignment-repo";
 import { createLeadRepo } from "./lead/write/lead-repo";
 import { createRateProposalRepo } from "./lead/write/rate-proposal-repo";
 import { createRateRevisionRepo } from "./lead/write/rate-revision-repo";
@@ -24,7 +23,6 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     leads: createLeadRepo(executor),
     leadQueries: createLeadQueries(executor),
     leadFavorites: createLeadFavoriteRepo(executor),
-    leadAssignments: createAssignmentRepo(executor),
     digitalPolicies: createDigitalPolicyRepo(executor),
     leadHistory: createHistoryRepo(executor),
     events: createEventsRepo(executor),

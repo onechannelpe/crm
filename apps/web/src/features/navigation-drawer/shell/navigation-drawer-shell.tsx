@@ -1,7 +1,6 @@
-import { useLocation, useNavigate } from "@solidjs/router";
+import { useAction, useLocation, useNavigate } from "@solidjs/router";
 import { Show, createSignal, type JSX } from "solid-js";
 
-import { logout } from "~/actions/auth/session";
 import LayoutSidebarLeftCollapse from "~/components/icons/layout-sidebar-left-collapse";
 import Search from "~/components/icons/search";
 import X from "~/components/icons/x";
@@ -9,6 +8,7 @@ import { AccountMenu } from "~/components/layout/account-menu";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
+import { logoutMutation } from "~/lib/mutations/auth";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 
@@ -45,6 +45,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     memorizeNavigationState,
   } = useNavigationDrawerState();
   const isSettingsDrawer = useIsSettingsDrawer();
+  const logout = useAction(logoutMutation);
 
   const [resizing, setResizing] = createSignal(false);
 

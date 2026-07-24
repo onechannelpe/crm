@@ -110,10 +110,9 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Monitoreo", icon: "monitoring", tileColor: "yellow" },
   },
   {
-    match: /^\/dashboards\/[^/]+$/,
+    match: /^\/dashboards\/merchant-gpv(?:\/.*)?$/,
     header: { label: "GPV de comercios", icon: "dashboards" },
   },
-  { match: "/dashboards", header: { label: "Paneles", icon: "dashboards" } },
   { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
   {
     match: "/settings/capacity-policies",
@@ -237,10 +236,10 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
   },
   {
     id: "dashboards",
-    href: "/dashboards",
+    href: "/dashboards/merchant-gpv",
     activePrefixes: ["/dashboards"],
-    label: "Paneles",
-    navLabel: "Paneles",
+    label: "GPV de comercios",
+    navLabel: "GPV de comercios",
     icon: "dashboards",
     tileColor: "green",
     section: "secondary",

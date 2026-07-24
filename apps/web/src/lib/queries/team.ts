@@ -3,10 +3,7 @@ import { query } from "@solidjs/router";
 import { getBulkImportSetup, getInviteManagement } from "~/actions/team/read";
 
 export const inviteManagementQuery = query(
-  async () => ({
-    ...(await getInviteManagement()),
-    evaluatedAt: Date.now(),
-  }),
+  getInviteManagement,
   "inviteManagement",
 );
 export const bulkImportSetupQuery = query(

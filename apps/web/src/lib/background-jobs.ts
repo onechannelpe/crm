@@ -6,8 +6,7 @@ import type { QueueRunner } from "~/lib/job-queue/types";
 import { createLogger } from "~/lib/observability/logger";
 import { readStoredFile } from "~/server/files/storage";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
-import { createMerchantAttributionQueue } from "~/server/merchant-stats/attribution/queue";
-import { createMerchantReportsQueue } from "~/server/merchant-stats/report-import/queue";
+import { createGpvSnapshotQueue } from "~/server/merchant-stats/snapshot/queue";
 import { getServerRuntime } from "~/server/platform/container";
 import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
 import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/lead-reservation-maintenance";
@@ -67,15 +66,10 @@ export function startBackgroundJobs(): void {
     readFile,
   });
 
-  const merchantReportsQueue = createMerchantReportsQueue(WORKER_ID, {
+  const gpvSnapshotQueue = createGpvSnapshotQueue(WORKER_ID, {
     db: integration.executor,
     now: integration.now,
     readFile,
-  });
-
-  const merchantAttributionQueue = createMerchantAttributionQueue(WORKER_ID, {
-    db: integration.executor,
-    now: integration.now,
   });
 
   const enrichmentQueue = runtime.clientSearch.createEnrichmentQueue(WORKER_ID);
@@ -83,8 +77,7 @@ export function startBackgroundJobs(): void {
 
   const queuesByChannel: Record<string, QueueRunner[]> = {
     [JOB_TABLE_CHANNELS.workflow_integration_jobs]: [recordsImportQueue],
-    [JOB_TABLE_CHANNELS.merchant_report_imports]: [merchantReportsQueue],
-    [JOB_TABLE_CHANNELS.merchant_attribution_jobs]: [merchantAttributionQueue],
+    [JOB_TABLE_CHANNELS.gpv_snapshot_jobs]: [gpvSnapshotQueue],
     [JOB_TABLE_CHANNELS.company_registry_record]: [enrichmentQueue],
     [JOB_TABLE_CHANNELS.notification_intents]: [notificationQueues.expansion],
     [JOB_TABLE_CHANNELS.notification_deliveries]: [notificationQueues.dispatch],

@@ -18,9 +18,9 @@ import type {
 import { formatSoles } from "~/features/dashboards/format";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import { homeMerchantPortfolioQuery } from "~/features/home/data/queries";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
-import { homeMerchantPortfolioQuery } from "~/lib/queries/home";
 import { formatCalendarDate } from "~/lib/time/app-time";
 import { calendarDateParts, type CalendarDate } from "~/lib/time/calendar-date";
 
@@ -46,14 +46,19 @@ function PortfolioContent(props: {
   portfolio: Accessor<HomeMerchantPortfolioView>;
 }) {
   const navigate = useNavigate();
-  const data = props.portfolio;
+  const data = () => props.portfolio();
   const columns = createMemo(() => merchantColumns(data().cutDate));
 
   return (
     <WidgetCardShell
       title="Mis comercios"
       action={
-        <Show when={data().cutDate}>
+        <Show
+          when={data().cutDate}
+          fallback={
+            <span class={styles.updated}>GPV pendiente de actualización</span>
+          }
+        >
           {(cutDate) => (
             <span class={styles.updated}>
               Actualizado al {formatCalendarDate(cutDate())}
@@ -66,8 +71,6 @@ function PortfolioContent(props: {
         <Show when={data().merchants.length > 0} fallback={<PortfolioEmpty />}>
           <p class={styles.summary}>
             {merchantCountLabel(data().merchants.length)}
-            <span aria-hidden="true"> · </span>
-            <strong>{formatSoles(data().totalGpv)}</strong> de GPV
           </p>
           <div class={styles.grid}>
             <DataGrid
@@ -95,9 +98,9 @@ function PortfolioContent(props: {
 function PortfolioEmpty() {
   return (
     <div class={styles.empty}>
-      <p class={styles.emptyTitle}>Aún no hay GPV para tus comercios.</p>
+      <p class={styles.emptyTitle}>Aún no tienes comercios asignados.</p>
       <p class={styles.emptyDescription}>
-        Aparecerá después de la próxima actualización.
+        Los comercios aparecerán aquí cuando se te asigne su gestión.
       </p>
     </div>
   );

@@ -1,15 +1,12 @@
-import { Show, Suspense, createResource, createSignal } from "solid-js";
+import {
+  createAsync,
+  revalidate,
+  type RouteDefinition,
+  useAction,
+  useSubmission,
+} from "@solidjs/router";
+import { Show, Suspense, createSignal } from "solid-js";
 
-import {
-  acknowledgeRecoveryCodes,
-  getRecoveryCodesStatus,
-  regenerateRecoveryCodes,
-} from "~/actions/auth/recovery-codes";
-import {
-  changePassword,
-  disableTotp,
-  removeAllPasskeys,
-} from "~/actions/settings/security";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
@@ -21,14 +18,25 @@ import { usePasskeyEnrollment } from "~/features/auth/security/use-passkey-enrol
 import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment";
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { useAsyncAction } from "~/hooks/use-async-action";
 import { useConfirmDialog } from "~/hooks/use-confirm-dialog";
+import {
+  acknowledgeRecoveryCodesMutation,
+  changePasswordMutation,
+  disableTotpMutation,
+  regenerateRecoveryCodesMutation,
+  removeAllPasskeysMutation,
+} from "~/lib/mutations/security";
+import { recoveryCodesStatusQuery } from "~/lib/queries/auth";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./security.module.css";
 import base from "./settings-page.module.css";
 
 const CHANGE_PASSWORD_FORM_ID = "settings-security-change-password-form";
+
+export const route = {
+  preload: () => recoveryCodesStatusQuery(),
+} satisfies RouteDefinition;
 
 function getSetupKey(otpauthUri: string): string {
   try {
@@ -124,9 +132,21 @@ export default function SecurityPage() {
   const disableTotpDialog = useConfirmDialog();
   const regenerateRecoveryDialog = useConfirmDialog();
 
-  const [recoveryStatus, { refetch: refetchRecoveryStatus }] = createResource(
-    getRecoveryCodesStatus,
+  const recoveryStatus = createAsync(() => recoveryCodesStatusQuery());
+  const removePasskeys = useAction(removeAllPasskeysMutation);
+  const removePasskeysSubmission = useSubmission(removeAllPasskeysMutation);
+  const disableAuthenticator = useAction(disableTotpMutation);
+  const disableTotpSubmission = useSubmission(disableTotpMutation);
+  const regenerateRecovery = useAction(regenerateRecoveryCodesMutation);
+  const regenerateRecoverySubmission = useSubmission(
+    regenerateRecoveryCodesMutation,
   );
+  const acknowledgeRecovery = useAction(acknowledgeRecoveryCodesMutation);
+  const acknowledgeRecoverySubmission = useSubmission(
+    acknowledgeRecoveryCodesMutation,
+  );
+  const savePassword = useAction(changePasswordMutation);
+  const changePasswordSubmission = useSubmission(changePasswordMutation);
 
   // Recovery codes are returned once, so keep them in memory until confirmed.
   const [freshRecoveryCodes, setFreshRecoveryCodes] = createSignal<string[]>(
@@ -135,7 +155,7 @@ export default function SecurityPage() {
 
   function showFreshRecoveryCodes(codes: string[]) {
     setFreshRecoveryCodes(codes);
-    void refetchRecoveryStatus();
+    void revalidate(recoveryCodesStatusQuery.key);
   }
 
   const passkeyEnrollment = usePasskeyEnrollment({
@@ -152,92 +172,74 @@ export default function SecurityPage() {
     onRecoveryCodes: showFreshRecoveryCodes,
   });
 
-  const [handleRemovePasskeys, isRemovingPasskeys] = useAsyncAction(
-    async () => {
-      try {
-        const { message } = await removeAllPasskeys();
-
-        await refreshCurrentUser();
-        enqueueSuccessSnackBar(message);
-      } catch (caught: unknown) {
-        enqueueErrorSnackBar(actionErrorMessage(caught));
-      }
-
-      removePasskeysDialog.close();
-    },
-  );
-
-  const [handleDisableTotp, isDisablingTotp] = useAsyncAction(async () => {
+  async function handleRemovePasskeys(): Promise<void> {
     try {
-      const { message } = await disableTotp();
-
-      totpEnrollment.reset();
-      await refreshCurrentUser();
+      const { message } = await removePasskeys();
       enqueueSuccessSnackBar(message);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
+    } finally {
+      removePasskeysDialog.close();
     }
+  }
 
-    disableTotpDialog.close();
-  });
+  async function handleDisableTotp(): Promise<void> {
+    try {
+      const { message } = await disableAuthenticator();
+
+      totpEnrollment.reset();
+      enqueueSuccessSnackBar(message);
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } finally {
+      disableTotpDialog.close();
+    }
+  }
 
   async function handleCopySetupKey(setupKey: string) {
     await navigator.clipboard.writeText(setupKey);
     enqueueSuccessSnackBar("Clave de configuración copiada");
   }
 
-  const [handleRegenerateRecovery, isRegeneratingRecovery] = useAsyncAction(
-    async () => {
-      try {
-        const { recoveryCodes } = await regenerateRecoveryCodes();
-
-        showFreshRecoveryCodes(recoveryCodes);
-      } catch (caught: unknown) {
-        enqueueErrorSnackBar(actionErrorMessage(caught));
-      }
-
+  async function handleRegenerateRecovery(): Promise<void> {
+    try {
+      const { recoveryCodes } = await regenerateRecovery();
+      showFreshRecoveryCodes(recoveryCodes);
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } finally {
       regenerateRecoveryDialog.close();
-    },
-  );
+    }
+  }
 
-  const [handleAcknowledgeRecovery, isAcknowledgingRecovery] = useAsyncAction(
-    async () => {
-      try {
-        await acknowledgeRecoveryCodes();
+  async function handleAcknowledgeRecovery(): Promise<void> {
+    try {
+      await acknowledgeRecovery();
+      setFreshRecoveryCodes([]);
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    }
+  }
 
-        setFreshRecoveryCodes([]);
-        await refreshCurrentUser();
-        await refetchRecoveryStatus();
-      } catch (caught: unknown) {
-        enqueueErrorSnackBar(actionErrorMessage(caught));
-      }
-    },
-  );
+  async function handleChangePassword(event: Event): Promise<void> {
+    event.preventDefault();
 
-  const [handleChangePassword, isChangingPassword] = useAsyncAction(
-    async (event: Event) => {
-      event.preventDefault();
+    if (newPassword() !== confirmPassword()) {
+      enqueueErrorSnackBar("Las contraseñas no coinciden");
+      return;
+    }
 
-      if (newPassword() !== confirmPassword()) {
-        enqueueErrorSnackBar("Las contraseñas no coinciden");
-        return;
-      }
+    try {
+      const { message } = await savePassword(currentPassword(), newPassword());
 
-      try {
-        const { message } = await changePassword(
-          currentPassword(),
-          newPassword(),
-        );
-
-        enqueueSuccessSnackBar(message);
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      } catch (caught: unknown) {
-        enqueueErrorSnackBar(actionErrorMessage(caught));
-      }
-    },
-  );
+      enqueueSuccessSnackBar(message);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (caught: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(caught));
+    }
+  }
 
   return (
     <SettingsPageLayout>
@@ -246,7 +248,7 @@ export default function SecurityPage() {
         title="Eliminar claves de acceso"
         description="Se eliminarán todas las claves registradas en esta cuenta."
         confirmLabel="Eliminar"
-        loading={isRemovingPasskeys()}
+        loading={Boolean(removePasskeysSubmission.pending)}
         onConfirm={() => void handleRemovePasskeys()}
         onClose={removePasskeysDialog.close}
       />
@@ -256,7 +258,7 @@ export default function SecurityPage() {
         title="Desactivar autenticación en dos pasos"
         description="Se desactivará el segundo paso con código para esta cuenta."
         confirmLabel="Desactivar"
-        loading={isDisablingTotp()}
+        loading={Boolean(disableTotpSubmission.pending)}
         onConfirm={() => void handleDisableTotp()}
         onClose={disableTotpDialog.close}
       />
@@ -266,7 +268,7 @@ export default function SecurityPage() {
         title="Regenerar códigos de recuperación"
         description="Los códigos actuales dejarán de funcionar. Recibirás nuevos códigos."
         confirmLabel="Regenerar"
-        loading={isRegeneratingRecovery()}
+        loading={Boolean(regenerateRecoverySubmission.pending)}
         onConfirm={() => void handleRegenerateRecovery()}
         onClose={regenerateRecoveryDialog.close}
       />
@@ -279,7 +281,7 @@ export default function SecurityPage() {
             form={CHANGE_PASSWORD_FORM_ID}
             size="sm"
             variant="secondary"
-            loading={isChangingPassword()}
+            loading={Boolean(changePasswordSubmission.pending)}
           >
             Guardar
           </Button>
@@ -441,7 +443,7 @@ export default function SecurityPage() {
                     type="button"
                     size="sm"
                     variant="secondary"
-                    loading={isAcknowledgingRecovery()}
+                    loading={Boolean(acknowledgeRecoverySubmission.pending)}
                     onClick={() => void handleAcknowledgeRecovery()}
                   >
                     Ya los guardé

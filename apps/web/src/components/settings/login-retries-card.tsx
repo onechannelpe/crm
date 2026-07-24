@@ -1,9 +1,6 @@
+import { useAction, useSubmission } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
-import {
-  getUserLoginRetryReport,
-  type UserLoginRetryReport,
-} from "~/actions/admin/auth-security";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
@@ -15,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { useAsyncAction } from "~/hooks/use-async-action";
+import { loginRetryReportMutation } from "~/lib/mutations/security";
 import { formatAppDateTime } from "~/lib/time/app-time";
 import { actionErrorMessage } from "~/lib/wire-error";
 
@@ -29,18 +26,19 @@ function labelFor(stage: string): string {
 
 export function LoginRetriesCard() {
   const [email, setEmail] = createSignal("");
-  const [report, setReport] = createSignal<UserLoginRetryReport | null>(null);
   const { enqueueErrorSnackBar, enqueueInfoSnackBar } = useSnackBar();
+  const lookup = useAction(loginRetryReportMutation);
+  const submission = useSubmission(loginRetryReportMutation);
+  const report = () => submission.result;
 
-  const [lookup, isLookingUp] = useAsyncAction(async () => {
+  async function handleLookup(): Promise<void> {
     try {
-      const next = await getUserLoginRetryReport(email());
-      setReport(next);
+      const next = await lookup(email());
       if (!next) enqueueInfoSnackBar("Usuario no encontrado");
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
-  });
+  }
 
   return (
     <section class={styles.root}>
@@ -48,7 +46,7 @@ export function LoginRetriesCard() {
         class={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
-          void lookup();
+          void handleLookup();
         }}
       >
         <Input
@@ -58,7 +56,11 @@ export function LoginRetriesCard() {
           onInput={(e) => setEmail(e.currentTarget.value)}
           required
         />
-        <Button type="submit" loading={isLookingUp()} disabled={isLookingUp()}>
+        <Button
+          type="submit"
+          loading={Boolean(submission.pending)}
+          disabled={Boolean(submission.pending)}
+        >
           Ver reporte
         </Button>
       </form>

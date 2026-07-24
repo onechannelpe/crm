@@ -32,12 +32,15 @@ export async function requestSearchEnrichment(input: unknown) {
   });
 }
 
-export async function getSearchEnrichmentStatus(input: unknown) {
+export async function getSearchEnrichmentStatus(
+  documentType: unknown,
+  documentValue: unknown,
+) {
   return runAction({
     name: "client_search.enrichment.status.read",
     access: { kind: "permission", permission: "search:use" },
 
-    parse: () => parseDocumentInput(input),
+    parse: () => parseDocumentInput({ documentType, documentValue }),
 
     execute: async (_ctx, document) => {
       const { enrichmentQuery } = getServerRuntime().clientSearch;

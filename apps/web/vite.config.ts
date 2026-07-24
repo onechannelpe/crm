@@ -36,16 +36,6 @@ export default defineConfig({
     watch: {
       ignored: ["**/.local-storage/**"],
     },
-
-    // Register server functions that may only be reached from client events.
-    // Without warmup, they may be called before their modules are imported.
-    warmup: {
-      ssrFiles: [
-        "./src/actions/**/*.ts",
-        "./src/server/auth/infrastructure/request-passkey-provider.ts",
-        "./src/server/team/infrastructure/invite-delivery.ts",
-      ],
-    },
   },
 
   plugins: [

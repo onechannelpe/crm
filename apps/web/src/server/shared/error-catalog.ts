@@ -109,6 +109,23 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró la atribución de ese comercio para ese mes.",
   },
+  merchant_credit_source_not_found: {
+    kind: "not_found",
+    message:
+      "No se encontró una organización y actualización publicada para acreditar este GPV.",
+  },
+  gpv_snapshot_not_found: {
+    kind: "not_found",
+    message: "No se encontró la actualización de GPV.",
+  },
+  gpv_snapshot_issue_not_found: {
+    kind: "not_found",
+    message: "No se encontró la incidencia de la actualización.",
+  },
+  gpv_snapshot_previous_placement_not_found: {
+    kind: "not_found",
+    message: "No se encontró la colocación del corte anterior.",
+  },
   // Also returned when the RUC exists but is not the caller's client: an
   // executive must not be able to probe which RUCs the book contains.
   merchant_stats_not_found: {
@@ -123,6 +140,30 @@ export const ERROR_CATALOG = {
   request_not_pending: {
     kind: "conflict",
     message: "La solicitud ya no está pendiente.",
+  },
+  gpv_snapshot_not_activatable: {
+    kind: "conflict",
+    message: "Esta actualización de GPV no se puede activar.",
+  },
+  gpv_snapshot_superseded: {
+    kind: "conflict",
+    message: "Ya se publicó una actualización de GPV más reciente.",
+  },
+  gpv_snapshot_issue_not_resolvable: {
+    kind: "conflict",
+    message: "Esta incidencia ya no se puede resolver.",
+  },
+  gpv_snapshot_resolution_invalid: {
+    kind: "conflict",
+    message: "Esa decisión no corresponde a este tipo de incidencia.",
+  },
+  gpv_snapshot_issue_has_no_placement: {
+    kind: "conflict",
+    message: "La incidencia no identifica una colocación.",
+  },
+  organization_assignment_time_invalid: {
+    kind: "conflict",
+    message: "La reasignación debe ser posterior a la asignación vigente.",
   },
   token_already_used: {
     kind: "conflict",

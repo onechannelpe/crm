@@ -1,5 +1,3 @@
-import { sql } from "kysely";
-
 import type {
   BookFilter,
   LifecycleSummary,
@@ -36,9 +34,11 @@ export async function getLifecycle(
       eb.fn.count<number>("s.activated_at").as("activated_count"),
 
       // Late activations skew a mean; the median better represents a typical merchant.
-      sql<number | null>`percentile_cont(0.5) within group (
-        order by (s.activated_at - s.sold_at)
-      ) filter (where s.activated_at is not null)`.as("median_days"),
+      eb.fn
+        .agg<number | null>("percentile_cont", [eb.val(0.5)])
+        .withinGroupOrderBy(eb("s.activated_at", "-", eb.ref("s.sold_at")))
+        .filterWhere("s.activated_at", "is not", null)
+        .as("median_days"),
 
       // A sale that never transacted is unactivated, not dormant.
       eb.fn

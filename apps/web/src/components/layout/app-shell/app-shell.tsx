@@ -2,12 +2,12 @@ import { useLocation, type RouteSectionProps } from "@solidjs/router";
 import { Match, Switch } from "solid-js";
 
 import {
-  isDashboardDetailPath,
+  isMerchantGpvPath,
   isRecordShowPath,
   isSettingsRoutePath,
 } from "~/lib/navigation/route-classification";
 
-import { DashboardShowShell } from "./dashboard-show-shell";
+import { MerchantGpvShell } from "./merchant-gpv-shell";
 import { RecordShowShell } from "./record-show-shell";
 import { SettingsAppShell } from "./settings-app-shell";
 import { StandardAppShell } from "./standard-app-shell";
@@ -16,7 +16,7 @@ export function AppShell(props: RouteSectionProps) {
   const location = useLocation();
   const isSettingsRoute = () => isSettingsRoutePath(location.pathname);
   const isRecordShow = () => isRecordShowPath(location.pathname);
-  const isDashboardShow = () => isDashboardDetailPath(location.pathname);
+  const isMerchantGpv = () => isMerchantGpvPath(location.pathname);
 
   return (
     <Switch fallback={<StandardAppShell {...props} />}>
@@ -26,8 +26,8 @@ export function AppShell(props: RouteSectionProps) {
       <Match when={isRecordShow()}>
         <RecordShowShell {...props} />
       </Match>
-      <Match when={isDashboardShow()}>
-        <DashboardShowShell {...props} />
+      <Match when={isMerchantGpv()}>
+        <MerchantGpvShell {...props} />
       </Match>
     </Switch>
   );

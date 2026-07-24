@@ -15,10 +15,13 @@ import {
   requestPasswordReset,
   resetPassword,
 } from "~/actions/auth/reset-password";
+import { logout } from "~/actions/auth/session";
 import type {
   PasskeyStartSubmissionResult,
   PasswordLoginSubmissionResult,
 } from "~/contracts/auth";
+
+export const logoutMutation = action(logout, "logout");
 
 export const passwordLoginMutation = action(
   async (formData: FormData): Promise<PasswordLoginSubmissionResult> =>

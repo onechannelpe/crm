@@ -11,8 +11,7 @@ import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { UserId } from "~/server/shared/ids";
 
 import { dateFromStorage } from "../storage-month";
-import { getLatestCompletedMerchantReportCut } from "./latest-report";
-import { targetAsOfMonth } from "./target-as-of";
+import { getActiveGpvSnapshotCut } from "./latest-report";
 
 interface MerchantContext {
   tradeName: string | null;
@@ -22,29 +21,56 @@ interface MerchantContext {
 export async function getExecutiveMerchantPortfolio(
   db: DatabaseExecutor,
   executiveId: UserId,
+  now: Date,
 ): Promise<HomeMerchantPortfolioView> {
-  const cutAt = await getLatestCompletedMerchantReportCut(db);
-
-  if (!cutAt) {
-    return emptyPortfolio();
-  }
-
-  const cutDate = appCalendarDateAt(cutAt);
-  const month = calendarMonthFromDate(cutDate);
+  const cutAt = await getActiveGpvSnapshotCut(db);
+  const cutDate = cutAt ? appCalendarDateAt(cutAt) : null;
+  const month = calendarMonthFromDate(appCalendarDateAt(cutAt ?? now));
+  const monthStart = calendarMonthStart(month);
   const rows = await db
-    .selectFrom("merchant_monthly_gpv as m")
-    .innerJoin("merchant_month_credit as a", (join) =>
-      join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
+    .selectFrom("organizations as o")
+    .leftJoin(
+      "organization_current_owners as owner",
+      "owner.organization_id",
+      "o.id",
     )
-    .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
-    .leftJoin("organizations as o", "o.ruc", "m.ruc")
-    .where("m.month", "=", calendarMonthStart(month))
-    .where("a.seller_user_id", "=", executiveId)
-    .select(["m.ruc", "m.gpv", "o.legal_name", "t.projected_gpv"])
+    .leftJoin("merchant_monthly_gpv as m", (join) =>
+      join.onRef("m.ruc", "=", "o.ruc").on("m.month", "=", monthStart),
+    )
+    .leftJoin("merchant_month_credit as credit", (join) =>
+      join
+        .onRef("credit.ruc", "=", "o.ruc")
+        .on("credit.month", "=", monthStart),
+    )
+    .leftJoinLateral(
+      (eb) =>
+        eb
+          .selectFrom("merchant_gpv_targets as target")
+          .select("target.monthly_target_gpv")
+          .whereRef("target.organization_id", "=", "o.id")
+          .where("target.effective_from", "<=", monthStart)
+          .orderBy("target.effective_from", "desc")
+          .limit(1)
+          .as("target"),
+      (join) => join.onTrue(),
+    )
+    .where((eb) =>
+      eb.or([
+        eb("owner.executive_id", "=", executiveId),
+        eb("credit.seller_user_id", "=", executiveId),
+      ]),
+    )
+    .select([
+      "o.ruc",
+      "o.legal_name",
+      "m.gpv",
+      "credit.seller_user_id",
+      "target.monthly_target_gpv",
+    ])
     .execute();
 
   if (rows.length === 0) {
-    return { cutDate, month, totalGpv: 0, merchants: [] };
+    return { cutDate, month, merchants: [] };
   }
 
   const rucs = rows.map((row) => row.ruc);
@@ -60,8 +86,8 @@ export async function getExecutiveMerchantPortfolio(
       return {
         ruc: row.ruc,
         name: context?.tradeName ?? row.legal_name ?? row.ruc,
-        gpv: row.gpv,
-        projectedGpv: row.projected_gpv,
+        gpv: row.seller_user_id === executiveId ? (row.gpv ?? 0) : 0,
+        projectedGpv: row.monthly_target_gpv,
         lastTransactionAt: context?.lastTransactionAt ?? null,
         leadId: leadIdByRuc.get(row.ruc) ?? null,
       };
@@ -71,17 +97,7 @@ export async function getExecutiveMerchantPortfolio(
   return {
     cutDate,
     month,
-    totalGpv: merchants.reduce((total, merchant) => total + merchant.gpv, 0),
     merchants,
-  };
-}
-
-function emptyPortfolio(): HomeMerchantPortfolioView {
-  return {
-    cutDate: null,
-    month: null,
-    totalGpv: 0,
-    merchants: [],
   };
 }
 
@@ -127,9 +143,14 @@ async function loadLeadIds(
   const leads = await db
     .selectFrom("workflow_leads as lead")
     .innerJoin("organizations as o", "o.id", "lead.organization_id")
+    .innerJoin(
+      "organization_current_owners as owner",
+      "owner.organization_id",
+      "lead.organization_id",
+    )
     .select(["o.ruc", "lead.id", "lead.created_at"])
     .where("o.ruc", "in", rucs)
-    .where("lead.executive_id", "=", executiveId)
+    .where("owner.executive_id", "=", executiveId)
     .where("lead.deleted_at", "is", null)
     .where("lead.stage", "!=", "EXPIRED")
     .orderBy("lead.created_at", "desc")

@@ -1,29 +1,26 @@
 import { revalidate } from "@solidjs/router";
 
-import {
-  attainmentQuery,
-  cohortRowsQuery,
-  culqiUserGpvQuery,
-  lifecycleQuery,
-  merchantFilterOptionsQuery,
-  qualityRowsQuery,
-  qualitySummaryQuery,
-  rampQuery,
-} from "~/lib/queries/dashboards";
-import { homeMerchantPortfolioQuery } from "~/lib/queries/home";
+import { QUERY_KEYS } from "~/contracts/query-keys";
 
-const GPV_QUERY_KEYS = [
-  attainmentQuery.key,
-  rampQuery.key,
-  lifecycleQuery.key,
+import {
+  cohortRowsQuery,
+  gpvCulqiViewQuery,
+  gpvPerformanceViewQuery,
+  merchantFilterOptionsQuery,
+  merchantStatsByRucQuery,
+  qualityRowsQuery,
+} from "./data/queries";
+
+const PUBLISHED_GPV_QUERY_KEYS = [
+  gpvPerformanceViewQuery.key,
+  gpvCulqiViewQuery.key,
   cohortRowsQuery.key,
-  culqiUserGpvQuery.key,
   merchantFilterOptionsQuery.key,
-  qualitySummaryQuery.key,
+  merchantStatsByRucQuery.key,
   qualityRowsQuery.key,
-  homeMerchantPortfolioQuery.key,
+  QUERY_KEYS.homeMerchantPortfolio,
 ];
 
-export function revalidateGpvData(): Promise<void> {
-  return revalidate(GPV_QUERY_KEYS);
+export function refreshPublishedGpvData(): Promise<void> {
+  return revalidate(PUBLISHED_GPV_QUERY_KEYS);
 }

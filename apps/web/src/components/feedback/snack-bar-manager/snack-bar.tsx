@@ -46,8 +46,8 @@ export function SnackBar(props: SnackBarProps) {
   return (
     <div
       class={cn(styles.snackBar, variantStyles[props.item.variant])}
-      onMouseEnter={props.onPause}
-      onMouseLeave={props.onResume}
+      onMouseEnter={() => props.onPause()}
+      onMouseLeave={() => props.onResume()}
       role={props.item.role}
       aria-live={props.item.role === "alert" ? "assertive" : "polite"}
       data-globally-prevent-click-outside

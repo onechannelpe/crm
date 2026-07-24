@@ -1,17 +1,12 @@
-import { revalidate, useSearchParams } from "@solidjs/router";
-import { createEffect, createMemo, createSignal, on, Show } from "solid-js";
+import { useAction, useSearchParams, useSubmission } from "@solidjs/router";
+import { createEffect, createMemo, createSignal, Show } from "solid-js";
 
-import { searchDirect } from "~/actions/search/run";
 import { AppPage } from "~/components/layout/page";
 import {
   isSearchIntent,
   type SearchIntent,
 } from "~/contracts/search/vocabulary";
-import {
-  intentFromTab,
-  tabFromIntent,
-  type SearchTab,
-} from "~/features/search/model/display";
+import { intentFromTab, tabFromIntent } from "~/features/search/model/display";
 import { createSearchViewModel } from "~/features/search/model/search-view-model";
 import { SearchLayout } from "~/features/search/ui/search-layout";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
@@ -19,77 +14,97 @@ import {
   createSearchCompanyDetailSidePanelPage,
   createSearchPersonDetailSidePanelPage,
 } from "~/features/side-panel/types/side-panel-page";
-import { mySearchAllowanceQuery } from "~/lib/queries/search";
+import { searchDirectMutation } from "~/lib/mutations/search";
+import { actionErrorMessage } from "~/lib/wire-error";
 
 import pageStyles from "~/features/search/ui/search-page-shell.module.css";
+
+const EMPTY_SEARCH_MODEL = createSearchViewModel({ rows: [] });
+
+function searchKey(input: { intent: SearchIntent; query: string }): string {
+  return `${input.intent}:${input.query}`;
+}
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = createSignal("");
   const [intent, setIntent] = createSignal<SearchIntent>("people");
-  const [tab, setTab] = createSignal<SearchTab>("people");
-  const [model, setModel] = createSignal(createSearchViewModel({ rows: [] }));
+  const [result, setResult] = createSignal<{
+    key: string;
+    model: ReturnType<typeof createSearchViewModel>;
+  }>();
   const [selectedKey, setSelectedKey] = createSignal<string | null>(null);
-  const [searching, setSearching] = createSignal(false);
-  const [searchErrorMessage, setSearchErrorMessage] = createSignal<
-    string | null
-  >(null);
+  const executeSearch = useAction(searchDirectMutation);
+  const submission = useSubmission(searchDirectMutation);
   const { openPanel, closePanel } = useSidePanel();
+  const tab = createMemo(() => tabFromIntent(intent()));
+  const committedInput = createMemo(() => {
+    const urlQuery =
+      typeof searchParams.query === "string" ? searchParams.query : "";
+    const urlIntent =
+      typeof searchParams.intent === "string" &&
+      isSearchIntent(searchParams.intent)
+        ? searchParams.intent
+        : "people";
+
+    return { intent: urlIntent, query: urlQuery, limit: 20 };
+  });
+  const committedKey = () => searchKey(committedInput());
+  const model = createMemo(() => {
+    const current = result();
+    return current?.key === committedKey() ? current.model : EMPTY_SEARCH_MODEL;
+  });
   const resultCount = createMemo(() => model().total);
+  let autoSearchKey: string | null = null;
 
   createEffect(() => {
-    if (typeof searchParams.query === "string" && searchParams.query) {
-      setQuery(searchParams.query);
-    }
-
-    if (
-      typeof searchParams.intent !== "string" ||
-      !isSearchIntent(searchParams.intent)
-    ) {
-      return;
-    }
-
-    setIntent(searchParams.intent);
-    setTab(tabFromIntent(searchParams.intent));
+    const committed = committedInput();
+    setQuery(committed.query);
+    setIntent(committed.intent);
   });
 
-  async function handleSearch(event?: Event) {
+  async function runSearch(input: {
+    intent: SearchIntent;
+    query: string;
+    limit: number;
+  }): Promise<void> {
+    setResult(undefined);
+    setSelectedKey(null);
+    closePanel();
+
+    const response = await executeSearch(input);
+    const key = searchKey(input);
+    setResult({ key, model: createSearchViewModel(response) });
+    setSearchParams({
+      intent: input.intent,
+      query: input.query,
+      limit: String(input.limit),
+    });
+  }
+
+  async function handleSearch(event?: Event): Promise<void> {
     event?.preventDefault();
-    setSearching(true);
-    setSearchErrorMessage(null);
     try {
-      const response = await searchDirect({
+      await runSearch({
         intent: intent(),
         query: query(),
         limit: 20,
       });
-      setSearchParams({ intent: intent(), query: query(), limit: "20" });
-      const nextModel = createSearchViewModel(response);
-      setModel(nextModel);
+    } catch {
       setSelectedKey(null);
       closePanel();
-      await revalidate(mySearchAllowanceQuery.key);
-    } catch (caught) {
-      setModel(createSearchViewModel({ rows: [] }));
-      setSelectedKey(null);
-      closePanel();
-      setSearchErrorMessage(
-        caught instanceof Error ? caught.message : "Search failed",
-      );
-    } finally {
-      setSearching(false);
     }
   }
 
-  createEffect(
-    on(
-      () => searchParams.query,
-      (urlQuery) => {
-        if (!urlQuery || model().total > 0 || searchErrorMessage()) return;
-        void handleSearch();
-      },
-    ),
-  );
+  createEffect(() => {
+    const input = committedInput();
+    const key = searchKey(input);
+    if (!input.query || result()?.key === key || autoSearchKey === key) {
+      return;
+    }
+    autoSearchKey = key;
+    void runSearch(input).catch(() => undefined);
+  });
 
   return (
     <AppPage class={pageStyles.page}>
@@ -98,7 +113,6 @@ export default function SearchPage() {
           tab={tab()}
           tabs={["people", "companies"]}
           onTabChange={(nextTab) => {
-            setTab(nextTab);
             setIntent(intentFromTab(nextTab));
             setSelectedKey(null);
             closePanel();
@@ -109,7 +123,7 @@ export default function SearchPage() {
             setSelectedKey(null);
             closePanel();
           }}
-          searching={searching()}
+          searching={Boolean(submission.pending)}
           onSearch={(event) => void handleSearch(event)}
           totalCount={resultCount()}
           people={model().people}
@@ -135,8 +149,10 @@ export default function SearchPage() {
           }}
         />
 
-        <Show when={searchErrorMessage()}>
-          {(message) => <p class={pageStyles.error}>{message()}</p>}
+        <Show when={submission.error}>
+          {(error) => (
+            <p class={pageStyles.error}>{actionErrorMessage(error())}</p>
+          )}
         </Show>
       </div>
     </AppPage>

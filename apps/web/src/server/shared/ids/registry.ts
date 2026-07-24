@@ -68,17 +68,29 @@ export const FulfillmentOrderId = uuidId("FulfillmentOrderId");
 export type IntegrationJobId = BrandedId<"IntegrationJobId">;
 export const IntegrationJobId = uuidId("IntegrationJobId");
 
-export type MerchantReportId = BrandedId<"MerchantReportId">;
-export const MerchantReportId = uuidId("MerchantReportId");
+export type GpvSnapshotId = BrandedId<"GpvSnapshotId">;
+export const GpvSnapshotId = uuidId("GpvSnapshotId");
 
-export type MerchantReportImportId = BrandedId<"MerchantReportImportId">;
-export const MerchantReportImportId = uuidId("MerchantReportImportId");
+export type GpvSnapshotJobId = BrandedId<"GpvSnapshotJobId">;
+export const GpvSnapshotJobId = uuidId("GpvSnapshotJobId");
 
-export type MerchantSaleId = BrandedId<"MerchantSaleId">;
-export const MerchantSaleId = uuidId("MerchantSaleId");
+export type GpvSnapshotPlacementId = BrandedId<"GpvSnapshotPlacementId">;
+export const GpvSnapshotPlacementId = uuidId("GpvSnapshotPlacementId");
 
-export type MerchantAttributionJobId = BrandedId<"MerchantAttributionJobId">;
-export const MerchantAttributionJobId = uuidId("MerchantAttributionJobId");
+export type GpvSnapshotIssueId = BrandedId<"GpvSnapshotIssueId">;
+export const GpvSnapshotIssueId = uuidId("GpvSnapshotIssueId");
+
+export type OrganizationOwnerAssignmentId =
+  BrandedId<"OrganizationOwnerAssignmentId">;
+export const OrganizationOwnerAssignmentId = uuidId(
+  "OrganizationOwnerAssignmentId",
+);
+
+export type MerchantMonthCreditAdjustmentId =
+  BrandedId<"MerchantMonthCreditAdjustmentId">;
+export const MerchantMonthCreditAdjustmentId = uuidId(
+  "MerchantMonthCreditAdjustmentId",
+);
 
 export type NotificationDeliveryId = BrandedId<"NotificationDeliveryId">;
 export const NotificationDeliveryId = uuidId("NotificationDeliveryId");

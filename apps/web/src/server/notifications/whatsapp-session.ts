@@ -1,5 +1,3 @@
-import { sql } from "kysely";
-
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { UserId } from "~/server/shared/ids";
 
@@ -18,9 +16,12 @@ export async function openSession(
       expires_at: expiresAt,
     })
     .onConflict((oc) =>
-      oc.column("user_id").doUpdateSet({
-        expires_at: sql<Date>`GREATEST(whatsapp_sessions.expires_at, EXCLUDED.expires_at)`,
-      }),
+      oc.column("user_id").doUpdateSet((eb) => ({
+        expires_at: eb.fn<Date>("greatest", [
+          "whatsapp_sessions.expires_at",
+          eb.ref("excluded.expires_at"),
+        ]),
+      })),
     )
     .execute();
 }

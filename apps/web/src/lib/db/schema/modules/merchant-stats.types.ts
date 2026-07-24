@@ -2,37 +2,52 @@ import type { ColumnType, Generated } from "kysely";
 
 import type { Json } from "~/contracts/json";
 import type {
-  AttributionConfidence,
-  AttributionMethod,
-} from "~/contracts/merchant-stats/vocabulary";
-import type {
   BranchId,
+  FileAssetId,
   GeneratedId,
+  GpvSnapshotId,
+  GpvSnapshotIssueId,
+  GpvSnapshotJobId,
+  GpvSnapshotPlacementId,
   IdColumn,
-  MerchantAttributionJobId,
-  MerchantReportId,
-  MerchantReportImportId,
-  MerchantSaleId,
+  MerchantMonthCreditAdjustmentId,
   NullableIdColumn,
   OrganizationId,
   UserId,
 } from "~/server/shared/ids";
 
 export type MerchantProduct = "CULQIFULL" | "CULQILINK" | "CULQIONLINE";
+export type GpvSnapshotState =
+  | "queued"
+  | "processing"
+  | "needs_review"
+  | "ready"
+  | "active"
+  | "superseded"
+  | "rejected"
+  | "failed";
+export type GpvSnapshotIssueSeverity = "warning" | "blocking";
+export type GpvSnapshotIssueStatus = "open" | "resolved";
+export type GpvSnapshotIssueResolution =
+  | "accept_candidate"
+  | "keep_previous"
+  | "exclude_candidate"
+  | "reject_snapshot";
 
-export interface MerchantReportsTable {
-  id: GeneratedId<MerchantReportId>;
-  content_sha256: string;
+export interface GpvSnapshotsTable {
+  id: GeneratedId<GpvSnapshotId>;
+  file_asset_id: IdColumn<FileAssetId>;
   cut_at: Date;
-  storage_key: string;
-  source_filename: string;
-  uploaded_by: IdColumn<UserId>;
-  created_at: Date;
+  revision: number;
+  state: Generated<GpvSnapshotState>;
+  uploaded_at: Date;
+  activated_by: NullableIdColumn<UserId>;
+  activated_at: Date | null;
 }
 
-export interface MerchantReportImportsTable {
-  id: GeneratedId<MerchantReportImportId>;
-  report_id: IdColumn<MerchantReportId>;
+export interface GpvSnapshotJobsTable {
+  id: GeneratedId<GpvSnapshotJobId>;
+  snapshot_id: IdColumn<GpvSnapshotId>;
   queue_state: Generated<"pending" | "processing" | "done" | "failed">;
   rows_total: number | null;
   rows_applied: number | null;
@@ -47,22 +62,19 @@ export interface MerchantReportImportsTable {
   completed_at: Date | null;
 }
 
-export interface MerchantReportRejectionsTable {
-  report_id: IdColumn<MerchantReportId>;
-  row_number: number;
-  ruc: string | null;
-  merchant_id: string | null;
-  serial_number: string | null;
-  reason: string;
-  raw: Json;
+export interface MerchantGpvDatasetTable {
+  id: "default";
+  updated_at: Date;
 }
 
-export interface MerchantSalesTable {
-  id: GeneratedId<MerchantSaleId>;
+export interface GpvSnapshotPlacementsTable {
+  id: GeneratedId<GpvSnapshotPlacementId>;
+  snapshot_id: IdColumn<GpvSnapshotId>;
+  row_number: number;
+  placement_key: string;
   merchant_id: string;
   product: string;
   serial_number: string | null;
-  serial_key: Generated<string>;
   ruc: string;
   sold_at: string;
   sale_month: string;
@@ -82,24 +94,101 @@ export interface MerchantSalesTable {
   last_transaction_at: string | null;
   m0_plus_15d_gpv: number | null;
   m0_plus_15d_trx: number | null;
-  first_seen_report_id: IdColumn<MerchantReportId>;
-  last_seen_report_id: IdColumn<MerchantReportId>;
-  created_at: Date;
-  updated_at: Date;
+  raw: Json;
 }
 
-export interface MerchantSaleGpvTable {
-  sale_id: IdColumn<MerchantSaleId>;
+export interface GpvSnapshotObservationsTable {
+  snapshot_id: IdColumn<GpvSnapshotId>;
+  placement_id: IdColumn<GpvSnapshotPlacementId>;
   month_offset: number;
   sale_month: string;
   realized_month: Generated<string>;
   gpv: number;
   trx: number;
-  cut_at: Date;
-  report_id: IdColumn<MerchantReportId>;
 }
 
-export interface MerchantMonthlyGpvTable {
+export interface GpvSnapshotIssuesTable {
+  id: GeneratedId<GpvSnapshotIssueId>;
+  snapshot_id: IdColumn<GpvSnapshotId>;
+  issue_key: string;
+  issue_type: string;
+  entity_key: string | null;
+  severity: GpvSnapshotIssueSeverity;
+  status: Generated<GpvSnapshotIssueStatus>;
+  detail: string;
+  previous_value: Json | null;
+  candidate_value: Json | null;
+  resolution: GpvSnapshotIssueResolution | null;
+  resolved_by: NullableIdColumn<UserId>;
+  resolved_at: Date | null;
+  created_at: Date;
+}
+
+export interface MerchantMonthCreditsTable {
+  ruc: string;
+  month: string;
+  organization_id: IdColumn<OrganizationId>;
+  seller_user_id: IdColumn<UserId>;
+  branch_id: NullableIdColumn<BranchId>;
+  first_snapshot_id: IdColumn<GpvSnapshotId>;
+  credited_at: Date;
+}
+
+export interface MerchantMonthCreditAdjustmentsTable {
+  id: GeneratedId<MerchantMonthCreditAdjustmentId>;
+  ruc: string;
+  month: string;
+  seller_user_id: NullableIdColumn<UserId>;
+  branch_id: NullableIdColumn<BranchId>;
+  reason: string;
+  adjusted_by: IdColumn<UserId>;
+  adjusted_at: Date;
+}
+
+export interface MerchantGpvTargetsTable {
+  organization_id: IdColumn<OrganizationId>;
+  effective_from: string;
+  monthly_target_gpv: number | null;
+  set_by: IdColumn<UserId>;
+  set_at: Date;
+}
+
+export interface MerchantSalesView {
+  id: IdColumn<GpvSnapshotPlacementId>;
+  merchant_id: string;
+  product: string;
+  serial_number: string | null;
+  ruc: string;
+  sold_at: string;
+  sale_month: string;
+  trade_name: string | null;
+  legal_name: string | null;
+  culqi_user_code: string | null;
+  culqi_user_name: string | null;
+  mesa: string | null;
+  channel: string | null;
+  subchannel: string | null;
+  offer_amount: number | null;
+  promotion: string | null;
+  client_type: string | null;
+  stock_type: string | null;
+  trial_at: string | null;
+  activated_at: string | null;
+  last_transaction_at: string | null;
+  m0_plus_15d_gpv: number | null;
+  m0_plus_15d_trx: number | null;
+}
+
+export interface MerchantSaleGpvView {
+  sale_id: IdColumn<GpvSnapshotPlacementId>;
+  month_offset: number;
+  sale_month: string;
+  realized_month: string;
+  gpv: number;
+  trx: number;
+}
+
+export interface MerchantMonthlyGpvView {
   ruc: string;
   month: string;
   gpv: number;
@@ -107,59 +196,16 @@ export interface MerchantMonthlyGpvTable {
   device_count: number;
 }
 
-export interface MerchantMonthAttributionTable {
+export interface MerchantMonthCreditView {
   ruc: string;
   month: string;
-  organization_id: NullableIdColumn<OrganizationId>;
+  organization_id: IdColumn<OrganizationId>;
   seller_user_id: NullableIdColumn<UserId>;
   branch_id: NullableIdColumn<BranchId>;
-  method: AttributionMethod;
-  confidence: AttributionConfidence;
-  evidence: Json;
-  derived_at: Date;
-}
-
-export interface MerchantMonthAttributionOverrideTable {
-  ruc: string;
-  month: string;
-  seller_user_id: NullableIdColumn<UserId>;
-  branch_id: NullableIdColumn<BranchId>;
-  resolved_by: IdColumn<UserId>;
-  resolved_at: Date;
-}
-
-export interface MerchantMonthCreditTable {
-  ruc: string;
-  month: string;
-  organization_id: NullableIdColumn<OrganizationId>;
-  seller_user_id: NullableIdColumn<UserId>;
-  branch_id: NullableIdColumn<BranchId>;
-  method: AttributionMethod;
-  confidence: AttributionConfidence;
+  method: "crm_owner" | "manual";
+  confidence: "exact" | "none";
   evidence: Json;
   derived_at: Date;
   resolved_by: NullableIdColumn<UserId>;
   resolved_at: Date | null;
-}
-
-export interface MerchantAttributionJobsTable {
-  id: GeneratedId<MerchantAttributionJobId>;
-  ruc: string;
-  month: string;
-  queue_state: Generated<"pending" | "processing" | "done" | "failed">;
-  error_message: string | null;
-  lease_owner: string | null;
-  attempt_count: ColumnType<number, number | undefined, number>;
-  max_attempts: number;
-  claimable_at: Date;
-  created_at: Date;
-  completed_at: Date | null;
-}
-
-export interface MerchantTargetsTable {
-  ruc: string;
-  effective_from: string;
-  projected_gpv: number | null;
-  set_by: IdColumn<UserId>;
-  set_at: Date;
 }

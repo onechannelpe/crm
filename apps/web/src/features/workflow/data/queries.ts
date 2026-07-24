@@ -1,79 +1,44 @@
 import { query } from "@solidjs/router";
 
+import { listLeadSaleProofFiles } from "~/actions/workflow/files";
 import { queryMyInquiries } from "~/actions/workflow/queries/inquiries";
 import {
   queryAssignableExecutives,
   queryFulfillmentQueue,
+  queryLeadBootstrapPreview,
   queryLeadDetail,
   queryLeadList,
   queryPendingQuotationCount,
 } from "~/actions/workflow/queries/records";
-import {
-  type ListAssignableExecutivesInput,
-  type ListLeadsFiltersInput,
-} from "~/contracts/workflow/inputs";
-import {
-  type AssignableExecutiveView,
-  type FulfillmentQueueView,
-  type InquiryListView,
-  type LeadDetailView,
-  type LeadListView,
-  type PendingQuotationCountView,
-} from "~/contracts/workflow/views";
+import { QUERY_KEYS } from "~/contracts/query-keys";
 
-function normalizeLeadListFilters(
-  filters: ListLeadsFiltersInput,
-): ListLeadsFiltersInput {
-  return {
-    stage: filters.stage,
-    status: filters.status,
-    priority: filters.priority,
-    executiveId: filters.executiveId,
-    anyFieldSearch: filters.anyFieldSearch,
-    updatedToday: filters.updatedToday,
-    sortBy: filters.sortBy,
-    sortDirection: filters.sortDirection,
-    limit: filters.limit,
-    offset: filters.offset,
-  };
-}
+export const leadListQuery = query(queryLeadList, "workflow.leadList");
 
-export const leadListQuery = query(
-  (filters: ListLeadsFiltersInput): Promise<LeadListView> =>
-    queryLeadList(normalizeLeadListFilters(filters)),
-  "workflow.leadList",
-);
+export const leadDetailQuery = query(queryLeadDetail, "workflow.leadDetail");
 
-export const leadDetailQuery = query(
-  async (
-    leadId: string,
-  ): Promise<LeadDetailView & { evaluatedAt: number }> => ({
-    ...(await queryLeadDetail(leadId)),
-    evaluatedAt: Date.now(),
-  }),
-  "workflow.leadDetail",
+export const leadBootstrapPreviewQuery = query(
+  queryLeadBootstrapPreview,
+  "workflow.leadBootstrapPreview",
 );
 
 export const assignableExecutivesQuery = query(
-  (input: ListAssignableExecutivesInput): Promise<AssignableExecutiveView[]> =>
-    queryAssignableExecutives(input),
+  queryAssignableExecutives,
   "workflow.assignableExecutives",
 );
 
 export const fulfillmentQueueQuery = query(
-  async (): Promise<FulfillmentQueueView & { evaluatedAt: number }> => ({
-    ...(await queryFulfillmentQueue()),
-    evaluatedAt: Date.now(),
-  }),
+  queryFulfillmentQueue,
   "workflow.fulfillmentQueue",
 );
 
 export const pendingQuotationCountQuery = query(
-  (): Promise<PendingQuotationCountView> => queryPendingQuotationCount(),
+  queryPendingQuotationCount,
   "workflow.pendingQuotationCount",
 );
 
-export const inquiryListQuery = query(
-  (): Promise<InquiryListView> => queryMyInquiries(),
-  "workflow.inquiryList",
+export const inquiryListQuery = query(queryMyInquiries, "workflow.inquiryList");
+
+export const leadSaleProofFilesQuery = query(
+  listLeadSaleProofFiles,
+  QUERY_KEYS.workflow.leadSaleProofFiles,
 );

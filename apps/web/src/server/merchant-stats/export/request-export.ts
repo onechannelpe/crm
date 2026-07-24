@@ -9,7 +9,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
 import { getCohortRows } from "../read/cohort";
-import { getLatestCompletedMerchantReportCut } from "../read/latest-report";
+import { getActiveGpvSnapshotCut } from "../read/latest-report";
 import { buildMerchantGpvWorkbook } from "./workbook";
 
 type ExportDeps = {
@@ -25,7 +25,7 @@ export async function requestMerchantGpvExport(
 ): Promise<Result<{ token: string }, DomainError>> {
   const [rows, cutAt] = await Promise.all([
     getCohortRows(deps.db, filter),
-    getLatestCompletedMerchantReportCut(deps.db),
+    getActiveGpvSnapshotCut(deps.db),
   ]);
   const bytes = buildMerchantGpvWorkbook(rows);
   const storedFile = await storeGeneratedFile(

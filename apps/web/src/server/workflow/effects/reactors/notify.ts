@@ -90,11 +90,16 @@ export async function reactToStageChanges(
   const leadRows = await tx
     .selectFrom("workflow_leads as lead")
     .innerJoin("organizations as org", "org.id", "lead.organization_id")
-    .leftJoin("users as executive", "executive.id", "lead.executive_id")
+    .innerJoin(
+      "organization_current_owners as owner",
+      "owner.organization_id",
+      "lead.organization_id",
+    )
+    .innerJoin("users as executive", "executive.id", "owner.executive_id")
     .select([
       "lead.id as leadId",
       "org.ruc as ruc",
-      "lead.executive_id as executiveId",
+      "owner.executive_id as executiveId",
       "executive.branch_id as branchId",
     ])
     .where("lead.id", "in", leadIds)

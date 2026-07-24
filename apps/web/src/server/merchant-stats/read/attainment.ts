@@ -49,7 +49,7 @@ async function sellerRows(
       "u.first_surname",
       "b.name as branch_name",
       eb.fn.sum<number>("m.gpv").as("gpv"),
-      eb.fn.sum<number | null>("t.projected_gpv").as("projected_gpv"),
+      eb.fn.sum<number | null>("t.monthly_target_gpv").as("monthly_target_gpv"),
       eb.fn.count<number>("m.ruc").distinct().as("ruc_count"),
       eb.fn.sum<number>("m.device_count").as("device_count"),
     ])
@@ -62,7 +62,7 @@ async function sellerRows(
       label: displayName(row) ?? "Sin asignar",
       sublabel: row.branch_name,
       gpv: row.gpv ?? 0,
-      projectedGpv: row.projected_gpv,
+      projectedGpv: row.monthly_target_gpv,
       rucCount: row.ruc_count ?? 0,
       deviceCount: row.device_count ?? 0,
     }))
@@ -87,7 +87,7 @@ async function branchRows(
       "a.branch_id",
       "b.name as branch_name",
       eb.fn.sum<number>("m.gpv").as("gpv"),
-      eb.fn.sum<number | null>("t.projected_gpv").as("projected_gpv"),
+      eb.fn.sum<number | null>("t.monthly_target_gpv").as("monthly_target_gpv"),
       eb.fn.count<number>("m.ruc").distinct().as("ruc_count"),
       eb.fn.sum<number>("m.device_count").as("device_count"),
     ])
@@ -100,7 +100,7 @@ async function branchRows(
       label: row.branch_name ?? "Sin zonal",
       sublabel: null,
       gpv: row.gpv ?? 0,
-      projectedGpv: row.projected_gpv,
+      projectedGpv: row.monthly_target_gpv,
       rucCount: row.ruc_count ?? 0,
       deviceCount: row.device_count ?? 0,
     }))

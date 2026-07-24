@@ -5,16 +5,16 @@ import styles from "./navigation-drawer-item.module.css";
 export function NavigationDrawerItemBreadcrumb(props: {
   state?: NavigationDrawerSubItemState;
 }) {
-  const showVerticalBar =
+  const showVerticalBar = () =>
     props.state !== "last-not-selected" && props.state !== "last-selected";
 
-  const verticalBarShouldBeDarker =
+  const verticalBarShouldBeDarker = () =>
     props.state === "intermediate-before-selected";
 
-  const protrusionShouldBeDarker =
+  const protrusionShouldBeDarker = () =>
     props.state === "intermediate-selected" || props.state === "last-selected";
 
-  const gapShouldBeDarker =
+  const gapShouldBeDarker = () =>
     props.state === "intermediate-before-selected" ||
     props.state === "intermediate-selected" ||
     props.state === "last-selected";
@@ -23,16 +23,16 @@ export function NavigationDrawerItemBreadcrumb(props: {
     <span class={styles.subItemBreadcrumb}>
       <span
         class={styles.subItemBreadcrumbGap}
-        data-darker={gapShouldBeDarker ? "true" : undefined}
+        data-darker={gapShouldBeDarker() ? "true" : undefined}
       />
       <span
         class={styles.subItemBreadcrumbElbow}
-        data-darker={protrusionShouldBeDarker ? "true" : undefined}
+        data-darker={protrusionShouldBeDarker() ? "true" : undefined}
       />
-      {showVerticalBar ? (
+      {showVerticalBar() ? (
         <span
           class={styles.subItemBreadcrumbVertical}
-          data-darker={verticalBarShouldBeDarker ? "true" : undefined}
+          data-darker={verticalBarShouldBeDarker() ? "true" : undefined}
         />
       ) : null}
     </span>

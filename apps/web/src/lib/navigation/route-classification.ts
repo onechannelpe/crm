@@ -6,6 +6,6 @@ export function isRecordShowPath(pathname: string): boolean {
   return /^\/records\/[^/]+$/.test(pathname);
 }
 
-export function isDashboardDetailPath(pathname: string): boolean {
-  return /^\/dashboards\/[^/]+$/.test(pathname);
+export function isMerchantGpvPath(pathname: string): boolean {
+  return pathname === "/dashboards/merchant-gpv";
 }

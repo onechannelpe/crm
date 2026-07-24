@@ -2,8 +2,9 @@ import type { Kysely } from "kysely";
 
 import { computeHash, readStoredHash, writeStoredHash } from "./migration-hash";
 import { REFERENCE_DATA_MODULES, SCHEMA_MODULES } from "./schema";
+import type { Database } from "./types";
 
-export async function migrateToLatest(db: Kysely<any>) {
+export async function migrateToLatest(db: Kysely<Database>) {
   const hash = await computeHash(SCHEMA_MODULES, REFERENCE_DATA_MODULES);
   const stored = await readStoredHash(db);
 

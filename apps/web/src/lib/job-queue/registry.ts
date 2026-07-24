@@ -2,8 +2,7 @@ import { sql, type SqlBool } from "kysely";
 
 export const JOB_TABLE_CHANNELS = {
   workflow_integration_jobs: "job:records-import",
-  merchant_report_imports: "job:merchant-report-imports",
-  merchant_attribution_jobs: "job:merchant-attribution",
+  gpv_snapshot_jobs: "job:gpv-snapshots",
   company_registry_record: "job:enrichment",
   notification_intents: "job:notifications-intents",
   notification_deliveries: "job:notifications-deliveries",
@@ -19,4 +18,4 @@ export const CLAIMABLE_STATES = sql<SqlBool>`queue_state in ('pending', 'process
 
 // Progress updates use a browser channel, not a job queue.
 export const RECORDS_IMPORT_PROGRESS_CHANNEL = "records-import-progress";
-export const MERCHANT_REPORT_PROGRESS_CHANNEL = "merchant-report-progress";
+export const GPV_SNAPSHOT_PROGRESS_CHANNEL = "gpv-snapshot-progress";

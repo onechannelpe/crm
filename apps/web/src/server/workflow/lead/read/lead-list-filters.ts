@@ -5,13 +5,13 @@ import type { LeadQueryDatabase } from "./lead-query-types";
 
 type VisibilityQuery = SelectQueryBuilder<
   LeadQueryDatabase,
-  "lead" | "executive",
+  "lead" | "owner" | "executive",
   any
 >;
 
 type LeadListQuery = SelectQueryBuilder<
   LeadQueryDatabase,
-  "lead" | "executive" | "creator" | "org",
+  "lead" | "owner" | "executive" | "creator" | "org",
   any
 >;
 
@@ -44,7 +44,7 @@ export function applyLeadVisibility(
   }
 
   if (filters.actorRole === "executive") {
-    return query.where("lead.executive_id", "=", filters.actorUserId);
+    return query.where("owner.executive_id", "=", filters.actorUserId);
   }
 
   return query.where("executive.branch_id", "=", filters.actorBranchId);
@@ -57,7 +57,7 @@ export function applyLeadListFilters(
   let next = query;
 
   if (filters.executiveId !== undefined) {
-    next = next.where("lead.executive_id", "=", filters.executiveId);
+    next = next.where("owner.executive_id", "=", filters.executiveId);
   }
 
   if (filters.stage !== undefined) {

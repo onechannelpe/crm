@@ -32,7 +32,12 @@ export async function listFulfillmentQueue(
     .selectFrom("lead_fulfillment_orders as order")
     .innerJoin("workflow_leads as lead", "lead.id", "order.lead_id")
     .innerJoin("organizations as org", "org.id", "lead.organization_id")
-    .innerJoin("users as executive", "executive.id", "lead.executive_id")
+    .innerJoin(
+      "organization_current_owners as owner",
+      "owner.organization_id",
+      "lead.organization_id",
+    )
+    .innerJoin("users as executive", "executive.id", "owner.executive_id")
     .select([
       "order.lead_id as leadId",
       "order.current_step as currentStep",

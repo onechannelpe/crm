@@ -31,9 +31,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("organization_id", "uuid", (col) =>
       col.notNull().references("organizations.id"),
     )
-    .addColumn("executive_id", "uuid", (col) =>
-      col.notNull().references("users.id"),
-    )
     .addColumn("stage", "text", (col) => col.notNull())
     .addColumn("status", "text")
     .addColumn("priority", "text")
@@ -72,12 +69,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .on("workflow_leads")
     .column("reservation_expires_at")
     .where("reservation_expires_at", "is not", null)
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_leads_executive")
-    .on("workflow_leads")
-    .column("executive_id")
     .execute();
 
   await db.schema
@@ -141,13 +132,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .execute();
 
   await db.schema
-    .createTable("workflow_idempotency_keys")
-    .addColumn("key", "text", (col) => col.primaryKey())
-    .addColumn("result_json", "jsonb", (col) => col.notNull())
-    .addColumn("created_at", "timestamptz", (col) => col.notNull())
-    .execute();
-
-  await db.schema
     .createTable("workflow_lead_digital_policy")
     .addColumn("lead_id", "text", (col) =>
       col.primaryKey().references("workflow_leads.id").onDelete("cascade"),
@@ -163,38 +147,6 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("updated_by", "uuid", (col) =>
       col.notNull().references("users.id"),
     )
-    .execute();
-
-  await db.schema
-    .createTable("workflow_lead_assignments")
-    .addColumn("id", "text", (col) =>
-      col.primaryKey().defaultTo(sql`uuidv7()::text`),
-    )
-    .addColumn("lead_id", "text", (col) =>
-      col.notNull().references("workflow_leads.id"),
-    )
-    .addColumn("executive_id", "uuid", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("assigned_by", "uuid", (col) =>
-      col.notNull().references("users.id"),
-    )
-    .addColumn("is_active", "boolean", (col) => col.notNull().defaultTo(true))
-    .addColumn("assigned_at", "timestamptz", (col) => col.notNull())
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_lead_assignments_lead")
-    .on("workflow_lead_assignments")
-    .columns(["lead_id", "is_active"])
-    .execute();
-
-  await db.schema
-    .createIndex("idx_workflow_lead_assignments_active_unique")
-    .on("workflow_lead_assignments")
-    .columns(["lead_id", "is_active"])
-    .unique()
-    .where("is_active", "=", true)
     .execute();
 
   await db.schema

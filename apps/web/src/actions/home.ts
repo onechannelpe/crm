@@ -11,11 +11,12 @@ export async function getHomeMerchantPortfolio(): Promise<HomeMerchantPortfolioV
     name: "home.merchantPortfolio.read",
     access: { kind: "permission", permission: "dashboards:read:own" },
 
-    execute: async ({ actor }) =>
+    execute: async ({ actor, now }) =>
       Ok(
         await getExecutiveMerchantPortfolio(
           getServerRuntime().infra.db,
           actor.userId,
+          now(),
         ),
       ),
   });

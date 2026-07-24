@@ -1,7 +1,6 @@
-import { useAction, useSubmissions } from "@solidjs/router";
+import { useAction, useSubmission, useSubmissions } from "@solidjs/router";
 import { createSignal, onCleanup } from "solid-js";
 
-import { updateUserProfile } from "~/actions/settings/profile";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
@@ -12,6 +11,7 @@ import { Input } from "~/components/ui/input/input";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   removeUserAvatarMutation,
+  updateUserProfileMutation,
   uploadUserAvatarMutation,
 } from "~/lib/mutations/profile";
 import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
@@ -26,7 +26,6 @@ export default function ProfilePage() {
   const user = () => currentUser();
 
   const [profilePhone, setProfilePhone] = createSignal(user().phone || "");
-  const [savingProfile, setSavingProfile] = createSignal(false);
   const [avatarUrl, setAvatarUrl] = createSignal(user().avatarUrl);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = createSignal<string | null>(
     null,
@@ -37,6 +36,8 @@ export default function ProfilePage() {
 
   const uploadAvatar = useAction(uploadUserAvatarMutation);
   const removeAvatar = useAction(removeUserAvatarMutation);
+  const updateProfile = useAction(updateUserProfileMutation);
+  const profileSubmission = useSubmission(updateUserProfileMutation);
   const uploadSubmissions = useSubmissions(uploadUserAvatarMutation);
   const removeSubmissions = useSubmissions(removeUserAvatarMutation);
 
@@ -69,10 +70,8 @@ export default function ProfilePage() {
       return;
     }
 
-    setSavingProfile(true);
-
     try {
-      const { message } = await updateUserProfile(localPhone);
+      const { message } = await updateProfile(localPhone);
 
       updateCurrentUser((existing) => ({
         ...existing,
@@ -82,8 +81,6 @@ export default function ProfilePage() {
       enqueueSuccessSnackBar(message);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
-    } finally {
-      setSavingProfile(false);
     }
   };
 
@@ -160,7 +157,7 @@ export default function ProfilePage() {
             form={phoneFormId}
             size="sm"
             variant="secondary"
-            loading={savingProfile()}
+            loading={Boolean(profileSubmission.pending)}
           >
             Guardar
           </Button>

@@ -1,5 +1,6 @@
 import type {
   Database,
+  OrganizationCurrentOwnersView,
   OrganizationsTable,
   UsersTable,
   WorkflowLeadsTable,
@@ -13,6 +14,10 @@ export interface ExecutiveAlias {
   executive: UsersTable;
 }
 
+export interface OwnerAlias {
+  owner: OrganizationCurrentOwnersView;
+}
+
 export interface CreatorAlias {
   creator: UsersTable;
 }
@@ -23,6 +28,7 @@ export interface OrganizationAlias {
 
 export type LeadQueryDatabase = Database &
   LeadAlias &
+  OwnerAlias &
   ExecutiveAlias &
   CreatorAlias &
   OrganizationAlias;

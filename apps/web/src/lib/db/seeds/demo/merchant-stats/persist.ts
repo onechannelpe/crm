@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import type { Kysely } from "kysely";
 
 import type { Database } from "~/lib/db/types";
@@ -7,18 +5,14 @@ import {
   calendarDateFromParts,
   type CalendarDate,
 } from "~/lib/time/calendar-date";
-import { recomputeAttribution } from "~/server/merchant-stats/attribution/recompute";
-import { acceptReport } from "~/server/merchant-stats/commands/accept-report";
 import { setTarget } from "~/server/merchant-stats/commands/set-target";
-import { batchByRuc } from "~/server/merchant-stats/facts/batch-by-ruc";
-import {
-  insertRejections,
-  writeFactsBatch,
-} from "~/server/merchant-stats/facts/write-batch";
 import type {
   ParsedReport,
   SourceRow,
 } from "~/server/merchant-stats/intake/types";
+import { activateGpvSnapshot } from "~/server/merchant-stats/snapshot/activate";
+import { stageGpvSnapshot } from "~/server/merchant-stats/snapshot/stage";
+import { validateGpvSnapshot } from "~/server/merchant-stats/snapshot/validate";
 import type { UserId } from "~/server/shared/ids";
 
 import { daysBefore, type SeedContext } from "../../shared/context";
@@ -26,8 +20,6 @@ import { VALERIA } from "../demo-ids";
 import { LEAD_SPECS, MERCHANT_STATS_SERIAL_LINKS } from "../scenario";
 import { generateMerchants, toSourceRow, type MerchantSpec } from "./generator";
 import { CULQI_MERCHANT_REPORT_PROFILE as PROFILE } from "./profile";
-
-const SEED_BATCH_TARGET_ROWS = 2000;
 
 export async function persistDemoMerchantStats(
   db: Kysely<Database>,
@@ -70,61 +62,51 @@ async function applySnapshot(
   const cutDate = isoDate(input.cutAt);
   const parsed = snapshot(input.merchants, cutDate);
   const sourceFilename = `planning-report__dealer-infinity-pay_${cutFilenamePart(input.cutAt)}.xlsx`;
+  const file = await db
+    .insertInto("file_assets")
+    .values({
+      storage_key: `seed/${sourceFilename}`,
+      purpose: "merchant_gpv_snapshot",
+      original_filename: sourceFilename,
+      safe_display_filename: sourceFilename,
+      detected_mime:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      extension: "xlsx",
+      size_bytes: 0,
+      sha256_hex: `seed-${cutDate}`,
+      signature_kind: "zip",
+      scan_status: "clean",
+      created_by_user_id: input.uploader,
+      created_at: input.now,
+    })
+    .returning("id")
+    .executeTakeFirstOrThrow();
+  const snapshotRow = await db
+    .insertInto("gpv_snapshots")
+    .values({
+      file_asset_id: file.id,
+      cut_at: input.cutAt,
+      revision: 1,
+      uploaded_at: input.now,
+      state: "processing",
+    })
+    .returning("id")
+    .executeTakeFirstOrThrow();
 
-  const accepted = await acceptReport(db, {
-    contentSha256: createHash("sha256").update(`seed:${cutDate}`).digest("hex"),
-    cutAt: input.cutAt,
-    storageKey: `seed/${sourceFilename}`,
-    sourceFilename,
-    uploadedBy: input.uploader,
+  await stageGpvSnapshot(db, snapshotRow.id, parsed, input.now);
+  const issues = await validateGpvSnapshot(db, snapshotRow.id, input.now);
+  if (issues.blocking > 0) {
+    throw new Error("demo_gpv_snapshot_requires_review");
+  }
+
+  const activated = await activateGpvSnapshot(db, {
+    snapshotId: snapshotRow.id,
+    activatedBy: input.uploader,
     now: input.now,
   });
-
-  if (accepted.kind === "duplicate") {
-    return;
+  if (!activated.ok) {
+    throw new Error(activated.error.code ?? "gpv_snapshot_activation_failed");
   }
-
-  let rowsApplied = 0;
-  let rowsFailed = parsed.rejections.length;
-  let conflicts = 0;
-  let needsReview = 0;
-
-  await insertRejections(db, accepted.reportId, parsed.rejections);
-
-  for (const batch of batchByRuc(parsed.rows, SEED_BATCH_TARGET_ROWS)) {
-    // eslint-disable-next-line no-await-in-loop
-    const written = await writeFactsBatch(db, {
-      reportId: accepted.reportId,
-      cutAt: input.cutAt,
-      rows: batch,
-      now: input.now,
-    });
-
-    // eslint-disable-next-line no-await-in-loop
-    const derived = await recomputeAttribution(db, written.touched, input.now);
-
-    rowsApplied += written.rowsApplied;
-    rowsFailed += written.rowsRejected;
-    conflicts += derived.conflicts;
-    needsReview += derived.needsReview;
-  }
-
-  await db
-    .updateTable("merchant_report_imports")
-    .set({
-      queue_state: "done",
-      rows_total: parsed.rows.length + parsed.rejections.length,
-      rows_applied: rowsApplied,
-      rows_failed: rowsFailed,
-      results_json: JSON.stringify({
-        reportId: accepted.reportId,
-        conflicts,
-        needsReview,
-      }),
-      completed_at: input.now,
-    })
-    .where("id", "=", accepted.importId)
-    .execute();
 }
 
 async function persistTargets(
@@ -144,13 +126,16 @@ async function persistTargets(
   for (const merchant of byRuc.values()) {
     // Start at the sale month so ramping months are not marked as no_target.
     // eslint-disable-next-line no-await-in-loop
-    await setTarget(db, {
+    const target = await setTarget(db, {
       ruc: merchant.ruc,
       effectiveFrom: merchant.saleMonth,
       projectedGpv: merchant.projectedGpv,
       setBy: VALERIA,
       now: setAt,
     });
+    if (!target.ok) {
+      throw new Error(target.error.code ?? "merchant_target_seed_failed");
+    }
   }
 }
 

@@ -7,7 +7,7 @@ import type {
 } from "~/contracts/merchant-stats/views";
 import { calendarMonthStart } from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { MerchantSaleId } from "~/server/shared/ids";
+import type { GpvSnapshotPlacementId } from "~/server/shared/ids";
 
 import { dateFromStorage, monthFromStorageDate } from "../storage-month";
 import { creditFilter } from "./filter";
@@ -77,16 +77,16 @@ async function cohortTargets(
     .$if(filter.product != null, (qb) =>
       qb.where("s.product", "=", filter.product ?? ""),
     )
-    .select(["s.sale_month", "s.ruc", "t.projected_gpv"])
+    .select(["s.sale_month", "s.ruc", "t.monthly_target_gpv"])
     .distinct()
     .execute();
 
   const byMonth = new Map<string, number>();
   for (const row of rows) {
-    if (row.projected_gpv == null) continue;
+    if (row.monthly_target_gpv == null) continue;
     byMonth.set(
       row.sale_month,
-      (byMonth.get(row.sale_month) ?? 0) + row.projected_gpv,
+      (byMonth.get(row.sale_month) ?? 0) + row.monthly_target_gpv,
     );
   }
   return byMonth;
@@ -130,7 +130,7 @@ export async function getCohortRows(
       "s.m0_plus_15d_gpv",
       "s.m0_plus_15d_trx",
       "o.id as organization_id",
-      "t.projected_gpv",
+      "t.monthly_target_gpv",
       "u.names",
       "u.first_surname",
       "b.name as branch_name",
@@ -172,7 +172,7 @@ export async function getCohortRows(
       sellerName: displayName(sale),
       culqiUserName: sale.culqi_user_name,
       branchName: sale.branch_name,
-      projectedGpv: sale.projected_gpv,
+      projectedGpv: sale.monthly_target_gpv,
       months: Array.from(bySaleOffset, ([offset, point]) => ({
         offset,
         gpv: point.gpv,
@@ -188,7 +188,7 @@ export async function getCohortRows(
 
 async function pointsBySale(
   db: DatabaseExecutor,
-  saleIds: readonly MerchantSaleId[],
+  saleIds: readonly GpvSnapshotPlacementId[],
 ): Promise<Map<string, Map<number, GpvPoint>>> {
   const rows = await db
     .selectFrom("merchant_sale_gpv")

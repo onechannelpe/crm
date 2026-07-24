@@ -14,18 +14,19 @@ export interface TextareaProps extends JSX.TextareaHTMLAttributes<HTMLTextAreaEl
 
 export function Textarea(props: TextareaProps) {
   const [local, others] = splitProps(props, ["label", "error", "class", "id"]);
-  const textareaId = local.id || createUniqueId();
+  const generatedId = createUniqueId();
+  const textareaId = () => local.id || generatedId;
 
   return (
     <div class={styles.field}>
       {local.label && (
-        <InputLabel for={textareaId}>
+        <InputLabel for={textareaId()}>
           {local.label}
           {props.required && <span class={styles.required}>*</span>}
         </InputLabel>
       )}
       <textarea
-        id={textareaId}
+        id={textareaId()}
         class={cn(
           styles.textareaControl,
           local.error ? styles.errorControl : undefined,

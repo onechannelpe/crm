@@ -11,8 +11,8 @@ import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import { cohortRowsQuery } from "~/lib/queries/dashboards";
 
+import { cohortRowsQuery } from "../data/queries";
 import { formatInteger, formatMonth, formatSolesCompact } from "../format";
 import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";
@@ -117,7 +117,7 @@ const COLUMNS = [
 export function CohortGrid(props: { view: GpvView }) {
   const grid = useDashboardGrid<CohortSaleRow>({
     pageSize: GPV_GRID_PAGE_SIZE,
-    resetOn: props.view.filter,
+    resetKey: () => JSON.stringify(props.view.filter()),
     load: (page) => cohortRowsQuery({ filter: props.view.filter(), page }),
   });
 

@@ -16,7 +16,10 @@ export function QualityPanel(props: { summary: QualitySummary }) {
       <For each={QUALITY_ISSUES}>
         {(issue) => (
           <li class={styles.row}>
-            <A href={`/dashboards/quality/${issue}`} class={styles.link}>
+            <A
+              href={`/dashboards/merchant-gpv/quality/${issue}`}
+              class={styles.link}
+            >
               <span class={styles.label}>
                 {QUALITY_ISSUE_COPY[issue].label}
               </span>

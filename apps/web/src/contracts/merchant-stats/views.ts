@@ -18,6 +18,11 @@ export interface Page {
   offset: number;
 }
 
+export interface PublishedPage<Row> {
+  publicationId: string | null;
+  rows: Row[];
+}
+
 export interface GpvPoint {
   gpv: number;
   trx: number;
@@ -106,6 +111,25 @@ export interface LifecycleSummary {
 }
 
 export type QualitySummary = Record<QualityIssue, number>;
+
+export type GpvPerformanceView =
+  | { kind: "empty" }
+  | {
+      kind: "ready";
+      month: CalendarMonth;
+      attainment: Attainment;
+      lifecycle: LifecycleSummary;
+      ramp: CohortRampSeries[];
+      quality: QualitySummary;
+    };
+
+export type GpvCulqiView =
+  | { kind: "empty" }
+  | {
+      kind: "ready";
+      month: CalendarMonth;
+      rows: CulqiUserGpvRow[];
+    };
 
 export interface QualityRow {
   ruc: string;

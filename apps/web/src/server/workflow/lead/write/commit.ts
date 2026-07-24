@@ -1,7 +1,7 @@
-import { enqueueAttributionForLead } from "~/server/merchant-stats/attribution/invalidate";
+import { assignOrganizationOwner } from "~/server/organization/ownership";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
+import type { UserId } from "~/server/shared/ids";
 import { createEventsRepo } from "~/server/shared/repos-events";
 import { Err, Ok, type Result } from "~/server/shared/result";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
@@ -20,29 +20,6 @@ export type LeadAssignment = {
   at: Date;
 };
 
-async function replaceActiveAssignment(
-  tx: DatabaseExecutor,
-  input: LeadAssignment & { leadId: WorkflowLeadId },
-): Promise<void> {
-  await tx
-    .updateTable("workflow_lead_assignments")
-    .set({ is_active: false })
-    .where("lead_id", "=", input.leadId)
-    .where("is_active", "=", true)
-    .execute();
-
-  await tx
-    .insertInto("workflow_lead_assignments")
-    .values({
-      lead_id: input.leadId,
-      executive_id: input.toExecutiveId,
-      assigned_by: input.assignedBy,
-      is_active: true,
-      assigned_at: input.at,
-    })
-    .execute();
-}
-
 export async function commitTransition(
   tx: DatabaseExecutor,
   transition: LeadTransition,
@@ -56,7 +33,6 @@ export async function commitTransition(
       stage: next.stage,
       status: next.status,
       priority: next.priority,
-      executive_id: next.executiveId,
       updated_by: next.updatedBy,
       updated_at: next.updatedAt,
       reservation_expires_at: next.reservationExpiresAt,
@@ -72,14 +48,18 @@ export async function commitTransition(
   }
 
   if (assignment) {
-    await replaceActiveAssignment(tx, {
-      ...assignment,
-      leadId: next.id,
+    const assigned = await assignOrganizationOwner(tx, {
+      organizationId: next.organizationId,
+      executiveId: assignment.toExecutiveId,
+      assignedBy: assignment.assignedBy,
+      at: assignment.at,
+      reason: "workflow_reassignment",
     });
-  }
 
-  // Any transition can affect attribution, so always queue a recalculation.
-  await enqueueAttributionForLead(tx, next.id, next.updatedAt);
+    if (!assigned.ok) {
+      return assigned;
+    }
+  }
 
   const eventIds = await createEventsRepo(tx).append(
     events.map(toLeadEventAppend),

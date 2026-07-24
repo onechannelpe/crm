@@ -77,7 +77,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
           class={styles.navButton}
           aria-label="Mes anterior"
           disabled={props.isPreviousMonthDisabled}
-          onClick={props.onPreviousMonth}
+          onClick={() => props.onPreviousMonth()}
         >
           <ChevronLeft size={16} />
         </button>
@@ -85,7 +85,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
           type="button"
           class={styles.navButton}
           aria-label="Mes siguiente"
-          onClick={props.onNextMonth}
+          onClick={() => props.onNextMonth()}
         >
           <ChevronRight size={16} />
         </button>

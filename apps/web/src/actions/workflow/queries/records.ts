@@ -21,7 +21,7 @@ import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { UserId, WorkflowLeadId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Ok } from "~/server/shared/result";
+import { isErr, Ok } from "~/server/shared/result";
 import { resolvePendingQuotationPolicy } from "~/server/workflow/lead/domain/pending-quotation";
 import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
@@ -81,7 +81,7 @@ export async function queryLeadList(
 
 export async function queryLeadDetail(
   rawLeadId: string,
-): Promise<LeadDetailView> {
+): Promise<LeadDetailView & { evaluatedAt: number }> {
   return runAction({
     name: "workflow.get_lead_detail",
     access: { kind: "auth" },
@@ -93,30 +93,44 @@ export async function queryLeadDetail(
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, query) => {
+    execute: async ({ actor, now }, query) => {
       const workflow = getServerRuntime().workflow;
       const { userId, role } = workflowActor(actor);
 
-      return getLeadDetail(workflow.repos, {
+      const detail = await getLeadDetail(workflow.repos, {
         actorUserId: userId,
         actorRole: role,
         leadId: query.leadId,
+      });
+      if (isErr(detail)) return detail;
+
+      return Ok({
+        ...detail.value,
+        evaluatedAt: now().getTime(),
       });
     },
   });
 }
 
-export async function queryFulfillmentQueue(): Promise<FulfillmentQueueView> {
+export async function queryFulfillmentQueue(): Promise<
+  FulfillmentQueueView & { evaluatedAt: number }
+> {
   return runAction({
     name: "workflow.list_fulfillment_queue",
     access: { kind: "auth" },
 
-    execute: ({ actor }) => {
+    execute: async ({ actor, now }) => {
       const { role, branchId } = workflowActor(actor);
-      return listFulfillmentQueue(
+      const queue = await listFulfillmentQueue(
         getServerRuntime().workflow.ports().executor,
         { actorRole: role, actorBranchId: branchId },
       );
+      if (isErr(queue)) return queue;
+
+      return Ok({
+        ...queue.value,
+        evaluatedAt: now().getTime(),
+      });
     },
   });
 }

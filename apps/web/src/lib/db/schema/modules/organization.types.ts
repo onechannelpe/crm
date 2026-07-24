@@ -4,8 +4,10 @@ import type {
   GeneratedId,
   IdColumn,
   OrganizationId,
+  OrganizationOwnerAssignmentId,
   OrganizationPersonId,
   PersonId,
+  UserId,
 } from "~/server/shared/ids";
 
 export interface PeopleTable {
@@ -31,6 +33,23 @@ export interface OrganizationsTable {
   phone: string | null;
   email: string | null;
   created_at: Date;
+}
+
+export interface OrganizationOwnerAssignmentsTable {
+  id: GeneratedId<OrganizationOwnerAssignmentId>;
+  organization_id: IdColumn<OrganizationId>;
+  executive_id: IdColumn<UserId>;
+  valid_from: Date;
+  valid_until: Date | null;
+  assigned_by: IdColumn<UserId>;
+  reason: string | null;
+  created_at: Date;
+}
+
+export interface OrganizationCurrentOwnersView {
+  organization_id: IdColumn<OrganizationId>;
+  executive_id: IdColumn<UserId>;
+  assigned_at: Date;
 }
 
 export interface OrganizationPeopleTable {

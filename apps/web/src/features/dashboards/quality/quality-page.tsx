@@ -1,7 +1,6 @@
-import { createAsync, useParams } from "@solidjs/router";
+import { createAsync, useAction, useParams } from "@solidjs/router";
 import { createMemo, ErrorBoundary, Suspense } from "solid-js";
 
-import { resolveAttribution } from "~/actions/dashboards/attribution";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
@@ -20,17 +19,14 @@ import { isQualityIssue } from "~/contracts/merchant-stats/vocabulary";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import {
-  merchantFilterOptionsQuery,
-  qualityRowsQuery,
-} from "~/lib/queries/dashboards";
 
+import { adjustMonthCreditMutation } from "../data/mutations";
+import { merchantFilterOptionsQuery, qualityRowsQuery } from "../data/queries";
 import { formatMonth, formatSoles } from "../format";
 import {
   GPV_GRID_PAGE_SIZE,
   useDashboardGrid,
 } from "../grids/use-dashboard-grid";
-import { revalidateGpvData } from "../revalidate";
 
 import styles from "./quality-page.module.css";
 
@@ -44,15 +40,16 @@ export function QualityPage() {
 
   const options = createAsync(() => merchantFilterOptionsQuery());
   const sellers = () => options()?.sellers ?? [];
+  const adjustCredit = useAction(adjustMonthCreditMutation);
 
   const grid = useDashboardGrid<QualityRow>({
     pageSize: GPV_GRID_PAGE_SIZE,
-    resetOn: issue,
+    resetKey: () => issue() ?? "invalid",
     load: (page) => {
       const current = issue();
       return current
         ? qualityRowsQuery({ issue: current, page })
-        : Promise.resolve([]);
+        : Promise.resolve({ publicationId: null, rows: [] });
     },
   });
 
@@ -93,17 +90,16 @@ export function QualityPage() {
             ariaLabel="Vendedor real"
             options={[UNASSIGNED, ...sellers().map((seller) => seller.name)]}
             selected={editor.row.sellerName ?? UNASSIGNED}
-            onSubmit={async (name) => {
+            onSubmit={(name) => {
               const seller = sellers().find(
                 (candidate) => candidate.name === name,
               );
-              await resolveAttribution({
+              return adjustCredit({
                 ruc: editor.row.ruc,
                 month: editor.row.month,
                 sellerUserId: seller?.userId ?? null,
-                branchId: null,
-              });
-              await revalidateGpvData();
+                reason: "Resolución de incidencia de atribución",
+              }).then(() => undefined);
             }}
             onClose={editor.close}
           />
