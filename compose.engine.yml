@@ -25,10 +25,10 @@ services:
       retries: 6
       start_period: 10s
     networks:
-      shared-engine:
+      dokploy-network:
         aliases:
-          - engine
+          - crm-engine
 
 networks:
-  shared-engine:
-    name: crm-engine
+  dokploy-network:
+    external: true

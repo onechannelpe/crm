@@ -12,13 +12,12 @@ x-app: &app
     NITRO_PORT: 3000
     WEB_DB_URL: postgres://postgres@postgres:5432/crm
     ENGINE_CONNECT_MODE: internal
-    ENGINE_URL: http://engine:3001
+    ENGINE_URL: http://crm-engine:3001
     WEB_UPLOADS_ROOT: /var/lib/crm-web/documents
   volumes:
     - ${APP_DATA_PATH:?Set APP_DATA_PATH}/uploads:/var/lib/crm-web
   networks:
     - default
-    - shared-engine
     - dokploy-network
 
 services:
@@ -98,9 +97,6 @@ services:
         condition: service_completed_successfully
 
 networks:
-  shared-engine:
-    external: true
-    name: crm-engine
   dokploy-network:
     external: true
     name: dokploy-network
