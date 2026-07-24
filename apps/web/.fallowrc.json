@@ -32,6 +32,72 @@
     "@crm/message-channels",
     "solid-mdx"
   ],
+  "boundaries": {
+    "zones": [
+      {
+        "name": "contracts",
+        "patterns": ["src/contracts/**"]
+      },
+      {
+        "name": "lib",
+        "patterns": ["src/lib/**"]
+      },
+      {
+        "name": "server",
+        "patterns": ["src/server/**"]
+      },
+      {
+        "name": "actions",
+        "patterns": ["src/actions/**"]
+      },
+      {
+        "name": "features",
+        "patterns": ["src/features/**"]
+      },
+      {
+        "name": "components",
+        "patterns": ["src/components/**"]
+      },
+      {
+        "name": "routes",
+        "patterns": ["src/routes/**"]
+      }
+    ],
+    "rules": [
+      {
+        "from": "contracts",
+        "allow": ["contracts", "lib"]
+      },
+      {
+        "from": "server",
+        "allow": ["contracts", "lib", "server"]
+      },
+      {
+        "from": "actions",
+        "allow": ["actions", "contracts", "lib", "server"]
+      },
+      {
+        "from": "features",
+        "allow": ["actions", "components", "contracts", "features", "lib"]
+      },
+      {
+        "from": "components",
+        "allow": ["actions", "components", "contracts", "features", "lib"]
+      },
+      {
+        "from": "routes",
+        "allow": [
+          "actions",
+          "components",
+          "contracts",
+          "features",
+          "lib",
+          "routes",
+          "server"
+        ]
+      }
+    ]
+  },
   "rules": {
     "unused-files": "warn",
     "unused-exports": "warn",

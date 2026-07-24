@@ -1,10 +1,8 @@
 "use server";
 
+import type { OnboardingSnapshot } from "~/contracts/auth";
 import { changeInstallationPassword } from "~/server/auth/flows/change-installation-password";
-import {
-  loadOnboardingSnapshot,
-  type OnboardingSnapshot,
-} from "~/server/auth/onboarding/snapshot";
+import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { validationFail } from "~/server/shared/parsing";

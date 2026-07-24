@@ -13,7 +13,7 @@
  *     -> crates/search/src/result_contract_generated.rs
  *     -> apps/web/src/server/shared/engine/doc-projection-contract.ts
  *     -> apps/web/src/server/shared/engine/company-projection-contract.ts
- *     -> apps/web/src/server/shared/engine/result-contract.ts
+ *     -> apps/web/src/contracts/search/engine-results.generated.ts
  */
 
 import {
@@ -86,7 +86,7 @@ const artifacts: { path: string; content: string }[] = [
     content: renderResultContractRust(docProjSpec, companyProjSpec),
   },
   {
-    path: "apps/web/src/server/shared/engine/result-contract.ts",
+    path: "apps/web/src/contracts/search/engine-results.generated.ts",
     content: renderResultContractTs(docProjSpec, companyProjSpec),
   },
 ];

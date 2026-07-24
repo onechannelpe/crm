@@ -23,6 +23,7 @@ import { beginPasskeyEnrollment } from "~/actions/auth/security/passkey";
 import { beginTotpEnrollment } from "~/actions/auth/security/totp";
 import { Loader } from "~/components/feedback/loading/loader";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
+import type { OnboardingSnapshot } from "~/contracts/auth";
 import { onboardingSnapshotQuery } from "~/features/onboarding/data/queries";
 import {
   resolveOnboardingStep,
@@ -41,7 +42,6 @@ import {
 } from "~/lib/auth/passkey/registration-client";
 import { normalizePhoneInput, isValidPhone } from "~/lib/phone/pe-mobile";
 import { actionErrorMessage } from "~/lib/wire-error";
-import type { OnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 

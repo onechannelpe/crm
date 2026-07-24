@@ -1,15 +1,7 @@
 export type {
-  CompanyInfo,
-  CompanyRow,
-  DocInfo,
-  DocumentRow,
-  OrgInfo,
-  PhoneInfo,
-  RepInfo,
-  RoleInfo,
   SearchResponse,
   SearchResult,
-} from "~/server/shared/engine/result-contract";
+} from "~/contracts/search/engine-results.generated";
 
 export type {
   RecordCandidate,

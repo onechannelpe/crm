@@ -8,7 +8,7 @@ import {
 const MIN_INVITE_EXPIRY_DAYS = 7;
 export const INVITE_EXPIRY_HELPER_TEXT =
   "Opcional. Debe vencer al menos 7 días después de hoy.";
-export const INVALID_INVITE_EXPIRY_ERROR_TEXT = "Ingresa una fecha válida.";
+const INVALID_INVITE_EXPIRY_ERROR_TEXT = "Ingresa una fecha válida.";
 export const INVITE_EXPIRY_ERROR_TEXT =
   "Elige una fecha al menos 7 días después de hoy.";
 

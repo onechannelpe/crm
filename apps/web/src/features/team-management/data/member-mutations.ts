@@ -1,6 +1,5 @@
 import { action, json } from "@solidjs/router";
 
-import { removeMemberAvatar, uploadMemberAvatar } from "~/actions/users/avatar";
 import {
   startImpersonation,
   stopImpersonation,
@@ -63,16 +62,6 @@ export const deleteMemberMutation = action(async (userId: string) => {
   const { message } = await deleteMember(userId);
   return json({ message }, { revalidate: membersRosterQuery.key });
 }, "deleteMember");
-
-export const uploadMemberAvatarMutation = action(async (formData: FormData) => {
-  const { message } = await uploadMemberAvatar(formData);
-  return json({ message }, { revalidate: revalidateMember });
-}, "uploadMemberAvatar");
-
-export const removeMemberAvatarMutation = action(async (userId: string) => {
-  const { message } = await removeMemberAvatar(userId);
-  return json({ message }, { revalidate: revalidateMember });
-}, "removeMemberAvatar");
 
 export const startImpersonationMutation = action(async (userId: string) => {
   const { message } = await startImpersonation(userId);

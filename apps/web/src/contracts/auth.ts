@@ -35,6 +35,21 @@ export interface CurrentUserView {
   impersonating: boolean;
 }
 
+export interface OnboardingSnapshot {
+  user: {
+    email: string;
+    names: string;
+    firstSurname: string;
+    secondSurname: string;
+    role: Role;
+    phone: string | null;
+  };
+  passwordChangeRequired: boolean;
+  strongAuthRequired: boolean;
+  hasPasskey: boolean;
+  totpEnabled: boolean;
+}
+
 export type PasswordLoginSubmissionResult = {
   nextStep: "passkey";
   flow: PasskeyLoginFlowState;

@@ -1,4 +1,4 @@
-import type { OnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
+import type { OnboardingSnapshot } from "~/contracts/auth";
 
 export type OnboardingStep =
   | "password"

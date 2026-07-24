@@ -61,13 +61,3 @@ export function formatRatio(numerator: number, denominator: number): string {
 
   return `${formatted}%`;
 }
-
-export function trendPercentage(
-  current: number | undefined,
-  prior: number | undefined,
-): number | undefined {
-  if (current === undefined || prior === undefined || prior === 0) {
-    return undefined;
-  }
-  return Math.round(((current - prior) / prior) * 100);
-}

@@ -2,9 +2,9 @@
 
 import { redirect } from "@solidjs/router";
 
+import type { OnboardingSnapshot } from "~/contracts/auth";
 import { getSessionPath } from "~/lib/auth/access/route-policy";
 import { getSession } from "~/lib/auth/access/session";
-import type { OnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
 import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
 import { getServerRuntime } from "~/server/platform/container";
 import { isErr } from "~/server/shared/result";

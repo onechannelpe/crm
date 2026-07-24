@@ -1,4 +1,4 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import type { OnboardingSnapshot } from "~/contracts/auth";
 import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import { fail, type DomainError } from "~/server/shared/domain-error";
@@ -6,21 +6,6 @@ import type { UserId } from "~/server/shared/ids";
 import { Err, Ok, type Result } from "~/server/shared/result";
 
 import type { AuthSetupRepos } from "../infrastructure/setup-context";
-
-export interface OnboardingSnapshot {
-  user: {
-    email: string;
-    names: string;
-    firstSurname: string;
-    secondSurname: string;
-    role: Role;
-    phone: string | null;
-  };
-  passwordChangeRequired: boolean;
-  strongAuthRequired: boolean;
-  hasPasskey: boolean;
-  totpEnabled: boolean;
-}
 
 export async function loadOnboardingSnapshot(
   repos: AuthSetupRepos,

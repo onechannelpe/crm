@@ -1,10 +1,11 @@
+import type { OnboardingSnapshot } from "~/contracts/auth";
 import type { Phone } from "~/lib/phone/pe-mobile";
 import type { AuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { fail, type DomainError } from "~/server/shared/domain-error";
 import type { UserId } from "~/server/shared/ids";
 import { Err, type Result } from "~/server/shared/result";
 
-import { loadOnboardingSnapshot, type OnboardingSnapshot } from "./snapshot";
+import { loadOnboardingSnapshot } from "./snapshot";
 
 export function saveOnboardingProfile(
   deps: AuthSetupContext,

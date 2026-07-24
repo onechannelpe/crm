@@ -1,8 +1,8 @@
 "use server";
 
+import type { OnboardingSnapshot } from "~/contracts/auth";
 import { parsePhone } from "~/lib/phone/pe-mobile";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
-import type { OnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { fail, type DomainError } from "~/server/shared/domain-error";
