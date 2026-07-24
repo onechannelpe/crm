@@ -1,9 +1,4 @@
-import {
-  createAsync,
-  revalidate,
-  useAction,
-  useSearchParams,
-} from "@solidjs/router";
+import { revalidate, useAction, useSearchParams } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
@@ -16,7 +11,7 @@ import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
 import type { InquiryListRowView } from "~/contracts/workflow/views";
 import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridSource } from "~/features/data-grid/model/source";
+import { createGridSource } from "~/features/data-grid/model/create-grid-source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createLeadRecordCreateSidePanelPage } from "~/features/side-panel/types/side-panel-page";
@@ -32,7 +27,10 @@ import styles from "./inquiries-page.module.css";
 
 export function InquiriesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const inquiries = createAsync(() => inquiryListQuery());
+  const { source } = createGridSource(
+    () => inquiryListQuery(),
+    (data) => ({ rows: data.rows }),
+  );
   const createInquiry = useAction(createInquiryMutation);
   const { openPanel } = useSidePanel();
 
@@ -41,14 +39,6 @@ export function InquiriesPage() {
   const [ruc, setRuc] = createSignal(initialRuc);
   const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
-
-  const source = (): DataGridSource<InquiryListRowView> => {
-    const data = inquiries();
-    if (data === undefined) {
-      return { status: "pending", rows: [] };
-    }
-    return { status: "ready", rows: data.rows };
-  };
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();

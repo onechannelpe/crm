@@ -6,7 +6,7 @@ import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import type { LeadListRowView } from "~/contracts/workflow/views";
-import type { DataGridSource } from "~/features/data-grid/model/source";
+import { createGridSource } from "~/features/data-grid/model/create-grid-source";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type { RecordIndexDefinition } from "~/features/record-index/model/definition";
 import { mergeLeadRows } from "~/features/workflow/data/merge-lead-rows";
@@ -46,44 +46,31 @@ export function LeadsWorkspace() {
     availableViews: available,
     defaultViewId,
   });
-  const leads = createAsync(() =>
-    leadListQuery(
-      resolveLeadListQueryInput(
-        {
-          view: route.view.value(),
-          filter: route.filter.value(),
-          sort: route.sort.value(),
-          search: route.search.query(),
-          pageIndex: route.page.index(),
-        },
-        { id: user.id, role: user.role },
+  const leads = createGridSource(
+    () =>
+      leadListQuery(
+        resolveLeadListQueryInput(
+          {
+            view: route.view.value(),
+            filter: route.filter.value(),
+            sort: route.sort.value(),
+            search: route.search.query(),
+            pageIndex: route.page.index(),
+          },
+          { id: user.id, role: user.role },
+        ),
       ),
-    ),
+    (data) => ({ rows: data.rows, totalCount: data.totalCount }),
+    {
+      overlay: (rows) =>
+        mergeLeadRows(rows, getOptimisticLeadRows(route.activeView().id)),
+    },
   );
 
-  const totalCount = () => leads.latest?.totalCount ?? 0;
+  const totalCount = () => leads.data()?.totalCount ?? 0;
   const hasPreviousPage = () => route.page.index() > 0;
   const hasNextPage = () =>
     (route.page.index() + 1) * LEAD_PAGE_SIZE < totalCount();
-
-  const source = (): DataGridSource<LeadListRowView> => {
-    const data = leads.latest;
-    const serverRows = data?.rows ?? [];
-    const rows = mergeLeadRows(
-      serverRows,
-      getOptimisticLeadRows(route.activeView().id),
-    );
-
-    if (data === undefined && rows.length === 0) {
-      return { status: "pending", rows: [] };
-    }
-
-    return {
-      status: "ready",
-      rows,
-      totalCount: data?.totalCount ?? rows.length,
-    };
-  };
 
   const openLeadRecord = useOpenLeadRecord();
   const { enqueueWarningSnackBar } = useSnackBar();
@@ -123,7 +110,7 @@ export function LeadsWorkspace() {
       color: "blue",
     },
     columns: workspaceColumnsForRole(user.role),
-    source,
+    source: leads.source,
     search: {
       value: route.search.value,
       placeholder: "RUC, cliente, dirección o ejecutivo",

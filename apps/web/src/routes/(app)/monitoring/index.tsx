@@ -1,5 +1,5 @@
 import { revalidate } from "@solidjs/router";
-import { For, Show, createMemo, createResource, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 
 import Activity from "~/components/icons/activity";
 import CircleAlert from "~/components/icons/circle-alert";
@@ -9,7 +9,7 @@ import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
 import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridSource } from "~/features/data-grid/model/source";
+import { createGridSource } from "~/features/data-grid/model/create-grid-source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
@@ -81,39 +81,20 @@ export default function MonitoringPage() {
     status: status() === "all" ? undefined : status(),
     limit: 80,
   }));
-  const [snapshot] = createResource(queryParams, (params) =>
-    observabilitySnapshotQuery({
-      windowMinutes: params.windowMinutes,
-      status: params.status,
-      limit: params.limit,
-    }),
+  const { source } = createGridSource(
+    () => observabilitySnapshotQuery(queryParams()),
+    (snapshot) => ({ rows: snapshot.summary }),
   );
-  const latestSnapshot = () => snapshot.latest ?? null;
-  const isInitialLoading = () =>
-    snapshot.state === "pending" && snapshot.latest === undefined;
-  const isRefreshing = () => snapshot.state === "refreshing";
-  const snapshotError = (): Error | null => {
-    const error = snapshot.error;
-    if (error instanceof Error) {
-      return error;
+
+  const [refreshing, setRefreshing] = createSignal(false);
+  async function reload() {
+    setRefreshing(true);
+    try {
+      await revalidate(observabilitySnapshotQuery.key);
+    } finally {
+      setRefreshing(false);
     }
-    if (error === undefined || error === null) {
-      return null;
-    }
-    return new Error(String(error));
-  };
-  const rows = createMemo<ReadonlyArray<MonitoringRow>>(
-    () => latestSnapshot()?.summary ?? [],
-  );
-  const source = (): DataGridSource<MonitoringRow> => {
-    if (snapshotError()) {
-      return { status: "error", rows: [] };
-    }
-    if (isInitialLoading()) {
-      return { status: "pending", rows: [] };
-    }
-    return { status: "ready", rows: rows() };
-  };
+  }
 
   const rowOpen = useSidePanelRowOpen<MonitoringRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -159,13 +140,12 @@ export default function MonitoringPage() {
         <Button
           variant="secondary"
           size="sm"
-          onClick={() => {
-            void revalidate(observabilitySnapshotQuery.key);
-          }}
+          disabled={refreshing()}
+          onClick={() => void reload()}
         >
           Recargar
         </Button>
-        <Show when={isRefreshing() && !isInitialLoading()}>
+        <Show when={refreshing()}>
           <span class={styles.refreshing}>Actualizando...</span>
         </Show>
       </div>

@@ -1,17 +1,17 @@
 import { type RouteDefinition } from "@solidjs/router";
 
-import { getMe } from "~/actions/auth/session";
 import { leadListQuery } from "~/features/workflow/data/queries";
 import {
   parseLeadPageIndex,
   resolveLeadListQueryInput,
 } from "~/features/workflow/workspace/lead-list-query";
 import { LeadsWorkspace } from "~/features/workflow/workspace/leads-workspace";
+import { meQuery } from "~/lib/queries/auth";
 
 // Shared input normalization makes the preload warm the workspace query key.
 export const route = {
   preload: async ({ location }) => {
-    const user = await getMe();
+    const user = await meQuery();
     if (!user) {
       return;
     }

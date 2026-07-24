@@ -74,7 +74,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("serial_number", "text")
     .addColumn("ruc", "text", (col) => col.notNull())
     .addColumn("sold_at", "date", (col) => col.notNull())
-    .addColumn("sale_month", "date", (col) => col.notNull())
+    .addColumn("sale_month", "date", (col) =>
+      col.notNull().check(sql`extract(day from sale_month) = 1`),
+    )
     .addColumn("trade_name", "text")
     .addColumn("legal_name", "text")
     .addColumn("culqi_user_code", "text")
@@ -133,7 +135,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("month_offset", "integer", (col) =>
       col.notNull().check(sql`month_offset between 0 and 3`),
     )
-    .addColumn("sale_month", "date", (col) => col.notNull())
+    .addColumn("sale_month", "date", (col) =>
+      col.notNull().check(sql`extract(day from sale_month) = 1`),
+    )
     .addColumn("realized_month", "date", (col) =>
       col
         .generatedAlwaysAs(
@@ -182,7 +186,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("merchant_month_attribution")
     .addColumn("ruc", "text", (col) => col.notNull())
-    .addColumn("month", "date", (col) => col.notNull())
+    .addColumn("month", "date", (col) =>
+      col.notNull().check(sql`extract(day from month) = 1`),
+    )
     .addColumn("organization_id", "uuid", (col) =>
       col.references("organizations.id"),
     )
@@ -201,7 +207,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("merchant_month_attribution_override")
     .addColumn("ruc", "text", (col) => col.notNull())
-    .addColumn("month", "date", (col) => col.notNull())
+    .addColumn("month", "date", (col) =>
+      col.notNull().check(sql`extract(day from month) = 1`),
+    )
     .addColumn("seller_user_id", "uuid", (col) => col.references("users.id"))
     .addColumn("branch_id", "uuid", (col) => col.references("branches.id"))
     .addColumn("resolved_by", "uuid", (col) =>
@@ -248,7 +256,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .createTable("merchant_attribution_jobs")
     .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
     .addColumn("ruc", "text", (col) => col.notNull())
-    .addColumn("month", "date", (col) => col.notNull())
+    .addColumn("month", "date", (col) =>
+      col.notNull().check(sql`extract(day from month) = 1`),
+    )
     .addColumn("queue_state", "text", (col) =>
       col.notNull().defaultTo("pending"),
     )
@@ -272,7 +282,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
   await db.schema
     .createTable("merchant_targets")
     .addColumn("ruc", "text", (col) => col.notNull())
-    .addColumn("effective_from", "date", (col) => col.notNull())
+    .addColumn("effective_from", "date", (col) =>
+      col.notNull().check(sql`extract(day from effective_from) = 1`),
+    )
     .addColumn("projected_gpv", "numeric")
     .addColumn("set_by", "uuid", (col) => col.notNull().references("users.id"))
     .addColumn("set_at", "timestamptz", (col) => col.notNull())
