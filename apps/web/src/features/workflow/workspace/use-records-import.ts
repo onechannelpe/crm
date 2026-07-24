@@ -9,7 +9,7 @@ import {
   parseRecordImportProgressMessage,
   type RecordImportProgressEvent,
   type RecordImportType,
-} from "~/features/records-imports/contracts";
+} from "~/contracts/records/imports";
 import {
   subscribeState,
   type StateSubscription,

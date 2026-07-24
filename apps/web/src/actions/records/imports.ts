@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import type {
   RecordImportProgressEvent,
   RecordImportType,
-} from "~/features/records-imports/contracts";
+} from "~/contracts/records/imports";
 import type { Role } from "~/lib/auth/access/rbac";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";

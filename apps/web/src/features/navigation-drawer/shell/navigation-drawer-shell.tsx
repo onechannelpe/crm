@@ -8,7 +8,7 @@ import { AccountMenu } from "~/components/layout/account-menu";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
-import { logoutMutation } from "~/lib/mutations/auth";
+import { logoutMutation } from "~/features/auth/data/mutations";
 import { shortName } from "~/lib/users/display-name";
 import { cn } from "~/lib/utils";
 

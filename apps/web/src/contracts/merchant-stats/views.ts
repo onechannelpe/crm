@@ -23,6 +23,21 @@ export interface PublishedPage<Row> {
   rows: Row[];
 }
 
+export interface ExecutiveGpvMerchantView {
+  ruc: string;
+  name: string;
+  gpv: number;
+  projectedGpv: number | null;
+  lastTransactionAt: CalendarDate | null;
+  leadId: string | null;
+}
+
+export interface ExecutiveGpvProgressView {
+  cutDate: CalendarDate | null;
+  month: CalendarMonth | null;
+  merchants: ExecutiveGpvMerchantView[];
+}
+
 export interface GpvPoint {
   gpv: number;
   trx: number;

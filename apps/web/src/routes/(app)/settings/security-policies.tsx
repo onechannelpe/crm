@@ -15,12 +15,12 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
-import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { upsertAuditPolicyMutation } from "~/lib/mutations/audit";
+import { upsertAuditPolicyMutation } from "~/features/audit-policies/data/mutations";
 import {
   auditPolicySnapshotQuery,
   canManageAuditPoliciesQuery,
-} from "~/lib/queries/audit";
+} from "~/features/audit-policies/data/queries";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 
 import styles from "./settings-page.module.css";
 

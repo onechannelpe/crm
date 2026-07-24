@@ -2,7 +2,7 @@ import {
   parseRecordImportProgressMessage,
   recordImportTopic,
   type RecordImportProgressEvent,
-} from "~/features/records-imports/contracts";
+} from "~/contracts/records/imports";
 import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
 import { getServerRuntime } from "~/server/platform/container";
 import {

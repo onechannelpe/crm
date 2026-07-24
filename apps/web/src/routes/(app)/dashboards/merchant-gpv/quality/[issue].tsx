@@ -4,9 +4,9 @@ import { isQualityIssue } from "~/contracts/merchant-stats/vocabulary";
 import {
   merchantFilterOptionsQuery,
   qualityRowsQuery,
-} from "~/features/dashboards/data/queries";
-import { GPV_GRID_PAGE_SIZE } from "~/features/dashboards/grids/use-dashboard-grid";
-import { QualityPage } from "~/features/dashboards/quality/quality-page";
+} from "~/features/merchant-gpv/data/queries";
+import { GPV_GRID_PAGE_SIZE } from "~/features/merchant-gpv/grids/use-dashboard-grid";
+import { QualityPage } from "~/features/merchant-gpv/quality/quality-page";
 
 export const route = {
   preload: ({ params }) => {

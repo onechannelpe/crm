@@ -1,6 +1,6 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import { recordImportTopic } from "~/features/records-imports/contracts";
+import { recordImportTopic } from "~/contracts/records/imports";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import { getSession } from "~/lib/auth/access/session";
 import { getServerRuntime } from "~/server/platform/container";

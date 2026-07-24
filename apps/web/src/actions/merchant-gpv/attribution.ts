@@ -1,8 +1,5 @@
 "use server";
 
-import { json } from "@solidjs/router";
-
-import { QUERY_KEYS } from "~/contracts/query-keys";
 import type { CalendarMonth } from "~/lib/time/calendar-date";
 import { setTarget } from "~/server/merchant-stats/commands/set-target";
 import { adjustMerchantMonthCredit } from "~/server/merchant-stats/credit/adjust";
@@ -12,21 +9,13 @@ import { UserId } from "~/server/shared/ids";
 import { parseObject, validationFail } from "~/server/shared/parsing";
 import { isErr, Ok } from "~/server/shared/result";
 
-const ATTRIBUTION_QUERY_KEYS = [
-  QUERY_KEYS.merchantGpv.cohortRows,
-  QUERY_KEYS.merchantGpv.performanceView,
-  QUERY_KEYS.homeMerchantPortfolio,
-  QUERY_KEYS.merchantGpv.statsByRuc,
-  QUERY_KEYS.merchantGpv.qualityRows,
-];
-
 export async function adjustMonthCredit(raw: {
   ruc: string;
   month: CalendarMonth;
   sellerUserId: string | null;
   reason: string;
 }) {
-  const result = await runAction({
+  return runAction({
     name: "merchantGpv.attribution.resolve",
     access: { kind: "permission", permission: "dashboards:manage" },
 
@@ -58,13 +47,6 @@ export async function adjustMonthCredit(raw: {
       return Ok({ ok: true as const });
     },
   });
-
-  return json(result, {
-    revalidate: [
-      ...ATTRIBUTION_QUERY_KEYS,
-      QUERY_KEYS.merchantGpv.filterOptions,
-    ],
-  });
 }
 
 export async function setMerchantTarget(raw: {
@@ -72,7 +54,7 @@ export async function setMerchantTarget(raw: {
   effectiveFrom: CalendarMonth;
   projectedGpv: number | null;
 }) {
-  const result = await runAction({
+  return runAction({
     name: "merchantGpv.target.set",
     access: { kind: "permission", permission: "dashboards:manage" },
 
@@ -102,6 +84,4 @@ export async function setMerchantTarget(raw: {
       return Ok({ ok: true as const });
     },
   });
-
-  return json(result, { revalidate: ATTRIBUTION_QUERY_KEYS });
 }

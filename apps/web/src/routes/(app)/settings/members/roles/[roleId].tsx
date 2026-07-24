@@ -3,15 +3,15 @@ import { Show } from "solid-js";
 
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Badge } from "~/components/ui/display/badge";
-import { RolePermissions } from "~/features/settings-members/role-permissions";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
+import { RolePermissions } from "~/features/team-management/role-permissions";
 import { getPermissions, isRole } from "~/lib/auth/access/rbac";
 import {
   getRoleBadgeVariant,
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
 
-import styles from "~/features/settings-members/settings-members.module.css";
+import styles from "~/features/team-management/team-management.module.css";
 
 export default function SettingsRoleDetailPage() {
   const params = useParams<{ roleId: string }>();

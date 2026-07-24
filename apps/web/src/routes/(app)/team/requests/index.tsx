@@ -6,14 +6,14 @@ import MessageSquare from "~/components/icons/message-square";
 import UserRound from "~/components/icons/user-round";
 import { Button } from "~/components/ui/input/button";
 import type { PendingCapacityRequestView } from "~/contracts/capacity";
-import { DataGrid } from "~/features/data-grid/components/grid";
-import type { DataGridSource } from "~/features/data-grid/model/source";
-import type { DataGridColumn } from "~/features/data-grid/model/types";
 import {
   approveCapacityRequestMutation,
   rejectCapacityRequestMutation,
-} from "~/lib/mutations/capacity";
-import { pendingCapacityRequestsQuery } from "~/lib/queries/capacity";
+} from "~/features/capacity/data/mutations";
+import { pendingCapacityRequestsQuery } from "~/features/capacity/data/queries";
+import { DataGrid } from "~/features/data-grid/components/grid";
+import type { DataGridSource } from "~/features/data-grid/model/source";
+import type { DataGridColumn } from "~/features/data-grid/model/types";
 
 import styles from "./requests-page.module.css";
 

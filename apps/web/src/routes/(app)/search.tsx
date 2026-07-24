@@ -6,6 +6,7 @@ import {
   isSearchIntent,
   type SearchIntent,
 } from "~/contracts/search/vocabulary";
+import { searchDirectMutation } from "~/features/search/data/mutations";
 import { intentFromTab, tabFromIntent } from "~/features/search/model/display";
 import { createSearchViewModel } from "~/features/search/model/search-view-model";
 import { SearchLayout } from "~/features/search/ui/search-layout";
@@ -14,7 +15,6 @@ import {
   createSearchCompanyDetailSidePanelPage,
   createSearchPersonDetailSidePanelPage,
 } from "~/features/side-panel/types/side-panel-page";
-import { searchDirectMutation } from "~/lib/mutations/search";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import pageStyles from "~/features/search/ui/search-page-shell.module.css";

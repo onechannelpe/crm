@@ -4,10 +4,10 @@ import { Show } from "solid-js";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { resetPasswordMutation } from "~/features/auth/data/mutations";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { LoginFeedback } from "~/features/auth/ui/login-feedback";
-import { resetPasswordMutation } from "~/lib/mutations/auth";
 import { parseWireError } from "~/lib/wire-error";
 import { codeIs } from "~/lib/wire-error-codes";
 

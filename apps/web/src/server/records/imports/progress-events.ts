@@ -1,4 +1,4 @@
-import type { RecordImportProgressEvent } from "~/features/records-imports/contracts";
+import type { RecordImportProgressEvent } from "~/contracts/records/imports";
 import { db } from "~/lib/db/db";
 import { notify } from "~/lib/db/notify";
 import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";

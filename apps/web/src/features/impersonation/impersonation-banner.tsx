@@ -3,7 +3,7 @@ import { createSignal, Show } from "solid-js";
 
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { Button } from "~/components/ui/input/button";
-import { stopImpersonationMutation } from "~/lib/mutations/members";
+import { stopImpersonationMutation } from "~/features/team-management/data/member-mutations";
 import { shortName } from "~/lib/users/display-name";
 
 import styles from "./impersonation-banner.module.css";

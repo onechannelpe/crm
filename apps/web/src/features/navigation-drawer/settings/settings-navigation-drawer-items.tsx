@@ -2,7 +2,7 @@ import { useAction, useLocation } from "@solidjs/router";
 import { For, Show, createMemo } from "solid-js";
 
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { logoutMutation } from "~/lib/mutations/auth";
+import { logoutMutation } from "~/features/auth/data/mutations";
 
 import { AdvancedSettingsWrapper } from "../advanced/advanced-settings-wrapper";
 import { getNavigationSubItemLeftAdornment } from "../item/get-navigation-sub-item-left-adornment";

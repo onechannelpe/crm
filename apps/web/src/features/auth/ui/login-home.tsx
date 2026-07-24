@@ -4,9 +4,9 @@ import { createEffect, createSignal, onMount, Show } from "solid-js";
 import Google from "~/components/icons/brands/google";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { passwordLoginMutation } from "~/features/auth/data/mutations";
 import { useLoginFlow } from "~/features/auth/services/use-login-flow";
 import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
-import { passwordLoginMutation } from "~/lib/mutations/auth";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import { LastUsedPill } from "./last-used-pill";

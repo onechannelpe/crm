@@ -20,11 +20,11 @@ import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page
 import {
   updatePendingQuotationPolicyMutation,
   updateRateProposalPolicyMutation,
-} from "~/lib/mutations/workflow-settings";
+} from "~/features/workflow/data/settings-mutations";
 import {
   pendingQuotationPolicyQuery,
   rateProposalPolicyQuery,
-} from "~/lib/queries/workflow-settings";
+} from "~/features/workflow/data/settings-queries";
 import { formatAppDateTime } from "~/lib/time/app-time";
 import { actionErrorMessage } from "~/lib/wire-error";
 

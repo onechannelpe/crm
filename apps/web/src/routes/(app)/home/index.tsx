@@ -1,17 +1,17 @@
 import type { RouteDefinition } from "@solidjs/router";
 
 import { AppPage } from "~/components/layout/page";
-import { homeMerchantPortfolioQuery } from "~/features/home/data/queries";
-import { HomeMerchantPortfolio } from "~/features/home/home-merchant-portfolio";
+import { executiveGpvProgressQuery } from "~/features/merchant-gpv/data/queries";
+import { ExecutiveGpvProgress } from "~/features/merchant-gpv/ui/executive-gpv-progress";
 
 export const route = {
-  preload: () => homeMerchantPortfolioQuery(),
+  preload: () => executiveGpvProgressQuery(),
 } satisfies RouteDefinition;
 
 export default function HomePage() {
   return (
     <AppPage width="wide">
-      <HomeMerchantPortfolio />
+      <ExecutiveGpvProgress />
     </AppPage>
   );
 }

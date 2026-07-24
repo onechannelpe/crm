@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { loginRetryReportMutation } from "~/lib/mutations/security";
+import { loginRetryReportMutation } from "~/features/auth/data/security-mutations";
 import { formatAppDateTime } from "~/lib/time/app-time";
 import { actionErrorMessage } from "~/lib/wire-error";
 

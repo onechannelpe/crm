@@ -1,7 +1,5 @@
 "use server";
 
-import { json } from "@solidjs/router";
-
 import type {
   BookFilter,
   CohortSaleRow,
@@ -133,7 +131,7 @@ export async function getFilterOptions(): Promise<FilterOptions> {
 }
 
 export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
-  const result = await runAction({
+  return runAction({
     name: "merchantGpv.export",
     access: { kind: "permission", permission: "dashboards:read" },
 
@@ -158,6 +156,4 @@ export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
       });
     },
   });
-
-  return json(result, { revalidate: [] });
 }

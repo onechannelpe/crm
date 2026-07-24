@@ -10,7 +10,6 @@ import {
   queryLeadList,
   queryPendingQuotationCount,
 } from "~/actions/workflow/queries/records";
-import { QUERY_KEYS } from "~/contracts/query-keys";
 
 export const leadListQuery = query(queryLeadList, "workflow.leadList");
 
@@ -40,5 +39,5 @@ export const inquiryListQuery = query(queryMyInquiries, "workflow.inquiryList");
 
 export const leadSaleProofFilesQuery = query(
   listLeadSaleProofFiles,
-  QUERY_KEYS.workflow.leadSaleProofFiles,
+  "workflow.leadSaleProofFiles",
 );

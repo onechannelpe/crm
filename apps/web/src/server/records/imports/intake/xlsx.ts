@@ -1,6 +1,6 @@
 import { read, utils } from "xlsx";
 
-import type { RecordImportType } from "~/features/records-imports/contracts";
+import type { RecordImportType } from "~/contracts/records/imports";
 
 import {
   normalizeHeader,

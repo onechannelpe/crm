@@ -8,24 +8,24 @@ import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { Avatar } from "~/components/ui/display/avatar";
 import { Badge } from "~/components/ui/display/badge";
-import { MemberAdminActions } from "~/features/settings-members/member-admin-actions";
-import { MemberCapacityTab } from "~/features/settings-members/member-capacity-tab";
-import { MemberInfoTab } from "~/features/settings-members/member-info-tab";
-import { MemberPermissionsTab } from "~/features/settings-members/member-permissions-tab";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   TabStrip,
   type TabItem,
 } from "~/features/side-panel/components/tab-strip";
+import { memberDetailQuery } from "~/features/team-management/data/queries";
+import { MemberAdminActions } from "~/features/team-management/member-admin-actions";
+import { MemberCapacityTab } from "~/features/team-management/member-capacity-tab";
+import { MemberInfoTab } from "~/features/team-management/member-info-tab";
+import { MemberPermissionsTab } from "~/features/team-management/member-permissions-tab";
 import { hasPermission } from "~/lib/auth/access/rbac";
 import {
   getRoleBadgeVariant,
   getRoleLabel,
 } from "~/lib/auth/access/role-display";
-import { memberDetailQuery } from "~/lib/queries/members";
 import { shortName } from "~/lib/users/display-name";
 
-import styles from "~/features/settings-members/settings-members.module.css";
+import styles from "~/features/team-management/team-management.module.css";
 
 type MemberTabId = "info" | "permissions" | "capacity";
 

@@ -4,13 +4,13 @@ import { createSignal } from "solid-js";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { SettingsPageContainer } from "~/features/settings-shell/content/settings-page-container";
 import {
   requestMoreLeadRefillMutation,
   requestMoreSearchesMutation,
-} from "~/lib/mutations/capacity";
-import { myContactAssignmentCapacityQuery } from "~/lib/queries/contact-assignment-capacity";
-import { mySearchAllowanceQuery } from "~/lib/queries/search";
+} from "~/features/capacity/data/mutations";
+import { myContactAssignmentCapacityQuery } from "~/features/capacity/data/queries";
+import { mySearchAllowanceQuery } from "~/features/capacity/data/queries";
+import { SettingsPageContainer } from "~/features/settings-shell/content/settings-page-container";
 
 import styles from "./capacity-page.module.css";
 

@@ -1,10 +1,10 @@
 import { createAsync, useParams, type RouteDefinition } from "@solidjs/router";
 import { Match, Switch } from "solid-js";
 
+import { inviteActivationViewQuery } from "~/features/auth/data/queries";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { InviteActivationForm } from "~/features/auth/ui/invite-activation-form";
-import { inviteActivationViewQuery } from "~/lib/queries/auth-invite";
 
 import pageStyles from "~/features/auth/ui/login-page.module.css";
 

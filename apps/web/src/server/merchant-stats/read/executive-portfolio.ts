@@ -1,7 +1,7 @@
 import type {
-  HomeMerchantPortfolioView,
-  HomeMerchantRowView,
-} from "~/contracts/home/views";
+  ExecutiveGpvMerchantView,
+  ExecutiveGpvProgressView,
+} from "~/contracts/merchant-stats/views";
 import { appCalendarDateAt } from "~/lib/time/app-time";
 import {
   calendarMonthFromDate,
@@ -15,14 +15,14 @@ import { getActiveGpvSnapshotCut } from "./latest-report";
 
 interface MerchantContext {
   tradeName: string | null;
-  lastTransactionAt: HomeMerchantRowView["lastTransactionAt"];
+  lastTransactionAt: ExecutiveGpvMerchantView["lastTransactionAt"];
 }
 
-export async function getExecutiveMerchantPortfolio(
+export async function loadExecutiveGpvProgress(
   db: DatabaseExecutor,
   executiveId: UserId,
   now: Date,
-): Promise<HomeMerchantPortfolioView> {
+): Promise<ExecutiveGpvProgressView> {
   const cutAt = await getActiveGpvSnapshotCut(db);
   const cutDate = cutAt ? appCalendarDateAt(cutAt) : null;
   const month = calendarMonthFromDate(appCalendarDateAt(cutAt ?? now));
@@ -80,7 +80,7 @@ export async function getExecutiveMerchantPortfolio(
   ]);
 
   const merchants = rows
-    .map((row): HomeMerchantRowView => {
+    .map((row): ExecutiveGpvMerchantView => {
       const context = merchantContextByRuc.get(row.ruc);
 
       return {
@@ -167,8 +167,8 @@ async function loadLeadIds(
 }
 
 function compareMerchants(
-  left: HomeMerchantRowView,
-  right: HomeMerchantRowView,
+  left: ExecutiveGpvMerchantView,
+  right: ExecutiveGpvMerchantView,
 ): number {
   if (left.lastTransactionAt === null && right.lastTransactionAt !== null) {
     return -1;

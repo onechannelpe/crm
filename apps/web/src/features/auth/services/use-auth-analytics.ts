@@ -1,7 +1,7 @@
 import { useAction } from "@solidjs/router";
 import { onMount } from "solid-js";
 
-import { trackAuthClientEventMutation } from "~/lib/mutations/auth-analytics";
+import { trackAuthClientEventMutation } from "~/features/auth/data/analytics-mutations";
 import {
   type AuthFunnelClientEventPayload,
   type AuthFunnelScreen,

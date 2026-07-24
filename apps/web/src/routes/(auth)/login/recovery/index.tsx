@@ -5,11 +5,11 @@ import { Loader } from "~/components/feedback/loading/loader";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
+import { recoveryLoginMutation } from "~/features/auth/data/mutations";
+import { loginFlowQuery } from "~/features/auth/data/queries";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
-import { recoveryLoginMutation } from "~/lib/mutations/auth";
-import { loginFlowQuery } from "~/lib/queries/auth";
+import { parseLoginFlowId } from "~/lib/auth/login-flow/parse-id";
 import { parseWireError } from "~/lib/wire-error";
 import { codeIs } from "~/lib/wire-error-codes";
 

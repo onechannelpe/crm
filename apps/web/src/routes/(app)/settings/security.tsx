@@ -13,20 +13,20 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { RecoveryCodesPanel } from "~/features/auth/security/recovery-codes-panel";
-import { usePasskeyEnrollment } from "~/features/auth/security/use-passkey-enrollment";
-import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment";
-import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
-import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { useConfirmDialog } from "~/hooks/use-confirm-dialog";
+import { recoveryCodesStatusQuery } from "~/features/auth/data/queries";
 import {
   acknowledgeRecoveryCodesMutation,
   changePasswordMutation,
   disableTotpMutation,
   regenerateRecoveryCodesMutation,
   removeAllPasskeysMutation,
-} from "~/lib/mutations/security";
-import { recoveryCodesStatusQuery } from "~/lib/queries/auth";
+} from "~/features/auth/data/security-mutations";
+import { RecoveryCodesPanel } from "~/features/auth/security/recovery-codes-panel";
+import { usePasskeyEnrollment } from "~/features/auth/security/use-passkey-enrollment";
+import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment";
+import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
+import { useConfirmDialog } from "~/hooks/use-confirm-dialog";
 import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./security.module.css";

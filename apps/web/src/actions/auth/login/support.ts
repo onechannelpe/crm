@@ -2,10 +2,10 @@
 
 import { redirect } from "@solidjs/router";
 
-import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
 import type { Role } from "~/lib/auth/access/rbac";
 import { getSessionPath } from "~/lib/auth/access/route-policy";
 import type { SessionClass } from "~/lib/auth/core/session-contract";
+import { parseLoginFlowId } from "~/lib/auth/login-flow/parse-id";
 import { setSessionCookie } from "~/lib/auth/session/cookies";
 import type { AuthLoginFlowId } from "~/server/shared/ids";
 

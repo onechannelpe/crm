@@ -5,10 +5,10 @@ import {
   gpvCulqiViewQuery,
   gpvPerformanceViewQuery,
   merchantFilterOptionsQuery,
-} from "~/features/dashboards/data/queries";
-import { readGpvFilter, readGpvTab } from "~/features/dashboards/gpv-view";
-import { GPV_GRID_PAGE_SIZE } from "~/features/dashboards/grids/use-dashboard-grid";
-import { MerchantGpvDashboard } from "~/features/dashboards/merchant-gpv-dashboard";
+} from "~/features/merchant-gpv/data/queries";
+import { readGpvFilter, readGpvTab } from "~/features/merchant-gpv/gpv-view";
+import { GPV_GRID_PAGE_SIZE } from "~/features/merchant-gpv/grids/use-dashboard-grid";
+import { MerchantGpvDashboard } from "~/features/merchant-gpv/merchant-gpv-dashboard";
 
 export const route = {
   preload: ({ location }) => {

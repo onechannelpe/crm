@@ -4,7 +4,7 @@ import { createMemo, createSignal } from "solid-js";
 import type { InviteActivationView } from "~/actions/auth/invite";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { acceptInvitePasswordMutation } from "~/lib/mutations/auth";
+import { acceptInvitePasswordMutation } from "~/features/auth/data/mutations";
 
 import { LoginFeedback } from "./login-feedback";
 

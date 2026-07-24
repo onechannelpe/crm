@@ -8,10 +8,10 @@ import Plus from "~/components/icons/plus";
 import UserRound from "~/components/icons/user-round";
 import { SearchInput } from "~/components/ui/input/search-input";
 import type { ManagedExecutiveView } from "~/contracts/capacity";
+import { managedExecutivesQuery } from "~/features/capacity/data/queries";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import { managedExecutivesQuery } from "~/lib/queries/capacity";
 import { capitalize } from "~/lib/utils";
 
 import styles from "./team-page.module.css";

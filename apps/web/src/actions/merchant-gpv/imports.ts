@@ -1,12 +1,9 @@
 "use server";
 
-import { json } from "@solidjs/router";
-
 import type {
   GpvSnapshotProgressEvent,
   GpvSnapshotView,
 } from "~/contracts/merchant-stats/imports";
-import { QUERY_KEYS } from "~/contracts/query-keys";
 import type { GpvSnapshotIssueResolution } from "~/lib/db/schema/modules/merchant-stats.types";
 import { storeUploadedFile } from "~/server/files/service/store-uploaded-file";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
@@ -81,7 +78,7 @@ function parseUpload(formData: FormData): Result<Upload, DomainError> {
 }
 
 export async function uploadMerchantReport(formData: FormData) {
-  const result = await runAction({
+  return runAction({
     name: "merchantGpv.import.upload",
     access: { kind: "permission", permission: "dashboards:manage" },
 
@@ -136,8 +133,6 @@ export async function uploadMerchantReport(formData: FormData) {
       });
     },
   });
-
-  return json(result, { revalidate: [] });
 }
 
 // Used when the progress stream is unavailable.
@@ -243,7 +238,7 @@ export async function resolveGpvImportIssue(raw: {
   issueId: string;
   resolution: GpvSnapshotIssueResolution;
 }) {
-  const result = await runAction({
+  return runAction({
     name: "merchantGpv.import.issue.resolve",
     access: { kind: "permission", permission: "dashboards:manage" },
     parse: () =>
@@ -260,19 +255,4 @@ export async function resolveGpvImportIssue(raw: {
         now: now(),
       }),
   });
-  const revalidate: string[] = [QUERY_KEYS.merchantGpv.snapshot];
-
-  if (result.activated) {
-    revalidate.push(
-      QUERY_KEYS.merchantGpv.cohortRows,
-      QUERY_KEYS.merchantGpv.culqiView,
-      QUERY_KEYS.merchantGpv.performanceView,
-      QUERY_KEYS.homeMerchantPortfolio,
-      QUERY_KEYS.merchantGpv.filterOptions,
-      QUERY_KEYS.merchantGpv.statsByRuc,
-      QUERY_KEYS.merchantGpv.qualityRows,
-    );
-  }
-
-  return json(result, { revalidate });
 }
