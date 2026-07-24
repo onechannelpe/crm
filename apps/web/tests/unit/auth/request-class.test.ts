@@ -22,7 +22,7 @@ describe("classifyRequest", () => {
   });
 
   it("treats unknown app and api routes as browser, secure by default", () => {
-    expect(classifyRequest("/dashboard")).toBe("browser");
+    expect(classifyRequest("/home")).toBe("browser");
     expect(classifyRequest("/records")).toBe("browser");
     expect(classifyRequest("/releases/v1.0")).toBe("browser");
     expect(classifyRequest("/reports/export.csv")).toBe("browser");

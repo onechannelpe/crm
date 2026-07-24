@@ -9,6 +9,7 @@ import type { DomainError } from "~/server/shared/domain-error";
 import type { Result } from "~/server/shared/result";
 
 import { getCohortRows } from "../read/cohort";
+import { getLatestCompletedMerchantReportCut } from "../read/latest-report";
 import { buildMerchantGpvWorkbook } from "./workbook";
 
 type ExportDeps = {
@@ -24,7 +25,7 @@ export async function requestMerchantGpvExport(
 ): Promise<Result<{ token: string }, DomainError>> {
   const [rows, cutAt] = await Promise.all([
     getCohortRows(deps.db, filter),
-    latestCompletedReportCut(deps.db),
+    getLatestCompletedMerchantReportCut(deps.db),
   ]);
   const bytes = buildMerchantGpvWorkbook(rows);
   const storedFile = await storeGeneratedFile(
@@ -40,20 +41,6 @@ export async function requestMerchantGpvExport(
   if (!storedFile.ok) return storedFile;
 
   return issueDownloadToken(ctx, storedFile.value.id, { repo: deps.filesRepo });
-}
-
-async function latestCompletedReportCut(
-  db: DatabaseExecutor,
-): Promise<Date | null> {
-  const report = await db
-    .selectFrom("merchant_reports as r")
-    .innerJoin("merchant_report_imports as i", "i.report_id", "r.id")
-    .where("i.queue_state", "=", "done")
-    .select("r.cut_at")
-    .orderBy("r.cut_at", "desc")
-    .executeTakeFirst();
-
-  return report?.cut_at ?? null;
 }
 
 function exportFilename(cutAt: Date): string {

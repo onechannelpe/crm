@@ -11,7 +11,7 @@ const LOCAL_ORIGIN = "http://localhost:3000";
 describe("auth middleware csrf policy", () => {
   it("allows same-origin unsafe requests via fetch metadata", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { "sec-fetch-site": "same-origin" },
       }),
@@ -22,7 +22,7 @@ describe("auth middleware csrf policy", () => {
 
   it("rejects cross-site unsafe requests via fetch metadata", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { "sec-fetch-site": "cross-site" },
       }),
@@ -33,7 +33,7 @@ describe("auth middleware csrf policy", () => {
 
   it("rejects same-site unsafe requests via fetch metadata", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { "sec-fetch-site": "same-site" },
       }),
@@ -44,7 +44,7 @@ describe("auth middleware csrf policy", () => {
 
   it("rejects requests with no fetch metadata context (none)", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { "sec-fetch-site": "none" },
       }),
@@ -55,7 +55,7 @@ describe("auth middleware csrf policy", () => {
 
   it("accepts a request whose origin matches the target origin", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { Origin: LOCAL_ORIGIN },
       }),
@@ -66,7 +66,7 @@ describe("auth middleware csrf policy", () => {
 
   it("falls back to strict origin matching when fetch metadata is absent", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { Origin: "http://evil.local" },
       }),
@@ -77,7 +77,7 @@ describe("auth middleware csrf policy", () => {
 
   it("derives the source origin from the referer when Origin is absent", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { Referer: "http://evil.local/some/path" },
       }),
@@ -88,7 +88,7 @@ describe("auth middleware csrf policy", () => {
 
   it("fails closed when fetch metadata and origin headers are absent", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", { method: "POST" }),
+      new Request("http://localhost:3000/home", { method: "POST" }),
       LOCAL_ORIGIN,
     );
     expect(error).toBe("CSRF validation failed (Origin missing)");

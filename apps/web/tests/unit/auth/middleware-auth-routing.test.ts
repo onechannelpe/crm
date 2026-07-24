@@ -7,7 +7,7 @@ import { enforceAuthRequest } from "~/lib/auth/access/request-auth";
 describe("auth middleware routing", () => {
   it("redirects to /login when private route has no session", async () => {
     const decision = await enforceAuthRequest({
-      request: new Request("http://localhost:3000/dashboard"),
+      request: new Request("http://localhost:3000/home"),
       locals: { nonce: "nonce", requestContext: createRequestContext(null) },
     });
 
@@ -31,7 +31,7 @@ describe("auth middleware routing", () => {
 
   it("redirects to onboarding when session is not onboarded", async () => {
     const decision = await enforceAuthRequest({
-      request: new Request("http://localhost:3000/dashboard"),
+      request: new Request("http://localhost:3000/home"),
       locals: {
         nonce: "nonce",
         requestContext: createRequestContext(
@@ -56,7 +56,7 @@ describe("auth middleware routing", () => {
 
     expect(decision.kind).toBe("redirect_home");
     if (decision.kind !== "redirect_home") throw new Error("Expected redirect");
-    expect(decision.to).toBe("/records");
+    expect(decision.to).toBe("/home");
   });
 
   it("redirects users from routes they cannot access", async () => {
@@ -72,7 +72,7 @@ describe("auth middleware routing", () => {
 
     expect(decision.kind).toBe("redirect_home");
     if (decision.kind !== "redirect_home") throw new Error("Expected redirect");
-    expect(decision.to).toBe("/records");
+    expect(decision.to).toBe("/home");
   });
 
   it("redirects authenticated users from root to home route", async () => {

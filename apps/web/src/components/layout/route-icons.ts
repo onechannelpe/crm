@@ -25,7 +25,7 @@ export const ICON_BY_ROUTE: Record<
   inventory: Package,
   leads: User,
   "rate-simulator": Moneybag,
-  dashboard: House,
+  home: House,
   audit: Info,
   capacity: Building2,
   profile: UserRound,

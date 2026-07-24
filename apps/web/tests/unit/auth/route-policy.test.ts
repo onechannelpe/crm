@@ -16,7 +16,7 @@ describe("route permissions", () => {
     expect(getRoutePermission("/rate-simulator")).toBe("lead:rate:simulate");
     expect(getRoutePermission("/records/new")).toBeNull();
     expect(getRoutePermission("/records/123")).toBeNull();
-    expect(getRoutePermission("/dashboard")).toBe("lead:work");
+    expect(getRoutePermission("/home")).toBe("lead:work");
     expect(getRoutePermission("/settings/profile")).toBeNull();
   });
 
@@ -38,10 +38,10 @@ describe("route permissions", () => {
   });
 
   it("returns a role-safe default path", () => {
-    expect(getDefaultAppPath("executive")).toBe("/records");
+    expect(getDefaultAppPath("executive")).toBe("/home");
     expect(getDefaultAppPath("logistics")).toBe("/inventory");
     expect(getDefaultAppPath("hr")).toBe("/team");
-    expect(getDefaultAppPath("admin")).toBe("/dashboard");
+    expect(getDefaultAppPath("admin")).toBe("/home");
   });
 });
 
@@ -52,7 +52,7 @@ describe("nav config structural invariants", () => {
 
   it("uses fallback when no header rule exists", () => {
     expect(getHeaderRoute("/unknown-route").label).toBe("Espacio de trabajo");
-    expect(getHeaderRoute("/dashboard").label).toBe("Inicio");
+    expect(getHeaderRoute("/home").label).toBe("Inicio");
   });
 
   it("every sidebar route href is registered in the route manifest", () => {

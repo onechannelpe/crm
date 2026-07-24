@@ -7,7 +7,7 @@ export type RouteIcon =
   | "inventory"
   | "leads"
   | "rate-simulator"
-  | "dashboard"
+  | "home"
   | "audit"
   | "capacity"
   | "profile"
@@ -57,8 +57,8 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     header: { label: "Registros", icon: "leads", tileColor: "blue" },
   },
   {
-    match: "/dashboard",
-    header: { label: "Inicio", icon: "dashboard", tileColor: "blue" },
+    match: "/home",
+    header: { label: "Inicio", icon: "home", tileColor: "blue" },
   },
   {
     match: "/schedule",
@@ -127,11 +127,11 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
 
 export const SIDEBAR_ENTRIES: SidebarEntry[] = [
   {
-    id: "dashboard",
-    href: "/dashboard",
-    activePrefixes: ["/dashboard"],
+    id: "home",
+    href: "/home",
+    activePrefixes: ["/home"],
     label: "Inicio",
-    icon: "dashboard",
+    icon: "home",
     tileColor: "blue",
     section: "primary",
     order: 1,

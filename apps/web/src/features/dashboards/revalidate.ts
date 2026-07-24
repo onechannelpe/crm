@@ -10,6 +10,7 @@ import {
   qualitySummaryQuery,
   rampQuery,
 } from "~/lib/queries/dashboards";
+import { homeMerchantPortfolioQuery } from "~/lib/queries/home";
 
 const GPV_QUERY_KEYS = [
   attainmentQuery.key,
@@ -20,6 +21,7 @@ const GPV_QUERY_KEYS = [
   merchantFilterOptionsQuery.key,
   qualitySummaryQuery.key,
   qualityRowsQuery.key,
+  homeMerchantPortfolioQuery.key,
 ];
 
 export function revalidateGpvData(): Promise<void> {

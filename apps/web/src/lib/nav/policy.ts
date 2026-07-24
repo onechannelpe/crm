@@ -24,7 +24,7 @@ export interface SidebarGroup {
 
 const HEADER_FALLBACK: HeaderDescriptor = {
   label: "Espacio de trabajo",
-  icon: "dashboard",
+  icon: "home",
 };
 
 function sortByOrder(a: SidebarEntry, b: SidebarEntry): number {

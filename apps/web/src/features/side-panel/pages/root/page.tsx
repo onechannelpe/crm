@@ -15,7 +15,7 @@ import styles from "./page.module.css";
 
 type ActionItem = {
   label: string;
-  icon: typeof ICON_BY_ROUTE.dashboard;
+  icon: typeof ICON_BY_ROUTE.home;
   onAction: () => void;
 };
 

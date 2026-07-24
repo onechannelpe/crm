@@ -12,7 +12,7 @@ export function createRequestContext(
     observability: {
       traceId: "trace-id",
       requestId: "request-id",
-      routePath: "/dashboard",
+      routePath: "/home",
       httpMethod: "GET",
       requestStartedAt: 1_700_000_000_000,
     },
