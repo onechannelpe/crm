@@ -62,6 +62,7 @@ export interface MerchantSalesTable {
   merchant_id: string;
   product: string;
   serial_number: string | null;
+  serial_key: Generated<string>;
   ruc: string;
   sold_at: string;
   sale_month: string;

@@ -9,6 +9,19 @@ export type DomainPatch = Record<
   string | number | boolean | Date | null
 >;
 
+interface QueueControlColumns {
+  id: string | number;
+  queue_state: string;
+  lease_owner: string | null;
+  claimable_at: Date;
+  attempt_count: number;
+  max_attempts: number;
+  error_message: string | null;
+  completed_at: Date | null;
+}
+
+type QueueControlDb = Record<JobTableName, QueueControlColumns>;
+
 export interface JobStore<TId extends string | number, TRow> {
   claim(
     workerId: string,
@@ -50,10 +63,6 @@ export interface JobStore<TId extends string | number, TRow> {
   countOutstanding(): Promise<number>;
 }
 
-function updatedAtLeastOneRow(result: { numUpdatedRows?: bigint }): boolean {
-  return Number(result.numUpdatedRows ?? 0) > 0;
-}
-
 export function createJobStore<
   TRow,
   TId extends string | number = string | number,
@@ -62,9 +71,9 @@ export function createJobStore<
   table: JobTableName,
   selectColumns: readonly string[],
 ): JobStore<TId, TRow> {
-  // Queue tables are selected at runtime, so Kysely cannot type this handle.
+  // The table is chosen at runtime, so cast to the shared queue columns.
   // oxlint-disable-next-line no-unsafe-type-assertion
-  const db = executor as unknown as Kysely<any>;
+  const db = executor as unknown as Kysely<QueueControlDb>;
 
   async function settle(
     id: TId,
@@ -79,11 +88,15 @@ export function createJobStore<
       .where("queue_state", "=", "processing")
       .executeTakeFirst();
 
-    return updatedAtLeastOneRow(result);
+    return Number(result.numUpdatedRows ?? 0) > 0;
   }
 
   return {
     async claim(workerId, now, limit, leaseMs) {
+      const projection = selectColumns.map((column) =>
+        column === "id" ? `${table}.id` : column,
+      );
+
       const rows = await db
         .with("claimed", (qb) =>
           qb
@@ -108,11 +121,8 @@ export function createJobStore<
           error_message: null,
         }))
         .whereRef(`${table}.id`, "=", "claimed.id")
-        .returning(
-          selectColumns.map((column) =>
-            column === "id" ? `${table}.id` : column,
-          ),
-        )
+        // oxlint-disable-next-line no-unsafe-type-assertion
+        .returning(projection as never[])
         .execute();
 
       // oxlint-disable-next-line no-unsafe-type-assertion
@@ -129,7 +139,7 @@ export function createJobStore<
         .where("queue_state", "=", "processing")
         .executeTakeFirst();
 
-      return updatedAtLeastOneRow(result);
+      return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
     markDone(id, workerId, now, patch) {

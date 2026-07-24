@@ -72,6 +72,9 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addColumn("merchant_id", "text", (col) => col.notNull())
     .addColumn("product", "text", (col) => col.notNull())
     .addColumn("serial_number", "text")
+    .addColumn("serial_key", "text", (col) =>
+      col.generatedAlwaysAs(sql`coalesce(serial_number, '')`).stored(),
+    )
     .addColumn("ruc", "text", (col) => col.notNull())
     .addColumn("sold_at", "date", (col) => col.notNull())
     .addColumn("sale_month", "date", (col) =>
@@ -104,11 +107,12 @@ export async function createTables<T>(db: Kysely<T>): Promise<void> {
     .addUniqueConstraint("merchant_sales_id_sale_month", ["id", "sale_month"])
     .execute();
 
-  // Missing serial numbers still need a stable identity.
-  await sql`
-    create unique index idx_merchant_sales_identity
-      on merchant_sales (merchant_id, product, coalesce(serial_number, ''))
-  `.execute(db);
+  await db.schema
+    .createIndex("idx_merchant_sales_identity")
+    .unique()
+    .on("merchant_sales")
+    .columns(["merchant_id", "product", "serial_key"])
+    .execute();
 
   await db.schema
     .createIndex("idx_merchant_sales_ruc")

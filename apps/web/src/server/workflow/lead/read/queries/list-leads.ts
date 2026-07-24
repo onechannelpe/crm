@@ -24,7 +24,7 @@ type LeadListQueryDeps = {
 };
 
 function normalizeLeadAnyFieldSearch(value: string | undefined) {
-  return value?.trim().toLowerCase() || undefined;
+  return value?.trim() || undefined;
 }
 
 export async function listLeads(

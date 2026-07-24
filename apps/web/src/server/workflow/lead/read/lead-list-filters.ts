@@ -1,4 +1,4 @@
-import { sql, type SelectQueryBuilder } from "kysely";
+import type { SelectQueryBuilder } from "kysely";
 
 import type { LeadListFilters, RecordExportFilters } from "./lead-queries";
 import type { LeadQueryDatabase } from "./lead-query-types";
@@ -19,10 +19,11 @@ export function applyLeadVisibility(
   query: VisibilityQuery,
   filters: LeadListFilters | RecordExportFilters,
 ): VisibilityQuery {
-  // Soft-deleted leads are excluded from every active read path.
   query = query.where("lead.deleted_at", "is", null);
 
-  if (filters.actorRole === "superuser") return query;
+  if (filters.actorRole === "superuser") {
+    return query;
+  }
 
   if (filters.actorRole === "supervisor") {
     return query.where("executive.branch_id", "in", (eb) =>
@@ -58,18 +59,23 @@ export function applyLeadListFilters(
   if (filters.executiveId !== undefined) {
     next = next.where("lead.executive_id", "=", filters.executiveId);
   }
+
   if (filters.stage !== undefined) {
     next = next.where("lead.stage", "=", filters.stage);
   }
+
   if (filters.status !== undefined) {
     next = next.where("lead.status", "=", filters.status);
   }
+
   if (filters.priority !== undefined) {
     next = next.where("lead.priority", "=", filters.priority);
   }
+
   if (filters.updatedSince !== undefined) {
     next = next.where("lead.updated_at", ">=", filters.updatedSince);
   }
+
   if (filters.updatedUntil !== undefined) {
     next = next.where("lead.updated_at", "<", filters.updatedUntil);
   }
@@ -77,28 +83,29 @@ export function applyLeadListFilters(
   return applyLeadAnyFieldSearch(next, filters.anyFieldSearch);
 }
 
-function escapeLikePattern(value: string) {
+function escapeLikePattern(value: string): string {
   return value.replace(/[\\%_]/g, (match) => `\\${match}`);
 }
 
 function applyLeadAnyFieldSearch(
   query: LeadListQuery,
   anyFieldSearch: string | undefined,
-) {
-  if (!anyFieldSearch) return query;
+): LeadListQuery {
+  if (!anyFieldSearch) {
+    return query;
+  }
 
   const pattern = `%${escapeLikePattern(anyFieldSearch)}%`;
-  const escapeChar = "\\";
 
   return query.where((eb) =>
     eb.or([
-      sql<boolean>`org.ruc like ${pattern} escape ${escapeChar}`,
-      sql<boolean>`lower(org.legal_name) like ${pattern} escape ${escapeChar}`,
-      sql<boolean>`lower(org.address) like ${pattern} escape ${escapeChar}`,
-      sql<boolean>`lower(executive.names) like ${pattern} escape ${escapeChar}`,
-      sql<boolean>`lower(executive.first_surname) like ${pattern} escape ${escapeChar}`,
-      sql<boolean>`lower(creator.names) like ${pattern} escape ${escapeChar}`,
-      sql<boolean>`lower(creator.first_surname) like ${pattern} escape ${escapeChar}`,
+      eb("org.ruc", "ilike", pattern),
+      eb("org.legal_name", "ilike", pattern),
+      eb("org.address", "ilike", pattern),
+      eb("executive.names", "ilike", pattern),
+      eb("executive.first_surname", "ilike", pattern),
+      eb("creator.names", "ilike", pattern),
+      eb("creator.first_surname", "ilike", pattern),
     ]),
   );
 }

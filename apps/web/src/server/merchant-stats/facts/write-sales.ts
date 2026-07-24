@@ -1,5 +1,3 @@
-import { sql } from "kysely";
-
 import { calendarMonthStart } from "~/lib/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type { MerchantReportId, MerchantSaleId } from "~/server/shared/ids";
@@ -53,8 +51,7 @@ export async function upsertSales(
       .values(values)
       .onConflict((oc) =>
         oc
-          // Kysely adds the outer parentheses around this expression.
-          .expression(sql`merchant_id, product, coalesce(serial_number, '')`)
+          .columns(["merchant_id", "product", "serial_key"])
           .doUpdateSet((eb) => {
             const set: Record<string, unknown> = {};
 
