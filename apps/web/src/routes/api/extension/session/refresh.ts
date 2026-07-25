@@ -1,7 +1,7 @@
 import { isRefreshExtensionSessionRequest } from "~/server/extension/contracts";
+import { toWire } from "~/server/platform/action/domain-error";
 import { getServerRuntime } from "~/server/platform/container";
-import { toWire } from "~/server/shared/domain-error";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";
 import { readJsonBody } from "../json-body";

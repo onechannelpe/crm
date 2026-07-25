@@ -2,7 +2,7 @@ import { createEffect, Show, type JSX, splitProps } from "solid-js";
 
 import Check from "~/components/icons/check";
 import Minus from "~/components/icons/minus";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./field.module.css";
 

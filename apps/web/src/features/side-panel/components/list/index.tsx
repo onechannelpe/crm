@@ -1,6 +1,6 @@
 import { type ParentProps, createSignal, onCleanup, onMount } from "solid-js";
 
-import { getVerticalNavigationAction } from "~/lib/keyboard/list-navigation";
+import { getVerticalNavigationAction } from "~/browser/keyboard/list-navigation";
 
 import styles from "./styles.module.css";
 

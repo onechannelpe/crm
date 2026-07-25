@@ -3,14 +3,14 @@ import {
   canDeleteMember,
   canImpersonateMember,
   canManageMember,
-} from "~/lib/auth/access/member-management";
-import { getPermissions } from "~/lib/auth/access/rbac";
-import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
-import { appCalendarDateBefore } from "~/lib/time/app-time";
+} from "~/domain/auth/access/member-management";
+import { getPermissions } from "~/domain/auth/access/rbac";
+import { getAssignableRoleOptions } from "~/domain/auth/access/role-display";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { appCalendarDateBefore } from "~/domain/time/app-time";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { memberAvatarUrl } from "../member-view";
 import type { MemberReadDeps } from "../ports";

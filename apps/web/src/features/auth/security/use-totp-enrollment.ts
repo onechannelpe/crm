@@ -4,7 +4,7 @@ import {
   beginTotpEnrollment,
   finishTotpEnrollment,
 } from "~/actions/auth/security/totp";
-import { actionErrorMessage } from "~/lib/wire-error";
+import { actionErrorMessage } from "~/contracts/errors";
 
 export interface TotpEnrollmentState {
   qrCodeDataUrl: string;

@@ -1,4 +1,4 @@
-import type { DocumentKind } from "~/server/shared/document";
+import type { DocumentKind } from "~/domain/identity/document";
 
 import type { SunatEconomicActivity } from "./enrichment/sunat/contracts";
 

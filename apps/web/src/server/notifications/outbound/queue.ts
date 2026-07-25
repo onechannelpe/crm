@@ -1,9 +1,9 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import { createJobQueue } from "~/lib/job-queue/job-queue";
-import type { QueueRunner } from "~/lib/job-queue/types";
-import { toE164Peru } from "~/lib/phone/pe-mobile";
+import { toE164Peru } from "~/domain/phone/pe-mobile";
+import type { Database } from "~/server/platform/database/types";
+import { createJobQueue } from "~/server/platform/jobs/job-queue";
+import type { QueueRunner } from "~/server/platform/jobs/types";
 
 import type { MessagingGateway } from "../channels/messaging-gateway";
 import { classifySendReceipt } from "../channels/send-result";

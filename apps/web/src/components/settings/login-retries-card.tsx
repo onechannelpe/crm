@@ -12,9 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { actionErrorMessage } from "~/contracts/errors";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import { loginRetryReportMutation } from "~/features/auth/data/security-mutations";
-import { formatAppDateTime } from "~/lib/time/app-time";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./login-retries-card.module.css";
 

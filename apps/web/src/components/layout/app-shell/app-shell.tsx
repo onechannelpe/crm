@@ -5,7 +5,7 @@ import {
   isMerchantGpvPath,
   isRecordShowPath,
   isSettingsRoutePath,
-} from "~/lib/navigation/route-classification";
+} from "~/domain/navigation/route-classification";
 
 import { MerchantGpvShell } from "./merchant-gpv-shell";
 import { RecordShowShell } from "./record-show-shell";

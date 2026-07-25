@@ -1,11 +1,11 @@
 import type { ManagedExecutiveView } from "~/contracts/capacity";
-import { longName } from "~/lib/users/display-name";
+import type { DomainError } from "~/domain/errors";
+import { longName } from "~/domain/identity/display-name";
+import type { BranchId, UserId } from "~/domain/ids";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 import type { CapacityUser } from "../actor-scope";
 import { canManageExecutive } from "../authorize-capacity-actor";

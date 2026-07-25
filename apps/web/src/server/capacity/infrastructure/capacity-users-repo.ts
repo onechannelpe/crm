@@ -1,8 +1,8 @@
 import type { Selectable } from "kysely";
 
-import type { UsersTable } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { BranchId, UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { UsersTable } from "~/server/platform/database/types";
 
 import type { CapacityUser } from "../application/actor-scope";
 

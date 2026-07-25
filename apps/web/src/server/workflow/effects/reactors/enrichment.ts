@@ -1,6 +1,6 @@
 import type { EnrichmentRequest } from "~/server/client-search/ports";
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
 // On lead registration, writes the SUNAT request in the same transaction;

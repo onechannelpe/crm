@@ -4,7 +4,7 @@ import type {
   OrganizationsTable,
   UsersTable,
   WorkflowLeadsTable,
-} from "~/lib/db/types";
+} from "~/server/platform/database/types";
 
 export interface LeadAlias {
   lead: WorkflowLeadsTable;

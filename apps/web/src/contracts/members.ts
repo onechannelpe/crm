@@ -1,7 +1,7 @@
-import type { Permission, Role } from "~/lib/auth/access/rbac";
-import type { RoleOption } from "~/lib/auth/access/role-display";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
-import type { CalendarDate } from "~/lib/time/calendar-date";
+import type { Permission, Role } from "~/domain/auth/access/rbac";
+import type { RoleOption } from "~/domain/auth/access/role-display";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import type { CalendarDate } from "~/domain/time/calendar-date";
 
 import type { TeamOption } from "./team";
 
@@ -12,7 +12,7 @@ export interface MemberListItem {
   secondSurname: string;
   email: string;
   role: Role;
-  executiveCategory: ExecutiveCategoryValue | null;
+  executiveCategory: ExecutiveCategory | null;
   teamName: string | null;
   isActive: boolean;
   onboardingCompleted: boolean;
@@ -30,7 +30,7 @@ export interface MemberDetail {
   secondSurname: string;
   email: string;
   role: Role;
-  executiveCategory: ExecutiveCategoryValue | null;
+  executiveCategory: ExecutiveCategory | null;
   teamId: string | null;
   teamName: string | null;
   branchName: string | null;

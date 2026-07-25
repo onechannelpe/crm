@@ -2,13 +2,13 @@ import type {
   ExecutiveGpvMerchantView,
   ExecutiveGpvProgressView,
 } from "~/contracts/merchant-stats/views";
-import { appCalendarDateAt } from "~/lib/time/app-time";
+import type { UserId } from "~/domain/ids";
+import { appCalendarDateAt } from "~/domain/time/app-time";
 import {
   calendarMonthFromDate,
   calendarMonthStart,
-} from "~/lib/time/calendar-date";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { UserId } from "~/server/shared/ids";
+} from "~/domain/time/calendar-date";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { dateFromStorage } from "../storage-month";
 import { getActiveGpvSnapshotCut } from "./latest-report";

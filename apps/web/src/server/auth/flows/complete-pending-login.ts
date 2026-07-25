@@ -1,14 +1,14 @@
-import { loadActiveAuthContextForUser } from "~/lib/auth/context/auth-context";
-import { resolveSessionClass } from "~/lib/auth/core/session-contract";
-import { recordAuthEvent } from "~/lib/auth/security/auth-events";
-import { enqueueAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
+import { resolveSessionClass } from "~/domain/auth/core/session-contract";
 import type { LoginFlowLoginResult } from "~/server/auth/application/login-contracts";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import { loadActiveAuthContextForUser } from "~/server/auth/context/auth-context";
 import type { VerifiedPasskeyLogin } from "~/server/auth/factors/passkey/service/login-finish";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
+import { recordAuthEvent } from "~/server/auth/security/auth-events";
+import { enqueueAlertOnNewLoginSource } from "~/server/auth/security/login-source-alert";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
 import { createSessionService } from "~/server/auth/session/session.service";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type {
   VerifiedRecoveryLoginProof,

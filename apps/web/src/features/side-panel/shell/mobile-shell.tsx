@@ -1,7 +1,7 @@
 import { type ParentProps, Show, onCleanup, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { SIDE_PANEL_CLICK_OUTSIDE_ID } from "../constants/side-panel-click-outside-id";
 import { useSidePanel } from "../state/use-side-panel";

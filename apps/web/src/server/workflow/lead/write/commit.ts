@@ -1,11 +1,11 @@
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { assignOrganizationOwner } from "~/server/organization/ownership";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { createEventsRepo } from "~/server/shared/repos-events";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { toLeadEventAppend } from "./lead-events";
 

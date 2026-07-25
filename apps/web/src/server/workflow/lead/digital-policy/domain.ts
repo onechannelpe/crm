@@ -3,8 +3,8 @@ import type {
   CollectionMode,
   ProductScope,
 } from "~/contracts/workflow/vocabulary";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import { Err, Ok, type Result } from "~/shared/result";
 
 type LinkConfig = { url: string };
 type OnlineConfig = { url: string; collectionMode: CollectionMode };

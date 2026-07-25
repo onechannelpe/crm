@@ -1,6 +1,6 @@
 import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import type { Permission } from "~/lib/auth/access/rbac";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import type { Permission } from "~/domain/auth/access/rbac";
 
 export type WorkspaceView = {
   readonly id: string;

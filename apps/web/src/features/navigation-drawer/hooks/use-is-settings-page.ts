@@ -1,6 +1,6 @@
 import { useLocation } from "@solidjs/router";
 
-import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
+import { isSettingsRoutePath } from "~/domain/navigation/route-classification";
 
 export function useIsSettingsPage() {
   const location = useLocation();

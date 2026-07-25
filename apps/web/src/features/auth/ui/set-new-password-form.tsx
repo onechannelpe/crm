@@ -4,12 +4,12 @@ import { Show } from "solid-js";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { codeIs } from "~/contracts/error-codes";
+import { parseWireError } from "~/contracts/errors";
 import { resetPasswordMutation } from "~/features/auth/data/mutations";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { LoginFeedback } from "~/features/auth/ui/login-feedback";
-import { parseWireError } from "~/lib/wire-error";
-import { codeIs } from "~/lib/wire-error-codes";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";

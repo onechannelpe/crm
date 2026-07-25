@@ -2,14 +2,17 @@
 
 import { randomUUIDv7 } from "bun";
 
-import { isRole } from "~/lib/auth/access/rbac";
+import { isRole } from "~/domain/auth/access/rbac";
+import { invalid, type DomainError } from "~/domain/errors";
+import { NotificationIntentId, TeamId, UserId } from "~/domain/ids";
 import type { NotificationAudience } from "~/server/notifications/types";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { invalid, type DomainError } from "~/server/shared/domain-error";
-import { NotificationIntentId, TeamId, UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 const AUDIENCE_TYPES = ["user_ids", "global_roles", "team"] as const;
 

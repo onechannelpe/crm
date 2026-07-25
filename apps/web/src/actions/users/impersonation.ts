@@ -1,17 +1,20 @@
 "use server";
 
+import { UserId } from "~/domain/ids";
 import {
   deleteImpersonatorCookie,
   getImpersonatorCookie,
   getSessionCookie,
   setImpersonatorCookie,
   setSessionCookie,
-} from "~/lib/auth/session/cookies";
+} from "~/server/auth/session/cookies";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { isErr, Ok } from "~/server/shared/result";
+import { isErr, Ok } from "~/shared/result";
 
 export async function startImpersonation(
   rawUserId: unknown,

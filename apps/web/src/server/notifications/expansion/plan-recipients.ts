@@ -1,9 +1,9 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { Logger } from "~/lib/observability/logger-shared";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
+import type { Logger } from "~/shared/observability/logger";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import {
   isChannelControllable,

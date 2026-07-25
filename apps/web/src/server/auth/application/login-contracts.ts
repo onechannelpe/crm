@@ -1,6 +1,6 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { SessionClass } from "~/lib/auth/core/session-contract";
-import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { SessionClass } from "~/domain/auth/core/session-contract";
+import type { PasskeyLoginFlowState } from "~/domain/auth/passkey/types";
 
 export interface TotpLoginFlowState {
   id: string;

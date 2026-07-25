@@ -1,7 +1,7 @@
 import type { JSX, ParentProps } from "solid-js";
 import { children, Show } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./primitives.module.css";
 

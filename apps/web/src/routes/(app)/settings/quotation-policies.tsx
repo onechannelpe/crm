@@ -16,6 +16,8 @@ import {
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Toggle } from "~/components/ui/input/toggle";
+import { actionErrorMessage } from "~/contracts/errors";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   updatePendingQuotationPolicyMutation,
@@ -25,8 +27,6 @@ import {
   pendingQuotationPolicyQuery,
   rateProposalPolicyQuery,
 } from "~/features/workflow/data/settings-queries";
-import { formatAppDateTime } from "~/lib/time/app-time";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-page.module.css";
 

@@ -1,12 +1,12 @@
 import type { CapacityPolicyDefaultsView } from "~/contracts/capacity";
+import type { DomainError } from "~/domain/errors";
 import type { CapacityTeamsRepo } from "~/server/capacity/infrastructure/capacity-teams-repo";
 import type {
   LeadPolicyDefaultsRepo,
   SearchPolicyDefaultsRepo,
 } from "~/server/capacity/infrastructure/policy-repos";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/shared/result";
 
 interface PolicyDefaultsDeps {
   repos: {

@@ -2,14 +2,17 @@
 
 import { MAX_RATE_REVISION_FILES } from "~/contracts/workflow/limits";
 import { CLOSE_REASONS, CURRENCIES } from "~/contracts/workflow/vocabulary";
-import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
 import {
   WorkflowLeadId,
   WorkflowRateProposalId,
   WorkflowRateRevisionFileId,
-} from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
+} from "~/domain/ids";
+import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
+import { getServerRuntime } from "~/server/platform/container";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
 import { editRateProposalCommand } from "~/server/workflow/lead/commands/edit-rate-proposal";

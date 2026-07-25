@@ -1,7 +1,7 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import type { WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { Ok, type Result } from "~/shared/result";
 
 import { expireReservation } from "../../lead/domain/decide";
 import { isReservationLapsed } from "../../lead/domain/reservation";

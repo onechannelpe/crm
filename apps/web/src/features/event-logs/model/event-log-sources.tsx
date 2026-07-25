@@ -14,8 +14,8 @@ import type {
   EventLogTable,
 } from "~/contracts/event-logs/event-log";
 import { summarizeFieldChanges } from "~/contracts/events";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import type { DataGridIcon } from "~/features/data-grid/model/types";
-import { formatAppDateTime } from "~/lib/time/app-time";
 
 import { EventLogJsonCell } from "../components/event-log-json-cell";
 

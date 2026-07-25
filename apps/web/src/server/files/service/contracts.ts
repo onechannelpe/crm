@@ -1,7 +1,6 @@
-import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { FileAssetId } from "~/server/shared/ids";
-import type { Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import type { FileAssetId, UserId } from "~/domain/ids";
+import type { Result } from "~/shared/result";
 
 import type { createAssetsRepo } from "../repo/assets";
 import type { createRateRevisionFilesRepo } from "../repo/rate-revision";
@@ -15,6 +14,11 @@ export interface FileRepos {
   tokens: ReturnType<typeof createTokensRepo>;
   sales: ReturnType<typeof createSalesRepo>;
   rateRevision: ReturnType<typeof createRateRevisionFilesRepo>;
+}
+
+export interface FileOperationContext {
+  actor: { userId: UserId };
+  now: () => Date;
 }
 
 export interface StoreUploadInput {
@@ -46,17 +50,17 @@ export interface ExecuteDownloadDeps {
 
 export interface FileServiceApi {
   storeUploadedFile: (
-    ctx: AppContext,
+    ctx: FileOperationContext,
     input: StoreUploadInput,
     deps: StoreFileDeps,
   ) => Promise<Result<FileAsset, DomainError>>;
   storeGeneratedFile: (
-    ctx: AppContext,
+    ctx: FileOperationContext,
     input: StoreGeneratedFileInput,
     deps: StoreFileDeps,
   ) => Promise<Result<FileAsset, DomainError>>;
   issueDownloadToken: (
-    ctx: AppContext,
+    ctx: FileOperationContext,
     fileAssetId: FileAssetId,
     deps: DownloadTokenDeps,
   ) => Promise<Result<{ token: string }, DomainError>>;

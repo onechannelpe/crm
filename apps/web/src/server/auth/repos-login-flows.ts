@@ -1,11 +1,11 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
 import type {
   AuthLoginFlowId,
   UserId,
   WebauthnChallengeId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 export function createLoginFlowsRepo(db: Kysely<Database>) {
   return {

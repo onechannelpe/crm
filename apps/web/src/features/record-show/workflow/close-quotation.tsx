@@ -4,6 +4,7 @@ import { createSignal, For, Show } from "solid-js";
 import { Button } from "~/components/ui/input/button";
 import { Select } from "~/components/ui/input/select";
 import { Textarea } from "~/components/ui/input/textarea";
+import { actionErrorMessage } from "~/contracts/errors";
 import { describeCloseReason } from "~/contracts/workflow/close-reason-labels";
 import {
   CLOSE_REASONS,
@@ -13,7 +14,6 @@ import {
 import { WidgetCard, WidgetCardContent } from "~/features/widgets/widget-card";
 import { closeLeadMutation } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./close-quotation.module.css";
 

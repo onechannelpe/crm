@@ -3,7 +3,7 @@ import { For, Show, createMemo } from "solid-js";
 
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { getNavigableRoutes } from "~/lib/nav/policy";
+import { getNavigableRoutes } from "~/domain/navigation/policy";
 
 import { PanelGroup } from "../../components/group";
 import { PanelList } from "../../components/list";

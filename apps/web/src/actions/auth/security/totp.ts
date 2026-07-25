@@ -1,13 +1,13 @@
 "use server";
 
-import { setSessionCookie } from "~/lib/auth/session/cookies";
+import { fail } from "~/domain/errors";
 import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
 import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-enrollment";
 import { startTotpEnrollment } from "~/server/auth/flows/start-totp-enrollment";
+import { setSessionCookie } from "~/server/auth/session/cookies";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail } from "~/server/shared/domain-error";
-import { Err, isErr, Ok } from "~/server/shared/result";
+import { Err, isErr, Ok } from "~/shared/result";
 
 export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;

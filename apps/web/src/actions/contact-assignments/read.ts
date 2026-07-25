@@ -6,7 +6,7 @@ import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } fro
 import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { Ok } from "~/server/shared/result";
+import { Ok } from "~/shared/result";
 
 export async function getActiveContactAssignments(): Promise<
   ActiveContactAssignmentView[]

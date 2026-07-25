@@ -2,6 +2,7 @@ import { useAction } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
+import { actionErrorMessage } from "~/contracts/errors";
 import {
   WidgetCard,
   WidgetCardActions,
@@ -9,7 +10,6 @@ import {
   WidgetCardHeader,
   WidgetCardTitle,
 } from "~/features/widgets/widget-card";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import { restartQuotationMutation } from "../../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../../data/revalidate-workflow";

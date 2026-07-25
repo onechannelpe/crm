@@ -1,12 +1,12 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, type Result } from "~/server/shared/result";
+import { type DomainError } from "~/domain/errors";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 import {
   createWorkflowRepos,
   type WorkflowRepos,
 } from "~/server/workflow/repos";
+import { Err, isErr, type Result } from "~/shared/result";
 
 import {
   appendFacts,

@@ -1,6 +1,9 @@
 import { For } from "solid-js";
 
-import type { UpdateFilter, UpdateFilterOption } from "~/lib/updates";
+import type {
+  UpdateFilter,
+  UpdateFilterOption,
+} from "~/features/updates/model";
 
 import styles from "./styles/filters.module.css";
 

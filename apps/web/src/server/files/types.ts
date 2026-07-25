@@ -1,4 +1,4 @@
-import type { FileAssetId, UserId } from "~/server/shared/ids";
+import type { FileAssetId, UserId } from "~/domain/ids";
 
 export const FILE_PURPOSES = [
   "records_export",

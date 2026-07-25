@@ -2,18 +2,18 @@
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { isRegistrationResponse } from "~/lib/auth/passkey/credential-response";
-import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/types";
-import { setSessionCookie } from "~/lib/auth/session/cookies";
+import { isRegistrationResponse } from "~/domain/auth/passkey/credential-response";
+import type { PasskeyEnrollmentChallenge } from "~/domain/auth/passkey/types";
+import { fail, type DomainError } from "~/domain/errors";
+import { WebauthnChallengeId } from "~/domain/ids";
 import { verifyPasskeyEnrollment } from "~/server/auth/factors/passkey/service";
 import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-enrollment";
 import { startPasskeyEnrollment } from "~/server/auth/flows/start-passkey-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
+import { setSessionCookie } from "~/server/auth/session/cookies";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { WebauthnChallengeId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {
   const setup = getServerRuntime().auth.setup;

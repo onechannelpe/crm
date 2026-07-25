@@ -1,10 +1,10 @@
 import type { Json } from "~/contracts/json";
-import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
-import type { JobStore } from "~/lib/job-queue/job-store";
-import type { QueueState } from "~/lib/job-queue/queue-state";
-import type { QueueJobBase } from "~/lib/job-queue/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { IntegrationJobId, UserId } from "~/server/shared/ids";
+import type { IntegrationJobId, UserId } from "~/domain/ids";
+import type { QueueState } from "~/domain/jobs/queue-state";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { WorkflowIntegrationJobsTable } from "~/server/platform/database/types";
+import type { JobStore } from "~/server/platform/jobs/job-store";
+import type { QueueJobBase } from "~/server/platform/jobs/types";
 
 export type IntegrationJobType = WorkflowIntegrationJobsTable["type"];
 

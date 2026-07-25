@@ -39,8 +39,16 @@
         "patterns": ["src/contracts/**"]
       },
       {
-        "name": "lib",
-        "patterns": ["src/lib/**"]
+        "name": "shared",
+        "patterns": ["src/shared/**"]
+      },
+      {
+        "name": "domain",
+        "patterns": ["src/domain/**"]
+      },
+      {
+        "name": "browser",
+        "patterns": ["src/browser/**"]
       },
       {
         "name": "server",
@@ -66,34 +74,64 @@
     "rules": [
       {
         "from": "contracts",
-        "allow": ["contracts", "lib"]
+        "allow": ["contracts", "domain", "shared"]
+      },
+      {
+        "from": "shared",
+        "allow": ["shared"]
+      },
+      {
+        "from": "domain",
+        "allow": ["domain", "shared"]
+      },
+      {
+        "from": "browser",
+        "allow": ["browser", "contracts", "domain", "shared"]
       },
       {
         "from": "server",
-        "allow": ["contracts", "lib", "server"]
+        "allow": ["contracts", "domain", "server", "shared"]
       },
       {
         "from": "actions",
-        "allow": ["actions", "contracts", "lib", "server"]
+        "allow": ["actions", "contracts", "domain", "server", "shared"]
       },
       {
         "from": "features",
-        "allow": ["actions", "components", "contracts", "features", "lib"]
+        "allow": [
+          "actions",
+          "browser",
+          "components",
+          "contracts",
+          "domain",
+          "features",
+          "shared"
+        ]
       },
       {
         "from": "components",
-        "allow": ["actions", "components", "contracts", "features", "lib"]
+        "allow": [
+          "actions",
+          "browser",
+          "components",
+          "contracts",
+          "domain",
+          "features",
+          "shared"
+        ]
       },
       {
         "from": "routes",
         "allow": [
           "actions",
+          "browser",
           "components",
           "contracts",
+          "domain",
           "features",
-          "lib",
           "routes",
-          "server"
+          "server",
+          "shared"
         ]
       }
     ]

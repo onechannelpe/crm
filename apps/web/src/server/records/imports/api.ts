@@ -1,9 +1,9 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { BranchId, UserId } from "~/domain/ids";
 import type {
   IntegrationJobRow,
   IntegrationRuntime,
 } from "~/server/integrations/types";
-import type { BranchId, UserId } from "~/server/shared/ids";
 
 interface ActorScope {
   userId: UserId;

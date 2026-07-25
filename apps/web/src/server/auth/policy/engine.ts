@@ -1,5 +1,5 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import { resolveSessionClass } from "~/lib/auth/core/session-contract";
+import type { Role } from "~/domain/auth/access/rbac";
+import { resolveSessionClass } from "~/domain/auth/core/session-contract";
 
 import { requiresStrongAuthRole } from "./rules/role";
 import type { AuthProof, LoginDecision } from "./types";

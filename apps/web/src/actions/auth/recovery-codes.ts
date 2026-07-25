@@ -1,13 +1,13 @@
 "use server";
 
-import { setSessionCookie } from "~/lib/auth/session/cookies";
 import {
   acknowledgeRecoverySetup,
   regenerateRecoverySetup,
 } from "~/server/auth/recovery/recovery-setup";
+import { setSessionCookie } from "~/server/auth/session/cookies";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { Ok } from "~/server/shared/result";
+import { Ok } from "~/shared/result";
 
 export async function getRecoveryCodesStatus(): Promise<{
   hasActiveSet: boolean;

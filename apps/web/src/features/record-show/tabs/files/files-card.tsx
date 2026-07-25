@@ -7,6 +7,7 @@ import {
 } from "~/actions/workflow/files";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
+import { actionErrorMessage } from "~/contracts/errors";
 import { describeDocKind } from "~/contracts/workflow/fulfillment-labels";
 import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
 import type {
@@ -22,7 +23,6 @@ import {
   ActivityRowMeta,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import { AttachmentList } from "./attachment-list";
 import { PreviewModal, type PreviewModalState } from "./preview-modal";

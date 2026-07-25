@@ -7,7 +7,7 @@ import ShieldCheck from "~/components/icons/shield-check";
 import Sun from "~/components/icons/sun";
 import UserIcon from "~/components/icons/user";
 import UserRound from "~/components/icons/user-round";
-import { canAccessPath, type Role } from "~/lib/auth/access/route-policy";
+import { canAccessPath, type Role } from "~/domain/auth/access/route-policy";
 
 import type { SettingsNavSection } from "./settings-navigation.types";
 

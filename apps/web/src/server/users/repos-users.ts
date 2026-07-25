@@ -1,6 +1,7 @@
-import type { ExecutiveCategoryValue, UsersTable } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import type { BranchId, TeamId, UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { UsersTable } from "~/server/platform/database/types";
 
 type UserRole = UsersTable["role"];
 
@@ -18,7 +19,7 @@ export type MemberRosterRow = {
   second_surname: string;
   email: string;
   role: UserRole;
-  executive_category: ExecutiveCategoryValue | null;
+  executive_category: ExecutiveCategory | null;
   is_active: boolean;
   avatar_storage_key: string | null;
   avatar_version: number;
@@ -199,7 +200,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
       second_surname: string;
       expires_at?: Date | null;
       role: UserRole;
-      executive_category?: ExecutiveCategoryValue | null;
+      executive_category?: ExecutiveCategory | null;
       is_active: boolean;
     }) {
       return (
@@ -249,7 +250,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         first_surname: string;
         second_surname: string;
         role: UserRole;
-        executive_category?: ExecutiveCategoryValue | null;
+        executive_category?: ExecutiveCategory | null;
         is_active: boolean;
       },
     ) {
@@ -275,7 +276,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
         first_surname: string;
         second_surname: string;
         team_id: TeamId | null;
-        executive_category: ExecutiveCategoryValue | null;
+        executive_category: ExecutiveCategory | null;
       },
     ) {
       return db
@@ -295,7 +296,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
       id: UserId,
       values: {
         role: UserRole;
-        executive_category: ExecutiveCategoryValue | null;
+        executive_category: ExecutiveCategory | null;
       },
     ) {
       return db

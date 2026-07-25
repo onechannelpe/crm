@@ -2,16 +2,16 @@ import type {
   FulfillmentAction,
   ProductKind,
 } from "~/contracts/workflow/vocabulary";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/domain/errors";
 import type {
   FileAssetId,
   FulfillmentOrderId,
   WorkflowLeadId,
   WorkflowVenueId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { completeFulfillment } from "../domain/decide";
 import {

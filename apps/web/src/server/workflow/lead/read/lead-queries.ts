@@ -3,9 +3,9 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { Role } from "~/lib/auth/access/rbac";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { BranchId, UserId, WorkflowLeadId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { BranchId, UserId, WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { applyLeadListFilters, applyLeadVisibility } from "./lead-list-filters";
 

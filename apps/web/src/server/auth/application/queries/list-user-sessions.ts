@@ -1,8 +1,8 @@
 import type { Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { UserId } from "~/domain/ids";
 import type { AppContext } from "~/server/platform/action/context";
-import type { UserId } from "~/server/shared/ids";
+import type { Database } from "~/server/platform/database/types";
 
 import type { AdminSessionsReadContext } from "../../infrastructure/admin-sessions-read-context";
 

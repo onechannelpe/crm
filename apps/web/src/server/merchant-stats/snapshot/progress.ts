@@ -1,7 +1,7 @@
 import type { GpvSnapshotProgressEvent } from "~/contracts/merchant-stats/imports";
-import { notify } from "~/lib/db/notify";
-import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { notify } from "~/server/platform/database/notify";
+import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 
 import type { GpvSnapshotJobRow } from "./repo";
 

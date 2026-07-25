@@ -1,5 +1,5 @@
 import { springTransform } from "~/components/ui/animation/spring-transform";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./toggle.module.css";
 

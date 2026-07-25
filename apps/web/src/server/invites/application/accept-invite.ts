@@ -1,6 +1,6 @@
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { auditEntityId } from "~/domain/audit/entity";
+import { fail, type DomainError } from "~/domain/errors";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { mapAcceptedInviteResult } from "./runtime";
 import type {

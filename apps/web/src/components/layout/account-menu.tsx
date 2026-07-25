@@ -10,7 +10,7 @@ import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { Avatar } from "~/components/ui/display/avatar";
 import { useTheme } from "~/components/ui/theme/theme-context";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./account-menu.module.css";
 

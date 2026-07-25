@@ -3,11 +3,11 @@
 import { redirect } from "@solidjs/router";
 
 import type { OnboardingSnapshot } from "~/contracts/auth";
-import { getSessionPath } from "~/lib/auth/access/route-policy";
-import { getSession } from "~/lib/auth/access/session";
+import { getSessionPath } from "~/domain/auth/access/route-policy";
 import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
+import { getSession } from "~/server/platform/action/session";
 import { getServerRuntime } from "~/server/platform/container";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {
   const session = await getSession();

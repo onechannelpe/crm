@@ -3,12 +3,8 @@ import type {
   LeadPriority,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type {
-  UserId,
-  WorkflowInquiryId,
-  WorkflowLeadId,
-} from "~/server/shared/ids";
+import type { UserId, WorkflowInquiryId, WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { resolveReviewTransition } from "~/server/workflow/lead/domain/review";
 import type { RecordExportFilters } from "~/server/workflow/lead/read/lead-queries";
 

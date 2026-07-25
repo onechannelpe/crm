@@ -6,7 +6,7 @@ import { Dynamic } from "solid-js/web";
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
 import { TintedIconTile } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
 import { PageCardHeader } from "~/components/ui/layout/page-card/page-card-header";
-import { getHeaderRoute } from "~/lib/nav/policy";
+import { getHeaderRoute } from "~/domain/navigation/policy";
 
 import { AppHeaderActions } from "./app-header-actions";
 

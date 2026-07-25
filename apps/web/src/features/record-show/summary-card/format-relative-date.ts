@@ -1,6 +1,9 @@
-import { APP_LOCALE } from "~/lib/locale";
-import { appCalendarDateAt } from "~/lib/time/app-time";
-import { calendarDateParts, type CalendarDate } from "~/lib/time/calendar-date";
+import { appCalendarDateAt } from "~/domain/time/app-time";
+import {
+  calendarDateParts,
+  type CalendarDate,
+} from "~/domain/time/calendar-date";
+import { APP_LOCALE } from "~/shared/locale";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const RELATIVE_DATE_FORMAT = new Intl.RelativeTimeFormat(APP_LOCALE, {

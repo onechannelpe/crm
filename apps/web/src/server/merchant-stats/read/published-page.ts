@@ -1,8 +1,8 @@
 import type { Kysely } from "kysely";
 
 import type { PublishedPage } from "~/contracts/merchant-stats/views";
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 
 export async function readPublishedGpvPage<Row>(
   db: Kysely<Database>,

@@ -1,6 +1,6 @@
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { BranchId, TeamId, UserId } from "~/domain/ids";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { resolveSearchPolicy, type SearchPolicy } from "../domain/policy";
 import type { ActorScope } from "./actor-scope";

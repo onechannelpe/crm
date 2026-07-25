@@ -1,6 +1,6 @@
 import { Show, children, type ParentProps } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
 import { useNavigationDrawerState } from "../state/navigation-drawer-provider";

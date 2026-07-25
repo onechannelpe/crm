@@ -3,10 +3,10 @@ import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import { createEnrichmentQueue } from "~/server/client-search/worker";
+import type { EngineClient } from "~/server/integrations/engine/client";
 import { createOrganizationEnrichmentProjection } from "~/server/organization/apply-enrichment";
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
-import type { EngineClient } from "~/server/shared/engine/client";
 
 import type { ServerInfra } from "./infra";
 

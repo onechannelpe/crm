@@ -1,7 +1,7 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
 
 import { SpringParallax } from "~/components/ui/animation/spring-parallax";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./animated-placeholder.module.css";
 

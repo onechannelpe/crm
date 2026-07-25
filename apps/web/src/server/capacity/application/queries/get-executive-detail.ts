@@ -1,17 +1,13 @@
 import type { ExecutiveCapacityDetailView } from "~/contracts/capacity";
-import { longName } from "~/lib/users/display-name";
+import { fail, forbidden, type DomainError } from "~/domain/errors";
+import { longName } from "~/domain/identity/display-name";
+import type { UserId } from "~/domain/ids";
+import { epochMilliseconds } from "~/domain/time/epoch";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { CapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import type { AppContext } from "~/server/platform/action/context";
-import {
-  fail,
-  forbidden,
-  type DomainError,
-} from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import { epochMilliseconds } from "~/server/shared/time";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import { fromDbCapacityRequestKind } from "../../domain/request-policy";
 import type { CapacityUser } from "../actor-scope";

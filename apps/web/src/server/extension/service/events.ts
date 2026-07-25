@@ -1,14 +1,14 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { AppUow } from "~/server/shared/application/uow";
-import { external, fail, type DomainError } from "~/server/shared/domain-error";
+import type { Role } from "~/domain/auth/access/rbac";
+import { external, fail, type DomainError } from "~/domain/errors";
 import {
   ContactAssignmentId,
   OrganizationPersonId,
   type BranchId,
   type UserId,
-} from "~/server/shared/ids";
-import { Err, Ok, isErr, type Result } from "~/server/shared/result";
-import { dateFromEpochMilliseconds, type Clock } from "~/server/shared/time";
+} from "~/domain/ids";
+import { dateFromEpochMilliseconds, type Clock } from "~/domain/time/epoch";
+import type { AppUow } from "~/server/platform/database/uow";
+import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 import {
   type ExtensionRuntimeEventEnvelope,

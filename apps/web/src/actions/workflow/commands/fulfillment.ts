@@ -12,12 +12,14 @@ import {
   PRODUCT_KINDS,
   type FulfillmentAction,
 } from "~/contracts/workflow/vocabulary";
+import { fail, invalid, type DomainError } from "~/domain/errors";
+import { FileAssetId, WorkflowLeadId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
-import { FileAssetId, WorkflowLeadId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, Ok, type Result } from "~/server/shared/result";
 import {
   chooseFulfillmentProductCommand,
   recordUnitSerialCommand,
@@ -26,6 +28,7 @@ import {
   rejectFulfillmentStepCommand,
   validateFulfillmentPaymentCommand,
 } from "~/server/workflow/lead/fulfillment/commands";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { workflowActor } from "./actor";
 

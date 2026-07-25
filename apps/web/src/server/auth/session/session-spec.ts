@@ -1,17 +1,17 @@
 import type { Selectable } from "kysely";
 
-import type { Role } from "~/lib/auth/access/rbac";
-import type { AuthSession } from "~/lib/auth/access/session-types";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { AuthSession } from "~/domain/auth/access/session-types";
 import type {
   PrimaryAuthMethod,
   SessionClass,
   StrongAuthMethod,
-} from "~/lib/auth/core/session-contract";
-import type { UserSessionRow } from "~/lib/auth/types";
-import type { UsersTable } from "~/lib/db/types";
-import type { Logger } from "~/lib/observability/logger-shared";
-import type { BranchId, UserId } from "~/server/shared/ids";
-import type { EventsRepo } from "~/server/shared/repos-events";
+} from "~/domain/auth/core/session-contract";
+import type { BranchId, UserId } from "~/domain/ids";
+import type { UserSessionRow } from "~/server/auth/types";
+import type { EventsRepo } from "~/server/event-logs/events-repo";
+import type { UsersTable } from "~/server/platform/database/types";
+import type { Logger } from "~/shared/observability/logger";
 
 type UserRow = Selectable<UsersTable>;
 

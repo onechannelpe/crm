@@ -3,28 +3,30 @@ import {
   recordImportTopic,
   type RecordImportProgressEvent,
 } from "~/contracts/records/imports";
-import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
-import { getServerRuntime } from "~/server/platform/container";
+import { IntegrationJobId } from "~/domain/ids";
+import type { IntegrationJobsPort } from "~/server/integrations/types";
+import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 import {
   createTopicRealtimeChannel,
   snapshotReconciler,
 } from "~/server/realtime/topic-realtime-channel";
-import { IntegrationJobId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 import { buildRecordImportProgressEvent } from "./progress-events";
 
 export async function recordImportSnapshot(
   jobId: IntegrationJobId,
+  jobs: Pick<IntegrationJobsPort, "findById">,
 ): Promise<string | null> {
-  const { integration } = getServerRuntime().integrations;
-  const job = await integration.jobs.findById(jobId);
+  const job = await jobs.findById(jobId);
 
   return job ? JSON.stringify(buildRecordImportProgressEvent(job)) : null;
 }
 
-export const recordImportsRealtime =
-  createTopicRealtimeChannel<RecordImportProgressEvent>({
+export function createRecordImportsRealtime(
+  jobs: Pick<IntegrationJobsPort, "findById">,
+) {
+  return createTopicRealtimeChannel<RecordImportProgressEvent>({
     name: "records-imports",
     channel: RECORDS_IMPORT_PROGRESS_CHANNEL,
     parseEvent: parseRecordImportProgressMessage,
@@ -36,6 +38,7 @@ export const recordImportsRealtime =
         return null;
       }
 
-      return recordImportSnapshot(jobId.value);
+      return recordImportSnapshot(jobId.value, jobs);
     }),
   });
+}

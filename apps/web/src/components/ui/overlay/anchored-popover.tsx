@@ -7,7 +7,7 @@ import {
 } from "solid-js";
 import { Portal } from "solid-js/web";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./anchored-popover.module.css";
 

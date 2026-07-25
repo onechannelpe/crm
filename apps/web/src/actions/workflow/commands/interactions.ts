@@ -1,9 +1,12 @@
 "use server";
 
+import { WorkflowLeadId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { WorkflowLeadId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 import { addLeadNote as addLeadNoteUseCase } from "~/server/workflow/lead/interaction/write";
 
 import { workflowActor } from "./actor";

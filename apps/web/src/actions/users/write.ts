@@ -1,18 +1,21 @@
 "use server";
 
-import { ROLES } from "~/lib/auth/access/rbac";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
+import { ROLES } from "~/domain/auth/access/rbac";
+import { fail } from "~/domain/errors";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import { TeamId, UserId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail } from "~/server/shared/domain-error";
-import { TeamId, UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, isErr, Ok } from "~/server/shared/result";
+import { Err, isErr, Ok } from "~/shared/result";
 
 const EXECUTIVE_CATEGORIES = [
   "elite",
   "corporativa",
-] as const satisfies ReadonlyArray<ExecutiveCategoryValue>;
+] as const satisfies ReadonlyArray<ExecutiveCategory>;
 
 export async function updateMemberProfile(
   input: unknown,

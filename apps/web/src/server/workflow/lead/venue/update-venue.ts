@@ -1,13 +1,13 @@
 import type { UpdateVenueInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId, WorkflowVenueId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId, WorkflowVenueId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,
 } from "~/server/workflow/lead/digital-policy/domain";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { runLeadTransaction } from "../write/transition";
 import { updateVenue } from "./domain";

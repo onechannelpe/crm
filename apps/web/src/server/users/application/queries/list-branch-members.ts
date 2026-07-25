@@ -1,7 +1,7 @@
 import type { MembersRoster } from "~/contracts/members";
+import type { DomainError } from "~/domain/errors";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/shared/result";
 
 import { toMemberListItem } from "../member-view";
 import type { MemberReadDeps } from "../ports";

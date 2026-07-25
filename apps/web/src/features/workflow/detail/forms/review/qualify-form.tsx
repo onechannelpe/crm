@@ -6,6 +6,7 @@ import Info from "~/components/icons/info";
 import Package from "~/components/icons/package";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import { actionErrorMessage } from "~/contracts/errors";
 import {
   LEAD_PRIORITIES,
   LEAD_STATUSES,
@@ -24,8 +25,7 @@ import {
   WidgetCardHeader,
   WidgetCardTitle,
 } from "~/features/widgets/widget-card";
-import { capitalize } from "~/lib/utils";
-import { actionErrorMessage } from "~/lib/wire-error";
+import { capitalize } from "~/shared/text";
 
 import { reviewLeadMutation } from "../../../data/command-mutations";
 import { revalidateWorkflowLead } from "../../../data/revalidate-workflow";

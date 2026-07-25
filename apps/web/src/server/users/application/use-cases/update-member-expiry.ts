@@ -1,7 +1,7 @@
-import { appDayRange } from "~/lib/time/app-time";
+import { type DomainError } from "~/domain/errors";
+import { appDayRange } from "~/domain/time/app-time";
 import type { AppContext } from "~/server/platform/action/context";
-import { type DomainError } from "~/server/shared/domain-error";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 import type { UpdateMemberExpiryCommand } from "../contracts";
 import type { MemberWriteDeps } from "../ports";

@@ -5,7 +5,7 @@ import {
   calendarDateParts,
   type CalendarDate,
   type CalendarMonth,
-} from "~/lib/time/calendar-date";
+} from "~/domain/time/calendar-date";
 
 type ExportCell = Date | number | string | null | undefined;
 

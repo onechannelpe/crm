@@ -4,7 +4,7 @@ import type {
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 import type { FilePurpose, ScanStatus } from "../types";
 

@@ -6,8 +6,8 @@ import {
   addCalendarMonths,
   calendarMonthStart,
   type CalendarMonth,
-} from "~/lib/time/calendar-date";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/time/calendar-date";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import {
   cellDateOrNull,

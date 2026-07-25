@@ -1,7 +1,7 @@
-import { canDeleteMember } from "~/lib/auth/access/member-management";
+import { canDeleteMember } from "~/domain/auth/access/member-management";
+import { fail, type DomainError } from "~/domain/errors";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { MemberIdCommand } from "../contracts";
 import type { MemberWriteDeps } from "../ports";

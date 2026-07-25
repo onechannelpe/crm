@@ -1,10 +1,13 @@
 "use server";
 
+import { AppNotificationId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { AppNotificationId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Ok } from "~/server/shared/result";
+import { Ok } from "~/shared/result";
 
 export async function getHeaderNotifications() {
   return runAction({

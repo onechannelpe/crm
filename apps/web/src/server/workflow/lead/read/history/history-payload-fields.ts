@@ -10,11 +10,11 @@ import {
   type LeadStatus,
   type Currency,
 } from "~/contracts/workflow/vocabulary";
-import { isPlainRecord } from "~/lib/type-guards";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
 import { invalidHistoryPayload } from "~/server/workflow/lead/domain/integrity-errors";
 import { parseVocabularyValue } from "~/server/workflow/lead/domain/parse";
+import { Ok, type Result } from "~/shared/result";
+import { isPlainRecord } from "~/shared/type-guards";
 
 import type { HistoryEventRow } from "./history-event-row";
 

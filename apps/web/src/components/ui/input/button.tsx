@@ -1,7 +1,7 @@
 import { type JSX, mergeProps, splitProps } from "solid-js";
 
 import { Loader } from "~/components/feedback/loading/loader";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./button.module.css";
 

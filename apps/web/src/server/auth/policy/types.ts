@@ -1,8 +1,8 @@
 import type {
   SessionClass,
   StrongAuthMethod,
-} from "~/lib/auth/core/session-contract";
-import type { UserId } from "~/server/shared/ids";
+} from "~/domain/auth/core/session-contract";
+import type { UserId } from "~/domain/ids";
 
 export type AuthProof =
   | {

@@ -2,7 +2,7 @@ import { Show, children, type JSX } from "solid-js";
 
 import LayoutSidebarLeftExpand from "~/components/icons/layout-sidebar-left-expand";
 import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./page-card-header.module.css";
 

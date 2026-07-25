@@ -6,7 +6,7 @@ import {
   splitProps,
 } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { InputErrorHelper } from "./input-error-helper";
 import { InputHint } from "./input-hint";

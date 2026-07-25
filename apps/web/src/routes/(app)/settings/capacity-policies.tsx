@@ -14,10 +14,10 @@ import type {
   CapacityPolicyDefaultsView,
   CapacityPolicyTeamDefaultsView,
 } from "~/contracts/capacity";
+import { actionErrorMessage } from "~/contracts/errors";
 import { updateScopePolicyMutation } from "~/features/capacity/data/mutations";
 import { capacityPolicyDefaultsQuery } from "~/features/capacity/data/queries";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-page.module.css";
 

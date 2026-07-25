@@ -1,6 +1,6 @@
 import { parseFieldChanges, type FieldChange } from "~/contracts/events";
 import type { Json } from "~/contracts/json";
-import type { EventId, UserId } from "~/server/shared/ids";
+import type { EventId, UserId } from "~/domain/ids";
 import type {
   LeadHistoryEntry,
   LeadHistoryPerson,

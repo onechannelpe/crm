@@ -1,4 +1,6 @@
+import type { UserId } from "~/domain/ids";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import type { AuthAnalyticsRecorder } from "~/server/auth/auth-analytics";
 import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
 import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
@@ -16,12 +18,11 @@ import {
   stopImpersonation,
 } from "~/server/auth/session/impersonation";
 import { createSessionService } from "~/server/auth/session/session.service";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { NotificationIntent } from "~/server/notifications/types";
 import type { AppContext } from "~/server/platform/action/context";
-import type { UserId } from "~/server/shared/ids";
-import { createEventsRepo } from "~/server/shared/repos-events";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 import type { ServerInfra } from "./infra";
@@ -32,6 +33,7 @@ export function createAuthRuntime(
     messaging: MessagingGateway;
     enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
   },
+  analytics: AuthAnalyticsRecorder,
 ) {
   const sessionService = createSessionService({
     sessions: createAuthSessionRepo(infra.db),
@@ -56,6 +58,7 @@ export function createAuthRuntime(
 
   return {
     authThrottleService,
+    analytics,
     sessionService,
     impersonation: {
       start: (ctx: AppContext, command: { userId: UserId }) =>

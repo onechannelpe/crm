@@ -9,7 +9,7 @@ import type {
   LeadPriority,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import { fail, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/domain/errors";
 import type {
   FulfillmentOrderId,
   UserId,
@@ -17,9 +17,9 @@ import type {
   WorkflowRateRevisionId,
   WorkflowRateRevisionFileId,
   WorkflowVenueId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { applyEvents } from "./evolve";
 import { createHistoryEvent, type LeadHistoryEventDraft } from "./history";

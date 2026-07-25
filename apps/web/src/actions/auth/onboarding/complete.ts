@@ -2,18 +2,18 @@
 
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import { isRegistrationResponse } from "~/lib/auth/passkey/credential-response";
-import { setSessionCookie } from "~/lib/auth/session/cookies";
-import { isPlainRecord } from "~/lib/type-guards";
+import { isRegistrationResponse } from "~/domain/auth/passkey/credential-response";
+import { fail, type DomainError } from "~/domain/errors";
+import { WebauthnChallengeId } from "~/domain/ids";
 import { verifyPasskeyEnrollment } from "~/server/auth/factors/passkey/service";
 import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
+import { setSessionCookie } from "~/server/auth/session/cookies";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { WebauthnChallengeId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
+import { isPlainRecord } from "~/shared/type-guards";
 
 type ParsedCompleteOnboardingInput =
   | { method: "none" }

@@ -1,17 +1,13 @@
 import QRCode from "qrcode";
 
-import { encryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
+import { fail, forbidden, type DomainError } from "~/domain/errors";
+import { encryptTotpSecret } from "~/server/auth/totp/secret-crypto";
 import {
   buildTotpProvisioningUri,
   generateTotpSecret,
-} from "~/lib/auth/totp/totp";
+} from "~/server/auth/totp/totp";
 import type { AppContext } from "~/server/platform/action/context";
-import {
-  fail,
-  forbidden,
-  type DomainError,
-} from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { AuthSetupContext } from "../infrastructure/setup-context";
 

@@ -1,7 +1,7 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { OrganizationId, UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { OrganizationId, UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 export interface AssignOrganizationOwnerInput {
   organizationId: OrganizationId;

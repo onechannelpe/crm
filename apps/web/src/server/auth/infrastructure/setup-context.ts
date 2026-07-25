@@ -1,11 +1,11 @@
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createExecutorUow } from "~/server/platform/database/uow";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
-import { createExecutorUow } from "~/server/shared/application/uow";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createEventsRepo } from "~/server/shared/repos-events";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";

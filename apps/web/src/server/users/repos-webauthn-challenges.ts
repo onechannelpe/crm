@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { UserId, WebauthnChallengeId } from "~/server/shared/ids";
+import type { UserId, WebauthnChallengeId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 export function createWebauthnChallengesRepo(db: Kysely<Database>) {
   return {

@@ -1,17 +1,14 @@
 import type { APIEvent } from "@solidjs/start/server";
 
 import { recordImportTopic } from "~/contracts/records/imports";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import { getSession } from "~/lib/auth/access/session";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import { IntegrationJobId } from "~/domain/ids";
+import { getSession } from "~/server/platform/action/session";
 import { getServerRuntime } from "~/server/platform/container";
 import { openTopicStream } from "~/server/realtime/sse-topic-stream";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
-import {
-  recordImportSnapshot,
-  recordImportsRealtime,
-} from "~/server/records/imports/realtime";
-import { IntegrationJobId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { recordImportSnapshot } from "~/server/records/imports/realtime";
+import { isErr } from "~/shared/result";
 
 export async function GET(
   event: Pick<APIEvent, "params" | "nativeEvent">,
@@ -33,7 +30,8 @@ export async function GET(
   }
 
   const jobId = parsedJobId.value;
-  const { integration } = getServerRuntime().integrations;
+  const runtime = getServerRuntime();
+  const { integration } = runtime.integrations;
   const job = await integration.jobs.findById(jobId);
 
   if (!job) {
@@ -46,14 +44,14 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  await recordImportsRealtime.ensure();
+  await runtime.recordsImportRealtime.ensure();
 
   const stream = await openTopicStream(
     event.nativeEvent,
-    recordImportsRealtime.hub,
+    runtime.recordsImportRealtime.hub,
     recordImportTopic.of(jobId),
     {
-      snapshot: () => recordImportSnapshot(jobId),
+      snapshot: () => recordImportSnapshot(jobId, integration.jobs),
     },
   );
 

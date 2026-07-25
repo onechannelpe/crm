@@ -1,12 +1,12 @@
 import type { BookFilter } from "~/contracts/merchant-stats/views";
+import type { DomainError } from "~/domain/errors";
 import type { FileRepos } from "~/server/files/service/contracts";
 import { issueDownloadToken } from "~/server/files/service/issue-download-token";
 import { storeGeneratedFile } from "~/server/files/service/store-generated-file";
 import type { FileStorage } from "~/server/files/storage";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { Result } from "~/server/shared/result";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Result } from "~/shared/result";
 
 import { getCohortRows } from "../read/cohort";
 import { getActiveGpvSnapshotCut } from "../read/latest-report";

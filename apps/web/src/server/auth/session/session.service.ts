@@ -1,21 +1,21 @@
-import { isRole } from "~/lib/auth/access/rbac";
+import { auditEntityId } from "~/domain/audit/entity";
+import { isRole } from "~/domain/auth/access/rbac";
 import {
   isPrimaryAuthMethod,
   isSessionClass,
   isStrongAuthMethod,
-} from "~/lib/auth/core/session-contract";
-import { sessionCache } from "~/lib/auth/session/session-cache";
+} from "~/domain/auth/core/session-contract";
+import type { UserId } from "~/domain/ids";
+import { sessionCache } from "~/server/auth/session/session-cache";
 import {
   mapUserSessionRowToAuthSession,
   mapUserToSessionIdentity,
-} from "~/lib/auth/session/session-mappers";
+} from "~/server/auth/session/session-mappers";
 import {
   generateSessionToken,
   hashSessionToken,
   isValidTokenFormat,
-} from "~/lib/auth/session/tokens";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import type { UserId } from "~/server/shared/ids";
+} from "~/server/auth/session/tokens";
 
 import type {
   AuthSession,

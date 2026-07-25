@@ -2,7 +2,7 @@ import { For, Show, createSignal } from "solid-js";
 import { Dynamic, Portal } from "solid-js/web";
 
 import ChevronLeft from "~/components/icons/chevron-left";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { SIDE_PANEL_CLICK_OUTSIDE_ID } from "../constants/side-panel-click-outside-id";
 import { useSidePanel } from "../state/use-side-panel";

@@ -1,4 +1,4 @@
-import { createJobQueue } from "~/lib/job-queue/job-queue";
+import { createJobQueue } from "~/server/platform/jobs/job-queue";
 import {
   buildRecordImportProgressEvent,
   publishRecordImportProgress,

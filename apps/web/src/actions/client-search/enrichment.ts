@@ -1,11 +1,11 @@
 "use server";
 
-import { isPlainRecord } from "~/lib/type-guards";
+import { invalid } from "~/domain/errors";
+import { parseDocument } from "~/domain/identity/document";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { parseDocument } from "~/server/shared/document";
-import { invalid } from "~/server/shared/domain-error";
-import { Err, Ok } from "~/server/shared/result";
+import { Err, Ok } from "~/shared/result";
+import { isPlainRecord } from "~/shared/type-guards";
 
 function parseDocumentInput(input: unknown) {
   if (!isPlainRecord(input)) {

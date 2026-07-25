@@ -1,9 +1,9 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   FileAssetId,
   GpvSnapshotId,
   GpvSnapshotJobId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { createGpvSnapshotJobRepo } from "./repo";
 

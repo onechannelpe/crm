@@ -1,13 +1,12 @@
-import type { AuthContext } from "~/lib/auth/context/auth-context";
-import { recordAuthEvent } from "~/lib/auth/security/auth-events";
-import { enqueueAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
-import { config } from "~/lib/config";
+import type { UserId } from "~/domain/ids";
 import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
   TotpLoginFlowState,
 } from "~/server/auth/application/login-contracts";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import { AUTH_LOGIN_FLOW_TTL_MS } from "~/server/auth/config";
+import type { AuthContext } from "~/server/auth/context/auth-context";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import {
   persistPasskeyLoginFlow,
@@ -18,10 +17,11 @@ import type { AuthLoginRepos } from "~/server/auth/flows/login-deps";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
 import type { AuthProof } from "~/server/auth/policy/types";
+import { recordAuthEvent } from "~/server/auth/security/auth-events";
+import { enqueueAlertOnNewLoginSource } from "~/server/auth/security/login-source-alert";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
 import { createSessionService } from "~/server/auth/session/session.service";
-import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 async function createTotpLoginFlow(
   identifier: string,
@@ -36,7 +36,7 @@ async function createTotpLoginFlow(
     user_id: userId,
     challenge_id: null,
     state: "totp",
-    expires_at: new Date(occurredAt.getTime() + config.auth.loginFlowTtlMs),
+    expires_at: new Date(occurredAt.getTime() + AUTH_LOGIN_FLOW_TTL_MS),
     created_at: occurredAt,
   });
 

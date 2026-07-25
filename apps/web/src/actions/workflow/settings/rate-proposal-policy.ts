@@ -1,8 +1,11 @@
 "use server";
 
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 import { getRateProposalPolicy } from "~/server/workflow/policy/read/get-rate-proposal-policy";
 import { updateRateProposalPolicy } from "~/server/workflow/policy/write/update-rate-proposal-policy";
 

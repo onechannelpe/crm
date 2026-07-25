@@ -1,9 +1,9 @@
-import { appCalendarDateAt } from "~/lib/time/app-time";
+import { appCalendarDateAt } from "~/domain/time/app-time";
 import {
   addCalendarDays,
   parseCalendarDate,
   type CalendarDate,
-} from "~/lib/time/calendar-date";
+} from "~/domain/time/calendar-date";
 
 const MIN_INVITE_EXPIRY_DAYS = 7;
 export const INVITE_EXPIRY_HELPER_TEXT =

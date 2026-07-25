@@ -7,9 +7,9 @@ import {
   isHydrationDiagnosticsEnabled,
   isHydrationMismatchError,
   traceHydrationEvent,
-} from "./lib/observability/diagnostics/hydration";
-import { sentryDefaultDataCollection } from "./lib/observability/sentry";
-import { setupCsrfInterceptor } from "./lib/security/csrf-client";
+} from "./browser/observability/diagnostics/hydration";
+import { setupCsrfInterceptor } from "./browser/security/csrf-client";
+import { sentryDefaultDataCollection } from "./shared/observability/sentry";
 
 init({
   dsn: import.meta.env.VITE_SENTRY_DSN,

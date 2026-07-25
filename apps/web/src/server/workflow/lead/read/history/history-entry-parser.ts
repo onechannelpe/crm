@@ -1,7 +1,7 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import { WorkflowVenueId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import { WorkflowVenueId } from "~/domain/ids";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
+import { Ok, type Result } from "~/shared/result";
 
 import {
   toCommercialScopeCorrectedEntry,

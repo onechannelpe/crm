@@ -6,10 +6,13 @@ import type {
   ManagedExecutiveView,
   PendingCapacityRequestView,
 } from "~/contracts/capacity";
+import { UserId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]

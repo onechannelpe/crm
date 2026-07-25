@@ -1,10 +1,10 @@
-import { personDisplayName } from "~/lib/users/display-name";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { personDisplayName } from "~/domain/identity/display-name";
 import type {
   OrganizationId,
   OrganizationPersonId,
   PersonId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 export const LEGAL_REPRESENTATIVE_ROLE = "LEGAL_REPRESENTATIVE";
 

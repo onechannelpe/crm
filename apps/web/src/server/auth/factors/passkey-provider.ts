@@ -10,7 +10,7 @@ import {
   type AuthenticationResponseJSON,
 } from "@simplewebauthn/server";
 
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 
 const rpName = "Culqi360";

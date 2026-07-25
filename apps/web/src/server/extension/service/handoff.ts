@@ -1,24 +1,15 @@
-import { extensionConfig } from "~/lib/env";
-import type { AppUow } from "~/server/shared/application/uow";
-import {
-  external,
-  fail,
-  invalid,
-  type DomainError,
-} from "~/server/shared/domain-error";
-import { InstallationId } from "~/server/shared/ids";
-import type {
-  BranchId,
-  ContactAssignmentId,
-  UserId,
-} from "~/server/shared/ids";
-import { Err, Ok, isErr, type Result } from "~/server/shared/result";
+import { external, fail, invalid, type DomainError } from "~/domain/errors";
+import { InstallationId } from "~/domain/ids";
+import type { BranchId, ContactAssignmentId, UserId } from "~/domain/ids";
 import {
   addMilliseconds,
   epochMilliseconds,
   epochSeconds,
   type Clock,
-} from "~/server/shared/time";
+} from "~/domain/time/epoch";
+import { extensionConfig } from "~/server/platform/config/env";
+import type { AppUow } from "~/server/platform/database/uow";
+import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,

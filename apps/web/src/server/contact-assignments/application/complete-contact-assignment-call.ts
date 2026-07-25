@@ -1,8 +1,8 @@
+import { fail, type DomainError } from "~/domain/errors";
 import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
-import type { AppUow } from "~/server/shared/application/uow";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { InteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { InteractionLogsRepo } from "~/server/contact-assignments/infrastructure/interaction-logs-repo";
+import type { AppUow } from "~/server/platform/database/uow";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type {
   CompleteContactAssignmentCallCommand,

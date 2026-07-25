@@ -2,9 +2,9 @@ import { Show } from "solid-js";
 
 import { ExtensionStatusIndicator } from "~/components/features/extension/extension-status-indicator";
 import { TopBarCommandButton } from "~/components/layout/top-bar-command-button";
+import { focusExtensionWindow } from "~/features/extension/runtime";
 import { HeaderNotificationsPanel } from "~/features/notifications/ui/header-notifications-panel";
 import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
-import { focusExtensionWindow } from "~/lib/extension/runtime";
 
 import { useAppHeaderSidePanel } from "./use-app-header-side-panel";
 

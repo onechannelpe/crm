@@ -17,11 +17,13 @@ import {
   LEAD_STAGES,
   LEAD_STATUSES,
 } from "~/contracts/workflow/vocabulary";
+import { UserId, WorkflowLeadId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { UserId, WorkflowLeadId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { isErr, Ok } from "~/server/shared/result";
 import { resolvePendingQuotationPolicy } from "~/server/workflow/lead/domain/pending-quotation";
 import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
@@ -29,6 +31,7 @@ import { listAssignableExecutives } from "~/server/workflow/lead/read/queries/li
 import { listFulfillmentQueue } from "~/server/workflow/lead/read/queries/list-fulfillment-queue";
 import { listLeads } from "~/server/workflow/lead/read/queries/list-leads";
 import { createWorkflowRepos } from "~/server/workflow/repos";
+import { isErr, Ok } from "~/shared/result";
 
 import { workflowActor } from "../commands/actor";
 

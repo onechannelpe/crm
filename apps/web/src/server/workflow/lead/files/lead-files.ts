@@ -6,8 +6,14 @@ import type {
   FulfillmentAction,
   FulfillmentDocKind,
 } from "~/contracts/workflow/vocabulary";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import { appCalendarDateAt } from "~/lib/time/app-time";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import { fail, forbidden, type DomainError } from "~/domain/errors";
+import type {
+  FileAssetId,
+  WorkflowLeadId,
+  WorkflowRateRevisionFileId,
+} from "~/domain/ids";
+import { appCalendarDateAt } from "~/domain/time/app-time";
 import type { FileRepos } from "~/server/files/service/contracts";
 import { issueDownloadToken } from "~/server/files/service/issue-download-token";
 import { storeGeneratedFile } from "~/server/files/service/store-generated-file";
@@ -15,18 +21,7 @@ import { storeUploadedFile } from "~/server/files/service/store-uploaded-file";
 import type { FileStorage } from "~/server/files/storage";
 import { buildRecordExportCsv } from "~/server/integrations/infrastructure/lead-export-builder";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import {
-  fail,
-  forbidden,
-  type DomainError,
-} from "~/server/shared/domain-error";
-import type {
-  FileAssetId,
-  WorkflowLeadId,
-  WorkflowRateRevisionFileId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import {
   exportPendingInquiries,
   type InquiryExportRow,
@@ -43,6 +38,7 @@ import type {
   RecordExportRow,
 } from "~/server/workflow/lead/read/lead-queries";
 import type { LeadReader } from "~/server/workflow/lead/read/ports";
+import { Err, Ok, type Result } from "~/shared/result";
 
 // Leads awaiting review and pending availability inquiries ride the same CSV
 // through the external availability platform, which keys on RUC. Inquiry rows

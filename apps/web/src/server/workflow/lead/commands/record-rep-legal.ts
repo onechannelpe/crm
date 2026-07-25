@@ -1,10 +1,10 @@
 import type { RecordRepLegalInput } from "~/contracts/workflow/inputs";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId } from "~/domain/ids";
 import { LEGAL_REPRESENTATIVE_ROLE } from "~/server/organization/organization-repo";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { recordRepLegal } from "../../lead/domain/decide";
 import { runLeadTransaction } from "../write/transition";

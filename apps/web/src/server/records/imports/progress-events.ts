@@ -1,8 +1,8 @@
 import type { RecordImportProgressEvent } from "~/contracts/records/imports";
-import { db } from "~/lib/db/db";
-import { notify } from "~/lib/db/notify";
-import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
 import type { IntegrationJobRow } from "~/server/integrations/types";
+import { db } from "~/server/platform/database/db";
+import { notify } from "~/server/platform/database/notify";
+import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 
 export function buildRecordImportProgressEvent(
   job: Pick<

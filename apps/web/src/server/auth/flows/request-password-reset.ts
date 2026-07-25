@@ -1,9 +1,9 @@
+import { fail, type DomainError } from "~/domain/errors";
 import {
   generatePasswordResetToken,
   hashPasswordResetToken,
-} from "~/lib/auth/password/reset-tokens";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/server/auth/password/reset-tokens";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { PasswordResetRequestContext } from "../infrastructure/password-reset-context";
 

@@ -1,14 +1,14 @@
 "use server";
 
 import type { CurrentUserView } from "~/contracts/auth";
+import { AuthLoginFlowId } from "~/domain/ids";
 import { getCurrentUser } from "~/server/auth/application/queries/get-current-user";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { logoutUser } from "~/server/auth/flows/logout-user";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { AuthLoginFlowId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 export async function getLoginFlow(flowId: string) {
   const parsedFlowId = AuthLoginFlowId.parse(flowId);

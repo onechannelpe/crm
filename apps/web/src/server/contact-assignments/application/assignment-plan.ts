@@ -1,3 +1,5 @@
+import type { DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import type { ActorScope } from "~/server/capacity/application/actor-scope";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import type {
@@ -9,9 +11,7 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 import { computeNeededAssignments } from "../domain/assignment-demand";
 

@@ -15,7 +15,7 @@ import { WidgetCard, WidgetCardContent } from "~/features/widgets/widget-card";
 import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import { CommercialScopeFields } from "~/features/workflow/forms/commercial-scope/fields";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
-import { capitalize } from "~/lib/utils";
+import { capitalize } from "~/shared/text";
 
 import { CommercialFields } from "./commercial-fields";
 import { RegistrySection } from "./registry-section";

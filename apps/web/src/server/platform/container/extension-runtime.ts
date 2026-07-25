@@ -11,11 +11,11 @@ import {
   createOrganizationRepo,
   type OrganizationRepository,
 } from "~/server/organization/organization-repo";
+import { createExecutorUow } from "~/server/platform/database/uow";
 import {
   createSessionRepository,
   type SessionRepository,
 } from "~/server/sessions/repos-sessions";
-import { createExecutorUow } from "~/server/shared/application/uow";
 
 import type { ServerInfra } from "./infra";
 

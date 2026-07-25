@@ -1,5 +1,5 @@
-import { isPlainRecord } from "~/lib/type-guards";
-import type { InstallationId } from "~/server/shared/ids";
+import type { InstallationId } from "~/domain/ids";
+import { isPlainRecord } from "~/shared/type-guards";
 
 export const EXTENSION_HANDOFF_TOKEN_ISSUER = "web" as const;
 export const EXTENSION_HANDOFF_TOKEN_AUDIENCE = "crm-extension" as const;

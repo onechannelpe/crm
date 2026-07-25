@@ -1,4 +1,4 @@
-import type { Document } from "~/server/shared/document";
+import type { Document } from "~/domain/identity/document";
 
 import type { SunatEconomicActivity } from "./enrichment/sunat/contracts";
 import type { EnrichmentStatus, Overlay } from "./model";

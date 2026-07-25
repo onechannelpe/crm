@@ -3,8 +3,8 @@
 import type { InquiryListView } from "~/contracts/workflow/views";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { Ok } from "~/server/shared/result";
 import { listInquiriesForExecutive } from "~/server/workflow/inquiry/inquiry-queries";
+import { Ok } from "~/shared/result";
 
 import { workflowActor } from "../commands/actor";
 

@@ -1,10 +1,10 @@
-import { APP_MONTH_NAMES } from "~/lib/time/app-time";
+import { APP_MONTH_NAMES } from "~/domain/time/app-time";
 import {
   addCalendarDays,
   calendarDateFromParts,
   calendarDateParts,
   type CalendarDate,
-} from "~/lib/time/calendar-date";
+} from "~/domain/time/calendar-date";
 
 export const DAY_NAMES = ["L", "M", "X", "J", "V", "S", "D"] as const;
 const CALENDAR_START_DAY = 1;

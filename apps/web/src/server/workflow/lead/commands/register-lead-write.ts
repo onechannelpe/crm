@@ -1,10 +1,9 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId } from "~/domain/ids";
 import { assignOrganizationOwner } from "~/server/organization/ownership";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { withAdvisoryLock } from "~/server/shared/db-lock";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { withAdvisoryLock } from "~/server/platform/database/advisory-lock";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { convertInquiryOnRegistration } from "~/server/workflow/inquiry/convert";
 import {
@@ -19,6 +18,7 @@ import {
   type LeadCommercialScope,
   type LeadState,
 } from "~/server/workflow/lead/domain/state";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { runLeadTransaction } from "../write/transition";
 

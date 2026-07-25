@@ -9,13 +9,13 @@ import {
   UpdatesHero,
   UpdatesList,
 } from "~/features/updates/components";
-import { buildUpdateListJsonLd, JsonLd } from "~/lib/seo";
 import {
   loadUpdates,
   parseUpdateFilter,
   queryUpdates,
   type UpdateFilter,
-} from "~/lib/updates";
+} from "~/features/updates/model";
+import { buildUpdateListJsonLd, JsonLd } from "~/features/updates/seo";
 
 import { UPDATES_PAGE_COPY } from "./updates-page.data";
 

@@ -1,10 +1,13 @@
 "use server";
 
 import type { MemberDetail, MembersRoster } from "~/contracts/members";
+import { UserId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function getMembersRoster(): Promise<MembersRoster> {
   return runAction({

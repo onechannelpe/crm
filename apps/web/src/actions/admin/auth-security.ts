@@ -1,10 +1,13 @@
 "use server";
 
-import { longName } from "~/lib/users/display-name";
+import { longName } from "~/domain/identity/display-name";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Ok } from "~/server/shared/result";
+import { Ok } from "~/shared/result";
 
 export interface UserLoginRetryReport {
   user: {

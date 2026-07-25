@@ -1,17 +1,17 @@
 import type { Insertable, Kysely } from "kysely";
 
-import { notify } from "~/lib/db/notify";
-import type { Database } from "~/lib/db/types";
 import type {
   AuthFunnelEventName,
   AuthFunnelMethod,
   AuthFunnelOutcome,
-} from "~/lib/observability/auth-funnel";
+} from "~/domain/observability/auth-funnel";
 import { mapAuthFunnelEventRow } from "~/server/event-logs/mappers";
 import {
   EVENT_LOGS_STREAM_CHANNEL,
   serializeEventLogStreamPayload,
 } from "~/server/event-logs/stream-contract";
+import { notify } from "~/server/platform/database/notify";
+import type { Database } from "~/server/platform/database/types";
 
 type NewAuthFunnelEventRow = Insertable<Database["auth_funnel_events"]>;
 

@@ -1,5 +1,5 @@
 import type { TabIconComponent } from "~/features/side-panel/components/tab-strip/types";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./styles.module.css";
 

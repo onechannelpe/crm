@@ -1,6 +1,6 @@
 import { Show, type JSX, type ParentProps } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./settings-option-card.module.css";
 

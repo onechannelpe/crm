@@ -3,15 +3,15 @@ import type { Insertable, Selectable } from "kysely";
 
 import type { SaleVenueAccount } from "~/contracts/workflow/primitives";
 import type { CollectionMode } from "~/contracts/workflow/vocabulary";
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { DomainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/domain/errors";
 import {
   WorkflowVenueId,
   type UserId,
   type WorkflowLeadId,
-} from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
+import { Ok, type Result } from "~/shared/result";
 
 export type LeadVenue = {
   id: WorkflowVenueId;

@@ -1,15 +1,15 @@
 import { randomUUIDv7 } from "bun";
 
 import type { CreateVenueInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { WorkflowVenueId, type WorkflowLeadId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import { WorkflowVenueId, type WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,
 } from "~/server/workflow/lead/digital-policy/domain";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { runLeadTransaction } from "../write/transition";
 import { createVenue } from "./domain";

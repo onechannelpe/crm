@@ -1,6 +1,6 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserInviteId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import type { UserInviteId } from "~/domain/ids";
+import { Ok, type Result } from "~/shared/result";
 
 import type { InviteDeps, InviteRuntime } from "./types";
 

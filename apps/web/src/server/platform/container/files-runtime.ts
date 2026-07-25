@@ -1,10 +1,10 @@
-import type { UploadsConfig } from "~/lib/env";
 import { createAssetsRepo } from "~/server/files/repo/assets";
 import { createRateRevisionFilesRepo } from "~/server/files/repo/rate-revision";
 import { createSalesRepo } from "~/server/files/repo/sales";
 import { createTokensRepo } from "~/server/files/repo/tokens";
 import type { FileRepos } from "~/server/files/service/contracts";
 import { createFileStorage, type FileStorage } from "~/server/files/storage";
+import type { UploadsConfig } from "~/server/platform/config/env";
 
 import type { ServerInfra } from "./infra";
 

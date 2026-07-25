@@ -1,7 +1,7 @@
 import type { Transaction } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { IntegrationJobId } from "~/server/shared/ids";
+import type { IntegrationJobId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 import type { ImportRowInput } from "./types";
 

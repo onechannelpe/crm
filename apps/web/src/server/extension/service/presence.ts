@@ -1,5 +1,5 @@
-import type { BranchId, UserId } from "~/server/shared/ids";
-import { epochMilliseconds } from "~/server/shared/time";
+import type { BranchId, UserId } from "~/domain/ids";
+import { epochMilliseconds } from "~/domain/time/epoch";
 
 import type {
   ExtensionExecutivePresenceStatus,

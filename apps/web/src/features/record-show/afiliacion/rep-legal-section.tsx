@@ -7,6 +7,7 @@ import Phone from "~/components/icons/phone";
 import User from "~/components/icons/user";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import { actionErrorMessage } from "~/contracts/errors";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import {
   FieldInputValue,
@@ -24,7 +25,6 @@ import {
 } from "~/features/widgets/widget-card";
 import { recordRepLegalMutation } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import formStyles from "./section-form.module.css";
 

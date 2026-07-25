@@ -1,6 +1,6 @@
-import type { AuthSession } from "~/lib/auth/access/session-types";
-import { getRequestContext } from "~/lib/http/request-context";
-import { getActionRequestContext } from "~/lib/observability/context";
+import type { AuthSession } from "~/domain/auth/access/session-types";
+import { getRequestContext } from "~/server/platform/http/request-context";
+import { getActionRequestContext } from "~/server/platform/observability/context";
 
 export interface AppContext {
   actor: AuthSession;

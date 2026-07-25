@@ -1,6 +1,6 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { GpvSnapshotJobId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import type { GpvSnapshotJobId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { isErr } from "~/shared/result";
 
 import { parseReport } from "../intake/parse-report";
 import { activateGpvSnapshot } from "./activate";

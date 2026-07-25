@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 
-import { formatAppDateTime } from "~/lib/time/app-time";
+import { formatAppDateTime } from "~/domain/time/app-time";
 
 import { isLinkedEvent, type Event } from "../../model/event";
 

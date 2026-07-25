@@ -1,7 +1,7 @@
 import { type JSX, type ParentProps } from "solid-js";
 
 import { springTransform } from "~/components/ui/animation/spring-transform";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./radio.module.css";
 

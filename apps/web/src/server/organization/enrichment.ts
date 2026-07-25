@@ -1,5 +1,5 @@
-import type { Ruc } from "~/server/shared/document";
-import type { EngineClient } from "~/server/shared/engine/client";
+import type { Ruc } from "~/domain/identity/document";
+import type { EngineClient } from "~/server/integrations/engine/client";
 
 // Resolves legal name and address from the external registry by RUC. One port
 // shared by lead registration and the bootstrap preview.

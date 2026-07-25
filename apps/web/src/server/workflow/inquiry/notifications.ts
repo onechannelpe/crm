@@ -1,5 +1,5 @@
+import { NotificationIntentId } from "~/domain/ids";
 import type { NotificationIntent } from "~/server/notifications/types";
-import { NotificationIntentId } from "~/server/shared/ids";
 
 import type { InquiryRow } from "./repo";
 

@@ -1,6 +1,6 @@
 import { type JSX, splitProps } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./styles.module.css";
 

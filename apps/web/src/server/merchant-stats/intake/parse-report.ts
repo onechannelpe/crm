@@ -1,11 +1,11 @@
 import { read, utils, type WorkBook, type WorkSheet } from "xlsx";
 
+import { fail, type DomainError } from "~/domain/errors";
 import {
   calendarDateFromParts,
   calendarMonthFromDate,
-} from "~/lib/time/calendar-date";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/time/calendar-date";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import {
   GPV_REQUIRED_HEADERS,

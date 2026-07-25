@@ -1,16 +1,20 @@
 "use server";
 
-import type { Role } from "~/lib/auth/access/rbac";
-import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
-import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import { auditEntityId } from "~/domain/audit/entity";
+import type { Role } from "~/domain/auth/access/rbac";
+import { fail } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { hashPassword, verifyPassword } from "~/server/auth/password/password";
+import { canRemoveStrongAuthFactor } from "~/server/auth/security/factor-management-policy";
+import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
 import { runAction } from "~/server/platform/action";
+import { throwDomain } from "~/server/platform/action/domain-error";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, throwDomain } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Ok } from "~/server/shared/result";
+import { Ok } from "~/shared/result";
 
 async function requireCurrentUserWithStrongAuthState(userId: UserId) {
   const repos = getServerRuntime().security;

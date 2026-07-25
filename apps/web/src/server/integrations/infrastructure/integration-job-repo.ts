@@ -1,13 +1,13 @@
-import { notify } from "~/lib/db/notify";
-import { createJobStore } from "~/lib/job-queue/job-store";
-import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
+import type { IntegrationJobId } from "~/domain/ids";
 import type {
   IntegrationJobRow,
   IntegrationJobsPort,
   NewIntegrationJob,
 } from "~/server/integrations/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { IntegrationJobId } from "~/server/shared/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { notify } from "~/server/platform/database/notify";
+import { createJobStore } from "~/server/platform/jobs/job-store";
+import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 
 const JOB_COLUMNS = [
   "id",

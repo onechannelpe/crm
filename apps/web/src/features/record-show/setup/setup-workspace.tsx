@@ -8,6 +8,7 @@ import { Button } from "~/components/ui/input/button";
 import { Radio, RadioGroup } from "~/components/ui/input/radio";
 import { TextInput } from "~/components/ui/input/text-input";
 import { Toggle } from "~/components/ui/input/toggle";
+import { actionErrorMessage } from "~/contracts/errors";
 import type {
   LeadDetailVenueView,
   LeadDetailView,
@@ -37,7 +38,6 @@ import {
   updateVenueMutation,
 } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import { AccountsForm } from "./components/accounts-form";
 import { VenueCard } from "./components/venue-card";

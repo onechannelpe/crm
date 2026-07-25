@@ -1,10 +1,10 @@
 import { createSignal, onMount } from "solid-js";
 
+import { useHotkey } from "~/browser/hotkey/use-hotkey";
+import { createExtensionPortConnection } from "~/features/extension/port";
 import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import { createExtensionPortConnection } from "~/lib/extension/port";
-import { useHotkey } from "~/lib/hotkey/use-hotkey";
 
 export function useAppHeaderSidePanel() {
   const [modKey, setModKey] = createSignal("Ctrl");

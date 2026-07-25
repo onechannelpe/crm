@@ -1,8 +1,8 @@
-import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
+import type { AuthLoginFlowId } from "~/domain/ids";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyLoginStateService } from "~/server/auth/factors/passkey/service/login-state";
 import type { AuthLoginRepos } from "~/server/auth/flows/login-deps";
-import type { AuthLoginFlowId } from "~/server/shared/ids";
+import { deleteLoginFlow } from "~/server/auth/login-flow/shared";
 
 import type { LoginFlowState } from "../login-contracts";
 

@@ -1,13 +1,9 @@
-import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import { fail, forbidden, type DomainError } from "~/domain/errors";
+import type { CapacityRequestId } from "~/domain/ids";
 import { grantUsageCapacity } from "~/server/capacity/application/usage/ledger";
 import type { AppContext } from "~/server/platform/action/context";
-import {
-  fail,
-  forbidden,
-  type DomainError,
-} from "~/server/shared/domain-error";
-import type { CapacityRequestId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { checkActionRateLimit } from "~/server/security/action-rate-limit";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import { normalizeDecisionNote } from "../../domain/request-policy";
 import { canManageExecutive } from "../authorize-capacity-actor";

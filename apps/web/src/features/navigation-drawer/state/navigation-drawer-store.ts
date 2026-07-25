@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 
-import { isSettingsRoutePath } from "~/lib/navigation/route-classification";
+import { isSettingsRoutePath } from "~/domain/navigation/route-classification";
 
 import { persistNavigationDrawerExpandedToCookie } from "./navigation-drawer-expanded";
 import {

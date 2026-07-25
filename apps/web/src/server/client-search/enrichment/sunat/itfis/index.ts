@@ -1,4 +1,4 @@
-import { isPlainRecord } from "~/lib/type-guards";
+import { isPlainRecord } from "~/shared/type-guards";
 
 import type { SunatDniData } from "../contracts";
 import { sanitizeField } from "../text";

@@ -1,11 +1,11 @@
 import type { Selectable } from "kysely";
 
-import { notify } from "~/lib/db/notify";
-import type { GpvSnapshotJobsTable } from "~/lib/db/schema/modules/merchant-stats.types";
-import { createJobStore } from "~/lib/job-queue/job-store";
-import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { GpvSnapshotId, GpvSnapshotJobId } from "~/server/shared/ids";
+import type { GpvSnapshotId, GpvSnapshotJobId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { notify } from "~/server/platform/database/notify";
+import type { GpvSnapshotJobsTable } from "~/server/platform/database/schema/modules/merchant-stats.types";
+import { createJobStore } from "~/server/platform/jobs/job-store";
+import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 
 export type GpvSnapshotJobRow = Selectable<GpvSnapshotJobsTable>;
 

@@ -1,9 +1,12 @@
 "use server";
 
+import { BranchId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { BranchId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 import { getSourcingPolicy } from "~/server/workflow/policy/read/get-sourcing-policy";
 import { updateSourcingPolicy } from "~/server/workflow/policy/write/update-sourcing-policy";
 

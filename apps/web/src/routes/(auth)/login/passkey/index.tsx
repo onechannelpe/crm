@@ -8,7 +8,7 @@ import { loginFlowQuery } from "~/features/auth/data/queries";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
-import { parseLoginFlowId } from "~/lib/auth/login-flow/parse-id";
+import { parseLoginFlowId } from "~/server/auth/login-flow/parse-id";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";

@@ -1,9 +1,12 @@
 import type { Kysely } from "kysely";
 
 import type { Json } from "~/contracts/json";
-import type { Database } from "~/lib/db/types";
-import { createJobStore, type JobStore } from "~/lib/job-queue/job-store";
-import type { NotificationIntentId } from "~/server/shared/ids";
+import type { NotificationIntentId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
+import {
+  createJobStore,
+  type JobStore,
+} from "~/server/platform/jobs/job-store";
 
 export interface IntentJob {
   id: NotificationIntentId;

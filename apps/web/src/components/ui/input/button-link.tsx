@@ -1,6 +1,6 @@
 import { type JSX, mergeProps, splitProps } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import type { ButtonSize, ButtonVariant } from "./button";
 

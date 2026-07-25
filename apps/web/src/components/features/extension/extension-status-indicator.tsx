@@ -3,7 +3,7 @@ import type { Accessor } from "solid-js";
 
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
-import type { ExecutiveStateSnapshot } from "~/lib/extension/runtime";
+import type { ExecutiveStateSnapshot } from "~/features/extension/runtime";
 
 import styles from "./extension-status-indicator.module.css";
 

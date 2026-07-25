@@ -1,5 +1,5 @@
-import { UserId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { UserId } from "~/domain/ids";
+import { isErr } from "~/shared/result";
 
 import {
   EXTENSION_HANDOFF_TOKEN_AUDIENCE,

@@ -1,7 +1,10 @@
 import { createEffect, createSignal, on, type Accessor } from "solid-js";
 
 import type { CurrentUserView } from "~/contracts/auth";
+import { codeIs } from "~/contracts/error-codes";
+import { parseWireError } from "~/contracts/errors";
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
+import { shortName } from "~/domain/identity/display-name";
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 import {
   addOptimisticLead,
@@ -11,9 +14,6 @@ import {
   toCommercialScopePayload,
   type CommercialScopeFormValues,
 } from "~/features/workflow/forms/commercial-scope/values";
-import { shortName } from "~/lib/users/display-name";
-import { parseWireError } from "~/lib/wire-error";
-import { codeIs } from "~/lib/wire-error-codes";
 
 import { createCommandController } from "../../core/commands/create-command-controller";
 import { createOptimisticTransactionStore } from "../../core/optimistic/create-optimistic-transaction-store";

@@ -6,7 +6,7 @@ import { getRequestEvent } from "solid-js/web";
 
 import favicon from "~/assets/images/logo/logo.ico";
 
-import { CSRF_CONFIG } from "./lib/security/csrf-config";
+import { CSRF_CONFIG } from "./shared/csrf-config";
 
 function RequestMeta() {
   const event = getRequestEvent();

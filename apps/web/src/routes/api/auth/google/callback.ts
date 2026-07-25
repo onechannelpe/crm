@@ -1,13 +1,13 @@
+import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
 import {
   appendClearedGoogleOAuthCookies,
   readGoogleOAuthCookies,
-} from "~/lib/auth/google/google-oauth-cookies";
-import { getClientIp } from "~/lib/auth/password/client-ip";
-import { appendSessionCookie } from "~/lib/auth/session/cookies";
-import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
+} from "~/server/auth/google/google-oauth-cookies";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
+import { getClientIp } from "~/server/auth/password/client-ip";
+import { appendSessionCookie } from "~/server/auth/session/cookies";
 import { getServerRuntime } from "~/server/platform/container";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";
 

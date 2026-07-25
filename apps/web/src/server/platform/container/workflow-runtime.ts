@@ -1,8 +1,8 @@
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
+import type { EngineClient } from "~/server/integrations/engine/client";
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
-import type { EngineClient } from "~/server/shared/engine/client";
 import { createLeadFilesService } from "~/server/workflow/lead/files/lead-files";
 import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 import { createWorkflowRepos } from "~/server/workflow/repos";

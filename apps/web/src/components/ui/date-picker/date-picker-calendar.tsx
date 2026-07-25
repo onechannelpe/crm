@@ -2,8 +2,8 @@ import { For } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
 import ChevronRight from "~/components/icons/chevron-right";
-import type { CalendarDate } from "~/lib/time/calendar-date";
-import { cn } from "~/lib/utils";
+import type { CalendarDate } from "~/domain/time/calendar-date";
+import { cn } from "~/shared/classnames";
 
 import {
   DAY_NAMES,

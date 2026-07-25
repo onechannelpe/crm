@@ -3,7 +3,7 @@ import {
   isEventLogTable,
   type EventLogQueryInput,
 } from "~/contracts/event-logs/event-log";
-import { parseCalendarDate } from "~/lib/time/calendar-date";
+import { parseCalendarDate } from "~/domain/time/calendar-date";
 
 type Query = Record<string, string | string[] | undefined>;
 const FIRST_PAGE_SIZE = 100;

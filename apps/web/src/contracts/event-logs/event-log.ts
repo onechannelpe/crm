@@ -1,6 +1,6 @@
 import { isFieldChange, type FieldChange } from "~/contracts/events";
 import type { Json } from "~/contracts/json";
-import type { CalendarDate } from "~/lib/time/calendar-date";
+import type { CalendarDate } from "~/domain/time/calendar-date";
 
 export const EVENT_LOG_TABLES = [
   "DOMAIN_EVENT",

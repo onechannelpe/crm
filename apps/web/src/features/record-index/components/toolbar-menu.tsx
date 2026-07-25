@@ -1,7 +1,7 @@
 import { Show, type JSX } from "solid-js";
 
 import { AnchoredPopover } from "~/components/ui/overlay/anchored-popover";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import menuStyles from "../styles/menu.module.css";
 import styles from "../styles/toolbar.module.css";

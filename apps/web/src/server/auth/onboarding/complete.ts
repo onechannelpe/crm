@@ -1,7 +1,8 @@
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import { resolveSessionClass } from "~/lib/auth/core/session-contract";
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
-import { parsePhone } from "~/lib/phone/pe-mobile";
+import { auditEntityId } from "~/domain/audit/entity";
+import { getDefaultAppPath } from "~/domain/auth/access/route-policy";
+import { resolveSessionClass } from "~/domain/auth/core/session-contract";
+import { fail, type DomainError } from "~/domain/errors";
+import { parsePhone } from "~/domain/phone/pe-mobile";
 import {
   persistVerifiedPasskeyEnrollment,
   type VerifiedPasskeyEnrollment,
@@ -13,11 +14,10 @@ import {
 import type { AuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import { issueRecoveryCodesForEnrollment } from "~/server/auth/recovery/issue-recovery-codes";
+import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
 import { replaceSession } from "~/server/auth/session/replace-session";
 import type { AppContext } from "~/server/platform/action/context";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export type CompleteOnboardingCommand =
   | { method: "none" }

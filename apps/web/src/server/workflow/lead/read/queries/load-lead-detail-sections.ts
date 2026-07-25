@@ -1,14 +1,12 @@
-import { createLogger } from "~/lib/observability/logger";
-import type { OrganizationRepository } from "~/server/organization/organization-repo";
-import { fail, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/domain/errors";
 import type {
   FileAssetId,
   UserId,
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
+import type { OrganizationRepository } from "~/server/organization/organization-repo";
 import type { DigitalPolicyRepository } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import type {
@@ -39,6 +37,8 @@ import type {
   LeadVenue,
   LeadVenueRepository,
 } from "~/server/workflow/lead/venue/repo";
+import { createLogger } from "~/shared/observability/runtime-logger";
+import { Err, Ok, type Result } from "~/shared/result";
 
 const logger = createLogger("workflow-get-lead-detail");
 

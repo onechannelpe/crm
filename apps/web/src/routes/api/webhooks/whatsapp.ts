@@ -1,8 +1,8 @@
-import { notificationsConfig } from "~/lib/env";
-import { createLogger } from "~/lib/observability/logger";
 import type { ApiRequestEvent } from "~/routes/api/request-event";
 import { receiveKapsoWebhook } from "~/server/integrations/kapso/webhooks/receive-webhook";
+import { notificationsConfig } from "~/server/platform/config/env";
 import { getServerRuntime } from "~/server/platform/container";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 const logger = createLogger("whatsapp-webhook");
 

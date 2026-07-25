@@ -1,7 +1,7 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { IntegrationJobId, UserId } from "~/domain/ids";
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { IntegrationJobId, UserId } from "~/server/shared/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
 import { deriveInquiryAnsweredIntents } from "~/server/workflow/inquiry/notifications";
 import type { InquiryRow } from "~/server/workflow/inquiry/repo";

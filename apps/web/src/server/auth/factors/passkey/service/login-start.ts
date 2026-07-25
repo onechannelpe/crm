@@ -1,15 +1,18 @@
-import type { AuthContextUser } from "~/lib/auth/context/auth-context";
-import type { InvalidCredentialsError } from "~/lib/auth/errors";
+import type { InvalidCredentialsError } from "~/domain/auth/errors";
 import type {
   PasskeyLoginFlowState,
   PasskeyLoginMode,
-} from "~/lib/auth/passkey/types";
-import { recordAuthEvent } from "~/lib/auth/security/auth-events";
-import { config } from "~/lib/config";
+} from "~/domain/auth/passkey/types";
+import type { UserId } from "~/domain/ids";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import {
+  AUTH_LOGIN_FLOW_TTL_MS,
+  AUTH_WEBAUTHN_CHALLENGE_TTL_MS,
+} from "~/server/auth/config";
+import type { AuthContextUser } from "~/server/auth/context/auth-context";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { recordAuthEvent } from "~/server/auth/security/auth-events";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
 
@@ -167,7 +170,7 @@ export async function persistPasskeyLoginFlow(
     type: "authentication",
     challenge: prepared.options.challenge,
     expires_at: new Date(
-      prepared.occurredAt.getTime() + config.auth.webauthnChallengeTtlMs,
+      prepared.occurredAt.getTime() + AUTH_WEBAUTHN_CHALLENGE_TTL_MS,
     ),
     created_at: prepared.occurredAt,
   });
@@ -178,7 +181,7 @@ export async function persistPasskeyLoginFlow(
     challenge_id: challengeId,
     state: "passkey",
     expires_at: new Date(
-      prepared.occurredAt.getTime() + config.auth.loginFlowTtlMs,
+      prepared.occurredAt.getTime() + AUTH_LOGIN_FLOW_TTL_MS,
     ),
     created_at: prepared.occurredAt,
   });

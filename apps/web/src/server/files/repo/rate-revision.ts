@@ -1,13 +1,13 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
 import type {
   FileAssetId,
   UserId,
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 import type { RateRevisionFileRecord } from "./types";
 

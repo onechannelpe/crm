@@ -15,13 +15,13 @@ import type {
   ExecutiveCapacityDetailView,
   PolicySource,
 } from "~/contracts/capacity";
+import { actionErrorMessage } from "~/contracts/errors";
 import {
   grantMoreLeadRefillMutation,
   grantMoreSearchesMutation,
   updateExecutivePolicyOverrideMutation,
 } from "~/features/capacity/data/mutations";
 import { executiveCapacityDetailQuery } from "~/features/capacity/data/queries";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./team-management.module.css";
 

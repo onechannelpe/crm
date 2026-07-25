@@ -1,6 +1,5 @@
-import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { FileAsset } from "../types";
 import {
@@ -8,11 +7,15 @@ import {
   createUploadStreamInspector,
   validateUploadMetadata,
 } from "../validators";
-import type { StoreFileDeps, StoreGeneratedFileInput } from "./contracts";
+import type {
+  FileOperationContext,
+  StoreFileDeps,
+  StoreGeneratedFileInput,
+} from "./contracts";
 import { buildStorageKey } from "./helpers";
 
 export async function storeGeneratedFile(
-  ctx: AppContext,
+  ctx: FileOperationContext,
   input: StoreGeneratedFileInput,
   deps: StoreFileDeps,
 ): Promise<Result<FileAsset, DomainError>> {

@@ -1,7 +1,7 @@
 import { createUniqueId } from "solid-js";
 
 import Point from "~/components/icons/point";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./advanced-settings-toggle.module.css";
 

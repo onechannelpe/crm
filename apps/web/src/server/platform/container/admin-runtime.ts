@@ -1,5 +1,5 @@
-import { createAuditActionPoliciesRepo } from "~/server/shared/repos-audit-action-policies";
-import { createEventsRepo } from "~/server/shared/repos-events";
+import { createAuditActionPoliciesRepo } from "~/server/audit-reader/audit-policy-repo";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 
 import type { ServerInfra } from "./infra";
 

@@ -1,4 +1,4 @@
-import type { RequestContext } from "~/lib/http/request-context";
+import type { RequestContext } from "~/server/platform/http/request-context";
 
 declare namespace App {
   interface RequestObservabilityContext {

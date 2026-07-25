@@ -6,10 +6,10 @@ import { DatePicker } from "~/components/ui/date-picker/date-picker-field";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
+import { codeIs } from "~/contracts/error-codes";
+import { parseWireError } from "~/contracts/errors";
 import type { InviteManagement } from "~/contracts/team";
 import { createTeamInviteMutation } from "~/features/team-management/data/team-mutations";
-import { parseWireError } from "~/lib/wire-error";
-import { codeIs } from "~/lib/wire-error-codes";
 
 import {
   getInviteExpiryFieldError,

@@ -1,9 +1,9 @@
 import { Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
-import type { Role } from "~/lib/auth/access/rbac";
-import { getRoleLabel } from "~/lib/auth/access/role-display";
-import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
+import type { Role } from "~/domain/auth/access/rbac";
+import { getRoleLabel } from "~/domain/auth/access/role-display";
+import { isValidPhone, normalizePhoneInput } from "~/domain/phone/pe-mobile";
 
 import { OnboardingStepAnimatedItem } from "./onboarding-step-animated-item";
 import { OnboardingStepHeading } from "./onboarding-step-heading";

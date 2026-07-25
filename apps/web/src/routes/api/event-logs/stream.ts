@@ -6,13 +6,13 @@ import {
   isEventLogTable,
   type EventLogRecord,
 } from "~/contracts/event-logs/event-log";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import { getSession } from "~/lib/auth/access/session";
+import { hasPermission } from "~/domain/auth/access/rbac";
 import { eventLogsRealtime } from "~/server/event-logs/realtime";
 import {
   eventLogTopic,
   parseEventLogStreamPayload,
 } from "~/server/event-logs/stream-contract";
+import { getSession } from "~/server/platform/action/session";
 import { getServerRuntime } from "~/server/platform/container";
 import { openTopicStream } from "~/server/realtime/sse-topic-stream";
 

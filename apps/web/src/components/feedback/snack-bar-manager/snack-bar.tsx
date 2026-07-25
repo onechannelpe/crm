@@ -8,7 +8,7 @@ import Info from "~/components/icons/info";
 import X from "~/components/icons/x";
 import { ProgressBar } from "~/components/ui/feedback/progress-bar";
 import { Button } from "~/components/ui/input/button";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import type { SnackBarItem, SnackBarVariant } from "./types";
 

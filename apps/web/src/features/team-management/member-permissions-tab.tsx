@@ -5,11 +5,11 @@ import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-b
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Select } from "~/components/ui/input/select";
+import { actionErrorMessage } from "~/contracts/errors";
 import type { MemberDetail } from "~/contracts/members";
+import type { Role } from "~/domain/auth/access/rbac";
+import { getRoleLabel } from "~/domain/auth/access/role-display";
 import { changeMemberRoleMutation } from "~/features/team-management/data/member-mutations";
-import type { Role } from "~/lib/auth/access/rbac";
-import { getRoleLabel } from "~/lib/auth/access/role-display";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import { RolePermissions } from "./role-permissions";
 

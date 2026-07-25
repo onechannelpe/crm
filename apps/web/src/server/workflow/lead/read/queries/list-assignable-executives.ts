@@ -1,8 +1,7 @@
 import type { AssignableExecutiveView } from "~/contracts/workflow/views";
-import type { Role } from "~/lib/auth/access/rbac";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId, UserId, WorkflowLeadId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { Role } from "~/domain/auth/access/rbac";
+import { fail, type DomainError } from "~/domain/errors";
+import type { BranchId, UserId, WorkflowLeadId } from "~/domain/ids";
 import {
   authorizeLeadAction,
   requireCapability,
@@ -10,6 +9,7 @@ import {
 } from "~/server/workflow/lead/domain/policy";
 import type { LeadReader } from "~/server/workflow/lead/read/ports";
 import type { WorkflowUserRepository } from "~/server/workflow/lead/read/users-repo";
+import { Err, Ok, type Result } from "~/shared/result";
 
 type AssignableExecutivesQueryDeps = {
   leads: LeadReader;

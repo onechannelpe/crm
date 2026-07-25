@@ -1,17 +1,17 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/types";
-import { config } from "~/lib/config";
+import { auditEntityId } from "~/domain/audit/entity";
+import type { PasskeyEnrollmentChallenge } from "~/domain/auth/passkey/types";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId, WebauthnChallengeId } from "~/domain/ids";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import { AUTH_WEBAUTHN_CHALLENGE_TTL_MS } from "~/server/auth/config";
 import {
   isPasskeyRequestError,
   type VerifiedRegistrationCredential,
   type WebauthnProvider,
 } from "~/server/auth/factors/passkey-provider";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId, WebauthnChallengeId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
 
@@ -119,7 +119,7 @@ export async function persistPasskeyEnrollmentChallenge(
     type: "registration",
     challenge: prepared.options.challenge,
     expires_at: new Date(
-      prepared.occurredAt.getTime() + config.auth.webauthnChallengeTtlMs,
+      prepared.occurredAt.getTime() + AUTH_WEBAUTHN_CHALLENGE_TTL_MS,
     ),
     created_at: prepared.occurredAt,
   });

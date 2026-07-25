@@ -7,11 +7,13 @@ import {
   LEAD_STATUSES,
   LEAD_PRIORITIES,
 } from "~/contracts/workflow/vocabulary";
+import { UserId, WorkflowInquiryId, WorkflowLeadId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { UserId, WorkflowInquiryId, WorkflowLeadId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { isErr, Ok } from "~/server/shared/result";
 import { addToFavoritesCommand } from "~/server/workflow/lead/commands/add-to-favorites";
 import { deleteLeadCommand } from "~/server/workflow/lead/commands/delete-lead";
 import { editCommercialScopeCommand } from "~/server/workflow/lead/commands/edit-commercial-scope";
@@ -23,6 +25,7 @@ import { requestSunatRefresh } from "~/server/workflow/lead/commands/request-sun
 import { restartQuotationCommand } from "~/server/workflow/lead/commands/restart-quotation";
 import { reviewLeadCommand } from "~/server/workflow/lead/commands/review-lead";
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
+import { isErr, Ok } from "~/shared/result";
 
 import { workflowActor } from "./actor";
 

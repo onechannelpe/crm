@@ -12,7 +12,7 @@ import { managedExecutivesQuery } from "~/features/capacity/data/queries";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import { capitalize } from "~/lib/utils";
+import { capitalize } from "~/shared/text";
 
 import styles from "./team-page.module.css";
 

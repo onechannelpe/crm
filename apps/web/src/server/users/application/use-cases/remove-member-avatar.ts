@@ -1,7 +1,7 @@
+import { type DomainError } from "~/domain/errors";
 import type { AppContext } from "~/server/platform/action/context";
-import { type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import { toAvatarDomainError } from "~/server/users/avatar-error";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { MemberIdCommand } from "../contracts";
 import type { MemberAvatarDeps } from "../ports";

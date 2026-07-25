@@ -1,11 +1,7 @@
+import { NotificationIntentId, type BranchId, type UserId } from "~/domain/ids";
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import type { NotificationIntent } from "~/server/notifications/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import {
-  NotificationIntentId,
-  type BranchId,
-  type UserId,
-} from "~/server/shared/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { LeadHistoryEventDraftFor } from "~/server/workflow/lead/domain/history";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 

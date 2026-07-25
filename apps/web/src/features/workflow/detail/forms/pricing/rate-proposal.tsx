@@ -13,6 +13,7 @@ import {
   InlineFieldEditor,
   InlineOptionsEditor,
 } from "~/components/ui/input/inline-field-editor";
+import { actionErrorMessage } from "~/contracts/errors";
 import type { EditRateProposalInput } from "~/contracts/workflow/inputs";
 import { MAX_RATE_REVISION_FILES } from "~/contracts/workflow/limits";
 import type {
@@ -20,6 +21,7 @@ import type {
   LeadDetailRateRevisionView,
 } from "~/contracts/workflow/views";
 import { CURRENCIES } from "~/contracts/workflow/vocabulary";
+import { formatAppDate } from "~/domain/time/app-time";
 import {
   FieldTable,
   FieldTextValue,
@@ -36,8 +38,6 @@ import {
   formatAmount,
   formatRate,
 } from "~/features/workflow/presentation/format";
-import { formatAppDate } from "~/lib/time/app-time";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import {
   acceptRateMutation,

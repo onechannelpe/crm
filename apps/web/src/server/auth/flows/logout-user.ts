@@ -1,8 +1,8 @@
+import { auditEntityId } from "~/domain/audit/entity";
+import type { DomainError } from "~/domain/errors";
 import type { AuthSessionLogoutPort } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/platform/action/context";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/shared/result";
 
 export async function logoutUser(
   ctx: AppContext,

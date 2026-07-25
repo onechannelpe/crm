@@ -1,5 +1,5 @@
 import type { FilterOptions } from "~/contracts/merchant-stats/views";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";

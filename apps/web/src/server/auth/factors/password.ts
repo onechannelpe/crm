@@ -1,12 +1,12 @@
 import type { Selectable } from "kysely";
 
-import { verifyPasswordLoginCredentials } from "~/lib/auth/password/password-login";
-import type { UsersTable } from "~/lib/db/types";
+import { verifyPasswordLoginCredentials } from "~/server/auth/password/password-login";
 import type { AuthProof } from "~/server/auth/policy/types";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { UsersTable } from "~/server/platform/database/types";
 import type { createUsersRepo } from "~/server/users/repos-users";
+import { Err, Ok, type Result } from "~/shared/result";
 
 type PasswordProviderDeps = {
   users: ReturnType<typeof createUsersRepo>;

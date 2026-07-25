@@ -1,7 +1,7 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
-import type { CalendarDate } from "~/lib/time/calendar-date";
-import type { TeamId, UserId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import type { TeamId, UserId } from "~/domain/ids";
+import type { CalendarDate } from "~/domain/time/calendar-date";
 
 export interface UpdateMemberProfileCommand {
   userId: UserId;
@@ -9,13 +9,13 @@ export interface UpdateMemberProfileCommand {
   firstSurname: string;
   secondSurname: string;
   teamId: TeamId | null;
-  executiveCategory: ExecutiveCategoryValue | null;
+  executiveCategory: ExecutiveCategory | null;
 }
 
 export interface ChangeMemberRoleCommand {
   userId: UserId;
   role: Role;
-  executiveCategory: ExecutiveCategoryValue | null;
+  executiveCategory: ExecutiveCategory | null;
 }
 
 export interface UpdateMemberExpiryCommand {

@@ -1,5 +1,5 @@
-import { createJobQueue } from "~/lib/job-queue/job-queue";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createJobQueue } from "~/server/platform/jobs/job-queue";
 
 import {
   buildGpvSnapshotProgressEvent,

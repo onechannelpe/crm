@@ -1,9 +1,9 @@
 import type { Kysely } from "kysely";
 
-import { db } from "~/lib/db/db";
-import type { Database } from "~/lib/db/types";
-import { createLogger } from "~/lib/observability/logger";
-import type { Logger } from "~/lib/observability/logger-shared";
+import { db } from "~/server/platform/database/db";
+import type { Database } from "~/server/platform/database/types";
+import type { Logger } from "~/shared/observability/logger";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 export interface ServerInfra {
   db: Kysely<Database>;

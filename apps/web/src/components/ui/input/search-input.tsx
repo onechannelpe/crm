@@ -1,7 +1,7 @@
 import { splitProps, type JSX } from "solid-js";
 
 import Search from "~/components/icons/search";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./search-input.module.css";
 

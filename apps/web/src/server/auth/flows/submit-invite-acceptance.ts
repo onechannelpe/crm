@@ -1,10 +1,10 @@
+import type { DomainError } from "~/domain/errors";
 import { createSessionService } from "~/server/auth/session/session.service";
+import type { EventsRepo } from "~/server/event-logs/events-repo";
 import type { InviteService } from "~/server/invites/application/types";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { EventsRepo } from "~/server/shared/repos-events";
-import { isErr, Ok, type Result } from "~/server/shared/result";
 import type { UsersRepo } from "~/server/users/repos-users";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 export async function submitInviteAcceptance(
   deps: {

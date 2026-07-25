@@ -1,17 +1,16 @@
-import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { FileAssetId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import type { FileAssetId } from "~/domain/ids";
+import { Ok, type Result } from "~/shared/result";
 
 import {
   DOWNLOAD_TOKEN_TTL_MS,
   generateDownloadToken,
   hashToken,
 } from "../token";
-import type { DownloadTokenDeps } from "./contracts";
+import type { DownloadTokenDeps, FileOperationContext } from "./contracts";
 
 export async function issueDownloadToken(
-  ctx: AppContext,
+  ctx: FileOperationContext,
   fileAssetId: FileAssetId,
   deps: DownloadTokenDeps,
 ): Promise<Result<{ token: string }, DomainError>> {

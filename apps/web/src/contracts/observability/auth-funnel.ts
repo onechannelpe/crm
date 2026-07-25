@@ -4,7 +4,7 @@ import type {
   AuthFunnelOutcome,
   AuthFunnelScreen,
   AuthFunnelSource,
-} from "~/lib/observability/auth-funnel";
+} from "~/domain/observability/auth-funnel";
 
 export interface AuthFunnelSnapshotInput {
   windowMinutes?: number;

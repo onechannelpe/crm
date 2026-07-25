@@ -1,4 +1,4 @@
-import type { Document } from "~/server/shared/document";
+import type { Document } from "~/domain/identity/document";
 
 import type { CompanyRegistryPort } from "./ports";
 

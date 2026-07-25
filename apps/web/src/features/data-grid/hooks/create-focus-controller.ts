@@ -5,7 +5,7 @@ import {
   type Accessor,
 } from "solid-js";
 
-import { getVerticalNavigationAction } from "~/lib/keyboard/list-navigation";
+import { getVerticalNavigationAction } from "~/browser/keyboard/list-navigation";
 
 export type DataGridCellAddress = {
   rowId: string;

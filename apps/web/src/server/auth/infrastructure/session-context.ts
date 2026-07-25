@@ -1,9 +1,9 @@
-import { deleteSessionCookie } from "~/lib/auth/session/cookies";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
+import { deleteSessionCookie } from "~/server/auth/session/cookies";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createEventsRepo } from "~/server/shared/repos-events";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";

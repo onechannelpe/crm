@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { FileAssetId } from "~/server/shared/ids";
+import type { FileAssetId } from "~/domain/ids";
 
 import type { FilePurpose } from "../types";
 

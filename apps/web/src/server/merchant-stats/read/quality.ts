@@ -7,8 +7,8 @@ import type {
   QualitySummary,
 } from "~/contracts/merchant-stats/views";
 import type { QualityIssue } from "~/contracts/merchant-stats/vocabulary";
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 
 import { monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";

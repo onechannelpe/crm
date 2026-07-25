@@ -1,11 +1,11 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { WorkspaceScopeType } from "~/lib/auth/access/workspace-scope";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { WorkspaceScopeType } from "~/domain/auth/access/workspace-scope";
 import type {
   PrimaryAuthMethod,
   SessionClass,
   StrongAuthMethod,
-} from "~/lib/auth/core/session-contract";
-import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
+} from "~/domain/auth/core/session-contract";
+import type { PasskeyLoginFlowState } from "~/domain/auth/passkey/types";
 
 export interface CurrentUserView {
   id: string;

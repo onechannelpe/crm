@@ -1,7 +1,7 @@
-import { canAssignRole } from "~/lib/auth/access/rbac";
+import { canAssignRole } from "~/domain/auth/access/rbac";
+import { fail, type DomainError } from "~/domain/errors";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { ChangeMemberRoleCommand } from "../contracts";
 import type { MemberWriteDeps } from "../ports";

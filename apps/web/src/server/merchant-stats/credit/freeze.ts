@@ -1,7 +1,7 @@
 import { sql } from "kysely";
 
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { GpvSnapshotId } from "~/server/shared/ids";
+import type { GpvSnapshotId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 export async function freezeUncreditedMerchantMonths(
   tx: DatabaseExecutor,

@@ -10,7 +10,7 @@ import {
   NavigationBar,
   type NavigationBarItemDef,
 } from "~/components/ui/navigation/navigation-bar/navigation-bar";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { getDefaultAppPath } from "~/domain/auth/access/route-policy";
 
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
 import { useOpenSettingsMenu } from "../hooks/use-open-settings-menu";

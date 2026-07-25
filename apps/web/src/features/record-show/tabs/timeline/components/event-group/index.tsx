@@ -1,6 +1,6 @@
 import { For } from "solid-js";
 
-import { calendarMonthParts } from "~/lib/time/calendar-date";
+import { calendarMonthParts } from "~/domain/time/calendar-date";
 
 import type { Group } from "../../model/group";
 import { EventRow } from "../event-row";

@@ -7,7 +7,7 @@ import {
 } from "solid-js";
 import { Portal } from "solid-js/web";
 
-import type { CalendarDate } from "~/lib/time/calendar-date";
+import type { CalendarDate } from "~/domain/time/calendar-date";
 
 import { DatePickerCalendar } from "./date-picker-calendar";
 import {

@@ -1,11 +1,11 @@
-import { canImpersonateMember } from "~/lib/auth/access/member-management";
+import { auditEntityId } from "~/domain/audit/entity";
+import { canImpersonateMember } from "~/domain/auth/access/member-management";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import type { EventsRepo } from "~/server/event-logs/events-repo";
 import type { AppContext } from "~/server/platform/action/context";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import type { EventsRepo } from "~/server/shared/repos-events";
-import { Err, Ok, type Result } from "~/server/shared/result";
 import type { UsersRepo } from "~/server/users/repos-users";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { SessionService } from "./session.service";
 

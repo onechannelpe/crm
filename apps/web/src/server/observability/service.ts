@@ -1,3 +1,4 @@
+import type { WireKind } from "~/contracts/errors";
 import { serializeEventPayload } from "~/contracts/events";
 import type {
   AuthFunnelSnapshot,
@@ -8,7 +9,9 @@ import type {
   ObservabilitySnapshotInput,
   ObservationStatus,
 } from "~/contracts/observability/snapshot";
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
+import { invalid, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import {
   isAuthFunnelEventName,
   isAuthFunnelMethod,
@@ -18,15 +21,12 @@ import {
   type AuthFunnelOutcome,
   type AuthFunnelScreen,
   type AuthFunnelSource,
-} from "~/lib/observability/auth-funnel";
-import type { WireKind } from "~/lib/wire-error";
-import { invalid, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
+} from "~/domain/observability/auth-funnel";
 import {
   parsePositiveIntegerAtMost,
   trimOrUndefined,
-} from "~/server/shared/query-window";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+} from "~/server/platform/action/query-window";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { createActionObservationsRepo } from "./repos-action-observations";
 import type { createAuthFunnelEventsRepo } from "./repos-auth-funnel-events";

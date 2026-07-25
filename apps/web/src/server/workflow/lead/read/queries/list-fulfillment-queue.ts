@@ -3,16 +3,16 @@ import type {
   FulfillmentQueueView,
 } from "~/contracts/workflow/views";
 import type { FulfillmentStep } from "~/contracts/workflow/vocabulary";
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { shortName } from "~/lib/users/display-name";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { forbidden, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { hasPermission, type Role } from "~/domain/auth/access/rbac";
+import { forbidden, type DomainError } from "~/domain/errors";
+import { shortName } from "~/domain/identity/display-name";
+import type { BranchId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import {
   backOfficeQueueSteps,
   pendingOwnerForStep,
 } from "~/server/workflow/lead/fulfillment/steps";
+import { Err, Ok, type Result } from "~/shared/result";
 
 // Back office sees everything pending an internal action, scoped to their branch.
 function queueStepsForRole(role: Role): FulfillmentStep[] | null {

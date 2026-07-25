@@ -1,5 +1,5 @@
-import { HalftoneImageCanvas } from "~/lib/halftone/image-canvas";
-import { WebGlMount } from "~/lib/visual-runtime";
+import { HalftoneImageCanvas } from "~/browser/visual/halftone/image-canvas";
+import { WebGlMount } from "~/browser/visual/runtime";
 
 import { UpdatesHeroVisualPlaceholder } from "./hero-visual-fallback";
 import {

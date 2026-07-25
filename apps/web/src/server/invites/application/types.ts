@@ -1,18 +1,13 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
-import type { AppUow } from "~/server/shared/application/uow";
-import type { DomainError } from "~/server/shared/domain-error";
-import type {
-  BranchId,
-  TeamId,
-  UserId,
-  UserInviteId,
-} from "~/server/shared/ids";
-import type { EventsRepo } from "~/server/shared/repos-events";
-import type { Result } from "~/server/shared/result";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { DomainError } from "~/domain/errors";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import type { BranchId, TeamId, UserId, UserInviteId } from "~/domain/ids";
+import type { EventsRepo } from "~/server/event-logs/events-repo";
+import type { AppUow } from "~/server/platform/database/uow";
 import type { TeamsRepo } from "~/server/users/repos-teams";
 import type { UserInvitesRepo } from "~/server/users/repos-user-invites";
 import type { UsersRepo } from "~/server/users/repos-users";
+import type { Result } from "~/shared/result";
 
 export interface InviteDeps {
   users: Pick<
@@ -78,7 +73,7 @@ export interface CreateInviteInput {
   secondSurname: string;
   email: string;
   role: Role;
-  executiveCategory?: ExecutiveCategoryValue | null;
+  executiveCategory?: ExecutiveCategory | null;
   teamId: TeamId | null;
   expiresAt?: Date | null;
 }

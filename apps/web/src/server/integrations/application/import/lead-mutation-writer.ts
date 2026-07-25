@@ -1,10 +1,6 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type {
-  IntegrationJobId,
-  UserId,
-  WorkflowLeadId,
-} from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { IntegrationJobId, UserId, WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createInquiryRepo } from "~/server/workflow/inquiry/repo";
 import { reviewLead } from "~/server/workflow/lead/domain/decide";
 import { commitTransition } from "~/server/workflow/lead/write/commit";

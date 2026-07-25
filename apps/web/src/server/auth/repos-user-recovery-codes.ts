@@ -1,6 +1,6 @@
-import type { RecoveryCodeSetSource } from "~/lib/db/schema/modules/auth.types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { RecoveryCodeSetSource } from "~/server/platform/database/schema/modules/auth.types";
 
 type ActiveRecoveryCodeSet = {
   createdAt: Date;

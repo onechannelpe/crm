@@ -1,9 +1,9 @@
+import { fail, type DomainError } from "~/domain/errors";
 import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { authorizeLeadAction } from "~/server/workflow/lead/domain/policy";
 import type { LeadReader } from "~/server/workflow/lead/read/ports";
+import { Err, Ok, type Result } from "~/shared/result";
 
 export async function requestSunatRefresh(
   input: { actor: WorkflowActor; leadId: string },

@@ -1,5 +1,5 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { BranchId, UserId } from "~/domain/ids";
 
 export type WorkflowActor = {
   userId: UserId;

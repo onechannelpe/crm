@@ -1,7 +1,7 @@
 import { Show } from "solid-js";
 
 import X from "~/components/icons/x";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";

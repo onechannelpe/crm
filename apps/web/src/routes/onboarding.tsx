@@ -21,9 +21,15 @@ import { submitOnboardingProfile } from "~/actions/auth/onboarding/submit-profil
 import { acknowledgeRecoveryCodes } from "~/actions/auth/recovery-codes";
 import { beginPasskeyEnrollment } from "~/actions/auth/security/passkey";
 import { beginTotpEnrollment } from "~/actions/auth/security/totp";
+import {
+  createRegistrationResponse,
+  isPasskeyRegistrationSupported,
+} from "~/browser/auth/passkey/registration-client";
 import { Loader } from "~/components/feedback/loading/loader";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import type { OnboardingSnapshot } from "~/contracts/auth";
+import { actionErrorMessage } from "~/contracts/errors";
+import { normalizePhoneInput, isValidPhone } from "~/domain/phone/pe-mobile";
 import { onboardingSnapshotQuery } from "~/features/onboarding/data/queries";
 import {
   resolveOnboardingStep,
@@ -36,12 +42,6 @@ import { OnboardingProfileStep } from "~/features/onboarding/ui/onboarding-profi
 import { OnboardingSecurityStep } from "~/features/onboarding/ui/onboarding-security-step";
 import { OnboardingShell } from "~/features/onboarding/ui/onboarding-shell";
 import { OnboardingTotpStep } from "~/features/onboarding/ui/onboarding-totp-step";
-import {
-  createRegistrationResponse,
-  isPasskeyRegistrationSupported,
-} from "~/lib/auth/passkey/registration-client";
-import { normalizePhoneInput, isValidPhone } from "~/lib/phone/pe-mobile";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 

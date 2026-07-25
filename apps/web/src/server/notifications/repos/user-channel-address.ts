@@ -1,8 +1,11 @@
 import type { Insertable, Kysely } from "kysely";
 
-import type { Database, UserChannelAddressesTable } from "~/lib/db/types";
-import type { Phone } from "~/lib/phone/pe-mobile";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
+import type { Phone } from "~/domain/phone/pe-mobile";
+import type {
+  Database,
+  UserChannelAddressesTable,
+} from "~/server/platform/database/types";
 
 type ChannelType = UserChannelAddressesTable["channel"];
 

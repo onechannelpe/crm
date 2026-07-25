@@ -1,6 +1,7 @@
-import { config } from "~/lib/config";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import { Err, Ok, type Result } from "~/shared/result";
+
+import { CAPACITY_LIMITS } from "./config";
 
 const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -10,7 +11,7 @@ export function validateRequestAmount(
   if (!Number.isInteger(amount) || amount < 1) {
     return Err(fail("invalid_amount"));
   }
-  if (amount > config.capacityRequests.maxRequestAmount) {
+  if (amount > CAPACITY_LIMITS.maxRequestAmount) {
     return Err(fail("amount_exceeds_max"));
   }
   return Ok(amount);
@@ -22,7 +23,7 @@ export function validateSearchLimit(
   if (!Number.isInteger(monthlyLimit) || monthlyLimit < 1) {
     return Err(fail("invalid_search_limit"));
   }
-  if (monthlyLimit > config.searchAccess.maxMonthlyLimit) {
+  if (monthlyLimit > CAPACITY_LIMITS.maxSearchMonthly) {
     return Err(fail("search_limit_exceeds_max"));
   }
   return Ok(monthlyLimit);
@@ -35,13 +36,13 @@ export function validateLeadPolicyValues(values: {
   if (!Number.isInteger(values.bufferTarget) || values.bufferTarget < 1) {
     return Err(fail("invalid_buffer_target"));
   }
-  if (values.bufferTarget > config.leadAssignment.maxBufferTarget) {
+  if (values.bufferTarget > CAPACITY_LIMITS.maxLeadBuffer) {
     return Err(fail("buffer_target_exceeds_max"));
   }
   if (!Number.isInteger(values.dailyLimit) || values.dailyLimit < 1) {
     return Err(fail("invalid_daily_refill"));
   }
-  if (values.dailyLimit > config.capacityRequests.maxRequestAmount) {
+  if (values.dailyLimit > CAPACITY_LIMITS.maxRequestAmount) {
     return Err(fail("daily_refill_exceeds_max"));
   }
   return Ok({

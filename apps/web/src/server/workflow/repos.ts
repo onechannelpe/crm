@@ -1,7 +1,7 @@
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createRateRevisionFilesRepo } from "~/server/files/repo/rate-revision";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createEventsRepo } from "~/server/shared/repos-events";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { createDigitalPolicyRepo } from "./lead/digital-policy/repo";
 import { createFulfillmentRepo } from "./lead/fulfillment/repo";

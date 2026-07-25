@@ -7,6 +7,7 @@ import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";
 import { Select } from "~/components/ui/input/select";
 import { TextInput } from "~/components/ui/input/text-input";
+import { actionErrorMessage } from "~/contracts/errors";
 import {
   describeDocKind,
   describeFulfillmentAction,
@@ -32,7 +33,6 @@ import {
   WidgetCardHeader,
   WidgetCardTitle,
 } from "~/features/widgets/widget-card";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import {
   chooseFulfillmentProductMutation,

@@ -2,19 +2,18 @@ import type {
   BulkApplyResult,
   BulkParseResult,
 } from "~/contracts/team/bulk-import";
-import type { Role } from "~/lib/auth/access/rbac";
-import { shortName } from "~/lib/users/display-name";
+import type { Role } from "~/domain/auth/access/rbac";
+import { invalid, type DomainError } from "~/domain/errors";
+import { shortName } from "~/domain/identity/display-name";
 import { inviteLink } from "~/server/invites/domain/invite-link";
 import type { AppContext } from "~/server/platform/action/context";
-import { invalid, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import {
   applyImport,
   parseAndValidateCsvRows,
 } from "~/server/users/service-bulk-import";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { TeamBulkImportContext } from "../infrastructure/invite-context";
-import { sendInviteEmail } from "../infrastructure/invite-delivery";
 
 export async function previewBulkImport(
   csvContent: string,
@@ -64,7 +63,7 @@ export async function applyBulkImport(
     input.role,
     deps.inviteService,
     async ({ row, inviteId, token, expiresAt }) => {
-      const emailResult = await sendInviteEmail({
+      const emailResult = await deps.delivery.send({
         email: row.email,
         fullName: shortName({
           names: row.names,

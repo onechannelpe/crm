@@ -1,9 +1,9 @@
-import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
+import type { AuthLoginFlowId, UserId } from "~/domain/ids";
 import { verifyRecoveryCode } from "~/server/auth/factors/recovery";
 import { verifyTotpStepUp } from "~/server/auth/factors/totp";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import type { AuthLoginFlowId, UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { deleteLoginFlow } from "~/server/auth/login-flow/shared";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 type PendingLogin = {
   flow: NonNullable<

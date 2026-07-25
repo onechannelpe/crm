@@ -1,8 +1,8 @@
+import type { Clock } from "~/domain/time/epoch";
 import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import type { OrganizationRepository } from "~/server/organization/organization-repo";
+import type { AppUow } from "~/server/platform/database/uow";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
-import type { AppUow } from "~/server/shared/application/uow";
-import type { Clock } from "~/server/shared/time";
 
 import type { ExtensionRuntimeRepo } from "../repos";
 

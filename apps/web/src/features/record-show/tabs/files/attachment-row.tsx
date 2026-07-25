@@ -2,6 +2,7 @@ import { createMemo } from "solid-js";
 
 import CalendarDays from "~/components/icons/calendar-days";
 import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import {
   ActivityListRow,
   ActivityRowBody,
@@ -9,7 +10,6 @@ import {
   ActivityRowIcon,
   ActivityRowTitle,
 } from "~/features/side-panel/components/activity-tabs/primitives";
-import { formatAppDateTime } from "~/lib/time/app-time";
 
 import { AttachmentActionsMenu } from "./attachment-actions-menu";
 import {

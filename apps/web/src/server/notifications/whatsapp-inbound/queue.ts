@@ -1,10 +1,10 @@
 import type { Kysely } from "kysely";
 
-import { notify } from "~/lib/db/notify";
-import type { Database } from "~/lib/db/types";
-import { createJobQueue } from "~/lib/job-queue/job-queue";
-import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
-import type { QueueRunner } from "~/lib/job-queue/types";
+import { notify } from "~/server/platform/database/notify";
+import type { Database } from "~/server/platform/database/types";
+import { createJobQueue } from "~/server/platform/jobs/job-queue";
+import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
+import type { QueueRunner } from "~/server/platform/jobs/types";
 
 import { createWhatsAppInboundEventRepo } from "./inbound-event-repo";
 import { processInboundWhatsAppEvent } from "./process-event";

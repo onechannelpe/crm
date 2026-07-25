@@ -8,7 +8,7 @@ import type {
 } from "~/contracts/event-logs/event-log";
 import { parseFieldChanges } from "~/contracts/events";
 import type { Json } from "~/contracts/json";
-import type { Database } from "~/lib/db/types";
+import type { Database } from "~/server/platform/database/types";
 
 type EventRow = {
   id: string;

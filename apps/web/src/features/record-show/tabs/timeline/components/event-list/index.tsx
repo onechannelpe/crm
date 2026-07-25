@@ -1,7 +1,7 @@
 import { For } from "solid-js";
 
-import { formatCalendarMonthName } from "~/lib/time/app-time";
-import { calendarMonthParts } from "~/lib/time/calendar-date";
+import { formatCalendarMonthName } from "~/domain/time/app-time";
+import { calendarMonthParts } from "~/domain/time/calendar-date";
 
 import type { Group } from "../../model/group";
 import { EventGroup } from "../event-group";

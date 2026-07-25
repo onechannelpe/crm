@@ -1,8 +1,8 @@
 import type { Insertable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { GpvSnapshotId } from "~/server/shared/ids";
+import type { GpvSnapshotId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 
 import { chunks } from "../chunks";
 

@@ -1,5 +1,5 @@
-import { createJobQueue } from "~/lib/job-queue/job-queue";
-import type { QueueRunner } from "~/lib/job-queue/types";
+import { createJobQueue } from "~/server/platform/jobs/job-queue";
+import type { QueueRunner } from "~/server/platform/jobs/types";
 
 import type { IntentJob, IntentRepository } from "../repos/intent-repo";
 import type { IntentExpander } from "./expand-intent";

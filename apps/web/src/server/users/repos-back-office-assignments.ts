@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { TeamId, UserId } from "~/server/shared/ids";
+import type { TeamId, UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 export function createBackOfficeAssignmentsRepo(db: Kysely<Database>) {
   return {

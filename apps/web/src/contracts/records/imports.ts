@@ -1,5 +1,5 @@
-import { isQueueState, type QueueState } from "~/lib/job-queue/queue-state";
-import { defineTopic } from "~/lib/realtime/topic";
+import { defineTopic } from "~/contracts/realtime/topic";
+import { isQueueState, type QueueState } from "~/domain/jobs/queue-state";
 
 export type RecordImportType = "import_status" | "import_prioridad";
 

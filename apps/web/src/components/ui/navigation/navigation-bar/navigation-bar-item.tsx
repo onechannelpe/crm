@@ -2,7 +2,7 @@ import type { Component } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import type { IconProps } from "~/components/icons/icon-base";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./navigation-bar.module.css";
 

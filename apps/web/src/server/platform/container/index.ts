@@ -1,10 +1,11 @@
+import { createDefaultEngineClient } from "~/server/integrations/engine/client";
 import {
   appConfig,
   engineConfig,
   notificationsConfig,
   uploadsConfig,
-} from "~/lib/env";
-import { createDefaultEngineClient } from "~/server/shared/engine/client";
+} from "~/server/platform/config/env";
+import { createRecordImportsRealtime } from "~/server/records/imports/realtime";
 
 import { createAdminRuntime } from "./admin-runtime";
 import { createAuthRuntime } from "./auth-runtime";
@@ -42,7 +43,13 @@ function createServerRuntime() {
   );
   const files = memo(() => createFilesRuntime(infra, uploadsConfig()));
   const admin = memo(() => createAdminRuntime(infra));
-  const auth = memo(() => createAuthRuntime(infra, notifications()));
+  const auth = memo(() =>
+    createAuthRuntime(
+      infra,
+      notifications(),
+      observability().observabilityService,
+    ),
+  );
   const capacity = memo(() => createCapacityRuntime(infra));
   const clientSearch = memo(() => createClientSearchRuntime(infra, engine()));
   const contactAssignments = memo(() =>
@@ -51,12 +58,21 @@ function createServerRuntime() {
   const eventLogs = memo(() => createEventLogsRuntime(infra));
   const extension = memo(() => createExtensionRuntime(infra));
   const integrations = memo(() => createIntegrationsRuntime(infra));
+  const recordsImportRealtime = memo(() =>
+    createRecordImportsRealtime(integrations().integration.jobs),
+  );
   const observability = memo(() => createObservabilityRuntime(infra));
   const workflow = memo(() => createWorkflowRuntime(infra, engine(), files()));
   const avatar = memo(() => createAvatarRuntime(infra, uploadsConfig()));
   const security = memo(() => createSecurityRuntime(infra));
   const search = memo(() => createSearchRuntime(infra));
-  const team = memo(() => createTeamRuntime(infra, appConfig().publicOrigin));
+  const team = memo(() =>
+    createTeamRuntime(
+      infra,
+      appConfig().publicOrigin,
+      notifications().messaging,
+    ),
+  );
   const users = memo(() =>
     createUsersRuntime(infra, auth().sessionService, avatar().avatarService),
   );
@@ -92,6 +108,9 @@ function createServerRuntime() {
     },
     get integrations() {
       return integrations();
+    },
+    get recordsImportRealtime() {
+      return recordsImportRealtime();
     },
     get notifications() {
       return notifications();

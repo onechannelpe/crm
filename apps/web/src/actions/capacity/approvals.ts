@@ -1,11 +1,14 @@
 "use server";
 
+import type { DomainError } from "~/domain/errors";
+import { CapacityRequestId, UserId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import type { DomainError } from "~/server/shared/domain-error";
-import { CapacityRequestId, UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import type { Result } from "~/server/shared/result";
+import type { Result } from "~/shared/result";
 
 type CapacityDecision = {
   requestId: CapacityRequestId;

@@ -3,7 +3,7 @@ import type {
   AuditPolicyRiskLevel,
   AuditPolicySnapshot,
 } from "~/contracts/audit-reader/policy";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 
 interface AuditPolicyServiceDeps {
   auditActionPolicies: {

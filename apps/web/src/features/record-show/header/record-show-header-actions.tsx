@@ -1,6 +1,7 @@
 import { createAsync, useNavigate } from "@solidjs/router";
 import { Show, createMemo, createSignal, onMount } from "solid-js";
 
+import { useHotkey } from "~/browser/hotkey/use-hotkey";
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
 import Heart from "~/components/icons/heart";
@@ -11,6 +12,8 @@ import { TopBarCommandButton } from "~/components/layout/top-bar-command-button"
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
+import { actionErrorMessage } from "~/contracts/errors";
+import { hasPermission } from "~/domain/auth/access/rbac";
 import { useLeadActions } from "~/features/record-show/use-record-actions";
 import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
 import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
@@ -20,9 +23,6 @@ import {
   leadDetailQuery,
   leadListQuery,
 } from "~/features/workflow/data/queries";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import { useHotkey } from "~/lib/hotkey/use-hotkey";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import {
   RecordShowActionsMenu,

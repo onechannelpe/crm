@@ -5,15 +5,15 @@ import type {
   FulfillmentStep,
   ProductKind,
 } from "~/contracts/workflow/vocabulary";
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   FileAssetId,
   FulfillmentOrderId,
   UserId,
   WorkflowLeadId,
   WorkflowVenueId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 
 import type { UnitField } from "./steps";
 

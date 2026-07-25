@@ -1,15 +1,18 @@
 "use server";
 
 import type { AuditPolicySnapshot } from "~/contracts/audit-reader/policy";
-import { getSession, hasRole } from "~/lib/auth/access/session";
 import {
   createAuditPolicyService,
   type UpsertAuditPolicyInput,
 } from "~/server/audit-reader/policy-service";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
+import { getSession, hasRole } from "~/server/platform/action/session";
 import { getServerRuntime } from "~/server/platform/container";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Ok } from "~/server/shared/result";
+import { Ok } from "~/shared/result";
 
 function auditPolicyService() {
   return createAuditPolicyService({

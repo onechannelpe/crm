@@ -1,4 +1,4 @@
-import type { ReservationStatus } from "~/server/shared/scope";
+import type { ReservationStatus } from "~/server/capacity/domain/types";
 
 export function sumAmount(rows: { amount: number }[]): number {
   return rows.reduce((acc, row) => acc + row.amount, 0);

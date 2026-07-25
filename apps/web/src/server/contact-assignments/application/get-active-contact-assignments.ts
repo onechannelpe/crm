@@ -1,7 +1,7 @@
 import type { ActiveContactAssignmentView } from "~/contracts/contact-assignments/views";
+import type { UserId } from "~/domain/ids";
+import { epochMilliseconds } from "~/domain/time/epoch";
 import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
-import type { UserId } from "~/server/shared/ids";
-import { epochMilliseconds } from "~/server/shared/time";
 
 export type ContactAssignmentReadRepos = {
   contactAssignments: Pick<

@@ -1,11 +1,12 @@
 "use server";
 
+import type { AuthFunnelClientEventPayload } from "~/domain/observability/auth-funnel";
 import {
   isAuthAnalyticsScreen,
-  recordAuthAnalyticsEvent,
-} from "~/lib/auth/auth-analytics";
-import type { AuthFunnelClientEventPayload } from "~/lib/observability/auth-funnel";
-import { getActionRequestContext } from "~/lib/observability/context";
+  recordAuthAnalyticsEvent as recordAuthAnalytics,
+} from "~/server/auth/auth-analytics";
+import { getServerRuntime } from "~/server/platform/container";
+import { getActionRequestContext } from "~/server/platform/observability/context";
 
 function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
   if (input.kind === "screen_viewed") {
@@ -32,11 +33,14 @@ export async function trackAuthClientEvent(
   input: AuthFunnelClientEventPayload,
 ): Promise<void> {
   const event = readClientAuthAnalyticsEvent(input);
-  await recordAuthAnalyticsEvent(
+  const runtime = getServerRuntime();
+  await recordAuthAnalytics(
     {
       source: "client",
       ...event,
     },
     getActionRequestContext(),
+    runtime.auth.analytics,
+    runtime.infra.now,
   );
 }

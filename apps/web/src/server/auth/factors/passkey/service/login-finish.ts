@@ -1,8 +1,11 @@
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server";
 
-import type { InvalidCredentialsError } from "~/lib/auth/errors";
-import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
-import { recordAuthEvent } from "~/lib/auth/security/auth-events";
+import type { InvalidCredentialsError } from "~/domain/auth/errors";
+import type {
+  AuthLoginFlowId,
+  UserId,
+  WebauthnChallengeId,
+} from "~/domain/ids";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import {
   isPasskeyRequestError,
@@ -10,12 +13,9 @@ import {
   type VerifiedAuthenticationCredential,
   type WebauthnProvider,
 } from "~/server/auth/factors/passkey-provider";
-import type {
-  AuthLoginFlowId,
-  UserId,
-  WebauthnChallengeId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { deleteLoginFlow } from "~/server/auth/login-flow/shared";
+import { recordAuthEvent } from "~/server/auth/security/auth-events";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { PasskeyAuthRepos } from "./shared";
 

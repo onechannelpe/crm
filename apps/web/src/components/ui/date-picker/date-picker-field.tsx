@@ -7,11 +7,11 @@ import {
   onMount,
 } from "solid-js";
 
+import { useHotkey } from "~/browser/hotkey/use-hotkey";
 import CalendarDays from "~/components/icons/calendar-days";
-import { useHotkey } from "~/lib/hotkey/use-hotkey";
-import { appCalendarDateAt } from "~/lib/time/app-time";
-import { parseCalendarDate } from "~/lib/time/calendar-date";
-import { cn } from "~/lib/utils";
+import { appCalendarDateAt } from "~/domain/time/app-time";
+import { parseCalendarDate } from "~/domain/time/calendar-date";
+import { cn } from "~/shared/classnames";
 
 import { getVisibleMonth, shiftVisibleMonth } from "./date-picker-model";
 import { DatePickerPopover } from "./date-picker-popover";

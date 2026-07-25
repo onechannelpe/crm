@@ -1,7 +1,7 @@
 import { createPasswordResetTokensRepo } from "~/server/auth/repos-password-reset";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
-import { createExecutorUow } from "~/server/shared/application/uow";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createExecutorUow } from "~/server/platform/database/uow";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 type PasswordResetRepos = {

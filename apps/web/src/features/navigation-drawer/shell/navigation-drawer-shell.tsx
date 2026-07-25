@@ -8,9 +8,9 @@ import { AccountMenu } from "~/components/layout/account-menu";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
+import { shortName } from "~/domain/identity/display-name";
 import { logoutMutation } from "~/features/auth/data/mutations";
-import { shortName } from "~/lib/users/display-name";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "../constants/navigation-drawer-click-outside-id";
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";

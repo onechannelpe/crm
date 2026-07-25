@@ -1,12 +1,12 @@
 "use server";
 
 import type { OnboardingSnapshot } from "~/contracts/auth";
-import { parsePhone } from "~/lib/phone/pe-mobile";
+import { fail, type DomainError } from "~/domain/errors";
+import { parsePhone } from "~/domain/phone/pe-mobile";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
 
 export function submitOnboardingProfile(input: {
   phone: unknown;

@@ -2,8 +2,8 @@ import type {
   LeadReservationId,
   SearchReservationId,
   UserId,
-} from "~/server/shared/ids";
-import type { CapacityKind } from "~/server/shared/scope";
+} from "~/domain/ids";
+import type { CapacityKind } from "~/server/capacity/domain/types";
 
 export type { CapacityKind };
 

@@ -1,4 +1,4 @@
-import type { Ruc } from "~/server/shared/document";
+import type { Ruc } from "~/domain/identity/document";
 import type {
   LeadSourceStatus,
   RateProposal,

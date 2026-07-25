@@ -1,4 +1,6 @@
-import { appMonthRange } from "~/lib/time/app-time";
+import type { DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { appMonthRange } from "~/domain/time/app-time";
 import {
   buildSearchCapacitySnapshot,
   type SearchCapacitySnapshot,
@@ -8,9 +10,7 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/shared/result";
 
 import type { ActorScope } from "../actor-scope";
 import { getEffectiveSearchPolicy } from "../resolve-search-policy";

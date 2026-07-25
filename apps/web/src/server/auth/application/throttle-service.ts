@@ -1,13 +1,13 @@
-import { buildThrottleKeys } from "~/lib/auth/password/throttle-keys";
+import { buildThrottleKeys } from "~/server/auth/password/throttle-keys";
 import {
   AUTH_THROTTLE_POLICY,
   AUTH_THROTTLE_SCOPES,
   type AuthThrottleEndpoint,
-} from "~/lib/auth/password/throttle-policy";
+} from "~/server/auth/password/throttle-policy";
 import {
   calculateBlockMs,
   isThrottleWindowExpired,
-} from "~/lib/auth/password/throttle-state";
+} from "~/server/auth/password/throttle-state";
 import type { AuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 
 type CheckResult = { allowed: true } | { allowed: false; retryAfterMs: number };

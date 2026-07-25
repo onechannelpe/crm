@@ -1,13 +1,16 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
+import { fail, type DomainError } from "~/domain/errors";
 import {
-  isExecutiveCategoryValue,
-  type ExecutiveCategoryValue,
-} from "~/lib/db/types";
-import { appCalendarDateAt, appDayRange } from "~/lib/time/app-time";
-import { addCalendarDays, type CalendarDate } from "~/lib/time/calendar-date";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { TeamId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+  isExecutiveCategory,
+  type ExecutiveCategory,
+} from "~/domain/identity/executive-category";
+import type { TeamId } from "~/domain/ids";
+import { appCalendarDateAt, appDayRange } from "~/domain/time/app-time";
+import {
+  addCalendarDays,
+  type CalendarDate,
+} from "~/domain/time/calendar-date";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { CreateTeamInviteCommand } from "../application/contracts";
 
@@ -72,12 +75,12 @@ export function validateTeamInviteInput(
 function resolveExecutiveCategory(
   role: Role,
   executiveCategory: string | null,
-): Result<ExecutiveCategoryValue | null, DomainError> {
+): Result<ExecutiveCategory | null, DomainError> {
   if (role !== "executive") {
     return Ok(null);
   }
 
-  if (!executiveCategory || !isExecutiveCategoryValue(executiveCategory)) {
+  if (!executiveCategory || !isExecutiveCategory(executiveCategory)) {
     return Err(fail("invalid_executive_category"));
   }
 

@@ -3,13 +3,13 @@ import type {
   LeadPriority,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   IntegrationJobId,
   UserId,
   WorkflowInquiryId,
   WorkflowLeadId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 export type InquiryRow = {
   id: WorkflowInquiryId;

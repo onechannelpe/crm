@@ -12,12 +12,12 @@ import {
 } from "~/server/capacity/infrastructure/usage-repo";
 import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import { createContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
+import { createInteractionLogsRepo } from "~/server/contact-assignments/infrastructure/interaction-logs-repo";
+import type { EngineClient } from "~/server/integrations/engine/client";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
-import { createExecutorUow } from "~/server/shared/application/uow";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { EngineClient } from "~/server/shared/engine/client";
-import { createInteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
-import { isErr, Ok } from "~/server/shared/result";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createExecutorUow } from "~/server/platform/database/uow";
+import { isErr, Ok } from "~/shared/result";
 
 export type ContactAssignmentRepos = {
   users: ReturnType<typeof createCapacityUsersRepo>;

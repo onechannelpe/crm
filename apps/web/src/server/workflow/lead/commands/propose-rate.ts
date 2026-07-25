@@ -1,14 +1,11 @@
 import { randomUUIDv7 } from "bun";
 
 import type { ProposeRateInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import {
-  WorkflowRateProposalId,
-  type WorkflowLeadId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import { WorkflowRateProposalId, type WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { proposeRate } from "../../lead/domain/decide";
 import { resolveRateProposalPolicy } from "../../lead/domain/pricing";

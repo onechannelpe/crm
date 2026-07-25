@@ -1,4 +1,4 @@
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { TopBarActionButton } from "./top-bar-action-button";
 import { TopBarTooltip } from "./top-bar-tooltip";

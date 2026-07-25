@@ -3,7 +3,7 @@ import type {
   GpvCulqiView,
   GpvPerformanceView,
 } from "~/contracts/merchant-stats/views";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { getAttainment } from "./attainment";
 import { getCohortRamp } from "./cohort";

@@ -1,4 +1,4 @@
-import { ActionError } from "~/lib/wire-error";
+import { ActionError } from "~/contracts/errors";
 
 import { faultToWire } from "./fault-boundary";
 import { defaultPorts } from "./ports";

@@ -1,6 +1,6 @@
 import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { Database } from "~/server/platform/database/types";
 
 type RequestSessionRow = Selectable<Database["request_sessions"]>;
 type NewRequestSessionRow = Insertable<Database["request_sessions"]>;

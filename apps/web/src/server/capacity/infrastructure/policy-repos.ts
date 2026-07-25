@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import type { BranchId, TeamId, UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 type DefaultScopeType = "branch" | "team";
 type DefaultScopeId = BranchId | TeamId;

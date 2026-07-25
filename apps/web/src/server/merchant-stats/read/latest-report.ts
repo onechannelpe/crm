@@ -1,4 +1,4 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 export async function getActiveGpvSnapshotCut(
   db: DatabaseExecutor,

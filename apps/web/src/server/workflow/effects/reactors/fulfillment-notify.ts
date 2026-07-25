@@ -1,16 +1,16 @@
 import type { FulfillmentStep } from "~/contracts/workflow/vocabulary";
-import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
-import type {
-  NotificationAudience,
-  NotificationIntent,
-} from "~/server/notifications/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import {
   FulfillmentOrderId,
   NotificationIntentId,
   type BranchId,
   type UserId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
+import type {
+  NotificationAudience,
+  NotificationIntent,
+} from "~/server/notifications/types";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import {
   pendingOwnerForStep,
   type PendingOwner,

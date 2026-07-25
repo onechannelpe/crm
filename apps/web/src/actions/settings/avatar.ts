@@ -1,10 +1,10 @@
 "use server";
 
+import { fail, type DomainError } from "~/domain/errors";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, isErr, type Result } from "~/server/shared/result";
 import { toAvatarDomainError } from "~/server/users/avatar-error";
+import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 function avatarUrl(version: number): string {
   return `/api/me/avatar?v=${version}`;

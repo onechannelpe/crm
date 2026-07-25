@@ -1,11 +1,11 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import { hasPermission } from "~/lib/auth/access/rbac";
-import { getSession } from "~/lib/auth/access/session";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import { UserId } from "~/domain/ids";
+import { getSession } from "~/server/platform/action/session";
 import { getServerRuntime } from "~/server/platform/container";
-import { UserId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
 import type { AvatarDomainErrorCode } from "~/server/users/avatar-service";
+import { isErr } from "~/shared/result";
 
 function mapAvatarErrorStatus(code: AvatarDomainErrorCode): number {
   switch (code) {

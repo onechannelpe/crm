@@ -1,8 +1,8 @@
-import { appCalendarDateAt } from "~/lib/time/app-time";
+import { appCalendarDateAt } from "~/domain/time/app-time";
 import {
   calendarMonthFromDate,
   type CalendarMonth,
-} from "~/lib/time/calendar-date";
+} from "~/domain/time/calendar-date";
 
 import type { Event } from "./event";
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { invalid } from "~/domain/errors";
 import {
   CATEGORY_META,
   EXTERNAL_CHANNELS,
@@ -8,10 +9,12 @@ import {
 } from "~/server/notifications/categories";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { invalid } from "~/server/shared/domain-error";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, Ok } from "~/server/shared/result";
+import { Err, Ok } from "~/shared/result";
 
 export interface NotificationChannelPreference {
   channel: (typeof EXTERNAL_CHANNELS)[number];

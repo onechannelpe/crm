@@ -1,9 +1,9 @@
-import { getSessionPath } from "~/lib/auth/access/route-policy";
-import { loadActiveAuthContextForUser } from "~/lib/auth/context/auth-context";
-import { authenticateGoogleAuthorizationCode } from "~/lib/auth/google/google-oauth";
+import { getSessionPath } from "~/domain/auth/access/route-policy";
+import { loadActiveAuthContextForUser } from "~/server/auth/context/auth-context";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
+import { authenticateGoogleAuthorizationCode } from "~/server/auth/google/google-oauth";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import { completePrimaryAuthProof } from "./primary-login";
 

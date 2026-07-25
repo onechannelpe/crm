@@ -1,6 +1,6 @@
-import type { GpvSnapshotState } from "~/lib/db/schema/modules/merchant-stats.types";
-import { isQueueState, type QueueState } from "~/lib/job-queue/queue-state";
-import { defineTopic } from "~/lib/realtime/topic";
+import { defineTopic } from "~/contracts/realtime/topic";
+import { isQueueState, type QueueState } from "~/domain/jobs/queue-state";
+import type { GpvSnapshotState } from "~/domain/merchant-stats/snapshot";
 
 export interface GpvSnapshotProgressEvent {
   type: "gpv_snapshot_progress";

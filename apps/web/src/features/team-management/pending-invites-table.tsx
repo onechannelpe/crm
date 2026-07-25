@@ -16,16 +16,16 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { actionErrorMessage } from "~/contracts/errors";
 import type { TeamInvite } from "~/contracts/team";
+import {
+  getRoleBadgeVariant,
+  getRoleLabel,
+} from "~/domain/auth/access/role-display";
 import {
   resendTeamInviteMutation,
   revokeTeamInviteMutation,
 } from "~/features/team-management/data/team-mutations";
-import {
-  getRoleBadgeVariant,
-  getRoleLabel,
-} from "~/lib/auth/access/role-display";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./team-management.module.css";
 

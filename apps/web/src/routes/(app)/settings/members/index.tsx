@@ -5,6 +5,7 @@ import Mail from "~/components/icons/mail";
 import ShieldCheck from "~/components/icons/shield-check";
 import UserRound from "~/components/icons/user-round";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { hasPermission } from "~/domain/auth/access/rbac";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   TabStrip,
@@ -13,7 +14,6 @@ import {
 import { InviteTab } from "~/features/team-management/invite-tab";
 import { RolesTab } from "~/features/team-management/roles-tab";
 import { TeamTab } from "~/features/team-management/team-tab";
-import { hasPermission } from "~/lib/auth/access/rbac";
 
 import styles from "~/features/team-management/team-management.module.css";
 

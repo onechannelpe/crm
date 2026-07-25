@@ -2,13 +2,13 @@ import { useAction } from "@solidjs/router";
 import { For, Show, createSignal } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
+import { actionErrorMessage } from "~/contracts/errors";
 import type { LeadDetailView } from "~/contracts/workflow/views";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import { addNoteMutation } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
-import { formatAppDateTime } from "~/lib/time/app-time";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./notas.module.css";
 

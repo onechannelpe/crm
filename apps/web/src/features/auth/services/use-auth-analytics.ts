@@ -1,11 +1,11 @@
 import { useAction } from "@solidjs/router";
 import { onMount } from "solid-js";
 
-import { trackAuthClientEventMutation } from "~/features/auth/data/analytics-mutations";
 import {
   type AuthFunnelClientEventPayload,
   type AuthFunnelScreen,
-} from "~/lib/observability/auth-funnel";
+} from "~/domain/observability/auth-funnel";
+import { trackAuthClientEventMutation } from "~/features/auth/data/analytics-mutations";
 
 export function useAuthPageView(screen: AuthFunnelScreen): void {
   const trackAuthClientEvent = useAction(trackAuthClientEventMutation);

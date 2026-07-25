@@ -1,5 +1,5 @@
-import type { DomainPatch } from "~/lib/job-queue/job-store";
-import { isPlainRecord } from "~/lib/type-guards";
+import type { DomainPatch } from "~/server/platform/jobs/job-store";
+import { isPlainRecord } from "~/shared/type-guards";
 
 import type { SunatScraperClient } from "./enrichment/sunat/contracts";
 import { sanitizeField } from "./enrichment/sunat/text";

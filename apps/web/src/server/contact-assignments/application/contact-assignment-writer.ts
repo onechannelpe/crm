@@ -1,17 +1,17 @@
-import { createAssignment } from "~/server/contact-assignments/domain/assignment";
-import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
-import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
-import type { ContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
-import type { OrganizationRepository } from "~/server/organization/organization-repo";
-import type { AppUow } from "~/server/shared/application/uow";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { RecordCandidate } from "~/server/shared/engine/record-contract";
+import type { DomainError } from "~/domain/errors";
 import type {
   OrganizationId,
   OrganizationPersonId,
   UserId,
-} from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
+import { createAssignment } from "~/server/contact-assignments/domain/assignment";
+import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
+import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
+import type { ContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
+import type { RecordCandidate } from "~/server/integrations/engine/record-contract";
+import type { OrganizationRepository } from "~/server/organization/organization-repo";
+import type { AppUow } from "~/server/platform/database/uow";
+import { Ok, type Result } from "~/shared/result";
 
 export type AssignContactsTransactionRepos = {
   organization: Pick<

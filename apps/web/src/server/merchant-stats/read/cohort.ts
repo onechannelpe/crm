@@ -5,9 +5,9 @@ import type {
   GpvPoint,
   Page,
 } from "~/contracts/merchant-stats/views";
-import { calendarMonthStart } from "~/lib/time/calendar-date";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { GpvSnapshotPlacementId } from "~/server/shared/ids";
+import type { GpvSnapshotPlacementId } from "~/domain/ids";
+import { calendarMonthStart } from "~/domain/time/calendar-date";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { dateFromStorage, monthFromStorageDate } from "../storage-month";
 import { creditFilter } from "./filter";

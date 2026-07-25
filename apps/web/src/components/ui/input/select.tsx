@@ -1,6 +1,6 @@
 import { createUniqueId, type JSX, splitProps } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { InputErrorHelper } from "./input-error-helper";
 import { InputLabel } from "./input-label";

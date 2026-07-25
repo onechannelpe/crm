@@ -8,15 +8,15 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { ImageInput } from "~/components/ui/input/image-input";
 import { Input } from "~/components/ui/input/input";
+import { actionErrorMessage } from "~/contracts/errors";
+import { shortName } from "~/domain/identity/display-name";
+import { isValidPhone, normalizePhoneInput } from "~/domain/phone/pe-mobile";
 import {
   removeUserAvatarMutation,
   updateUserProfileMutation,
   uploadUserAvatarMutation,
 } from "~/features/auth/data/profile-mutations";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
-import { shortName } from "~/lib/users/display-name";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./settings-page.module.css";
 

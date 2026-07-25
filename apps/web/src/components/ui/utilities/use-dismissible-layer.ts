@@ -1,6 +1,6 @@
 import { onCleanup, onMount } from "solid-js";
 
-import { useHotkey } from "~/lib/hotkey/use-hotkey";
+import { useHotkey } from "~/browser/hotkey/use-hotkey";
 
 interface UseDismissibleLayerOptions {
   enabled: () => boolean;

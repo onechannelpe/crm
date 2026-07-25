@@ -1,8 +1,8 @@
+import type { Ruc } from "~/domain/identity/document";
 import type { Overlay } from "~/server/client-search/model";
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentQuery } from "~/server/client-search/status";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { Ruc } from "~/server/shared/document";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type {
   LeadSourceStatus,
   SunatSourceStatus,

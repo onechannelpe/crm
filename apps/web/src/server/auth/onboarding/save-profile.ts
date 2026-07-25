@@ -1,9 +1,9 @@
 import type { OnboardingSnapshot } from "~/contracts/auth";
-import type { Phone } from "~/lib/phone/pe-mobile";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import type { Phone } from "~/domain/phone/pe-mobile";
 import type { AuthSetupContext } from "~/server/auth/infrastructure/setup-context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, type Result } from "~/server/shared/result";
+import { Err, type Result } from "~/shared/result";
 
 import { loadOnboardingSnapshot } from "./snapshot";
 

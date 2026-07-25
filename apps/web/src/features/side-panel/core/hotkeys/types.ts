@@ -1,6 +1,6 @@
 import type { Accessor } from "solid-js";
 
-import type { HotkeyCombo } from "~/lib/hotkey/types";
+import type { HotkeyCombo } from "~/browser/hotkey/types";
 
 export type HotkeyScope = {
   container: Accessor<HTMLElement | undefined>;

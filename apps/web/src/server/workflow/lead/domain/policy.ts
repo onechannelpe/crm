@@ -4,10 +4,10 @@ import {
   type FulfillmentStep,
   type LeadStage,
 } from "~/contracts/workflow/vocabulary";
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { forbidden, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { hasPermission, type Role } from "~/domain/auth/access/rbac";
+import { forbidden, type DomainError } from "~/domain/errors";
+import type { BranchId, UserId } from "~/domain/ids";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import {
   pendingOwnerForStep,

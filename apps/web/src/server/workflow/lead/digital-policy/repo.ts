@@ -4,9 +4,9 @@ import type {
   ProductScope,
   CollectionMode,
 } from "~/contracts/workflow/vocabulary";
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
+import type { UserId, WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 
 export type DigitalPolicyFields = {
   linkScope: ProductScope;

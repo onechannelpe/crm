@@ -1,14 +1,14 @@
 import type { LeadDetailView } from "~/contracts/workflow/views";
-import type { Role } from "~/lib/auth/access/rbac";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { DomainError } from "~/domain/errors";
+import type { UserId, WorkflowLeadId } from "~/domain/ids";
 import {
   authorizeLeadAction,
   canRevealFullTimeline,
   resolveAvailableActions,
 } from "~/server/workflow/lead/domain/policy";
 import { isReservationActive } from "~/server/workflow/lead/domain/reservation";
+import { Ok, type Result } from "~/shared/result";
 
 import { presentLeadDetail } from "../presenters/lead-detail";
 import {

@@ -1,8 +1,8 @@
+import { type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import type { AppContext } from "~/server/platform/action/context";
-import { type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
 import { toAvatarDomainError } from "~/server/users/avatar-error";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { MemberAvatarDeps } from "../ports";
 import { authorizeMemberManagement } from "./authorize-member-management";

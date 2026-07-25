@@ -9,13 +9,6 @@ import {
 } from "@crm/message-channels";
 import type { Kysely } from "kysely";
 
-import { notify } from "~/lib/db/notify";
-import type { Database } from "~/lib/db/types";
-import type { AppConfig, NotificationsConfig } from "~/lib/env";
-import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
-import type { QueueRunner } from "~/lib/job-queue/types";
-import { createLogger } from "~/lib/observability/logger";
-import type { Logger } from "~/lib/observability/logger-shared";
 import {
   createMessagingGateway,
   type MessagingGateway,
@@ -36,6 +29,16 @@ import {
 } from "~/server/notifications/repos/opt-out-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createWhatsAppInboundQueue } from "~/server/notifications/whatsapp-inbound/queue";
+import type {
+  AppConfig,
+  NotificationsConfig,
+} from "~/server/platform/config/env";
+import { notify } from "~/server/platform/database/notify";
+import type { Database } from "~/server/platform/database/types";
+import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
+import type { QueueRunner } from "~/server/platform/jobs/types";
+import type { Logger } from "~/shared/observability/logger";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 import type { ServerInfra } from "./infra";
 

@@ -1,9 +1,9 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import type { WorkflowLeadId } from "~/domain/ids";
 import { reviewLead } from "~/server/workflow/lead/domain/decide";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
 import type { LeadTransaction } from "~/server/workflow/lead/write/transition";
+import { Ok, type Result } from "~/shared/result";
 
 import { isAnswerFresh } from "./carryover";
 import { createInquiryRepo, type InquiryRow } from "./repo";

@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { OrganizationPersonId, UserId } from "~/server/shared/ids";
+import type { OrganizationPersonId, UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 // Last-contacted timestamp + cooldown window per membership. Owned by
 // contact-assignments (not the organization identity row). Read by

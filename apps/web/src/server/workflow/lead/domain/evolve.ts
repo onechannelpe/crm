@@ -1,4 +1,4 @@
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 
 import type { LeadHistoryEventDraft } from "./history";
 import type { LeadState } from "./state";

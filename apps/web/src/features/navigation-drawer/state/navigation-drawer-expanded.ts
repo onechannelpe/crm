@@ -1,7 +1,7 @@
 import {
   booleanUiPreferenceCookieCodec,
   defineUiPreferenceCookie,
-} from "~/lib/http/ui-preference-cookie";
+} from "~/browser/ui/ui-preference-cookie";
 
 const NAVIGATION_DRAWER_EXPANDED_COOKIE = "navigation_drawer_expanded";
 const NAVIGATION_DRAWER_EXPANDED_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;

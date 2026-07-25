@@ -27,10 +27,10 @@ import {
   createSearchUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
 import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createExecutorUow } from "~/server/platform/database/uow";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
-import { createExecutorUow } from "~/server/shared/application/uow";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createEventsRepo } from "~/server/shared/repos-events";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 
 import type { ServerInfra } from "./infra";

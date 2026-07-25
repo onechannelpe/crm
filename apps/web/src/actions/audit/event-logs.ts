@@ -7,8 +7,11 @@ import {
   type EventLogQueryResult,
 } from "~/contracts/event-logs/event-log";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function getEventLogs(
   rawParams: unknown,

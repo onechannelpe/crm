@@ -1,7 +1,7 @@
+import type { UserId } from "~/domain/ids";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { UserId } from "~/server/shared/ids";
-import { createEventsRepo } from "~/server/shared/repos-events";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import type { AdminSessionRevocationPort } from "../application/ports";
 

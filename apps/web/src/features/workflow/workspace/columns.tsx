@@ -12,15 +12,15 @@ import {
   RecordLinkChip,
 } from "~/components/ui/record-chip/record-chip";
 import type { LeadListRowView } from "~/contracts/workflow/views";
+import { hasPermission, type Role } from "~/domain/auth/access/rbac";
+import { formatAppDate } from "~/domain/time/app-time";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import {
   leadNextStepLabel,
   leadStageLabel,
 } from "~/features/workflow/presentation/lead-display";
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { formatAppDate } from "~/lib/time/app-time";
-import { capitalize } from "~/lib/utils";
+import { capitalize } from "~/shared/text";
 
 import styles from "./styles.module.css";
 

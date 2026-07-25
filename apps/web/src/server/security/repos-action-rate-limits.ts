@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { Database } from "~/server/platform/database/types";
 
 interface CounterSnapshot {
   request_count: number;

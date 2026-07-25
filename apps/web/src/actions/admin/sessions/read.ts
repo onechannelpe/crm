@@ -1,14 +1,17 @@
 "use server";
 
 import type { SessionInfo } from "~/contracts/auth";
+import { UserId } from "~/domain/ids";
 import { countActiveSessions as countActiveSessionsService } from "~/server/auth/application/queries/count-active-sessions";
 import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/auth/application/queries/list-all-active-sessions";
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Ok } from "~/server/shared/result";
+import { Ok } from "~/shared/result";
 
 export async function listUserSessions(rawUserId: unknown) {
   return runAction({

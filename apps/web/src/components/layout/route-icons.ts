@@ -13,7 +13,7 @@ import Settings from "~/components/icons/settings";
 import User from "~/components/icons/user";
 import UserRound from "~/components/icons/user-round";
 import Users from "~/components/icons/users";
-import type { RouteIcon } from "~/lib/nav/config";
+import type { RouteIcon } from "~/domain/navigation/config";
 
 export const ICON_BY_ROUTE: Record<
   RouteIcon,

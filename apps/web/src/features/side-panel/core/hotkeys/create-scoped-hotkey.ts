@@ -1,5 +1,5 @@
-import type { HotkeyCombo } from "~/lib/hotkey/types";
-import { useHotkey } from "~/lib/hotkey/use-hotkey";
+import type { HotkeyCombo } from "~/browser/hotkey/types";
+import { useHotkey } from "~/browser/hotkey/use-hotkey";
 
 import { useHotkeyScope } from "./hotkey-boundary";
 import type { ScopedHotkeyOptions } from "./types";

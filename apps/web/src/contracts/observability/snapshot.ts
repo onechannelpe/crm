@@ -1,6 +1,4 @@
-import type { ActionObservationsTable } from "~/lib/db/schema/modules/observability.types";
-
-export type ObservationStatus = ActionObservationsTable["status"];
+export type ObservationStatus = "ok" | "error";
 
 export interface ObservabilitySnapshotInput {
   windowMinutes?: number;

@@ -1,7 +1,7 @@
-import { isRole } from "~/lib/auth/access/rbac";
-import { isPlainRecord } from "~/lib/type-guards";
-import { NotificationIntentId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { isRole } from "~/domain/auth/access/rbac";
+import { NotificationIntentId } from "~/domain/ids";
+import { isErr } from "~/shared/result";
+import { isPlainRecord } from "~/shared/type-guards";
 
 import type {
   NotificationAudience,

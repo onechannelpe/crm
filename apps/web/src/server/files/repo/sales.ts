@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { FileAssetId, UserId, WorkflowLeadId } from "~/server/shared/ids";
+import type { FileAssetId, UserId, WorkflowLeadId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 import type { SaleProofFileRecord } from "./types";
 

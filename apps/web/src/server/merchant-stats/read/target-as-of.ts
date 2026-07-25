@@ -1,6 +1,6 @@
 import type { ExpressionBuilder } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { Database } from "~/server/platform/database/types";
 
 // Read each target as of the observed month so later revisions do not change history.
 

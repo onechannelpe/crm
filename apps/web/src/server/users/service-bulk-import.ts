@@ -4,18 +4,21 @@ import type {
   BulkParseResult,
   BulkRowError,
 } from "~/contracts/team/bulk-import";
-import type { Role } from "~/lib/auth/access/rbac";
-import { isExecutiveCategoryValue } from "~/lib/db/types";
-import { appCalendarDateAt, appDayRange } from "~/lib/time/app-time";
-import { addCalendarDays, parseCalendarDate } from "~/lib/time/calendar-date";
+import type { Role } from "~/domain/auth/access/rbac";
+import { isExecutiveCategory } from "~/domain/identity/executive-category";
+import type { BranchId, UserId, UserInviteId } from "~/domain/ids";
+import { appCalendarDateAt, appDayRange } from "~/domain/time/app-time";
+import {
+  addCalendarDays,
+  parseCalendarDate,
+} from "~/domain/time/calendar-date";
 import {
   parseCsvRows,
   readFirstNonEmptyCsvRow,
   type CsvDelimiter,
 } from "~/server/csv/core";
 import type { InviteService } from "~/server/invites/application/types";
-import type { BranchId, UserId, UserInviteId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
 
 type ProvisioningInterface = Pick<
   InviteService,
@@ -306,7 +309,7 @@ export function parseAndValidateCsvRows(
     let executiveCategory: BulkImportRow["executiveCategory"] = null;
 
     if (isExecutive) {
-      if (!isExecutiveCategoryValue(rawCategory)) {
+      if (!isExecutiveCategory(rawCategory)) {
         errors.push({
           row: row.rowNumber,
           message: `Categoría de ejecutivo inválida: "${rawCategory}". Valores permitidos: elite, corporativa`,

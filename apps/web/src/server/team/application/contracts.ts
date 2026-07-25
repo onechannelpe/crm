@@ -1,6 +1,6 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
-import type { TeamId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import type { TeamId } from "~/domain/ids";
 
 export interface InviteInfo {
   fullName: string;
@@ -14,7 +14,7 @@ export interface CreateTeamInviteCommand {
   secondSurname: string;
   email: string;
   role: Role;
-  executiveCategory: ExecutiveCategoryValue | null;
+  executiveCategory: ExecutiveCategory | null;
   teamId: TeamId | null;
   expiresAt: Date | null;
 }

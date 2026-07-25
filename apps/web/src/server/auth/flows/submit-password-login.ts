@@ -1,12 +1,12 @@
-import { loadActiveAuthContextForUser } from "~/lib/auth/context/auth-context";
 import type {
   SubmitPrimaryLoginError,
   SubmitPrimaryLoginResult,
 } from "~/server/auth/application/login-contracts";
+import { loadActiveAuthContextForUser } from "~/server/auth/context/auth-context";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { authenticatePassword } from "~/server/auth/factors/password";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { Err, isErr, type Result } from "~/server/shared/result";
+import { Err, isErr, type Result } from "~/shared/result";
 
 import { completePrimaryAuthProof } from "./primary-login";
 

@@ -1,5 +1,5 @@
-import type { Logger } from "~/lib/observability/logger-shared";
-import { isErr } from "~/server/shared/result";
+import type { Logger } from "~/shared/observability/logger";
+import { isErr } from "~/shared/result";
 
 import type { AppNotificationRepo } from "../repos/app-notification";
 import type { DeliveryRepository } from "../repos/delivery-repo";

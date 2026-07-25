@@ -2,7 +2,7 @@ import { children, type Accessor, type JSX } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
 import { TintedIconTile } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { NavigationDrawerAnimatedCollapseWrapper } from "./navigation-drawer-animated-collapse-wrapper";
 import { NavigationDrawerItemBreadcrumb } from "./navigation-drawer-item-breadcrumb";

@@ -4,15 +4,11 @@ import {
   type LeadStatus,
   type SettlementBank,
 } from "~/contracts/workflow/vocabulary";
-import type { Ruc } from "~/server/shared/document";
-import { parseRuc } from "~/server/shared/document";
-import type { DomainError } from "~/server/shared/domain-error";
-import type {
-  OrganizationId,
-  UserId,
-  WorkflowLeadId,
-} from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import type { Ruc } from "~/domain/identity/document";
+import { parseRuc } from "~/domain/identity/document";
+import type { OrganizationId, UserId, WorkflowLeadId } from "~/domain/ids";
+import { Ok, type Result } from "~/shared/result";
 
 export type LeadCommercialScope = {
   currentProvider: string;

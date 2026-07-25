@@ -1,8 +1,8 @@
 import type { Selectable } from "kysely";
 
-import type { CompanyRegistryRecordTable } from "~/lib/db/schema/modules/search.types";
-import type { JobStore } from "~/lib/job-queue/job-store";
-import type { DocumentKind } from "~/server/shared/document";
+import type { DocumentKind } from "~/domain/identity/document";
+import type { CompanyRegistryRecordTable } from "~/server/platform/database/schema/modules/search.types";
+import type { JobStore } from "~/server/platform/jobs/job-store";
 
 export type RegistryRow = Selectable<CompanyRegistryRecordTable>;
 

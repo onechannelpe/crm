@@ -5,6 +5,7 @@ import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-b
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Button } from "~/components/ui/input/button";
+import { actionErrorMessage } from "~/contracts/errors";
 import type { MemberDetail } from "~/contracts/members";
 import {
   deactivateMemberMutation,
@@ -12,7 +13,6 @@ import {
   reactivateMemberMutation,
   startImpersonationMutation,
 } from "~/features/team-management/data/member-mutations";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./team-management.module.css";
 

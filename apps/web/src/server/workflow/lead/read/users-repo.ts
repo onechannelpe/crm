@@ -1,6 +1,6 @@
-import { shortName } from "~/lib/users/display-name";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import { shortName } from "~/domain/identity/display-name";
+import type { BranchId, UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 export type LeadUser = {

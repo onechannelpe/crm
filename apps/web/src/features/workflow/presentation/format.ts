@@ -1,4 +1,4 @@
-import { APP_LOCALE } from "~/lib/locale";
+import { APP_LOCALE } from "~/shared/locale";
 
 export function formatAmount(value: number | null | undefined): string {
   if (value == null) return "--";

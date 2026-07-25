@@ -1,10 +1,10 @@
 import type { AddLeadNoteInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { runLeadTransaction } from "~/server/workflow/lead/write/transition";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import { recordNote } from "./domain";
 

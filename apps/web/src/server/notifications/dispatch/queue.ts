@@ -1,5 +1,5 @@
-import { createJobQueue } from "~/lib/job-queue/job-queue";
-import type { QueueRunner } from "~/lib/job-queue/types";
+import { createJobQueue } from "~/server/platform/jobs/job-queue";
+import type { QueueRunner } from "~/server/platform/jobs/types";
 
 import type { DeliveryJob, DeliveryRepository } from "../repos/delivery-repo";
 import type { DeliverySender } from "./send-delivery";

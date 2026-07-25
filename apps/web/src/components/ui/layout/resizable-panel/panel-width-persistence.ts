@@ -1,7 +1,7 @@
 import {
   defineUiPreferenceCookie,
   type UiPreferenceCookieCodec,
-} from "~/lib/http/ui-preference-cookie";
+} from "~/browser/ui/ui-preference-cookie";
 
 type PanelWidthConstraints = {
   min: number;

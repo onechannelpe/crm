@@ -1,8 +1,8 @@
-import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { auditEntityId } from "~/domain/audit/entity";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { hashPassword, verifyPassword } from "~/server/auth/password/password";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { AuthSetupContext } from "../infrastructure/setup-context";
 import { createSessionService } from "../session/session.service";

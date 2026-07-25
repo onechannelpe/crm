@@ -1,6 +1,6 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import { getSession } from "~/lib/auth/access/session";
+import { getSession } from "~/server/platform/action/session";
 import { getServerRuntime } from "~/server/platform/container";
 import type { AvatarDomainErrorCode } from "~/server/users/avatar-service";
 

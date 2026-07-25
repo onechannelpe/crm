@@ -1,6 +1,9 @@
 import { join } from "node:path";
 
-import { createBlobStore, type BlobStore } from "~/server/shared/blob-store";
+import {
+  createBlobStore,
+  type BlobStore,
+} from "~/server/platform/files/blob-store";
 
 export type FileStorage = BlobStore;
 

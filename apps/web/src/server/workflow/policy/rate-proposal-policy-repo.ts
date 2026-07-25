@@ -1,8 +1,8 @@
 import type { Insertable, Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { BranchId, UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 
 type RateProposalPolicyDefault = {
   branchId: BranchId;

@@ -1,3 +1,4 @@
+import { fail, type DomainError } from "~/domain/errors";
 import {
   persistVerifiedPasskeyEnrollment,
   type VerifiedPasskeyEnrollment,
@@ -10,8 +11,7 @@ import type { AuthSetupContext } from "~/server/auth/infrastructure/setup-contex
 import { issueRecoveryCodesForEnrollment } from "~/server/auth/recovery/issue-recovery-codes";
 import { replaceSession } from "~/server/auth/session/replace-session";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 type VerifiedFactorEnrollment =
   | { method: "passkey"; enrollment: VerifiedPasskeyEnrollment }

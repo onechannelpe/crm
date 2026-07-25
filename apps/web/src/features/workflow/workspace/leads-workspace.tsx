@@ -1,11 +1,13 @@
 import { createAsync } from "@solidjs/router";
 
 import { requestWorkflowLeadsExportDownloadToken } from "~/actions/workflow/files";
+import { downloadWithToken } from "~/browser/files/client";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import type { LeadListRowView } from "~/contracts/workflow/views";
+import { hasPermission } from "~/domain/auth/access/rbac";
 import { createGridSource } from "~/features/data-grid/model/create-grid-source";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type { RecordIndexDefinition } from "~/features/record-index/model/definition";
@@ -15,8 +17,6 @@ import {
   leadListQuery,
   pendingQuotationCountQuery,
 } from "~/features/workflow/data/queries";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import { downloadWithToken } from "~/lib/files/client";
 
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";

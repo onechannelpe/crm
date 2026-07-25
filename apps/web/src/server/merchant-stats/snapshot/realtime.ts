@@ -3,14 +3,14 @@ import {
   parseGpvSnapshotProgressMessage,
   type GpvSnapshotProgressEvent,
 } from "~/contracts/merchant-stats/imports";
-import { db } from "~/lib/db/db";
-import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
+import { GpvSnapshotJobId } from "~/domain/ids";
+import { db } from "~/server/platform/database/db";
+import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 import {
   createTopicRealtimeChannel,
   snapshotReconciler,
 } from "~/server/realtime/topic-realtime-channel";
-import { GpvSnapshotJobId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 import { buildGpvSnapshotProgressEvent } from "./progress";
 import { createGpvSnapshotJobRepo } from "./repo";

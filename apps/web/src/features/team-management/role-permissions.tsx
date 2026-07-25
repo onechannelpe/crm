@@ -14,8 +14,8 @@ import { Checkbox } from "~/components/ui/input/checkbox";
 import {
   groupPermissions,
   type PermissionGroupId,
-} from "~/lib/auth/access/permission-display";
-import type { Permission } from "~/lib/auth/access/rbac";
+} from "~/domain/auth/access/permission-display";
+import type { Permission } from "~/domain/auth/access/rbac";
 
 import styles from "./team-management.module.css";
 

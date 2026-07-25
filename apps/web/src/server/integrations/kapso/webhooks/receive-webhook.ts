@@ -1,10 +1,10 @@
 import type { Insertable, Kysely } from "kysely";
 
-import { notify } from "~/lib/db/notify";
-import type { WhatsAppInboundEventsTable } from "~/lib/db/schema/modules/notifications.types";
-import type { Database } from "~/lib/db/types";
-import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { notify } from "~/server/platform/database/notify";
+import type { WhatsAppInboundEventsTable } from "~/server/platform/database/schema/modules/notifications.types";
+import type { Database } from "~/server/platform/database/types";
+import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import {
   parseKapsoEnvelope,

@@ -2,10 +2,9 @@
 
 import { redirect } from "@solidjs/router";
 
-import { recordAuthAnalyticsEvent } from "~/lib/auth/auth-analytics";
-import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
-import { getRequestClientMetadata } from "~/lib/http/request-context";
-import { getActionRequestContext } from "~/lib/observability/context";
+import type { PasskeyLoginFlowState } from "~/domain/auth/passkey/types";
+import { fail, internal } from "~/domain/errors";
+import { recordAuthAnalyticsEvent as recordAuthAnalytics } from "~/server/auth/auth-analytics";
 import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
 import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
@@ -15,9 +14,11 @@ import {
 } from "~/server/auth/flows/verify-pending-login";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runPublicAction } from "~/server/platform/action";
+import { throwDomain } from "~/server/platform/action/domain-error";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail, internal, throwDomain } from "~/server/shared/domain-error";
-import { isErr } from "~/server/shared/result";
+import { getRequestClientMetadata } from "~/server/platform/http/request-context";
+import { getActionRequestContext } from "~/server/platform/observability/context";
+import { isErr } from "~/shared/result";
 
 import {
   completeLoginAndRedirect,
@@ -25,6 +26,19 @@ import {
   readLoginText,
   readPasskeyStartMode,
 } from "./support";
+
+function recordAuthAnalyticsEvent(
+  event: Parameters<typeof recordAuthAnalytics>[0],
+  context: Parameters<typeof recordAuthAnalytics>[1],
+) {
+  const runtime = getServerRuntime();
+  return recordAuthAnalytics(
+    event,
+    context,
+    runtime.auth.analytics,
+    runtime.infra.now,
+  );
+}
 
 export async function passwordLogin(
   formData: FormData,

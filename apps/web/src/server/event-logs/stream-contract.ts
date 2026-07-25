@@ -2,7 +2,7 @@ import {
   parseEventLogRecordText,
   type EventLogRecord,
 } from "~/contracts/event-logs/event-log";
-import { defineTopic } from "~/lib/realtime/topic";
+import { defineTopic } from "~/contracts/realtime/topic";
 
 export const EVENT_LOGS_STREAM_CHANNEL = "event_logs_stream";
 const MAX_STREAM_PAYLOAD_BYTES = 7_500;

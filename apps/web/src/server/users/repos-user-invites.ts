@@ -1,12 +1,11 @@
 import type { Insertable, Kysely } from "kysely";
 
-import type { Database, UserInvitesTable, UsersTable } from "~/lib/db/types";
+import type { BranchId, TeamId, UserId, UserInviteId } from "~/domain/ids";
 import type {
-  BranchId,
-  TeamId,
-  UserId,
-  UserInviteId,
-} from "~/server/shared/ids";
+  Database,
+  UserInvitesTable,
+  UsersTable,
+} from "~/server/platform/database/types";
 
 type NewUserInviteRow = Insertable<UserInvitesTable>;
 

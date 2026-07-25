@@ -1,6 +1,6 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import { hashPassword } from "~/lib/auth/password/password";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { BranchId, UserId } from "~/domain/ids";
+import { hashPassword } from "~/server/auth/password/password";
 
 import type {
   InviteAcceptedResult,

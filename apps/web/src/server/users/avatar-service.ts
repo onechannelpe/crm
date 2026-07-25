@@ -1,8 +1,8 @@
-import { createLogger } from "~/lib/observability/logger";
-import type { BlobStore } from "~/server/shared/blob-store";
-import type { UserId } from "~/server/shared/ids";
-import type { Result } from "~/server/shared/result";
-import { Err, Ok } from "~/server/shared/result";
+import type { UserId } from "~/domain/ids";
+import type { BlobStore } from "~/server/platform/files/blob-store";
+import { createLogger } from "~/shared/observability/runtime-logger";
+import type { Result } from "~/shared/result";
+import { Err, Ok } from "~/shared/result";
 
 const MAX_PROFILE_PICTURE_BYTES = 10 * 1024 * 1024;
 const MIME_TO_EXTENSION: Record<string, string> = {

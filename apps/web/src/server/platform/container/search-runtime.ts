@@ -10,10 +10,10 @@ import {
   createSearchUsageCommitsRepo,
   createSearchUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createEventsRepo } from "~/server/shared/repos-events";
-import { isErr, Ok } from "~/server/shared/result";
+import { isErr, Ok } from "~/shared/result";
 
 import type { ServerInfra } from "./infra";
 

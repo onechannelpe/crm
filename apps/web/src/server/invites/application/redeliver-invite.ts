@@ -1,8 +1,8 @@
-import { canAssignRole } from "~/lib/auth/access/rbac";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
-import { addMilliseconds, epochMilliseconds } from "~/server/shared/time";
+import { auditEntityId } from "~/domain/audit/entity";
+import { canAssignRole } from "~/domain/auth/access/rbac";
+import { fail, type DomainError } from "~/domain/errors";
+import { addMilliseconds, epochMilliseconds } from "~/domain/time/epoch";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type {
   InviteIssueResult,

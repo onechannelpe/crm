@@ -1,6 +1,6 @@
-import { generateInviteToken } from "~/lib/auth/invite/tokens";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { addMilliseconds, epochMilliseconds } from "~/server/shared/time";
+import { auditEntityId } from "~/domain/audit/entity";
+import { generateInviteToken } from "~/domain/auth/invite/tokens";
+import { addMilliseconds, epochMilliseconds } from "~/domain/time/epoch";
 
 import type {
   InviteDeps,

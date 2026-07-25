@@ -1,9 +1,7 @@
-import { ActionError, type WireError } from "~/lib/wire-error";
-import {
-  type DomainError,
-  toWire,
-  unexpectedFault,
-} from "~/server/shared/domain-error";
+import { ActionError, type WireError } from "~/contracts/errors";
+import { type DomainError, unexpectedFault } from "~/domain/errors";
+
+import { toWire } from "./domain-error";
 
 export type FaultPorts = {
   report: (error: unknown) => void;

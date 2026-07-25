@@ -1,4 +1,4 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
 import { reactToRegistration } from "./reactors/enrichment";

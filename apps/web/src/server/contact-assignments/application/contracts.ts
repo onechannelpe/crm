@@ -5,7 +5,7 @@ import type {
   ContactAssignmentId,
   OrganizationPersonId,
   UserId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 export interface AssignContactsCommand {
   actorUserId: UserId;

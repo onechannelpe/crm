@@ -1,13 +1,16 @@
 import type { Insertable, Kysely } from "kysely";
 
-import { notify } from "~/lib/db/notify";
-import type { ActionObservationsTable, Database } from "~/lib/db/types";
+import type { UserId } from "~/domain/ids";
 import { mapActionObservationRow } from "~/server/event-logs/mappers";
 import {
   EVENT_LOGS_STREAM_CHANNEL,
   serializeEventLogStreamPayload,
 } from "~/server/event-logs/stream-contract";
-import type { UserId } from "~/server/shared/ids";
+import { notify } from "~/server/platform/database/notify";
+import type {
+  ActionObservationsTable,
+  Database,
+} from "~/server/platform/database/types";
 
 type NewActionObservationRow = Insertable<Database["action_observations"]>;
 

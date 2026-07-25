@@ -1,5 +1,5 @@
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
-import type { CalendarDate } from "~/lib/time/calendar-date";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import type { CalendarDate } from "~/domain/time/calendar-date";
 
 export interface BulkImportRow {
   firstSurname: string;
@@ -7,7 +7,7 @@ export interface BulkImportRow {
   names: string;
   email: string;
   expiresOn: CalendarDate | null;
-  executiveCategory: ExecutiveCategoryValue | null;
+  executiveCategory: ExecutiveCategory | null;
 }
 
 export type BulkRowError = {

@@ -7,13 +7,13 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { DatePicker } from "~/components/ui/date-picker/date-picker-field";
 import { Input } from "~/components/ui/input/input";
 import { Select } from "~/components/ui/input/select";
+import { actionErrorMessage } from "~/contracts/errors";
 import type { MemberDetail } from "~/contracts/members";
+import { parseCalendarDate } from "~/domain/time/calendar-date";
 import {
   updateMemberExpiryMutation,
   updateMemberProfileMutation,
 } from "~/features/team-management/data/member-mutations";
-import { parseCalendarDate } from "~/lib/time/calendar-date";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./team-management.module.css";
 

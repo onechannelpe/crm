@@ -1,7 +1,7 @@
 import { A } from "@solidjs/router";
 import { Show, splitProps, type JSX } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./top-bar-action-button.module.css";
 

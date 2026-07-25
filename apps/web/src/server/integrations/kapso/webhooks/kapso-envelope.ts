@@ -1,5 +1,5 @@
-import { isPlainRecord } from "~/lib/type-guards";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
+import { isPlainRecord } from "~/shared/type-guards";
 
 export type KapsoInboundEvent = {
   id: string;

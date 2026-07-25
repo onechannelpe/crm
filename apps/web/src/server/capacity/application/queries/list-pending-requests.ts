@@ -1,9 +1,9 @@
 import type { PendingCapacityRequestView } from "~/contracts/capacity";
+import type { DomainError } from "~/domain/errors";
+import { epochMilliseconds } from "~/domain/time/epoch";
 import type { CapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
-import { epochMilliseconds } from "~/server/shared/time";
+import { Ok, type Result } from "~/shared/result";
 
 import { fromDbCapacityRequestKind } from "../../domain/request-policy";
 

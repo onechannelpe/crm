@@ -1,7 +1,7 @@
-import type { AuthSession } from "~/lib/auth/access/session-types";
-import { ActionError, type WireError } from "~/lib/wire-error";
-import { type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { ActionError, type WireError } from "~/contracts/errors";
+import type { AuthSession } from "~/domain/auth/access/session-types";
+import { type DomainError } from "~/domain/errors";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import {
   type ActionAccess,

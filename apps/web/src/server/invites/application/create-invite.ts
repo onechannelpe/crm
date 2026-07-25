@@ -1,7 +1,7 @@
-import { canAssignRole } from "~/lib/auth/access/rbac";
-import { generateUsername } from "~/lib/users/generate-username";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { canAssignRole } from "~/domain/auth/access/rbac";
+import { fail, type DomainError } from "~/domain/errors";
+import { generateUsername } from "~/domain/identity/generate-username";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import {
   buildPendingIdentity,

@@ -4,10 +4,13 @@ import type {
   BulkApplyResult,
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
-import { ROLES } from "~/lib/auth/access/rbac";
+import { ROLES } from "~/domain/auth/access/rbac";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 import {
   applyBulkImport as applyBulkImportService,
   previewBulkImport as previewBulkImportService,

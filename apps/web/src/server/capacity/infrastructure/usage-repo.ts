@@ -1,12 +1,12 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { InstantRange } from "~/lib/time/app-time";
 import type {
   LeadReservationId,
   SearchReservationId,
   UserId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { InstantRange } from "~/domain/time/app-time";
+import type { Database } from "~/server/platform/database/types";
 
 export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
   return {

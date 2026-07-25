@@ -1,11 +1,11 @@
+import type { UserId } from "~/domain/ids";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import {
   persistPasskeyEnrollmentChallenge,
   preparePasskeyEnrollment,
 } from "~/server/auth/factors/passkey/service";
 import type { AuthSetupContext } from "~/server/auth/infrastructure/setup-context";
-import type { UserId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 export async function startPasskeyEnrollment(
   deps: AuthSetupContext,

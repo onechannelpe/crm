@@ -1,10 +1,9 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
+import { fail, type DomainError } from "~/domain/errors";
+import { parseRuc } from "~/domain/identity/document";
+import type { WorkflowInquiryId, WorkflowLeadId } from "~/domain/ids";
 import type { OrganizationEnrichment } from "~/server/organization/enrichment";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { parseRuc } from "~/server/shared/document";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowInquiryId, WorkflowLeadId } from "~/server/shared/ids";
-import { Err, type Result } from "~/server/shared/result";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
   createInquiryRepo,
@@ -12,6 +11,7 @@ import {
 } from "~/server/workflow/inquiry/repo";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 import { createWorkflowRepos } from "~/server/workflow/repos";
+import { Err, type Result } from "~/shared/result";
 
 import { requireCapability } from "../../lead/domain/policy";
 import { isReservationLapsed } from "../../lead/domain/reservation";

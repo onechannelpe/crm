@@ -12,11 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { getPermissions, ROLES } from "~/lib/auth/access/rbac";
+import { getPermissions, ROLES } from "~/domain/auth/access/rbac";
 import {
   getRoleBadgeVariant,
   getRoleLabel,
-} from "~/lib/auth/access/role-display";
+} from "~/domain/auth/access/role-display";
 
 import styles from "./team-management.module.css";
 

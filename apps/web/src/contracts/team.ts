@@ -1,5 +1,5 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { RoleOption } from "~/lib/auth/access/role-display";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { RoleOption } from "~/domain/auth/access/role-display";
 
 export interface BulkImportSetup {
   assignableRoles: RoleOption[];

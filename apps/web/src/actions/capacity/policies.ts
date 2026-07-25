@@ -1,9 +1,12 @@
 "use server";
 
+import { BranchId, TeamId, UserId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { BranchId, TeamId, UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 
 const SCOPE_TYPES = ["branch", "team"] as const;
 

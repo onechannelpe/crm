@@ -1,9 +1,9 @@
-import { authorizeRoutePermission } from "~/lib/auth/access/route-access";
+import { ContactAssignmentId } from "~/domain/ids";
 import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contracts";
+import { toWire } from "~/server/platform/action/domain-error";
 import { getServerRuntime } from "~/server/platform/container";
-import { toWire } from "~/server/shared/domain-error";
-import { ContactAssignmentId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { authorizeRoutePermission } from "~/server/platform/http/route-access";
+import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../request-event";
 import { readJsonBody } from "./json-body";

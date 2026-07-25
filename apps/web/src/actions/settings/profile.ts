@@ -1,11 +1,14 @@
 "use server";
 
-import { parsePhone } from "~/lib/phone/pe-mobile";
+import { fail } from "~/domain/errors";
+import { parsePhone } from "~/domain/phone/pe-mobile";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail } from "~/server/shared/domain-error";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, isErr, Ok } from "~/server/shared/result";
+import { Err, isErr, Ok } from "~/shared/result";
 
 export async function updateUserProfile(
   rawPhone: unknown,

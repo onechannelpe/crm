@@ -1,10 +1,10 @@
-import { config } from "~/lib/config";
-import { createLogger } from "~/lib/observability/logger";
-import { formatAppLongDate } from "~/lib/time/app-time";
-import { shortName } from "~/lib/users/display-name";
+import { PLATFORM_NAME } from "~/domain/branding";
+import { shortName } from "~/domain/identity/display-name";
+import type { UserId } from "~/domain/ids";
+import { formatAppLongDate } from "~/domain/time/app-time";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { UserId } from "~/server/shared/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 import { expireUsersAndInvalidateSessions } from "./expire-users";
 import { createUsersRepo } from "./repos-users";
@@ -59,7 +59,7 @@ async function runExpiryNotificationTick(
             fullName: shortName(user),
             username: user.username,
             expiresAt: formatAppLongDate(user.expires_at.getTime() - 1),
-            platformName: config.branding.platformName,
+            platformName: PLATFORM_NAME,
           },
         });
         if (!sent.ok) {
@@ -86,17 +86,24 @@ async function runExpiryNotificationTick(
   }
 }
 
-export function startAccountLifecycleMaintenance(deps: AccountLifecycleDeps) {
+export function startAccountLifecycleMaintenance(
+  deps: AccountLifecycleDeps,
+): () => void {
   const users = createUsersRepo(deps.executor);
 
-  setInterval(() => {
+  const expiryTimer = setInterval(() => {
     void runAccountExpiryTick(deps);
   }, 60_000);
 
-  setInterval(
+  const notificationTimer = setInterval(
     () => {
       void runExpiryNotificationTick(users, deps.messaging);
     },
     24 * 60 * 60_000,
   );
+
+  return () => {
+    clearInterval(expiryTimer);
+    clearInterval(notificationTimer);
+  };
 }

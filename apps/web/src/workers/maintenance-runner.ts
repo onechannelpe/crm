@@ -1,5 +1,9 @@
-import { startSessionCleanupScheduler } from "~/lib/auth/session/cleanup";
-import { startBackgroundJobs } from "~/lib/background-jobs";
+import { startMaintenanceWorker } from "~/server/platform/workers/maintenance-worker";
 
-startSessionCleanupScheduler();
-startBackgroundJobs();
+const worker = startMaintenanceWorker();
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => {
+    void worker.stop().finally(() => process.exit(0));
+  });
+}

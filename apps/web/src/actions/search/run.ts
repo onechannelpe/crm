@@ -2,11 +2,14 @@
 
 import type { SearchDirectResult } from "~/contracts/search/results";
 import { SEARCH_INTENTS } from "~/contracts/search/vocabulary";
-import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { parseObject, validationFail } from "~/server/shared/parsing";
+import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 
 export async function searchDirect(
   input: unknown,

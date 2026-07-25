@@ -1,14 +1,14 @@
 "use server";
 
-import { isValidInviteTokenFormat } from "~/lib/auth/invite/tokens";
-import { setSessionCookie } from "~/lib/auth/session/cookies";
-import { getRequestClientMetadata } from "~/lib/http/request-context";
+import { isValidInviteTokenFormat } from "~/domain/auth/invite/tokens";
 import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-acceptance";
+import { setSessionCookie } from "~/server/auth/session/cookies";
+import { throwDomain } from "~/server/platform/action/domain-error";
 import { runPublicAction } from "~/server/platform/action/public-action";
 import { getServerRuntime } from "~/server/platform/container";
-import { throwDomain } from "~/server/shared/domain-error";
-import { isErr } from "~/server/shared/result";
+import { getRequestClientMetadata } from "~/server/platform/http/request-context";
 import { getInviteInfo as getInviteInfoService } from "~/server/team/application/invites";
+import { isErr } from "~/shared/result";
 
 export interface InviteActivationView {
   fullName: string;

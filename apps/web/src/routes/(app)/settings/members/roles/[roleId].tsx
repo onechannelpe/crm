@@ -3,13 +3,13 @@ import { Show } from "solid-js";
 
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Badge } from "~/components/ui/display/badge";
-import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { RolePermissions } from "~/features/team-management/role-permissions";
-import { getPermissions, isRole } from "~/lib/auth/access/rbac";
+import { getPermissions, isRole } from "~/domain/auth/access/rbac";
 import {
   getRoleBadgeVariant,
   getRoleLabel,
-} from "~/lib/auth/access/role-display";
+} from "~/domain/auth/access/role-display";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
+import { RolePermissions } from "~/features/team-management/role-permissions";
 
 import styles from "~/features/team-management/team-management.module.css";
 

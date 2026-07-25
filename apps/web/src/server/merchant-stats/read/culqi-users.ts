@@ -5,8 +5,8 @@ import type {
 import {
   calendarMonthStart,
   type CalendarMonth,
-} from "~/lib/time/calendar-date";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+} from "~/domain/time/calendar-date";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 // Culqi's `vendedor` is the registered usuario, not the crm seller. This is a
 // reconciliation view at sale grain because a RUC can have multiple usuarios.

@@ -1,11 +1,11 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { parseRuc } from "~/server/shared/document";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowInquiryId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import { parseRuc } from "~/domain/identity/document";
+import type { WorkflowInquiryId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { requireCapability } from "~/server/workflow/lead/domain/policy";
 import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { createInquiryRepo } from "./repo";
 

@@ -1,6 +1,6 @@
-import { createLogger } from "~/lib/observability/logger";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { expireLapsedReservations } from "~/server/workflow/lead/commands/expire-reservation";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 const logger = createLogger("lead-reservation-maintenance");
 const SWEEP_INTERVAL_MS = 60_000;
@@ -29,8 +29,10 @@ async function runReservationSweepTick(deps: LeadReservationMaintenanceDeps) {
 // reservations on its own, not via this sweep.
 export function startLeadReservationMaintenance(
   deps: LeadReservationMaintenanceDeps,
-) {
-  setInterval(() => {
+): () => void {
+  const timer = setInterval(() => {
     void runReservationSweepTick(deps);
   }, SWEEP_INTERVAL_MS);
+
+  return () => clearInterval(timer);
 }

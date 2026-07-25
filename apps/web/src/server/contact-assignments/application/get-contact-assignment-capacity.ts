@@ -1,10 +1,10 @@
+import type { DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import {
   getLeadCapacitySnapshot,
   type LeadCapacitySnapshot,
 } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import type { Result } from "~/server/shared/result";
+import type { Result } from "~/shared/result";
 
 import type { AssignmentPlanRepos } from "./assignment-plan";
 

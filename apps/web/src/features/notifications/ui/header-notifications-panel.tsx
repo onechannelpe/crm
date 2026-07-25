@@ -1,18 +1,18 @@
 import { useAction } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 
+import { createOptimisticQuery } from "~/browser/ui/create-optimistic-query";
 import Bell from "~/components/icons/bell";
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import {
   markAllNotificationsReadMutation,
   markNotificationReadMutation,
 } from "~/features/notifications/data/mutations";
 import { headerNotificationsQuery } from "~/features/notifications/data/queries";
-import { formatAppDateTime } from "~/lib/time/app-time";
-import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./header-notifications-panel.module.css";
 

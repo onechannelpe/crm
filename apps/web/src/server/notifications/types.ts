@@ -1,10 +1,10 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
 import type {
   BranchId,
   NotificationIntentId,
   TeamId,
   UserId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 import type { NotificationEventType } from "./categories";
 

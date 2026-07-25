@@ -7,8 +7,8 @@ import type {
 import {
   calendarMonthStart,
   type CalendarMonth,
-} from "~/lib/time/calendar-date";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+} from "~/domain/time/calendar-date";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { creditFilter } from "./filter";
 import { displayName } from "./names";

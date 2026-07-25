@@ -4,7 +4,7 @@ import {
   parseCalendarDate,
   type CalendarMonth,
   type CalendarDate,
-} from "~/lib/time/calendar-date";
+} from "~/domain/time/calendar-date";
 
 export function dateFromStorage(value: string): CalendarDate {
   const date = parseCalendarDate(value);

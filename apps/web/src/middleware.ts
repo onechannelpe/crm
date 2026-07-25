@@ -1,10 +1,11 @@
 import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
 
-import { enforceAuthRequest } from "~/lib/auth/access/request-auth";
-import { sentryConfig } from "~/lib/env";
-import { buildRequestContext } from "~/lib/http/request-context";
-import { generateRequestId, generateTraceId } from "~/lib/observability/ids";
+import { sentryConfig } from "./server/platform/config/env";
+import { getServerRuntime } from "./server/platform/container";
+import { enforceAuthRequest } from "./server/platform/http/request-auth";
+import { buildRequestContext } from "./server/platform/http/request-context";
+import { generateRequestId, generateTraceId } from "./shared/observability/ids";
 
 const { sentryIngestHost } = sentryConfig();
 
@@ -23,9 +24,15 @@ export default createMiddleware({
       httpMethod: event.request.method,
       requestStartedAt: Date.now(),
     };
+    const runtime = getServerRuntime();
     event.locals.requestContext = await buildRequestContext(
       event.request,
       observability,
+      {
+        resolveAuthSession: (token) =>
+          runtime.auth.sessionService.resolve(token),
+        requestSessions: runtime.security.requestSessions,
+      },
     );
 
     // Nonce-based strict CSP per https://docs.solidjs.com/solid-start/guides/security

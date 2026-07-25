@@ -1,11 +1,14 @@
 "use server";
 
+import { fail, type DomainError } from "~/domain/errors";
+import { UserId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export async function uploadMemberAvatar(
   formData: FormData,

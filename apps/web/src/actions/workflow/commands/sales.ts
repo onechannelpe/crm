@@ -11,15 +11,15 @@ import {
   ACCOUNT_TYPE_KINDS,
   COLLECTION_MODES,
 } from "~/contracts/workflow/vocabulary";
+import type { DomainError } from "~/domain/errors";
+import { WorkflowLeadId, WorkflowVenueId } from "~/domain/ids";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
-import type { DomainError } from "~/server/shared/domain-error";
-import { WorkflowLeadId, WorkflowVenueId } from "~/server/shared/ids";
 import {
   parseObject,
   validationFail,
   type Reader,
-} from "~/server/shared/parsing";
+} from "~/server/platform/action/input-reader";
+import { getServerRuntime } from "~/server/platform/container";
 import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
 import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
 import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";

@@ -7,8 +7,8 @@ import {
 import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
-} from "~/lib/auth/passkey/registration-client";
-import { actionErrorMessage } from "~/lib/wire-error";
+} from "~/browser/auth/passkey/registration-client";
+import { actionErrorMessage } from "~/contracts/errors";
 
 interface PasskeyEnrollmentOptions {
   enqueueSuccessSnackBar: (message: string) => void;

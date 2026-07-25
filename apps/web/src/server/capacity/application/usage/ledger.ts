@@ -1,8 +1,8 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { withAdvisoryLock } from "~/server/shared/db-lock";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { withAdvisoryLock } from "~/server/platform/database/advisory-lock";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type {
   CapacityKind,

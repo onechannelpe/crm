@@ -1,7 +1,7 @@
 import type { DeliveryProviderId } from "@crm/message-channels";
 
-import type { Logger } from "~/lib/observability/logger-shared";
-import { toE164Peru } from "~/lib/phone/pe-mobile";
+import { toE164Peru } from "~/domain/phone/pe-mobile";
+import type { Logger } from "~/shared/observability/logger";
 
 import type { MessagingGateway } from "../channels/messaging-gateway";
 import { classifySendReceipt } from "../channels/send-result";

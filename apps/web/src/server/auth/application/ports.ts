@@ -1,4 +1,4 @@
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 
 export interface AdminSessionRevocationPort {
   revokeSession(sessionId: string): Promise<void>;

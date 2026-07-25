@@ -1,7 +1,10 @@
 import { init } from "@sentry/bun";
 
-import { sentryConfig, validateServerConfig } from "~/lib/env";
-import { sentryDefaultDataCollection } from "~/lib/observability/sentry";
+import {
+  sentryConfig,
+  validateServerConfig,
+} from "./server/platform/config/env";
+import { sentryDefaultDataCollection } from "./shared/observability/sentry";
 
 validateServerConfig();
 

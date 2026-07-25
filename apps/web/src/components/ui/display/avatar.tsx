@@ -1,6 +1,6 @@
 import { Show, createEffect, createSignal, on } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./avatar.module.css";
 

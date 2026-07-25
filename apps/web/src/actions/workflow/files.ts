@@ -1,17 +1,20 @@
 "use server";
 
+import type { WireError } from "~/contracts/errors";
 import type { LeadRateRevisionFileView } from "~/contracts/workflow/results";
-import type { WireError } from "~/lib/wire-error";
-import { runAction, runActionResult } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
-import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
+import { fail, invalid, type DomainError } from "~/domain/errors";
 import {
   FileAssetId,
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
-} from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
+import { runAction, runActionResult } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
+import { getServerRuntime } from "~/server/platform/container";
+import { Err, Ok, type Result } from "~/shared/result";
 
 type LeadUpload = {
   leadId: WorkflowLeadId;

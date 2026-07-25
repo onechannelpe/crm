@@ -3,7 +3,7 @@ import {
   sumAmount,
   sumPending,
 } from "~/server/capacity/domain/math";
-import type { ReservationStatus } from "~/server/shared/scope";
+import type { ReservationStatus } from "~/server/capacity/domain/types";
 
 import type { LeadPolicy, SearchPolicy } from "./policy";
 

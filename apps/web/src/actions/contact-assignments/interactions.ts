@@ -1,12 +1,15 @@
 "use server";
 
 import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignments/vocabulary";
+import { ContactAssignmentId, OrganizationPersonId } from "~/domain/ids";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { ContactAssignmentId, OrganizationPersonId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function completeContactAssignmentCall(
   input: unknown,

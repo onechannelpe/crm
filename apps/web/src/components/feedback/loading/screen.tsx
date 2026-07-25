@@ -1,5 +1,5 @@
 import LoaderCircle from "~/components/icons/loader-circle";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./screen.module.css";
 

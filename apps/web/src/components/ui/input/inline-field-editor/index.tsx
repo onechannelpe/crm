@@ -2,7 +2,7 @@ import { createSignal, For, onMount, Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import styles from "./styles.module.css";
 

@@ -8,6 +8,12 @@ import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { Avatar } from "~/components/ui/display/avatar";
 import { Badge } from "~/components/ui/display/badge";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import {
+  getRoleBadgeVariant,
+  getRoleLabel,
+} from "~/domain/auth/access/role-display";
+import { shortName } from "~/domain/identity/display-name";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   TabStrip,
@@ -18,12 +24,6 @@ import { MemberAdminActions } from "~/features/team-management/member-admin-acti
 import { MemberCapacityTab } from "~/features/team-management/member-capacity-tab";
 import { MemberInfoTab } from "~/features/team-management/member-info-tab";
 import { MemberPermissionsTab } from "~/features/team-management/member-permissions-tab";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import {
-  getRoleBadgeVariant,
-  getRoleLabel,
-} from "~/lib/auth/access/role-display";
-import { shortName } from "~/lib/users/display-name";
 
 import styles from "~/features/team-management/team-management.module.css";
 

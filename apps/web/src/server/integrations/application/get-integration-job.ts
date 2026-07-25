@@ -1,4 +1,4 @@
-import type { IntegrationJobId } from "~/server/shared/ids";
+import type { IntegrationJobId } from "~/domain/ids";
 
 import type { IntegrationJobsPort } from "../types";
 

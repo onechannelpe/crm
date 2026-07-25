@@ -4,17 +4,17 @@ import {
   getRecordImportProgress,
   uploadRecordImportFile,
 } from "~/actions/records/imports";
+import {
+  subscribeState,
+  type StateSubscription,
+} from "~/browser/realtime/subscribe-state";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
+import { actionErrorMessage } from "~/contracts/errors";
 import {
   parseRecordImportProgressMessage,
   type RecordImportProgressEvent,
   type RecordImportType,
 } from "~/contracts/records/imports";
-import {
-  subscribeState,
-  type StateSubscription,
-} from "~/lib/realtime/subscribe-state";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 4_000;

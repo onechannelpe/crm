@@ -1,12 +1,12 @@
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import {
   calendarMonthStart,
   type CalendarMonth,
-} from "~/lib/time/calendar-date";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { createEventsRepo } from "~/server/shared/repos-events";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/time/calendar-date";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 export interface SetTargetInput {
   ruc: string;

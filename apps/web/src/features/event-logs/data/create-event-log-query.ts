@@ -8,6 +8,7 @@ import {
 } from "solid-js";
 
 import { getEventLogs } from "~/actions/audit/event-logs";
+import { useEventFeed } from "~/browser/realtime/use-event-feed";
 import {
   parseEventLogRecordText,
   type EventLogQueryInput,
@@ -15,7 +16,6 @@ import {
   type EventLogRecord,
 } from "~/contracts/event-logs/event-log";
 import { eventLogsQuery } from "~/features/event-logs/data/queries";
-import { useEventFeed } from "~/lib/realtime/use-event-feed";
 
 import { hasEventLogFilters } from "../model/event-log-location";
 

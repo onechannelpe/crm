@@ -1,7 +1,7 @@
 import { join } from "node:path";
 
-import type { UploadsConfig } from "~/lib/env";
-import { createBlobStore } from "~/server/shared/blob-store";
+import type { UploadsConfig } from "~/server/platform/config/env";
+import { createBlobStore } from "~/server/platform/files/blob-store";
 import { createAvatarService } from "~/server/users/avatar-service";
 import { createUsersRepo } from "~/server/users/repos-users";
 

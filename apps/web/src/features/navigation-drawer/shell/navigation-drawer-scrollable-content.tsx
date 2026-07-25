@@ -1,6 +1,6 @@
 import { type ParentProps } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { cn } from "~/shared/classnames";
 
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
 

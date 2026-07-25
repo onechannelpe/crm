@@ -1,7 +1,10 @@
 import { createEffect, createSignal } from "solid-js";
 
 import { DatePicker } from "~/components/ui/date-picker/date-picker-field";
-import { parseCalendarDate, type CalendarDate } from "~/lib/time/calendar-date";
+import {
+  parseCalendarDate,
+  type CalendarDate,
+} from "~/domain/time/calendar-date";
 
 type EventLogDatePickerInputProps = {
   label?: string;

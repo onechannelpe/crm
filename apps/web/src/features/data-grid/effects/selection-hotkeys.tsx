@@ -1,4 +1,4 @@
-import { useHotkey } from "~/lib/hotkey/use-hotkey";
+import { useHotkey } from "~/browser/hotkey/use-hotkey";
 
 import { useDataGrid } from "../context/instance-context";
 import type { DataGridSelectionController } from "../model/selection";

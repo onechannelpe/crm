@@ -1,7 +1,18 @@
+import type { Role } from "~/domain/auth/access/rbac";
+import type { DomainError } from "~/domain/errors";
+import type { BranchId } from "~/domain/ids";
 import type { PendingBranchInvite } from "~/server/invites/application/types";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { BranchId } from "~/server/shared/ids";
-import type { Result } from "~/server/shared/result";
+import type { Result } from "~/shared/result";
+
+export interface InviteDelivery {
+  send(input: {
+    email: string;
+    fullName: string;
+    role: Role;
+    inviteUrl: string;
+    expiresAt: Date;
+  }): Promise<Result<void, DomainError>>;
+}
 
 export interface InviteManagementQueryPort {
   listTeamsByBranch(

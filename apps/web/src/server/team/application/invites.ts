@@ -1,15 +1,15 @@
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
-import type { Role } from "~/lib/auth/access/rbac";
-import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
-import { createLogger } from "~/lib/observability/logger";
-import { shortName } from "~/lib/users/display-name";
+import type { Role } from "~/domain/auth/access/rbac";
+import { getAssignableRoleOptions } from "~/domain/auth/access/role-display";
+import { fail, type DomainError } from "~/domain/errors";
+import { shortName } from "~/domain/identity/display-name";
+import type { UserInviteId } from "~/domain/ids";
+import { epochMilliseconds } from "~/domain/time/epoch";
 import type { InviteService } from "~/server/invites/application/types";
 import { inviteLink } from "~/server/invites/domain/invite-link";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserInviteId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import { epochMilliseconds } from "~/server/shared/time";
+import { createLogger } from "~/shared/observability/runtime-logger";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type {
   TeamInviteCreateContext,
@@ -17,7 +17,6 @@ import type {
   TeamInviteRepos,
   TeamInviteResendContext,
 } from "../infrastructure/invite-context";
-import { sendInviteEmail } from "../infrastructure/invite-delivery";
 import type { CreateTeamInviteCommand, InviteInfo } from "./contracts";
 import type { InviteManagementQueryPort } from "./ports";
 
@@ -31,6 +30,7 @@ export interface CreateTeamInviteResult {
 }
 
 async function deliverInviteEmail(
+  delivery: TeamInviteCreateContext["delivery"],
   inviteService: Pick<InviteService, "markInviteDelivered">,
   params: {
     inviteId: UserInviteId;
@@ -41,7 +41,7 @@ async function deliverInviteEmail(
     expiresAt: Date;
   },
 ): Promise<boolean> {
-  const sent = await sendInviteEmail({
+  const sent = await delivery.send({
     email: params.email,
     fullName: params.fullName,
     role: params.role,
@@ -162,18 +162,22 @@ export async function createTeamInvite(
 
   const inviteUrl = inviteLink(deps.publicOrigin, created.value.token);
 
-  const delivered = await deliverInviteEmail(deps.inviteService, {
-    inviteId: created.value.inviteId,
-    email: input.email,
-    fullName: shortName({
-      names: input.names,
-      firstSurname: input.firstSurname,
-      secondSurname: input.secondSurname,
-    }),
-    role: input.role,
-    inviteUrl,
-    expiresAt: created.value.expiresAt,
-  });
+  const delivered = await deliverInviteEmail(
+    deps.delivery,
+    deps.inviteService,
+    {
+      inviteId: created.value.inviteId,
+      email: input.email,
+      fullName: shortName({
+        names: input.names,
+        firstSurname: input.firstSurname,
+        secondSurname: input.secondSurname,
+      }),
+      role: input.role,
+      inviteUrl,
+      expiresAt: created.value.expiresAt,
+    },
+  );
 
   return Ok({
     inviteId: created.value.inviteId,
@@ -209,14 +213,18 @@ export async function resendTeamInvite(
     return Err(fail("invite_target_missing"));
   }
 
-  const delivered = await deliverInviteEmail(deps.inviteService, {
-    inviteId: redelivered.value.inviteId,
-    email: user.email,
-    fullName: shortName(user),
-    role: user.role,
-    inviteUrl: inviteLink(deps.publicOrigin, redelivered.value.token),
-    expiresAt: redelivered.value.expiresAt,
-  });
+  const delivered = await deliverInviteEmail(
+    deps.delivery,
+    deps.inviteService,
+    {
+      inviteId: redelivered.value.inviteId,
+      email: user.email,
+      fullName: shortName(user),
+      role: user.role,
+      inviteUrl: inviteLink(deps.publicOrigin, redelivered.value.token),
+      expiresAt: redelivered.value.expiresAt,
+    },
+  );
 
   return Ok({ delivered });
 }

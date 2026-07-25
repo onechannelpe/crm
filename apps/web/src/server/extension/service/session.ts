@@ -1,12 +1,7 @@
-import {
-  external,
-  fail,
-  invalid,
-  type DomainError,
-} from "~/server/shared/domain-error";
-import { InstallationId } from "~/server/shared/ids";
-import { Err, Ok, isErr, type Result } from "~/server/shared/result";
-import type { Clock } from "~/server/shared/time";
+import { external, fail, invalid, type DomainError } from "~/domain/errors";
+import { InstallationId } from "~/domain/ids";
+import type { Clock } from "~/domain/time/epoch";
+import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 import type { RefreshExtensionSessionResponse } from "../contracts";
 import { hashExtensionSecretToken } from "../crypto";

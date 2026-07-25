@@ -1,11 +1,11 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { Phone } from "~/lib/phone/pe-mobile";
-import { parsePhone } from "~/lib/phone/pe-mobile";
+import type { Phone } from "~/domain/phone/pe-mobile";
+import { parsePhone } from "~/domain/phone/pe-mobile";
 import { categoriesControllableOn } from "~/server/notifications/categories";
 import { openSession } from "~/server/notifications/whatsapp-session";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 
 import { classifyInboundMessage } from "./classify-message";
 import type { WhatsAppInboundEventJob } from "./inbound-event-repo";

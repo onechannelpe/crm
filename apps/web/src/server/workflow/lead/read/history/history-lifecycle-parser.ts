@@ -1,7 +1,7 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import { UserId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import { UserId } from "~/domain/ids";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
+import { Ok, type Result } from "~/shared/result";
 
 import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
 import {

@@ -1,4 +1,3 @@
-import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
 import type { Overlay } from "~/server/client-search/model";
 import type {
@@ -10,6 +9,7 @@ import {
   processEnrichmentJob,
   overlayToPatch,
 } from "~/server/client-search/process";
+import { createJobQueue } from "~/server/platform/jobs/job-queue";
 
 // SUNAT-unreachable fallback: supplies legal name + address only. The
 // degraded record expires quickly so the next refresh re-attempts the

@@ -1,13 +1,9 @@
-import type { GpvSnapshotIssueResolution } from "~/lib/db/schema/modules/merchant-stats.types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type {
-  GpvSnapshotId,
-  GpvSnapshotIssueId,
-  UserId,
-} from "~/server/shared/ids";
-import { createEventsRepo } from "~/server/shared/repos-events";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { GpvSnapshotId, GpvSnapshotIssueId, UserId } from "~/domain/ids";
+import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { activateGpvSnapshot } from "./activate";
 import { validateGpvSnapshot } from "./validate";

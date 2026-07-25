@@ -1,13 +1,10 @@
 import { diffFields } from "~/contracts/events";
 import type { EditRateProposalInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type {
-  WorkflowLeadId,
-  WorkflowRateProposalId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId, WorkflowRateProposalId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { editRateProposal } from "../../lead/domain/decide";
 import type { RateProposalNumbers } from "../domain/rows";

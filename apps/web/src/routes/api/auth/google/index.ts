@@ -1,7 +1,7 @@
 import { generateCodeVerifier, generateState } from "arctic";
 
-import { getGoogleOAuth } from "~/lib/auth/google/google-oauth";
-import { appendGoogleOAuthChallengeCookies } from "~/lib/auth/google/google-oauth-cookies";
+import { getGoogleOAuth } from "~/server/auth/google/google-oauth";
+import { appendGoogleOAuthChallengeCookies } from "~/server/auth/google/google-oauth-cookies";
 
 export async function GET(): Promise<Response> {
   const state = generateState();

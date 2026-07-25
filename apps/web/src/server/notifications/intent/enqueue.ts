@@ -1,6 +1,6 @@
-import { notify } from "~/lib/db/notify";
-import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { notify } from "~/server/platform/database/notify";
+import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 
 import type { NotificationIntent } from "../types";
 import { validateNotificationIntent } from "./payload";

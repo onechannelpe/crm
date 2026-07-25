@@ -6,10 +6,18 @@ import type {
   RecordImportProgressEvent,
   RecordImportType,
 } from "~/contracts/records/imports";
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
+import { fail, invalid, type DomainError } from "~/domain/errors";
+import type { BranchId, UserId } from "~/domain/ids";
+import { IntegrationJobId } from "~/domain/ids";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import { runAction } from "~/server/platform/action";
+import { throwDomain } from "~/server/platform/action/domain-error";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
 import { parseImportFile } from "~/server/records/imports/intake";
@@ -17,16 +25,7 @@ import {
   buildRecordImportProgressEvent,
   publishRecordImportProgress,
 } from "~/server/records/imports/progress-events";
-import {
-  fail,
-  invalid,
-  type DomainError,
-  throwDomain,
-} from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
-import { IntegrationJobId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
 
 const IMPORT_JOB_MAX_ATTEMPTS = 3;
 

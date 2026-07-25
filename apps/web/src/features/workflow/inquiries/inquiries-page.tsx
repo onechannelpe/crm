@@ -9,7 +9,9 @@ import Target from "~/components/icons/target";
 import { Badge } from "~/components/ui/display/badge";
 import { Button } from "~/components/ui/input/button";
 import { TextInput } from "~/components/ui/input/text-input";
+import { parseWireError } from "~/contracts/errors";
 import type { InquiryListRowView } from "~/contracts/workflow/views";
+import { formatAppDate } from "~/domain/time/app-time";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import { createGridSource } from "~/features/data-grid/model/create-grid-source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
@@ -17,9 +19,7 @@ import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createLeadRecordCreateSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { createInquiryMutation } from "~/features/workflow/data/command-mutations";
 import { inquiryListQuery } from "~/features/workflow/data/queries";
-import { formatAppDate } from "~/lib/time/app-time";
-import { capitalize } from "~/lib/utils";
-import { parseWireError } from "~/lib/wire-error";
+import { capitalize } from "~/shared/text";
 
 import { inquiryStateLabel } from "./display";
 

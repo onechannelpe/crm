@@ -3,7 +3,7 @@ import Info from "~/components/icons/info";
 import Target from "~/components/icons/target";
 import type { RecordIndexFilterField } from "~/features/record-index/model/catalog";
 import { leadStageLabel } from "~/features/workflow/presentation/lead-display";
-import { capitalize } from "~/lib/utils";
+import { capitalize } from "~/shared/text";
 
 const LEAD_MODIFIED_FILTER_OPTIONS = [
   { value: "updated_today", label: "Hoy" },

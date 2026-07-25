@@ -1,11 +1,11 @@
+import { type DomainError } from "~/domain/errors";
+import { LeadReservationId } from "~/domain/ids";
 import {
   executeWithUsageReservation,
   type UsageReservationPorts,
 } from "~/server/capacity/application/usage/ledger";
-import { type DomainError } from "~/server/shared/domain-error";
-import type { EngineClient } from "~/server/shared/engine/client";
-import { LeadReservationId } from "~/server/shared/ids";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import type { EngineClient } from "~/server/integrations/engine/client";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 import {
   planContactAssignments,

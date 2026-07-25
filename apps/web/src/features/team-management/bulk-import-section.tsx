@@ -2,6 +2,7 @@ import { createAsync } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 
 import { applyBulkImport, previewBulkCsv } from "~/actions/team/bulk-import";
+import { readFileText } from "~/browser/file/read-file-text";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { SettingsSection } from "~/components/settings/SettingsSection";
@@ -16,14 +17,13 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { actionErrorMessage } from "~/contracts/errors";
 import type {
   BulkApplyResult,
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
+import { formatCalendarDate } from "~/domain/time/app-time";
 import { bulkImportSetupQuery } from "~/features/team-management/data/queries";
-import { readFileText } from "~/lib/file/read-file-text";
-import { formatCalendarDate } from "~/lib/time/app-time";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./team-management.module.css";
 

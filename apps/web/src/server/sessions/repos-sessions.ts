@@ -1,8 +1,8 @@
 import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type { Role } from "~/lib/auth/access/rbac";
-import type { Database } from "~/lib/db/types";
-import type { UserId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 type UserSessionRow = Selectable<Database["user_sessions"]>;
 type NewUserSessionRow = Insertable<Database["user_sessions"]>;

@@ -1,5 +1,5 @@
 import type { MemberListItem } from "~/contracts/members";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 import type { MemberRosterRow } from "~/server/users/repos-users";
 
 // Other members' avatars are served through a dedicated, permission-gated route

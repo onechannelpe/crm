@@ -9,6 +9,7 @@ import {
   InlineFieldEditor,
   InlineOptionsEditor,
 } from "~/components/ui/input/inline-field-editor";
+import { actionErrorMessage } from "~/contracts/errors";
 import type { CommercialScope } from "~/contracts/workflow/inputs";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import { SETTLEMENT_BANKS } from "~/contracts/workflow/vocabulary";
@@ -22,7 +23,6 @@ import {
   formatAmount,
   formatRate,
 } from "~/features/workflow/presentation/format";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 type InlineEdit = {
   ariaLabel: string;

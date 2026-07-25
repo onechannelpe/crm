@@ -1,5 +1,9 @@
 import type { RucMerchantStats } from "~/contracts/merchant-stats/views";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { hasPermission, type Role } from "~/domain/auth/access/rbac";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { dateFromStorage, monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";
@@ -69,4 +73,35 @@ export async function getMerchantStatsByRuc(
     })),
     sellerName: attribution ? displayName(attribution) : null,
   };
+}
+
+export async function getMerchantStatsForViewer(
+  db: DatabaseExecutor,
+  input: { ruc: string; role: Role; userId: UserId },
+): Promise<Result<RucMerchantStats, DomainError>> {
+  if (!hasPermission(input.role, "dashboards:read")) {
+    const ownership = await db
+      .selectFrom("workflow_leads as lead")
+      .innerJoin(
+        "organizations as organization",
+        "organization.id",
+        "lead.organization_id",
+      )
+      .innerJoin(
+        "organization_current_owners as owner",
+        "owner.organization_id",
+        "lead.organization_id",
+      )
+      .select("lead.id")
+      .where("organization.ruc", "=", input.ruc)
+      .where("owner.executive_id", "=", input.userId)
+      .where("lead.deleted_at", "is", null)
+      .executeTakeFirst();
+
+    if (!ownership) {
+      return Err(fail("merchant_stats_not_found"));
+    }
+  }
+
+  return Ok(await getMerchantStatsByRuc(db, input.ruc));
 }

@@ -1,14 +1,14 @@
 import type { Kysely, SelectQueryBuilder } from "kysely";
 
 import type { Json } from "~/contracts/json";
-import type { Database } from "~/lib/db/types";
 import type {
   BranchId,
   ContactAssignmentId,
   InstallationId,
   OrganizationPersonId,
   UserId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 function withExecutiveStatusJoinsAndSelect(
   qb: SelectQueryBuilder<Database, "extension_executive_statuses", object>,

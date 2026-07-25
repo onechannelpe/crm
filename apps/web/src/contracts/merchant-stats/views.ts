@@ -1,4 +1,4 @@
-import type { CalendarDate, CalendarMonth } from "~/lib/time/calendar-date";
+import type { CalendarDate, CalendarMonth } from "~/domain/time/calendar-date";
 
 import type {
   AttributionConfidence,

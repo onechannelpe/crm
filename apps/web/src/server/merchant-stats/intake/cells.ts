@@ -3,7 +3,7 @@ import {
   parseCalendarMonth,
   type CalendarDate,
   type CalendarMonth,
-} from "~/lib/time/calendar-date";
+} from "~/domain/time/calendar-date";
 
 import type { GpvCellValue } from "./types";
 

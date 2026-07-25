@@ -1,4 +1,4 @@
-import type { Topic } from "~/lib/realtime/topic";
+import type { Topic } from "~/contracts/realtime/topic";
 
 import { createPgTopicBridge } from "./bridge";
 import { TopicHub } from "./topic-hub";

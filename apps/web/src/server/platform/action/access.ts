@@ -1,14 +1,14 @@
-import type { Permission, Role } from "~/lib/auth/access/rbac";
+import type { Permission, Role } from "~/domain/auth/access/rbac";
+import type { AuthSession } from "~/domain/auth/access/session-types";
+import { type DomainError } from "~/domain/errors";
+import { checkRecentStrongAuth } from "~/server/auth/security/step-up";
 import {
   authenticate,
   authenticateSession,
   authorizePermission,
   authorizeRole,
-} from "~/lib/auth/access/session";
-import type { AuthSession } from "~/lib/auth/access/session-types";
-import { checkRecentStrongAuth } from "~/lib/auth/security/step-up";
-import { type DomainError } from "~/server/shared/domain-error";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+} from "~/server/platform/action/session";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 export type ActionAccess =
   | { kind: "permission"; permission: Permission }

@@ -3,9 +3,12 @@ import type {
   LifecycleSummary,
 } from "~/contracts/merchant-stats/views";
 import { DORMANT_AFTER_DAYS } from "~/contracts/merchant-stats/vocabulary";
-import { appCalendarDateAt } from "~/lib/time/app-time";
-import { addCalendarDays, calendarMonthStart } from "~/lib/time/calendar-date";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { appCalendarDateAt } from "~/domain/time/app-time";
+import {
+  addCalendarDays,
+  calendarMonthStart,
+} from "~/domain/time/calendar-date";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { creditFilter } from "./filter";
 

@@ -1,5 +1,5 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 

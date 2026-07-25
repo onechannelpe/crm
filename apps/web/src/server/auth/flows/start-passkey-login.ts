@@ -3,7 +3,7 @@ import {
   persistPasskeyLoginFlow,
   preparePasskeyLogin,
 } from "~/server/auth/factors/passkey/service";
-import { isErr, Ok } from "~/server/shared/result";
+import { isErr, Ok } from "~/shared/result";
 
 import type { AuthLoginContext } from "../infrastructure/login-context";
 

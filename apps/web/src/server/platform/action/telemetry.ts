@@ -1,4 +1,4 @@
-import type { WireError } from "~/lib/wire-error";
+import type { WireError } from "~/contracts/errors";
 import type { RecordActionObservationInput } from "~/server/observability/service";
 
 import type { AppContext } from "./context";

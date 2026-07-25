@@ -1,12 +1,15 @@
 "use server";
 
 import type { ActionSuccess } from "~/contracts/common";
+import { UserId } from "~/domain/ids";
 import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession as revokeUserSessionService } from "~/server/auth/flows/revoke-user-session";
 import { runAction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 import { getServerRuntime } from "~/server/platform/container";
-import { UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
 
 export async function revokeUserSession(
   rawSessionId: unknown,

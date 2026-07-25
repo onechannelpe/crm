@@ -3,11 +3,11 @@
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
-import { isErr, Ok } from "~/server/shared/result";
 import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,
 } from "~/server/team/application/invites";
+import { isErr, Ok } from "~/shared/result";
 
 export async function getInviteManagement(): Promise<
   InviteManagement & { evaluatedAt: number }

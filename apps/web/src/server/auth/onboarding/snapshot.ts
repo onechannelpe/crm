@@ -1,9 +1,9 @@
 import type { OnboardingSnapshot } from "~/contracts/auth";
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { AuthSetupRepos } from "../infrastructure/setup-context";
 

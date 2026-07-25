@@ -4,11 +4,11 @@ import {
   FULFILLMENT_STEPS,
   PRODUCT_KINDS,
 } from "~/contracts/workflow/vocabulary";
-import type { DomainError } from "~/server/shared/domain-error";
-import { FileAssetId, FulfillmentOrderId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import { FileAssetId, FulfillmentOrderId } from "~/domain/ids";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import { parseVocabularyValue } from "~/server/workflow/lead/domain/parse";
+import { Ok, type Result } from "~/shared/result";
 
 import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
 import {

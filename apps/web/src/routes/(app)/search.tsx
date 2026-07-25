@@ -2,6 +2,7 @@ import { useAction, useSearchParams, useSubmission } from "@solidjs/router";
 import { createEffect, createMemo, createSignal, Show } from "solid-js";
 
 import { AppPage } from "~/components/layout/page";
+import { actionErrorMessage } from "~/contracts/errors";
 import {
   isSearchIntent,
   type SearchIntent,
@@ -15,7 +16,6 @@ import {
   createSearchCompanyDetailSidePanelPage,
   createSearchPersonDetailSidePanelPage,
 } from "~/features/side-panel/types/side-panel-page";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import pageStyles from "~/features/search/ui/search-page-shell.module.css";
 

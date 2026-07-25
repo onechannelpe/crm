@@ -1,8 +1,8 @@
-import type { HalftoneImageFit } from "~/lib/halftone/footprint";
-import { normalizeHalftoneStudioSettings } from "~/lib/halftone/state";
-import type { HalftonePose } from "~/lib/halftone/state";
-import type { HalftoneStudioSettings } from "~/lib/halftone/state";
-import type { HalftoneStudioSettingsOverrides } from "~/lib/halftone/state";
+import type { HalftoneImageFit } from "~/browser/visual/halftone/footprint";
+import { normalizeHalftoneStudioSettings } from "~/browser/visual/halftone/state";
+import type { HalftonePose } from "~/browser/visual/halftone/state";
+import type { HalftoneStudioSettings } from "~/browser/visual/halftone/state";
+import type { HalftoneStudioSettingsOverrides } from "~/browser/visual/halftone/state";
 
 export type MilestoneSettingsOverrides = HalftoneStudioSettingsOverrides;
 

@@ -18,7 +18,7 @@ import type {
   WorkflowRateProposalId,
   WorkflowRateRevisionId,
   WorkflowVenueId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 export type LeadHistoryEventType =
   | "lead_registered"
