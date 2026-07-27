@@ -19,14 +19,14 @@ flowchart TD
 
 [`middleware.ts`](src/middleware.ts) adds request metadata, prepares the CSP
 nonce and CSRF cookie, and delegates authentication to
-[`request-auth.ts`](src/lib/auth/access/request-auth.ts). Public requests bypass
-session checks. Authenticated requests store their session on `event.locals`.
+[`request-auth.ts`](src/server/platform/http/request-auth.ts). Public requests
+bypass session checks. Authenticated requests store their session on
+`event.locals`.
 
 Authenticated routes live under [`src/routes/(app)/`](src/routes/%28app%29/),
 and public routes live under [`src/routes/(public)/`](src/routes/%28public%29/).
-Routes call server functions in [`src/actions/`](src/actions/). Read and write
-wrappers exposed to UI code live in [`src/lib/queries/`](src/lib/queries/) and
-[`src/lib/mutations/`](src/lib/mutations/).
+Routes and features call server functions in [`src/actions/`](src/actions/).
+Each action validates transport input and delegates to its product capability.
 
 Domain services and repositories live under [`src/server/`](src/server/).
 [`src/server/platform/action/`](src/server/platform/action/) runs actions with
@@ -36,9 +36,10 @@ assembled by domain in
 
 ## Persistence
 
-PostgreSQL stores application state. Database access starts in
-[`client.ts`](src/lib/db/client.ts) and [`db.ts`](src/lib/db/db.ts). Schema
-modules live under [`src/lib/db/schema/modules/`](src/lib/db/schema/modules/).
+PostgreSQL stores application state. Database infrastructure lives under
+[`src/server/platform/database/`](src/server/platform/database/). Schema modules
+live under
+[`src/server/platform/database/schema/modules/`](src/server/platform/database/schema/modules/).
 
 Culqi360 builds a new database from the current schema modules. It stores a hash
 of that schema and stops startup when an existing database has a different hash.
@@ -54,8 +55,9 @@ Queue records are stored in PostgreSQL. The maintenance worker listens for
 PostgreSQL notifications and checks the affected queues when notified. It also
 checks every queue once per second, so a missed notification does not strand a
 job. The worker entry point is
-[`background-jobs.ts`](src/lib/background-jobs.ts), and the shared queue runner
-is [`job-queue.ts`](src/lib/job-queue/job-queue.ts).
+[`maintenance-runner.ts`](src/workers/maintenance-runner.ts), and queue
+infrastructure lives in
+[`src/server/platform/jobs/`](src/server/platform/jobs/).
 
 Browser updates use feature-specific transports:
 
@@ -65,9 +67,8 @@ Browser updates use feature-specific transports:
 
 ## Engine integration
 
-The engine client contract lives in
-[`src/server/shared/engine/`](src/server/shared/engine/), and the HTTP adapter
-lives in [`src/server/adapters/engine/`](src/server/adapters/engine/). Direct
+The engine client contract and HTTP adapter live in
+[`src/server/integrations/engine/`](src/server/integrations/engine/). Direct
 search is implemented under
 [`src/server/search-workflow/`](src/server/search-workflow/). Candidate
 assignment is implemented under

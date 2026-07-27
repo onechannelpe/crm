@@ -3,11 +3,6 @@ import type { APIEvent } from "@solidjs/start/server";
 import { gpvSnapshotTopic } from "~/contracts/merchant-stats/imports";
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { GpvSnapshotJobId } from "~/domain/ids";
-import {
-  gpvSnapshotJobSnapshot,
-  gpvSnapshotsRealtime,
-} from "~/server/merchant-stats/snapshot/realtime";
-import { createGpvSnapshotJobRepo } from "~/server/merchant-stats/snapshot/repo";
 import { getSession } from "~/server/platform/action/session";
 import { getServerRuntime } from "~/server/platform/container";
 import { openTopicStream } from "~/server/realtime/sse-topic-stream";
@@ -33,21 +28,21 @@ export async function GET(
   }
 
   const jobId = parsedJobId.value;
-  const jobs = createGpvSnapshotJobRepo(getServerRuntime().infra.db);
-  const job = await jobs.findById(jobId);
+  const imports = getServerRuntime().merchantStats.imports;
+  const job = await imports.progress(jobId);
 
   if (!job) {
     return new Response("Not found", { status: 404 });
   }
 
-  await gpvSnapshotsRealtime.ensure();
+  await imports.realtime.ensure();
 
   const stream = await openTopicStream(
     event.nativeEvent,
-    gpvSnapshotsRealtime.hub,
+    imports.realtime.hub,
     gpvSnapshotTopic.of(jobId),
     {
-      snapshot: () => gpvSnapshotJobSnapshot(jobId),
+      snapshot: () => imports.snapshotValue(jobId),
     },
   );
 

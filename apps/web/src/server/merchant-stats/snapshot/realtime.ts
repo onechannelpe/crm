@@ -4,7 +4,6 @@ import {
   type GpvSnapshotProgressEvent,
 } from "~/contracts/merchant-stats/imports";
 import { GpvSnapshotJobId } from "~/domain/ids";
-import { db } from "~/server/platform/database/db";
 import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 import {
   createTopicRealtimeChannel,
@@ -13,18 +12,24 @@ import {
 import { isErr } from "~/shared/result";
 
 import { buildGpvSnapshotProgressEvent } from "./progress";
-import { createGpvSnapshotJobRepo } from "./repo";
+import { type createGpvSnapshotJobRepo } from "./repo";
+
+type GpvSnapshotJobReader = Pick<
+  ReturnType<typeof createGpvSnapshotJobRepo>,
+  "findById"
+>;
 
 export async function gpvSnapshotJobSnapshot(
+  jobs: GpvSnapshotJobReader,
   jobId: GpvSnapshotJobId,
 ): Promise<string | null> {
-  const job = await createGpvSnapshotJobRepo(db).findById(jobId);
+  const job = await jobs.findById(jobId);
 
   return job ? JSON.stringify(buildGpvSnapshotProgressEvent(job)) : null;
 }
 
-export const gpvSnapshotsRealtime =
-  createTopicRealtimeChannel<GpvSnapshotProgressEvent>({
+export function createGpvSnapshotsRealtime(jobs: GpvSnapshotJobReader) {
+  return createTopicRealtimeChannel<GpvSnapshotProgressEvent>({
     name: "gpv-snapshots",
     channel: GPV_SNAPSHOT_PROGRESS_CHANNEL,
     parseEvent: parseGpvSnapshotProgressMessage,
@@ -36,6 +41,7 @@ export const gpvSnapshotsRealtime =
         return null;
       }
 
-      return gpvSnapshotJobSnapshot(jobId.value);
+      return gpvSnapshotJobSnapshot(jobs, jobId.value);
     }),
   });
+}

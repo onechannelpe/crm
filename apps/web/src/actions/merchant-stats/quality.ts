@@ -9,8 +9,6 @@ import {
   QUALITY_ISSUES,
   type QualityIssue,
 } from "~/contracts/merchant-stats/vocabulary";
-import { readPublishedGpvPage } from "~/server/merchant-stats/read/published-page";
-import { getQualityRows as readQualityRows } from "~/server/merchant-stats/read/quality";
 import { runAction } from "~/server/platform/action";
 import {
   parseObject,
@@ -27,7 +25,7 @@ export async function getQualityRows(raw: {
   page: Page;
 }): Promise<PublishedPage<QualityRow>> {
   return runAction({
-    name: "merchantGpv.quality.rows",
+    name: "merchantStats.quality.rows",
     access: { kind: "permission", permission: "dashboards:manage" },
 
     parse: () =>
@@ -42,13 +40,12 @@ export async function getQualityRows(raw: {
 
     audit: (input) => ({ issue: input.issue }),
 
-    execute: async (_ctx, input) => {
-      const db = getServerRuntime().infra.db;
-      const page = await readPublishedGpvPage(db, (transaction) =>
-        readQualityRows(transaction, input.issue, input.page),
-      );
-
-      return Ok(page);
-    },
+    execute: async (_ctx, input) =>
+      Ok(
+        await getServerRuntime().merchantStats.quality.rows(
+          input.issue,
+          input.page,
+        ),
+      ),
   });
 }

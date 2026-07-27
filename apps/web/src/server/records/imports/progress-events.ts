@@ -1,6 +1,6 @@
 import type { RecordImportProgressEvent } from "~/contracts/records/imports";
 import type { IntegrationJobRow } from "~/server/integrations/types";
-import { db } from "~/server/platform/database/db";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { notify } from "~/server/platform/database/notify";
 import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 
@@ -29,6 +29,7 @@ export function buildRecordImportProgressEvent(
 }
 
 export function publishRecordImportProgress(
+  db: DatabaseExecutor,
   event: RecordImportProgressEvent,
 ): void {
   notify(db, RECORDS_IMPORT_PROGRESS_CHANNEL, JSON.stringify(event));

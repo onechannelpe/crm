@@ -1,8 +1,5 @@
 import { startSessionCleanupScheduler } from "~/server/auth/session/cleanup";
-import { readStoredFile } from "~/server/files/storage";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
-import { createGpvSnapshotQueue } from "~/server/merchant-stats/snapshot/queue";
-import { uploadsConfig } from "~/server/platform/config/env";
 import { getServerRuntime } from "~/server/platform/container";
 import { dbUrl } from "~/server/platform/database/db";
 import {
@@ -56,9 +53,6 @@ function makeWaker(run: () => Promise<void>): () => void {
   };
 }
 
-const readFile = (filePath: string) =>
-  readStoredFile(uploadsConfig().storageRoot, filePath);
-
 export function startMaintenanceWorker(): { stop(): Promise<void> } {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
 
@@ -67,14 +61,10 @@ export function startMaintenanceWorker(): { stop(): Promise<void> } {
 
   const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
     runtime: integration,
-    readFile,
+    readFile: (storageKey) => runtime.files.storage.getBytes(storageKey),
   });
 
-  const gpvSnapshotQueue = createGpvSnapshotQueue(WORKER_ID, {
-    db: integration.executor,
-    now: integration.now,
-    readFile,
-  });
+  const gpvSnapshotQueue = runtime.merchantStats.imports.createQueue(WORKER_ID);
 
   const enrichmentQueue = runtime.clientSearch.createEnrichmentQueue(WORKER_ID);
   const notificationQueues = runtime.notifications.createQueues(WORKER_ID);

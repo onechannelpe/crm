@@ -8,6 +8,10 @@
     "src/workers/maintenance-runner.ts",
     "src/routes/**/*.{ts,tsx}",
     "src/actions/**/*.{ts,tsx}",
+    "src/server/platform/database/migrate-cli.ts",
+    "src/server/platform/database/seed.ts",
+    "src/workers/maintenance-runner.ts",
+    "tools/e2e/prepare.ts",
     "vite.config.ts",
     "tracer.ts",
     "vitest.bench.config.ts"
@@ -52,7 +56,7 @@
       },
       {
         "name": "server",
-        "patterns": ["src/server/**"]
+        "autoDiscover": ["src/server"]
       },
       {
         "name": "actions",
@@ -90,7 +94,234 @@
       },
       {
         "from": "server",
-        "allow": ["contracts", "domain", "server", "shared"]
+        "allow": ["contracts", "domain", "server/platform", "shared"]
+      },
+      {
+        "from": "server/auth",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/event-logs",
+          "server/extension",
+          "server/invites",
+          "server/notifications",
+          "server/observability",
+          "server/security",
+          "server/sessions",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/capacity",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/security",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/contact-assignments",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/capacity",
+          "server/integrations",
+          "server/organization",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/event-logs",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/realtime",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/extension",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/contact-assignments",
+          "server/organization",
+          "server/sessions",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/integrations",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/notifications",
+          "server/records",
+          "server/users",
+          "server/workflow",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/invites",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/auth",
+          "server/event-logs",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/merchant-stats",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/csv",
+          "server/event-logs",
+          "server/files",
+          "server/realtime",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/observability",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/event-logs",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/organization",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/integrations",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/platform",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/audit-reader",
+          "server/auth",
+          "server/capacity",
+          "server/client-search",
+          "server/contact-assignments",
+          "server/event-logs",
+          "server/extension",
+          "server/files",
+          "server/integrations",
+          "server/invites",
+          "server/merchant-stats",
+          "server/notifications",
+          "server/observability",
+          "server/organization",
+          "server/records",
+          "server/security",
+          "server/sessions",
+          "server/team",
+          "server/users",
+          "server/workflow",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/records",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/csv",
+          "server/integrations",
+          "server/realtime",
+          "server/workflow",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/search-workflow",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/capacity",
+          "server/integrations",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/security",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/auth",
+          "server/event-logs",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/team",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/event-logs",
+          "server/invites",
+          "server/notifications",
+          "server/security",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/users",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/auth",
+          "server/csv",
+          "server/invites",
+          "server/notifications",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/workflow",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/client-search",
+          "server/event-logs",
+          "server/files",
+          "server/integrations",
+          "server/notifications",
+          "server/organization",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
       },
       {
         "from": "actions",

@@ -2,7 +2,6 @@
 
 import type { RucMerchantStats } from "~/contracts/merchant-stats/views";
 import { fail, type DomainError } from "~/domain/errors";
-import { getMerchantStatsForViewer } from "~/server/merchant-stats/read/ruc-stats";
 import { runAction } from "~/server/platform/action";
 import { getServerRuntime } from "~/server/platform/container";
 import { Err, Ok, type Result } from "~/shared/result";
@@ -11,7 +10,7 @@ export async function getMerchantStatsForRuc(
   rawRuc: string,
 ): Promise<RucMerchantStats> {
   return runAction({
-    name: "merchantGpv.ruc.read",
+    name: "merchantStats.ruc.read",
     access: { kind: "permission", permission: "dashboards:read:own" },
 
     parse: (): Result<{ ruc: string }, DomainError> => {
@@ -25,7 +24,7 @@ export async function getMerchantStatsForRuc(
     audit: ({ ruc }) => ({ ruc }),
 
     execute: ({ actor }, { ruc }) =>
-      getMerchantStatsForViewer(getServerRuntime().infra.db, {
+      getServerRuntime().merchantStats.executive.rucStats({
         ruc,
         role: actor.role,
         userId: actor.userId,

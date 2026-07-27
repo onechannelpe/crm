@@ -1,10 +1,12 @@
 import type { BookFilter } from "~/contracts/merchant-stats/views";
 import type { DomainError } from "~/domain/errors";
-import type { FileRepos } from "~/server/files/service/contracts";
+import type {
+  FileOperationContext,
+  FileRepos,
+} from "~/server/files/service/contracts";
 import { issueDownloadToken } from "~/server/files/service/issue-download-token";
 import { storeGeneratedFile } from "~/server/files/service/store-generated-file";
 import type { FileStorage } from "~/server/files/storage";
-import type { AppContext } from "~/server/platform/action/context";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { Result } from "~/shared/result";
 
@@ -19,7 +21,7 @@ type ExportDeps = {
 };
 
 export async function requestMerchantGpvExport(
-  ctx: AppContext,
+  ctx: FileOperationContext,
   filter: BookFilter,
   deps: ExportDeps,
 ): Promise<Result<{ token: string }, DomainError>> {

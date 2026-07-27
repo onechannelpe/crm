@@ -70,7 +70,7 @@ export function createRecordImportRunner(deps: {
 
           // Stream in-flight counts; only the initial and final counts are persisted.
           onProgress: (progress) => {
-            publishRecordImportProgress({
+            publishRecordImportProgress(executor, {
               ...buildRecordImportProgressEvent(job),
               ...progress,
             });

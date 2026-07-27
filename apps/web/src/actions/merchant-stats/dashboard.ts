@@ -10,14 +10,6 @@ import type {
   PublishedPage,
 } from "~/contracts/merchant-stats/views";
 import type { DomainError } from "~/domain/errors";
-import { requestMerchantGpvExport } from "~/server/merchant-stats/export/request-export";
-import { getCohortRows as readCohortRows } from "~/server/merchant-stats/read/cohort";
-import {
-  getGpvCulqiView as readGpvCulqiView,
-  getGpvPerformanceView as readGpvPerformanceView,
-} from "~/server/merchant-stats/read/dashboard-views";
-import { getFilterOptions as readFilterOptions } from "~/server/merchant-stats/read/options";
-import { readPublishedGpvPage } from "~/server/merchant-stats/read/published-page";
 import { runAction } from "~/server/platform/action";
 import {
   parseObject,
@@ -58,7 +50,7 @@ export async function getGpvPerformance(raw: {
   filter: BookFilter;
 }): Promise<GpvPerformanceView> {
   return runAction({
-    name: "merchantGpv.performance.read",
+    name: "merchantStats.performance.read",
     access: { kind: "permission", permission: "dashboards:read" },
 
     parse: () =>
@@ -66,12 +58,10 @@ export async function getGpvPerformance(raw: {
         filter: r.obj("filter", readFilter),
       })),
 
-    execute: async (ctx, input) =>
+    execute: async (_ctx, input) =>
       Ok(
-        await readGpvPerformanceView(
-          getServerRuntime().infra.db,
+        await getServerRuntime().merchantStats.dashboard.performance(
           input.filter,
-          ctx.now(),
         ),
       ),
   });
@@ -81,7 +71,7 @@ export async function getGpvCulqi(raw: {
   filter: BookFilter;
 }): Promise<GpvCulqiView> {
   return runAction({
-    name: "merchantGpv.culqi.read",
+    name: "merchantStats.culqi.read",
     access: { kind: "permission", permission: "dashboards:read" },
 
     parse: () =>
@@ -90,7 +80,7 @@ export async function getGpvCulqi(raw: {
       })),
 
     execute: async (_ctx, input) =>
-      Ok(await readGpvCulqiView(getServerRuntime().infra.db, input.filter)),
+      Ok(await getServerRuntime().merchantStats.dashboard.culqi(input.filter)),
   });
 }
 
@@ -99,7 +89,7 @@ export async function getCohortRows(raw: {
   page: Page;
 }): Promise<PublishedPage<CohortSaleRow>> {
   return runAction({
-    name: "merchantGpv.cohort.read",
+    name: "merchantStats.cohort.read",
     access: { kind: "permission", permission: "dashboards:read" },
 
     parse: () =>
@@ -108,31 +98,30 @@ export async function getCohortRows(raw: {
         page: r.obj("page", readPage),
       })),
 
-    execute: async (_ctx, input) => {
-      const db = getServerRuntime().infra.db;
-      const page = await readPublishedGpvPage(db, (transaction) =>
-        readCohortRows(transaction, input.filter, input.page),
-      );
-
-      return Ok(page);
-    },
+    execute: async (_ctx, input) =>
+      Ok(
+        await getServerRuntime().merchantStats.dashboard.cohorts(
+          input.filter,
+          input.page,
+        ),
+      ),
   });
 }
 
 export async function getFilterOptions(): Promise<FilterOptions> {
   return runAction({
-    name: "merchantGpv.filterOptions.read",
+    name: "merchantStats.filterOptions.read",
     access: { kind: "permission", permission: "dashboards:read" },
     parse: () => Ok(undefined),
 
     execute: async () =>
-      Ok(await readFilterOptions(getServerRuntime().infra.db)),
+      Ok(await getServerRuntime().merchantStats.dashboard.filterOptions()),
   });
 }
 
 export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
   return runAction({
-    name: "merchantGpv.export",
+    name: "merchantStats.export",
     access: { kind: "permission", permission: "dashboards:read" },
 
     parse: () =>
@@ -147,13 +136,7 @@ export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
       product: filter.product ?? null,
     }),
 
-    execute: (ctx, input) => {
-      const runtime = getServerRuntime();
-      return requestMerchantGpvExport(ctx, input.filter, {
-        db: runtime.infra.db,
-        filesRepo: runtime.files.repo,
-        filesStorage: runtime.files.storage,
-      });
-    },
+    execute: (ctx, input) =>
+      getServerRuntime().merchantStats.dashboard.export(ctx, input.filter),
   });
 }

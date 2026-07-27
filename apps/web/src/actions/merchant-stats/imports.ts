@@ -16,11 +16,6 @@ import {
   cutAtFromFilename,
   cutAtFromInput,
 } from "~/server/merchant-stats/intake/cut-at";
-import { getGpvSnapshotDetail } from "~/server/merchant-stats/read/snapshot-detail";
-import { buildGpvSnapshotProgressEvent } from "~/server/merchant-stats/snapshot/progress";
-import { createGpvSnapshotJobRepo } from "~/server/merchant-stats/snapshot/repo";
-import { resolveGpvSnapshotIssue } from "~/server/merchant-stats/snapshot/resolve-issue";
-import { submitGpvSnapshot } from "~/server/merchant-stats/snapshot/submit";
 import { runAction } from "~/server/platform/action";
 import {
   parseObject,
@@ -78,7 +73,7 @@ function parseUpload(formData: FormData): Result<Upload, DomainError> {
 
 export async function uploadMerchantReport(formData: FormData) {
   return runAction({
-    name: "merchantGpv.import.upload",
+    name: "merchantStats.import.upload",
     access: { kind: "permission", permission: "dashboards:manage" },
 
     parse: () => parseUpload(formData),
@@ -90,26 +85,16 @@ export async function uploadMerchantReport(formData: FormData) {
     }),
 
     execute: async (ctx, { file, cutAt }) => {
-      const runtime = getServerRuntime();
-      const submitted = await submitGpvSnapshot(
-        {
-          file: {
-            name: file.name,
-            sizeBytes: file.size,
-            stream: file.stream(),
-          },
-          cutAt,
-          uploadedBy: ctx.actor.userId,
-          now: ctx.now(),
+      const submitted = await getServerRuntime().merchantStats.imports.submit({
+        file: {
+          name: file.name,
+          sizeBytes: file.size,
+          stream: file.stream(),
         },
-        {
-          db: runtime.infra.db,
-          files: {
-            repo: runtime.files.repo,
-            storage: runtime.files.storage,
-          },
-        },
-      );
+        cutAt,
+        uploadedBy: ctx.actor.userId,
+        now: ctx.now(),
+      });
       if (!submitted.ok) return submitted;
 
       return Ok({
@@ -127,7 +112,7 @@ export async function getGpvSnapshotProgress(
   rawJobId: string,
 ): Promise<GpvSnapshotProgressEvent> {
   return runAction({
-    name: "merchantGpv.import.progress",
+    name: "merchantStats.import.progress",
     access: { kind: "permission", permission: "dashboards:read" },
 
     parse: () =>
@@ -138,15 +123,14 @@ export async function getGpvSnapshotProgress(
     audit: ({ jobId }) => ({ jobId }),
 
     execute: async (_ctx, { jobId }) => {
-      const runtime = getServerRuntime();
-      const jobs = createGpvSnapshotJobRepo(runtime.infra.db);
-      const row = await jobs.findById(jobId);
+      const progress =
+        await getServerRuntime().merchantStats.imports.progress(jobId);
 
-      if (!row) {
+      if (!progress) {
         return Err(fail("import_job_not_found"));
       }
 
-      return Ok(buildGpvSnapshotProgressEvent(row));
+      return Ok(progress);
     },
   });
 }
@@ -155,7 +139,7 @@ export async function getGpvSnapshot(
   rawSnapshotId: string,
 ): Promise<GpvSnapshotView> {
   return runAction({
-    name: "merchantGpv.import.read",
+    name: "merchantStats.import.read",
     access: { kind: "permission", permission: "dashboards:manage" },
     parse: () =>
       parseObject({ snapshotId: rawSnapshotId }, validationFail, (r) => ({
@@ -163,7 +147,7 @@ export async function getGpvSnapshot(
       })),
     audit: ({ snapshotId }) => ({ snapshotId }),
     execute: async (_ctx, { snapshotId }) =>
-      getGpvSnapshotDetail(getServerRuntime().infra.db, snapshotId),
+      getServerRuntime().merchantStats.imports.snapshot(snapshotId),
   });
 }
 
@@ -172,7 +156,7 @@ export async function resolveGpvImportIssue(raw: {
   resolution: GpvSnapshotIssueResolution;
 }) {
   return runAction({
-    name: "merchantGpv.import.issue.resolve",
+    name: "merchantStats.import.issue.resolve",
     access: { kind: "permission", permission: "dashboards:manage" },
     parse: () =>
       parseObject(raw, validationFail, (r) => ({
@@ -180,12 +164,11 @@ export async function resolveGpvImportIssue(raw: {
         resolution: r.enum("resolution", SNAPSHOT_RESOLUTIONS),
       })),
     audit: ({ issueId, resolution }) => ({ issueId, resolution }),
-    execute: async ({ actor, now }, input) =>
-      resolveGpvSnapshotIssue(getServerRuntime().infra.db, {
+    execute: async ({ actor }, input) =>
+      getServerRuntime().merchantStats.imports.resolveIssue({
         issueId: input.issueId,
         resolution: input.resolution,
         resolvedBy: actor.userId,
-        now: now(),
       }),
   });
 }

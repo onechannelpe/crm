@@ -1,4 +1,5 @@
 import { createDefaultEngineClient } from "~/server/integrations/engine/client";
+import { createMerchantStatsRuntime } from "~/server/merchant-stats/infrastructure/runtime";
 import {
   appConfig,
   engineConfig,
@@ -58,6 +59,13 @@ function createServerRuntime() {
   const eventLogs = memo(() => createEventLogsRuntime(infra));
   const extension = memo(() => createExtensionRuntime(infra));
   const integrations = memo(() => createIntegrationsRuntime(infra));
+  const merchantStats = memo(() =>
+    createMerchantStatsRuntime({
+      db: infra.db,
+      now: infra.now,
+      files: files(),
+    }),
+  );
   const recordsImportRealtime = memo(() =>
     createRecordImportsRealtime(integrations().integration.jobs),
   );
@@ -108,6 +116,9 @@ function createServerRuntime() {
     },
     get integrations() {
       return integrations();
+    },
+    get merchantStats() {
+      return merchantStats();
     },
     get recordsImportRealtime() {
       return recordsImportRealtime();

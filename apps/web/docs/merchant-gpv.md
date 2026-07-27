@@ -1,152 +1,82 @@
-# Merchant GPV
+# Merchant statistics
 
-The merchant GPV pipeline imports Culqi reports and makes device activity,
-monthly GPV, attribution, and targets available to Culqi360 dashboards.
+Merchant statistics imports complete Culqi report snapshots and shows GPV by
+merchant RUC, realized month, and CRM executive. GPV remains the user-facing
+term; `merchant-stats` is the source capability that owns imports, validation,
+attribution, targets, and read models.
 
-GPV is grouped by merchant RUC and realized month. A sale month identifies the
-device cohort. A realized month is the sale month plus the report's cohort
-offset. A cut identifies when Culqi produced a report snapshot.
+`m0` is the GPV realized during the sale month, `m1` is the next calendar month,
+and so on. A target belongs to a RUC and is effective-dated: it is the monthly
+GPV the RUC should approach, not a total across the executive portfolio.
 
-## Import lifecycle
+## Snapshot lifecycle
 
 ```mermaid
-flowchart TD
-    Upload[Store uploaded XLSX] --> Accept[Create report and import job]
-    Accept --> Decode[Decode rows without database access]
-    Decode --> Transaction[Start one database transaction]
-    Transaction --> Guard[Reject sale-month conflicts]
-    Guard --> Write[Write rejections, devices, and GPV]
-    Write --> Context[Load attribution context]
-    Context --> Attribute[Write eligible attribution]
-    Attribute --> Complete[Complete report and job]
+flowchart LR
+    Upload[Upload XLSX] --> Queue[Create snapshot and job]
+    Queue --> Stage[Parse and stage immutable rows]
+    Stage --> Validate[Compare with the active snapshot]
+    Validate -->|No blocking issue| Activate[Activate snapshot]
+    Validate -->|Blocking issue| Review[Human review]
+    Review --> Activate
 ```
 
-[`uploadMerchantReport`](../src/actions/dashboards/imports.ts) hashes the raw
-file with SHA-256 and stores it before accepting the report. The unique
-`content_sha256` value prevents the same file from creating another report or
-job.
+[`uploadMerchantReport`](../src/actions/merchant-stats/imports.ts) stores the
+file and creates a queued snapshot. The maintenance worker uses the
+merchant-stats runtime to process its job. Parsing is isolated in
+[`intake/`](../src/server/merchant-stats/intake/); staging, validation, and
+activation live in [`snapshot/`](../src/server/merchant-stats/snapshot/).
 
-[`parseReport`](../src/server/merchant-stats/intake/parse-report.ts) decodes the
-workbook without database access. The queue runner passes the decoded report to
-[`applyReport`](../src/server/merchant-stats/apply/apply-report.ts), which
-applies rejections, device data, GPV observations, and attribution in one
-transaction.
+Snapshots are complete cuts. A newer cut never silently rewrites a prior cut:
+the validator records blocking differences such as a missing placement, changed
+RUC, or changed sale month. A human resolves those issues before activation.
+Warnings, such as a RUC or owner missing from CRM, remain visible without
+blocking publication.
 
-## Data guarantees
+Only one snapshot is active. Activation serializes on the dataset row,
+supersedes the prior active snapshot, and freezes uncredited merchant months
+against the snapshot that first made them available.
 
-The implementation enforces these guarantees:
+## Ownership, attribution, and targets
 
-- One content hash creates at most one report.
-- A known sale identity keeps its original sale month.
-- An older cut cannot replace a newer GPV observation for the same sale and
-  cohort offset.
-- Imported attribution cannot replace a manual resolution.
-- Executives can read merchant GPV only for RUCs assigned to them.
-- Manual attribution changes are written to the RUC timeline.
+CRM ownership is the source of truth for an executive. Culqi's seller code is
+report context, not the internal executive identity. An executive can read a RUC
+only when they are its current CRM owner; managers can read the team view.
 
-[`partitionBySaleMonth`](../src/server/merchant-stats/apply/sale-month-guard.ts)
-rejects a row when its merchant, product, and serial identity already belongs to
-another sale month.
+Monthly merchant credit is frozen when a snapshot first exposes the month. Later
+ownership reassignment therefore does not rewrite historical progress. Managers
+can record an explicit monthly credit correction through
+[`adjustMonthCredit`](../src/actions/merchant-stats/attribution.ts).
 
-[`upsertGpv`](../src/server/merchant-stats/apply/write-gpv.ts) compares `cut_at`
-before replacing GPV and transaction counts. This cut guard applies to GPV
-observations. Device metadata is refreshed by every accepted report.
+Targets are effective-dated per RUC. Updating the same RUC and effective month
+replaces that target; adding a later effective month preserves earlier periods.
 
-## Monthly GPV
+## Access
 
-`merchant_sale_gpv.month_offset` stores the cohort offset. PostgreSQL generates
-`realized_month` from the sale month and offset. The `merchant_monthly_gpv` view
-groups those observations by RUC and realized month. These objects are defined
-in the
-[merchant statistics schema](../src/lib/db/schema/modules/merchant-stats.ts).
+| Permission            | Access                                                           |
+| --------------------- | ---------------------------------------------------------------- |
+| `dashboards:read`     | Team dashboards and GPV quality views.                           |
+| `dashboards:read:own` | The caller's currently owned RUCs and progress.                  |
+| `dashboards:manage`   | Imports, issue resolution, targets, credits, and quality review. |
 
-## Attribution
+## Realtime and storage
 
-Attribution is calculated once for every RUC and realized month in an imported
-batch. [`attributeMonth`](../src/server/merchant-stats/attribution/ladder.ts)
-uses this order:
+Import progress is published through PostgreSQL notifications and streamed to
+the import page with server-sent events. The stream reconciles from the durable
+job row after reconnecting, so a missed browser event cannot change job state.
 
-1. Conflicting serial evidence remains unattributed.
-2. One serial owner produces exact attribution.
-3. A qualifying RUC lead produces inferred attribution.
-4. A lead created after any contributing sale is marked late.
-5. Missing evidence remains unattributed.
+Uploaded workbooks and exported GPV files use the shared file service. The
+snapshot references its file asset; application code does not encode a report
+path or manage storage directly.
 
-An import may fill an unresolved attribution when new evidence becomes
-available. It does not replace an existing seller or a manual resolution.
+## Schema and demo data
 
-Managers resolve attribution through
-[`resolveAttribution`](../src/actions/dashboards/attribution.ts). The action
-updates the monthly attribution and appends a `merchant_attribution_resolved`
-event for the `merchant_ruc` timeline.
+Merchant-statistics tables are defined in
+[`merchant-stats.ts`](../src/server/platform/database/schema/modules/merchant-stats.ts)
+and their matching types file. Core tables include `gpv_snapshots`,
+`gpv_snapshot_jobs`, `gpv_snapshot_placements`, `gpv_snapshot_observations`,
+`gpv_snapshot_issues`, `merchant_month_credits`, and `merchant_gpv_targets`.
 
-## Targets
-
-Targets are effective-dated by `(ruc, effective_from)`. Dashboard queries select
-the latest target effective on or before the observed month through
-[`target-as-of.ts`](../src/server/merchant-stats/read/target-as-of.ts).
-
-Updating the same RUC and effective date replaces that target and changes
-calculations for its effective period. Insert a later effective date when the
-earlier period must remain unchanged.
-
-Target changes run through the audited
-[`setMerchantTarget`](../src/actions/dashboards/attribution.ts) action and
-append a `merchant_target_set` event to the RUC timeline.
-
-## Access control
-
-| Permission            | Access                                                            |
-| --------------------- | ----------------------------------------------------------------- |
-| `dashboards:read`     | Team dashboards and the quality summary.                          |
-| `dashboards:read:own` | GPV for RUCs assigned to the caller.                              |
-| `dashboards:manage`   | Report uploads, attribution changes, targets, and quality queues. |
-
-Executives receive `dashboards:read:own`, but not `dashboards:read` or
-`dashboards:manage`. The canonical role assignments are in
-[`rbac.ts`](../src/lib/auth/access/rbac.ts). RUC-level access is enforced by
-[`getMerchantStatsForRuc`](../src/actions/dashboards/org-stats.ts).
-
-## Storage and queue execution
-
-Uploaded reports are stored as `gpv-reports/<sha256>.xlsx` under
-`WEB_UPLOADS_ROOT`. `merchant_reports.storage_key` stores that relative path.
-
-The report queue uses [`createJobQueue`](../src/lib/job-queue/job-queue.ts) and
-claims only `import_gpv` records from `workflow_integration_jobs`. Record
-imports use the same table with different job types, so the workers do not claim
-each other's jobs.
-
-The upload UI polls `getMerchantReportJob` every 1.5 seconds. It revalidates GPV
-queries after the job completes. This flow does not use server-sent events.
-
-## Database objects
-
-All objects below are defined in
-[`merchant-stats.ts`](../src/lib/db/schema/modules/merchant-stats.ts).
-
-| Object                         | Key                       | Purpose                                                    |
-| ------------------------------ | ------------------------- | ---------------------------------------------------------- |
-| `merchant_reports`             | `id`                      | Report snapshots and their content hashes.                 |
-| `merchant_report_rejections`   | `(report_id, row_number)` | Rejected source rows and their original JSON.              |
-| `merchant_sales`               | `id`                      | Merchant devices, unique by merchant, product, and serial. |
-| `merchant_sale_gpv`            | `(sale_id, month_offset)` | Device GPV by cohort offset.                               |
-| `merchant_monthly_gpv`         | View                      | GPV grouped by RUC and realized month.                     |
-| `merchant_monthly_attribution` | `(ruc, month)`            | Imported or manually resolved attribution.                 |
-| `merchant_targets`             | `(ruc, effective_from)`   | Effective-dated targets.                                   |
-
-`MerchantReportId` and `MerchantSaleId` are registered in
-[`registry.ts`](../src/server/shared/ids/registry.ts). Tables with composite
-keys do not use surrogate IDs.
-
-## Maintenance and demo data
-
-Schema changes require updates to
-[`merchant-stats.ts`](../src/lib/db/schema/modules/merchant-stats.ts) and
-[`merchant-stats.types.ts`](../src/lib/db/schema/modules/merchant-stats.types.ts).
-Follow [Database development](database.md) to rebuild the disposable database.
-
-Demo generation and persistence live under
-[`src/lib/db/seeds/demo/merchant-stats/`](../src/lib/db/seeds/demo/merchant-stats/).
-The seed imports two report cuts, creates effective-dated targets, and produces
-examples for attribution and quality views.
+Demo data lives under
+[`seeds/demo/merchant-stats/`](../src/server/platform/database/seeds/demo/merchant-stats/).
+See [Database development](database.md) when changing the disposable schema.

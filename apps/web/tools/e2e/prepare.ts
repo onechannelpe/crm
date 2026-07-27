@@ -12,18 +12,18 @@ import { join, resolve } from "node:path";
 import { sql, type Kysely } from "kysely";
 import { Client } from "pg";
 
-import { hashPassword } from "~/lib/auth/password/password";
+import { TeamId, UserId } from "~/domain/ids";
+import { hashPassword } from "~/server/auth/password/password";
 import {
   hashSessionToken,
   isValidTokenFormat,
-} from "~/lib/auth/session/tokens";
-import { createDb } from "~/lib/db/client";
-import { migrateToLatest } from "~/lib/db/migrate";
-import { provisionInstallation } from "~/lib/db/seeds/installation";
-import { INFINITY_BRANCH_ID } from "~/lib/db/seeds/installation/persist/branches-policies";
-import { createSeedContext } from "~/lib/db/seeds/shared/context";
-import type { Database } from "~/lib/db/types";
-import { TeamId, UserId } from "~/server/shared/ids";
+} from "~/server/auth/session/tokens";
+import { createDb } from "~/server/platform/database/client";
+import { migrateToLatest } from "~/server/platform/database/migrate";
+import { provisionInstallation } from "~/server/platform/database/seeds/installation";
+import { INFINITY_BRANCH_ID } from "~/server/platform/database/seeds/installation/persist/branches-policies";
+import { createSeedContext } from "~/server/platform/database/seeds/shared/context";
+import type { Database } from "~/server/platform/database/types";
 
 import { withDatabase } from "../../tests/e2e/db";
 import {

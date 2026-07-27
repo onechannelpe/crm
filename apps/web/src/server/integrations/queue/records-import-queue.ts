@@ -40,7 +40,10 @@ export function createRecordsImportQueue(
       reportProgress: async (jobId, progress) => {
         const persisted = await runtime.jobs.updateProgress(jobId, progress);
 
-        publishRecordImportProgress(buildRecordImportProgressEvent(persisted));
+        publishRecordImportProgress(
+          runtime.executor,
+          buildRecordImportProgressEvent(persisted),
+        );
       },
     });
 
@@ -73,7 +76,10 @@ export function createRecordsImportQueue(
         return;
       }
 
-      publishRecordImportProgress(buildRecordImportProgressEvent(settled));
+      publishRecordImportProgress(
+        runtime.executor,
+        buildRecordImportProgressEvent(settled),
+      );
     },
   });
 }

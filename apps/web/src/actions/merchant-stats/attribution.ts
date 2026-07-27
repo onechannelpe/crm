@@ -2,8 +2,6 @@
 
 import { UserId } from "~/domain/ids";
 import type { CalendarMonth } from "~/domain/time/calendar-date";
-import { setTarget } from "~/server/merchant-stats/commands/set-target";
-import { adjustMerchantMonthCredit } from "~/server/merchant-stats/credit/adjust";
 import { runAction } from "~/server/platform/action";
 import {
   parseObject,
@@ -19,7 +17,7 @@ export async function adjustMonthCredit(raw: {
   reason: string;
 }) {
   return runAction({
-    name: "merchantGpv.attribution.resolve",
+    name: "merchantStats.attribution.resolve",
     access: { kind: "permission", permission: "dashboards:manage" },
 
     parse: () =>
@@ -32,18 +30,15 @@ export async function adjustMonthCredit(raw: {
 
     audit: ({ ruc, month }) => ({ ruc, month }),
 
-    execute: async ({ actor, now }, input) => {
-      const db = getServerRuntime().infra.db;
-      const occurredAt = now();
-
-      const resolved = await adjustMerchantMonthCredit(db, {
-        ruc: input.ruc,
-        month: input.month,
-        sellerUserId: input.sellerUserId,
-        reason: input.reason,
-        adjustedBy: actor.userId,
-        now: occurredAt,
-      });
+    execute: async ({ actor }, input) => {
+      const resolved =
+        await getServerRuntime().merchantStats.attribution.adjust({
+          ruc: input.ruc,
+          month: input.month,
+          sellerUserId: input.sellerUserId,
+          reason: input.reason,
+          adjustedBy: actor.userId,
+        });
 
       if (isErr(resolved)) return resolved;
 
@@ -58,7 +53,7 @@ export async function setMerchantTarget(raw: {
   projectedGpv: number | null;
 }) {
   return runAction({
-    name: "merchantGpv.target.set",
+    name: "merchantStats.target.set",
     access: { kind: "permission", permission: "dashboards:manage" },
 
     parse: () =>
@@ -70,17 +65,14 @@ export async function setMerchantTarget(raw: {
 
     audit: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
 
-    execute: async ({ actor, now }, input) => {
-      const db = getServerRuntime().infra.db;
-      const occurredAt = now();
-
-      const updated = await setTarget(db, {
-        ruc: input.ruc,
-        effectiveFrom: input.effectiveFrom,
-        projectedGpv: input.projectedGpv,
-        setBy: actor.userId,
-        now: occurredAt,
-      });
+    execute: async ({ actor }, input) => {
+      const updated =
+        await getServerRuntime().merchantStats.attribution.setTarget({
+          ruc: input.ruc,
+          effectiveFrom: input.effectiveFrom,
+          projectedGpv: input.projectedGpv,
+          setBy: actor.userId,
+        });
 
       if (isErr(updated)) return updated;
 

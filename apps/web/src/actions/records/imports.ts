@@ -146,7 +146,10 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         created_at: ctx.now(),
       });
 
-      publishRecordImportProgress(buildRecordImportProgressEvent(job));
+      publishRecordImportProgress(
+        integration.executor,
+        buildRecordImportProgressEvent(job),
+      );
 
       return Ok({
         jobId: job.id,

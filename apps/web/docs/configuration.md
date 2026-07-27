@@ -3,8 +3,8 @@
 Culqi360 reads local development values from the env file selected by each
 package script. Production commands read their environment from the process.
 
-[`src/lib/env.ts`](../src/lib/env.ts) is the canonical server configuration.
-[`vite.config.ts`](../vite.config.ts) and
+[`src/server/platform/config/env.ts`](../src/server/platform/config/env.ts) is
+the canonical server configuration. [`vite.config.ts`](../vite.config.ts) and
 [`src/entry-client.tsx`](../src/entry-client.tsx) read build and browser values
 directly.
 
