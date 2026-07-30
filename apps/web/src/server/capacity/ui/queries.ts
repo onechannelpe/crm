@@ -1,3 +1,5 @@
+import "server-only";
+
 import type {
   CapacityPolicyDefaultsView,
   ExecutiveCapacityDetailView,
@@ -15,7 +17,6 @@ import {
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]
 > {
-  "use server";
 
   return executeSessionServerFunction({
     name: "capacity.managed_executives.read",
@@ -28,7 +29,6 @@ export async function getManagedExecutivesList(): Promise<
 export async function getExecutiveDetail(
   userId: string,
 ): Promise<ExecutiveCapacityDetailView> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "capacity.executive_detail.read",
@@ -50,7 +50,6 @@ export async function getExecutiveDetail(
 export async function getPendingRequests(): Promise<
   PendingCapacityRequestView[]
 > {
-  "use server";
 
   return executeSessionServerFunction({
     name: "capacity.pending_requests.read",
@@ -61,7 +60,6 @@ export async function getPendingRequests(): Promise<
 }
 
 export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "capacity.policy_defaults.read",

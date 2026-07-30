@@ -1,13 +1,14 @@
+import "server-only";
+
 import type { InquiryListView } from "~/contracts/workflow/views";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { db } from "~/server/platform/database/db";
 import { listInquiriesForExecutive } from "~/server/workflow/inquiry/inquiry-queries";
 import { Ok } from "~/shared/result";
 
-import { workflowActor } from "../commands/actor.action";
+import { workflowActor } from "~/server/workflow/ui/actor";
 
 export async function queryMyInquiries(): Promise<InquiryListView> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.list_inquiries",

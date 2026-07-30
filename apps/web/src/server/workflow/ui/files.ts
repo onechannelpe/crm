@@ -1,3 +1,5 @@
+import "server-only";
+
 import { ActionError, type WireError } from "~/contracts/errors";
 import type { LeadRateRevisionFileView } from "~/contracts/workflow/results";
 import { fail, invalid, type DomainError } from "~/domain/errors";
@@ -73,7 +75,6 @@ function parseLeadUpload(formData: unknown): Result<LeadUpload, DomainError> {
 }
 
 export async function listLeadSaleProofFiles(rawLeadId: string) {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.list_sale_proof_files",
@@ -97,7 +98,6 @@ export async function listLeadSaleProofFiles(rawLeadId: string) {
 export async function requestWorkflowLeadsExportDownloadToken(): Promise<{
   token: string;
 }> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.request_leads_export_download_token",
@@ -111,7 +111,6 @@ export async function requestWorkflowLeadsExportDownloadToken(): Promise<{
 }
 
 export async function uploadLeadSaleProofFile(formData: FormData) {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.upload_sale_proof_file",
@@ -138,7 +137,6 @@ export async function requestLeadSaleProofDownloadToken(input: {
   leadId: string;
   fileId: string;
 }) {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.request_sale_proof_download_token",
@@ -167,7 +165,6 @@ export async function requestLeadSaleProofDownloadToken(input: {
 export async function uploadLeadRateRevisionFile(
   formData: FormData,
 ): Promise<Result<LeadRateRevisionFileView, WireError>> {
-  "use server";
 
   return executeFileOperation(
     executeSessionServerFunction({
@@ -196,7 +193,6 @@ export async function requestRateRevisionFileDownloadToken(input: {
   leadId: string;
   fileId: string;
 }) {
-  "use server";
 
   return executeFileOperation(
     executeSessionServerFunction({

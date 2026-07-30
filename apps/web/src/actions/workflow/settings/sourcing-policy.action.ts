@@ -8,7 +8,7 @@ import { getSourcingPolicy } from "~/server/workflow/policy/read/get-sourcing-po
 import { updateSourcingPolicy } from "~/server/workflow/policy/write/update-sourcing-policy";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
 
-import { workflowActor } from "../commands/actor.action";
+import { workflowActor } from "~/server/workflow/ui/actor";
 
 export async function querySourcingPolicy(rawBranchId: string) {
   "use server";

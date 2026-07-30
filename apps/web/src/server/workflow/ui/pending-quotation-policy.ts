@@ -1,3 +1,5 @@
+import "server-only";
+
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -7,10 +9,9 @@ import { getPendingQuotationPolicy } from "~/server/workflow/policy/read/get-pen
 import { updatePendingQuotationPolicy } from "~/server/workflow/policy/write/update-pending-quotation-policy";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
 
-import { workflowActor } from "../commands/actor.action";
+import { workflowActor } from "~/server/workflow/ui/actor";
 
 export async function queryPendingQuotationPolicy() {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.get_pending_quotation_policy",
@@ -42,7 +43,6 @@ export type SavePendingQuotationPolicyInput =
 export async function savePendingQuotationPolicy(
   input: SavePendingQuotationPolicyInput,
 ) {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.update_pending_quotation_policy",

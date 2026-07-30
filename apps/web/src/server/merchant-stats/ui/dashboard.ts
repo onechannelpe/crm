@@ -1,3 +1,5 @@
+import "server-only";
+
 import type {
   BookFilter,
   CohortSaleRow,
@@ -54,7 +56,6 @@ function readPage(r: Reader<DomainError>): Page {
 export async function getGpvPerformance(raw: {
   filter: BookFilter;
 }): Promise<GpvPerformanceView> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "merchantStats.performance.read",
@@ -73,7 +74,6 @@ export async function getGpvPerformance(raw: {
 export async function getGpvCulqi(raw: {
   filter: BookFilter;
 }): Promise<GpvCulqiView> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "merchantStats.culqi.read",
@@ -92,7 +92,6 @@ export async function getCohortRows(raw: {
   filter: BookFilter;
   page: Page;
 }): Promise<PublishedPage<CohortSaleRow>> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "merchantStats.cohort.read",
@@ -114,7 +113,6 @@ export async function getCohortRows(raw: {
 }
 
 export async function getFilterOptions(): Promise<FilterOptions> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "merchantStats.filterOptions.read",
@@ -126,7 +124,6 @@ export async function getFilterOptions(): Promise<FilterOptions> {
 }
 
 export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
-  "use server";
 
   return executeSessionServerFunction({
     name: "merchantStats.export",

@@ -1,3 +1,5 @@
+import "server-only";
+
 import { redirect } from "@solidjs/router";
 
 import type { OnboardingSnapshot } from "~/contracts/auth";
@@ -8,7 +10,6 @@ import { getSession } from "~/server/platform/action/session";
 import { isErr } from "~/shared/result";
 
 export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {
-  "use server";
 
   const session = await getSession();
   if (!session) {

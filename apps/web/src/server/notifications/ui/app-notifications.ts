@@ -1,3 +1,5 @@
+import "server-only";
+
 import { AppNotificationId } from "~/domain/ids";
 import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
@@ -8,7 +10,6 @@ import {
 import { Ok } from "~/shared/result";
 
 export async function getHeaderNotifications() {
-  "use server";
 
   return executeSessionServerFunction({
     name: "notifications.header.read",
@@ -42,7 +43,6 @@ export async function getHeaderNotifications() {
 export async function markNotificationRead(
   rawNotificationId: unknown,
 ): Promise<void> {
-  "use server";
 
   await executeSessionServerFunction({
     name: "notifications.mark_read",
@@ -74,7 +74,6 @@ export async function markNotificationRead(
 }
 
 export async function markAllNotificationsRead(): Promise<void> {
-  "use server";
 
   await executeSessionServerFunction({
     name: "notifications.mark_all_read",

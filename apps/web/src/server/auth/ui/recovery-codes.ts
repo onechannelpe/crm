@@ -1,3 +1,5 @@
+import "server-only";
+
 import {
   acknowledgeRecoverySetup,
   regenerateRecoverySetup,
@@ -13,7 +15,6 @@ export async function getRecoveryCodesStatus(): Promise<{
   unused: number;
   acknowledged: boolean;
 }> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "auth.recovery.status",
@@ -37,7 +38,6 @@ export async function getRecoveryCodesStatus(): Promise<{
 export async function regenerateRecoveryCodes(): Promise<{
   recoveryCodes: string[];
 }> {
-  "use server";
 
   const result = await executeSessionServerFunction({
     name: "auth.recovery.regenerate",
@@ -56,7 +56,6 @@ export async function regenerateRecoveryCodes(): Promise<{
 export async function acknowledgeRecoveryCodes(): Promise<{
   redirectTo: string;
 }> {
-  "use server";
 
   const result = await executeSessionServerFunction({
     name: "auth.recovery.acknowledge",

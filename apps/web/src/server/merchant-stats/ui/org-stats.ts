@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { RucMerchantStats } from "~/contracts/merchant-stats/views";
 import { fail, type DomainError } from "~/domain/errors";
 import { getMerchantStatsForViewer } from "~/server/merchant-stats/read/ruc-stats";
@@ -8,7 +10,6 @@ import { Err, Ok, type Result } from "~/shared/result";
 export async function getMerchantStatsForRuc(
   rawRuc: string,
 ): Promise<RucMerchantStats> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "merchantStats.ruc.read",

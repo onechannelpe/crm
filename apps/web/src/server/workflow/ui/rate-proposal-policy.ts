@@ -1,3 +1,5 @@
+import "server-only";
+
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -7,10 +9,9 @@ import { getRateProposalPolicy } from "~/server/workflow/policy/read/get-rate-pr
 import { updateRateProposalPolicy } from "~/server/workflow/policy/write/update-rate-proposal-policy";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
 
-import { workflowActor } from "../commands/actor.action";
+import { workflowActor } from "~/server/workflow/ui/actor";
 
 export async function queryRateProposalPolicy() {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.get_rate_proposal_policy",
@@ -35,7 +36,6 @@ export async function queryRateProposalPolicy() {
 }
 
 export async function saveRateProposalPolicy(input: { validityDays: number }) {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.update_rate_proposal_policy",

@@ -1,3 +1,5 @@
+import "server-only";
+
 import {
   type ListAssignableExecutivesInput,
   type ListLeadsFiltersInput,
@@ -31,7 +33,7 @@ import { listLeads } from "~/server/workflow/lead/read/queries/list-leads";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 import { isErr, Ok } from "~/shared/result";
 
-import { workflowActor } from "../commands/actor.action";
+import { workflowActor } from "~/server/workflow/ui/actor";
 
 const SORT_FIELDS = ["createdAt", "updatedAt", "registeredBy", "ruc"] as const;
 const SORT_DIRECTIONS = ["asc", "desc"] as const;
@@ -40,7 +42,6 @@ const workflowRepos = createWorkflowRepos(db);
 export async function queryLeadList(
   filters: ListLeadsFiltersInput,
 ): Promise<LeadListView> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.list_leads",
@@ -85,7 +86,6 @@ export async function queryLeadList(
 export async function queryLeadDetail(
   rawLeadId: string,
 ): Promise<LeadDetailView & { evaluatedAt: number }> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.get_lead_detail",
@@ -119,7 +119,6 @@ export async function queryLeadDetail(
 export async function queryFulfillmentQueue(): Promise<
   FulfillmentQueueView & { evaluatedAt: number }
 > {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.list_fulfillment_queue",
@@ -142,7 +141,6 @@ export async function queryFulfillmentQueue(): Promise<
 }
 
 export async function queryPendingQuotationCount(): Promise<PendingQuotationCountView> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.pending_quotation_count",
@@ -165,7 +163,6 @@ export async function queryPendingQuotationCount(): Promise<PendingQuotationCoun
 export async function queryLeadBootstrapPreview(
   rawRuc: string,
 ): Promise<LeadBootstrapPreviewView> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.get_lead_bootstrap_preview",
@@ -195,7 +192,6 @@ export async function queryLeadBootstrapPreview(
 export async function queryAssignableExecutives(
   input: ListAssignableExecutivesInput,
 ): Promise<AssignableExecutiveView[]> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "workflow.list_assignable_executives",

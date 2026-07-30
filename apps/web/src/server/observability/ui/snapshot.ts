@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
 import { composeObservability } from "~/server/observability/ui/composition";
 import { executeAdminServerFunction } from "~/server/platform/action";
@@ -10,7 +12,6 @@ import { Ok } from "~/shared/result";
 export async function getObservabilitySnapshot(
   rawParams?: unknown,
 ): Promise<ObservabilitySnapshot> {
-  "use server";
 
   return executeAdminServerFunction({
     name: "admin.observability.snapshot.read",

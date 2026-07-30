@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { CurrentUserView } from "~/contracts/auth";
 import { AuthLoginFlowId } from "~/domain/ids";
 import { getCurrentUser } from "~/server/auth/application/queries/get-current-user";
@@ -14,7 +16,6 @@ const loginContext = createAuthLoginContext(db);
 const sessionReadContext = createAuthSessionReadContext(db);
 
 export async function getLoginFlow(flowId: string) {
-  "use server";
 
   const parsedFlowId = AuthLoginFlowId.parse(flowId);
   if (isErr(parsedFlowId)) return null;
@@ -28,7 +29,6 @@ export async function getLoginFlow(flowId: string) {
 }
 
 export async function logout(): Promise<void> {
-  "use server";
 
   const { composeAuth } = await import("~/server/auth/ui/composition");
   await executeSessionServerFunction({
@@ -39,7 +39,6 @@ export async function logout(): Promise<void> {
 }
 
 export async function getMe(): Promise<CurrentUserView | null> {
-  "use server";
 
   return executeSessionServerFunction({
     name: "auth.session.get_me",
