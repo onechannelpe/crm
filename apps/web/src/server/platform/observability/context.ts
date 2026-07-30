@@ -12,9 +12,15 @@ export interface ActionRequestContext {
 
 export function getActionRequestContext(): ActionRequestContext {
   const event = getRequestEvent();
-  const existing = event?.locals?.requestContext?.observability;
-  if (existing) {
-    return existing;
+  const context = event?.locals?.requestContext;
+  if (context) {
+    return {
+      traceId: context.traceId,
+      requestId: context.requestId,
+      routePath: context.route,
+      httpMethod: context.method,
+      requestStartedAt: context.startedAt,
+    };
   }
 
   const requestUrl = event?.request.url ? new URL(event.request.url) : null;

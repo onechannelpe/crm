@@ -4,11 +4,12 @@ import { createMiddleware } from "@solidjs/start/middleware";
 import type { FetchEvent } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";
 
-import { sentryConfig } from "./server/platform/config/env";
+import { middlewareConfig } from "./server/platform/config/middleware-config";
 import { enforceAuthRequest } from "./server/platform/http/request-auth";
-import { buildRequestContext } from "./server/platform/http/request-context";
-import { requestContextDeps } from "./server/platform/http/request-context-deps";
-import type { ActionRequestContext } from "./server/platform/observability/context";
+import {
+  buildAnonymousRequestContext,
+  buildRequestContext,
+} from "./server/platform/http/request-context";
 import { generateRequestId, generateTraceId } from "./shared/observability/ids";
 
 type StartMiddleware = Extract<
@@ -26,19 +27,23 @@ function fetchEvent(): FetchEvent {
 
 const identifyRequest: StartMiddleware = async (event, next) => {
   const requestEvent = fetchEvent();
-  const url = event.url;
+  const nonce = crypto.randomUUID().replaceAll("-", "");
+  const identity = {
+    traceId: generateTraceId(),
+    requestId: generateRequestId(),
+    startedAt: Date.now(),
+    nonce,
+  };
+  const { trustedProxy } = middlewareConfig();
 
   requestEvent.locals = {
     ...requestEvent.locals,
-    requestContext: undefined as never,
-    nonce: "",
-  };
-  event.context.requestObservability = {
-    traceId: generateTraceId(),
-    requestId: generateRequestId(),
-    routePath: url.pathname,
-    httpMethod: event.req.method,
-    requestStartedAt: Date.now(),
+    requestContext: buildAnonymousRequestContext(
+      event.req,
+      identity,
+      trustedProxy,
+    ),
+    nonce,
   };
 
   return next();
@@ -46,10 +51,9 @@ const identifyRequest: StartMiddleware = async (event, next) => {
 
 const applySecurityResponseState: StartMiddleware = async (event, next) => {
   const requestEvent = fetchEvent();
-  const nonce = crypto.randomUUID().replaceAll("-", "");
-  requestEvent.locals.nonce = nonce;
+  const nonce = requestEvent.locals.requestContext.nonce;
 
-  const { sentryIngestHost } = sentryConfig();
+  const { sentryIngestHost } = middlewareConfig();
   const sentryConnectSrc = sentryIngestHost
     ? ` https://${sentryIngestHost}`
     : "";
@@ -72,13 +76,25 @@ const applySecurityResponseState: StartMiddleware = async (event, next) => {
 
 const resolveSession: StartMiddleware = async (_event, next) => {
   const event = fetchEvent();
-  const observability = event.nativeEvent.context
-    .requestObservability as ActionRequestContext;
+  const current = event.locals.requestContext;
+  if (isPrerenderRoute(current.route)) {
+    return next();
+  }
+
+  const { createRequestContextDependencies } =
+    await import("./server/auth/ui/resolve-request-context");
+  const { trustedProxy } = middlewareConfig();
 
   event.locals.requestContext = await buildRequestContext(
     event.request,
-    observability,
-    requestContextDeps,
+    {
+      traceId: current.traceId,
+      requestId: current.requestId,
+      startedAt: current.startedAt,
+      nonce: current.nonce,
+    },
+    createRequestContextDependencies(),
+    trustedProxy,
   );
 
   return next();
@@ -110,10 +126,20 @@ const enforceNavigationPolicy: StartMiddleware = async (_event, next) => {
 const recordRequestTiming: StartMiddleware = async (event, next) => {
   const response = await next();
   const context = fetchEvent().locals.requestContext;
-  const duration = Date.now() - context.observability.requestStartedAt;
+  const duration = Date.now() - context.startedAt;
   event.res.headers.set("Server-Timing", `app;dur=${duration}`);
   return response;
 };
+
+function isPrerenderRoute(pathname: string): boolean {
+  return (
+    pathname === "/legal/privacy" ||
+    pathname === "/legal/terms" ||
+    pathname === "/updates" ||
+    pathname === "/docs" ||
+    pathname.startsWith("/docs/")
+  );
+}
 
 export default createMiddleware([
   identifyRequest,

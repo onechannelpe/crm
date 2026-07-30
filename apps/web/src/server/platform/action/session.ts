@@ -14,12 +14,8 @@ import { getRequestContext } from "~/server/platform/http/request-context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export async function getSession(): Promise<AuthSession | null> {
-  return getRequestContext().getAuthSession();
+  return getRequestContext().principal;
 }
-
-// Auth denials return Err(...) in the same Result channel as parsing and
-// execution so the action runtime can branch on kind instead of catching.
-// Throwing facades further down wrap these for non-runAction callers.
 
 export async function authenticate(): Promise<
   Result<AuthSession, DomainError>

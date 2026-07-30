@@ -136,7 +136,10 @@ export async function enforceAuthRequest(
       return reject(403, csrfPolicyError);
     }
 
-    const csrfToken = await requestContext.getRequestCsrfToken();
+    const csrfToken =
+      requestContext.csrf.kind === "available"
+        ? requestContext.csrf.token
+        : null;
     const isCsrfValid = csrfToken
       ? await verifyCsrf(event.request, csrfToken)
       : false;
@@ -147,7 +150,7 @@ export async function enforceAuthRequest(
 
   if (requestClass === "public") return { kind: "allow" };
 
-  const session = await requestContext.getAuthSession();
+  const session = requestContext.principal;
   if (!session) {
     // Browser navigations get a login redirect; API clients get a status code
     // they can act on instead of an opaque 302 to an HTML page.
@@ -198,7 +201,7 @@ function logCsrfReject(
     fetchSite: request.headers.get("sec-fetch-site"),
     origin: request.headers.get("origin"),
     targetOrigin,
-    requestId: event.locals.requestContext.observability.requestId,
-    traceId: event.locals.requestContext.observability.traceId,
+    requestId: event.locals.requestContext.requestId,
+    traceId: event.locals.requestContext.traceId,
   });
 }

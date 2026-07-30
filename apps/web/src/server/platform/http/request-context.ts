@@ -3,8 +3,6 @@ import { getRequestEvent } from "solid-js/web";
 import type { AuthSession } from "~/domain/auth/access/session-types";
 import { getClientIp } from "~/server/auth/password/client-ip";
 import { getSessionCookie } from "~/server/auth/session/cookies";
-import { securityConfig } from "~/server/platform/config/env";
-import type { ActionRequestContext } from "~/server/platform/observability/context";
 import {
   deleteRequestSessionCookie,
   getRequestSessionCookie,
@@ -16,14 +14,25 @@ import { resolvePublicOrigin } from "./public-origin";
 
 const REQUEST_SESSION_ACTIVITY_UPDATE_MS = 5 * 60 * 1000;
 
+export type AuthPrincipal = AuthSession;
+
+export type CsrfState =
+  | { kind: "not_applicable" }
+  | { kind: "missing" }
+  | { kind: "available"; token: string };
+
 export interface RequestContext {
+  traceId: string;
+  requestId: string;
+  route: string;
+  method: string;
+  startedAt: number;
+  nonce: string;
+  csrf: CsrfState;
+  principal: AuthPrincipal | null;
   publicOrigin: string;
   clientIp: string;
   userAgent: string | null;
-  observability: ActionRequestContext;
-  csrfToken: string | null;
-  getAuthSession(): Promise<AuthSession | null>;
-  getRequestCsrfToken(): Promise<string | null>;
 }
 
 interface RequestSessionStore {
@@ -50,41 +59,62 @@ export interface RequestContextDeps {
 
 export async function buildRequestContext(
   request: Request,
-  observability: ActionRequestContext,
+  identity: {
+    traceId: string;
+    requestId: string;
+    startedAt: number;
+    nonce: string;
+  },
   deps: RequestContextDeps,
+  trustedProxy: boolean,
 ): Promise<RequestContext> {
-  const initialRequestSession = shouldBootstrapRequestSession(request)
-    ? await loadRequestSessionState(request, true, deps.requestSessions)
-    : null;
-  let authSessionPromise: Promise<AuthSession | null> | null = null;
-  let requestSessionPromise: Promise<{
-    id: string;
-    csrfToken: string;
-  } | null> | null = initialRequestSession
-    ? Promise.resolve(initialRequestSession)
-    : null;
+  const [principal, requestSession] = await Promise.all([
+    loadRequestSession(deps.resolveAuthSession),
+    loadRequestSessionState(
+      request,
+      shouldBootstrapRequestSession(request),
+      deps.requestSessions,
+    ),
+  ]);
+  const url = new URL(request.url);
 
   return {
+    ...identity,
+    route: url.pathname,
+    method: request.method,
+    csrf: requestSession
+      ? { kind: "available", token: requestSession.csrfToken }
+      : { kind: "missing" },
+    principal,
     publicOrigin: resolvePublicOrigin(request, {
-      trustedProxy: securityConfig().trustedProxy === "true",
+      trustedProxy,
     }),
-    clientIp: getClientIp(request.headers),
+    clientIp: getClientIp(request.headers, trustedProxy),
     userAgent: request.headers.get("user-agent") ?? null,
-    observability,
-    csrfToken: initialRequestSession?.csrfToken ?? null,
-    getAuthSession() {
-      authSessionPromise ??= loadRequestSession(deps.resolveAuthSession);
-      return authSessionPromise;
-    },
-    async getRequestCsrfToken() {
-      requestSessionPromise ??= loadRequestSessionState(
-        request,
-        false,
-        deps.requestSessions,
-      );
-      const requestSession = await requestSessionPromise;
-      return requestSession?.csrfToken ?? null;
-    },
+  };
+}
+
+export function buildAnonymousRequestContext(
+  request: Request,
+  identity: {
+    traceId: string;
+    requestId: string;
+    startedAt: number;
+    nonce: string;
+  },
+  trustedProxy: boolean,
+): RequestContext {
+  const url = new URL(request.url);
+
+  return {
+    ...identity,
+    route: url.pathname,
+    method: request.method,
+    csrf: { kind: "not_applicable" },
+    principal: null,
+    publicOrigin: resolvePublicOrigin(request, { trustedProxy }),
+    clientIp: getClientIp(request.headers, trustedProxy),
+    userAgent: request.headers.get("user-agent") ?? null,
   };
 }
 

@@ -10,8 +10,8 @@ import {
   authorizeAccess,
 } from "./access";
 import { type AppContext, createAppContext } from "./context";
-import { domainToWire } from "./fault-boundary";
-import { type RuntimePorts } from "./ports";
+import { toWire } from "./domain-error";
+import { type ServerFunctionPorts } from "./ports";
 import {
   type AuditFields,
   errorRow,
@@ -42,10 +42,10 @@ export type ActionDef<TIn, TOut, E extends DomainError> =
 
 function runParse<TIn>(
   parse: () => Result<TIn, DomainError>,
-  ports: RuntimePorts,
+  _ports: ServerFunctionPorts,
 ): Result<TIn, WireError> {
   const parsed = parse();
-  if (isErr(parsed)) return Err(domainToWire(parsed.error, ports));
+  if (isErr(parsed)) return Err(toWire(parsed.error));
   return Ok(parsed.value);
 }
 
@@ -53,26 +53,26 @@ async function runExecute<TIn, TOut, E extends DomainError>(
   ctx: AppContext,
   input: TIn,
   execute: (ctx: AppContext, input: TIn) => Promise<Result<TOut, E>>,
-  ports: RuntimePorts,
+  _ports: ServerFunctionPorts,
 ): Promise<Result<TOut, WireError>> {
   const result = await execute(ctx, input);
 
   if (!isErr(result)) return Ok(result.value);
-  return Err(domainToWire(result.error, ports));
+  return Err(toWire(result.error));
 }
 
 async function runExecuteEmpty<TOut, E extends DomainError>(
   ctx: AppContext,
   execute: (ctx: AppContext) => Promise<Result<TOut, E>>,
-  ports: RuntimePorts,
+  _ports: ServerFunctionPorts,
 ): Promise<Result<TOut, WireError>> {
   const result = await execute(ctx);
 
   if (!isErr(result)) return Ok(result.value);
-  return Err(domainToWire(result.error, ports));
+  return Err(toWire(result.error));
 }
 
-export function createActionRunner(ports: RuntimePorts) {
+export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
   async function runAuthenticated<TOut>(
     def: ActionCommon,
     startedAt: Date,
@@ -82,7 +82,7 @@ export function createActionRunner(ports: RuntimePorts) {
     const identity: Result<AuthSession, DomainError> = await authenticateAccess(
       def.access,
     );
-    if (isErr(identity)) return Err(domainToWire(identity.error, ports));
+    if (isErr(identity)) return Err(toWire(identity.error));
 
     const ctx = createAppContext(identity.value, ports.now);
     const tele: TelemetryContext = {
@@ -94,7 +94,7 @@ export function createActionRunner(ports: RuntimePorts) {
 
     const authorized = authorizeAccess(identity.value, def.access, def.stepUp);
     if (isErr(authorized)) {
-      const wire = domainToWire(authorized.error, ports);
+      const wire = toWire(authorized.error);
       ports.record(errorRow(tele, wire));
       return Err(wire);
     }
@@ -109,7 +109,7 @@ export function createActionRunner(ports: RuntimePorts) {
     return executed;
   }
 
-  async function runActionResult<TIn, TOut, E extends DomainError>(
+  async function executeResult<TIn, TOut, E extends DomainError>(
     def: ActionDef<TIn, TOut, E>,
   ): Promise<Result<TOut, WireError>> {
     const startedAt = ports.now();
@@ -129,13 +129,13 @@ export function createActionRunner(ports: RuntimePorts) {
     );
   }
 
-  async function runAction<TIn, TOut, E extends DomainError>(
+  async function execute<TIn, TOut, E extends DomainError>(
     def: ActionDef<TIn, TOut, E>,
   ): Promise<TOut> {
-    const result = await runActionResult(def);
+    const result = await executeResult(def);
     if (isErr(result)) throw new ActionError(result.error);
     return result.value;
   }
 
-  return { runAction, runActionResult };
+  return { execute };
 }

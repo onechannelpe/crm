@@ -10,7 +10,8 @@ import { CSRF_CONFIG } from "./shared/csrf-config";
 
 function RequestMeta() {
   const event = getRequestEvent();
-  const csrfToken = event?.locals?.requestContext?.csrfToken;
+  const csrf = event?.locals?.requestContext?.csrf;
+  const csrfToken = csrf?.kind === "available" ? csrf.token : null;
 
   // eslint-disable-next-line solid/components-return-once
   return csrfToken ? (

@@ -1,7 +1,6 @@
 import type { TelemetryRow } from "./telemetry";
 
-export type RuntimePorts = {
+export type ServerFunctionPorts = {
   now: () => Date;
-  report: (error: unknown) => void;
   record: (row: TelemetryRow) => void;
 };

@@ -1,27 +1,22 @@
 import "server-only";
 import type { DomainError } from "~/domain/errors";
 
-import { type ActionDef, createActionRunner } from "./run";
-import { defaultPorts } from "./runtime-ports";
+import { recordActionObservation } from "./record-action-observation";
+import { type ActionDef, createServerFunctionExecutor } from "./run";
 
-// Composition root for server functions. run.ts stays free of concrete
-// dependencies so tests can build a runner with fakes.
-const serverFunctionRunner = createActionRunner(defaultPorts);
+const serverFunctionExecutor = createServerFunctionExecutor({
+  now: () => new Date(),
+  record: (row) => {
+    void recordActionObservation(row).catch(() => {});
+  },
+});
 
 export function executeSessionServerFunction<
   TInput,
   TOutput,
   TError extends DomainError,
 >(definition: ActionDef<TInput, TOutput, TError>) {
-  return serverFunctionRunner.runAction(definition);
-}
-
-export function executeSessionServerFunctionResult<
-  TInput,
-  TOutput,
-  TError extends DomainError,
->(definition: ActionDef<TInput, TOutput, TError>) {
-  return serverFunctionRunner.runActionResult(definition);
+  return serverFunctionExecutor.execute(definition);
 }
 
 export function executeAdminServerFunction<
@@ -29,5 +24,5 @@ export function executeAdminServerFunction<
   TOutput,
   TError extends DomainError,
 >(definition: ActionDef<TInput, TOutput, TError>) {
-  return serverFunctionRunner.runAction(definition);
+  return serverFunctionExecutor.execute(definition);
 }

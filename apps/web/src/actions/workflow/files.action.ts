@@ -1,4 +1,4 @@
-import type { WireError } from "~/contracts/errors";
+import { ActionError, type WireError } from "~/contracts/errors";
 import type { LeadRateRevisionFileView } from "~/contracts/workflow/results";
 import { fail, invalid, type DomainError } from "~/domain/errors";
 import {
@@ -6,10 +6,7 @@ import {
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
 } from "~/domain/ids";
-import {
-  executeSessionServerFunction,
-  executeSessionServerFunctionResult,
-} from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -25,6 +22,22 @@ type LeadUpload = {
     stream: ReadableStream<Uint8Array>;
   };
 };
+
+type FileOperationResult<T> = Result<T, WireError>;
+
+async function executeFileOperation<T>(
+  operation: Promise<T>,
+): Promise<FileOperationResult<T>> {
+  try {
+    return Ok(await operation);
+  } catch (error) {
+    if (error instanceof ActionError && error.wire.kind !== "internal") {
+      return Err(error.wire);
+    }
+
+    throw error;
+  }
+}
 
 function parseLeadUpload(formData: unknown): Result<LeadUpload, DomainError> {
   if (!(formData instanceof FormData)) {
@@ -156,25 +169,27 @@ export async function uploadLeadRateRevisionFile(
 ): Promise<Result<LeadRateRevisionFileView, WireError>> {
   "use server";
 
-  return executeSessionServerFunctionResult({
-    name: "workflow.upload_rate_revision_file",
-    access: { kind: "auth" },
+  return executeFileOperation(
+    executeSessionServerFunction({
+      name: "workflow.upload_rate_revision_file",
+      access: { kind: "auth" },
 
-    parse: () => parseLeadUpload(formData),
+      parse: () => parseLeadUpload(formData),
 
-    audit: ({ leadId, file }) => ({
-      leadId,
-      fileName: file.name,
-      sizeBytes: file.sizeBytes,
-    }),
-
-    execute: (ctx, { leadId, file }) =>
-      getWorkflowRuntime().leadFiles.uploadRateRevisionFile({
-        ctx,
+      audit: ({ leadId, file }) => ({
         leadId,
-        file,
+        fileName: file.name,
+        sizeBytes: file.sizeBytes,
       }),
-  });
+
+      execute: (ctx, { leadId, file }) =>
+        getWorkflowRuntime().leadFiles.uploadRateRevisionFile({
+          ctx,
+          leadId,
+          file,
+        }),
+    }),
+  );
 }
 
 export async function requestRateRevisionFileDownloadToken(input: {
@@ -183,26 +198,28 @@ export async function requestRateRevisionFileDownloadToken(input: {
 }) {
   "use server";
 
-  return executeSessionServerFunctionResult({
-    name: "workflow.request_rate_revision_download_token",
-    access: { kind: "auth" },
+  return executeFileOperation(
+    executeSessionServerFunction({
+      name: "workflow.request_rate_revision_download_token",
+      access: { kind: "auth" },
 
-    parse: () =>
-      parseObject(input, validationFail, (r) => ({
-        leadId: r.id("leadId", WorkflowLeadId),
-        fileId: r.id("fileId", WorkflowRateRevisionFileId),
-      })),
+      parse: () =>
+        parseObject(input, validationFail, (r) => ({
+          leadId: r.id("leadId", WorkflowLeadId),
+          fileId: r.id("fileId", WorkflowRateRevisionFileId),
+        })),
 
-    audit: ({ leadId, fileId }) => ({
-      leadId,
-      fileId,
-    }),
-
-    execute: (ctx, { leadId, fileId }) =>
-      getWorkflowRuntime().leadFiles.requestRateRevisionDownloadToken({
-        ctx,
+      audit: ({ leadId, fileId }) => ({
         leadId,
         fileId,
       }),
-  });
+
+      execute: (ctx, { leadId, fileId }) =>
+        getWorkflowRuntime().leadFiles.requestRateRevisionDownloadToken({
+          ctx,
+          leadId,
+          fileId,
+        }),
+    }),
+  );
 }
