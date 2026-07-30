@@ -3,8 +3,8 @@ import { redirect } from "@solidjs/router";
 import type { OnboardingSnapshot } from "~/contracts/auth";
 import { getSessionPath } from "~/domain/auth/access/route-policy";
 import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
+import { composeAuth } from "~/server/auth/ui/composition";
 import { getSession } from "~/server/platform/action/session";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { isErr } from "~/shared/result";
 
 export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {
@@ -19,7 +19,7 @@ export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {
   }
 
   const result = await loadOnboardingSnapshot(
-    getAuthRuntime().setup.repos,
+    composeAuth().setup.repos,
     session.userId,
   );
   if (isErr(result)) {

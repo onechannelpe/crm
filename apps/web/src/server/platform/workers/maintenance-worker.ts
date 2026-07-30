@@ -1,12 +1,12 @@
 import { startSessionCleanupScheduler } from "~/server/auth/session/cleanup";
+import { composeAuth } from "~/server/auth/ui/composition";
+import { composeClientSearch } from "~/server/client-search/ui/composition";
+import { composeFiles } from "~/server/files/ui/composition";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
-import { getClientSearchRuntime } from "~/server/platform/container/client-search-runtime";
-import { getFilesRuntime } from "~/server/platform/container/files-runtime";
-import { infra } from "~/server/platform/container/infra";
-import { getIntegrationsRuntime } from "~/server/platform/container/integrations-runtime";
-import { getMerchantStatsRuntime } from "~/server/platform/container/merchant-stats-runtime";
-import { getNotificationsRuntime } from "~/server/platform/container/notifications-runtime";
+import { composeIntegrations } from "~/server/integrations/ui/composition";
+import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
+import { composeNotifications } from "~/server/notifications/ui/composition";
+import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
 import { dbUrl } from "~/server/platform/database/db";
 import {
   createPgListener,
@@ -62,19 +62,19 @@ function makeWaker(run: () => Promise<void>): () => void {
 export function startMaintenanceWorker(): { stop(): Promise<void> } {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
 
-  const { integration } = getIntegrationsRuntime();
+  const { integration } = composeIntegrations();
 
   const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
     runtime: integration,
-    readFile: (storageKey) => getFilesRuntime().storage.getBytes(storageKey),
+    readFile: (storageKey) => composeFiles().storage.getBytes(storageKey),
   });
 
   const gpvSnapshotQueue =
-    getMerchantStatsRuntime().imports.createQueue(WORKER_ID);
+    composeMerchantStats().imports.createQueue(WORKER_ID);
 
   const enrichmentQueue =
-    getClientSearchRuntime().createEnrichmentQueue(WORKER_ID);
-  const notificationQueues = getNotificationsRuntime().createQueues(WORKER_ID);
+    composeClientSearch().createEnrichmentQueue(WORKER_ID);
+  const notificationQueues = composeNotifications().createQueues(WORKER_ID);
 
   const queuesByChannel: Record<string, QueueRunner[]> = {
     [JOB_TABLE_CHANNELS.workflow_integration_jobs]: [recordsImportQueue],
@@ -109,16 +109,18 @@ export function startMaintenanceWorker(): { stop(): Promise<void> } {
   };
 
   const stopAccountLifecycleMaintenance = startAccountLifecycleMaintenance({
-    executor: infra.db,
-    messaging: getNotificationsRuntime().messaging,
+    executor: serverInfrastructure.db,
+    messaging: composeNotifications().messaging,
     invalidateUserSessions: (userId) =>
-      getAuthRuntime().sessionService.revokeAllForUser(userId),
+      composeAuth().sessionService.revokeAllForUser(userId),
   });
 
   const stopLeadReservationMaintenance = startLeadReservationMaintenance({
-    executor: infra.db,
+    executor: serverInfrastructure.db,
   });
-  const stopSessionCleanup = startSessionCleanupScheduler(infra.db);
+  const stopSessionCleanup = startSessionCleanupScheduler(
+    serverInfrastructure.db,
+  );
 
   const pollTimer = setInterval(wakeAll, POLL_FLOOR_MS);
 

@@ -3,12 +3,12 @@ import type { APIEvent } from "@solidjs/start/server";
 import { recordImportTopic } from "~/contracts/records/imports";
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { IntegrationJobId } from "~/domain/ids";
+import { composeIntegrations } from "~/server/integrations/ui/composition";
 import { getSession } from "~/server/platform/action/session";
-import { getIntegrationsRuntime } from "~/server/platform/container/integrations-runtime";
-import { getRecordsImportRealtimeRuntime } from "~/server/platform/container/records-import-realtime-runtime";
 import { openTopicStream } from "~/server/realtime/sse-topic-stream";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
 import { recordImportSnapshot } from "~/server/records/imports/realtime";
+import { composeRecordsImportRealtime } from "~/server/records/imports/ui/realtime-composition";
 import { isErr } from "~/shared/result";
 
 export async function GET(
@@ -31,7 +31,7 @@ export async function GET(
   }
 
   const jobId = parsedJobId.value;
-  const { integration } = getIntegrationsRuntime();
+  const { integration } = composeIntegrations();
   const job = await integration.jobs.findById(jobId);
 
   if (!job) {
@@ -44,11 +44,11 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  await getRecordsImportRealtimeRuntime().ensure();
+  await composeRecordsImportRealtime().ensure();
 
   const stream = await openTopicStream(
     event.nativeEvent,
-    getRecordsImportRealtimeRuntime().hub,
+    composeRecordsImportRealtime().hub,
     recordImportTopic.of(jobId),
     {
       snapshot: () => recordImportSnapshot(jobId, integration.jobs),

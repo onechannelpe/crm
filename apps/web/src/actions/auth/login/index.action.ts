@@ -11,10 +11,10 @@ import {
   verifyTotpLoginProof,
 } from "~/server/auth/flows/verify-pending-login";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
+import { composeAuth } from "~/server/auth/ui/composition";
 import { executePublicServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
-import { infra } from "~/server/platform/container/infra";
+import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
 import { getRequestClientMetadata } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
@@ -33,8 +33,8 @@ function recordAuthAnalyticsEvent(
   return recordAuthAnalytics(
     event,
     context,
-    getAuthRuntime().analytics,
-    infra.now,
+    composeAuth().analytics,
+    serverInfrastructure.now,
   );
 }
 
@@ -48,7 +48,7 @@ export async function passwordLogin(
     const password = readLoginText(formData, "password", { trim: false });
     const request = getRequestClientMetadata();
     const analyticsContext = getActionRequestContext();
-    const loginContext = getAuthRuntime().login;
+    const loginContext = composeAuth().login;
 
     const result = await submitPasswordLogin(
       {
@@ -131,7 +131,7 @@ export async function passkeyStart(
 
     const request = getRequestClientMetadata();
     const analyticsContext = getActionRequestContext();
-    const loginContext = getAuthRuntime().login;
+    const loginContext = composeAuth().login;
 
     const command =
       mode === "identified"
@@ -191,7 +191,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
 
     const request = getRequestClientMetadata();
     const analyticsContext = getActionRequestContext();
-    const loginContext = getAuthRuntime().login;
+    const loginContext = composeAuth().login;
 
     const verifiedAt = loginContext.now();
     const verified = await verifyTotpLoginProof(loginContext, {
@@ -270,7 +270,7 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
     }
 
     const request = getRequestClientMetadata();
-    const loginContext = getAuthRuntime().login;
+    const loginContext = composeAuth().login;
 
     const verifiedAt = loginContext.now();
     const verified = await verifyRecoveryLoginProof(loginContext, {

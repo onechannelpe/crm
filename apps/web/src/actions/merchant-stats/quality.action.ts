@@ -7,12 +7,12 @@ import {
   QUALITY_ISSUES,
   type QualityIssue,
 } from "~/contracts/merchant-stats/vocabulary";
+import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getMerchantStatsRuntime } from "~/server/platform/container/merchant-stats-runtime";
 import { Ok } from "~/shared/result";
 
 const DEFAULT_PAGE = 60;
@@ -41,6 +41,6 @@ export async function getQualityRows(raw: {
     audit: (input) => ({ issue: input.issue }),
 
     execute: async (_ctx, input) =>
-      Ok(await getMerchantStatsRuntime().quality.rows(input.issue, input.page)),
+      Ok(await composeMerchantStats().quality.rows(input.issue, input.page)),
   });
 }

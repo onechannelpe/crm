@@ -1,10 +1,10 @@
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { getTeamRuntime } from "~/server/platform/container/team-runtime";
 import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,
 } from "~/server/team/application/invites";
+import { composeTeam } from "~/server/team/ui/composition";
 import { isErr, Ok } from "~/shared/result";
 
 export async function getInviteManagement(): Promise<
@@ -18,8 +18,8 @@ export async function getInviteManagement(): Promise<
     execute: async (ctx) => {
       const management = await getInviteManagementService(
         ctx,
-        getTeamRuntime().inviteManagement,
-        getTeamRuntime().publicOrigin,
+        composeTeam().inviteManagement,
+        composeTeam().publicOrigin,
       );
       if (isErr(management)) return management;
 

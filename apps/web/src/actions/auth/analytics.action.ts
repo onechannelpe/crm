@@ -3,8 +3,8 @@ import {
   isAuthAnalyticsScreen,
   recordAuthAnalyticsEvent as recordAuthAnalytics,
 } from "~/server/auth/auth-analytics";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
-import { infra } from "~/server/platform/container/infra";
+import { composeAuth } from "~/server/auth/ui/composition";
+import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
 function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
@@ -40,7 +40,7 @@ export async function trackAuthClientEvent(
       ...event,
     },
     getActionRequestContext(),
-    getAuthRuntime().analytics,
-    infra.now,
+    composeAuth().analytics,
+    serverInfrastructure.now,
   );
 }

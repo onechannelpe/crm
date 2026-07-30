@@ -3,8 +3,8 @@ import {
   regenerateRecoverySetup,
 } from "~/server/auth/recovery/recovery-setup";
 import { setSessionCookie } from "~/server/auth/session/cookies";
+import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Ok } from "~/shared/result";
 
 export async function getRecoveryCodesStatus(): Promise<{
@@ -20,7 +20,7 @@ export async function getRecoveryCodesStatus(): Promise<{
     access: { kind: "session" },
 
     execute: async ({ actor }) => {
-      const recoveryCodes = getAuthRuntime().setup.repos.userRecoveryCodes;
+      const recoveryCodes = composeAuth().setup.repos.userRecoveryCodes;
 
       const active = await recoveryCodes.getActiveSet(actor.userId);
 
@@ -43,7 +43,7 @@ export async function regenerateRecoveryCodes(): Promise<{
     name: "auth.recovery.regenerate",
     access: { kind: "session" },
 
-    execute: (ctx) => regenerateRecoverySetup(ctx, getAuthRuntime().setup),
+    execute: (ctx) => regenerateRecoverySetup(ctx, composeAuth().setup),
   });
 
   setSessionCookie(result.sessionToken);
@@ -62,7 +62,7 @@ export async function acknowledgeRecoveryCodes(): Promise<{
     name: "auth.recovery.acknowledge",
     access: { kind: "session" },
 
-    execute: (ctx) => acknowledgeRecoverySetup(ctx, getAuthRuntime().setup),
+    execute: (ctx) => acknowledgeRecoverySetup(ctx, composeAuth().setup),
   });
 
   setSessionCookie(result.sessionToken);

@@ -1,10 +1,10 @@
 import { longName } from "~/domain/identity/display-name";
+import { composeAuth } from "~/server/auth/ui/composition";
 import { executeAdminServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Ok } from "~/shared/result";
 
 export interface UserLoginRetryReport {
@@ -42,7 +42,7 @@ export async function getUserLoginRetryReport(
       })),
 
     execute: async (_ctx, input) => {
-      const { users, authEvents } = getAuthRuntime().login.repos;
+      const { users, authEvents } = composeAuth().login.repos;
 
       const user = await users.findByUsername(input.username);
 

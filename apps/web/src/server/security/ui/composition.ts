@@ -9,14 +9,16 @@ import { createRequestSessionsRepo } from "~/server/security/repos-request-sessi
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-export function createSecurityComposition(infra: ServerInfrastructure) {
+export function createSecurityComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
   return {
-    requestSessions: createRequestSessionsRepo(infra.db),
-    users: createUsersRepo(infra.db),
-    passkeys: createPasskeysRepo(infra.db),
-    userTotpFactors: createUserTotpFactorsRepo(infra.db),
-    userRecoveryCodes: createUserRecoveryCodesRepo(infra.db),
-    events: createEventsRepo(infra.db),
+    requestSessions: createRequestSessionsRepo(serverInfrastructure.db),
+    users: createUsersRepo(serverInfrastructure.db),
+    passkeys: createPasskeysRepo(serverInfrastructure.db),
+    userTotpFactors: createUserTotpFactorsRepo(serverInfrastructure.db),
+    userRecoveryCodes: createUserRecoveryCodesRepo(serverInfrastructure.db),
+    events: createEventsRepo(serverInfrastructure.db),
   };
 }
 

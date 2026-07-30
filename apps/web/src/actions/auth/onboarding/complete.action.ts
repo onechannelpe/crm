@@ -8,8 +8,8 @@ import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { setSessionCookie } from "~/server/auth/session/cookies";
+import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 import { isPlainRecord } from "~/shared/type-guards";
 
@@ -66,7 +66,7 @@ export async function completeOnboardingAction(
     access: { kind: "session" },
     parse: () => parseCompletionInput(input),
     execute: async (ctx, command) => {
-      const setup = getAuthRuntime().setup;
+      const setup = composeAuth().setup;
 
       switch (command.method) {
         case "none":

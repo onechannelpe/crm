@@ -17,7 +17,6 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import {
   chooseFulfillmentProductCommand,
   recordUnitSerialCommand,
@@ -26,6 +25,7 @@ import {
   rejectFulfillmentStepCommand,
   validateFulfillmentPaymentCommand,
 } from "~/server/workflow/lead/fulfillment/commands";
+import { composeWorkflow } from "~/server/workflow/ui/composition";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { workflowActor } from "./actor.action";
@@ -159,7 +159,7 @@ export async function chooseFulfillmentProduct(input: unknown) {
           actor: workflowActor(actor),
           ...payload,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -180,7 +180,7 @@ export async function uploadFulfillmentDocument(formData: FormData) {
     }),
 
     execute: (ctx, { leadId, action, file }) =>
-      getWorkflowRuntime().leadFiles.uploadFulfillmentDocument({
+      composeWorkflow().leadFiles.uploadFulfillmentDocument({
         ctx,
         leadId,
         action,
@@ -219,7 +219,7 @@ export async function recordFulfillmentSerial(input: unknown) {
           actor: workflowActor(actor),
           ...payload,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -254,7 +254,7 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
           actor: workflowActor(actor),
           ...payload,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -275,7 +275,7 @@ export async function uploadFulfillmentPaymentProof(formData: FormData) {
     }),
 
     execute: (ctx, { leadId, unitId, file }) =>
-      getWorkflowRuntime().leadFiles.uploadFulfillmentPaymentProof({
+      composeWorkflow().leadFiles.uploadFulfillmentPaymentProof({
         ctx,
         leadId,
         unitId,
@@ -304,7 +304,7 @@ export async function validateFulfillmentPayment(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -338,7 +338,7 @@ export async function rejectFulfillmentStep(input: unknown) {
           actor: workflowActor(actor),
           ...payload,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -373,7 +373,7 @@ export async function registerFulfillmentSale(input: unknown) {
           actor: workflowActor(actor),
           ...payload,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -400,7 +400,7 @@ export async function requestFulfillmentDownloadToken(input: {
     }),
 
     execute: (ctx, { leadId, fileAssetId }) =>
-      getWorkflowRuntime().leadFiles.requestFulfillmentDownloadToken({
+      composeWorkflow().leadFiles.requestFulfillmentDownloadToken({
         ctx,
         leadId,
         fileAssetId,

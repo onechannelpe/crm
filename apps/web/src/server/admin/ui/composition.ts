@@ -5,10 +5,12 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createAdminComposition(infra: ServerInfrastructure) {
+export function createAdminComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
   return {
-    events: createEventsRepo(infra.db),
-    auditActionPolicies: createAuditActionPoliciesRepo(infra.db),
+    events: createEventsRepo(serverInfrastructure.db),
+    auditActionPolicies: createAuditActionPoliciesRepo(serverInfrastructure.db),
   };
 }
 

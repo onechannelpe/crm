@@ -2,8 +2,8 @@ import type { APIEvent } from "@solidjs/start/server";
 
 import { buildFileDownloadHeaders } from "~/server/files/headers";
 import { executeDownload } from "~/server/files/service/execute-download";
+import { composeFiles } from "~/server/files/ui/composition";
 import { toWire } from "~/server/platform/action/domain-error";
-import { getFilesRuntime } from "~/server/platform/container/files-runtime";
 import { isErr } from "~/shared/result";
 
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
       return new Response("Invalid token", { status: 400 });
     }
 
-    const { repo, storage } = getFilesRuntime();
+    const { repo, storage } = composeFiles();
     const now = new Date();
 
     const result = await executeDownload(token, { repo, storage }, now);

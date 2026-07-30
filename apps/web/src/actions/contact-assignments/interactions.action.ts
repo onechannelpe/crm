@@ -2,12 +2,12 @@ import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignment
 import { ContactAssignmentId, OrganizationPersonId } from "~/domain/ids";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
+import { composeContactAssignments } from "~/server/contact-assignments/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getContactAssignmentsRuntime } from "~/server/platform/container/contact-assignments-runtime";
 
 export async function completeContactAssignmentCall(
   input: unknown,
@@ -40,7 +40,7 @@ export async function completeContactAssignmentCall(
           outcome: command.outcome,
           notes: command.notes,
         },
-        getContactAssignmentsRuntime().interactionUow,
+        composeContactAssignments().interactionUow,
       ),
   });
 }

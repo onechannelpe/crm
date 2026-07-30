@@ -5,12 +5,12 @@ import type {
   PendingCapacityRequestView,
 } from "~/contracts/capacity";
 import { UserId } from "~/domain/ids";
+import { composeCapacity } from "~/server/capacity/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getCapacityRuntime } from "~/server/platform/container/capacity-runtime";
 
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]
@@ -21,7 +21,7 @@ export async function getManagedExecutivesList(): Promise<
     name: "capacity.managed_executives.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
-    execute: (ctx) => getCapacityRuntime().useCases.listManagedExecutives(ctx),
+    execute: (ctx) => composeCapacity().useCases.listManagedExecutives(ctx),
   });
 }
 
@@ -43,7 +43,7 @@ export async function getExecutiveDetail(
     audit: (params) => ({ userId: params.userId }),
 
     execute: (ctx, params) =>
-      getCapacityRuntime().useCases.getExecutiveDetail(ctx, params),
+      composeCapacity().useCases.getExecutiveDetail(ctx, params),
   });
 }
 
@@ -56,7 +56,7 @@ export async function getPendingRequests(): Promise<
     name: "capacity.pending_requests.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
-    execute: (ctx) => getCapacityRuntime().useCases.listPendingRequests(ctx),
+    execute: (ctx) => composeCapacity().useCases.listPendingRequests(ctx),
   });
 }
 
@@ -67,6 +67,6 @@ export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
     name: "capacity.policy_defaults.read",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
-    execute: (ctx) => getCapacityRuntime().useCases.getPolicyDefaults(ctx),
+    execute: (ctx) => composeCapacity().useCases.getPolicyDefaults(ctx),
   });
 }

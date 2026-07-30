@@ -7,11 +7,11 @@ import {
 } from "~/server/platform/composition/infrastructure";
 
 export function createContactAssignmentsComposition(
-  infra: ServerInfrastructure,
+  serverInfrastructure: ServerInfrastructure,
   engine: EngineClient,
 ) {
   return createContactAssignmentsContext({
-    executor: infra.db,
+    executor: serverInfrastructure.db,
     engine,
   });
 }

@@ -3,12 +3,12 @@ import { UserId } from "~/domain/ids";
 import { countActiveSessions as countActiveSessionsService } from "~/server/auth/application/queries/count-active-sessions";
 import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/auth/application/queries/list-all-active-sessions";
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
+import { composeAuth } from "~/server/auth/ui/composition";
 import { executeAdminServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Ok } from "~/shared/result";
 
 export async function listUserSessions(rawUserId: unknown) {
@@ -30,7 +30,7 @@ export async function listUserSessions(rawUserId: unknown) {
       Ok(
         await listUserSessionsService(
           ctx,
-          getAuthRuntime().adminSessionsRead,
+          composeAuth().adminSessionsRead,
           parsed,
         ),
       ),
@@ -46,7 +46,7 @@ export async function getActiveSessionsCount(): Promise<number> {
     stepUp: "recent_strong_auth",
 
     execute: async () =>
-      Ok(await countActiveSessionsService(getAuthRuntime().adminSessionsRead)),
+      Ok(await countActiveSessionsService(composeAuth().adminSessionsRead)),
   });
 }
 
@@ -59,8 +59,6 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
     stepUp: "recent_strong_auth",
 
     execute: async () =>
-      Ok(
-        await listAllActiveSessionsService(getAuthRuntime().adminSessionsRead),
-      ),
+      Ok(await listAllActiveSessionsService(composeAuth().adminSessionsRead)),
   });
 }

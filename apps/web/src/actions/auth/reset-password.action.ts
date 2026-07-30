@@ -1,8 +1,8 @@
 import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/flows/request-password-reset";
 import { resetPassword as resetPasswordService } from "~/server/auth/flows/reset-password";
+import { composeAuth } from "~/server/auth/ui/composition";
 import { executePublicServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { getRequestContext } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
@@ -18,7 +18,7 @@ export async function requestPasswordReset(
 
   return executePublicServerFunction(async () => {
     const result = await requestPasswordResetService({
-      deps: getAuthRuntime().passwordReset,
+      deps: composeAuth().passwordReset,
       email,
       origin,
     });
@@ -44,7 +44,7 @@ export async function resetPassword(formData: FormData): Promise<{ ok: true }> {
 
   return executePublicServerFunction(async () => {
     const result = await resetPasswordService({
-      deps: getAuthRuntime().passwordReset,
+      deps: composeAuth().passwordReset,
       token,
       password,
       confirmPassword,

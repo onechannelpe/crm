@@ -37,10 +37,15 @@ function buildRepos(db: ServerInfrastructure["db"]): ExtensionCompositionRepos {
   };
 }
 
-export function createExtensionComposition(infra: ServerInfrastructure) {
-  const extensionService = createExtensionService(buildRepos(infra.db), {
-    uow: createExecutorUow(infra.db, buildRepos),
-  });
+export function createExtensionComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
+  const extensionService = createExtensionService(
+    buildRepos(serverInfrastructure.db),
+    {
+      uow: createExecutorUow(serverInfrastructure.db, buildRepos),
+    },
+  );
 
   return { extensionService };
 }

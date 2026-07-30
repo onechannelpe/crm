@@ -5,7 +5,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getUsersRuntime } from "~/server/platform/container/users-runtime";
+import { composeUsers } from "~/server/users/ui/composition";
 
 export async function getMembersRoster(): Promise<MembersRoster> {
   "use server";
@@ -13,7 +13,7 @@ export async function getMembersRoster(): Promise<MembersRoster> {
   return executeSessionServerFunction({
     name: "members.roster.read",
     access: { kind: "permission", permission: "team:read" },
-    execute: (ctx) => getUsersRuntime().members.listRoster(ctx),
+    execute: (ctx) => composeUsers().members.listRoster(ctx),
   });
 }
 
@@ -29,7 +29,6 @@ export async function getMemberDetail(
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.id("userId", UserId),
       })),
-    execute: (ctx, command) =>
-      getUsersRuntime().members.getDetail(ctx, command),
+    execute: (ctx, command) => composeUsers().members.getDetail(ctx, command),
   });
 }

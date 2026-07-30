@@ -32,7 +32,7 @@ import {
 import { createUsersRepo } from "~/server/users/repos-users";
 
 export function createAuthComposition(
-  infra: ServerInfrastructure,
+  serverInfrastructure: ServerInfrastructure,
   notifications: {
     messaging: MessagingGateway;
     enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
@@ -40,24 +40,27 @@ export function createAuthComposition(
   analytics: AuthAnalyticsRecorder,
 ) {
   const sessionService = createSessionService({
-    sessions: createAuthSessionRepo(infra.db),
-    users: createAuthUsersRepo(infra.db),
-    events: createEventsRepo(infra.db),
-    now: infra.now,
-    logger: infra.logger,
+    sessions: createAuthSessionRepo(serverInfrastructure.db),
+    users: createAuthUsersRepo(serverInfrastructure.db),
+    events: createEventsRepo(serverInfrastructure.db),
+    now: serverInfrastructure.now,
+    logger: serverInfrastructure.logger,
   });
 
   const authThrottleService = createAuthThrottleService({
-    authThrottle: createAuthThrottleRepo(infra.db),
-    now: infra.now,
+    authThrottle: createAuthThrottleRepo(serverInfrastructure.db),
+    now: serverInfrastructure.now,
   });
-  const setup = createAuthSetupContext(infra.db);
-  const inviteService = createInviteServiceForExecutor(infra.db, infra.now);
+  const setup = createAuthSetupContext(serverInfrastructure.db);
+  const inviteService = createInviteServiceForExecutor(
+    serverInfrastructure.db,
+    serverInfrastructure.now,
+  );
 
   const impersonationDeps = {
     sessions: sessionService,
-    users: createUsersRepo(infra.db),
-    events: createEventsRepo(infra.db),
+    users: createUsersRepo(serverInfrastructure.db),
+    events: createEventsRepo(serverInfrastructure.db),
   };
 
   return {
@@ -69,7 +72,10 @@ export function createAuthComposition(
         startImpersonation(ctx, impersonationDeps, command),
       stop: (ctx: AppContext) => stopImpersonation(ctx, impersonationDeps),
     },
-    login: createAuthLoginContext(infra.db, infra.now),
+    login: createAuthLoginContext(
+      serverInfrastructure.db,
+      serverInfrastructure.now,
+    ),
     setup,
     inviteAcceptance: {
       inviteService,
@@ -80,17 +86,17 @@ export function createAuthComposition(
       },
     },
     passwordReset: createPasswordResetContext({
-      executor: infra.db,
+      executor: serverInfrastructure.db,
       messaging: notifications.messaging,
     }),
-    sessionRead: createAuthSessionReadContext(infra.db),
+    sessionRead: createAuthSessionReadContext(serverInfrastructure.db),
     sessionLogout: createAuthSessionLogoutContext({
-      executor: infra.db,
+      executor: serverInfrastructure.db,
       revokeSession: (id) => sessionService.revoke(id),
     }),
-    adminSessionsRead: createAdminSessionsReadContext(infra.db),
+    adminSessionsRead: createAdminSessionsReadContext(serverInfrastructure.db),
     adminSessionRevocation: createAdminSessionRevocationContext({
-      executor: infra.db,
+      executor: serverInfrastructure.db,
       revokeSession: (id) => sessionService.revoke(id),
       revokeUserSessions: (userId) => sessionService.revokeAllForUser(userId),
     }),

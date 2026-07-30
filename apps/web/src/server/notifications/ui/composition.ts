@@ -125,7 +125,7 @@ export function assembleNotificationPipeline(
 }
 
 export function createNotificationsRuntime(
-  infra: ServerInfrastructure,
+  serverInfrastructure: ServerInfrastructure,
   config: NotificationsConfig,
   app: AppConfig,
 ): NotificationPipeline {
@@ -171,7 +171,7 @@ export function createNotificationsRuntime(
   });
 
   return assembleNotificationPipeline({
-    db: infra.db,
+    db: serverInfrastructure.db,
     messaging,
     clock: () => new Date(),
     publicOrigin: app.publicOrigin,

@@ -6,13 +6,13 @@ import {
   NOTIFICATION_CATEGORIES,
 } from "~/server/notifications/categories";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
+import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { infra } from "~/server/platform/container/infra";
-import { getNotificationsRuntime } from "~/server/platform/container/notifications-runtime";
+import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
 import { Err, Ok } from "~/shared/result";
 
 export interface NotificationChannelPreference {
@@ -49,10 +49,10 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
     access: { kind: "session" },
 
     execute: async (ctx) => {
-      const addresses = createUserChannelAddressRepo(infra.db);
+      const addresses = createUserChannelAddressRepo(serverInfrastructure.db);
 
       const [optOuts, verifiedChannels] = await Promise.all([
-        getNotificationsRuntime().preferences.listForUser(ctx.actor.userId),
+        composeNotifications().preferences.listForUser(ctx.actor.userId),
         addresses.listVerifiedChannels(ctx.actor.userId),
       ]);
       const optedOut = new Set(
@@ -123,7 +123,7 @@ export async function setNotificationPreference(
         return Err(invalid({ code: "channel_not_controllable" }));
       }
 
-      const addresses = createUserChannelAddressRepo(infra.db);
+      const addresses = createUserChannelAddressRepo(serverInfrastructure.db);
       const verified = await addresses.listVerifiedChannels(ctx.actor.userId);
       // A channel with no verified address cannot deliver, so there is nothing
       // to configure. The UI disables it; reject direct calls to match.
@@ -131,7 +131,7 @@ export async function setNotificationPreference(
         return Err(invalid({ code: "channel_unavailable" }));
       }
 
-      await getNotificationsRuntime().preferences.setOptedOut({
+      await composeNotifications().preferences.setOptedOut({
         userId: ctx.actor.userId,
         category: command.category,
         channel: command.channel,

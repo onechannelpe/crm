@@ -58,11 +58,15 @@ function createCapacityRepos(executor: DatabaseExecutor) {
   };
 }
 
-export function createCapacityComposition(infra: ServerInfrastructure) {
-  const readRepos = createCapacityRepos(infra.db);
-  const uow = createExecutorUow(infra.db, (txDb) => createCapacityRepos(txDb));
+export function createCapacityComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
+  const readRepos = createCapacityRepos(serverInfrastructure.db);
+  const uow = createExecutorUow(serverInfrastructure.db, (txDb) =>
+    createCapacityRepos(txDb),
+  );
   const rateLimitDeps = {
-    actionRateLimits: createActionRateLimitsRepo(infra.db),
+    actionRateLimits: createActionRateLimitsRepo(serverInfrastructure.db),
     events: readRepos.events,
   };
 

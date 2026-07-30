@@ -8,11 +8,11 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getTeamRuntime } from "~/server/platform/container/team-runtime";
 import {
   applyBulkImport as applyBulkImportService,
   previewBulkImport as previewBulkImportService,
 } from "~/server/team/application/bulk-import";
+import { composeTeam } from "~/server/team/ui/composition";
 
 export async function previewBulkCsv(
   csvContent: unknown,
@@ -58,7 +58,7 @@ export async function applyBulkImport(
     audit: (input) => ({ role: input.role }),
 
     execute: (ctx, input) =>
-      applyBulkImportService(ctx, getTeamRuntime().invites, {
+      applyBulkImportService(ctx, composeTeam().invites, {
         csvContent: input.csvContent,
         role: input.role,
       }),

@@ -1,4 +1,5 @@
 import type { AuditPolicySnapshot } from "~/contracts/audit-reader/policy";
+import { composeAdmin } from "~/server/admin/ui/composition";
 import {
   createAuditPolicyService,
   type UpsertAuditPolicyInput,
@@ -9,12 +10,11 @@ import {
   validationFail,
 } from "~/server/platform/action/input-reader";
 import { getSession, hasRole } from "~/server/platform/action/session";
-import { getAdminRuntime } from "~/server/platform/container/admin-runtime";
 import { Ok } from "~/shared/result";
 
 function auditPolicyService() {
   return createAuditPolicyService({
-    auditActionPolicies: getAdminRuntime().auditActionPolicies,
+    auditActionPolicies: composeAdmin().auditActionPolicies,
   });
 }
 

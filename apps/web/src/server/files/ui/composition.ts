@@ -19,14 +19,14 @@ export type FilesComposition = {
 };
 
 export function createFilesComposition(
-  infra: ServerInfrastructure,
+  serverInfrastructure: ServerInfrastructure,
   config: UploadsConfig,
 ): FilesComposition {
   const repo: FileRepos = {
-    assets: createAssetsRepo(infra.db),
-    tokens: createTokensRepo(infra.db),
-    sales: createSalesRepo(infra.db),
-    rateRevision: createRateRevisionFilesRepo(infra.db),
+    assets: createAssetsRepo(serverInfrastructure.db),
+    tokens: createTokensRepo(serverInfrastructure.db),
+    sales: createSalesRepo(serverInfrastructure.db),
+    rateRevision: createRateRevisionFilesRepo(serverInfrastructure.db),
   };
 
   return {

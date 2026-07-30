@@ -8,16 +8,16 @@ import type { Role } from "~/domain/auth/access/rbac";
 import { fail, invalid, type DomainError } from "~/domain/errors";
 import type { BranchId, UserId } from "~/domain/ids";
 import { IntegrationJobId } from "~/domain/ids";
+import { composeFiles } from "~/server/files/ui/composition";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
+import { composeIntegrations } from "~/server/integrations/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getFilesRuntime } from "~/server/platform/container/files-runtime";
-import { getIntegrationsRuntime } from "~/server/platform/container/integrations-runtime";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
 import { parseImportFile } from "~/server/records/imports/intake";
 import {
@@ -73,7 +73,7 @@ async function getAuthorizedRecordImportJob(
   },
   jobId: IntegrationJobId,
 ): Promise<IntegrationJobRow> {
-  const { integration } = getIntegrationsRuntime();
+  const { integration } = composeIntegrations();
   const job = await integration.jobs.findById(jobId);
 
   if (
@@ -111,8 +111,8 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
     }),
 
     execute: async (ctx, { file, extension }) => {
-      const { storage } = getFilesRuntime();
-      const { integration } = getIntegrationsRuntime();
+      const { storage } = composeFiles();
+      const { integration } = composeIntegrations();
       const buffer = await file.arrayBuffer();
 
       let parsedImport: ReturnType<typeof parseImportFile>;

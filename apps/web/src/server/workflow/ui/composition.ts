@@ -17,16 +17,16 @@ import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
 export function createWorkflowComposition(
-  infra: ServerInfrastructure,
+  serverInfrastructure: ServerInfrastructure,
   engine: EngineClient,
   files: Pick<FilesComposition, "repo" | "storage">,
 ) {
   const organizationEnrichment = createOrganizationEnrichment(engine);
-  const repos = createWorkflowRepos(infra.db);
-  const leadRepo = createLeadRepo(infra.db);
+  const repos = createWorkflowRepos(serverInfrastructure.db);
+  const leadRepo = createLeadRepo(serverInfrastructure.db);
 
   const enrichmentCommand = createEnrichmentCommand(
-    createCompanyRegistryRepo(infra.db),
+    createCompanyRegistryRepo(serverInfrastructure.db),
   );
 
   const enrichmentQueue: OrganizationEnrichmentQueue = {
@@ -34,14 +34,17 @@ export function createWorkflowComposition(
       await enrichmentCommand.enqueueRequest(
         { kind: "ruc", value: ruc },
         requestedByUserId,
-        infra.now(),
+        serverInfrastructure.now(),
       );
     },
   };
 
   return {
-    now: infra.now,
-    ports: () => ({ executor: infra.db, now: infra.now() }),
+    now: serverInfrastructure.now,
+    ports: () => ({
+      executor: serverInfrastructure.db,
+      now: serverInfrastructure.now(),
+    }),
     repos,
     organizationEnrichment,
     enrichmentQueue,
@@ -51,7 +54,10 @@ export function createWorkflowComposition(
       fulfillment: repos.fulfillment,
       filesRepo: files.repo,
       filesStorage: files.storage,
-      workflowPorts: () => ({ executor: infra.db, now: infra.now() }),
+      workflowPorts: () => ({
+        executor: serverInfrastructure.db,
+        now: serverInfrastructure.now(),
+      }),
     }),
   };
 }

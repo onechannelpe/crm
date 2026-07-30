@@ -11,7 +11,6 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { addToFavoritesCommand } from "~/server/workflow/lead/commands/add-to-favorites";
 import { deleteLeadCommand } from "~/server/workflow/lead/commands/delete-lead";
 import { editCommercialScopeCommand } from "~/server/workflow/lead/commands/edit-commercial-scope";
@@ -23,6 +22,7 @@ import { requestSunatRefresh } from "~/server/workflow/lead/commands/request-sun
 import { restartQuotationCommand } from "~/server/workflow/lead/commands/restart-quotation";
 import { reviewLeadCommand } from "~/server/workflow/lead/commands/review-lead";
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
+import { composeWorkflow } from "~/server/workflow/ui/composition";
 import { isErr, Ok } from "~/shared/result";
 
 import { workflowActor } from "./actor.action";
@@ -58,8 +58,8 @@ export async function requestLeadCreation(input: unknown) {
       registerLead(
         { actor: workflowActor(actor), ...payload },
         {
-          ...getWorkflowRuntime().ports(),
-          identity: getWorkflowRuntime().organizationEnrichment,
+          ...composeWorkflow().ports(),
+          identity: composeWorkflow().organizationEnrichment,
         },
       ),
   });
@@ -90,7 +90,7 @@ export async function requestEditCommercialScope(input: unknown) {
     execute: ({ actor }, payload) =>
       editCommercialScopeCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -118,7 +118,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
     execute: ({ actor }, payload) =>
       saveDigitalPolicyCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -146,7 +146,7 @@ export async function requestRecordRepLegal(input: unknown) {
     execute: ({ actor }, payload) =>
       recordRepLegalCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -171,7 +171,7 @@ export async function requestLeadReview(input: unknown) {
     execute: ({ actor }, payload) =>
       reviewLeadCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -188,7 +188,7 @@ export async function requestQuotationRestart(input: unknown) {
     execute: ({ actor }, { leadId }) =>
       restartQuotationCommand(
         { actor: workflowActor(actor), leadId },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -215,7 +215,7 @@ export async function requestLeadReassignment(input: unknown) {
           leadId: payload.leadId,
           toExecutiveId: payload.newExecutiveId,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -235,7 +235,7 @@ export async function requestAddLeadToFavorites(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       );
 
       if (isErr(result)) {
@@ -262,7 +262,7 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       );
 
       if (isErr(result)) {
@@ -289,7 +289,7 @@ export async function requestLeadDeletion(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -310,8 +310,8 @@ export async function requestLeadSunatRefresh(input: unknown) {
           leadId,
         },
         {
-          leads: getWorkflowRuntime().repos.leads,
-          enrichmentQueue: getWorkflowRuntime().enrichmentQueue,
+          leads: composeWorkflow().repos.leads,
+          enrichmentQueue: composeWorkflow().enrichmentQueue,
         },
       ),
   });

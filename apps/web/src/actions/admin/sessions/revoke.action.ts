@@ -2,12 +2,12 @@ import type { ActionSuccess } from "~/contracts/common";
 import { UserId } from "~/domain/ids";
 import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession as revokeUserSessionService } from "~/server/auth/flows/revoke-user-session";
+import { composeAuth } from "~/server/auth/ui/composition";
 import { executeAdminServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 
 export async function revokeUserSession(
   rawSessionId: unknown,
@@ -35,7 +35,7 @@ export async function revokeUserSession(
     execute: (ctx, input) =>
       revokeUserSessionService(
         ctx,
-        getAuthRuntime().adminSessionRevocation,
+        composeAuth().adminSessionRevocation,
         input,
       ),
   });
@@ -61,7 +61,7 @@ export async function revokeAllUserSessions(
     execute: (ctx, input) =>
       revokeAllUserSessionsService(
         ctx,
-        getAuthRuntime().adminSessionRevocation,
+        composeAuth().adminSessionRevocation,
         input,
       ),
   });

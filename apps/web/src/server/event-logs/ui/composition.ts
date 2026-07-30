@@ -4,9 +4,11 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createEventLogsComposition(infra: ServerInfrastructure) {
+export function createEventLogsComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
   return {
-    eventLogsService: createEventLogsService(infra.db),
+    eventLogsService: createEventLogsService(serverInfrastructure.db),
   };
 }
 

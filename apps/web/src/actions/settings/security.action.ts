@@ -11,11 +11,11 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getSecurityRuntime } from "~/server/platform/container/security-runtime";
+import { composeSecurity } from "~/server/security/ui/composition";
 import { Ok } from "~/shared/result";
 
 async function requireCurrentUserWithStrongAuthState(userId: UserId) {
-  const repos = getSecurityRuntime();
+  const repos = composeSecurity();
   const user = await repos.users.findById(userId);
 
   if (!user) {
@@ -67,7 +67,7 @@ export async function changePassword(
 
     execute: async ({ actor }, input) => {
       const userId = actor.userId;
-      const { users, events } = getSecurityRuntime();
+      const { users, events } = composeSecurity();
 
       const user = await users.findById(userId);
 
@@ -110,7 +110,7 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
 
     execute: async ({ actor }) => {
       const userId = actor.userId;
-      const { passkeys, userRecoveryCodes, events } = getSecurityRuntime();
+      const { passkeys, userRecoveryCodes, events } = composeSecurity();
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
 
@@ -150,8 +150,7 @@ export async function disableTotp(): Promise<{ message: string }> {
 
     execute: async ({ actor }) => {
       const userId = actor.userId;
-      const { userTotpFactors, userRecoveryCodes, events } =
-        getSecurityRuntime();
+      const { userTotpFactors, userRecoveryCodes, events } = composeSecurity();
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
 

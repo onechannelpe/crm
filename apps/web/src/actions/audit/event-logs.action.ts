@@ -4,12 +4,12 @@ import {
   type EventLogQueryInput,
   type EventLogQueryResult,
 } from "~/contracts/event-logs/event-log";
+import { composeEventLogs } from "~/server/event-logs/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getEventLogsRuntime } from "~/server/platform/container/event-logs-runtime";
 
 export async function getEventLogs(
   rawParams: unknown,
@@ -47,6 +47,6 @@ export async function getEventLogs(
       ),
 
     execute: (_ctx, input) =>
-      getEventLogsRuntime().eventLogsService.getEventLogs(input),
+      composeEventLogs().eventLogsService.getEventLogs(input),
   });
 }

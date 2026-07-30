@@ -145,9 +145,9 @@ export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
     }),
 
     execute: async (ctx, input) => {
-      const { getMerchantStatsRuntime } =
-        await import("~/server/platform/container/merchant-stats-runtime");
-      return getMerchantStatsRuntime().dashboard.export(ctx, input.filter);
+      const { composeMerchantStats } =
+        await import("~/server/merchant-stats/ui/composition");
+      return composeMerchantStats().dashboard.export(ctx, input.filter);
     },
   });
 }

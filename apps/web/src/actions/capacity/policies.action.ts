@@ -1,10 +1,10 @@
 import { BranchId, TeamId, UserId } from "~/domain/ids";
+import { composeCapacity } from "~/server/capacity/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getCapacityRuntime } from "~/server/platform/container/capacity-runtime";
 
 const SCOPE_TYPES = ["branch", "team"] as const;
 
@@ -27,10 +27,7 @@ export async function updateExecutivePolicyOverride(input: unknown) {
     audit: ({ userId }) => ({ userId }),
 
     execute: (ctx, override) =>
-      getCapacityRuntime().useCases.updateExecutivePolicyOverride(
-        ctx,
-        override,
-      ),
+      composeCapacity().useCases.updateExecutivePolicyOverride(ctx, override),
   });
 }
 
@@ -60,6 +57,6 @@ export async function updateScopePolicy(input: unknown) {
     }),
 
     execute: (ctx, params) =>
-      getCapacityRuntime().useCases.updateScopePolicy(ctx, params),
+      composeCapacity().useCases.updateScopePolicy(ctx, params),
   });
 }

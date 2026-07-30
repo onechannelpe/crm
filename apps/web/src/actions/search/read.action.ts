@@ -1,6 +1,6 @@
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { getSearchRuntime } from "~/server/platform/container/search-runtime";
+import { composeSearch } from "~/server/search/ui/composition";
 
 export async function getMySearchAllowance() {
   "use server";
@@ -12,7 +12,7 @@ export async function getMySearchAllowance() {
     execute: (ctx) =>
       getSearchCapacitySnapshot(
         ctx.actor.userId,
-        getSearchRuntime().repos,
+        composeSearch().repos,
         ctx.now(),
       ),
   });

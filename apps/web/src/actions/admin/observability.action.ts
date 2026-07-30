@@ -1,10 +1,10 @@
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
+import { composeObservability } from "~/server/observability/ui/composition";
 import { executeAdminServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getObservabilityRuntime } from "~/server/platform/container/observability-runtime";
 import { Ok } from "~/shared/result";
 
 export async function getObservabilitySnapshot(
@@ -30,6 +30,6 @@ export async function getObservabilitySnapshot(
     },
 
     execute: (_ctx, input) =>
-      getObservabilityRuntime().observabilityService.getActionSnapshot(input),
+      composeObservability().observabilityService.getActionSnapshot(input),
   });
 }

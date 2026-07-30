@@ -14,17 +14,17 @@ import {
 } from "~/server/platform/composition/infrastructure";
 
 export function createClientSearchComposition(
-  infra: ServerInfrastructure,
+  serverInfrastructure: ServerInfrastructure,
   engine: EngineClient,
 ) {
-  const registry = createCompanyRegistryRepo(infra.db);
+  const registry = createCompanyRegistryRepo(serverInfrastructure.db);
   const scraper = createSunatScraperClient();
   const enrichmentCommand = createEnrichmentCommand(registry);
   const enrichmentQuery = createEnrichmentQuery(registry);
 
   const engineFallback = createOrganizationEnrichment(engine);
   const projectOrganization = createOrganizationEnrichmentProjection(
-    createOrganizationRepo(infra.db),
+    createOrganizationRepo(serverInfrastructure.db),
   );
 
   return {

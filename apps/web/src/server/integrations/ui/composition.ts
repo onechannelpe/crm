@@ -4,11 +4,13 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createIntegrationsComposition(infra: ServerInfrastructure) {
+export function createIntegrationsComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
   return {
     integration: createIntegrationRuntime({
-      executor: infra.db,
-      now: infra.now,
+      executor: serverInfrastructure.db,
+      now: serverInfrastructure.now,
     }),
   };
 }

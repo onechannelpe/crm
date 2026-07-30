@@ -5,13 +5,13 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getTeamRuntime } from "~/server/platform/container/team-runtime";
 import {
   createTeamInvite as createTeamInviteService,
   resendTeamInvite as resendTeamInviteService,
   revokeTeamInvite as revokeTeamInviteService,
 } from "~/server/team/application/invites";
 import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
+import { composeTeam } from "~/server/team/ui/composition";
 import { isErr, Ok } from "~/shared/result";
 
 export async function createTeamInvite(input: unknown): Promise<{
@@ -57,7 +57,7 @@ export async function createTeamInvite(input: unknown): Promise<{
     execute: async (ctx, command) => {
       const result = await createTeamInviteService(
         ctx,
-        getTeamRuntime().invites,
+        composeTeam().invites,
         command,
       );
 
@@ -92,7 +92,7 @@ export async function resendTeamInvite(
     execute: async (ctx, command) => {
       const result = await resendTeamInviteService(
         ctx,
-        getTeamRuntime().invites,
+        composeTeam().invites,
         command,
       );
 
@@ -127,7 +127,7 @@ export async function revokeTeamInvite(
     execute: async (ctx, command) => {
       const result = await revokeTeamInviteService(
         ctx,
-        getTeamRuntime().invites,
+        composeTeam().invites,
         command,
       );
 

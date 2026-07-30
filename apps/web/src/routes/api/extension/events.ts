@@ -1,6 +1,6 @@
 import { isExtensionRuntimeEventEnvelope } from "~/server/extension/contracts";
+import { composeExtension } from "~/server/extension/ui/composition";
 import { toWire } from "~/server/platform/action/domain-error";
-import { getExtensionRuntime } from "~/server/platform/container/extension-runtime";
 import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../request-event";
@@ -32,11 +32,12 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
       );
     }
 
-    const result =
-      await getExtensionRuntime().extensionService.ingestRuntimeEvent({
+    const result = await composeExtension().extensionService.ingestRuntimeEvent(
+      {
         sessionToken,
         event: body,
-      });
+      },
+    );
     if (isErr(result)) {
       const status =
         result.error.code === "extension_session_invalid"

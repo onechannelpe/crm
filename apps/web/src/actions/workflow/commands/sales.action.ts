@@ -17,10 +17,10 @@ import {
   validationFail,
   type Reader,
 } from "~/server/platform/action/input-reader";
-import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
 import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
 import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
+import { composeWorkflow } from "~/server/workflow/ui/composition";
 
 import { workflowActor } from "./actor.action";
 
@@ -76,7 +76,7 @@ export async function requestVenueCreation(input: unknown) {
     execute: ({ actor }, payload) =>
       createVenueCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -108,7 +108,7 @@ export async function requestVenueUpdate(input: unknown) {
     execute: ({ actor }, payload) =>
       updateVenueCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -144,7 +144,7 @@ export async function requestVenueAccountsAddition(input: unknown) {
     execute: ({ actor }, payload) =>
       addVenueAccountsCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }

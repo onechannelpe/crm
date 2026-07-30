@@ -6,11 +6,13 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createObservabilityComposition(infra: ServerInfrastructure) {
+export function createObservabilityComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
   return {
     observabilityService: createObservabilityService({
-      actionObservations: createActionObservationsRepo(infra.db),
-      authFunnelEvents: createAuthFunnelEventsRepo(infra.db),
+      actionObservations: createActionObservationsRepo(serverInfrastructure.db),
+      authFunnelEvents: createAuthFunnelEventsRepo(serverInfrastructure.db),
     }),
   };
 }

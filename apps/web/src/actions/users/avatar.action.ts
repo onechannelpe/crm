@@ -5,7 +5,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getUsersRuntime } from "~/server/platform/container/users-runtime";
+import { composeUsers } from "~/server/users/ui/composition";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export async function uploadMemberAvatar(
@@ -35,7 +35,7 @@ export async function uploadMemberAvatar(
     audit: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await getUsersRuntime().members.uploadAvatar(ctx, command);
+      const result = await composeUsers().members.uploadAvatar(ctx, command);
       if (isErr(result)) return result;
       return Ok({ message: "Foto de perfil actualizada" });
     },
@@ -59,7 +59,7 @@ export async function removeMemberAvatar(
     audit: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await getUsersRuntime().members.removeAvatar(ctx, command);
+      const result = await composeUsers().members.removeAvatar(ctx, command);
       if (isErr(result)) return result;
       return Ok({ message: "Foto de perfil eliminada" });
     },

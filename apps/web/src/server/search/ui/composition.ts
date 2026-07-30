@@ -49,13 +49,17 @@ export function createSearchUsageReservationPorts(
   };
 }
 
-export function createSearchComposition(infra: ServerInfrastructure) {
+export function createSearchComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
   return {
-    repos: buildSearchUsageRepos(infra.db),
-    usageReservationPorts: createSearchUsageReservationPorts(infra.db),
+    repos: buildSearchUsageRepos(serverInfrastructure.db),
+    usageReservationPorts: createSearchUsageReservationPorts(
+      serverInfrastructure.db,
+    ),
     rateLimitDeps: {
-      actionRateLimits: createActionRateLimitsRepo(infra.db),
-      events: createEventsRepo(infra.db),
+      actionRateLimits: createActionRateLimitsRepo(serverInfrastructure.db),
+      events: createEventsRepo(serverInfrastructure.db),
     },
   };
 }

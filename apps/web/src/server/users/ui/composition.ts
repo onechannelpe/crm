@@ -33,22 +33,24 @@ import { composeAvatar } from "~/server/users/ui/avatar-composition";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export function createUsersComposition(
-  infra: ServerInfrastructure,
+  serverInfrastructure: ServerInfrastructure,
   sessionService: Pick<SessionService, "revokeAllForUser">,
   avatarService: AvatarService,
 ) {
-  const usersRepo = createUsersRepo(infra.db);
-  const userChannelAddressesRepo = createUserChannelAddressRepo(infra.db);
+  const usersRepo = createUsersRepo(serverInfrastructure.db);
+  const userChannelAddressesRepo = createUserChannelAddressRepo(
+    serverInfrastructure.db,
+  );
 
   const readDeps = {
     users: usersRepo,
-    teams: createTeamsRepo(infra.db),
-    branches: createBranchesRepo(infra.db),
+    teams: createTeamsRepo(serverInfrastructure.db),
+    branches: createBranchesRepo(serverInfrastructure.db),
   };
   const writeDeps = {
     users: usersRepo,
     sessions: sessionService,
-    workload: createMemberWorkloadRepo(infra.db),
+    workload: createMemberWorkloadRepo(serverInfrastructure.db),
   };
   const avatarDeps = {
     users: usersRepo,

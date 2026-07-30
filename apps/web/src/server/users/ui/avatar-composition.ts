@@ -13,12 +13,12 @@ import { createAvatarService } from "~/server/users/avatar-service";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 export function createAvatarComposition(
-  infra: ServerInfrastructure,
+  serverInfrastructure: ServerInfrastructure,
   config: UploadsConfig,
 ) {
   return {
     avatarService: createAvatarService(
-      { users: createUsersRepo(infra.db) },
+      { users: createUsersRepo(serverInfrastructure.db) },
       createBlobStore(join(config.storageRoot, "avatars")),
     ),
   };

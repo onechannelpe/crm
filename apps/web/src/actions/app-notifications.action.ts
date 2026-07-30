@@ -1,10 +1,10 @@
 import { AppNotificationId } from "~/domain/ids";
+import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getNotificationsRuntime } from "~/server/platform/container/notifications-runtime";
 import { Ok } from "~/shared/result";
 
 export async function getHeaderNotifications() {
@@ -15,7 +15,7 @@ export async function getHeaderNotifications() {
     access: { kind: "auth" },
 
     execute: async ({ actor }) => {
-      const appNotifications = getNotificationsRuntime().appNotifications;
+      const appNotifications = composeNotifications().appNotifications;
 
       const [unreadCount, notifications] = await Promise.all([
         appNotifications.countUnreadByUser(actor.userId),
@@ -60,7 +60,7 @@ export async function markNotificationRead(
     audit: (command) => ({ notificationId: command.notificationId }),
 
     execute: async ({ actor }, command) => {
-      const appNotifications = getNotificationsRuntime().appNotifications;
+      const appNotifications = composeNotifications().appNotifications;
 
       await appNotifications.markRead(
         actor.userId,
@@ -81,7 +81,7 @@ export async function markAllNotificationsRead(): Promise<void> {
     access: { kind: "auth" },
 
     execute: async ({ actor }) => {
-      const appNotifications = getNotificationsRuntime().appNotifications;
+      const appNotifications = composeNotifications().appNotifications;
 
       await appNotifications.markAllRead(actor.userId, new Date());
 

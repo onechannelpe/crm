@@ -10,12 +10,12 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
 import { editRateProposalCommand } from "~/server/workflow/lead/commands/edit-rate-proposal";
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
+import { composeWorkflow } from "~/server/workflow/ui/composition";
 
 import { workflowActor } from "./actor.action";
 
@@ -42,7 +42,7 @@ export async function requestRateProposal(input: unknown) {
     execute: ({ actor }, payload) =>
       proposeRateCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -71,7 +71,7 @@ export async function requestRateProposalEdit(input: unknown) {
     execute: ({ actor }, payload) =>
       editRateProposalCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -94,7 +94,7 @@ export async function requestRateAcceptance(input: unknown) {
     execute: ({ actor }, payload) =>
       acceptRateCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -118,7 +118,7 @@ export async function requestLeadClosure(input: unknown) {
     execute: ({ actor }, payload) =>
       closeLeadCommand(
         { actor: workflowActor(actor), ...payload },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }
@@ -151,7 +151,7 @@ export async function requestRateRevision(input: unknown) {
           justification: payload.justification,
           fileIds: payload.fileIds,
         },
-        getWorkflowRuntime().ports(),
+        composeWorkflow().ports(),
       ),
   });
 }

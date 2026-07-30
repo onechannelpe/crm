@@ -9,14 +9,14 @@ import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-en
 import { startPasskeyEnrollment } from "~/server/auth/flows/start-passkey-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { setSessionCookie } from "~/server/auth/session/cookies";
+import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {
   "use server";
 
-  const setup = getAuthRuntime().setup;
+  const setup = composeAuth().setup;
   const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);
 
@@ -40,7 +40,7 @@ export async function finishPasskeyEnrollment(
 ): Promise<{ message: string; recoveryCodes: string[] }> {
   "use server";
 
-  const setup = getAuthRuntime().setup;
+  const setup = composeAuth().setup;
   const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);
 

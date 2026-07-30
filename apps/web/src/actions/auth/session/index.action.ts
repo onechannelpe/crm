@@ -30,12 +30,11 @@ export async function getLoginFlow(flowId: string) {
 export async function logout(): Promise<void> {
   "use server";
 
-  const { getAuthRuntime } =
-    await import("~/server/platform/container/auth-runtime");
+  const { composeAuth } = await import("~/server/auth/ui/composition");
   await executeSessionServerFunction({
     name: "auth.session.logout",
     access: { kind: "session" },
-    execute: (ctx) => logoutUser(ctx, getAuthRuntime().sessionLogout),
+    execute: (ctx) => logoutUser(ctx, composeAuth().sessionLogout),
   });
 }
 
