@@ -25,7 +25,7 @@ import { reviewLeadCommand } from "~/server/workflow/lead/commands/review-lead";
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
 import { isErr, Ok } from "~/shared/result";
 
-import { workflowActor } from "./actor";
+import { workflowActor } from "./actor.action";
 
 function parseLeadRef(input: unknown) {
   return parseObject(input, validationFail, (r) => ({

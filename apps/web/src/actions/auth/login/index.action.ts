@@ -24,7 +24,7 @@ import {
   readLoginFlowId,
   readLoginText,
   readPasskeyStartMode,
-} from "./support";
+} from "./support.action";
 
 function recordAuthAnalyticsEvent(
   event: Parameters<typeof recordAuthAnalytics>[0],

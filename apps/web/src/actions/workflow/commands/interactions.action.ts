@@ -7,7 +7,7 @@ import {
 import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { addLeadNote as addLeadNoteUseCase } from "~/server/workflow/lead/interaction/write";
 
-import { workflowActor } from "./actor";
+import { workflowActor } from "./actor.action";
 
 export async function addLeadNote(input: unknown) {
   "use server";

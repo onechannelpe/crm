@@ -7,7 +7,7 @@ import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime
 import { getRateProposalPolicy } from "~/server/workflow/policy/read/get-rate-proposal-policy";
 import { updateRateProposalPolicy } from "~/server/workflow/policy/write/update-rate-proposal-policy";
 
-import { workflowActor } from "../commands/actor";
+import { workflowActor } from "../commands/actor.action";
 
 export async function queryRateProposalPolicy() {
   "use server";

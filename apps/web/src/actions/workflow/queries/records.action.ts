@@ -31,7 +31,7 @@ import { listLeads } from "~/server/workflow/lead/read/queries/list-leads";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 import { isErr, Ok } from "~/shared/result";
 
-import { workflowActor } from "../commands/actor";
+import { workflowActor } from "../commands/actor.action";
 
 const SORT_FIELDS = ["createdAt", "updatedAt", "registeredBy", "ruc"] as const;
 const SORT_DIRECTIONS = ["asc", "desc"] as const;

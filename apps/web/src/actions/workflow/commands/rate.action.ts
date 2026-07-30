@@ -17,7 +17,7 @@ import { editRateProposalCommand } from "~/server/workflow/lead/commands/edit-ra
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
 
-import { workflowActor } from "./actor";
+import { workflowActor } from "./actor.action";
 
 export async function requestRateProposal(input: unknown) {
   "use server";

@@ -1,5 +1,4 @@
-import { getCookie } from "@solidjs/start/http";
-import { isServer } from "solid-js/web";
+import { getRequestEvent, isServer } from "solid-js/web";
 
 export type UiPreferenceCookieCodec<T> = {
   decode: (value: string) => T | null;
@@ -22,9 +21,18 @@ export const booleanUiPreferenceCookieCodec = {
 } satisfies UiPreferenceCookieCodec<boolean>;
 
 function readBrowserCookie(name: string): string | null {
+  return readCookieHeader(document.cookie, name);
+}
+
+function readServerCookie(name: string): string | null {
+  const cookieHeader = getRequestEvent()?.request.headers.get("cookie");
+  return cookieHeader ? readCookieHeader(cookieHeader, name) : null;
+}
+
+function readCookieHeader(cookieHeader: string, name: string): string | null {
   const prefix = `${name}=`;
 
-  for (const rawCookie of document.cookie.split(";")) {
+  for (const rawCookie of cookieHeader.split(";")) {
     const cookie = rawCookie.trim();
     if (!cookie.startsWith(prefix)) continue;
 
@@ -44,7 +52,7 @@ export function defineUiPreferenceCookie<T>(
   return {
     read(): T | null {
       const raw = isServer
-        ? (getCookie(options.name) ?? null)
+        ? readServerCookie(options.name)
         : readBrowserCookie(options.name);
 
       return raw === null ? null : options.codec.decode(raw);

@@ -4,7 +4,7 @@ import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime
 import { listInquiriesForExecutive } from "~/server/workflow/inquiry/inquiry-queries";
 import { Ok } from "~/shared/result";
 
-import { workflowActor } from "../commands/actor";
+import { workflowActor } from "../commands/actor.action";
 
 export async function queryMyInquiries(): Promise<InquiryListView> {
   "use server";

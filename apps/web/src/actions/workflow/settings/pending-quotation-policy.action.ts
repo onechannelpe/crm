@@ -7,7 +7,7 @@ import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime
 import { getPendingQuotationPolicy } from "~/server/workflow/policy/read/get-pending-quotation-policy";
 import { updatePendingQuotationPolicy } from "~/server/workflow/policy/write/update-pending-quotation-policy";
 
-import { workflowActor } from "../commands/actor";
+import { workflowActor } from "../commands/actor.action";
 
 export async function queryPendingQuotationPolicy() {
   "use server";

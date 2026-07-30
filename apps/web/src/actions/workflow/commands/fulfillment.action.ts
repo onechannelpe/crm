@@ -28,7 +28,7 @@ import {
 } from "~/server/workflow/lead/fulfillment/commands";
 import { Err, Ok, type Result } from "~/shared/result";
 
-import { workflowActor } from "./actor";
+import { workflowActor } from "./actor.action";
 
 type DocUpload = {
   leadId: WorkflowLeadId;

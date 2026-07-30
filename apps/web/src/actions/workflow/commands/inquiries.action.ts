@@ -6,7 +6,7 @@ import {
 import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { createInquiry } from "~/server/workflow/inquiry/create-inquiry";
 
-import { workflowActor } from "./actor";
+import { workflowActor } from "./actor.action";
 
 export async function requestInquiryCreation(input: unknown) {
   "use server";
