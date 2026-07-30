@@ -1,5 +1,4 @@
 import "server-only";
-
 import type {
   BookFilter,
   CohortSaleRow,
@@ -56,7 +55,6 @@ function readPage(r: Reader<DomainError>): Page {
 export async function getGpvPerformance(raw: {
   filter: BookFilter;
 }): Promise<GpvPerformanceView> {
-
   return executeSessionServerFunction({
     name: "merchantStats.performance.read",
     access: { kind: "permission", permission: "dashboards:read" },
@@ -74,7 +72,6 @@ export async function getGpvPerformance(raw: {
 export async function getGpvCulqi(raw: {
   filter: BookFilter;
 }): Promise<GpvCulqiView> {
-
   return executeSessionServerFunction({
     name: "merchantStats.culqi.read",
     access: { kind: "permission", permission: "dashboards:read" },
@@ -92,7 +89,6 @@ export async function getCohortRows(raw: {
   filter: BookFilter;
   page: Page;
 }): Promise<PublishedPage<CohortSaleRow>> {
-
   return executeSessionServerFunction({
     name: "merchantStats.cohort.read",
     access: { kind: "permission", permission: "dashboards:read" },
@@ -113,38 +109,11 @@ export async function getCohortRows(raw: {
 }
 
 export async function getFilterOptions(): Promise<FilterOptions> {
-
   return executeSessionServerFunction({
     name: "merchantStats.filterOptions.read",
     access: { kind: "permission", permission: "dashboards:read" },
     parse: () => Ok(undefined),
 
     execute: async () => Ok(await readFilterOptions(db)),
-  });
-}
-
-export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
-
-  return executeSessionServerFunction({
-    name: "merchantStats.export",
-    access: { kind: "permission", permission: "dashboards:read" },
-
-    parse: () =>
-      parseObject({ filter: raw }, validationFail, (r) => ({
-        filter: r.obj("filter", readFilter),
-      })),
-
-    audit: ({ filter }) => ({
-      branchId: filter.branchId ?? null,
-      sellerUserId: filter.sellerUserId ?? null,
-      month: filter.month ?? null,
-      product: filter.product ?? null,
-    }),
-
-    execute: async (ctx, input) => {
-      const { composeMerchantStats } =
-        await import("~/server/merchant-stats/ui/composition");
-      return composeMerchantStats().dashboard.export(ctx, input.filter);
-    },
   });
 }

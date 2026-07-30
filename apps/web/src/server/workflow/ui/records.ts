@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   type ListAssignableExecutivesInput,
   type ListLeadsFiltersInput,
@@ -31,9 +30,9 @@ import { listAssignableExecutives } from "~/server/workflow/lead/read/queries/li
 import { listFulfillmentQueue } from "~/server/workflow/lead/read/queries/list-fulfillment-queue";
 import { listLeads } from "~/server/workflow/lead/read/queries/list-leads";
 import { createWorkflowRepos } from "~/server/workflow/repos";
-import { isErr, Ok } from "~/shared/result";
-
 import { workflowActor } from "~/server/workflow/ui/actor";
+import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { isErr, Ok } from "~/shared/result";
 
 const SORT_FIELDS = ["createdAt", "updatedAt", "registeredBy", "ruc"] as const;
 const SORT_DIRECTIONS = ["asc", "desc"] as const;
@@ -42,7 +41,6 @@ const workflowRepos = createWorkflowRepos(db);
 export async function queryLeadList(
   filters: ListLeadsFiltersInput,
 ): Promise<LeadListView> {
-
   return executeSessionServerFunction({
     name: "workflow.list_leads",
     access: { kind: "auth" },
@@ -86,7 +84,6 @@ export async function queryLeadList(
 export async function queryLeadDetail(
   rawLeadId: string,
 ): Promise<LeadDetailView & { evaluatedAt: number }> {
-
   return executeSessionServerFunction({
     name: "workflow.get_lead_detail",
     access: { kind: "auth" },
@@ -119,7 +116,6 @@ export async function queryLeadDetail(
 export async function queryFulfillmentQueue(): Promise<
   FulfillmentQueueView & { evaluatedAt: number }
 > {
-
   return executeSessionServerFunction({
     name: "workflow.list_fulfillment_queue",
     access: { kind: "auth" },
@@ -141,7 +137,6 @@ export async function queryFulfillmentQueue(): Promise<
 }
 
 export async function queryPendingQuotationCount(): Promise<PendingQuotationCountView> {
-
   return executeSessionServerFunction({
     name: "workflow.pending_quotation_count",
     access: { kind: "auth" },
@@ -163,7 +158,6 @@ export async function queryPendingQuotationCount(): Promise<PendingQuotationCoun
 export async function queryLeadBootstrapPreview(
   rawRuc: string,
 ): Promise<LeadBootstrapPreviewView> {
-
   return executeSessionServerFunction({
     name: "workflow.get_lead_bootstrap_preview",
     access: { kind: "auth" },
@@ -176,8 +170,6 @@ export async function queryLeadBootstrapPreview(
     audit: ({ ruc }) => ({ ruc }),
 
     execute: async (_ctx, query) => {
-      const { composeWorkflow } =
-        await import("~/server/workflow/ui/composition");
       const workflow = composeWorkflow();
 
       return getLeadBootstrapPreview(
@@ -192,7 +184,6 @@ export async function queryLeadBootstrapPreview(
 export async function queryAssignableExecutives(
   input: ListAssignableExecutivesInput,
 ): Promise<AssignableExecutiveView[]> {
-
   return executeSessionServerFunction({
     name: "workflow.list_assignable_executives",
     access: { kind: "auth" },

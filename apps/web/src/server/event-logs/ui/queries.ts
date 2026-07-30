@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   EVENT_LOG_TABLES,
   type EventLogStatus,
@@ -16,7 +15,6 @@ import {
 export async function getEventLogs(
   rawParams: unknown,
 ): Promise<EventLogQueryResult> {
-
   return executeSessionServerFunction({
     name: "audit.event_logs.read",
     access: { kind: "permission", permission: "audit:read" },

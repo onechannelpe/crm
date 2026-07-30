@@ -3,7 +3,7 @@ import { action, json } from "@solidjs/router";
 import {
   savePendingQuotationPolicy,
   type SavePendingQuotationPolicyInput,
-} from "~/server/workflow/ui/pending-quotation-policy";
+} from "~/actions/workflow/settings/pending-quotation-policy.action";
 import { saveRateProposalPolicy } from "~/actions/workflow/settings/rate-proposal-policy.action";
 import { pendingQuotationPolicyQuery } from "~/features/workflow/data/pending-quotation-policy.query";
 import { rateProposalPolicyQuery } from "~/features/workflow/data/rate-proposal-policy.query";

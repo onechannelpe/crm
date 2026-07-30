@@ -34,7 +34,6 @@ export interface AuthSessionLogoutPort {
     syncHealth: "ok" | "stale" | "reauth_required";
     syncUpdatedAt: Date;
   }): Promise<void>;
-  clearSessionCookie(): void;
   appendEvent(input: {
     type: string;
     entityType: string;

@@ -1,28 +1,38 @@
-type Composition = typeof import("~/server/auth/ui/recovery-codes");
+import {
+  acknowledgeRecoverySetup,
+  regenerateRecoverySetup,
+} from "~/server/auth/recovery/recovery-setup";
+import { setSessionCookie } from "~/server/auth/session/cookies";
+import { composeAuth } from "~/server/auth/ui/composition";
+import { executeSessionServerFunction } from "~/server/platform/action";
 
-export async function getRecoveryCodesStatus(
-  ...args: Parameters<Composition["getRecoveryCodesStatus"]>
-) {
+export async function regenerateRecoveryCodes(): Promise<{
+  recoveryCodes: string[];
+}> {
   "use server";
-  const { getRecoveryCodesStatus: execute } =
-    await import("~/server/auth/ui/recovery-codes");
-  return execute(...args);
+
+  const result = await executeSessionServerFunction({
+    name: "auth.recovery.regenerate",
+    access: { kind: "session" },
+    execute: (context) => regenerateRecoverySetup(context, composeAuth().setup),
+  });
+
+  setSessionCookie(result.sessionToken);
+  return { recoveryCodes: result.recoveryCodes };
 }
 
-export async function regenerateRecoveryCodes(
-  ...args: Parameters<Composition["regenerateRecoveryCodes"]>
-) {
+export async function acknowledgeRecoveryCodes(): Promise<{
+  redirectTo: string;
+}> {
   "use server";
-  const { regenerateRecoveryCodes: execute } =
-    await import("~/server/auth/ui/recovery-codes");
-  return execute(...args);
-}
 
-export async function acknowledgeRecoveryCodes(
-  ...args: Parameters<Composition["acknowledgeRecoveryCodes"]>
-) {
-  "use server";
-  const { acknowledgeRecoveryCodes: execute } =
-    await import("~/server/auth/ui/recovery-codes");
-  return execute(...args);
+  const result = await executeSessionServerFunction({
+    name: "auth.recovery.acknowledge",
+    access: { kind: "session" },
+    execute: (context) =>
+      acknowledgeRecoverySetup(context, composeAuth().setup),
+  });
+
+  setSessionCookie(result.sessionToken);
+  return { redirectTo: result.redirectTo };
 }

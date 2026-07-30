@@ -4,6 +4,12 @@ import type { AuthSessionLogoutPort } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/platform/action/context";
 import { Ok, type Result } from "~/shared/result";
 
+/**
+ * Revokes the session and its downstream state. Clearing the caller's session
+ * cookie is deliberately not done here: it is a transport effect that needs a
+ * request, and this flow also runs from the background worker, which has none.
+ * HTTP callers clear the cookie themselves after this resolves.
+ */
 export async function logoutUser(
   ctx: AppContext,
   port: AuthSessionLogoutPort,
@@ -18,7 +24,6 @@ export async function logoutUser(
     syncHealth: "reauth_required",
     syncUpdatedAt: now,
   });
-  port.clearSessionCookie();
   await port.appendEvent({
     type: "logout",
     entityType: "user",

@@ -1,5 +1,4 @@
 import "server-only";
-
 import type {
   Page,
   PublishedPage,
@@ -24,7 +23,6 @@ export async function getQualityRows(raw: {
   issue: QualityIssue;
   page: Page;
 }): Promise<PublishedPage<QualityRow>> {
-
   return executeSessionServerFunction({
     name: "merchantStats.quality.rows",
     access: { kind: "permission", permission: "dashboards:manage" },

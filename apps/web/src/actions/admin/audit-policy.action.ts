@@ -1,28 +1,44 @@
-type Composition = typeof import("~/server/admin/ui/audit-policies");
+import { composeAdmin } from "~/server/admin/ui/composition";
+import {
+  createAuditPolicyService,
+  type UpsertAuditPolicyInput,
+} from "~/server/audit-reader/policy-service";
+import { executeAdminServerFunction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
+import { Ok } from "~/shared/result";
 
-export async function getAuditPolicySnapshot(
-  ...args: Parameters<Composition["getAuditPolicySnapshot"]>
-) {
+export async function upsertAuditPolicy(input: unknown): Promise<void> {
   "use server";
-  const { getAuditPolicySnapshot: execute } =
-    await import("~/server/admin/ui/audit-policies");
-  return execute(...args);
-}
 
-export async function canManageAuditPolicies(
-  ...args: Parameters<Composition["canManageAuditPolicies"]>
-) {
-  "use server";
-  const { canManageAuditPolicies: execute } =
-    await import("~/server/admin/ui/audit-policies");
-  return execute(...args);
-}
+  return executeAdminServerFunction({
+    name: "admin.audit_policy.upsert",
+    access: { kind: "role", role: "admin" },
 
-export async function upsertAuditPolicy(
-  ...args: Parameters<Composition["upsertAuditPolicy"]>
-) {
-  "use server";
-  const { upsertAuditPolicy: execute } =
-    await import("~/server/admin/ui/audit-policies");
-  return execute(...args);
+    parse: () =>
+      parseObject(input, validationFail, (reader) => ({
+        action: reader.str("action"),
+        riskLevel: reader.str("riskLevel"),
+        isActive: reader.bool("isActive"),
+      })),
+
+    audit: ({ action, isActive }) => ({ action, isActive }),
+
+    execute: async ({ actor }, fields) => {
+      const policies = createAuditPolicyService({
+        auditActionPolicies: composeAdmin().auditActionPolicies,
+      });
+
+      await policies.upsertPolicy({
+        action: fields.action,
+        riskLevel: fields.riskLevel,
+        isActive: fields.isActive,
+        actorUserId: actor.userId,
+      } satisfies UpsertAuditPolicyInput);
+
+      return Ok(undefined);
+    },
+  });
 }

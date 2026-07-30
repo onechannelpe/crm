@@ -1,21 +1,18 @@
-type Composition = typeof import("~/server/auth/ui/session");
+import { logoutUser } from "~/server/auth/flows/logout-user";
+import { deleteSessionCookie } from "~/server/auth/session/cookies";
+import { composeAuth } from "~/server/auth/ui/composition";
+import { executeSessionServerFunction } from "~/server/platform/action";
 
-export async function getLoginFlow(
-  ...args: Parameters<Composition["getLoginFlow"]>
-) {
+export async function logout(): Promise<void> {
   "use server";
-  const { getLoginFlow: execute } = await import("~/server/auth/ui/session");
-  return execute(...args);
-}
 
-export async function logout(...args: Parameters<Composition["logout"]>) {
-  "use server";
-  const { logout: execute } = await import("~/server/auth/ui/session");
-  return execute(...args);
-}
+  await executeSessionServerFunction({
+    name: "auth.session.logout",
+    access: { kind: "session" },
+    execute: (context) => logoutUser(context, composeAuth().sessionLogout),
+  });
 
-export async function getMe(...args: Parameters<Composition["getMe"]>) {
-  "use server";
-  const { getMe: execute } = await import("~/server/auth/ui/session");
-  return execute(...args);
+  // Only reached once revocation succeeded, so a cookie that survives an early
+  // throw always points at a session that is already gone.
+  deleteSessionCookie();
 }

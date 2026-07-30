@@ -40,12 +40,30 @@ export type ActionDef<TIn, TOut, E extends DomainError> =
   | ParsedActionDef<TIn, TOut, E>
   | EmptyActionDef<TOut, E>;
 
+/**
+ * Single owner for the DomainError to WireError projection.
+ *
+ * Internal and external faults are reported here because this is the last
+ * point that still holds the DomainError. The WireError keeps only kind, code
+ * and a translated message, so internalMessage, details and cause are gone
+ * after this returns and nothing downstream can report them.
+ */
+function projectFault(
+  error: DomainError,
+  ports: ServerFunctionPorts,
+): WireError {
+  if (error.kind === "internal" || error.kind === "external") {
+    ports.report(error);
+  }
+  return toWire(error);
+}
+
 function runParse<TIn>(
   parse: () => Result<TIn, DomainError>,
-  _ports: ServerFunctionPorts,
+  ports: ServerFunctionPorts,
 ): Result<TIn, WireError> {
   const parsed = parse();
-  if (isErr(parsed)) return Err(toWire(parsed.error));
+  if (isErr(parsed)) return Err(projectFault(parsed.error, ports));
   return Ok(parsed.value);
 }
 
@@ -53,23 +71,23 @@ async function runExecute<TIn, TOut, E extends DomainError>(
   ctx: AppContext,
   input: TIn,
   execute: (ctx: AppContext, input: TIn) => Promise<Result<TOut, E>>,
-  _ports: ServerFunctionPorts,
+  ports: ServerFunctionPorts,
 ): Promise<Result<TOut, WireError>> {
   const result = await execute(ctx, input);
 
   if (!isErr(result)) return Ok(result.value);
-  return Err(toWire(result.error));
+  return Err(projectFault(result.error, ports));
 }
 
 async function runExecuteEmpty<TOut, E extends DomainError>(
   ctx: AppContext,
   execute: (ctx: AppContext) => Promise<Result<TOut, E>>,
-  _ports: ServerFunctionPorts,
+  ports: ServerFunctionPorts,
 ): Promise<Result<TOut, WireError>> {
   const result = await execute(ctx);
 
   if (!isErr(result)) return Ok(result.value);
-  return Err(toWire(result.error));
+  return Err(projectFault(result.error, ports));
 }
 
 export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
@@ -82,7 +100,7 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
     const identity: Result<AuthSession, DomainError> = await authenticateAccess(
       def.access,
     );
-    if (isErr(identity)) return Err(toWire(identity.error));
+    if (isErr(identity)) return Err(projectFault(identity.error, ports));
 
     const ctx = createAppContext(identity.value, ports.now);
     const tele: TelemetryContext = {
@@ -94,7 +112,7 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
 
     const authorized = authorizeAccess(identity.value, def.access, def.stepUp);
     if (isErr(authorized)) {
-      const wire = toWire(authorized.error);
+      const wire = projectFault(authorized.error, ports);
       ports.record(errorRow(tele, wire));
       return Err(wire);
     }

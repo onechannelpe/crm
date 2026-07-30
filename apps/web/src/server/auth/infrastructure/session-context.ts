@@ -1,5 +1,4 @@
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import { deleteSessionCookie } from "~/server/auth/session/cookies";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
@@ -54,9 +53,6 @@ export function createAuthSessionLogoutContext(
         sync_health: input.syncHealth,
         sync_updated_at: input.syncUpdatedAt,
       });
-    },
-    clearSessionCookie() {
-      deleteSessionCookie();
     },
     async appendEvent(input) {
       await events.append(input);

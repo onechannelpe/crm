@@ -1,16 +1,9 @@
 import "server-only";
-
-import { AppNotificationId } from "~/domain/ids";
 import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import {
-  parseObject,
-  validationFail,
-} from "~/server/platform/action/input-reader";
 import { Ok } from "~/shared/result";
 
 export async function getHeaderNotifications() {
-
   return executeSessionServerFunction({
     name: "notifications.header.read",
     access: { kind: "auth" },
@@ -36,55 +29,6 @@ export async function getHeaderNotifications() {
           readAt: notification.read_at?.getTime() ?? null,
         })),
       });
-    },
-  });
-}
-
-export async function markNotificationRead(
-  rawNotificationId: unknown,
-): Promise<void> {
-
-  await executeSessionServerFunction({
-    name: "notifications.mark_read",
-    access: { kind: "auth" },
-
-    parse: () =>
-      parseObject(
-        { notificationId: rawNotificationId },
-        validationFail,
-        (r) => ({
-          notificationId: r.id("notificationId", AppNotificationId),
-        }),
-      ),
-
-    audit: (command) => ({ notificationId: command.notificationId }),
-
-    execute: async ({ actor }, command) => {
-      const appNotifications = composeNotifications().appNotifications;
-
-      await appNotifications.markRead(
-        actor.userId,
-        command.notificationId,
-        new Date(),
-      );
-
-      return Ok(undefined);
-    },
-  });
-}
-
-export async function markAllNotificationsRead(): Promise<void> {
-
-  await executeSessionServerFunction({
-    name: "notifications.mark_all_read",
-    access: { kind: "auth" },
-
-    execute: async ({ actor }) => {
-      const appNotifications = composeNotifications().appNotifications;
-
-      await appNotifications.markAllRead(actor.userId, new Date());
-
-      return Ok(undefined);
     },
   });
 }

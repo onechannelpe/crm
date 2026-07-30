@@ -1,6 +1,4 @@
 import "server-only";
-
-import { invalid } from "~/domain/errors";
 import {
   CATEGORY_META,
   EXTERNAL_CHANNELS,
@@ -10,12 +8,8 @@ import {
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import {
-  parseObject,
-  validationFail,
-} from "~/server/platform/action/input-reader";
 import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
-import { Err, Ok } from "~/shared/result";
+import { Ok } from "~/shared/result";
 
 export interface NotificationChannelPreference {
   channel: (typeof EXTERNAL_CHANNELS)[number];
@@ -44,7 +38,6 @@ export interface NotificationPreferencesView {
 // Default-on: a row in notification_opt_outs means "this user silenced this
 // category on this channel"; absence means on.
 export async function getNotificationPreferences(): Promise<NotificationPreferencesView> {
-
   return executeSessionServerFunction({
     name: "settings.notifications.read",
     access: { kind: "session" },
@@ -85,67 +78,6 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
       }));
 
       return Ok({ channels, categories });
-    },
-  });
-}
-
-export async function setNotificationPreference(
-  rawCategory: unknown,
-  rawChannel: unknown,
-  rawEnabled: unknown,
-): Promise<NotificationChannelPreference & { category: string }> {
-
-  return executeSessionServerFunction({
-    name: "settings.notifications.update",
-    access: { kind: "session" },
-
-    parse: () =>
-      parseObject(
-        { category: rawCategory, channel: rawChannel, enabled: rawEnabled },
-        validationFail,
-        (r) => ({
-          category: r.enum("category", NOTIFICATION_CATEGORIES),
-          channel: r.enum("channel", EXTERNAL_CHANNELS),
-          enabled: r.bool("enabled"),
-        }),
-      ),
-
-    audit: (command) => ({
-      category: command.category,
-      channel: command.channel,
-      enabled: command.enabled,
-    }),
-
-    execute: async (ctx, command) => {
-      // Mandatory categories (security) have no controllable channel and cannot
-      // be silenced; reject rather than write a row the planner would ignore.
-      if (!isChannelControllable(command.category, command.channel)) {
-        return Err(invalid({ code: "channel_not_controllable" }));
-      }
-
-      const addresses = createUserChannelAddressRepo(serverInfrastructure.db);
-      const verified = await addresses.listVerifiedChannels(ctx.actor.userId);
-      // A channel with no verified address cannot deliver, so there is nothing
-      // to configure. The UI disables it; reject direct calls to match.
-      if (!verified.includes(command.channel)) {
-        return Err(invalid({ code: "channel_unavailable" }));
-      }
-
-      await composeNotifications().preferences.setOptedOut({
-        userId: ctx.actor.userId,
-        category: command.category,
-        channel: command.channel,
-        optedOut: !command.enabled,
-        now: new Date(),
-      });
-
-      return Ok({
-        category: command.category,
-        channel: command.channel,
-        controllable: true,
-        available: true,
-        enabled: command.enabled,
-      });
     },
   });
 }

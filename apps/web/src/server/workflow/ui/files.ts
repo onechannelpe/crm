@@ -1,221 +1,25 @@
 import "server-only";
-
-import { ActionError, type WireError } from "~/contracts/errors";
-import type { LeadRateRevisionFileView } from "~/contracts/workflow/results";
-import { fail, invalid, type DomainError } from "~/domain/errors";
-import {
-  FileAssetId,
-  WorkflowLeadId,
-  WorkflowRateRevisionFileId,
-} from "~/domain/ids";
+import { WorkflowLeadId } from "~/domain/ids";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
-import { Err, Ok, type Result } from "~/shared/result";
 
-type LeadUpload = {
-  leadId: WorkflowLeadId;
-  file: {
-    name: string;
-    sizeBytes: number;
-    stream: ReadableStream<Uint8Array>;
-  };
-};
-
-type FileOperationResult<T> = Result<T, WireError>;
-
-async function executeFileOperation<T>(
-  operation: Promise<T>,
-): Promise<FileOperationResult<T>> {
-  try {
-    return Ok(await operation);
-  } catch (error) {
-    if (error instanceof ActionError && error.wire.kind !== "internal") {
-      return Err(error.wire);
-    }
-
-    throw error;
-  }
-}
-
-function parseLeadUpload(formData: unknown): Result<LeadUpload, DomainError> {
-  if (!(formData instanceof FormData)) {
-    return Err(invalid({ code: "invalid_input" }));
-  }
-
-  const parsedFields = parseObject(
-    { leadId: formData.get("leadId") },
-    validationFail,
-    (r) => ({
-      leadId: r.id("leadId", WorkflowLeadId),
-    }),
-  );
-
-  if (!parsedFields.ok) {
-    return parsedFields;
-  }
-
-  const file = formData.get("file");
-
-  if (!(file instanceof File)) {
-    return Err(fail("file_required"));
-  }
-
-  return Ok({
-    leadId: parsedFields.value.leadId,
-    file: {
-      name: file.name,
-      sizeBytes: file.size,
-      stream: file.stream(),
-    },
-  });
-}
-
-export async function listLeadSaleProofFiles(rawLeadId: string) {
-
+export async function listLeadSaleProofFiles(leadId: string) {
   return executeSessionServerFunction({
     name: "workflow.list_sale_proof_files",
     access: { kind: "auth" },
-
     parse: () =>
-      parseObject({ leadId: rawLeadId }, validationFail, (r) => ({
-        leadId: r.id("leadId", WorkflowLeadId),
+      parseObject({ leadId }, validationFail, (reader) => ({
+        leadId: reader.id("leadId", WorkflowLeadId),
       })),
-
-    audit: ({ leadId }) => ({ leadId }),
-
-    execute: (ctx, { leadId }) =>
+    audit: (input) => ({ leadId: input.leadId }),
+    execute: (context, input) =>
       composeWorkflow().leadFiles.listSaleProofFiles({
-        ctx,
-        leadId,
+        ctx: context,
+        leadId: input.leadId,
       }),
   });
-}
-
-export async function requestWorkflowLeadsExportDownloadToken(): Promise<{
-  token: string;
-}> {
-
-  return executeSessionServerFunction({
-    name: "workflow.request_leads_export_download_token",
-    access: { kind: "auth" },
-
-    execute: (ctx) =>
-      composeWorkflow().leadFiles.requestLeadsExportDownloadToken({
-        ctx,
-      }),
-  });
-}
-
-export async function uploadLeadSaleProofFile(formData: FormData) {
-
-  return executeSessionServerFunction({
-    name: "workflow.upload_sale_proof_file",
-    access: { kind: "auth" },
-
-    parse: () => parseLeadUpload(formData),
-
-    audit: ({ leadId, file }) => ({
-      leadId,
-      fileName: file.name,
-      sizeBytes: file.sizeBytes,
-    }),
-
-    execute: (ctx, { leadId, file }) =>
-      composeWorkflow().leadFiles.uploadSaleProofFile({
-        ctx,
-        leadId,
-        file,
-      }),
-  });
-}
-
-export async function requestLeadSaleProofDownloadToken(input: {
-  leadId: string;
-  fileId: string;
-}) {
-
-  return executeSessionServerFunction({
-    name: "workflow.request_sale_proof_download_token",
-    access: { kind: "auth" },
-
-    parse: () =>
-      parseObject(input, validationFail, (r) => ({
-        leadId: r.id("leadId", WorkflowLeadId),
-        fileAssetId: r.id("fileId", FileAssetId),
-      })),
-
-    audit: ({ leadId, fileAssetId }) => ({
-      leadId,
-      fileAssetId,
-    }),
-
-    execute: (ctx, { leadId, fileAssetId }) =>
-      composeWorkflow().leadFiles.requestSaleProofDownloadToken({
-        ctx,
-        leadId,
-        fileAssetId,
-      }),
-  });
-}
-
-export async function uploadLeadRateRevisionFile(
-  formData: FormData,
-): Promise<Result<LeadRateRevisionFileView, WireError>> {
-
-  return executeFileOperation(
-    executeSessionServerFunction({
-      name: "workflow.upload_rate_revision_file",
-      access: { kind: "auth" },
-
-      parse: () => parseLeadUpload(formData),
-
-      audit: ({ leadId, file }) => ({
-        leadId,
-        fileName: file.name,
-        sizeBytes: file.sizeBytes,
-      }),
-
-      execute: (ctx, { leadId, file }) =>
-        composeWorkflow().leadFiles.uploadRateRevisionFile({
-          ctx,
-          leadId,
-          file,
-        }),
-    }),
-  );
-}
-
-export async function requestRateRevisionFileDownloadToken(input: {
-  leadId: string;
-  fileId: string;
-}) {
-
-  return executeFileOperation(
-    executeSessionServerFunction({
-      name: "workflow.request_rate_revision_download_token",
-      access: { kind: "auth" },
-
-      parse: () =>
-        parseObject(input, validationFail, (r) => ({
-          leadId: r.id("leadId", WorkflowLeadId),
-          fileId: r.id("fileId", WorkflowRateRevisionFileId),
-        })),
-
-      audit: ({ leadId, fileId }) => ({
-        leadId,
-        fileId,
-      }),
-
-      execute: (ctx, { leadId, fileId }) =>
-        composeWorkflow().leadFiles.requestRateRevisionDownloadToken({
-          ctx,
-          leadId,
-          fileId,
-        }),
-    }),
-  );
 }

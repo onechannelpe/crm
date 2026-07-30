@@ -1,16 +1,8 @@
 import "server-only";
-
 import type { AuditPolicySnapshot } from "~/contracts/audit-reader/policy";
 import { composeAdmin } from "~/server/admin/ui/composition";
-import {
-  createAuditPolicyService,
-  type UpsertAuditPolicyInput,
-} from "~/server/audit-reader/policy-service";
+import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
 import { executeAdminServerFunction } from "~/server/platform/action";
-import {
-  parseObject,
-  validationFail,
-} from "~/server/platform/action/input-reader";
 import { getSession, hasRole } from "~/server/platform/action/session";
 import { Ok } from "~/shared/result";
 
@@ -21,7 +13,6 @@ function auditPolicyService() {
 }
 
 export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
-
   return executeAdminServerFunction({
     name: "admin.audit_policy.snapshot.read",
     access: { kind: "permission", permission: "audit:read" },
@@ -31,7 +22,6 @@ export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
 }
 
 export async function canManageAuditPolicies(): Promise<boolean> {
-
   const session = await getSession();
 
   if (!session) {
@@ -39,34 +29,4 @@ export async function canManageAuditPolicies(): Promise<boolean> {
   }
 
   return hasRole(session.role, "admin");
-}
-
-export async function upsertAuditPolicy(input: unknown): Promise<void> {
-
-  return executeAdminServerFunction({
-    name: "admin.audit_policy.upsert",
-    access: { kind: "role", role: "admin" },
-
-    parse: () =>
-      parseObject(input, validationFail, (r) => ({
-        action: r.str("action"),
-        riskLevel: r.str("riskLevel"),
-        isActive: r.bool("isActive"),
-      })),
-
-    audit: ({ action, isActive }) => ({
-      action,
-      isActive,
-    }),
-
-    execute: async ({ actor }, fields) =>
-      Ok(
-        await auditPolicyService().upsertPolicy({
-          action: fields.action,
-          riskLevel: fields.riskLevel,
-          isActive: fields.isActive,
-          actorUserId: actor.userId,
-        } satisfies UpsertAuditPolicyInput),
-      ),
-  });
 }

@@ -1,20 +1,43 @@
-type Composition =
-  typeof import("~/server/workflow/ui/pending-quotation-policy");
+import { executeSessionServerFunction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
+import { updatePendingQuotationPolicy } from "~/server/workflow/policy/write/update-pending-quotation-policy";
+import { workflowActor } from "~/server/workflow/ui/actor";
+import { composeWorkflow } from "~/server/workflow/ui/composition";
 
-export async function queryPendingQuotationPolicy(
-  ...args: Parameters<Composition["queryPendingQuotationPolicy"]>
-) {
-  "use server";
-  const { queryPendingQuotationPolicy: execute } =
-    await import("~/server/workflow/ui/pending-quotation-policy");
-  return execute(...args);
-}
+export type SavePendingQuotationPolicyInput =
+  | { enabled: false }
+  | { enabled: true; limit: number };
 
 export async function savePendingQuotationPolicy(
-  ...args: Parameters<Composition["savePendingQuotationPolicy"]>
+  input: SavePendingQuotationPolicyInput,
 ) {
   "use server";
-  const { savePendingQuotationPolicy: execute } =
-    await import("~/server/workflow/ui/pending-quotation-policy");
-  return execute(...args);
+
+  return executeSessionServerFunction({
+    name: "workflow.update_pending_quotation_policy",
+    access: { kind: "permission", permission: "quotation:policy:manage" },
+    parse: () =>
+      parseObject(input, validationFail, (reader) =>
+        reader.bool("enabled")
+          ? { enabled: true as const, limit: reader.posInt("limit") }
+          : { enabled: false as const },
+      ),
+    audit: (payload) => ({
+      enabled: payload.enabled,
+      limit: payload.enabled ? payload.limit : 0,
+    }),
+    execute: ({ actor }, payload) => {
+      const workflow = composeWorkflow();
+      return updatePendingQuotationPolicy(
+        { actor: workflowActor(actor), ...payload },
+        {
+          pendingQuotationPolicies: workflow.repos.pendingQuotationPolicies,
+          now: workflow.now(),
+        },
+      );
+    },
+  });
 }
