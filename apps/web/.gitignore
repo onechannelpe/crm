@@ -3,6 +3,7 @@
 .output
 dist
 app.config.timestamp_*.js
+src/server/shared/engine/*.ts
 
 .vite*
 test-results
