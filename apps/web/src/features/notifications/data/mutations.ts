@@ -3,8 +3,8 @@ import { action, json } from "@solidjs/router";
 import {
   markAllNotificationsRead,
   markNotificationRead,
-} from "~/actions/app-notifications";
-import { setNotificationPreference } from "~/actions/settings/notifications";
+} from "~/actions/app-notifications.action";
+import { setNotificationPreference } from "~/actions/settings/notifications.action";
 import {
   headerNotificationsQuery,
   notificationPreferencesQuery,

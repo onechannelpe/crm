@@ -1,4 +1,4 @@
-import { getGpvSnapshotProgress } from "~/actions/merchant-stats/imports";
+import { getGpvSnapshotProgress } from "~/actions/merchant-stats/imports.action";
 import {
   subscribeState,
   type StateSubscription,

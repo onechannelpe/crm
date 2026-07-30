@@ -14,7 +14,7 @@ import { ConfirmDialog } from "~/components/ui/confirm-dialog";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { actionErrorMessage } from "~/contracts/errors";
-import { recoveryCodesStatusQuery } from "~/features/auth/data/queries/recovery-codes";
+import { recoveryCodesStatusQuery } from "~/features/auth/data/queries/recovery-codes.query";
 import {
   acknowledgeRecoveryCodesMutation,
   changePasswordMutation,

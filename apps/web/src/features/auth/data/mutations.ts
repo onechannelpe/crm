@@ -4,18 +4,18 @@ import { redirect } from "@solidjs/router";
 import {
   acceptInvitePasswordStep,
   type AcceptInviteResult,
-} from "~/actions/auth/invite";
+} from "~/actions/auth/invite.action";
 import {
   passkeyStart,
   passwordLogin,
   recoveryLogin,
   totpLogin,
-} from "~/actions/auth/login";
+} from "~/actions/auth/login/index.action";
 import {
   requestPasswordReset,
   resetPassword,
-} from "~/actions/auth/reset-password";
-import { logout } from "~/actions/auth/session";
+} from "~/actions/auth/reset-password.action";
+import { logout } from "~/actions/auth/session/index.action";
 import type {
   PasskeyStartSubmissionResult,
   PasswordLoginSubmissionResult,

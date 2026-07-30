@@ -7,7 +7,7 @@ import { Button } from "~/components/ui/input/button";
 import { codeIs } from "~/contracts/error-codes";
 import { parseWireError } from "~/contracts/errors";
 import { totpLoginMutation } from "~/features/auth/data/mutations";
-import { loginFlowQuery } from "~/features/auth/data/queries/login-flow";
+import { loginFlowQuery } from "~/features/auth/data/queries/login-flow.query";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";

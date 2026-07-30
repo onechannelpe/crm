@@ -53,6 +53,15 @@ export default defineConfig({
     solidStart({
       middleware: "./src/middleware.ts",
       extensions: ["md", "mdx"],
+      serialization: {
+        mode: "json",
+      },
+      serverFunctions: {
+        filter: {
+          include: ["src/**/*.query.ts", "src/**/*.action.ts"],
+        },
+        onError: "./src/server-function-error.ts",
+      },
     }),
     nitro({
       alias: {

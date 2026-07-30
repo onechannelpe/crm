@@ -4,7 +4,7 @@ import {
   createTeamInvite,
   resendTeamInvite,
   revokeTeamInvite,
-} from "~/actions/team/invites";
+} from "~/actions/team/invites.action";
 import type { CreateTeamInviteInput } from "~/contracts/team";
 import { inviteManagementQuery } from "~/features/team-management/data/queries";
 

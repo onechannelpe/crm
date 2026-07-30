@@ -4,7 +4,7 @@ import { createSignal, Show } from "solid-js";
 import {
   acknowledgeRecoveryCodes,
   regenerateRecoveryCodes,
-} from "~/actions/auth/recovery-codes";
+} from "~/actions/auth/recovery-codes.action";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { Button } from "~/components/ui/input/button";
 import { actionErrorMessage } from "~/contracts/errors";

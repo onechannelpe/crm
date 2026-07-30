@@ -1,7 +1,7 @@
 import { useAction, useNavigate } from "@solidjs/router";
 import { createMemo, createSignal, onMount } from "solid-js";
 
-import { finishPasskeyLogin } from "~/actions/auth/login/passkey";
+import { finishPasskeyLogin } from "~/actions/auth/login/passkey.action";
 import {
   createAuthenticationResponse,
   isPasskeyAuthenticationSupported,

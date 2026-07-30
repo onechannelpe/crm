@@ -5,9 +5,9 @@ import {
   getManagedExecutivesList,
   getPendingRequests,
   getPolicyDefaults,
-} from "~/actions/capacity/read";
-import { getMyContactAssignmentCapacity } from "~/actions/contact-assignments/read";
-import { getMySearchAllowance } from "~/actions/search/read";
+} from "~/actions/capacity/read.action";
+import { getMyContactAssignmentCapacity } from "~/actions/contact-assignments/read.action";
+import { getMySearchAllowance } from "~/actions/search/read.action";
 
 export const managedExecutivesQuery = query(
   getManagedExecutivesList,

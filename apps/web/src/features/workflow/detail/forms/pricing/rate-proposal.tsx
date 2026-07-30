@@ -1,7 +1,7 @@
 import { useAction } from "@solidjs/router";
 import { createSignal, createUniqueId, For, Show } from "solid-js";
 
-import { uploadLeadRateRevisionFile } from "~/actions/workflow/files";
+import { uploadLeadRateRevisionFile } from "~/actions/workflow/files.action";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Paperclip from "~/components/icons/paperclip";

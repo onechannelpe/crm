@@ -3,7 +3,7 @@ import { action, json } from "@solidjs/router";
 import {
   startImpersonation,
   stopImpersonation,
-} from "~/actions/users/impersonation";
+} from "~/actions/users/impersonation.action";
 import {
   changeMemberRole,
   deactivateMember,
@@ -11,7 +11,7 @@ import {
   reactivateMember,
   updateMemberExpiry,
   updateMemberProfile,
-} from "~/actions/users/write";
+} from "~/actions/users/write.action";
 import type {
   ChangeMemberRoleInput,
   UpdateMemberExpiryInput,

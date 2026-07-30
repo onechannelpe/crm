@@ -5,15 +5,15 @@ import {
   grantMoreLeadRefill,
   grantMoreSearches,
   rejectCapacity,
-} from "~/actions/capacity/approvals";
+} from "~/actions/capacity/approvals.action";
 import {
   updateExecutivePolicyOverride,
   updateScopePolicy,
-} from "~/actions/capacity/policies";
+} from "~/actions/capacity/policies.action";
 import {
   requestMoreLeadRefill,
   requestMoreSearches,
-} from "~/actions/capacity/requests";
+} from "~/actions/capacity/requests.action";
 import {
   capacityPolicyDefaultsQuery,
   executiveCapacityDetailQuery,

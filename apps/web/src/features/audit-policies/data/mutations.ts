@@ -1,6 +1,6 @@
 import { action, json } from "@solidjs/router";
 
-import { upsertAuditPolicy } from "~/actions/admin/audit-policy";
+import { upsertAuditPolicy } from "~/actions/admin/audit-policy.action";
 import { auditPolicySnapshotQuery } from "~/features/audit-policies/data/queries";
 
 export const upsertAuditPolicyMutation = action(

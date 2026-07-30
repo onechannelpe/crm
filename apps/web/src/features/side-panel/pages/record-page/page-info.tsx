@@ -3,7 +3,7 @@ import { Show } from "solid-js";
 
 import { Avatar } from "~/components/ui/display/avatar";
 import { Tag } from "~/components/ui/tag/tag";
-import { leadDetailQuery } from "~/features/workflow/data/queries";
+import { leadDetailQuery } from "~/features/workflow/data/lead-detail.query";
 import {
   leadStageColor,
   leadStageLabel,

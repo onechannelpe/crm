@@ -3,7 +3,7 @@ import { createSignal } from "solid-js";
 import {
   beginTotpEnrollment,
   finishTotpEnrollment,
-} from "~/actions/auth/security/totp";
+} from "~/actions/auth/security/totp.action";
 import { actionErrorMessage } from "~/contracts/errors";
 
 export interface TotpEnrollmentState {

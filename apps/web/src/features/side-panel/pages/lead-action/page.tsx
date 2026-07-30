@@ -3,7 +3,7 @@ import { Match, Show, Switch, createEffect } from "solid-js";
 
 import { CloseQuotationSection } from "~/features/record-show/workflow/close-quotation";
 import { isLeadActionStillRelevant } from "~/features/record-show/workflow/next-action";
-import { leadDetailQuery } from "~/features/workflow/data/queries";
+import { leadDetailQuery } from "~/features/workflow/data/lead-detail.query";
 import { FulfillmentPanel } from "~/features/workflow/detail/forms/fulfillment/fulfillment-panel";
 import { ProposeRateSection } from "~/features/workflow/detail/forms/pricing/propose-rate";
 import { RateProposalSection } from "~/features/workflow/detail/forms/pricing/rate-proposal";

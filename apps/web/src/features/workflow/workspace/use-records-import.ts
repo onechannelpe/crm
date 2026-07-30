@@ -3,7 +3,7 @@ import { onCleanup } from "solid-js";
 import {
   getRecordImportProgress,
   uploadRecordImportFile,
-} from "~/actions/records/imports";
+} from "~/actions/records/imports.action";
 import {
   subscribeState,
   type StateSubscription,

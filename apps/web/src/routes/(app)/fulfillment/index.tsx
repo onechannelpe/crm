@@ -8,7 +8,7 @@ import {
 } from "~/contracts/workflow/fulfillment-labels";
 import type { FulfillmentQueueRowView } from "~/contracts/workflow/views";
 import type { FulfillmentStep } from "~/contracts/workflow/vocabulary";
-import { fulfillmentQueueQuery } from "~/features/workflow/data/queries";
+import { fulfillmentQueueQuery } from "~/features/workflow/data/fulfillment-queue.query";
 
 import styles from "./fulfillment-queue.module.css";
 

@@ -1,6 +1,6 @@
 import { createAsync } from "@solidjs/router";
 
-import { requestWorkflowLeadsExportDownloadToken } from "~/actions/workflow/files";
+import { requestWorkflowLeadsExportDownloadToken } from "~/actions/workflow/files.action";
 import { downloadWithToken } from "~/browser/files/client";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import Building2 from "~/components/icons/building-2";
@@ -13,10 +13,8 @@ import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type { RecordIndexDefinition } from "~/features/record-index/model/definition";
 import { mergeLeadRows } from "~/features/workflow/data/merge-lead-rows";
 import { getOptimisticLeadRows } from "~/features/workflow/data/optimistic-leads";
-import {
-  leadListQuery,
-  pendingQuotationCountQuery,
-} from "~/features/workflow/data/queries";
+import { leadListQuery } from "~/features/workflow/data/lead-list.query";
+import { pendingQuotationCountQuery } from "~/features/workflow/data/pending-quotation-count.query";
 
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";

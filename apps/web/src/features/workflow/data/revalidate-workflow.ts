@@ -1,6 +1,7 @@
 import { revalidate } from "@solidjs/router";
 
-import { leadDetailQuery, leadListQuery } from "./queries";
+import { leadDetailQuery } from "~/features/workflow/data/lead-detail.query";
+import { leadListQuery } from "~/features/workflow/data/lead-list.query";
 
 export async function revalidateWorkflowLead(leadId: string): Promise<void> {
   await Promise.all([

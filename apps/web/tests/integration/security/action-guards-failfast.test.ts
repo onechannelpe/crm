@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { getUserLoginRetryReport } from "~/actions/admin/auth-security";
-import { listUserSessions } from "~/actions/admin/sessions/read";
-import { revokeUserSession } from "~/actions/admin/sessions/revoke";
-import { acceptInvitePasswordStep } from "~/actions/auth/invite";
+import { getUserLoginRetryReport } from "~/actions/admin/auth-security.action";
+import { listUserSessions } from "~/actions/admin/sessions/read.action";
+import { revokeUserSession } from "~/actions/admin/sessions/revoke.action";
+import { acceptInvitePasswordStep } from "~/actions/auth/invite.action";
 import {
   createTeamInvite,
   resendTeamInvite,
   revokeTeamInvite,
-} from "~/actions/team/invites";
+} from "~/actions/team/invites.action";
 import { ActionError } from "~/lib/wire-error";
 
 async function rejectionCode(run: Promise<unknown>): Promise<unknown> {

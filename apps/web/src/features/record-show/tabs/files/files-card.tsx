@@ -1,10 +1,10 @@
 import { createSignal, For, Show } from "solid-js";
 
-import { requestFulfillmentDownloadToken } from "~/actions/workflow/commands/fulfillment";
+import { requestFulfillmentDownloadToken } from "~/actions/workflow/commands/fulfillment.action";
 import {
   requestLeadSaleProofDownloadToken,
   requestRateRevisionFileDownloadToken,
-} from "~/actions/workflow/files";
+} from "~/actions/workflow/files.action";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
 import { actionErrorMessage } from "~/contracts/errors";

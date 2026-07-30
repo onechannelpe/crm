@@ -1,7 +1,10 @@
 import { createAsync } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 
-import { applyBulkImport, previewBulkCsv } from "~/actions/team/bulk-import";
+import {
+  applyBulkImport,
+  previewBulkCsv,
+} from "~/actions/team/bulk-import.action";
 import { readFileText } from "~/browser/file/read-file-text";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";

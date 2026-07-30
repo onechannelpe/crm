@@ -9,16 +9,16 @@ import {
   uploadFulfillmentDocument,
   uploadFulfillmentPaymentProof,
   validateFulfillmentPayment,
-} from "~/actions/workflow/commands/fulfillment";
-import { requestInquiryCreation } from "~/actions/workflow/commands/inquiries";
-import { addLeadNote } from "~/actions/workflow/commands/interactions";
+} from "~/actions/workflow/commands/fulfillment.action";
+import { requestInquiryCreation } from "~/actions/workflow/commands/inquiries.action";
+import { addLeadNote } from "~/actions/workflow/commands/interactions.action";
 import {
   requestRateAcceptance,
   requestRateProposal,
   requestLeadClosure,
   requestRateProposalEdit,
   requestRateRevision,
-} from "~/actions/workflow/commands/rate";
+} from "~/actions/workflow/commands/rate.action";
 import {
   requestAddLeadToFavorites,
   requestEditCommercialScope,
@@ -30,12 +30,12 @@ import {
   requestRecordRepLegal,
   requestRemoveLeadFromFavorites,
   requestSaveDigitalPolicy,
-} from "~/actions/workflow/commands/records";
+} from "~/actions/workflow/commands/records.action";
 import {
   requestVenueAccountsAddition,
   requestVenueCreation,
   requestVenueUpdate,
-} from "~/actions/workflow/commands/sales";
+} from "~/actions/workflow/commands/sales.action";
 import type {
   AcceptRateInput,
   AddLeadNoteInput,
@@ -61,7 +61,8 @@ import type {
   UpdateVenueInput,
 } from "~/contracts/workflow/inputs";
 
-import { inquiryListQuery, leadListQuery } from "./queries";
+import { inquiryListQuery } from "~/features/workflow/data/inquiry-list.query";
+import { leadListQuery } from "~/features/workflow/data/lead-list.query";
 
 export const createLeadMutation = action(async (input: CreateLeadInput) => {
   const result = await requestLeadCreation(input);

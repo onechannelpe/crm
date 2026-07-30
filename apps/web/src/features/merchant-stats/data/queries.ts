@@ -5,11 +5,11 @@ import {
   getFilterOptions,
   getGpvCulqi,
   getGpvPerformance,
-} from "~/actions/merchant-stats/dashboard";
-import { getExecutiveGpvProgress } from "~/actions/merchant-stats/executive-progress";
-import { getGpvSnapshot } from "~/actions/merchant-stats/imports";
-import { getMerchantStatsForRuc } from "~/actions/merchant-stats/org-stats";
-import { getQualityRows } from "~/actions/merchant-stats/quality";
+} from "~/actions/merchant-stats/dashboard.action";
+import { getExecutiveGpvProgress } from "~/actions/merchant-stats/executive-progress.action";
+import { getGpvSnapshot } from "~/actions/merchant-stats/imports.action";
+import { getMerchantStatsForRuc } from "~/actions/merchant-stats/org-stats.action";
+import { getQualityRows } from "~/actions/merchant-stats/quality.action";
 
 export const gpvPerformanceViewQuery = query(
   getGpvPerformance,

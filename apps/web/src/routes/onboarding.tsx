@@ -15,12 +15,12 @@ import {
   Switch,
 } from "solid-js";
 
-import { changeOnboardingPassword } from "~/actions/auth/onboarding/change-password";
-import { completeOnboardingAction } from "~/actions/auth/onboarding/complete";
-import { submitOnboardingProfile } from "~/actions/auth/onboarding/submit-profile";
-import { acknowledgeRecoveryCodes } from "~/actions/auth/recovery-codes";
-import { beginPasskeyEnrollment } from "~/actions/auth/security/passkey";
-import { beginTotpEnrollment } from "~/actions/auth/security/totp";
+import { changeOnboardingPassword } from "~/actions/auth/onboarding/change-password.action";
+import { completeOnboardingAction } from "~/actions/auth/onboarding/complete.action";
+import { submitOnboardingProfile } from "~/actions/auth/onboarding/submit-profile.action";
+import { acknowledgeRecoveryCodes } from "~/actions/auth/recovery-codes.action";
+import { beginPasskeyEnrollment } from "~/actions/auth/security/passkey.action";
+import { beginTotpEnrollment } from "~/actions/auth/security/totp.action";
 import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
@@ -30,7 +30,7 @@ import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-b
 import type { OnboardingSnapshot } from "~/contracts/auth";
 import { actionErrorMessage } from "~/contracts/errors";
 import { normalizePhoneInput, isValidPhone } from "~/domain/phone/pe-mobile";
-import { onboardingSnapshotQuery } from "~/features/onboarding/data/queries";
+import { onboardingSnapshotQuery } from "~/features/onboarding/data/onboarding-snapshot.query";
 import {
   resolveOnboardingStep,
   type RequestedSecurityStep,

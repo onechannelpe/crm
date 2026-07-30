@@ -3,12 +3,12 @@ import { action, json } from "@solidjs/router";
 import {
   adjustMonthCredit,
   setMerchantTarget,
-} from "~/actions/merchant-stats/attribution";
-import { requestMerchantGpvExportDownloadToken } from "~/actions/merchant-stats/dashboard";
+} from "~/actions/merchant-stats/attribution.action";
+import { requestMerchantGpvExportDownloadToken } from "~/actions/merchant-stats/dashboard.action";
 import {
   resolveGpvImportIssue,
   uploadMerchantReport,
-} from "~/actions/merchant-stats/imports";
+} from "~/actions/merchant-stats/imports.action";
 
 import { gpvSnapshotQuery, merchantFilterOptionsQuery } from "./queries";
 import {

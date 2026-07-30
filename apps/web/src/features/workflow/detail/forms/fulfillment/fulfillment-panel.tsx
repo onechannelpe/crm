@@ -2,7 +2,7 @@ import { useAction } from "@solidjs/router";
 import { For, Match, Show, Switch, createSignal } from "solid-js";
 import type { JSX } from "solid-js";
 
-import { requestFulfillmentDownloadToken } from "~/actions/workflow/commands/fulfillment";
+import { requestFulfillmentDownloadToken } from "~/actions/workflow/commands/fulfillment.action";
 import { Button } from "~/components/ui/input/button";
 import { FileInput } from "~/components/ui/input/file-input";
 import { Select } from "~/components/ui/input/select";

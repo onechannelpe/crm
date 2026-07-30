@@ -55,11 +55,8 @@
     "shx": "^0.4.0"
   },
   "overrides": {
-    "h3": "2.0.1-rc.25",
+    "h3": "2.0.1-rc.26",
     "solid-js": "1.9.14"
   },
-  "packageManager": "bun@1.3.14",
-  "patchedDependencies": {
-    "nitro@3.0.260610-beta": "patches/nitro@3.0.260610-beta.patch"
-  }
+  "packageManager": "bun@1.3.14"
 }

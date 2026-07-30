@@ -19,10 +19,8 @@ import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-
 import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import {
-  leadDetailQuery,
-  leadListQuery,
-} from "~/features/workflow/data/queries";
+import { leadDetailQuery } from "~/features/workflow/data/lead-detail.query";
+import { leadListQuery } from "~/features/workflow/data/lead-list.query";
 
 import {
   RecordShowActionsMenu,

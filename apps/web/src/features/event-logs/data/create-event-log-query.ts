@@ -7,7 +7,7 @@ import {
   type Accessor,
 } from "solid-js";
 
-import { getEventLogs } from "~/actions/audit/event-logs";
+import { getEventLogs } from "~/actions/audit/event-logs.action";
 import { useEventFeed } from "~/browser/realtime/use-event-feed";
 import {
   parseEventLogRecordText,
