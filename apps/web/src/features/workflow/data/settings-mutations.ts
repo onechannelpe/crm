@@ -5,10 +5,8 @@ import {
   type SavePendingQuotationPolicyInput,
 } from "~/actions/workflow/settings/pending-quotation-policy.action";
 import { saveRateProposalPolicy } from "~/actions/workflow/settings/rate-proposal-policy.action";
-import {
-  pendingQuotationPolicyQuery,
-  rateProposalPolicyQuery,
-} from "~/features/workflow/data/settings-queries";
+import { pendingQuotationPolicyQuery } from "~/features/workflow/data/pending-quotation-policy.query";
+import { rateProposalPolicyQuery } from "~/features/workflow/data/rate-proposal-policy.query";
 
 export const updateRateProposalPolicyMutation = action(
   async (input: { validityDays: number }) => {

@@ -2,7 +2,7 @@ import { action, json } from "@solidjs/router";
 
 import { searchDirect } from "~/actions/search/run.action";
 import type { SearchIntent } from "~/contracts/search/vocabulary";
-import { mySearchAllowanceQuery } from "~/features/capacity/data/queries";
+import { mySearchAllowanceQuery } from "~/features/capacity/data/my-search-allowance.query";
 
 export const searchDirectMutation = action(
   async (input: { intent: SearchIntent; query: string; limit: number }) =>

@@ -19,9 +19,10 @@ import { isQualityIssue } from "~/contracts/merchant-stats/vocabulary";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import { merchantFilterOptionsQuery } from "~/features/merchant-stats/data/merchant-filter-options.query";
+import { qualityRowsQuery } from "~/features/merchant-stats/data/quality-rows.query";
 
 import { adjustMonthCreditMutation } from "../data/mutations";
-import { merchantFilterOptionsQuery, qualityRowsQuery } from "../data/queries";
 import { formatMonth, formatSoles } from "../format";
 import {
   GPV_GRID_PAGE_SIZE,

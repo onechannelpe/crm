@@ -15,7 +15,7 @@ import {
   type EventLogQueryResult,
   type EventLogRecord,
 } from "~/contracts/event-logs/event-log";
-import { eventLogsQuery } from "~/features/event-logs/data/queries";
+import { eventLogsQuery } from "~/features/event-logs/data/event-logs.query";
 
 import { hasEventLogFilters } from "../model/event-log-location";
 

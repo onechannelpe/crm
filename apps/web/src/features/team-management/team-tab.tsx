@@ -18,7 +18,7 @@ import {
 } from "~/components/ui/layout/table";
 import type { MemberListItem } from "~/contracts/members";
 import { shortName } from "~/domain/identity/display-name";
-import { membersRosterQuery } from "~/features/team-management/data/queries";
+import { membersRosterQuery } from "~/features/team-management/data/members-roster.query";
 
 import styles from "./team-management.module.css";
 

@@ -15,11 +15,9 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
+import { auditPolicySnapshotQuery } from "~/features/audit-policies/data/audit-policy-snapshot.query";
+import { canManageAuditPoliciesQuery } from "~/features/audit-policies/data/can-manage-audit-policies.query";
 import { upsertAuditPolicyMutation } from "~/features/audit-policies/data/mutations";
-import {
-  auditPolicySnapshotQuery,
-  canManageAuditPoliciesQuery,
-} from "~/features/audit-policies/data/queries";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 
 import styles from "./settings-page.module.css";

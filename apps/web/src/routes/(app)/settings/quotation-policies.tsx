@@ -19,14 +19,12 @@ import { Toggle } from "~/components/ui/input/toggle";
 import { actionErrorMessage } from "~/contracts/errors";
 import { formatAppDateTime } from "~/domain/time/app-time";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
+import { pendingQuotationPolicyQuery } from "~/features/workflow/data/pending-quotation-policy.query";
+import { rateProposalPolicyQuery } from "~/features/workflow/data/rate-proposal-policy.query";
 import {
   updatePendingQuotationPolicyMutation,
   updateRateProposalPolicyMutation,
 } from "~/features/workflow/data/settings-mutations";
-import {
-  pendingQuotationPolicyQuery,
-  rateProposalPolicyQuery,
-} from "~/features/workflow/data/settings-queries";
 
 import styles from "./settings-page.module.css";
 

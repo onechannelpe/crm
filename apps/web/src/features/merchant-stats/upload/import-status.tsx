@@ -20,12 +20,12 @@ import type { StateSubscription } from "~/browser/realtime/subscribe-state";
 import { actionErrorMessage } from "~/contracts/errors";
 import { type GpvSnapshotProgressEvent } from "~/contracts/merchant-stats/imports";
 import { formatAppDateTime } from "~/domain/time/app-time";
+import { gpvSnapshotQuery } from "~/features/merchant-stats/data/gpv-snapshot.query";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 
 import { subscribeToGpvSnapshotImport } from "../data/import-subscription";
 import { resolveGpvImportIssueMutation } from "../data/mutations";
-import { gpvSnapshotQuery } from "../data/queries";
 import { formatInteger } from "../format";
 import { refreshPublishedGpvData } from "../revalidate";
 

@@ -11,7 +11,10 @@ const logger = createLogger("action-fault");
 // values at the top level of the meta object.
 function faultMeta(error: unknown): Record<string, unknown> {
   if (error instanceof Error) return { error };
-  if (error === null || typeof error !== "object") return { error: String(error) };
+
+  if (error === null || typeof error !== "object") {
+    return { error: String(error) };
+  }
 
   return Object.fromEntries(Object.entries(error));
 }

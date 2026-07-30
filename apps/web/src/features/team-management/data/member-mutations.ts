@@ -17,10 +17,8 @@ import type {
   UpdateMemberExpiryInput,
   UpdateMemberProfileInput,
 } from "~/contracts/members";
-import {
-  memberDetailQuery,
-  membersRosterQuery,
-} from "~/features/team-management/data/queries";
+import { memberDetailQuery } from "~/features/team-management/data/member-detail.query";
+import { membersRosterQuery } from "~/features/team-management/data/members-roster.query";
 
 const revalidateMember = [membersRosterQuery.key, memberDetailQuery.key];
 

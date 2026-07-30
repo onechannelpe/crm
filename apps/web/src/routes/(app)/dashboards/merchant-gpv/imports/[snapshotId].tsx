@@ -1,7 +1,7 @@
 import { type RouteDefinition, useParams } from "@solidjs/router";
 
 import { AppPage, AppPageSection } from "~/components/layout/page";
-import { gpvSnapshotQuery } from "~/features/merchant-stats/data/queries";
+import { gpvSnapshotQuery } from "~/features/merchant-stats/data/gpv-snapshot.query";
 import { ImportStatus } from "~/features/merchant-stats/upload/import-status";
 
 export const route = {

@@ -5,8 +5,8 @@ import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
 import type { FilterOptions } from "~/contracts/merchant-stats/views";
 import { parseCalendarMonth } from "~/domain/time/calendar-date";
+import { merchantFilterOptionsQuery } from "~/features/merchant-stats/data/merchant-filter-options.query";
 
-import { merchantFilterOptionsQuery } from "./data/queries";
 import { formatMonth } from "./format";
 import type { GpvView } from "./gpv-view";
 

@@ -8,8 +8,8 @@ import {
   requestMoreLeadRefillMutation,
   requestMoreSearchesMutation,
 } from "~/features/capacity/data/mutations";
-import { myContactAssignmentCapacityQuery } from "~/features/capacity/data/queries";
-import { mySearchAllowanceQuery } from "~/features/capacity/data/queries";
+import { myContactAssignmentCapacityQuery } from "~/features/capacity/data/my-contact-assignment-capacity.query";
+import { mySearchAllowanceQuery } from "~/features/capacity/data/my-search-allowance.query";
 import { SettingsPageContainer } from "~/features/settings-shell/content/settings-page-container";
 
 import styles from "./capacity-page.module.css";

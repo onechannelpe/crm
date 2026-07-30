@@ -5,10 +5,8 @@ import {
   markNotificationRead,
 } from "~/actions/app-notifications.action";
 import { setNotificationPreference } from "~/actions/settings/notifications.action";
-import {
-  headerNotificationsQuery,
-  notificationPreferencesQuery,
-} from "~/features/notifications/data/queries";
+import { headerNotificationsQuery } from "~/features/notifications/data/header-notifications.query";
+import { notificationPreferencesQuery } from "~/features/notifications/data/notification-preferences.query";
 
 export const markNotificationReadMutation = action(
   async (notificationId: string) => {

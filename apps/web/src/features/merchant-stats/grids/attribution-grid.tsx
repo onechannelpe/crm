@@ -15,12 +15,13 @@ import type { CohortSaleRow } from "~/contracts/merchant-stats/views";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import { cohortRowsQuery } from "~/features/merchant-stats/data/cohort-rows.query";
+import { merchantFilterOptionsQuery } from "~/features/merchant-stats/data/merchant-filter-options.query";
 
 import {
   adjustMonthCreditMutation,
   setMerchantTargetMutation,
 } from "../data/mutations";
-import { cohortRowsQuery, merchantFilterOptionsQuery } from "../data/queries";
 import { formatMonth, formatSoles } from "../format";
 import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";

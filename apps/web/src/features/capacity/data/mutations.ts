@@ -14,14 +14,12 @@ import {
   requestMoreLeadRefill,
   requestMoreSearches,
 } from "~/actions/capacity/requests.action";
-import {
-  capacityPolicyDefaultsQuery,
-  executiveCapacityDetailQuery,
-  managedExecutivesQuery,
-  myContactAssignmentCapacityQuery,
-  mySearchAllowanceQuery,
-  pendingCapacityRequestsQuery,
-} from "~/features/capacity/data/queries";
+import { capacityPolicyDefaultsQuery } from "~/features/capacity/data/capacity-policy-defaults.query";
+import { executiveCapacityDetailQuery } from "~/features/capacity/data/executive-capacity-detail.query";
+import { managedExecutivesQuery } from "~/features/capacity/data/managed-executives.query";
+import { myContactAssignmentCapacityQuery } from "~/features/capacity/data/my-contact-assignment-capacity.query";
+import { mySearchAllowanceQuery } from "~/features/capacity/data/my-search-allowance.query";
+import { pendingCapacityRequestsQuery } from "~/features/capacity/data/pending-capacity-requests.query";
 
 export const requestMoreSearchesMutation = action(
   async (amount: number, reason: string) => {

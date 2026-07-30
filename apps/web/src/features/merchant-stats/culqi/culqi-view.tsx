@@ -3,11 +3,11 @@ import { ErrorBoundary, Show, Suspense } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { ScrollWrapper } from "~/components/ui/utilities/scroll-wrapper";
+import { gpvCulqiViewQuery } from "~/features/merchant-stats/data/gpv-culqi-view.query";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetGrid, WidgetGridItem } from "~/features/widgets/widget-layout";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 
-import { gpvCulqiViewQuery } from "../data/queries";
 import { formatMonth, formatSolesCompact } from "../format";
 import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";

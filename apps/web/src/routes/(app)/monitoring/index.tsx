@@ -11,7 +11,7 @@ import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import { createGridSource } from "~/features/data-grid/model/create-grid-source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import { observabilitySnapshotQuery } from "~/features/observability/data/queries";
+import { observabilitySnapshotQuery } from "~/features/observability/data/observability-snapshot.query";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 

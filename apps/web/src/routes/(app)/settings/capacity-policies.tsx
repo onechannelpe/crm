@@ -15,8 +15,8 @@ import type {
   CapacityPolicyTeamDefaultsView,
 } from "~/contracts/capacity";
 import { actionErrorMessage } from "~/contracts/errors";
+import { capacityPolicyDefaultsQuery } from "~/features/capacity/data/capacity-policy-defaults.query";
 import { updateScopePolicyMutation } from "~/features/capacity/data/mutations";
-import { capacityPolicyDefaultsQuery } from "~/features/capacity/data/queries";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 
 import styles from "./settings-page.module.css";

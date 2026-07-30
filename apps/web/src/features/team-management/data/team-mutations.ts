@@ -6,7 +6,7 @@ import {
   revokeTeamInvite,
 } from "~/actions/team/invites.action";
 import type { CreateTeamInviteInput } from "~/contracts/team";
-import { inviteManagementQuery } from "~/features/team-management/data/queries";
+import { inviteManagementQuery } from "~/features/team-management/data/invite-management.query";
 
 export const createTeamInviteMutation = action(
   async (input: CreateTeamInviteInput) => {

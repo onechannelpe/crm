@@ -26,7 +26,7 @@ import type {
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
 import { formatCalendarDate } from "~/domain/time/app-time";
-import { bulkImportSetupQuery } from "~/features/team-management/data/queries";
+import { bulkImportSetupQuery } from "~/features/team-management/data/bulk-import-setup.query";
 
 import styles from "./team-management.module.css";
 

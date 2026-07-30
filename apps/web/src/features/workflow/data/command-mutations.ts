@@ -60,7 +60,6 @@ import type {
   SaveDigitalPolicyInput,
   UpdateVenueInput,
 } from "~/contracts/workflow/inputs";
-
 import { inquiryListQuery } from "~/features/workflow/data/inquiry-list.query";
 import { leadListQuery } from "~/features/workflow/data/lead-list.query";
 

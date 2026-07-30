@@ -1,9 +1,10 @@
 import { createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
+import { merchantStatsByRucQuery } from "~/features/merchant-stats/data/merchant-stats-by-ruc.query";
+
 import { Gauge } from "../charts/gauge";
 import { LineChart } from "../charts/line-chart";
-import { merchantStatsByRucQuery } from "../data/queries";
 import { formatMonth, formatSolesCompact } from "../format";
 
 import styles from "./merchant-gpv-widget.module.css";

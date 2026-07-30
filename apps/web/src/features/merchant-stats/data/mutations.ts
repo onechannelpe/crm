@@ -9,8 +9,9 @@ import {
   resolveGpvImportIssue,
   uploadMerchantReport,
 } from "~/actions/merchant-stats/imports.action";
+import { gpvSnapshotQuery } from "~/features/merchant-stats/data/gpv-snapshot.query";
+import { merchantFilterOptionsQuery } from "~/features/merchant-stats/data/merchant-filter-options.query";
 
-import { gpvSnapshotQuery, merchantFilterOptionsQuery } from "./queries";
 import {
   ATTRIBUTION_GPV_QUERY_KEYS,
   PUBLISHED_GPV_QUERY_KEYS,

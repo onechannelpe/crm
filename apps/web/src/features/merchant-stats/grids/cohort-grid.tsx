@@ -9,10 +9,10 @@ import { COHORT_OFFSETS } from "~/contracts/merchant-stats/vocabulary";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import { cohortRowsQuery } from "~/features/merchant-stats/data/cohort-rows.query";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 
-import { cohortRowsQuery } from "../data/queries";
 import { formatInteger, formatMonth, formatSolesCompact } from "../format";
 import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";
