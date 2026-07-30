@@ -33,6 +33,7 @@ const ROW: CohortSaleRow = {
   sellerName: "Ejecutiva CRM",
   culqiUserName: "Ejecutiva Culqi",
   branchName: "LIMA",
+  subchannel: "INFINITY PAY LIMA",
   projectedGpv: 12_000,
   months: [
     { offset: 0, gpv: 0, trx: 0 },

@@ -97,6 +97,7 @@ export interface CohortSaleRow {
   sellerName: string | null;
   culqiUserName: string | null;
   branchName: string | null;
+  subchannel: string | null;
   projectedGpv: number | null;
   months: Array<GpvPoint & { offset: CohortOffset }>;
   m0Plus15d: GpvPoint | null;

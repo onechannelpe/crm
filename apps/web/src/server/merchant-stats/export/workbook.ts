@@ -28,7 +28,7 @@ const COLUMNS: ReadonlyArray<{
     value: (row) => row.saleMonth.replace("-", ""),
   },
   { header: "identificador_tributario", width: 22, value: (row) => row.ruc },
-  { header: "ZONAL", width: 20, value: (row) => row.branchName },
+  { header: "ZONAL", width: 20, value: (row) => zonalFromSubchannel(row) },
   { header: "VENDEDOR R", width: 28, value: (row) => row.sellerName },
   {
     header: "PROYECTADO",
@@ -167,4 +167,8 @@ function excelDate(value: CalendarDate | null): Date | null {
 function saleMonthName(saleMonth: CalendarMonth): string {
   const monthIndex = Number(saleMonth.slice(5, 7)) - 1;
   return MONTH_NAMES[monthIndex] ?? "";
+}
+
+function zonalFromSubchannel(row: CohortSaleRow): string | null {
+  return row.subchannel?.trim().split(/\s+/).at(-1) ?? null;
 }

@@ -127,6 +127,7 @@ export async function getCohortRows(
       "s.last_transaction_at",
       "s.client_type",
       "s.culqi_user_name",
+      "s.subchannel",
       "s.m0_plus_15d_gpv",
       "s.m0_plus_15d_trx",
       "o.id as organization_id",
@@ -172,6 +173,7 @@ export async function getCohortRows(
       sellerName: displayName(sale),
       culqiUserName: sale.culqi_user_name,
       branchName: sale.branch_name,
+      subchannel: sale.subchannel,
       projectedGpv: sale.monthly_target_gpv,
       months: Array.from(bySaleOffset, ([offset, point]) => ({
         offset,
