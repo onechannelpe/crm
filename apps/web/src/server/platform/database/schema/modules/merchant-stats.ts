@@ -295,6 +295,14 @@ export async function createTables(db: Kysely<Database>): Promise<void> {
   await createServingViews(db);
 }
 
+export async function ensureBaseline(db: Kysely<Database>): Promise<void> {
+  await db
+    .insertInto("merchant_gpv_dataset")
+    .values({ id: "default", updated_at: new Date(0) })
+    .onConflict((conflict) => conflict.column("id").doNothing())
+    .execute();
+}
+
 async function createServingViews(db: Kysely<Database>): Promise<void> {
   await db.schema
     .createView("merchant_sales")

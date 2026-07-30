@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "../types";
+import type { SchemaModule } from ".";
 import * as auth from "./modules/auth";
 import * as capacity from "./modules/capacity";
 import * as contactAssignments from "./modules/contact-assignments";
@@ -20,9 +20,7 @@ import * as sales from "./modules/sales";
 import * as search from "./modules/search";
 import * as workflow from "./modules/workflow";
 
-export const SCHEMA_MODULES: readonly {
-  createTables(db: Kysely<Database>): Promise<void>;
-}[] = [
+export const SCHEMA_MODULES = [
   core,
   identity,
   auth,
@@ -41,4 +39,4 @@ export const SCHEMA_MODULES: readonly {
   sales,
   fulfillment,
   merchantStats,
-];
+] as const satisfies readonly SchemaModule[];

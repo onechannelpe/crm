@@ -7,6 +7,7 @@ import * as workflowKinds from "./reference-data/workflow-kinds";
 
 export interface SchemaModule {
   createTables(db: Kysely<Database>): Promise<void>;
+  ensureBaseline?(db: Kysely<Database>): Promise<void>;
 }
 
 export interface ReferenceDataModule {
