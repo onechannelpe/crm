@@ -17,7 +17,7 @@ import type {
   PasskeyStartSubmissionResult,
   PasswordLoginSubmissionResult,
 } from "~/contracts/auth";
-import type { AcceptInviteResult } from "~/server/auth/ui/invites";
+import type { AcceptInviteResult } from "~/contracts/auth";
 
 export const logoutMutation = action(logout, "logout");
 

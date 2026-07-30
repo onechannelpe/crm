@@ -72,3 +72,23 @@ export interface SessionInfo {
   lastActivity: number;
   expiresAt: number;
 }
+
+export interface InviteActivationView {
+  fullName: string;
+  username: string;
+  email: string;
+}
+
+export type AcceptInviteResult =
+  | { ok: true; redirectTo: string }
+  | { ok: false; code: AcceptInviteErrorCode; message: string };
+
+export type AcceptInviteErrorCode =
+  | "invalid_token"
+  | "password_too_short"
+  | "password_missing_uppercase"
+  | "password_missing_lowercase"
+  | "password_missing_number"
+  | "password_mismatch"
+  | "invite_invalid_or_expired"
+  | "invite_target_active";

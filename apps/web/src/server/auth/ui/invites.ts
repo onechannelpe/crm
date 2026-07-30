@@ -1,4 +1,9 @@
 import "server-only";
+import type {
+  AcceptInviteErrorCode,
+  AcceptInviteResult,
+  InviteActivationView,
+} from "~/contracts/auth";
 import { isValidInviteTokenFormat } from "~/domain/auth/invite/tokens";
 import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-acceptance";
 import { setSessionCookie } from "~/server/auth/session/cookies";
@@ -9,26 +14,6 @@ import { getRequestClientMetadata } from "~/server/platform/http/request-context
 import { getInviteInfo as getInviteInfoService } from "~/server/team/application/invites";
 import { composeTeam } from "~/server/team/ui/composition";
 import { isErr } from "~/shared/result";
-
-export interface InviteActivationView {
-  fullName: string;
-  username: string;
-  email: string;
-}
-
-export type AcceptInviteErrorCode =
-  | "invalid_token"
-  | "password_too_short"
-  | "password_missing_uppercase"
-  | "password_missing_lowercase"
-  | "password_missing_number"
-  | "password_mismatch"
-  | "invite_invalid_or_expired"
-  | "invite_target_active";
-
-export type AcceptInviteResult =
-  | { ok: true; redirectTo: string }
-  | { ok: false; code: AcceptInviteErrorCode; message: string };
 
 function readInviteToken(
   raw: string,
