@@ -1,5 +1,3 @@
-"use server";
-
 import type { MemberDetail, MembersRoster } from "~/contracts/members";
 import { UserId } from "~/domain/ids";
 import { executeSessionServerFunction } from "~/server/platform/action";
@@ -10,6 +8,8 @@ import {
 import { getUsersRuntime } from "~/server/platform/container/users-runtime";
 
 export async function getMembersRoster(): Promise<MembersRoster> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.roster.read",
     access: { kind: "permission", permission: "team:read" },
@@ -20,6 +20,8 @@ export async function getMembersRoster(): Promise<MembersRoster> {
 export async function getMemberDetail(
   rawUserId: unknown,
 ): Promise<MemberDetail> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.detail.read",
     access: { kind: "permission", permission: "team:read" },

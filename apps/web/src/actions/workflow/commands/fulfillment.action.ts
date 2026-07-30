@@ -1,5 +1,3 @@
-"use server";
-
 import type {
   ChooseFulfillmentProductInput,
   RecordUnitSerialInput,
@@ -133,6 +131,8 @@ function parseFulfillmentPaymentProofUpload(
 }
 
 export async function chooseFulfillmentProduct(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.choose_fulfillment_product",
     access: { kind: "auth" },
@@ -165,6 +165,8 @@ export async function chooseFulfillmentProduct(input: unknown) {
 }
 
 export async function uploadFulfillmentDocument(formData: FormData) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.upload_fulfillment_document",
     access: { kind: "auth" },
@@ -188,6 +190,8 @@ export async function uploadFulfillmentDocument(formData: FormData) {
 }
 
 export async function recordFulfillmentSerial(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.record_fulfillment_serial",
     access: { kind: "auth" },
@@ -221,6 +225,8 @@ export async function recordFulfillmentSerial(input: unknown) {
 }
 
 export async function registerFulfillmentPaymentLink(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.register_fulfillment_payment_link",
     access: { kind: "auth" },
@@ -254,6 +260,8 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
 }
 
 export async function uploadFulfillmentPaymentProof(formData: FormData) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.upload_fulfillment_payment_proof",
     access: { kind: "auth" },
@@ -277,6 +285,8 @@ export async function uploadFulfillmentPaymentProof(formData: FormData) {
 }
 
 export async function validateFulfillmentPayment(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.validate_fulfillment_payment",
     access: { kind: "auth" },
@@ -300,6 +310,8 @@ export async function validateFulfillmentPayment(input: unknown) {
 }
 
 export async function rejectFulfillmentStep(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.reject_fulfillment_step",
     access: { kind: "auth" },
@@ -332,6 +344,8 @@ export async function rejectFulfillmentStep(input: unknown) {
 }
 
 export async function registerFulfillmentSale(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.register_fulfillment_sale",
     access: { kind: "auth" },
@@ -368,6 +382,8 @@ export async function requestFulfillmentDownloadToken(input: {
   leadId: string;
   fileId: string;
 }) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.request_fulfillment_download_token",
     access: { kind: "auth" },

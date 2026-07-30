@@ -1,5 +1,3 @@
-"use server";
-
 import { invalid } from "~/domain/errors";
 import {
   CATEGORY_META,
@@ -44,6 +42,8 @@ export interface NotificationPreferencesView {
 // Default-on: a row in notification_opt_outs means "this user silenced this
 // category on this channel"; absence means on.
 export async function getNotificationPreferences(): Promise<NotificationPreferencesView> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "settings.notifications.read",
     access: { kind: "session" },
@@ -93,6 +93,8 @@ export async function setNotificationPreference(
   rawChannel: unknown,
   rawEnabled: unknown,
 ): Promise<NotificationChannelPreference & { category: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "settings.notifications.update",
     access: { kind: "session" },

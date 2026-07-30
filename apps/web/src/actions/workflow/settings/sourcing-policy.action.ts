@@ -1,5 +1,3 @@
-"use server";
-
 import { BranchId } from "~/domain/ids";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
@@ -13,6 +11,8 @@ import { updateSourcingPolicy } from "~/server/workflow/policy/write/update-sour
 import { workflowActor } from "../commands/actor";
 
 export async function querySourcingPolicy(rawBranchId: string) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.get_sourcing_policy",
     access: { kind: "auth" },
@@ -42,6 +42,8 @@ export async function saveSourcingPolicy(input: {
   branchId: string;
   engineAssignmentEnabled: boolean;
 }) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.update_sourcing_policy",
     access: { kind: "auth" },

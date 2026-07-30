@@ -1,5 +1,3 @@
-"use server";
-
 import { auditEntityId } from "~/domain/audit/entity";
 import type { Role } from "~/domain/auth/access/rbac";
 import { fail } from "~/domain/errors";
@@ -55,6 +53,8 @@ export async function changePassword(
   currentPassword: unknown,
   newPassword: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "settings.security.change_password",
     access: { kind: "auth" },
@@ -102,6 +102,8 @@ export async function changePassword(
 }
 
 export async function removeAllPasskeys(): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "settings.security.remove_passkeys",
     access: { kind: "session" },
@@ -140,6 +142,8 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
 }
 
 export async function disableTotp(): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "settings.security.disable_totp",
     access: { kind: "session" },

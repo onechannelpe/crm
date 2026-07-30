@@ -1,5 +1,3 @@
-"use server";
-
 import type {
   AddVenueAccountsInput,
   CreateVenueInput,
@@ -65,6 +63,8 @@ function accountFields<TCurrency extends "PEN" | "USD">(
 }
 
 export async function requestVenueCreation(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.create_venue",
     access: { kind: "auth" },
@@ -82,6 +82,8 @@ export async function requestVenueCreation(input: unknown) {
 }
 
 export async function requestVenueUpdate(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.update_venue",
     access: { kind: "auth" },
@@ -112,6 +114,8 @@ export async function requestVenueUpdate(input: unknown) {
 }
 
 export async function requestVenueAccountsAddition(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.add_venue_accounts",
     access: { kind: "auth" },

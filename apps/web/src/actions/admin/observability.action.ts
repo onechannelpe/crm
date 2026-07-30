@@ -1,5 +1,3 @@
-"use server";
-
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
 import { executeAdminServerFunction } from "~/server/platform/action";
 import {
@@ -12,6 +10,8 @@ import { Ok } from "~/shared/result";
 export async function getObservabilitySnapshot(
   rawParams?: unknown,
 ): Promise<ObservabilitySnapshot> {
+  "use server";
+
   return executeAdminServerFunction({
     name: "admin.observability.snapshot.read",
     access: { kind: "permission", permission: "audit:read" },

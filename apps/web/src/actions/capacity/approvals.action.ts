@@ -1,5 +1,3 @@
-"use server";
-
 import type { DomainError } from "~/domain/errors";
 import { CapacityRequestId, UserId } from "~/domain/ids";
 import { executeSessionServerFunction } from "~/server/platform/action";
@@ -55,6 +53,8 @@ export async function approveCapacity(
   rawRequestId: unknown,
   rawNote?: unknown,
 ) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "capacity.approve",
     access: { kind: "permission", permission: "capacity:approve" },
@@ -66,6 +66,8 @@ export async function approveCapacity(
 }
 
 export async function rejectCapacity(rawRequestId: unknown, rawNote: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "capacity.reject",
     access: { kind: "permission", permission: "capacity:approve" },
@@ -81,6 +83,8 @@ export async function grantMoreSearches(
   rawAmount: unknown,
   rawReason: unknown,
 ) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "capacity.grant_search",
     access: { kind: "permission", permission: "capacity:manage" },
@@ -103,6 +107,8 @@ export async function grantMoreLeadRefill(
   rawAmount: unknown,
   rawReason: unknown,
 ) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "capacity.grant_lead",
     access: { kind: "permission", permission: "capacity:manage" },

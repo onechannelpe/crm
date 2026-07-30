@@ -1,5 +1,3 @@
-"use server";
-
 import { longName } from "~/domain/identity/display-name";
 import { executeAdminServerFunction } from "~/server/platform/action";
 import {
@@ -31,6 +29,8 @@ export interface UserLoginRetryReport {
 export async function getUserLoginRetryReport(
   username: unknown,
 ): Promise<UserLoginRetryReport | null> {
+  "use server";
+
   return executeAdminServerFunction({
     name: "admin.auth.login_retry_report.read",
     access: { kind: "role", role: "admin" },

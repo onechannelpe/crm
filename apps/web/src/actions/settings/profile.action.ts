@@ -1,5 +1,3 @@
-"use server";
-
 import { fail } from "~/domain/errors";
 import { parsePhone } from "~/domain/phone/pe-mobile";
 import { executeSessionServerFunction } from "~/server/platform/action";
@@ -13,6 +11,8 @@ import { Err, isErr, Ok } from "~/shared/result";
 export async function updateUserProfile(
   rawPhone: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "settings.profile.update_phone",
     access: { kind: "session" },

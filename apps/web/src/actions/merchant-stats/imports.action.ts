@@ -1,5 +1,3 @@
-"use server";
-
 import type {
   GpvSnapshotProgressEvent,
   GpvSnapshotView,
@@ -72,6 +70,8 @@ function parseUpload(formData: FormData): Result<Upload, DomainError> {
 }
 
 export async function uploadMerchantReport(formData: FormData) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "merchantStats.import.upload",
     access: { kind: "permission", permission: "dashboards:manage" },
@@ -111,6 +111,8 @@ export async function uploadMerchantReport(formData: FormData) {
 export async function getGpvSnapshotProgress(
   rawJobId: string,
 ): Promise<GpvSnapshotProgressEvent> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "merchantStats.import.progress",
     access: { kind: "permission", permission: "dashboards:read" },
@@ -137,6 +139,8 @@ export async function getGpvSnapshotProgress(
 export async function getGpvSnapshot(
   rawSnapshotId: string,
 ): Promise<GpvSnapshotView> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "merchantStats.import.read",
     access: { kind: "permission", permission: "dashboards:manage" },
@@ -154,6 +158,8 @@ export async function resolveGpvImportIssue(raw: {
   issueId: string;
   resolution: GpvSnapshotIssueResolution;
 }) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "merchantStats.import.issue.resolve",
     access: { kind: "permission", permission: "dashboards:manage" },

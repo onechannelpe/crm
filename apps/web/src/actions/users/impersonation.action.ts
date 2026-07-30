@@ -1,5 +1,3 @@
-"use server";
-
 import { UserId } from "~/domain/ids";
 import {
   deleteImpersonatorCookie,
@@ -19,6 +17,8 @@ import { isErr, Ok } from "~/shared/result";
 export async function startImpersonation(
   rawUserId: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.impersonation.start",
     access: { kind: "permission", permission: "admin:manage" },
@@ -42,6 +42,8 @@ export async function startImpersonation(
 }
 
 export async function stopImpersonation(): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.impersonation.stop",
     access: { kind: "auth" },

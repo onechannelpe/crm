@@ -1,5 +1,3 @@
-"use server";
-
 import { fail, type DomainError } from "~/domain/errors";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { getAvatarRuntime } from "~/server/platform/container/avatar-runtime";
@@ -25,6 +23,8 @@ export interface RemoveAvatarResult {
 export async function uploadUserAvatar(
   formData: FormData,
 ): Promise<UpdateAvatarResult> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "settings.avatar.upload",
     access: { kind: "session" },
@@ -53,6 +53,8 @@ export async function uploadUserAvatar(
 }
 
 export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "settings.avatar.remove",
     access: { kind: "session" },

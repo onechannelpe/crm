@@ -1,5 +1,3 @@
-"use server";
-
 import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/flows/request-password-reset";
 import { resetPassword as resetPasswordService } from "~/server/auth/flows/reset-password";
 import { executePublicServerFunction } from "~/server/platform/action";
@@ -11,6 +9,8 @@ import { isErr } from "~/shared/result";
 export async function requestPasswordReset(
   formData: FormData,
 ): Promise<{ ok: true }> {
+  "use server";
+
   const rawEmail = formData.get("email");
   const email = typeof rawEmail === "string" ? rawEmail : "";
 
@@ -32,6 +32,8 @@ export async function requestPasswordReset(
 }
 
 export async function resetPassword(formData: FormData): Promise<{ ok: true }> {
+  "use server";
+
   const rawToken = formData.get("token");
   const rawPassword = formData.get("password");
   const rawConfirm = formData.get("confirmPassword");

@@ -1,5 +1,3 @@
-"use server";
-
 import type { LeadCapacitySnapshot } from "~/contracts/capacity";
 import type { ActiveContactAssignmentView } from "~/contracts/contact-assignments/views";
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
@@ -11,6 +9,8 @@ import { Ok } from "~/shared/result";
 export async function getActiveContactAssignments(): Promise<
   ActiveContactAssignmentView[]
 > {
+  "use server";
+
   const readRepos = getContactAssignmentsRuntime().repos;
   return executeSessionServerFunction({
     name: "contact_assignments.list_active",
@@ -21,6 +21,8 @@ export async function getActiveContactAssignments(): Promise<
 }
 
 export async function getMyContactAssignmentCapacity(): Promise<LeadCapacitySnapshot> {
+  "use server";
+
   const readRepos = getContactAssignmentsRuntime().repos;
   return executeSessionServerFunction({
     name: "contact_assignments.get_capacity",

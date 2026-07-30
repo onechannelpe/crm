@@ -1,5 +1,3 @@
-"use server";
-
 import { randomUUID } from "node:crypto";
 
 import type {
@@ -99,6 +97,8 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
   importType: RecordImportType;
   rowsTotal: number;
 }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "records.import.upload",
     access: { kind: "permission", permission: "integration:manage" },
@@ -164,6 +164,8 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
 export async function getRecordImportProgress(
   rawJobId: string,
 ): Promise<RecordImportProgressEvent> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "records.import.progress",
     access: { kind: "permission", permission: "integration:manage" },

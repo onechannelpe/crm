@@ -1,5 +1,3 @@
-"use server";
-
 import { UserId } from "~/domain/ids";
 import type { CalendarMonth } from "~/domain/time/calendar-date";
 import { executeSessionServerFunction } from "~/server/platform/action";
@@ -16,6 +14,8 @@ export async function adjustMonthCredit(raw: {
   sellerUserId: string | null;
   reason: string;
 }) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "merchantStats.attribution.resolve",
     access: { kind: "permission", permission: "dashboards:manage" },
@@ -51,6 +51,8 @@ export async function setMerchantTarget(raw: {
   effectiveFrom: CalendarMonth;
   projectedGpv: number | null;
 }) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "merchantStats.target.set",
     access: { kind: "permission", permission: "dashboards:manage" },

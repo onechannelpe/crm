@@ -1,5 +1,3 @@
-"use server";
-
 import { fail } from "~/domain/errors";
 import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
 import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-enrollment";
@@ -13,6 +11,8 @@ export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
   qrCodeDataUrl: string;
 }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "auth.totp.begin",
     access: { kind: "session" },
@@ -24,6 +24,8 @@ export async function beginTotpEnrollment(): Promise<{
 export async function finishTotpEnrollment(
   rawCode: unknown,
 ): Promise<{ recoveryCodes: string[]; message: string }> {
+  "use server";
+
   const result = await executeSessionServerFunction({
     name: "auth.totp.finish",
     access: { kind: "session" },

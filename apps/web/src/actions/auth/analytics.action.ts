@@ -1,5 +1,3 @@
-"use server";
-
 import type { AuthFunnelClientEventPayload } from "~/domain/observability/auth-funnel";
 import {
   isAuthAnalyticsScreen,
@@ -33,6 +31,8 @@ function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
 export async function trackAuthClientEvent(
   input: AuthFunnelClientEventPayload,
 ): Promise<void> {
+  "use server";
+
   const event = readClientAuthAnalyticsEvent(input);
   await recordAuthAnalytics(
     {

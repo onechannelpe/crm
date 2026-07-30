@@ -1,5 +1,3 @@
-"use server";
-
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
 import { isRegistrationResponse } from "~/domain/auth/passkey/credential-response";
@@ -16,6 +14,8 @@ import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {
+  "use server";
+
   const setup = getAuthRuntime().setup;
   const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);
@@ -38,6 +38,8 @@ export async function finishPasskeyEnrollment(
   challengeId: unknown,
   response: unknown,
 ): Promise<{ message: string; recoveryCodes: string[] }> {
+  "use server";
+
   const setup = getAuthRuntime().setup;
   const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);

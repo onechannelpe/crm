@@ -1,5 +1,3 @@
-"use server";
-
 import {
   type ListAssignableExecutivesInput,
   type ListLeadsFiltersInput,
@@ -41,6 +39,8 @@ const SORT_DIRECTIONS = ["asc", "desc"] as const;
 export async function queryLeadList(
   filters: ListLeadsFiltersInput,
 ): Promise<LeadListView> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.list_leads",
     access: { kind: "auth" },
@@ -85,6 +85,8 @@ export async function queryLeadList(
 export async function queryLeadDetail(
   rawLeadId: string,
 ): Promise<LeadDetailView & { evaluatedAt: number }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.get_lead_detail",
     access: { kind: "auth" },
@@ -118,6 +120,8 @@ export async function queryLeadDetail(
 export async function queryFulfillmentQueue(): Promise<
   FulfillmentQueueView & { evaluatedAt: number }
 > {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.list_fulfillment_queue",
     access: { kind: "auth" },
@@ -139,6 +143,8 @@ export async function queryFulfillmentQueue(): Promise<
 }
 
 export async function queryPendingQuotationCount(): Promise<PendingQuotationCountView> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.pending_quotation_count",
     access: { kind: "auth" },
@@ -162,6 +168,8 @@ export async function queryPendingQuotationCount(): Promise<PendingQuotationCoun
 export async function queryLeadBootstrapPreview(
   rawRuc: string,
 ): Promise<LeadBootstrapPreviewView> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.get_lead_bootstrap_preview",
     access: { kind: "auth" },
@@ -188,6 +196,8 @@ export async function queryLeadBootstrapPreview(
 export async function queryAssignableExecutives(
   input: ListAssignableExecutivesInput,
 ): Promise<AssignableExecutiveView[]> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.list_assignable_executives",
     access: { kind: "auth" },

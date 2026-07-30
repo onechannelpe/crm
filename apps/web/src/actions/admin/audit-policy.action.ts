@@ -1,5 +1,3 @@
-"use server";
-
 import type { AuditPolicySnapshot } from "~/contracts/audit-reader/policy";
 import {
   createAuditPolicyService,
@@ -21,6 +19,8 @@ function auditPolicyService() {
 }
 
 export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
+  "use server";
+
   return executeAdminServerFunction({
     name: "admin.audit_policy.snapshot.read",
     access: { kind: "permission", permission: "audit:read" },
@@ -30,6 +30,8 @@ export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
 }
 
 export async function canManageAuditPolicies(): Promise<boolean> {
+  "use server";
+
   const session = await getSession();
 
   if (!session) {
@@ -40,6 +42,8 @@ export async function canManageAuditPolicies(): Promise<boolean> {
 }
 
 export async function upsertAuditPolicy(input: unknown): Promise<void> {
+  "use server";
+
   return executeAdminServerFunction({
     name: "admin.audit_policy.upsert",
     access: { kind: "role", role: "admin" },

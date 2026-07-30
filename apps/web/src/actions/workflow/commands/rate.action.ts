@@ -1,5 +1,3 @@
-"use server";
-
 import { MAX_RATE_REVISION_FILES } from "~/contracts/workflow/limits";
 import { CLOSE_REASONS, CURRENCIES } from "~/contracts/workflow/vocabulary";
 import {
@@ -22,6 +20,8 @@ import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/requ
 import { workflowActor } from "./actor";
 
 export async function requestRateProposal(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.propose_rate",
     access: { kind: "auth" },
@@ -48,6 +48,8 @@ export async function requestRateProposal(input: unknown) {
 }
 
 export async function requestRateProposalEdit(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.edit_rate_proposal",
     access: { kind: "auth" },
@@ -75,6 +77,8 @@ export async function requestRateProposalEdit(input: unknown) {
 }
 
 export async function requestRateAcceptance(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.accept_rate",
     access: { kind: "auth" },
@@ -96,6 +100,8 @@ export async function requestRateAcceptance(input: unknown) {
 }
 
 export async function requestLeadClosure(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.close_lead",
     access: { kind: "auth" },
@@ -118,6 +124,8 @@ export async function requestLeadClosure(input: unknown) {
 }
 
 export async function requestRateRevision(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.request_rate_revision",
     access: { kind: "auth" },

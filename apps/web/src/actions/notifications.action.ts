@@ -1,5 +1,3 @@
-"use server";
-
 import { randomUUIDv7 } from "bun";
 
 import { isRole } from "~/domain/auth/access/rbac";
@@ -48,6 +46,8 @@ function resolveAudience(
 export async function sendBroadcastNotification(
   params: unknown,
 ): Promise<void> {
+  "use server";
+
   await executeSessionServerFunction({
     name: "notifications.broadcast",
     access: { kind: "role", role: "admin" },

@@ -1,5 +1,3 @@
-"use server";
-
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -12,6 +10,8 @@ import { updatePendingQuotationPolicy } from "~/server/workflow/policy/write/upd
 import { workflowActor } from "../commands/actor";
 
 export async function queryPendingQuotationPolicy() {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.get_pending_quotation_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
@@ -42,6 +42,8 @@ export type SavePendingQuotationPolicyInput =
 export async function savePendingQuotationPolicy(
   input: SavePendingQuotationPolicyInput,
 ) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.update_pending_quotation_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },

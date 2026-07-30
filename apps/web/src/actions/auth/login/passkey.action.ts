@@ -1,5 +1,3 @@
-"use server";
-
 import { getSessionPath } from "~/domain/auth/access/route-policy";
 import { isAuthenticationResponse } from "~/domain/auth/passkey/credential-response";
 import { fail } from "~/domain/errors";
@@ -33,6 +31,8 @@ export async function finishPasskeyLogin(
   flowId: unknown,
   response: unknown,
 ): Promise<{ redirectTo: string }> {
+  "use server";
+
   return executePublicServerFunction(async () => {
     const login = getAuthRuntime().login;
     const clientMetadata = getRequestClientMetadata();

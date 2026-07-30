@@ -1,5 +1,3 @@
-"use server";
-
 import { fail, type DomainError } from "~/domain/errors";
 import { UserId } from "~/domain/ids";
 import { executeSessionServerFunction } from "~/server/platform/action";
@@ -13,6 +11,8 @@ import { Err, isErr, Ok, type Result } from "~/shared/result";
 export async function uploadMemberAvatar(
   formData: FormData,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.avatar.upload",
     access: { kind: "permission", permission: "team:manage" },
@@ -45,6 +45,8 @@ export async function uploadMemberAvatar(
 export async function removeMemberAvatar(
   rawUserId: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.avatar.remove",
     access: { kind: "permission", permission: "team:manage" },

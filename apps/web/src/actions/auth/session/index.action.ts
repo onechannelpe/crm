@@ -1,5 +1,3 @@
-"use server";
-
 import type { CurrentUserView } from "~/contracts/auth";
 import { AuthLoginFlowId } from "~/domain/ids";
 import { getCurrentUser } from "~/server/auth/application/queries/get-current-user";
@@ -11,6 +9,8 @@ import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { isErr } from "~/shared/result";
 
 export async function getLoginFlow(flowId: string) {
+  "use server";
+
   const parsedFlowId = AuthLoginFlowId.parse(flowId);
   if (isErr(parsedFlowId)) return null;
 
@@ -23,6 +23,8 @@ export async function getLoginFlow(flowId: string) {
 }
 
 export async function logout(): Promise<void> {
+  "use server";
+
   await executeSessionServerFunction({
     name: "auth.session.logout",
     access: { kind: "session" },
@@ -31,6 +33,8 @@ export async function logout(): Promise<void> {
 }
 
 export async function getMe(): Promise<CurrentUserView | null> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "auth.session.get_me",
     access: { kind: "session" },

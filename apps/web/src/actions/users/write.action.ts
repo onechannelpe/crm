@@ -1,5 +1,3 @@
-"use server";
-
 import { ROLES } from "~/domain/auth/access/rbac";
 import { fail } from "~/domain/errors";
 import type { ExecutiveCategory } from "~/domain/identity/executive-category";
@@ -20,6 +18,8 @@ const EXECUTIVE_CATEGORIES = [
 export async function updateMemberProfile(
   input: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.profile.update",
     access: { kind: "permission", permission: "team:manage" },
@@ -51,6 +51,8 @@ export async function updateMemberProfile(
 export async function changeMemberRole(
   input: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.role.change",
     access: { kind: "permission", permission: "team:manage" },
@@ -86,6 +88,8 @@ export async function changeMemberRole(
 export async function deactivateMember(
   rawUserId: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.deactivate",
     access: { kind: "permission", permission: "team:manage" },
@@ -105,6 +109,8 @@ export async function deactivateMember(
 export async function reactivateMember(
   rawUserId: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.reactivate",
     access: { kind: "permission", permission: "team:manage" },
@@ -124,6 +130,8 @@ export async function reactivateMember(
 export async function updateMemberExpiry(
   input: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.expiry.update",
     access: { kind: "permission", permission: "team:manage" },
@@ -147,6 +155,8 @@ export async function updateMemberExpiry(
 export async function deleteMember(
   rawUserId: unknown,
 ): Promise<{ message: string }> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "members.delete",
     access: { kind: "permission", permission: "team:manage" },

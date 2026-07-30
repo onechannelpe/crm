@@ -1,5 +1,3 @@
-"use server";
-
 import type {
   Page,
   PublishedPage,
@@ -24,6 +22,8 @@ export async function getQualityRows(raw: {
   issue: QualityIssue;
   page: Page;
 }): Promise<PublishedPage<QualityRow>> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "merchantStats.quality.rows",
     access: { kind: "permission", permission: "dashboards:manage" },

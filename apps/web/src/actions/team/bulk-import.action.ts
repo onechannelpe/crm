@@ -1,5 +1,3 @@
-"use server";
-
 import type {
   BulkApplyResult,
   BulkPreviewResult,
@@ -20,6 +18,8 @@ export async function previewBulkCsv(
   csvContent: unknown,
   role: unknown,
 ): Promise<BulkPreviewResult> {
+  "use server";
+
   const parsed = await executeSessionServerFunction({
     name: "team.bulk_import.preview",
     access: { kind: "permission", permission: "admin:manage" },
@@ -43,6 +43,8 @@ export async function applyBulkImport(
   csvContent: unknown,
   role: unknown,
 ): Promise<BulkApplyResult> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "team.bulk_import.apply",
     access: { kind: "permission", permission: "admin:manage" },

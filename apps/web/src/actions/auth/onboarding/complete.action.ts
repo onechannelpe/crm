@@ -1,5 +1,3 @@
-"use server";
-
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
 import { isRegistrationResponse } from "~/domain/auth/passkey/credential-response";
@@ -61,6 +59,8 @@ function parseCompletionInput(
 export async function completeOnboardingAction(
   input: unknown,
 ): Promise<CompletionResult> {
+  "use server";
+
   const result = await executeSessionServerFunction({
     name: "auth.onboarding.complete",
     access: { kind: "session" },

@@ -1,5 +1,3 @@
-"use server";
-
 import type { SearchDirectResult } from "~/contracts/search/results";
 import { SEARCH_INTENTS } from "~/contracts/search/vocabulary";
 import { executeSessionServerFunction } from "~/server/platform/action";
@@ -15,6 +13,8 @@ import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 export async function searchDirect(
   input: unknown,
 ): Promise<SearchDirectResult> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "search.use",
     access: { kind: "permission", permission: "search:use" },

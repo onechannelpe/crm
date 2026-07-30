@@ -1,5 +1,3 @@
-"use server";
-
 import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignments/vocabulary";
 import { ContactAssignmentId, OrganizationPersonId } from "~/domain/ids";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
@@ -14,6 +12,8 @@ import { getContactAssignmentsRuntime } from "~/server/platform/container/contac
 export async function completeContactAssignmentCall(
   input: unknown,
 ): Promise<CompleteContactAssignmentCallResult> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "contact_assignments.complete_call",
     access: { kind: "permission", permission: "lead:work" },

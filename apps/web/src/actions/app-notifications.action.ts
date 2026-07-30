@@ -1,5 +1,3 @@
-"use server";
-
 import { AppNotificationId } from "~/domain/ids";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
@@ -10,6 +8,8 @@ import { getNotificationsRuntime } from "~/server/platform/container/notificatio
 import { Ok } from "~/shared/result";
 
 export async function getHeaderNotifications() {
+  "use server";
+
   return executeSessionServerFunction({
     name: "notifications.header.read",
     access: { kind: "auth" },
@@ -42,6 +42,8 @@ export async function getHeaderNotifications() {
 export async function markNotificationRead(
   rawNotificationId: unknown,
 ): Promise<void> {
+  "use server";
+
   await executeSessionServerFunction({
     name: "notifications.mark_read",
     access: { kind: "auth" },
@@ -72,6 +74,8 @@ export async function markNotificationRead(
 }
 
 export async function markAllNotificationsRead(): Promise<void> {
+  "use server";
+
   await executeSessionServerFunction({
     name: "notifications.mark_all_read",
     access: { kind: "auth" },

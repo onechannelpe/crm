@@ -1,5 +1,3 @@
-"use server";
-
 import { redirect } from "@solidjs/router";
 
 import type { OnboardingSnapshot } from "~/contracts/auth";
@@ -10,6 +8,8 @@ import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { isErr } from "~/shared/result";
 
 export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {
+  "use server";
+
   const session = await getSession();
   if (!session) {
     throw redirect("/login");

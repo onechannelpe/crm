@@ -1,5 +1,3 @@
-"use server";
-
 import {
   EVENT_LOG_TABLES,
   type EventLogStatus,
@@ -16,6 +14,8 @@ import { getEventLogsRuntime } from "~/server/platform/container/event-logs-runt
 export async function getEventLogs(
   rawParams: unknown,
 ): Promise<EventLogQueryResult> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "audit.event_logs.read",
     access: { kind: "permission", permission: "audit:read" },

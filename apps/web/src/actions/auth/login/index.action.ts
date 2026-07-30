@@ -1,5 +1,3 @@
-"use server";
-
 import { redirect } from "@solidjs/router";
 
 import type { PasskeyLoginFlowState } from "~/domain/auth/passkey/types";
@@ -43,6 +41,8 @@ function recordAuthAnalyticsEvent(
 export async function passwordLogin(
   formData: FormData,
 ): Promise<{ nextStep: "passkey"; flow: PasskeyLoginFlowState }> {
+  "use server";
+
   return executePublicServerFunction(async () => {
     const identifier = readLoginText(formData, "identifier");
     const password = readLoginText(formData, "password", { trim: false });
@@ -120,6 +120,8 @@ export async function passwordLogin(
 export async function passkeyStart(
   formData: FormData,
 ): Promise<{ flow: PasskeyLoginFlowState }> {
+  "use server";
+
   return executePublicServerFunction(async () => {
     const mode = readPasskeyStartMode(formData);
 
@@ -177,6 +179,8 @@ export async function passkeyStart(
 }
 
 export async function totpLogin(formData: FormData): Promise<void> {
+  "use server";
+
   return executePublicServerFunction(async () => {
     const flowId = readLoginFlowId(formData, "flowId");
     const totpCode = readLoginText(formData, "totpCode");
@@ -255,6 +259,8 @@ export async function totpLogin(formData: FormData): Promise<void> {
 }
 
 export async function recoveryLogin(formData: FormData): Promise<void> {
+  "use server";
+
   return executePublicServerFunction(async () => {
     const flowId = readLoginFlowId(formData, "flowId");
     const recoveryCode = readLoginText(formData, "recoveryCode");

@@ -1,5 +1,3 @@
-"use server";
-
 import { isValidInviteTokenFormat } from "~/domain/auth/invite/tokens";
 import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-acceptance";
 import { setSessionCookie } from "~/server/auth/session/cookies";
@@ -93,6 +91,8 @@ function readStrongPassword(
 export async function getInviteActivationView(
   tokenInput: string,
 ): Promise<InviteActivationView | null> {
+  "use server";
+
   return executePublicServerFunction(async () => {
     const safeToken = readInviteToken(tokenInput);
     if (!safeToken.ok) {
@@ -114,6 +114,8 @@ export async function acceptInvitePasswordStep(input: {
   password: string;
   confirmPassword?: string;
 }): Promise<AcceptInviteResult> {
+  "use server";
+
   return executePublicServerFunction(async () => {
     if (
       input.confirmPassword !== undefined &&

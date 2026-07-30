@@ -1,5 +1,3 @@
-"use server";
-
 import {
   SETTLEMENT_BANKS,
   COLLECTION_MODES,
@@ -36,6 +34,8 @@ function parseLeadRef(input: unknown) {
 }
 
 export async function requestLeadCreation(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.register_lead",
     access: { kind: "auth" },
@@ -66,6 +66,8 @@ export async function requestLeadCreation(input: unknown) {
 }
 
 export async function requestEditCommercialScope(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.edit_commercial_scope",
     access: { kind: "auth" },
@@ -94,6 +96,8 @@ export async function requestEditCommercialScope(input: unknown) {
 }
 
 export async function requestSaveDigitalPolicy(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.save_digital_policy",
     access: { kind: "auth" },
@@ -120,6 +124,8 @@ export async function requestSaveDigitalPolicy(input: unknown) {
 }
 
 export async function requestRecordRepLegal(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.record_rep_legal",
     access: { kind: "auth" },
@@ -146,6 +152,8 @@ export async function requestRecordRepLegal(input: unknown) {
 }
 
 export async function requestLeadReview(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.review_lead",
     access: { kind: "auth" },
@@ -169,6 +177,8 @@ export async function requestLeadReview(input: unknown) {
 }
 
 export async function requestQuotationRestart(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.restart_quotation",
     access: { kind: "auth" },
@@ -184,6 +194,8 @@ export async function requestQuotationRestart(input: unknown) {
 }
 
 export async function requestLeadReassignment(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.reassign_lead",
     access: { kind: "auth" },
@@ -209,6 +221,8 @@ export async function requestLeadReassignment(input: unknown) {
 }
 
 export async function requestAddLeadToFavorites(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.add_lead_to_favorites",
     access: { kind: "auth" },
@@ -234,6 +248,8 @@ export async function requestAddLeadToFavorites(input: unknown) {
 }
 
 export async function requestRemoveLeadFromFavorites(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
@@ -259,6 +275,8 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
 }
 
 export async function requestLeadDeletion(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.delete_lead",
     access: { kind: "auth" },
@@ -277,6 +295,8 @@ export async function requestLeadDeletion(input: unknown) {
 }
 
 export async function requestLeadSunatRefresh(input: unknown) {
+  "use server";
+
   return executeSessionServerFunction({
     name: "workflow.request_sunat_refresh",
     access: { kind: "auth" },

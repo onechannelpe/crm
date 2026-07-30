@@ -1,5 +1,3 @@
-"use server";
-
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { getTeamRuntime } from "~/server/platform/container/team-runtime";
@@ -12,6 +10,8 @@ import { isErr, Ok } from "~/shared/result";
 export async function getInviteManagement(): Promise<
   InviteManagement & { evaluatedAt: number }
 > {
+  "use server";
+
   return executeSessionServerFunction({
     name: "team.invite_management.read",
     access: { kind: "permission", permission: "hr:manage" },
@@ -32,6 +32,8 @@ export async function getInviteManagement(): Promise<
 }
 
 export async function getBulkImportSetup(): Promise<BulkImportSetup> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "team.bulk_import_setup.read",
     access: { kind: "permission", permission: "admin:manage" },

@@ -1,5 +1,3 @@
-"use server";
-
 import type { OnboardingSnapshot } from "~/contracts/auth";
 import { changeInstallationPassword } from "~/server/auth/flows/change-installation-password";
 import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
@@ -12,6 +10,8 @@ export async function changeOnboardingPassword(input: {
   password: unknown;
   confirmPassword: unknown;
 }): Promise<OnboardingSnapshot> {
+  "use server";
+
   return executeSessionServerFunction({
     name: "auth.onboarding.change_password",
     access: { kind: "session" },

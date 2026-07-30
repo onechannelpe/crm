@@ -1,5 +1,3 @@
-"use server";
-
 import type { ActionSuccess } from "~/contracts/common";
 import { UserId } from "~/domain/ids";
 import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/flows/revoke-all-user-sessions";
@@ -15,6 +13,8 @@ export async function revokeUserSession(
   rawSessionId: unknown,
   rawTargetUserId: unknown,
 ): Promise<ActionSuccess> {
+  "use server";
+
   return executeAdminServerFunction({
     name: "admin.sessions.revoke",
     access: { kind: "role", role: "admin" },
@@ -44,6 +44,8 @@ export async function revokeUserSession(
 export async function revokeAllUserSessions(
   rawTargetUserId: unknown,
 ): Promise<ActionSuccess> {
+  "use server";
+
   return executeAdminServerFunction({
     name: "admin.sessions.revoke_all",
     access: { kind: "role", role: "admin" },
