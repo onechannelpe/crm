@@ -12,19 +12,18 @@ import {
 } from "~/server/auth/flows/verify-pending-login";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { composeAuth } from "~/server/auth/ui/composition";
+import {
+  completeLoginAndRedirect,
+  readLoginFlowId,
+  readLoginText,
+  readPasskeyStartMode,
+} from "~/server/auth/ui/login-support";
 import { executePublicServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
 import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
 import { getRequestClientMetadata } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
-
-import {
-  completeLoginAndRedirect,
-  readLoginFlowId,
-  readLoginText,
-  readPasskeyStartMode,
-} from "./support.action";
 
 function recordAuthAnalyticsEvent(
   event: Parameters<typeof recordAuthAnalytics>[0],
