@@ -15,9 +15,8 @@ import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
 import { editRateProposalCommand } from "~/server/workflow/lead/commands/edit-rate-proposal";
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
+import { workflowActor } from "~/server/workflow/ui/actor";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
-
-import { workflowActor } from "./actor.action";
 
 export async function requestRateProposal(input: unknown) {
   "use server";

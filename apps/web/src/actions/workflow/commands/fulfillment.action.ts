@@ -25,10 +25,9 @@ import {
   rejectFulfillmentStepCommand,
   validateFulfillmentPaymentCommand,
 } from "~/server/workflow/lead/fulfillment/commands";
+import { workflowActor } from "~/server/workflow/ui/actor";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
 import { Err, Ok, type Result } from "~/shared/result";
-
-import { workflowActor } from "./actor.action";
 
 type DocUpload = {
   leadId: WorkflowLeadId;

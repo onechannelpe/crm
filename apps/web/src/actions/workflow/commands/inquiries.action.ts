@@ -4,9 +4,8 @@ import {
   validationFail,
 } from "~/server/platform/action/input-reader";
 import { createInquiry } from "~/server/workflow/inquiry/create-inquiry";
+import { workflowActor } from "~/server/workflow/ui/actor";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
-
-import { workflowActor } from "./actor.action";
 
 export async function requestInquiryCreation(input: unknown) {
   "use server";

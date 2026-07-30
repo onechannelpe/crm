@@ -5,9 +5,8 @@ import {
   validationFail,
 } from "~/server/platform/action/input-reader";
 import { addLeadNote as addLeadNoteUseCase } from "~/server/workflow/lead/interaction/write";
+import { workflowActor } from "~/server/workflow/ui/actor";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
-
-import { workflowActor } from "./actor.action";
 
 export async function addLeadNote(input: unknown) {
   "use server";

@@ -20,9 +20,8 @@ import {
 import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
 import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
 import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
+import { workflowActor } from "~/server/workflow/ui/actor";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
-
-import { workflowActor } from "./actor.action";
 
 function venueFields(r: Reader<DomainError>): Omit<
   CreateVenueInput,

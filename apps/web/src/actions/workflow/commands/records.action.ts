@@ -22,10 +22,9 @@ import { requestSunatRefresh } from "~/server/workflow/lead/commands/request-sun
 import { restartQuotationCommand } from "~/server/workflow/lead/commands/restart-quotation";
 import { reviewLeadCommand } from "~/server/workflow/lead/commands/review-lead";
 import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
+import { workflowActor } from "~/server/workflow/ui/actor";
 import { composeWorkflow } from "~/server/workflow/ui/composition";
 import { isErr, Ok } from "~/shared/result";
-
-import { workflowActor } from "./actor.action";
 
 function parseLeadRef(input: unknown) {
   return parseObject(input, validationFail, (r) => ({
