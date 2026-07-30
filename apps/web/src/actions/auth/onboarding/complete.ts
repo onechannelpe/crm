@@ -11,7 +11,7 @@ import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/reque
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 import { isPlainRecord } from "~/shared/type-guards";
 
@@ -66,7 +66,7 @@ export async function completeOnboardingAction(
     access: { kind: "session" },
     parse: () => parseCompletionInput(input),
     execute: async (ctx, command) => {
-      const setup = getServerRuntime().auth.setup;
+      const setup = getAuthRuntime().setup;
 
       switch (command.method) {
         case "none":

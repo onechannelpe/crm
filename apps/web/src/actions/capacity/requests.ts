@@ -6,7 +6,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getCapacityRuntime } from "~/server/platform/container/capacity-runtime";
 import type { Result } from "~/shared/result";
 
 function parseCapacityRequest(
@@ -34,7 +34,7 @@ export async function requestMoreSearches(
     audit: (request) => ({ amount: request.amount }),
 
     execute: (ctx, request) =>
-      getServerRuntime().capacity.useCases.requestCapacity(ctx, {
+      getCapacityRuntime().useCases.requestCapacity(ctx, {
         kind: "search_extra",
         amount: request.amount,
         reason: request.reason,
@@ -53,7 +53,7 @@ export async function requestMoreLeadRefill(
     audit: (request) => ({ amount: request.amount }),
 
     execute: (ctx, request) =>
-      getServerRuntime().capacity.useCases.requestCapacity(ctx, {
+      getCapacityRuntime().useCases.requestCapacity(ctx, {
         kind: "lead_refill",
         amount: request.amount,
         reason: request.reason,

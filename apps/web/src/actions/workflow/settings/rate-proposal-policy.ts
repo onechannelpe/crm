@@ -5,7 +5,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { getRateProposalPolicy } from "~/server/workflow/policy/read/get-rate-proposal-policy";
 import { updateRateProposalPolicy } from "~/server/workflow/policy/write/update-rate-proposal-policy";
 
@@ -19,7 +19,7 @@ export async function queryRateProposalPolicy() {
     audit: () => ({}),
 
     execute: ({ actor }) => {
-      const workflow = getServerRuntime().workflow;
+      const workflow = getWorkflowRuntime();
 
       return getRateProposalPolicy(
         {
@@ -47,7 +47,7 @@ export async function saveRateProposalPolicy(input: { validityDays: number }) {
     audit: ({ validityDays }) => ({ validityDays }),
 
     execute: ({ actor }, payload) => {
-      const workflow = getServerRuntime().workflow;
+      const workflow = getWorkflowRuntime();
 
       return updateRateProposalPolicy(
         {

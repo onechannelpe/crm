@@ -5,7 +5,7 @@ import { fail, type DomainError } from "~/domain/errors";
 import { parsePhone } from "~/domain/phone/pe-mobile";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export function submitOnboardingProfile(input: {
@@ -23,7 +23,7 @@ export function submitOnboardingProfile(input: {
       return phone ? Ok(phone) : Err(fail("invalid_phone"));
     },
     execute: (ctx, phone) =>
-      saveOnboardingProfile(getServerRuntime().auth.setup, {
+      saveOnboardingProfile(getAuthRuntime().setup, {
         userId: ctx.actor.userId,
         phone,
         now: ctx.now(),

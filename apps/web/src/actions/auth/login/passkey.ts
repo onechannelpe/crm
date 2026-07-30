@@ -11,7 +11,8 @@ import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/reque
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { runPublicAction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
+import { infra } from "~/server/platform/container/infra";
 import { getRequestClientMetadata } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
@@ -20,12 +21,11 @@ function recordAuthAnalyticsEvent(
   event: Parameters<typeof recordAuthAnalytics>[0],
   context: Parameters<typeof recordAuthAnalytics>[1],
 ) {
-  const runtime = getServerRuntime();
   return recordAuthAnalytics(
     event,
     context,
-    runtime.auth.analytics,
-    runtime.infra.now,
+    getAuthRuntime().analytics,
+    infra.now,
   );
 }
 
@@ -34,7 +34,7 @@ export async function finishPasskeyLogin(
   response: unknown,
 ): Promise<{ redirectTo: string }> {
   return runPublicAction(async () => {
-    const runtime = getServerRuntime();
+    const login = getAuthRuntime().login;
     const clientMetadata = getRequestClientMetadata();
     const requestContext = getActionRequestContext();
 
@@ -44,13 +44,13 @@ export async function finishPasskeyLogin(
       throwDomain(fail("invalid_credentials"));
     }
 
-    const verifiedAt = runtime.auth.login.now();
-    const verified = await verifyPasskeyLogin(runtime.auth.login.repos, {
+    const verifiedAt = login.now();
+    const verified = await verifyPasskeyLogin(login.repos, {
       flowId: parsedFlowId.value,
       response,
       ipAddress: clientMetadata.ipAddress,
       occurredAt: verifiedAt,
-      webauthnProvider: createRequestPasskeyProvider(runtime.auth.login.repos),
+      webauthnProvider: createRequestPasskeyProvider(login.repos),
     });
 
     if (isErr(verified)) {
@@ -67,7 +67,7 @@ export async function finishPasskeyLogin(
       throwDomain(fail(verified.error.kind));
     }
 
-    const completed = await completePendingLogin(runtime.auth.login, {
+    const completed = await completePendingLogin(login, {
       proof: verified.value,
       occurredAt: verifiedAt,
       ipAddress: clientMetadata.ipAddress,

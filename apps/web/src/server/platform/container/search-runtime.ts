@@ -15,7 +15,8 @@ import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { isErr, Ok } from "~/shared/result";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 function buildSearchUsageRepos(executor: DatabaseExecutor) {
   return {
@@ -57,3 +58,5 @@ export function createSearchRuntime(infra: ServerInfra) {
     },
   };
 }
+
+export const getSearchRuntime = memo(() => createSearchRuntime(infra));

@@ -6,7 +6,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getNotificationsRuntime } from "~/server/platform/container/notifications-runtime";
 import { Ok } from "~/shared/result";
 
 export async function getHeaderNotifications() {
@@ -15,8 +15,7 @@ export async function getHeaderNotifications() {
     access: { kind: "auth" },
 
     execute: async ({ actor }) => {
-      const appNotifications =
-        getServerRuntime().notifications.appNotifications;
+      const appNotifications = getNotificationsRuntime().appNotifications;
 
       const [unreadCount, notifications] = await Promise.all([
         appNotifications.countUnreadByUser(actor.userId),
@@ -59,8 +58,7 @@ export async function markNotificationRead(
     audit: (command) => ({ notificationId: command.notificationId }),
 
     execute: async ({ actor }, command) => {
-      const appNotifications =
-        getServerRuntime().notifications.appNotifications;
+      const appNotifications = getNotificationsRuntime().appNotifications;
 
       await appNotifications.markRead(
         actor.userId,
@@ -79,8 +77,7 @@ export async function markAllNotificationsRead(): Promise<void> {
     access: { kind: "auth" },
 
     execute: async ({ actor }) => {
-      const appNotifications =
-        getServerRuntime().notifications.appNotifications;
+      const appNotifications = getNotificationsRuntime().appNotifications;
 
       await appNotifications.markAllRead(actor.userId, new Date());
 

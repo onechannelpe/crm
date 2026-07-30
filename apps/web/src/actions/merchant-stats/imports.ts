@@ -21,7 +21,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getMerchantStatsRuntime } from "~/server/platform/container/merchant-stats-runtime";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export interface UploadedReport {
@@ -85,7 +85,7 @@ export async function uploadMerchantReport(formData: FormData) {
     }),
 
     execute: async (ctx, { file, cutAt }) => {
-      const submitted = await getServerRuntime().merchantStats.imports.submit({
+      const submitted = await getMerchantStatsRuntime().imports.submit({
         file: {
           name: file.name,
           sizeBytes: file.size,
@@ -123,8 +123,7 @@ export async function getGpvSnapshotProgress(
     audit: ({ jobId }) => ({ jobId }),
 
     execute: async (_ctx, { jobId }) => {
-      const progress =
-        await getServerRuntime().merchantStats.imports.progress(jobId);
+      const progress = await getMerchantStatsRuntime().imports.progress(jobId);
 
       if (!progress) {
         return Err(fail("import_job_not_found"));
@@ -147,7 +146,7 @@ export async function getGpvSnapshot(
       })),
     audit: ({ snapshotId }) => ({ snapshotId }),
     execute: async (_ctx, { snapshotId }) =>
-      getServerRuntime().merchantStats.imports.snapshot(snapshotId),
+      getMerchantStatsRuntime().imports.snapshot(snapshotId),
   });
 }
 
@@ -165,7 +164,7 @@ export async function resolveGpvImportIssue(raw: {
       })),
     audit: ({ issueId, resolution }) => ({ issueId, resolution }),
     execute: async ({ actor }, input) =>
-      getServerRuntime().merchantStats.imports.resolveIssue({
+      getMerchantStatsRuntime().imports.resolveIssue({
         issueId: input.issueId,
         resolution: input.resolution,
         resolvedBy: actor.userId,

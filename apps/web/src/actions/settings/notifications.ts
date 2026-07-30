@@ -13,7 +13,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { infra } from "~/server/platform/container/infra";
+import { getNotificationsRuntime } from "~/server/platform/container/notifications-runtime";
 import { Err, Ok } from "~/shared/result";
 
 export interface NotificationChannelPreference {
@@ -48,11 +49,10 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
     access: { kind: "session" },
 
     execute: async (ctx) => {
-      const runtime = getServerRuntime();
-      const addresses = createUserChannelAddressRepo(runtime.infra.db);
+      const addresses = createUserChannelAddressRepo(infra.db);
 
       const [optOuts, verifiedChannels] = await Promise.all([
-        runtime.notifications.preferences.listForUser(ctx.actor.userId),
+        getNotificationsRuntime().preferences.listForUser(ctx.actor.userId),
         addresses.listVerifiedChannels(ctx.actor.userId),
       ]);
       const optedOut = new Set(
@@ -121,8 +121,7 @@ export async function setNotificationPreference(
         return Err(invalid({ code: "channel_not_controllable" }));
       }
 
-      const runtime = getServerRuntime();
-      const addresses = createUserChannelAddressRepo(runtime.infra.db);
+      const addresses = createUserChannelAddressRepo(infra.db);
       const verified = await addresses.listVerifiedChannels(ctx.actor.userId);
       // A channel with no verified address cannot deliver, so there is nothing
       // to configure. The UI disables it; reject direct calls to match.
@@ -130,7 +129,7 @@ export async function setNotificationPreference(
         return Err(invalid({ code: "channel_unavailable" }));
       }
 
-      await runtime.notifications.preferences.setOptedOut({
+      await getNotificationsRuntime().preferences.setOptedOut({
         userId: ctx.actor.userId,
         category: command.category,
         channel: command.channel,

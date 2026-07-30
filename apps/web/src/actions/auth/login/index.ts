@@ -15,7 +15,8 @@ import {
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { runPublicAction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
+import { infra } from "~/server/platform/container/infra";
 import { getRequestClientMetadata } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
@@ -31,12 +32,11 @@ function recordAuthAnalyticsEvent(
   event: Parameters<typeof recordAuthAnalytics>[0],
   context: Parameters<typeof recordAuthAnalytics>[1],
 ) {
-  const runtime = getServerRuntime();
   return recordAuthAnalytics(
     event,
     context,
-    runtime.auth.analytics,
-    runtime.infra.now,
+    getAuthRuntime().analytics,
+    infra.now,
   );
 }
 
@@ -48,7 +48,7 @@ export async function passwordLogin(
     const password = readLoginText(formData, "password", { trim: false });
     const request = getRequestClientMetadata();
     const analyticsContext = getActionRequestContext();
-    const loginContext = getServerRuntime().auth.login;
+    const loginContext = getAuthRuntime().login;
 
     const result = await submitPasswordLogin(
       {
@@ -129,7 +129,7 @@ export async function passkeyStart(
 
     const request = getRequestClientMetadata();
     const analyticsContext = getActionRequestContext();
-    const loginContext = getServerRuntime().auth.login;
+    const loginContext = getAuthRuntime().login;
 
     const command =
       mode === "identified"
@@ -187,7 +187,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
 
     const request = getRequestClientMetadata();
     const analyticsContext = getActionRequestContext();
-    const loginContext = getServerRuntime().auth.login;
+    const loginContext = getAuthRuntime().login;
 
     const verifiedAt = loginContext.now();
     const verified = await verifyTotpLoginProof(loginContext, {
@@ -264,7 +264,7 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
     }
 
     const request = getRequestClientMetadata();
-    const loginContext = getServerRuntime().auth.login;
+    const loginContext = getAuthRuntime().login;
 
     const verifiedAt = loginContext.now();
     const verified = await verifyRecoveryLoginProof(loginContext, {

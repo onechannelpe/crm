@@ -11,12 +11,12 @@ import {
   validationFail,
 } from "~/server/platform/action/input-reader";
 import { getSession, hasRole } from "~/server/platform/action/session";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAdminRuntime } from "~/server/platform/container/admin-runtime";
 import { Ok } from "~/shared/result";
 
 function auditPolicyService() {
   return createAuditPolicyService({
-    auditActionPolicies: getServerRuntime().admin.auditActionPolicies,
+    auditActionPolicies: getAdminRuntime().auditActionPolicies,
   });
 }
 

@@ -6,7 +6,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { addLeadNote as addLeadNoteUseCase } from "~/server/workflow/lead/interaction/write";
 
 import { workflowActor } from "./actor";
@@ -27,7 +27,7 @@ export async function addLeadNote(input: unknown) {
     execute: ({ actor }, payload) =>
       addLeadNoteUseCase(
         { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }

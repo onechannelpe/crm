@@ -6,7 +6,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getObservabilityRuntime } from "~/server/platform/container/observability-runtime";
 import { Ok } from "~/shared/result";
 
 export async function getObservabilitySnapshot(
@@ -30,8 +30,6 @@ export async function getObservabilitySnapshot(
     },
 
     execute: (_ctx, input) =>
-      getServerRuntime().observability.observabilityService.getActionSnapshot(
-        input,
-      ),
+      getObservabilityRuntime().observabilityService.getActionSnapshot(input),
   });
 }

@@ -5,7 +5,8 @@ import {
   isAuthAnalyticsScreen,
   recordAuthAnalyticsEvent as recordAuthAnalytics,
 } from "~/server/auth/auth-analytics";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
+import { infra } from "~/server/platform/container/infra";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
 function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
@@ -33,14 +34,13 @@ export async function trackAuthClientEvent(
   input: AuthFunnelClientEventPayload,
 ): Promise<void> {
   const event = readClientAuthAnalyticsEvent(input);
-  const runtime = getServerRuntime();
   await recordAuthAnalytics(
     {
       source: "client",
       ...event,
     },
     getActionRequestContext(),
-    runtime.auth.analytics,
-    runtime.infra.now,
+    getAuthRuntime().analytics,
+    infra.now,
   );
 }

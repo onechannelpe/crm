@@ -12,7 +12,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
 import { editRateProposalCommand } from "~/server/workflow/lead/commands/edit-rate-proposal";
@@ -42,7 +42,7 @@ export async function requestRateProposal(input: unknown) {
     execute: ({ actor }, payload) =>
       proposeRateCommand(
         { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -69,7 +69,7 @@ export async function requestRateProposalEdit(input: unknown) {
     execute: ({ actor }, payload) =>
       editRateProposalCommand(
         { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -90,7 +90,7 @@ export async function requestRateAcceptance(input: unknown) {
     execute: ({ actor }, payload) =>
       acceptRateCommand(
         { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -112,7 +112,7 @@ export async function requestLeadClosure(input: unknown) {
     execute: ({ actor }, payload) =>
       closeLeadCommand(
         { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -143,7 +143,7 @@ export async function requestRateRevision(input: unknown) {
           justification: payload.justification,
           fileIds: payload.fileIds,
         },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }

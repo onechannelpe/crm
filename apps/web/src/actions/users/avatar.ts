@@ -7,7 +7,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getUsersRuntime } from "~/server/platform/container/users-runtime";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export async function uploadMemberAvatar(
@@ -35,10 +35,7 @@ export async function uploadMemberAvatar(
     audit: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await getServerRuntime().users.members.uploadAvatar(
-        ctx,
-        command,
-      );
+      const result = await getUsersRuntime().members.uploadAvatar(ctx, command);
       if (isErr(result)) return result;
       return Ok({ message: "Foto de perfil actualizada" });
     },
@@ -60,10 +57,7 @@ export async function removeMemberAvatar(
     audit: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await getServerRuntime().users.members.removeAvatar(
-        ctx,
-        command,
-      );
+      const result = await getUsersRuntime().members.removeAvatar(ctx, command);
       if (isErr(result)) return result;
       return Ok({ message: "Foto de perfil eliminada" });
     },

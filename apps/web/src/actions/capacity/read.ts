@@ -12,7 +12,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getCapacityRuntime } from "~/server/platform/container/capacity-runtime";
 
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]
@@ -21,8 +21,7 @@ export async function getManagedExecutivesList(): Promise<
     name: "capacity.managed_executives.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.listManagedExecutives(ctx),
+    execute: (ctx) => getCapacityRuntime().useCases.listManagedExecutives(ctx),
   });
 }
 
@@ -42,7 +41,7 @@ export async function getExecutiveDetail(
     audit: (params) => ({ userId: params.userId }),
 
     execute: (ctx, params) =>
-      getServerRuntime().capacity.useCases.getExecutiveDetail(ctx, params),
+      getCapacityRuntime().useCases.getExecutiveDetail(ctx, params),
   });
 }
 
@@ -53,8 +52,7 @@ export async function getPendingRequests(): Promise<
     name: "capacity.pending_requests.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.listPendingRequests(ctx),
+    execute: (ctx) => getCapacityRuntime().useCases.listPendingRequests(ctx),
   });
 }
 
@@ -63,7 +61,6 @@ export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
     name: "capacity.policy_defaults.read",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.getPolicyDefaults(ctx),
+    execute: (ctx) => getCapacityRuntime().useCases.getPolicyDefaults(ctx),
   });
 }

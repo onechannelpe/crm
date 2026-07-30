@@ -12,11 +12,11 @@ import { startPasskeyEnrollment } from "~/server/auth/flows/start-passkey-enroll
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {
-  const setup = getServerRuntime().auth.setup;
+  const setup = getAuthRuntime().setup;
   const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);
 
@@ -38,7 +38,7 @@ export async function finishPasskeyEnrollment(
   challengeId: unknown,
   response: unknown,
 ): Promise<{ message: string; recoveryCodes: string[] }> {
-  const setup = getServerRuntime().auth.setup;
+  const setup = getAuthRuntime().setup;
   const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);
 

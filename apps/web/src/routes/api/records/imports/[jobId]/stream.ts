@@ -4,7 +4,8 @@ import { recordImportTopic } from "~/contracts/records/imports";
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { IntegrationJobId } from "~/domain/ids";
 import { getSession } from "~/server/platform/action/session";
-import { getServerRuntime } from "~/server/platform/container";
+import { getIntegrationsRuntime } from "~/server/platform/container/integrations-runtime";
+import { getRecordsImportRealtimeRuntime } from "~/server/platform/container/records-import-realtime-runtime";
 import { openTopicStream } from "~/server/realtime/sse-topic-stream";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
 import { recordImportSnapshot } from "~/server/records/imports/realtime";
@@ -30,8 +31,7 @@ export async function GET(
   }
 
   const jobId = parsedJobId.value;
-  const runtime = getServerRuntime();
-  const { integration } = runtime.integrations;
+  const { integration } = getIntegrationsRuntime();
   const job = await integration.jobs.findById(jobId);
 
   if (!job) {
@@ -44,11 +44,11 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  await runtime.recordsImportRealtime.ensure();
+  await getRecordsImportRealtimeRuntime().ensure();
 
   const stream = await openTopicStream(
     event.nativeEvent,
-    runtime.recordsImportRealtime.hub,
+    getRecordsImportRealtimeRuntime().hub,
     recordImportTopic.of(jobId),
     {
       snapshot: () => recordImportSnapshot(jobId, integration.jobs),

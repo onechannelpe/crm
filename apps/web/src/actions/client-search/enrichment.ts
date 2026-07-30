@@ -3,7 +3,7 @@
 import { invalid } from "~/domain/errors";
 import { parseDocument } from "~/domain/identity/document";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getClientSearchRuntime } from "~/server/platform/container/client-search-runtime";
 import { Err, Ok } from "~/shared/result";
 import { isPlainRecord } from "~/shared/type-guards";
 
@@ -22,7 +22,7 @@ export async function requestSearchEnrichment(input: unknown) {
     parse: () => parseDocumentInput(input),
 
     execute: async (ctx, document) => {
-      const { enrichmentCommand } = getServerRuntime().clientSearch;
+      const { enrichmentCommand } = getClientSearchRuntime();
       const jobId = await enrichmentCommand.enqueueRequest(
         document,
         ctx.actor.userId,
@@ -43,7 +43,7 @@ export async function getSearchEnrichmentStatus(
     parse: () => parseDocumentInput({ documentType, documentValue }),
 
     execute: async (_ctx, document) => {
-      const { enrichmentQuery } = getServerRuntime().clientSearch;
+      const { enrichmentQuery } = getClientSearchRuntime();
       const status = await enrichmentQuery.getStatus(document);
       return Ok(status);
     },

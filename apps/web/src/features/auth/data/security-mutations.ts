@@ -10,10 +10,8 @@ import {
   disableTotp,
   removeAllPasskeys,
 } from "~/actions/settings/security";
-import {
-  meQuery,
-  recoveryCodesStatusQuery,
-} from "~/features/auth/data/queries";
+import { meQuery } from "~/features/auth/data/queries/me";
+import { recoveryCodesStatusQuery } from "~/features/auth/data/queries/recovery-codes";
 
 const SECURITY_STATUS_KEYS = [meQuery.key, recoveryCodesStatusQuery.key];
 

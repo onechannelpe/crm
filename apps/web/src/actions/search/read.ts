@@ -2,7 +2,7 @@
 
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getSearchRuntime } from "~/server/platform/container/search-runtime";
 
 export async function getMySearchAllowance() {
   return runAction({
@@ -12,7 +12,7 @@ export async function getMySearchAllowance() {
     execute: (ctx) =>
       getSearchCapacitySnapshot(
         ctx.actor.userId,
-        getServerRuntime().search.repos,
+        getSearchRuntime().repos,
         ctx.now(),
       ),
   });

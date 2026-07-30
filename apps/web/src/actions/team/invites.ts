@@ -7,7 +7,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getTeamRuntime } from "~/server/platform/container/team-runtime";
 import {
   createTeamInvite as createTeamInviteService,
   resendTeamInvite as resendTeamInviteService,
@@ -57,7 +57,7 @@ export async function createTeamInvite(input: unknown): Promise<{
     execute: async (ctx, command) => {
       const result = await createTeamInviteService(
         ctx,
-        getServerRuntime().team.invites,
+        getTeamRuntime().invites,
         command,
       );
 
@@ -90,7 +90,7 @@ export async function resendTeamInvite(
     execute: async (ctx, command) => {
       const result = await resendTeamInviteService(
         ctx,
-        getServerRuntime().team.invites,
+        getTeamRuntime().invites,
         command,
       );
 
@@ -123,7 +123,7 @@ export async function revokeTeamInvite(
     execute: async (ctx, command) => {
       const result = await revokeTeamInviteService(
         ctx,
-        getServerRuntime().team.invites,
+        getTeamRuntime().invites,
         command,
       );
 

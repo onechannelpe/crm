@@ -2,7 +2,8 @@ import { createActionObservationsRepo } from "~/server/observability/repos-actio
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createObservabilityService } from "~/server/observability/service";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export function createObservabilityRuntime(infra: ServerInfra) {
   return {
@@ -12,3 +13,7 @@ export function createObservabilityRuntime(infra: ServerInfra) {
     }),
   };
 }
+
+export const getObservabilityRuntime = memo(() =>
+  createObservabilityRuntime(infra),
+);

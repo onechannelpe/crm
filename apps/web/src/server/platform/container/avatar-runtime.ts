@@ -1,11 +1,15 @@
 import { join } from "node:path";
 
-import type { UploadsConfig } from "~/server/platform/config/env";
+import {
+  uploadsConfig,
+  type UploadsConfig,
+} from "~/server/platform/config/env";
 import { createBlobStore } from "~/server/platform/files/blob-store";
 import { createAvatarService } from "~/server/users/avatar-service";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export function createAvatarRuntime(infra: ServerInfra, config: UploadsConfig) {
   return {
@@ -15,3 +19,7 @@ export function createAvatarRuntime(infra: ServerInfra, config: UploadsConfig) {
     ),
   };
 }
+
+export const getAvatarRuntime = memo(() =>
+  createAvatarRuntime(infra, uploadsConfig()),
+);

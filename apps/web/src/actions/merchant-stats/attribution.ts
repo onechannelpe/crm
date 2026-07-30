@@ -7,7 +7,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getMerchantStatsRuntime } from "~/server/platform/container/merchant-stats-runtime";
 import { isErr, Ok } from "~/shared/result";
 
 export async function adjustMonthCredit(raw: {
@@ -31,14 +31,13 @@ export async function adjustMonthCredit(raw: {
     audit: ({ ruc, month }) => ({ ruc, month }),
 
     execute: async ({ actor }, input) => {
-      const resolved =
-        await getServerRuntime().merchantStats.attribution.adjust({
-          ruc: input.ruc,
-          month: input.month,
-          sellerUserId: input.sellerUserId,
-          reason: input.reason,
-          adjustedBy: actor.userId,
-        });
+      const resolved = await getMerchantStatsRuntime().attribution.adjust({
+        ruc: input.ruc,
+        month: input.month,
+        sellerUserId: input.sellerUserId,
+        reason: input.reason,
+        adjustedBy: actor.userId,
+      });
 
       if (isErr(resolved)) return resolved;
 
@@ -66,13 +65,12 @@ export async function setMerchantTarget(raw: {
     audit: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
 
     execute: async ({ actor }, input) => {
-      const updated =
-        await getServerRuntime().merchantStats.attribution.setTarget({
-          ruc: input.ruc,
-          effectiveFrom: input.effectiveFrom,
-          projectedGpv: input.projectedGpv,
-          setBy: actor.userId,
-        });
+      const updated = await getMerchantStatsRuntime().attribution.setTarget({
+        ruc: input.ruc,
+        effectiveFrom: input.effectiveFrom,
+        projectedGpv: input.projectedGpv,
+        setBy: actor.userId,
+      });
 
       if (isErr(updated)) return updated;
 

@@ -11,12 +11,8 @@ export interface ServerInfra {
   logger: Pick<Logger, "info" | "error">;
 }
 
-export function createServerInfra(
-  executor: Kysely<Database> = db,
-): ServerInfra {
-  return {
-    db: executor,
-    now: () => new Date(),
-    logger: createLogger("server-runtime"),
-  };
-}
+export const infra: ServerInfra = {
+  db,
+  now: () => new Date(),
+  logger: createLogger("server-runtime"),
+};

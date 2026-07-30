@@ -18,7 +18,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getFilesRuntime } from "~/server/platform/container/files-runtime";
+import { getIntegrationsRuntime } from "~/server/platform/container/integrations-runtime";
 import { canAccessRecordImportJob } from "~/server/records/imports/api";
 import { parseImportFile } from "~/server/records/imports/intake";
 import {
@@ -74,7 +75,7 @@ async function getAuthorizedRecordImportJob(
   },
   jobId: IntegrationJobId,
 ): Promise<IntegrationJobRow> {
-  const { integration } = getServerRuntime().integrations;
+  const { integration } = getIntegrationsRuntime();
   const job = await integration.jobs.findById(jobId);
 
   if (
@@ -110,9 +111,8 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
     }),
 
     execute: async (ctx, { file, extension }) => {
-      const runtime = getServerRuntime();
-      const { storage } = runtime.files;
-      const { integration } = runtime.integrations;
+      const { storage } = getFilesRuntime();
+      const { integration } = getIntegrationsRuntime();
       const buffer = await file.arrayBuffer();
 
       let parsedImport: ReturnType<typeof parseImportFile>;

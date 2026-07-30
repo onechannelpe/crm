@@ -17,7 +17,8 @@ import {
   type SessionRepository,
 } from "~/server/sessions/repos-sessions";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export type ExtensionRuntimeRepos = {
   contactAssignments: ContactAssignmentsRepo;
@@ -42,3 +43,5 @@ export function createExtensionRuntime(infra: ServerInfra) {
 
   return { extensionService };
 }
+
+export const getExtensionRuntime = memo(() => createExtensionRuntime(infra));

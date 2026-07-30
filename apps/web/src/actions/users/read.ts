@@ -7,13 +7,13 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getUsersRuntime } from "~/server/platform/container/users-runtime";
 
 export async function getMembersRoster(): Promise<MembersRoster> {
   return runAction({
     name: "members.roster.read",
     access: { kind: "permission", permission: "team:read" },
-    execute: (ctx) => getServerRuntime().users.members.listRoster(ctx),
+    execute: (ctx) => getUsersRuntime().members.listRoster(ctx),
   });
 }
 
@@ -28,6 +28,6 @@ export async function getMemberDetail(
         userId: r.id("userId", UserId),
       })),
     execute: (ctx, command) =>
-      getServerRuntime().users.members.getDetail(ctx, command),
+      getUsersRuntime().members.getDetail(ctx, command),
   });
 }

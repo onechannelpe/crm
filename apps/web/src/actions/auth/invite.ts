@@ -5,7 +5,8 @@ import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-accept
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { throwDomain } from "~/server/platform/action/domain-error";
 import { runPublicAction } from "~/server/platform/action/public-action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
+import { getTeamRuntime } from "~/server/platform/container/team-runtime";
 import { getRequestClientMetadata } from "~/server/platform/http/request-context";
 import { getInviteInfo as getInviteInfoService } from "~/server/team/application/invites";
 import { isErr } from "~/shared/result";
@@ -99,7 +100,7 @@ export async function getInviteActivationView(
     }
     const result = await getInviteInfoService({
       token: safeToken.value,
-      repos: getServerRuntime().team.invites.repos,
+      repos: getTeamRuntime().invites.repos,
     });
     if (isErr(result)) {
       throwDomain(result.error);
@@ -136,7 +137,7 @@ export async function acceptInvitePasswordStep(input: {
     const request = getRequestClientMetadata();
 
     const result = await submitInviteAcceptance(
-      getServerRuntime().auth.inviteAcceptance,
+      getAuthRuntime().inviteAcceptance,
       {
         ipAddress: request.ipAddress,
         userAgent: request.userAgent,

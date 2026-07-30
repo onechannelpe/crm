@@ -29,9 +29,11 @@ import {
 } from "~/server/notifications/repos/opt-out-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createWhatsAppInboundQueue } from "~/server/notifications/whatsapp-inbound/queue";
-import type {
-  AppConfig,
-  NotificationsConfig,
+import {
+  appConfig,
+  notificationsConfig,
+  type AppConfig,
+  type NotificationsConfig,
 } from "~/server/platform/config/env";
 import { notify } from "~/server/platform/database/notify";
 import type { Database } from "~/server/platform/database/types";
@@ -40,7 +42,8 @@ import type { QueueRunner } from "~/server/platform/jobs/types";
 import type { Logger } from "~/shared/observability/logger";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export interface NotificationPipelineDeps {
   db: Kysely<Database>;
@@ -174,3 +177,7 @@ export function createNotificationsRuntime(
     logger,
   });
 }
+
+export const getNotificationsRuntime = memo(() =>
+  createNotificationsRuntime(infra, notificationsConfig(), appConfig()),
+);

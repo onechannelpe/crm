@@ -6,7 +6,7 @@ import type { OnboardingSnapshot } from "~/contracts/auth";
 import { getSessionPath } from "~/domain/auth/access/route-policy";
 import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
 import { getSession } from "~/server/platform/action/session";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { isErr } from "~/shared/result";
 
 export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {
@@ -19,7 +19,7 @@ export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {
   }
 
   const result = await loadOnboardingSnapshot(
-    getServerRuntime().auth.setup.repos,
+    getAuthRuntime().setup.repos,
     session.userId,
   );
   if (isErr(result)) {

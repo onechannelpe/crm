@@ -11,7 +11,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getNotificationsRuntime } from "~/server/platform/container/notifications-runtime";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 const AUDIENCE_TYPES = ["user_ids", "global_roles", "team"] as const;
@@ -83,7 +83,7 @@ export async function sendBroadcastNotification(
     audit: ({ audience }) => ({ audienceKind: audience.kind }),
 
     execute: async ({ actor }, input) => {
-      const notifications = getServerRuntime().notifications;
+      const notifications = getNotificationsRuntime();
       const now = new Date();
 
       await notifications.enqueue(

@@ -5,7 +5,8 @@ import { createRequestSessionsRepo } from "~/server/security/repos-request-sessi
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export function createSecurityRuntime(infra: ServerInfra) {
   return {
@@ -17,3 +18,5 @@ export function createSecurityRuntime(infra: ServerInfra) {
     events: createEventsRepo(infra.db),
   };
 }
+
+export const getSecurityRuntime = memo(() => createSecurityRuntime(infra));

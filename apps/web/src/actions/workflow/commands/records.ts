@@ -13,7 +13,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { addToFavoritesCommand } from "~/server/workflow/lead/commands/add-to-favorites";
 import { deleteLeadCommand } from "~/server/workflow/lead/commands/delete-lead";
 import { editCommercialScopeCommand } from "~/server/workflow/lead/commands/edit-commercial-scope";
@@ -58,8 +58,8 @@ export async function requestLeadCreation(input: unknown) {
       registerLead(
         { actor: workflowActor(actor), ...payload },
         {
-          ...getServerRuntime().workflow.ports(),
-          identity: getServerRuntime().workflow.organizationEnrichment,
+          ...getWorkflowRuntime().ports(),
+          identity: getWorkflowRuntime().organizationEnrichment,
         },
       ),
   });
@@ -88,7 +88,7 @@ export async function requestEditCommercialScope(input: unknown) {
     execute: ({ actor }, payload) =>
       editCommercialScopeCommand(
         { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -114,7 +114,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
     execute: ({ actor }, payload) =>
       saveDigitalPolicyCommand(
         { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -140,7 +140,7 @@ export async function requestRecordRepLegal(input: unknown) {
     execute: ({ actor }, payload) =>
       recordRepLegalCommand(
         { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -163,7 +163,7 @@ export async function requestLeadReview(input: unknown) {
     execute: ({ actor }, payload) =>
       reviewLeadCommand(
         { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -178,7 +178,7 @@ export async function requestQuotationRestart(input: unknown) {
     execute: ({ actor }, { leadId }) =>
       restartQuotationCommand(
         { actor: workflowActor(actor), leadId },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -203,7 +203,7 @@ export async function requestLeadReassignment(input: unknown) {
           leadId: payload.leadId,
           toExecutiveId: payload.newExecutiveId,
         },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -221,7 +221,7 @@ export async function requestAddLeadToFavorites(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       );
 
       if (isErr(result)) {
@@ -246,7 +246,7 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       );
 
       if (isErr(result)) {
@@ -271,7 +271,7 @@ export async function requestLeadDeletion(input: unknown) {
           actor: workflowActor(actor),
           leadId,
         },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }
@@ -290,8 +290,8 @@ export async function requestLeadSunatRefresh(input: unknown) {
           leadId,
         },
         {
-          leads: getServerRuntime().workflow.repos.leads,
-          enrichmentQueue: getServerRuntime().workflow.enrichmentQueue,
+          leads: getWorkflowRuntime().repos.leads,
+          enrichmentQueue: getWorkflowRuntime().enrichmentQueue,
         },
       ),
   });

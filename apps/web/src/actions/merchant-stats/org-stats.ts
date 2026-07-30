@@ -3,7 +3,7 @@
 import type { RucMerchantStats } from "~/contracts/merchant-stats/views";
 import { fail, type DomainError } from "~/domain/errors";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getMerchantStatsRuntime } from "~/server/platform/container/merchant-stats-runtime";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export async function getMerchantStatsForRuc(
@@ -24,7 +24,7 @@ export async function getMerchantStatsForRuc(
     audit: ({ ruc }) => ({ ruc }),
 
     execute: ({ actor }, { ruc }) =>
-      getServerRuntime().merchantStats.executive.rucStats({
+      getMerchantStatsRuntime().executive.rucStats({
         ruc,
         role: actor.role,
         userId: actor.userId,

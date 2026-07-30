@@ -1,6 +1,6 @@
 import { captureException } from "@sentry/bun";
 
-import { getServerRuntime } from "~/server/platform/container";
+import { getObservabilityRuntime } from "~/server/platform/container/observability-runtime";
 
 import type { TelemetryRow } from "./telemetry";
 
@@ -18,8 +18,8 @@ export const defaultPorts: RuntimePorts = {
     captureException(error);
   },
   record: (row) => {
-    void getServerRuntime()
-      .observability.observabilityService.recordAction(row)
+    void getObservabilityRuntime()
+      .observabilityService.recordAction(row)
       .catch(() => {});
   },
 };

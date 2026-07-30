@@ -13,7 +13,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { Err, Ok, type Result } from "~/shared/result";
 
 type LeadUpload = {
@@ -71,7 +71,7 @@ export async function listLeadSaleProofFiles(rawLeadId: string) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, { leadId }) =>
-      getServerRuntime().workflow.leadFiles.listSaleProofFiles({
+      getWorkflowRuntime().leadFiles.listSaleProofFiles({
         ctx,
         leadId,
       }),
@@ -86,7 +86,7 @@ export async function requestWorkflowLeadsExportDownloadToken(): Promise<{
     access: { kind: "auth" },
 
     execute: (ctx) =>
-      getServerRuntime().workflow.leadFiles.requestLeadsExportDownloadToken({
+      getWorkflowRuntime().leadFiles.requestLeadsExportDownloadToken({
         ctx,
       }),
   });
@@ -106,7 +106,7 @@ export async function uploadLeadSaleProofFile(formData: FormData) {
     }),
 
     execute: (ctx, { leadId, file }) =>
-      getServerRuntime().workflow.leadFiles.uploadSaleProofFile({
+      getWorkflowRuntime().leadFiles.uploadSaleProofFile({
         ctx,
         leadId,
         file,
@@ -134,7 +134,7 @@ export async function requestLeadSaleProofDownloadToken(input: {
     }),
 
     execute: (ctx, { leadId, fileAssetId }) =>
-      getServerRuntime().workflow.leadFiles.requestSaleProofDownloadToken({
+      getWorkflowRuntime().leadFiles.requestSaleProofDownloadToken({
         ctx,
         leadId,
         fileAssetId,
@@ -158,7 +158,7 @@ export async function uploadLeadRateRevisionFile(
     }),
 
     execute: (ctx, { leadId, file }) =>
-      getServerRuntime().workflow.leadFiles.uploadRateRevisionFile({
+      getWorkflowRuntime().leadFiles.uploadRateRevisionFile({
         ctx,
         leadId,
         file,
@@ -186,7 +186,7 @@ export async function requestRateRevisionFileDownloadToken(input: {
     }),
 
     execute: (ctx, { leadId, fileId }) =>
-      getServerRuntime().workflow.leadFiles.requestRateRevisionDownloadToken({
+      getWorkflowRuntime().leadFiles.requestRateRevisionDownloadToken({
         ctx,
         leadId,
         fileId,

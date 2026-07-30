@@ -7,7 +7,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getCapacityRuntime } from "~/server/platform/container/capacity-runtime";
 import type { Result } from "~/shared/result";
 
 type CapacityDecision = {
@@ -61,10 +61,7 @@ export async function approveCapacity(
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
     audit: (decision) => ({ requestId: decision.requestId }),
     execute: (ctx, decision) =>
-      getServerRuntime().capacity.useCases.approveCapacityRequest(
-        ctx,
-        decision,
-      ),
+      getCapacityRuntime().useCases.approveCapacityRequest(ctx, decision),
   });
 }
 
@@ -75,7 +72,7 @@ export async function rejectCapacity(rawRequestId: unknown, rawNote: unknown) {
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
     audit: (decision) => ({ requestId: decision.requestId }),
     execute: (ctx, decision) =>
-      getServerRuntime().capacity.useCases.rejectCapacityRequest(ctx, decision),
+      getCapacityRuntime().useCases.rejectCapacityRequest(ctx, decision),
   });
 }
 
@@ -93,7 +90,7 @@ export async function grantMoreSearches(
       amount: grant.amount,
     }),
     execute: (ctx, grant) =>
-      getServerRuntime().capacity.useCases.grantSearchCapacityDirect(ctx, {
+      getCapacityRuntime().useCases.grantSearchCapacityDirect(ctx, {
         targetUserId: grant.targetUserId,
         amount: grant.amount,
         reason: grant.reason,
@@ -115,7 +112,7 @@ export async function grantMoreLeadRefill(
       amount: grant.amount,
     }),
     execute: (ctx, grant) =>
-      getServerRuntime().capacity.useCases.grantLeadCapacityDirect(ctx, {
+      getCapacityRuntime().useCases.grantLeadCapacityDirect(ctx, {
         targetUserId: grant.targetUserId,
         amount: grant.amount,
         reason: grant.reason,

@@ -6,7 +6,7 @@ import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-en
 import { startTotpEnrollment } from "~/server/auth/flows/start-totp-enrollment";
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, isErr, Ok } from "~/shared/result";
 
 export async function beginTotpEnrollment(): Promise<{
@@ -17,7 +17,7 @@ export async function beginTotpEnrollment(): Promise<{
     name: "auth.totp.begin",
     access: { kind: "session" },
 
-    execute: (ctx) => startTotpEnrollment(ctx, getServerRuntime().auth.setup),
+    execute: (ctx) => startTotpEnrollment(ctx, getAuthRuntime().setup),
   });
 }
 
@@ -37,7 +37,7 @@ export async function finishTotpEnrollment(
     },
 
     execute: async ({ actor, ...ctx }, command) => {
-      const setup = getServerRuntime().auth.setup;
+      const setup = getAuthRuntime().setup;
 
       const verified = await verifyTotpEnrollment(setup.repos, {
         userId: actor.userId,

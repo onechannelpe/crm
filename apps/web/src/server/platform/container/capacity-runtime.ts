@@ -33,7 +33,8 @@ import { createExecutorUow } from "~/server/platform/database/uow";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 function createCapacityRepos(executor: DatabaseExecutor) {
   return {
@@ -108,3 +109,5 @@ export function createCapacityRuntime(infra: ServerInfra) {
     },
   };
 }
+
+export const getCapacityRuntime = memo(() => createCapacityRuntime(infra));

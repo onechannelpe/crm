@@ -2,7 +2,7 @@
 
 import type { InquiryListView } from "~/contracts/workflow/views";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { listInquiriesForExecutive } from "~/server/workflow/inquiry/inquiry-queries";
 import { Ok } from "~/shared/result";
 
@@ -16,7 +16,7 @@ export async function queryMyInquiries(): Promise<InquiryListView> {
     execute: async ({ actor }) => {
       const { userId } = workflowActor(actor);
       const rows = await listInquiriesForExecutive(
-        getServerRuntime().workflow.ports().executor,
+        getWorkflowRuntime().ports().executor,
         userId,
       );
       return Ok({ rows });

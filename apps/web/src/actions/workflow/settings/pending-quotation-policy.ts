@@ -5,7 +5,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { getPendingQuotationPolicy } from "~/server/workflow/policy/read/get-pending-quotation-policy";
 import { updatePendingQuotationPolicy } from "~/server/workflow/policy/write/update-pending-quotation-policy";
 
@@ -19,7 +19,7 @@ export async function queryPendingQuotationPolicy() {
     audit: () => ({}),
 
     execute: ({ actor }) => {
-      const workflow = getServerRuntime().workflow;
+      const workflow = getWorkflowRuntime();
 
       return getPendingQuotationPolicy(
         {
@@ -59,7 +59,7 @@ export async function savePendingQuotationPolicy(
     }),
 
     execute: ({ actor }, payload) => {
-      const workflow = getServerRuntime().workflow;
+      const workflow = getWorkflowRuntime();
 
       return updatePendingQuotationPolicy(
         {

@@ -4,7 +4,7 @@ import { gpvSnapshotTopic } from "~/contracts/merchant-stats/imports";
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { GpvSnapshotJobId } from "~/domain/ids";
 import { getSession } from "~/server/platform/action/session";
-import { getServerRuntime } from "~/server/platform/container";
+import { getMerchantStatsRuntime } from "~/server/platform/container/merchant-stats-runtime";
 import { openTopicStream } from "~/server/realtime/sse-topic-stream";
 import { isErr } from "~/shared/result";
 
@@ -28,7 +28,7 @@ export async function GET(
   }
 
   const jobId = parsedJobId.value;
-  const imports = getServerRuntime().merchantStats.imports;
+  const imports = getMerchantStatsRuntime().imports;
   const job = await imports.progress(jobId);
 
   if (!job) {

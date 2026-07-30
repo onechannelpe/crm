@@ -13,7 +13,7 @@ import {
   parseEventLogStreamPayload,
 } from "~/server/event-logs/stream-contract";
 import { getSession } from "~/server/platform/action/session";
-import { getServerRuntime } from "~/server/platform/container";
+import { getEventLogsRuntime } from "~/server/platform/container/event-logs-runtime";
 import { openTopicStream } from "~/server/realtime/sse-topic-stream";
 
 const REPLAY_LIMIT = 200;
@@ -63,12 +63,11 @@ export async function GET(
   const cursor = lastEventId ? decodeEventLogCursor(lastEventId) : null;
 
   if (cursor) {
-    const missed =
-      await getServerRuntime().eventLogs.eventLogsService.replayAfter(
-        table,
-        cursor,
-        REPLAY_LIMIT,
-      );
+    const missed = await getEventLogsRuntime().eventLogsService.replayAfter(
+      table,
+      cursor,
+      REPLAY_LIMIT,
+    );
 
     await stream.push(
       missed.map((record) => ({

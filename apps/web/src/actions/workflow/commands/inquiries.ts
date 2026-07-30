@@ -5,7 +5,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { createInquiry } from "~/server/workflow/inquiry/create-inquiry";
 
 import { workflowActor } from "./actor";
@@ -23,7 +23,7 @@ export async function requestInquiryCreation(input: unknown) {
     execute: ({ actor }, payload) =>
       createInquiry(
         { ruc: payload.ruc, actor: workflowActor(actor) },
-        getServerRuntime().workflow.ports(),
+        getWorkflowRuntime().ports(),
       ),
   });
 }

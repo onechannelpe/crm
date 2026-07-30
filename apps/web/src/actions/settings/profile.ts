@@ -7,7 +7,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getUsersRuntime } from "~/server/platform/container/users-runtime";
 import { Err, isErr, Ok } from "~/shared/result";
 
 export async function updateUserProfile(
@@ -36,7 +36,7 @@ export async function updateUserProfile(
     },
 
     execute: async (ctx, command) => {
-      const result = await getServerRuntime().users.updatePhone(
+      const result = await getUsersRuntime().updatePhone(
         ctx.actor.userId,
         command.phone,
       );

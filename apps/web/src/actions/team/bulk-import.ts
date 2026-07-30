@@ -10,7 +10,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getTeamRuntime } from "~/server/platform/container/team-runtime";
 import {
   applyBulkImport as applyBulkImportService,
   previewBulkImport as previewBulkImportService,
@@ -56,7 +56,7 @@ export async function applyBulkImport(
     audit: (input) => ({ role: input.role }),
 
     execute: (ctx, input) =>
-      applyBulkImportService(ctx, getServerRuntime().team.invites, {
+      applyBulkImportService(ctx, getTeamRuntime().invites, {
         csvContent: input.csvContent,
         role: input.role,
       }),

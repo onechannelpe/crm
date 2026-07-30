@@ -2,7 +2,7 @@
 
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getTeamRuntime } from "~/server/platform/container/team-runtime";
 import {
   getBulkImportSetup as getBulkImportSetupService,
   getInviteManagement as getInviteManagementService,
@@ -18,8 +18,8 @@ export async function getInviteManagement(): Promise<
     execute: async (ctx) => {
       const management = await getInviteManagementService(
         ctx,
-        getServerRuntime().team.inviteManagement,
-        getServerRuntime().team.publicOrigin,
+        getTeamRuntime().inviteManagement,
+        getTeamRuntime().publicOrigin,
       );
       if (isErr(management)) return management;
 

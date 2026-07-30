@@ -4,9 +4,13 @@ import { createSalesRepo } from "~/server/files/repo/sales";
 import { createTokensRepo } from "~/server/files/repo/tokens";
 import type { FileRepos } from "~/server/files/service/contracts";
 import { createFileStorage, type FileStorage } from "~/server/files/storage";
-import type { UploadsConfig } from "~/server/platform/config/env";
+import {
+  uploadsConfig,
+  type UploadsConfig,
+} from "~/server/platform/config/env";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export type FilesRuntime = {
   repo: FileRepos;
@@ -29,3 +33,7 @@ export function createFilesRuntime(
     storage: createFileStorage(config.storageRoot),
   };
 }
+
+export const getFilesRuntime = memo(() =>
+  createFilesRuntime(infra, uploadsConfig()),
+);

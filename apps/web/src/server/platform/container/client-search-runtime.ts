@@ -8,7 +8,9 @@ import { createOrganizationEnrichmentProjection } from "~/server/organization/ap
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
 
-import type { ServerInfra } from "./infra";
+import { getEngineRuntime } from "./engine-runtime";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export function createClientSearchRuntime(
   infra: ServerInfra,
@@ -36,3 +38,7 @@ export function createClientSearchRuntime(
       }),
   };
 }
+
+export const getClientSearchRuntime = memo(() =>
+  createClientSearchRuntime(infra, getEngineRuntime()),
+);

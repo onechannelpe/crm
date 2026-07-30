@@ -4,7 +4,7 @@ import { createMemo, Show, Suspense } from "solid-js";
 import { Loader } from "~/components/feedback/loading/loader";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
-import { loginFlowQuery } from "~/features/auth/data/queries";
+import { loginFlowQuery } from "~/features/auth/data/queries/login-flow";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";

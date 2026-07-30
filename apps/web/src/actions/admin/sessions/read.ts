@@ -10,7 +10,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Ok } from "~/shared/result";
 
 export async function listUserSessions(rawUserId: unknown) {
@@ -30,7 +30,7 @@ export async function listUserSessions(rawUserId: unknown) {
       Ok(
         await listUserSessionsService(
           ctx,
-          getServerRuntime().auth.adminSessionsRead,
+          getAuthRuntime().adminSessionsRead,
           parsed,
         ),
       ),
@@ -44,11 +44,7 @@ export async function getActiveSessionsCount(): Promise<number> {
     stepUp: "recent_strong_auth",
 
     execute: async () =>
-      Ok(
-        await countActiveSessionsService(
-          getServerRuntime().auth.adminSessionsRead,
-        ),
-      ),
+      Ok(await countActiveSessionsService(getAuthRuntime().adminSessionsRead)),
   });
 }
 
@@ -60,9 +56,7 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
 
     execute: async () =>
       Ok(
-        await listAllActiveSessionsService(
-          getServerRuntime().auth.adminSessionsRead,
-        ),
+        await listAllActiveSessionsService(getAuthRuntime().adminSessionsRead),
       ),
   });
 }

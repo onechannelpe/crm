@@ -13,11 +13,11 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getSecurityRuntime } from "~/server/platform/container/security-runtime";
 import { Ok } from "~/shared/result";
 
 async function requireCurrentUserWithStrongAuthState(userId: UserId) {
-  const repos = getServerRuntime().security;
+  const repos = getSecurityRuntime();
   const user = await repos.users.findById(userId);
 
   if (!user) {
@@ -67,7 +67,7 @@ export async function changePassword(
 
     execute: async ({ actor }, input) => {
       const userId = actor.userId;
-      const { users, events } = getServerRuntime().security;
+      const { users, events } = getSecurityRuntime();
 
       const user = await users.findById(userId);
 
@@ -108,8 +108,7 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
 
     execute: async ({ actor }) => {
       const userId = actor.userId;
-      const { passkeys, userRecoveryCodes, events } =
-        getServerRuntime().security;
+      const { passkeys, userRecoveryCodes, events } = getSecurityRuntime();
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
 
@@ -148,7 +147,7 @@ export async function disableTotp(): Promise<{ message: string }> {
     execute: async ({ actor }) => {
       const userId = actor.userId;
       const { userTotpFactors, userRecoveryCodes, events } =
-        getServerRuntime().security;
+        getSecurityRuntime();
       const { user, strongAuthStatus } =
         await requireCurrentUserWithStrongAuthState(userId);
 

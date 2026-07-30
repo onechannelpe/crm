@@ -14,7 +14,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getMerchantStatsRuntime } from "~/server/platform/container/merchant-stats-runtime";
 import { Ok } from "~/shared/result";
 
 const DEFAULT_PAGE = 60;
@@ -41,11 +41,6 @@ export async function getQualityRows(raw: {
     audit: (input) => ({ issue: input.issue }),
 
     execute: async (_ctx, input) =>
-      Ok(
-        await getServerRuntime().merchantStats.quality.rows(
-          input.issue,
-          input.page,
-        ),
-      ),
+      Ok(await getMerchantStatsRuntime().quality.rows(input.issue, input.page)),
   });
 }

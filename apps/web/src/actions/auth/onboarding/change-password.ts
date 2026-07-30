@@ -6,7 +6,7 @@ import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
 import { runAction } from "~/server/platform/action";
 import { validationFail } from "~/server/platform/action/input-reader";
 import { parseObject } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 
 export async function changeOnboardingPassword(input: {
   password: unknown;
@@ -21,7 +21,7 @@ export async function changeOnboardingPassword(input: {
         confirmPassword: reader.str("confirmPassword"),
       })),
     execute: async (ctx, password) => {
-      const setup = getServerRuntime().auth.setup;
+      const setup = getAuthRuntime().setup;
       const changed = await changeInstallationPassword(setup, {
         userId: ctx.actor.userId,
         currentSessionId: ctx.actor.id,

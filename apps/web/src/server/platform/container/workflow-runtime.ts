@@ -7,8 +7,10 @@ import { createLeadFilesService } from "~/server/workflow/lead/files/lead-files"
 import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
-import type { FilesRuntime } from "./files-runtime";
-import type { ServerInfra } from "./infra";
+import { getEngineRuntime } from "./engine-runtime";
+import { getFilesRuntime, type FilesRuntime } from "./files-runtime";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export function createWorkflowRuntime(
   infra: ServerInfra,
@@ -49,3 +51,7 @@ export function createWorkflowRuntime(
     }),
   };
 }
+
+export const getWorkflowRuntime = memo(() =>
+  createWorkflowRuntime(infra, getEngineRuntime(), getFilesRuntime()),
+);

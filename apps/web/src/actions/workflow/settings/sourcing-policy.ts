@@ -6,7 +6,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { getSourcingPolicy } from "~/server/workflow/policy/read/get-sourcing-policy";
 import { updateSourcingPolicy } from "~/server/workflow/policy/write/update-sourcing-policy";
 
@@ -25,7 +25,7 @@ export async function querySourcingPolicy(rawBranchId: string) {
     audit: ({ branchId }) => ({ branchId }),
 
     execute: ({ actor }, query) => {
-      const { sourcingPolicies } = getServerRuntime().workflow.repos;
+      const { sourcingPolicies } = getWorkflowRuntime().repos;
 
       return getSourcingPolicy(
         { sourcingPolicies },
@@ -55,7 +55,7 @@ export async function saveSourcingPolicy(input: {
     audit: ({ branchId }) => ({ branchId }),
 
     execute: ({ actor }, command) => {
-      const workflow = getServerRuntime().workflow;
+      const workflow = getWorkflowRuntime();
 
       return updateSourcingPolicy(
         {

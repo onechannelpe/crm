@@ -2,7 +2,7 @@
 
 import { fail, type DomainError } from "~/domain/errors";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAvatarRuntime } from "~/server/platform/container/avatar-runtime";
 import { toAvatarDomainError } from "~/server/users/avatar-error";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 
@@ -37,7 +37,7 @@ export async function uploadUserAvatar(
     },
 
     execute: async (ctx, file) => {
-      const { avatarService } = getServerRuntime().avatar;
+      const { avatarService } = getAvatarRuntime();
       const result = await avatarService.upload(ctx.actor.userId, file);
       if (isErr(result)) {
         return Err(toAvatarDomainError(result.error.code));
@@ -58,7 +58,7 @@ export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
     access: { kind: "session" },
 
     execute: async (ctx) => {
-      const { avatarService } = getServerRuntime().avatar;
+      const { avatarService } = getAvatarRuntime();
       const result = await avatarService.remove(ctx.actor.userId);
       if (isErr(result)) {
         return Err(toAvatarDomainError(result.error.code));

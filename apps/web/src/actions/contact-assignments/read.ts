@@ -5,13 +5,13 @@ import type { ActiveContactAssignmentView } from "~/contracts/contact-assignment
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
 import { getContactAssignmentCapacity } from "~/server/contact-assignments/application/get-contact-assignment-capacity";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getContactAssignmentsRuntime } from "~/server/platform/container/contact-assignments-runtime";
 import { Ok } from "~/shared/result";
 
 export async function getActiveContactAssignments(): Promise<
   ActiveContactAssignmentView[]
 > {
-  const readRepos = getServerRuntime().contactAssignments.repos;
+  const readRepos = getContactAssignmentsRuntime().repos;
   return runAction({
     name: "contact_assignments.list_active",
     access: { kind: "permission", permission: "lead:work" },
@@ -21,7 +21,7 @@ export async function getActiveContactAssignments(): Promise<
 }
 
 export async function getMyContactAssignmentCapacity(): Promise<LeadCapacitySnapshot> {
-  const readRepos = getServerRuntime().contactAssignments.repos;
+  const readRepos = getContactAssignmentsRuntime().repos;
   return runAction({
     name: "contact_assignments.get_capacity",
     access: { kind: "permission", permission: "capacity:read:self" },

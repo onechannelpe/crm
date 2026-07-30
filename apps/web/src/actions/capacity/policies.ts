@@ -6,7 +6,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getCapacityRuntime } from "~/server/platform/container/capacity-runtime";
 
 const SCOPE_TYPES = ["branch", "team"] as const;
 
@@ -27,7 +27,7 @@ export async function updateExecutivePolicyOverride(input: unknown) {
     audit: ({ userId }) => ({ userId }),
 
     execute: (ctx, override) =>
-      getServerRuntime().capacity.useCases.updateExecutivePolicyOverride(
+      getCapacityRuntime().useCases.updateExecutivePolicyOverride(
         ctx,
         override,
       ),
@@ -58,6 +58,6 @@ export async function updateScopePolicy(input: unknown) {
     }),
 
     execute: (ctx, params) =>
-      getServerRuntime().capacity.useCases.updateScopePolicy(ctx, params),
+      getCapacityRuntime().useCases.updateScopePolicy(ctx, params),
   });
 }

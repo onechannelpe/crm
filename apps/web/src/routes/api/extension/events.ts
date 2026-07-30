@@ -1,6 +1,6 @@
 import { isExtensionRuntimeEventEnvelope } from "~/server/extension/contracts";
 import { toWire } from "~/server/platform/action/domain-error";
-import { getServerRuntime } from "~/server/platform/container";
+import { getExtensionRuntime } from "~/server/platform/container/extension-runtime";
 import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../request-event";
@@ -33,7 +33,7 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
     }
 
     const result =
-      await getServerRuntime().extension.extensionService.ingestRuntimeEvent({
+      await getExtensionRuntime().extensionService.ingestRuntimeEvent({
         sessionToken,
         event: body,
       });

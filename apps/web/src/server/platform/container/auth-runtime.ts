@@ -25,7 +25,10 @@ import type { NotificationIntent } from "~/server/notifications/types";
 import type { AppContext } from "~/server/platform/action/context";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
+import { getNotificationsRuntime } from "./notifications-runtime";
+import { getObservabilityRuntime } from "./observability-runtime";
 
 export function createAuthRuntime(
   infra: ServerInfra,
@@ -95,3 +98,11 @@ export function createAuthRuntime(
     }),
   };
 }
+
+export const getAuthRuntime = memo(() =>
+  createAuthRuntime(
+    infra,
+    getNotificationsRuntime(),
+    getObservabilityRuntime().observabilityService,
+  ),
+);

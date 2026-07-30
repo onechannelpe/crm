@@ -6,7 +6,7 @@ import {
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getClientIp } from "~/server/auth/password/client-ip";
 import { appendSessionCookie } from "~/server/auth/session/cookies";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";
@@ -33,7 +33,7 @@ export async function GET(event: ApiRequestEvent): Promise<Response> {
 
   const ipAddress = getClientIp(event.request.headers);
   const userAgent = event.request.headers.get("user-agent") ?? null;
-  const runtime = getServerRuntime().auth.login;
+  const runtime = getAuthRuntime().login;
   const result = await completeGoogleOAuthCallback(
     {
       code,

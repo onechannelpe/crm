@@ -1,7 +1,9 @@
 import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
 import type { EngineClient } from "~/server/integrations/engine/client";
 
-import type { ServerInfra } from "./infra";
+import { getEngineRuntime } from "./engine-runtime";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export function createContactAssignmentsRuntime(
   infra: ServerInfra,
@@ -12,3 +14,7 @@ export function createContactAssignmentsRuntime(
     engine,
   });
 }
+
+export const getContactAssignmentsRuntime = memo(() =>
+  createContactAssignmentsRuntime(infra, getEngineRuntime()),
+);

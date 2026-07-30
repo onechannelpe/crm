@@ -16,7 +16,7 @@ import {
   validationFail,
   type Reader,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getMerchantStatsRuntime } from "~/server/platform/container/merchant-stats-runtime";
 import { Ok } from "~/shared/result";
 
 const DEFAULT_PAGE_SIZE = 60;
@@ -59,11 +59,7 @@ export async function getGpvPerformance(raw: {
       })),
 
     execute: async (_ctx, input) =>
-      Ok(
-        await getServerRuntime().merchantStats.dashboard.performance(
-          input.filter,
-        ),
-      ),
+      Ok(await getMerchantStatsRuntime().dashboard.performance(input.filter)),
   });
 }
 
@@ -80,7 +76,7 @@ export async function getGpvCulqi(raw: {
       })),
 
     execute: async (_ctx, input) =>
-      Ok(await getServerRuntime().merchantStats.dashboard.culqi(input.filter)),
+      Ok(await getMerchantStatsRuntime().dashboard.culqi(input.filter)),
   });
 }
 
@@ -100,7 +96,7 @@ export async function getCohortRows(raw: {
 
     execute: async (_ctx, input) =>
       Ok(
-        await getServerRuntime().merchantStats.dashboard.cohorts(
+        await getMerchantStatsRuntime().dashboard.cohorts(
           input.filter,
           input.page,
         ),
@@ -115,7 +111,7 @@ export async function getFilterOptions(): Promise<FilterOptions> {
     parse: () => Ok(undefined),
 
     execute: async () =>
-      Ok(await getServerRuntime().merchantStats.dashboard.filterOptions()),
+      Ok(await getMerchantStatsRuntime().dashboard.filterOptions()),
   });
 }
 
@@ -137,6 +133,6 @@ export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
     }),
 
     execute: (ctx, input) =>
-      getServerRuntime().merchantStats.dashboard.export(ctx, input.filter),
+      getMerchantStatsRuntime().dashboard.export(ctx, input.filter),
   });
 }

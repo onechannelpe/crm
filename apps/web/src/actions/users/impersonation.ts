@@ -13,7 +13,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { isErr, Ok } from "~/shared/result";
 
 export async function startImpersonation(
@@ -31,10 +31,7 @@ export async function startImpersonation(
       // Read the administrator's own cookie before the swap so exiting
       // impersonation can restore it.
       const adminToken = getSessionCookie();
-      const result = await getServerRuntime().auth.impersonation.start(
-        ctx,
-        command,
-      );
+      const result = await getAuthRuntime().impersonation.start(ctx, command);
       if (isErr(result)) return result;
 
       if (adminToken) setImpersonatorCookie(adminToken);
@@ -49,7 +46,7 @@ export async function stopImpersonation(): Promise<{ message: string }> {
     name: "members.impersonation.stop",
     access: { kind: "auth" },
     execute: async (ctx) => {
-      const result = await getServerRuntime().auth.impersonation.stop(ctx);
+      const result = await getAuthRuntime().impersonation.stop(ctx);
       if (isErr(result)) return result;
 
       const adminToken = getImpersonatorCookie();

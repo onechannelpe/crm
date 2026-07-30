@@ -8,7 +8,7 @@ import { Input } from "~/components/ui/input/input";
 import { codeIs } from "~/contracts/error-codes";
 import { parseWireError } from "~/contracts/errors";
 import { recoveryLoginMutation } from "~/features/auth/data/mutations";
-import { loginFlowQuery } from "~/features/auth/data/queries";
+import { loginFlowQuery } from "~/features/auth/data/queries/login-flow";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { parseLoginFlowId } from "~/server/auth/login-flow/parse-id";

@@ -23,7 +23,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
 import { resolvePendingQuotationPolicy } from "~/server/workflow/lead/domain/pending-quotation";
 import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
@@ -65,7 +65,7 @@ export async function queryLeadList(
     }),
 
     execute: ({ actor }, parsedFilters) => {
-      const workflow = getServerRuntime().workflow;
+      const workflow = getWorkflowRuntime();
       const { userId, role, branchId } = workflowActor(actor);
 
       return listLeads(
@@ -97,7 +97,7 @@ export async function queryLeadDetail(
     audit: ({ leadId }) => ({ leadId }),
 
     execute: async ({ actor, now }, query) => {
-      const workflow = getServerRuntime().workflow;
+      const workflow = getWorkflowRuntime();
       const { userId, role } = workflowActor(actor);
 
       const detail = await getLeadDetail(workflow.repos, {
@@ -125,7 +125,7 @@ export async function queryFulfillmentQueue(): Promise<
     execute: async ({ actor, now }) => {
       const { role, branchId } = workflowActor(actor);
       const queue = await listFulfillmentQueue(
-        getServerRuntime().workflow.ports().executor,
+        getWorkflowRuntime().ports().executor,
         { actorRole: role, actorBranchId: branchId },
       );
       if (isErr(queue)) return queue;
@@ -144,7 +144,7 @@ export async function queryPendingQuotationCount(): Promise<PendingQuotationCoun
     access: { kind: "auth" },
 
     execute: ({ actor }) => {
-      const ports = getServerRuntime().workflow.ports();
+      const ports = getWorkflowRuntime().ports();
       const { userId, branchId } = workflowActor(actor);
       const repos = createWorkflowRepos(ports.executor);
 
@@ -174,7 +174,7 @@ export async function queryLeadBootstrapPreview(
     audit: ({ ruc }) => ({ ruc }),
 
     execute: (_ctx, query) => {
-      const workflow = getServerRuntime().workflow;
+      const workflow = getWorkflowRuntime();
 
       return getLeadBootstrapPreview(
         { organization: workflow.repos.organization },
@@ -202,7 +202,7 @@ export async function queryAssignableExecutives(
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, query) => {
-      const workflow = getServerRuntime().workflow;
+      const workflow = getWorkflowRuntime();
       const { userId, role, branchId } = workflowActor(actor);
 
       return listAssignableExecutives(workflow.repos, {

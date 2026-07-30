@@ -2,7 +2,8 @@ import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
 
 import { sentryConfig } from "./server/platform/config/env";
-import { getServerRuntime } from "./server/platform/container";
+import { getAuthRuntime } from "./server/platform/container/auth-runtime";
+import { getSecurityRuntime } from "./server/platform/container/security-runtime";
 import { enforceAuthRequest } from "./server/platform/http/request-auth";
 import { buildRequestContext } from "./server/platform/http/request-context";
 import { generateRequestId, generateTraceId } from "./shared/observability/ids";
@@ -24,14 +25,13 @@ export default createMiddleware({
       httpMethod: event.request.method,
       requestStartedAt: Date.now(),
     };
-    const runtime = getServerRuntime();
     event.locals.requestContext = await buildRequestContext(
       event.request,
       observability,
       {
         resolveAuthSession: (token) =>
-          runtime.auth.sessionService.resolve(token),
-        requestSessions: runtime.security.requestSessions,
+          getAuthRuntime().sessionService.resolve(token),
+        requestSessions: getSecurityRuntime().requestSessions,
       },
     );
 

@@ -9,7 +9,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 
 export async function revokeUserSession(
   rawSessionId: unknown,
@@ -35,7 +35,7 @@ export async function revokeUserSession(
     execute: (ctx, input) =>
       revokeUserSessionService(
         ctx,
-        getServerRuntime().auth.adminSessionRevocation,
+        getAuthRuntime().adminSessionRevocation,
         input,
       ),
   });
@@ -59,7 +59,7 @@ export async function revokeAllUserSessions(
     execute: (ctx, input) =>
       revokeAllUserSessionsService(
         ctx,
-        getServerRuntime().auth.adminSessionRevocation,
+        getAuthRuntime().adminSessionRevocation,
         input,
       ),
   });

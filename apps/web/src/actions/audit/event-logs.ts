@@ -11,7 +11,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getEventLogsRuntime } from "~/server/platform/container/event-logs-runtime";
 
 export async function getEventLogs(
   rawParams: unknown,
@@ -47,6 +47,6 @@ export async function getEventLogs(
       ),
 
     execute: (_ctx, input) =>
-      getServerRuntime().eventLogs.eventLogsService.getEventLogs(input),
+      getEventLogsRuntime().eventLogsService.getEventLogs(input),
   });
 }

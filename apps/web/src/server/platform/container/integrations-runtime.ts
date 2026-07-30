@@ -1,6 +1,7 @@
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 
-import type { ServerInfra } from "./infra";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export function createIntegrationsRuntime(infra: ServerInfra) {
   return {
@@ -10,3 +11,7 @@ export function createIntegrationsRuntime(infra: ServerInfra) {
     }),
   };
 }
+
+export const getIntegrationsRuntime = memo(() =>
+  createIntegrationsRuntime(infra),
+);

@@ -7,7 +7,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getEngineRuntime } from "~/server/platform/container/engine-runtime";
+import { getSearchRuntime } from "~/server/platform/container/search-runtime";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 
@@ -28,14 +29,13 @@ export async function searchDirect(
     audit: (command) => ({ intent: command.intent }),
 
     execute: async (ctx, command) => {
-      const { usageReservationPorts, rateLimitDeps } =
-        getServerRuntime().search;
+      const { usageReservationPorts, rateLimitDeps } = getSearchRuntime();
       await checkActionRateLimit("search.use", ctx.actor.userId, rateLimitDeps);
 
       return runDirectSearch(
         { ...command, actorUserId: ctx.actor.userId },
         usageReservationPorts,
-        getServerRuntime().engine,
+        getEngineRuntime(),
       );
     },
   });

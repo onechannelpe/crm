@@ -2,7 +2,7 @@
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
+import { getContactAssignmentsRuntime } from "~/server/platform/container/contact-assignments-runtime";
 
 export async function assignCurrentUserContacts() {
   return runAction({
@@ -10,7 +10,7 @@ export async function assignCurrentUserContacts() {
     access: { kind: "permission", permission: "lead:work" },
     execute: (ctx) => {
       const { repos, uow, engine, leadUsageReservationPorts } =
-        getServerRuntime().contactAssignments;
+        getContactAssignmentsRuntime();
       return assignContacts(
         {
           actorUserId: ctx.actor.userId,

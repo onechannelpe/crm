@@ -26,7 +26,10 @@ import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { Err, Ok, type Result } from "~/shared/result";
 
-import type { ServerInfra } from "./infra";
+import { getAuthRuntime } from "./auth-runtime";
+import { getAvatarRuntime } from "./avatar-runtime";
+import { infra, type ServerInfra } from "./infra";
+import { memo } from "./memo";
 
 export function createUsersRuntime(
   infra: ServerInfra,
@@ -98,3 +101,11 @@ export function createUsersRuntime(
     members,
   };
 }
+
+export const getUsersRuntime = memo(() =>
+  createUsersRuntime(
+    infra,
+    getAuthRuntime().sessionService,
+    getAvatarRuntime().avatarService,
+  ),
+);

@@ -1,6 +1,6 @@
 import { type RouteDefinition } from "@solidjs/router";
 
-import { meQuery } from "~/features/auth/data/queries";
+import { meQuery } from "~/features/auth/data/queries/me";
 import { leadListQuery } from "~/features/workflow/data/queries";
 import {
   parseLeadPageIndex,

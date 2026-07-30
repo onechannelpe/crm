@@ -9,7 +9,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getServerRuntime } from "~/server/platform/container";
+import { getContactAssignmentsRuntime } from "~/server/platform/container/contact-assignments-runtime";
 
 export async function completeContactAssignmentCall(
   input: unknown,
@@ -40,7 +40,7 @@ export async function completeContactAssignmentCall(
           outcome: command.outcome,
           notes: command.notes,
         },
-        getServerRuntime().contactAssignments.interactionUow,
+        getContactAssignmentsRuntime().interactionUow,
       ),
   });
 }
