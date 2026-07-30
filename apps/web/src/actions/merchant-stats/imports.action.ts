@@ -8,7 +8,10 @@ import {
   cutAtFromInput,
 } from "~/server/merchant-stats/intake/cut-at";
 import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
-import { executeSessionServerFunction } from "~/server/platform/action";
+import {
+  executeSessionServerFunction,
+  executeSessionServerFunctionResult,
+} from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -50,7 +53,7 @@ function parseUpload(formData: FormData): Result<Upload, DomainError> {
 export async function uploadMerchantReport(formData: FormData) {
   "use server";
 
-  return executeSessionServerFunction({
+  return executeSessionServerFunctionResult({
     name: "merchantStats.import.upload",
     access: { kind: "permission", permission: "dashboards:manage" },
     parse: () => parseUpload(formData),

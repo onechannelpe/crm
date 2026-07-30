@@ -1,6 +1,7 @@
-import { useAction, useNavigate, useSubmission } from "@solidjs/router";
+import { useAction, useNavigate } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
+import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { FileDropzone } from "~/components/ui/input/file-dropzone";
 import { InputHint } from "~/components/ui/input/input-hint";
 import { InputLabel } from "~/components/ui/input/input-label";
@@ -14,21 +15,36 @@ import styles from "./upload-report.module.css";
 export function UploadReport() {
   const navigate = useNavigate();
   const upload = useAction(uploadMerchantReportMutation);
-  const submission = useSubmission(uploadMerchantReportMutation);
   const [cutAt, setCutAt] = createSignal("");
+  const [isUploading, setIsUploading] = createSignal(false);
+  const [errorMessage, setErrorMessage] = createSignal<string>();
+  const { enqueueErrorSnackBar } = useSnackBar();
 
   async function importFile(file: File): Promise<void> {
+    if (isUploading()) return;
+
     const form = new FormData();
     form.append("file", file);
     if (cutAt()) {
       form.append("cutAt", cutAt());
     }
 
+    setErrorMessage(undefined);
+    setIsUploading(true);
     try {
       const result = await upload(form);
-      navigate(`/dashboards/merchant-gpv/imports/${result.snapshotId}`);
-    } catch {
-      // useSubmission exposes the action error below.
+      if (!result.ok) {
+        setErrorMessage(result.error.message);
+        return;
+      }
+
+      navigate(`/dashboards/merchant-gpv/imports/${result.value.snapshotId}`);
+    } catch (caught: unknown) {
+      const message = actionErrorMessage(caught);
+      setErrorMessage(message);
+      enqueueErrorSnackBar(message);
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -36,7 +52,7 @@ export function UploadReport() {
     <div class={styles.panel}>
       <FileDropzone
         accept=".xlsx"
-        disabled={submission.pending}
+        disabled={isUploading()}
         onFiles={(files) => {
           const file = files[0];
           if (file) {
@@ -65,7 +81,7 @@ export function UploadReport() {
           id="gpv-cut-at"
           type="datetime-local"
           value={cutAt()}
-          disabled={submission.pending}
+          disabled={isUploading()}
           onChange={setCutAt}
         />
         <InputHint>
@@ -73,12 +89,14 @@ export function UploadReport() {
         </InputHint>
       </div>
 
-      <Show when={submission.pending}>
+      <Show when={isUploading()}>
         <p class={styles.status}>Subiendo archivo…</p>
       </Show>
-      <Show when={submission.error}>
-        {(error) => (
-          <p class={styles.statusError}>{actionErrorMessage(error())}</p>
+      <Show when={errorMessage()}>
+        {(message) => (
+          <p class={styles.statusError} role="alert">
+            {message()}
+          </p>
         )}
       </Show>
     </div>

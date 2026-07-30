@@ -8,7 +8,7 @@ import {
   isHydrationMismatchError,
   traceHydrationEvent,
 } from "./browser/observability/diagnostics/hydration";
-import { setupCsrfInterceptor } from "./browser/security/csrf-client";
+import { setupBrowserRequestSecurity } from "./browser/security/csrf-client";
 import { sentryDefaultDataCollection } from "./shared/observability/sentry";
 
 init({
@@ -26,7 +26,7 @@ init({
   dataCollection: sentryDefaultDataCollection(),
 });
 
-setupCsrfInterceptor();
+setupBrowserRequestSecurity();
 
 const HYDRATION_SCOPE = "entry-client";
 

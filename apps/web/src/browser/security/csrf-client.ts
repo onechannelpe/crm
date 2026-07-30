@@ -1,10 +1,11 @@
+import { captureException } from "@sentry/solid";
+
+import { ServerFunctionTransportError } from "~/contracts/errors";
 import { CSRF_CONFIG } from "~/shared/csrf-config";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
 
-// SolidStart actions and RPC share a global fetch. Install the CSRF header at
-// the window boundary so every mutation carries the token without per-call work.
-export function setupCsrfInterceptor() {
+export function setupBrowserRequestSecurity() {
   if (typeof window === "undefined" || !("fetch" in window)) return;
 
   const originalFetch = window.fetch;
@@ -13,23 +14,22 @@ export function setupCsrfInterceptor() {
     input: RequestInfo | URL,
     init: RequestInit | undefined,
   ): Promise<Response> => {
-    const method = init?.method?.toUpperCase() || "GET";
+    const request = addCsrfToken(new Request(input, init));
+    const response = await originalFetch(request);
 
-    if (!SAFE_METHODS.has(method)) {
-      const token = getCsrfMetaToken();
+    if (!isServerFunctionRequest(request) || response.ok) return response;
 
-      if (token) {
-        init = init || {};
-        const headers = new Headers(init.headers || {});
-
-        if (!headers.has(CSRF_CONFIG.HEADER_NAME)) {
-          headers.set(CSRF_CONFIG.HEADER_NAME, token);
-          init.headers = headers;
-        }
-      }
-    }
-
-    return originalFetch(input, init);
+    const error = new ServerFunctionTransportError(response.status);
+    captureException(error, {
+      level: "warning",
+      tags: { source: "server_function_transport" },
+      extra: {
+        method: request.method,
+        path: new URL(request.url).pathname,
+        status: response.status,
+      },
+    });
+    throw error;
   };
 
   Object.assign(patchedFetch, originalFetch);
@@ -42,6 +42,26 @@ export function setupCsrfInterceptor() {
     writable: true,
     enumerable: true,
   });
+}
+
+function addCsrfToken(request: Request): Request {
+  if (!needsCsrfToken(request)) return request;
+
+  const token = getCsrfMetaToken();
+  if (!token || request.headers.has(CSRF_CONFIG.HEADER_NAME)) return request;
+
+  const headers = new Headers(request.headers);
+  headers.set(CSRF_CONFIG.HEADER_NAME, token);
+  return new Request(request, { headers });
+}
+
+function needsCsrfToken(request: Request): boolean {
+  if (SAFE_METHODS.has(request.method.toUpperCase())) return false;
+  return new URL(request.url).origin === window.location.origin;
+}
+
+function isServerFunctionRequest(request: Request): boolean {
+  return new URL(request.url).pathname.endsWith("/_server");
 }
 
 function getCsrfMetaToken(): string | null {

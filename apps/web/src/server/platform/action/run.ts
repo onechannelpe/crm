@@ -155,5 +155,5 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
     return result.value;
   }
 
-  return { execute };
+  return { execute, executeResult };
 }

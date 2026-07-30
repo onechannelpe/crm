@@ -35,6 +35,42 @@ export class ActionError extends Error {
   }
 }
 
+export class ServerFunctionTransportError extends Error {
+  readonly wire: WireError;
+
+  constructor(status: number) {
+    const wire = wireForServerFunctionStatus(status);
+    super(wire.message);
+    this.name = "ServerFunctionTransportError";
+    this.wire = wire;
+  }
+}
+
+function wireForServerFunctionStatus(status: number): WireError {
+  if (status === 401) {
+    return {
+      kind: "unauthenticated",
+      code: "session_expired",
+      message: "Tu sesión expiró. Inicia sesión nuevamente.",
+    };
+  }
+
+  if (status === 403) {
+    return {
+      kind: "forbidden",
+      code: "request_security_rejected",
+      message:
+        "No se pudo verificar tu sesión de seguridad. Recarga la página e inténtalo otra vez.",
+    };
+  }
+
+  return {
+    kind: "internal",
+    code: null,
+    message: FALLBACK_MESSAGE,
+  };
+}
+
 function isWireKind(value: unknown): value is WireKind {
   return WIRE_KINDS.some((kind) => kind === value);
 }
@@ -62,6 +98,7 @@ function carriedWire(error: unknown): WireError | undefined {
 // Unknown failures use a generic message so server details are not exposed to the UI.
 export function parseWireError(error: unknown): WireError {
   if (error instanceof ActionError) return error.wire;
+  if (error instanceof ServerFunctionTransportError) return error.wire;
   return (
     carriedWire(error) ?? {
       kind: "internal",

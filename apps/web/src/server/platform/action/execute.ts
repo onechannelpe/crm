@@ -1,9 +1,11 @@
 import "server-only";
 import { captureException } from "@sentry/bun";
 
+import type { WireError } from "~/contracts/errors";
 import type { DomainError } from "~/domain/errors";
 import { faultMeta } from "~/shared/observability/fault-meta";
 import { createLogger } from "~/shared/observability/runtime-logger";
+import type { Result } from "~/shared/result";
 
 import { recordActionObservation } from "./record-action-observation";
 import { type ActionDef, createServerFunctionExecutor } from "./run";
@@ -27,6 +29,16 @@ export function executeSessionServerFunction<
   TError extends DomainError,
 >(definition: ActionDef<TInput, TOutput, TError>) {
   return serverFunctionExecutor.execute(definition);
+}
+
+export function executeSessionServerFunctionResult<
+  TInput,
+  TOutput,
+  TError extends DomainError,
+>(
+  definition: ActionDef<TInput, TOutput, TError>,
+): Promise<Result<TOutput, WireError>> {
+  return serverFunctionExecutor.executeResult(definition);
 }
 
 export function executeAdminServerFunction<
