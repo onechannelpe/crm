@@ -46,12 +46,7 @@ export async function persistDemoMerchantStats(
     merchants,
   });
 
-  await persistTargets(
-    db,
-    merchants,
-    new Set(linkedOrganizations.map((organization) => organization.ruc)),
-    context,
-  );
+  await persistTargets(db, merchants, context);
 }
 
 interface SnapshotInput {
@@ -118,20 +113,13 @@ async function applySnapshot(
 async function persistTargets(
   db: Kysely<Database>,
   merchants: readonly MerchantSpec[],
-  linkedOrganizationRucs: ReadonlySet<string>,
   context: SeedContext,
 ): Promise<void> {
   const setAt = daysBefore(context, 30);
   const byRuc = new Map<string, MerchantSpec>();
 
   for (const merchant of merchants) {
-    // Culqi report rows do not create CRM organizations. Only the deliberately
-    // linked rows can receive CRM-owned targets.
-    if (
-      linkedOrganizationRucs.has(merchant.ruc) &&
-      merchant.projectedGpv != null &&
-      !byRuc.has(merchant.ruc)
-    ) {
+    if (merchant.projectedGpv != null && !byRuc.has(merchant.ruc)) {
       byRuc.set(merchant.ruc, merchant);
     }
   }

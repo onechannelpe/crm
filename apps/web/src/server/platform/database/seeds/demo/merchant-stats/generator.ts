@@ -181,9 +181,8 @@ function buildMerchant(
     m0Plus15dTrx: Math.round(series[0].trx * (0.2 + rng() * 0.4)),
     series,
     ...culqiUser(rng, index),
-    // Left off a minority so the no_target queue has signal.
     projectedGpv:
-      index !== 2 && chance(rng, PROFILE.projectedGpvRate)
+      linkedOrganization && index !== 2 && chance(rng, PROFILE.projectedGpvRate)
         ? round2(2000 + rng() * 45000)
         : null,
   };
