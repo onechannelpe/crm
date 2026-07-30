@@ -8,13 +8,20 @@ import type {
   PublishedPage,
 } from "~/contracts/merchant-stats/views";
 import type { DomainError } from "~/domain/errors";
+import { getCohortRows as readCohortRows } from "~/server/merchant-stats/read/cohort";
+import {
+  getGpvCulqiView,
+  getGpvPerformanceView,
+} from "~/server/merchant-stats/read/dashboard-views";
+import { getFilterOptions as readFilterOptions } from "~/server/merchant-stats/read/options";
+import { readPublishedGpvPage } from "~/server/merchant-stats/read/published-page";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
   type Reader,
 } from "~/server/platform/action/input-reader";
-import { getMerchantStatsRuntime } from "~/server/platform/container/merchant-stats-runtime";
+import { db } from "~/server/platform/database/db";
 import { Ok } from "~/shared/result";
 
 const DEFAULT_PAGE_SIZE = 60;
@@ -59,7 +66,7 @@ export async function getGpvPerformance(raw: {
       })),
 
     execute: async (_ctx, input) =>
-      Ok(await getMerchantStatsRuntime().dashboard.performance(input.filter)),
+      Ok(await getGpvPerformanceView(db, input.filter, new Date())),
   });
 }
 
@@ -77,8 +84,7 @@ export async function getGpvCulqi(raw: {
         filter: r.obj("filter", readFilter),
       })),
 
-    execute: async (_ctx, input) =>
-      Ok(await getMerchantStatsRuntime().dashboard.culqi(input.filter)),
+    execute: async (_ctx, input) => Ok(await getGpvCulqiView(db, input.filter)),
   });
 }
 
@@ -98,13 +104,12 @@ export async function getCohortRows(raw: {
         page: r.obj("page", readPage),
       })),
 
-    execute: async (_ctx, input) =>
-      Ok(
-        await getMerchantStatsRuntime().dashboard.cohorts(
-          input.filter,
-          input.page,
-        ),
-      ),
+    execute: async (_ctx, input) => {
+      const rows = await readPublishedGpvPage(db, (transaction) =>
+        readCohortRows(transaction, input.filter, input.page),
+      );
+      return Ok(rows);
+    },
   });
 }
 
@@ -116,8 +121,7 @@ export async function getFilterOptions(): Promise<FilterOptions> {
     access: { kind: "permission", permission: "dashboards:read" },
     parse: () => Ok(undefined),
 
-    execute: async () =>
-      Ok(await getMerchantStatsRuntime().dashboard.filterOptions()),
+    execute: async () => Ok(await readFilterOptions(db)),
   });
 }
 
@@ -140,7 +144,10 @@ export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
       product: filter.product ?? null,
     }),
 
-    execute: (ctx, input) =>
-      getMerchantStatsRuntime().dashboard.export(ctx, input.filter),
+    execute: async (ctx, input) => {
+      const { getMerchantStatsRuntime } =
+        await import("~/server/platform/container/merchant-stats-runtime");
+      return getMerchantStatsRuntime().dashboard.export(ctx, input.filter);
+    },
   });
 }

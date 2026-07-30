@@ -21,7 +21,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
+import { db } from "~/server/platform/database/db";
 import { resolvePendingQuotationPolicy } from "~/server/workflow/lead/domain/pending-quotation";
 import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
@@ -35,6 +35,7 @@ import { workflowActor } from "../commands/actor.action";
 
 const SORT_FIELDS = ["createdAt", "updatedAt", "registeredBy", "ruc"] as const;
 const SORT_DIRECTIONS = ["asc", "desc"] as const;
+const workflowRepos = createWorkflowRepos(db);
 
 export async function queryLeadList(
   filters: ListLeadsFiltersInput,
@@ -65,11 +66,10 @@ export async function queryLeadList(
     }),
 
     execute: ({ actor }, parsedFilters) => {
-      const workflow = getWorkflowRuntime();
       const { userId, role, branchId } = workflowActor(actor);
 
       return listLeads(
-        { leads: workflow.repos.leadQueries },
+        { leads: workflowRepos.leadQueries },
         {
           actorUserId: userId,
           actorRole: role,
@@ -99,10 +99,9 @@ export async function queryLeadDetail(
     audit: ({ leadId }) => ({ leadId }),
 
     execute: async ({ actor, now }, query) => {
-      const workflow = getWorkflowRuntime();
       const { userId, role } = workflowActor(actor);
 
-      const detail = await getLeadDetail(workflow.repos, {
+      const detail = await getLeadDetail(workflowRepos, {
         actorUserId: userId,
         actorRole: role,
         leadId: query.leadId,
@@ -128,10 +127,10 @@ export async function queryFulfillmentQueue(): Promise<
 
     execute: async ({ actor, now }) => {
       const { role, branchId } = workflowActor(actor);
-      const queue = await listFulfillmentQueue(
-        getWorkflowRuntime().ports().executor,
-        { actorRole: role, actorBranchId: branchId },
-      );
+      const queue = await listFulfillmentQueue(db, {
+        actorRole: role,
+        actorBranchId: branchId,
+      });
       if (isErr(queue)) return queue;
 
       return Ok({
@@ -150,13 +149,11 @@ export async function queryPendingQuotationCount(): Promise<PendingQuotationCoun
     access: { kind: "auth" },
 
     execute: ({ actor }) => {
-      const ports = getWorkflowRuntime().ports();
       const { userId, branchId } = workflowActor(actor);
-      const repos = createWorkflowRepos(ports.executor);
 
       return Promise.all([
-        repos.leads.countPendingQuotationDecisions(userId, ports.now),
-        repos.pendingQuotationPolicies.findByBranchId(branchId),
+        workflowRepos.leads.countPendingQuotationDecisions(userId, new Date()),
+        workflowRepos.pendingQuotationPolicies.findByBranchId(branchId),
       ]).then(([count, branchPolicy]) => {
         const { limit } = resolvePendingQuotationPolicy({ branchPolicy });
         return Ok({ count, limit });
@@ -181,7 +178,10 @@ export async function queryLeadBootstrapPreview(
 
     audit: ({ ruc }) => ({ ruc }),
 
-    execute: (_ctx, query) => {
+    execute: async (_ctx, query) => {
+      const { getWorkflowRuntime } = await import(
+        "~/server/platform/container/workflow-runtime"
+      );
       const workflow = getWorkflowRuntime();
 
       return getLeadBootstrapPreview(
@@ -212,10 +212,9 @@ export async function queryAssignableExecutives(
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, query) => {
-      const workflow = getWorkflowRuntime();
       const { userId, role, branchId } = workflowActor(actor);
 
-      return listAssignableExecutives(workflow.repos, {
+      return listAssignableExecutives(workflowRepos, {
         actorUserId: userId,
         actorRole: role,
         actorBranchId: branchId,

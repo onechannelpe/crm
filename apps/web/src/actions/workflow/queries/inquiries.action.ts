@@ -1,6 +1,6 @@
 import type { InquiryListView } from "~/contracts/workflow/views";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { getWorkflowRuntime } from "~/server/platform/container/workflow-runtime";
+import { db } from "~/server/platform/database/db";
 import { listInquiriesForExecutive } from "~/server/workflow/inquiry/inquiry-queries";
 import { Ok } from "~/shared/result";
 
@@ -15,10 +15,7 @@ export async function queryMyInquiries(): Promise<InquiryListView> {
 
     execute: async ({ actor }) => {
       const { userId } = workflowActor(actor);
-      const rows = await listInquiriesForExecutive(
-        getWorkflowRuntime().ports().executor,
-        userId,
-      );
+      const rows = await listInquiriesForExecutive(db, userId);
       return Ok({ rows });
     },
   });
