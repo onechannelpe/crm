@@ -11,7 +11,7 @@ import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-en
 import { startPasskeyEnrollment } from "~/server/auth/flows/start-passkey-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
@@ -20,7 +20,7 @@ export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallen
   const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);
 
-  return runAction({
+  return executeSessionServerFunction({
     name: "auth.passkey.enroll.begin",
     access: { kind: "session" },
 
@@ -42,7 +42,7 @@ export async function finishPasskeyEnrollment(
   const { repos } = setup;
   const webauthnProvider = createRequestPasskeyProvider(repos);
 
-  const result = await runAction({
+  const result = await executeSessionServerFunction({
     name: "auth.passkey.enroll.finish",
     access: { kind: "session" },
 

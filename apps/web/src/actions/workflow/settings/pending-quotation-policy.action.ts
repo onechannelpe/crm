@@ -1,6 +1,6 @@
 "use server";
 
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -12,7 +12,7 @@ import { updatePendingQuotationPolicy } from "~/server/workflow/policy/write/upd
 import { workflowActor } from "../commands/actor";
 
 export async function queryPendingQuotationPolicy() {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.get_pending_quotation_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
 
@@ -42,7 +42,7 @@ export type SavePendingQuotationPolicyInput =
 export async function savePendingQuotationPolicy(
   input: SavePendingQuotationPolicyInput,
 ) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.update_pending_quotation_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
 

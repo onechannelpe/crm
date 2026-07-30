@@ -1,6 +1,6 @@
 "use server";
 
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -11,7 +11,7 @@ import { createInquiry } from "~/server/workflow/inquiry/create-inquiry";
 import { workflowActor } from "./actor";
 
 export async function requestInquiryCreation(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.create_inquiry",
     access: { kind: "auth" },
 

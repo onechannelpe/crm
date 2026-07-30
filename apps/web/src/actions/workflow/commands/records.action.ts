@@ -8,7 +8,7 @@ import {
   LEAD_PRIORITIES,
 } from "~/contracts/workflow/vocabulary";
 import { UserId, WorkflowInquiryId, WorkflowLeadId } from "~/domain/ids";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -36,7 +36,7 @@ function parseLeadRef(input: unknown) {
 }
 
 export async function requestLeadCreation(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.register_lead",
     access: { kind: "auth" },
 
@@ -66,7 +66,7 @@ export async function requestLeadCreation(input: unknown) {
 }
 
 export async function requestEditCommercialScope(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.edit_commercial_scope",
     access: { kind: "auth" },
 
@@ -94,7 +94,7 @@ export async function requestEditCommercialScope(input: unknown) {
 }
 
 export async function requestSaveDigitalPolicy(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.save_digital_policy",
     access: { kind: "auth" },
 
@@ -120,7 +120,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
 }
 
 export async function requestRecordRepLegal(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.record_rep_legal",
     access: { kind: "auth" },
 
@@ -146,7 +146,7 @@ export async function requestRecordRepLegal(input: unknown) {
 }
 
 export async function requestLeadReview(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.review_lead",
     access: { kind: "auth" },
 
@@ -169,7 +169,7 @@ export async function requestLeadReview(input: unknown) {
 }
 
 export async function requestQuotationRestart(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.restart_quotation",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
@@ -184,7 +184,7 @@ export async function requestQuotationRestart(input: unknown) {
 }
 
 export async function requestLeadReassignment(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.reassign_lead",
     access: { kind: "auth" },
 
@@ -209,7 +209,7 @@ export async function requestLeadReassignment(input: unknown) {
 }
 
 export async function requestAddLeadToFavorites(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.add_lead_to_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
@@ -234,7 +234,7 @@ export async function requestAddLeadToFavorites(input: unknown) {
 }
 
 export async function requestRemoveLeadFromFavorites(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
@@ -259,7 +259,7 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
 }
 
 export async function requestLeadDeletion(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.delete_lead",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
@@ -277,7 +277,7 @@ export async function requestLeadDeletion(input: unknown) {
 }
 
 export async function requestLeadSunatRefresh(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.request_sunat_refresh",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),

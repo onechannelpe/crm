@@ -1,7 +1,7 @@
 "use server";
 
 import type { DomainError } from "~/domain/errors";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -27,7 +27,7 @@ export async function requestMoreSearches(
   rawAmount: unknown,
   rawReason: unknown,
 ) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.request_search",
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(rawAmount, rawReason),
@@ -46,7 +46,7 @@ export async function requestMoreLeadRefill(
   rawAmount: unknown,
   rawReason: unknown,
 ) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.request_lead_refill",
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(rawAmount, rawReason),

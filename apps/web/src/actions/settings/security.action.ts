@@ -7,7 +7,7 @@ import type { UserId } from "~/domain/ids";
 import { hashPassword, verifyPassword } from "~/server/auth/password/password";
 import { canRemoveStrongAuthFactor } from "~/server/auth/security/factor-management-policy";
 import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
 import {
   parseObject,
@@ -55,7 +55,7 @@ export async function changePassword(
   currentPassword: unknown,
   newPassword: unknown,
 ): Promise<{ message: string }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "settings.security.change_password",
     access: { kind: "auth" },
 
@@ -102,7 +102,7 @@ export async function changePassword(
 }
 
 export async function removeAllPasskeys(): Promise<{ message: string }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "settings.security.remove_passkeys",
     access: { kind: "session" },
 
@@ -140,7 +140,7 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
 }
 
 export async function disableTotp(): Promise<{ message: string }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "settings.security.disable_totp",
     access: { kind: "session" },
 

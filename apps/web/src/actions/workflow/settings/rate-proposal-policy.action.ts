@@ -1,6 +1,6 @@
 "use server";
 
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -12,7 +12,7 @@ import { updateRateProposalPolicy } from "~/server/workflow/policy/write/update-
 import { workflowActor } from "../commands/actor";
 
 export async function queryRateProposalPolicy() {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.get_rate_proposal_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
 
@@ -35,7 +35,7 @@ export async function queryRateProposalPolicy() {
 }
 
 export async function saveRateProposalPolicy(input: { validityDays: number }) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.update_rate_proposal_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
 

@@ -10,7 +10,7 @@ import type {
   PublishedPage,
 } from "~/contracts/merchant-stats/views";
 import type { DomainError } from "~/domain/errors";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -49,7 +49,7 @@ function readPage(r: Reader<DomainError>): Page {
 export async function getGpvPerformance(raw: {
   filter: BookFilter;
 }): Promise<GpvPerformanceView> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.performance.read",
     access: { kind: "permission", permission: "dashboards:read" },
 
@@ -66,7 +66,7 @@ export async function getGpvPerformance(raw: {
 export async function getGpvCulqi(raw: {
   filter: BookFilter;
 }): Promise<GpvCulqiView> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.culqi.read",
     access: { kind: "permission", permission: "dashboards:read" },
 
@@ -84,7 +84,7 @@ export async function getCohortRows(raw: {
   filter: BookFilter;
   page: Page;
 }): Promise<PublishedPage<CohortSaleRow>> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.cohort.read",
     access: { kind: "permission", permission: "dashboards:read" },
 
@@ -105,7 +105,7 @@ export async function getCohortRows(raw: {
 }
 
 export async function getFilterOptions(): Promise<FilterOptions> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.filterOptions.read",
     access: { kind: "permission", permission: "dashboards:read" },
     parse: () => Ok(undefined),
@@ -116,7 +116,7 @@ export async function getFilterOptions(): Promise<FilterOptions> {
 }
 
 export async function requestMerchantGpvExportDownloadToken(raw: BookFilter) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.export",
     access: { kind: "permission", permission: "dashboards:read" },
 

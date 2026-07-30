@@ -1,10 +1,16 @@
 import "server-only";
 import type { ServerFunctionErrorHandler } from "@solidjs/start/server";
 
+import { ActionError } from "~/contracts/errors";
+
 const SAFE_ERROR_MESSAGE = "No se pudo completar la solicitud.";
 
 const onServerFunctionError: ServerFunctionErrorHandler = async (thrown) => {
   if (thrown instanceof Response) {
+    return thrown;
+  }
+
+  if (thrown instanceof ActionError && thrown.wire.kind !== "internal") {
     return thrown;
   }
 

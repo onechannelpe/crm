@@ -2,7 +2,7 @@
 
 import { fail } from "~/domain/errors";
 import { parsePhone } from "~/domain/phone/pe-mobile";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -13,7 +13,7 @@ import { Err, isErr, Ok } from "~/shared/result";
 export async function updateUserProfile(
   rawPhone: unknown,
 ): Promise<{ message: string }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "settings.profile.update_phone",
     access: { kind: "session" },
 

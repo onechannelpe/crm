@@ -2,7 +2,7 @@
 
 import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/flows/request-password-reset";
 import { resetPassword as resetPasswordService } from "~/server/auth/flows/reset-password";
-import { runPublicAction } from "~/server/platform/action";
+import { executePublicServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { getRequestContext } from "~/server/platform/http/request-context";
@@ -16,7 +16,7 @@ export async function requestPasswordReset(
 
   const origin = getRequestContext().publicOrigin;
 
-  return runPublicAction(async () => {
+  return executePublicServerFunction(async () => {
     const result = await requestPasswordResetService({
       deps: getAuthRuntime().passwordReset,
       email,
@@ -40,7 +40,7 @@ export async function resetPassword(formData: FormData): Promise<{ ok: true }> {
   const password = typeof rawPassword === "string" ? rawPassword : "";
   const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
 
-  return runPublicAction(async () => {
+  return executePublicServerFunction(async () => {
     const result = await resetPasswordService({
       deps: getAuthRuntime().passwordReset,
       token,

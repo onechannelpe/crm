@@ -1,11 +1,11 @@
 "use server";
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { getContactAssignmentsRuntime } from "~/server/platform/container/contact-assignments-runtime";
 
 export async function assignCurrentUserContacts() {
-  return runAction({
+  return executeSessionServerFunction({
     name: "contact_assignments.assign_current_user",
     access: { kind: "permission", permission: "lead:work" },
     execute: (ctx) => {

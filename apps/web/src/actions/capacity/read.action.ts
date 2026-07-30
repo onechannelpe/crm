@@ -7,7 +7,7 @@ import type {
   PendingCapacityRequestView,
 } from "~/contracts/capacity";
 import { UserId } from "~/domain/ids";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -17,7 +17,7 @@ import { getCapacityRuntime } from "~/server/platform/container/capacity-runtime
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]
 > {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.managed_executives.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
@@ -28,7 +28,7 @@ export async function getManagedExecutivesList(): Promise<
 export async function getExecutiveDetail(
   userId: string,
 ): Promise<ExecutiveCapacityDetailView> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.executive_detail.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
@@ -48,7 +48,7 @@ export async function getExecutiveDetail(
 export async function getPendingRequests(): Promise<
   PendingCapacityRequestView[]
 > {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.pending_requests.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
@@ -57,7 +57,7 @@ export async function getPendingRequests(): Promise<
 }
 
 export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.policy_defaults.read",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 

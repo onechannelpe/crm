@@ -2,7 +2,7 @@
 
 import { ROLES } from "~/domain/auth/access/rbac";
 import { TeamId, UserInviteId } from "~/domain/ids";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -22,7 +22,7 @@ export async function createTeamInvite(input: unknown): Promise<{
   delivered: boolean;
   message: string;
 }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "team.invite.create",
     access: { kind: "permission", permission: "hr:manage" },
 
@@ -76,7 +76,7 @@ export async function createTeamInvite(input: unknown): Promise<{
 export async function resendTeamInvite(
   rawInviteId: unknown,
 ): Promise<{ message: string }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "team.invite.resend",
     access: { kind: "permission", permission: "hr:manage" },
 
@@ -109,7 +109,7 @@ export async function resendTeamInvite(
 export async function revokeTeamInvite(
   rawInviteId: unknown,
 ): Promise<{ message: string }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "team.invite.revoke",
     access: { kind: "permission", permission: "hr:manage" },
 

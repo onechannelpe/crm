@@ -12,7 +12,7 @@ import type { BranchId, UserId } from "~/domain/ids";
 import { IntegrationJobId } from "~/domain/ids";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import type { IntegrationJobRow } from "~/server/integrations/types";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
 import {
   parseObject,
@@ -99,7 +99,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
   importType: RecordImportType;
   rowsTotal: number;
 }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "records.import.upload",
     access: { kind: "permission", permission: "integration:manage" },
 
@@ -164,7 +164,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
 export async function getRecordImportProgress(
   rawJobId: string,
 ): Promise<RecordImportProgressEvent> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "records.import.progress",
     access: { kind: "permission", permission: "integration:manage" },
 

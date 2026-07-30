@@ -1,7 +1,7 @@
 "use server";
 
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
-import { runAction } from "~/server/platform/action";
+import { executeAdminServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -12,7 +12,7 @@ import { Ok } from "~/shared/result";
 export async function getObservabilitySnapshot(
   rawParams?: unknown,
 ): Promise<ObservabilitySnapshot> {
-  return runAction({
+  return executeAdminServerFunction({
     name: "admin.observability.snapshot.read",
     access: { kind: "permission", permission: "audit:read" },
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { WorkflowLeadId } from "~/domain/ids";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -12,7 +12,7 @@ import { addLeadNote as addLeadNoteUseCase } from "~/server/workflow/lead/intera
 import { workflowActor } from "./actor";
 
 export async function addLeadNote(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.add_note",
     access: { kind: "auth" },
 

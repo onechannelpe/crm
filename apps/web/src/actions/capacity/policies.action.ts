@@ -1,7 +1,7 @@
 "use server";
 
 import { BranchId, TeamId, UserId } from "~/domain/ids";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -11,7 +11,7 @@ import { getCapacityRuntime } from "~/server/platform/container/capacity-runtime
 const SCOPE_TYPES = ["branch", "team"] as const;
 
 export async function updateExecutivePolicyOverride(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.executive_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
@@ -35,7 +35,7 @@ export async function updateExecutivePolicyOverride(input: unknown) {
 }
 
 export async function updateScopePolicy(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.scope_policy.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 

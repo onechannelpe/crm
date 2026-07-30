@@ -4,7 +4,7 @@ import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignment
 import { ContactAssignmentId, OrganizationPersonId } from "~/domain/ids";
 import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -14,7 +14,7 @@ import { getContactAssignmentsRuntime } from "~/server/platform/container/contac
 export async function completeContactAssignmentCall(
   input: unknown,
 ): Promise<CompleteContactAssignmentCallResult> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "contact_assignments.complete_call",
     access: { kind: "permission", permission: "lead:work" },
 

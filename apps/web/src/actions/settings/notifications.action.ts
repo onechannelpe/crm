@@ -8,7 +8,7 @@ import {
   NOTIFICATION_CATEGORIES,
 } from "~/server/notifications/categories";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -44,7 +44,7 @@ export interface NotificationPreferencesView {
 // Default-on: a row in notification_opt_outs means "this user silenced this
 // category on this channel"; absence means on.
 export async function getNotificationPreferences(): Promise<NotificationPreferencesView> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "settings.notifications.read",
     access: { kind: "session" },
 
@@ -93,7 +93,7 @@ export async function setNotificationPreference(
   rawChannel: unknown,
   rawEnabled: unknown,
 ): Promise<NotificationChannelPreference & { category: string }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "settings.notifications.update",
     access: { kind: "session" },
 

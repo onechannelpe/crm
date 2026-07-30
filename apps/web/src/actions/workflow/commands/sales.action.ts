@@ -13,7 +13,7 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import type { DomainError } from "~/domain/errors";
 import { WorkflowLeadId, WorkflowVenueId } from "~/domain/ids";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -65,7 +65,7 @@ function accountFields<TCurrency extends "PEN" | "USD">(
 }
 
 export async function requestVenueCreation(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.create_venue",
     access: { kind: "auth" },
 
@@ -82,7 +82,7 @@ export async function requestVenueCreation(input: unknown) {
 }
 
 export async function requestVenueUpdate(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.update_venue",
     access: { kind: "auth" },
 
@@ -112,7 +112,7 @@ export async function requestVenueUpdate(input: unknown) {
 }
 
 export async function requestVenueAccountsAddition(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.add_venue_accounts",
     access: { kind: "auth" },
 

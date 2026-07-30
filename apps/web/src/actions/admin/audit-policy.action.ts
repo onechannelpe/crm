@@ -5,7 +5,7 @@ import {
   createAuditPolicyService,
   type UpsertAuditPolicyInput,
 } from "~/server/audit-reader/policy-service";
-import { runAction } from "~/server/platform/action";
+import { executeAdminServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -21,7 +21,7 @@ function auditPolicyService() {
 }
 
 export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
-  return runAction({
+  return executeAdminServerFunction({
     name: "admin.audit_policy.snapshot.read",
     access: { kind: "permission", permission: "audit:read" },
 
@@ -40,7 +40,7 @@ export async function canManageAuditPolicies(): Promise<boolean> {
 }
 
 export async function upsertAuditPolicy(input: unknown): Promise<void> {
-  return runAction({
+  return executeAdminServerFunction({
     name: "admin.audit_policy.upsert",
     access: { kind: "role", role: "admin" },
 

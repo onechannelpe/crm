@@ -16,7 +16,7 @@ import {
   cutAtFromFilename,
   cutAtFromInput,
 } from "~/server/merchant-stats/intake/cut-at";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -72,7 +72,7 @@ function parseUpload(formData: FormData): Result<Upload, DomainError> {
 }
 
 export async function uploadMerchantReport(formData: FormData) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.import.upload",
     access: { kind: "permission", permission: "dashboards:manage" },
 
@@ -111,7 +111,7 @@ export async function uploadMerchantReport(formData: FormData) {
 export async function getGpvSnapshotProgress(
   rawJobId: string,
 ): Promise<GpvSnapshotProgressEvent> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.import.progress",
     access: { kind: "permission", permission: "dashboards:read" },
 
@@ -137,7 +137,7 @@ export async function getGpvSnapshotProgress(
 export async function getGpvSnapshot(
   rawSnapshotId: string,
 ): Promise<GpvSnapshotView> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.import.read",
     access: { kind: "permission", permission: "dashboards:manage" },
     parse: () =>
@@ -154,7 +154,7 @@ export async function resolveGpvImportIssue(raw: {
   issueId: string;
   resolution: GpvSnapshotIssueResolution;
 }) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.import.issue.resolve",
     access: { kind: "permission", permission: "dashboards:manage" },
     parse: () =>

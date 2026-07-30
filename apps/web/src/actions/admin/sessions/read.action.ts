@@ -5,7 +5,7 @@ import { UserId } from "~/domain/ids";
 import { countActiveSessions as countActiveSessionsService } from "~/server/auth/application/queries/count-active-sessions";
 import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/auth/application/queries/list-all-active-sessions";
 import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
-import { runAction } from "~/server/platform/action";
+import { executeAdminServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -14,7 +14,7 @@ import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Ok } from "~/shared/result";
 
 export async function listUserSessions(rawUserId: unknown) {
-  return runAction({
+  return executeAdminServerFunction({
     name: "admin.sessions.user.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
@@ -38,7 +38,7 @@ export async function listUserSessions(rawUserId: unknown) {
 }
 
 export async function getActiveSessionsCount(): Promise<number> {
-  return runAction({
+  return executeAdminServerFunction({
     name: "admin.sessions.count.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
@@ -49,7 +49,7 @@ export async function getActiveSessionsCount(): Promise<number> {
 }
 
 export async function listAllActiveSessions(): Promise<SessionInfo[]> {
-  return runAction({
+  return executeAdminServerFunction({
     name: "admin.sessions.active.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",

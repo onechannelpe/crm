@@ -6,7 +6,7 @@ import { isRole } from "~/domain/auth/access/rbac";
 import { invalid, type DomainError } from "~/domain/errors";
 import { NotificationIntentId, TeamId, UserId } from "~/domain/ids";
 import type { NotificationAudience } from "~/server/notifications/types";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -48,7 +48,7 @@ function resolveAudience(
 export async function sendBroadcastNotification(
   params: unknown,
 ): Promise<void> {
-  await runAction({
+  await executeSessionServerFunction({
     name: "notifications.broadcast",
     access: { kind: "role", role: "admin" },
 

@@ -2,7 +2,7 @@
 
 import type { DomainError } from "~/domain/errors";
 import { CapacityRequestId, UserId } from "~/domain/ids";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -55,7 +55,7 @@ export async function approveCapacity(
   rawRequestId: unknown,
   rawNote?: unknown,
 ) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.approve",
     access: { kind: "permission", permission: "capacity:approve" },
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
@@ -66,7 +66,7 @@ export async function approveCapacity(
 }
 
 export async function rejectCapacity(rawRequestId: unknown, rawNote: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.reject",
     access: { kind: "permission", permission: "capacity:approve" },
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
@@ -81,7 +81,7 @@ export async function grantMoreSearches(
   rawAmount: unknown,
   rawReason: unknown,
 ) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.grant_search",
     access: { kind: "permission", permission: "capacity:manage" },
     parse: () => parseCapacityGrant(rawUserId, rawAmount, rawReason),
@@ -103,7 +103,7 @@ export async function grantMoreLeadRefill(
   rawAmount: unknown,
   rawReason: unknown,
 ) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.grant_lead",
     access: { kind: "permission", permission: "capacity:manage" },
     parse: () => parseCapacityGrant(rawUserId, rawAmount, rawReason),

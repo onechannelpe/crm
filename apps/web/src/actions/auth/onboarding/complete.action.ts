@@ -10,7 +10,7 @@ import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 import { isPlainRecord } from "~/shared/type-guards";
@@ -61,7 +61,7 @@ function parseCompletionInput(
 export async function completeOnboardingAction(
   input: unknown,
 ): Promise<CompletionResult> {
-  const result = await runAction({
+  const result = await executeSessionServerFunction({
     name: "auth.onboarding.complete",
     access: { kind: "session" },
     parse: () => parseCompletionInput(input),

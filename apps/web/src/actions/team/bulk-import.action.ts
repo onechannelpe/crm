@@ -5,7 +5,7 @@ import type {
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
 import { ROLES } from "~/domain/auth/access/rbac";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -20,7 +20,7 @@ export async function previewBulkCsv(
   csvContent: unknown,
   role: unknown,
 ): Promise<BulkPreviewResult> {
-  const parsed = await runAction({
+  const parsed = await executeSessionServerFunction({
     name: "team.bulk_import.preview",
     access: { kind: "permission", permission: "admin:manage" },
 
@@ -43,7 +43,7 @@ export async function applyBulkImport(
   csvContent: unknown,
   role: unknown,
 ): Promise<BulkApplyResult> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "team.bulk_import.apply",
     access: { kind: "permission", permission: "admin:manage" },
 

@@ -2,7 +2,7 @@
 
 import { UserId } from "~/domain/ids";
 import type { CalendarMonth } from "~/domain/time/calendar-date";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -16,7 +16,7 @@ export async function adjustMonthCredit(raw: {
   sellerUserId: string | null;
   reason: string;
 }) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.attribution.resolve",
     access: { kind: "permission", permission: "dashboards:manage" },
 
@@ -51,7 +51,7 @@ export async function setMerchantTarget(raw: {
   effectiveFrom: CalendarMonth;
   projectedGpv: number | null;
 }) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.target.set",
     access: { kind: "permission", permission: "dashboards:manage" },
 

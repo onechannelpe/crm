@@ -4,7 +4,7 @@ import { isValidInviteTokenFormat } from "~/domain/auth/invite/tokens";
 import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-acceptance";
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { runPublicAction } from "~/server/platform/action/public-action";
+import { executePublicServerFunction } from "~/server/platform/action/public-action";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { getTeamRuntime } from "~/server/platform/container/team-runtime";
 import { getRequestClientMetadata } from "~/server/platform/http/request-context";
@@ -93,7 +93,7 @@ function readStrongPassword(
 export async function getInviteActivationView(
   tokenInput: string,
 ): Promise<InviteActivationView | null> {
-  return runPublicAction(async () => {
+  return executePublicServerFunction(async () => {
     const safeToken = readInviteToken(tokenInput);
     if (!safeToken.ok) {
       return null;
@@ -114,7 +114,7 @@ export async function acceptInvitePasswordStep(input: {
   password: string;
   confirmPassword?: string;
 }): Promise<AcceptInviteResult> {
-  return runPublicAction(async () => {
+  return executePublicServerFunction(async () => {
     if (
       input.confirmPassword !== undefined &&
       input.password !== input.confirmPassword

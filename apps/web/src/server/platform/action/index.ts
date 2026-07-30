@@ -1,3 +1,7 @@
-export { createActionRunner, runAction, runActionResult } from "./run";
+export {
+  executeAdminServerFunction,
+  executeSessionServerFunction,
+  executeSessionServerFunctionResult,
+} from "./execute";
 export { type AppContext } from "./context";
-export { runPublicAction } from "./public-action";
+export { executePublicServerFunction } from "./public-action";

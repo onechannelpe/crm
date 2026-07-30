@@ -9,7 +9,7 @@ import { verifyPasskeyLogin } from "~/server/auth/factors/passkey/service";
 import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { runPublicAction } from "~/server/platform/action";
+import { executePublicServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { infra } from "~/server/platform/container/infra";
@@ -33,7 +33,7 @@ export async function finishPasskeyLogin(
   flowId: unknown,
   response: unknown,
 ): Promise<{ redirectTo: string }> {
-  return runPublicAction(async () => {
+  return executePublicServerFunction(async () => {
     const login = getAuthRuntime().login;
     const clientMetadata = getRequestClientMetadata();
     const requestContext = getActionRequestContext();

@@ -5,7 +5,7 @@ import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
 import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-enrollment";
 import { startTotpEnrollment } from "~/server/auth/flows/start-totp-enrollment";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, isErr, Ok } from "~/shared/result";
 
@@ -13,7 +13,7 @@ export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;
   qrCodeDataUrl: string;
 }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "auth.totp.begin",
     access: { kind: "session" },
 
@@ -24,7 +24,7 @@ export async function beginTotpEnrollment(): Promise<{
 export async function finishTotpEnrollment(
   rawCode: unknown,
 ): Promise<{ recoveryCodes: string[]; message: string }> {
-  const result = await runAction({
+  const result = await executeSessionServerFunction({
     name: "auth.totp.finish",
     access: { kind: "session" },
 

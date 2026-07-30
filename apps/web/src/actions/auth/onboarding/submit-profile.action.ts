@@ -4,14 +4,14 @@ import type { OnboardingSnapshot } from "~/contracts/auth";
 import { fail, type DomainError } from "~/domain/errors";
 import { parsePhone } from "~/domain/phone/pe-mobile";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export function submitOnboardingProfile(input: {
   phone: unknown;
 }): Promise<OnboardingSnapshot> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "auth.onboarding.save_profile",
     access: { kind: "session" },
     parse: (): Result<

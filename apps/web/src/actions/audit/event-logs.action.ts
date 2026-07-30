@@ -6,7 +6,7 @@ import {
   type EventLogQueryInput,
   type EventLogQueryResult,
 } from "~/contracts/event-logs/event-log";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -16,7 +16,7 @@ import { getEventLogsRuntime } from "~/server/platform/container/event-logs-runt
 export async function getEventLogs(
   rawParams: unknown,
 ): Promise<EventLogQueryResult> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "audit.event_logs.read",
     access: { kind: "permission", permission: "audit:read" },
 

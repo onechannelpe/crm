@@ -4,7 +4,7 @@ import type { ActionSuccess } from "~/contracts/common";
 import { UserId } from "~/domain/ids";
 import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession as revokeUserSessionService } from "~/server/auth/flows/revoke-user-session";
-import { runAction } from "~/server/platform/action";
+import { executeAdminServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -15,7 +15,7 @@ export async function revokeUserSession(
   rawSessionId: unknown,
   rawTargetUserId: unknown,
 ): Promise<ActionSuccess> {
-  return runAction({
+  return executeAdminServerFunction({
     name: "admin.sessions.revoke",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
@@ -44,7 +44,7 @@ export async function revokeUserSession(
 export async function revokeAllUserSessions(
   rawTargetUserId: unknown,
 ): Promise<ActionSuccess> {
-  return runAction({
+  return executeAdminServerFunction({
     name: "admin.sessions.revoke_all",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",

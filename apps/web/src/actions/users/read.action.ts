@@ -2,7 +2,7 @@
 
 import type { MemberDetail, MembersRoster } from "~/contracts/members";
 import { UserId } from "~/domain/ids";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -10,7 +10,7 @@ import {
 import { getUsersRuntime } from "~/server/platform/container/users-runtime";
 
 export async function getMembersRoster(): Promise<MembersRoster> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "members.roster.read",
     access: { kind: "permission", permission: "team:read" },
     execute: (ctx) => getUsersRuntime().members.listRoster(ctx),
@@ -20,7 +20,7 @@ export async function getMembersRoster(): Promise<MembersRoster> {
 export async function getMemberDetail(
   rawUserId: unknown,
 ): Promise<MemberDetail> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "members.detail.read",
     access: { kind: "permission", permission: "team:read" },
     parse: () =>

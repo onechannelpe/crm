@@ -3,7 +3,7 @@
 import type { OnboardingSnapshot } from "~/contracts/auth";
 import { changeInstallationPassword } from "~/server/auth/flows/change-installation-password";
 import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { validationFail } from "~/server/platform/action/input-reader";
 import { parseObject } from "~/server/platform/action/input-reader";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
@@ -12,7 +12,7 @@ export async function changeOnboardingPassword(input: {
   password: unknown;
   confirmPassword: unknown;
 }): Promise<OnboardingSnapshot> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "auth.onboarding.change_password",
     access: { kind: "session" },
     parse: () =>

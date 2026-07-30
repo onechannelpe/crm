@@ -2,7 +2,7 @@
 
 import type { SearchDirectResult } from "~/contracts/search/results";
 import { SEARCH_INTENTS } from "~/contracts/search/vocabulary";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -15,7 +15,7 @@ import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 export async function searchDirect(
   input: unknown,
 ): Promise<SearchDirectResult> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "search.use",
     access: { kind: "permission", permission: "search:use" },
 

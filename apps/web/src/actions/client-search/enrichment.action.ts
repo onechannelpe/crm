@@ -2,7 +2,7 @@
 
 import { invalid } from "~/domain/errors";
 import { parseDocument } from "~/domain/identity/document";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { getClientSearchRuntime } from "~/server/platform/container/client-search-runtime";
 import { Err, Ok } from "~/shared/result";
 import { isPlainRecord } from "~/shared/type-guards";
@@ -15,7 +15,7 @@ function parseDocumentInput(input: unknown) {
 }
 
 export async function requestSearchEnrichment(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "client_search.enrichment.request",
     access: { kind: "permission", permission: "search:use" },
 
@@ -36,7 +36,7 @@ export async function getSearchEnrichmentStatus(
   documentType: unknown,
   documentValue: unknown,
 ) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "client_search.enrichment.status.read",
     access: { kind: "permission", permission: "search:use" },
 

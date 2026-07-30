@@ -5,7 +5,7 @@ import {
   regenerateRecoverySetup,
 } from "~/server/auth/recovery/recovery-setup";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { Ok } from "~/shared/result";
 
@@ -15,7 +15,7 @@ export async function getRecoveryCodesStatus(): Promise<{
   unused: number;
   acknowledged: boolean;
 }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "auth.recovery.status",
     access: { kind: "session" },
 
@@ -37,7 +37,7 @@ export async function getRecoveryCodesStatus(): Promise<{
 export async function regenerateRecoveryCodes(): Promise<{
   recoveryCodes: string[];
 }> {
-  const result = await runAction({
+  const result = await executeSessionServerFunction({
     name: "auth.recovery.regenerate",
     access: { kind: "session" },
 
@@ -54,7 +54,7 @@ export async function regenerateRecoveryCodes(): Promise<{
 export async function acknowledgeRecoveryCodes(): Promise<{
   redirectTo: string;
 }> {
-  const result = await runAction({
+  const result = await executeSessionServerFunction({
     name: "auth.recovery.acknowledge",
     access: { kind: "session" },
 

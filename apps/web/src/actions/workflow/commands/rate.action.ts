@@ -7,7 +7,7 @@ import {
   WorkflowRateProposalId,
   WorkflowRateRevisionFileId,
 } from "~/domain/ids";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -22,7 +22,7 @@ import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/requ
 import { workflowActor } from "./actor";
 
 export async function requestRateProposal(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.propose_rate",
     access: { kind: "auth" },
 
@@ -48,7 +48,7 @@ export async function requestRateProposal(input: unknown) {
 }
 
 export async function requestRateProposalEdit(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.edit_rate_proposal",
     access: { kind: "auth" },
 
@@ -75,7 +75,7 @@ export async function requestRateProposalEdit(input: unknown) {
 }
 
 export async function requestRateAcceptance(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.accept_rate",
     access: { kind: "auth" },
 
@@ -96,7 +96,7 @@ export async function requestRateAcceptance(input: unknown) {
 }
 
 export async function requestLeadClosure(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.close_lead",
     access: { kind: "auth" },
 
@@ -118,7 +118,7 @@ export async function requestLeadClosure(input: unknown) {
 }
 
 export async function requestRateRevision(input: unknown) {
-  return runAction({
+  return executeSessionServerFunction({
     name: "workflow.request_rate_revision",
     access: { kind: "auth" },
 

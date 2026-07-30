@@ -6,7 +6,7 @@ import { getCurrentUser } from "~/server/auth/application/queries/get-current-us
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { logoutUser } from "~/server/auth/flows/logout-user";
 import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { getAuthRuntime } from "~/server/platform/container/auth-runtime";
 import { isErr } from "~/shared/result";
 
@@ -23,7 +23,7 @@ export async function getLoginFlow(flowId: string) {
 }
 
 export async function logout(): Promise<void> {
-  await runAction({
+  await executeSessionServerFunction({
     name: "auth.session.logout",
     access: { kind: "session" },
     execute: (ctx) => logoutUser(ctx, getAuthRuntime().sessionLogout),
@@ -31,7 +31,7 @@ export async function logout(): Promise<void> {
 }
 
 export async function getMe(): Promise<CurrentUserView | null> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "auth.session.get_me",
     access: { kind: "session" },
     execute: (ctx) => getCurrentUser(ctx, getAuthRuntime().sessionRead),

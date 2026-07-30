@@ -9,7 +9,7 @@ import {
   QUALITY_ISSUES,
   type QualityIssue,
 } from "~/contracts/merchant-stats/vocabulary";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -24,7 +24,7 @@ export async function getQualityRows(raw: {
   issue: QualityIssue;
   page: Page;
 }): Promise<PublishedPage<QualityRow>> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "merchantStats.quality.rows",
     access: { kind: "permission", permission: "dashboards:manage" },
 

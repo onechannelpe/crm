@@ -8,7 +8,7 @@ import {
   setImpersonatorCookie,
   setSessionCookie,
 } from "~/server/auth/session/cookies";
-import { runAction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -19,7 +19,7 @@ import { isErr, Ok } from "~/shared/result";
 export async function startImpersonation(
   rawUserId: unknown,
 ): Promise<{ message: string }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "members.impersonation.start",
     access: { kind: "permission", permission: "admin:manage" },
     parse: () =>
@@ -42,7 +42,7 @@ export async function startImpersonation(
 }
 
 export async function stopImpersonation(): Promise<{ message: string }> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "members.impersonation.stop",
     access: { kind: "auth" },
     execute: async (ctx) => {

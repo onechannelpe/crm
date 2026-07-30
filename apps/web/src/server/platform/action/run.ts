@@ -10,7 +10,7 @@ import {
   authorizeAccess,
 } from "./access";
 import { type AppContext, createAppContext } from "./context";
-import { domainToWire, faultToWire } from "./fault-boundary";
+import { domainToWire } from "./fault-boundary";
 import { defaultPorts, type RuntimePorts } from "./ports";
 import {
   type AuditFields,
@@ -36,7 +36,7 @@ type EmptyActionDef<TOut, E extends DomainError> = ActionCommon & {
   execute: (ctx: AppContext) => Promise<Result<TOut, E>>;
 };
 
-type ActionDef<TIn, TOut, E extends DomainError> =
+export type ActionDef<TIn, TOut, E extends DomainError> =
   | ParsedActionDef<TIn, TOut, E>
   | EmptyActionDef<TOut, E>;
 
@@ -44,14 +44,9 @@ function runParse<TIn>(
   parse: () => Result<TIn, DomainError>,
   ports: RuntimePorts,
 ): Result<TIn, WireError> {
-  try {
-    const parsed = parse();
-    if (isErr(parsed)) return Err(domainToWire(parsed.error, ports));
-    return Ok(parsed.value);
-  } catch (error) {
-    if (error instanceof Response) throw error;
-    return Err(faultToWire(error, ports));
-  }
+  const parsed = parse();
+  if (isErr(parsed)) return Err(domainToWire(parsed.error, ports));
+  return Ok(parsed.value);
 }
 
 async function runExecute<TIn, TOut, E extends DomainError>(
@@ -60,13 +55,7 @@ async function runExecute<TIn, TOut, E extends DomainError>(
   execute: (ctx: AppContext, input: TIn) => Promise<Result<TOut, E>>,
   ports: RuntimePorts,
 ): Promise<Result<TOut, WireError>> {
-  let result: Result<TOut, E>;
-  try {
-    result = await execute(ctx, input);
-  } catch (error) {
-    if (error instanceof Response) throw error;
-    return Err(faultToWire(error, ports));
-  }
+  const result = await execute(ctx, input);
 
   if (!isErr(result)) return Ok(result.value);
   return Err(domainToWire(result.error, ports));
@@ -77,13 +66,7 @@ async function runExecuteEmpty<TOut, E extends DomainError>(
   execute: (ctx: AppContext) => Promise<Result<TOut, E>>,
   ports: RuntimePorts,
 ): Promise<Result<TOut, WireError>> {
-  let result: Result<TOut, E>;
-  try {
-    result = await execute(ctx);
-  } catch (error) {
-    if (error instanceof Response) throw error;
-    return Err(faultToWire(error, ports));
-  }
+  const result = await execute(ctx);
 
   if (!isErr(result)) return Ok(result.value);
   return Err(domainToWire(result.error, ports));
@@ -96,13 +79,9 @@ export function createActionRunner(ports: RuntimePorts) {
     audit: AuditFields,
     execute: (ctx: AppContext) => Promise<Result<TOut, WireError>>,
   ): Promise<Result<TOut, WireError>> {
-    let identity: Result<AuthSession, DomainError>;
-    try {
-      identity = await authenticateAccess(def.access);
-    } catch (error) {
-      if (error instanceof Response) throw error;
-      return Err(faultToWire(error, ports));
-    }
+    const identity: Result<AuthSession, DomainError> = await authenticateAccess(
+      def.access,
+    );
     if (isErr(identity)) return Err(domainToWire(identity.error, ports));
 
     const ctx = createAppContext(identity.value, ports.now);
@@ -162,6 +141,4 @@ export function createActionRunner(ports: RuntimePorts) {
 }
 
 // Production ports; tests build their own runner with fakes.
-const runner = createActionRunner(defaultPorts);
-export const runAction = runner.runAction;
-export const runActionResult = runner.runActionResult;
+export const serverFunctionRunner = createActionRunner(defaultPorts);
