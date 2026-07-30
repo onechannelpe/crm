@@ -43,8 +43,8 @@
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
     "@oslojs/otp": "^1.1.0",
-    "@sentry/bun": "^10.59.0",
-    "@sentry/solid": "^10.59.0",
+    "@sentry/bun": "^10.69.0",
+    "@sentry/solid": "^10.69.0",
     "@simplewebauthn/server": "^13.3.1",
     "@solid-primitives/keyed": "^1.5.1",
     "@solid-primitives/resize-observer": "^2.1.5",
@@ -68,7 +68,7 @@
   "devDependencies": {
     "@codspeed/vitest-plugin": "^5.2.0",
     "@mdx-js/rollup": "^3.1.1",
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "^1.62.1",
     "@sentry/vite-plugin": "^5.2.0",
     "@types/mdx": "^2.0.13",
     "@types/pg": "^8.20.0",
@@ -80,7 +80,7 @@
     "remark-mdx-frontmatter": "^5.2.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "typescript": "^7.0.2",
-    "vite": "^8.1.4",
+    "vite": "^8.2.0",
     "vitest": "^4.1.4"
   }
 }
