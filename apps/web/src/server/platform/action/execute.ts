@@ -1,6 +1,12 @@
+import "server-only";
 import type { DomainError } from "~/domain/errors";
 
-import { type ActionDef, serverFunctionRunner } from "./run";
+import { type ActionDef, createActionRunner } from "./run";
+import { defaultPorts } from "./runtime-ports";
+
+// Composition root for server functions. run.ts stays free of concrete
+// dependencies so tests can build a runner with fakes.
+const serverFunctionRunner = createActionRunner(defaultPorts);
 
 export function executeSessionServerFunction<
   TInput,

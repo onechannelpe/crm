@@ -82,10 +82,7 @@ export function createAuthRuntime(
       executor: infra.db,
       messaging: notifications.messaging,
     }),
-    sessionRead: createAuthSessionReadContext({
-      executor: infra.db,
-      revokeSession: (id) => sessionService.revoke(id),
-    }),
+    sessionRead: createAuthSessionReadContext(infra.db),
     sessionLogout: createAuthSessionLogoutContext({
       executor: infra.db,
       revokeSession: (id) => sessionService.revoke(id),

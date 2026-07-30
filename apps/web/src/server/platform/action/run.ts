@@ -11,7 +11,7 @@ import {
 } from "./access";
 import { type AppContext, createAppContext } from "./context";
 import { domainToWire } from "./fault-boundary";
-import { defaultPorts, type RuntimePorts } from "./ports";
+import { type RuntimePorts } from "./ports";
 import {
   type AuditFields,
   errorRow,
@@ -139,6 +139,3 @@ export function createActionRunner(ports: RuntimePorts) {
 
   return { runAction, runActionResult };
 }
-
-// Production ports; tests build their own runner with fakes.
-export const serverFunctionRunner = createActionRunner(defaultPorts);

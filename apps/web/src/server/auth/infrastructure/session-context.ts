@@ -17,8 +17,7 @@ interface AuthSessionRuntimeDeps {
   revokeSession(sessionId: string): Promise<void>;
 }
 
-export function createAuthSessionReadContext(deps: AuthSessionRuntimeDeps) {
-  const executor = deps.executor;
+export function createAuthSessionReadContext(executor: DatabaseExecutor) {
   return {
     repos: {
       users: createUsersRepo(executor),

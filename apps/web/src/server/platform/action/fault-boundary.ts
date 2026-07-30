@@ -1,5 +1,5 @@
-import { ActionError, type WireError } from "~/contracts/errors";
-import { type DomainError, unexpectedFault } from "~/domain/errors";
+import { type WireError } from "~/contracts/errors";
+import { type DomainError } from "~/domain/errors";
 
 import { toWire } from "./domain-error";
 
@@ -12,10 +12,4 @@ export function domainToWire(error: DomainError, ports: FaultPorts): WireError {
     ports.report(error);
   }
   return toWire(error);
-}
-
-export function faultToWire(error: unknown, ports: FaultPorts): WireError {
-  if (error instanceof ActionError) return error.wire;
-  ports.report(error);
-  return toWire(unexpectedFault(error));
 }
