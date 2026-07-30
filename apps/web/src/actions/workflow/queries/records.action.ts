@@ -179,9 +179,8 @@ export async function queryLeadBootstrapPreview(
     audit: ({ ruc }) => ({ ruc }),
 
     execute: async (_ctx, query) => {
-      const { getWorkflowRuntime } = await import(
-        "~/server/platform/container/workflow-runtime"
-      );
+      const { getWorkflowRuntime } =
+        await import("~/server/platform/container/workflow-runtime");
       const workflow = getWorkflowRuntime();
 
       return getLeadBootstrapPreview(
