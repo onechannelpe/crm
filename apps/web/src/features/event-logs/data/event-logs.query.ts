@@ -1,14 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetEventLogs =
-  (typeof import("~/actions/audit/event-logs.action"))["getEventLogs"];
+import { getEventLogs } from "~/server/event-logs/ui/queries";
 
 export const eventLogsQuery = query(
-  async (...args: Parameters<GetEventLogs>) => {
+  async (input: unknown) => {
     "use server";
-
-    const { getEventLogs } = await import("~/actions/audit/event-logs.action");
-    return getEventLogs(...args);
+    return getEventLogs(input);
   },
   "audit.event-logs",
 );

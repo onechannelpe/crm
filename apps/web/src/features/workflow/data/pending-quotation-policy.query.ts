@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type QueryPendingQuotationPolicy =
-  (typeof import("~/actions/workflow/settings/pending-quotation-policy.action"))["queryPendingQuotationPolicy"];
+import { queryPendingQuotationPolicy } from "~/server/workflow/ui/pending-quotation-policy";
 
 export const pendingQuotationPolicyQuery = query(
-  async (...args: Parameters<QueryPendingQuotationPolicy>) => {
+  async () => {
     "use server";
-
-    const { queryPendingQuotationPolicy } =
-      await import("~/actions/workflow/settings/pending-quotation-policy.action");
-    return queryPendingQuotationPolicy(...args);
+    return queryPendingQuotationPolicy();
   },
   "workflow.pending-quotation-policy",
 );

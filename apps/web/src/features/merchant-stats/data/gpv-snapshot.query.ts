@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetGpvSnapshot =
-  (typeof import("~/actions/merchant-stats/imports.action"))["getGpvSnapshot"];
+import { getGpvSnapshot } from "~/server/merchant-stats/ui/imports";
 
 export const gpvSnapshotQuery = query(
-  async (...args: Parameters<GetGpvSnapshot>) => {
+  async (snapshotId: string) => {
     "use server";
-
-    const { getGpvSnapshot } =
-      await import("~/actions/merchant-stats/imports.action");
-    return getGpvSnapshot(...args);
+    return getGpvSnapshot(snapshotId);
   },
   "merchant-stats.gpv-snapshot",
 );

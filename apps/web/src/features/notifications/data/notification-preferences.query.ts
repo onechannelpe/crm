@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetNotificationPreferences =
-  (typeof import("~/actions/settings/notifications.action"))["getNotificationPreferences"];
+import { getNotificationPreferences } from "~/server/notifications/ui/preferences";
 
 export const notificationPreferencesQuery = query(
-  async (...args: Parameters<GetNotificationPreferences>) => {
+  async () => {
     "use server";
-
-    const { getNotificationPreferences } =
-      await import("~/actions/settings/notifications.action");
-    return getNotificationPreferences(...args);
+    return getNotificationPreferences();
   },
   "notifications.preferences",
 );

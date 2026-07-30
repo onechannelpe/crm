@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type QueryPendingQuotationCount =
-  (typeof import("~/actions/workflow/queries/records.action"))["queryPendingQuotationCount"];
+import { queryPendingQuotationCount } from "~/server/workflow/ui/records";
 
 export const pendingQuotationCountQuery = query(
-  async (...args: Parameters<QueryPendingQuotationCount>) => {
+  async () => {
     "use server";
-
-    const { queryPendingQuotationCount } =
-      await import("~/actions/workflow/queries/records.action");
-    return queryPendingQuotationCount(...args);
+    return queryPendingQuotationCount();
   },
   "workflow.pending-quotation-count",
 );

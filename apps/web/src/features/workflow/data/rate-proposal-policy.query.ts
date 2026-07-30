@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type QueryRateProposalPolicy =
-  (typeof import("~/actions/workflow/settings/rate-proposal-policy.action"))["queryRateProposalPolicy"];
+import { queryRateProposalPolicy } from "~/server/workflow/ui/rate-proposal-policy";
 
 export const rateProposalPolicyQuery = query(
-  async (...args: Parameters<QueryRateProposalPolicy>) => {
+  async () => {
     "use server";
-
-    const { queryRateProposalPolicy } =
-      await import("~/actions/workflow/settings/rate-proposal-policy.action");
-    return queryRateProposalPolicy(...args);
+    return queryRateProposalPolicy();
   },
   "workflow.rate-proposal-policy",
 );

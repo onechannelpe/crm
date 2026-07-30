@@ -1,15 +1,13 @@
 import { query } from "@solidjs/router";
 
-type GetQualityRows =
-  (typeof import("~/actions/merchant-stats/quality.action"))["getQualityRows"];
+import type { Page } from "~/contracts/merchant-stats/views";
+import type { QualityIssue } from "~/contracts/merchant-stats/vocabulary";
+import { getQualityRows } from "~/server/merchant-stats/ui/quality";
 
 export const qualityRowsQuery = query(
-  async (...args: Parameters<GetQualityRows>) => {
+  async (input: { issue: QualityIssue; page: Page }) => {
     "use server";
-
-    const { getQualityRows } =
-      await import("~/actions/merchant-stats/quality.action");
-    return getQualityRows(...args);
+    return getQualityRows(input);
   },
   "merchant-stats.quality-rows",
 );

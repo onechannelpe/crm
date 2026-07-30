@@ -1,15 +1,12 @@
 import { query } from "@solidjs/router";
 
-type QueryLeadList =
-  (typeof import("~/actions/workflow/queries/records.action"))["queryLeadList"];
+import type { ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
+import { queryLeadList } from "~/server/workflow/ui/records";
 
 export const leadListQuery = query(
-  async (...args: Parameters<QueryLeadList>) => {
+  async (filters: ListLeadsFiltersInput) => {
     "use server";
-
-    const { queryLeadList } =
-      await import("~/actions/workflow/queries/records.action");
-    return queryLeadList(...args);
+    return queryLeadList(filters);
   },
   "workflow.lead-list",
 );

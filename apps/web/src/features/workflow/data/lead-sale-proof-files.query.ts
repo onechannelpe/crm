@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type ListLeadSaleProofFiles =
-  (typeof import("~/actions/workflow/files.action"))["listLeadSaleProofFiles"];
+import { listLeadSaleProofFiles } from "~/server/workflow/ui/files";
 
 export const leadSaleProofFilesQuery = query(
-  async (...args: Parameters<ListLeadSaleProofFiles>) => {
+  async (leadId: string) => {
     "use server";
-
-    const { listLeadSaleProofFiles } =
-      await import("~/actions/workflow/files.action");
-    return listLeadSaleProofFiles(...args);
+    return listLeadSaleProofFiles(leadId);
   },
   "workflow.lead-sale-proof-files",
 );

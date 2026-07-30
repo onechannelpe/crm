@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type CanManageAuditPolicies =
-  (typeof import("~/actions/admin/audit-policy.action"))["canManageAuditPolicies"];
+import { canManageAuditPolicies } from "~/server/admin/ui/audit-policies";
 
 export const canManageAuditPoliciesQuery = query(
-  async (...args: Parameters<CanManageAuditPolicies>) => {
+  async () => {
     "use server";
-
-    const { canManageAuditPolicies } =
-      await import("~/actions/admin/audit-policy.action");
-    return canManageAuditPolicies(...args);
+    return canManageAuditPolicies();
   },
   "audit.can-manage-policies",
 );

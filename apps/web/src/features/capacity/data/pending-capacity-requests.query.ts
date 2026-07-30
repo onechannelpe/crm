@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetPendingRequests =
-  (typeof import("~/actions/capacity/read.action"))["getPendingRequests"];
+import { getPendingRequests } from "~/server/capacity/ui/queries";
 
 export const pendingCapacityRequestsQuery = query(
-  async (...args: Parameters<GetPendingRequests>) => {
+  async () => {
     "use server";
-
-    const { getPendingRequests } =
-      await import("~/actions/capacity/read.action");
-    return getPendingRequests(...args);
+    return getPendingRequests();
   },
   "capacity.pending-requests",
 );

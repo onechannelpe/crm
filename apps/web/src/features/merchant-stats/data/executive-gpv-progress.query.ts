@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetExecutiveGpvProgress =
-  (typeof import("~/actions/merchant-stats/executive-progress.action"))["getExecutiveGpvProgress"];
+import { getExecutiveGpvProgress } from "~/server/merchant-stats/ui/executive-progress";
 
 export const executiveGpvProgressQuery = query(
-  async (...args: Parameters<GetExecutiveGpvProgress>) => {
+  async () => {
     "use server";
-
-    const { getExecutiveGpvProgress } =
-      await import("~/actions/merchant-stats/executive-progress.action");
-    return getExecutiveGpvProgress(...args);
+    return getExecutiveGpvProgress();
   },
   "merchant-stats.executive-progress",
 );

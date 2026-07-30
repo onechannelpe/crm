@@ -1,15 +1,12 @@
 import { query } from "@solidjs/router";
 
-type GetCohortRows =
-  (typeof import("~/actions/merchant-stats/dashboard.action"))["getCohortRows"];
+import type { BookFilter, Page } from "~/contracts/merchant-stats/views";
+import { getCohortRows } from "~/server/merchant-stats/ui/dashboard";
 
 export const cohortRowsQuery = query(
-  async (...args: Parameters<GetCohortRows>) => {
+  async (input: { filter: BookFilter; page: Page }) => {
     "use server";
-
-    const { getCohortRows } =
-      await import("~/actions/merchant-stats/dashboard.action");
-    return getCohortRows(...args);
+    return getCohortRows(input);
   },
   "merchant-stats.cohort-rows",
 );

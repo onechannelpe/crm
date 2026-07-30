@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetAuditPolicySnapshot =
-  (typeof import("~/actions/admin/audit-policy.action"))["getAuditPolicySnapshot"];
+import { getAuditPolicySnapshot } from "~/server/admin/ui/audit-policies";
 
 export const auditPolicySnapshotQuery = query(
-  async (...args: Parameters<GetAuditPolicySnapshot>) => {
+  async () => {
     "use server";
-
-    const { getAuditPolicySnapshot } =
-      await import("~/actions/admin/audit-policy.action");
-    return getAuditPolicySnapshot(...args);
+    return getAuditPolicySnapshot();
   },
   "audit.policy-snapshot",
 );

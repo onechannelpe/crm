@@ -4,7 +4,7 @@ import { redirect } from "@solidjs/router";
 import {
   acceptInvitePasswordStep,
   type AcceptInviteResult,
-} from "~/actions/auth/invite.action";
+} from "~/server/auth/ui/invites";
 import {
   passkeyStart,
   passwordLogin,

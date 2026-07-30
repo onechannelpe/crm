@@ -1,14 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetBulkImportSetup =
-  (typeof import("~/actions/team/read.action"))["getBulkImportSetup"];
+import { getBulkImportSetup } from "~/server/team/ui/queries";
 
 export const bulkImportSetupQuery = query(
-  async (...args: Parameters<GetBulkImportSetup>) => {
+  async () => {
     "use server";
-
-    const { getBulkImportSetup } = await import("~/actions/team/read.action");
-    return getBulkImportSetup(...args);
+    return getBulkImportSetup();
   },
   "team.bulk-import-setup",
 );

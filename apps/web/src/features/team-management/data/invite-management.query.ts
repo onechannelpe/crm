@@ -1,14 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetInviteManagement =
-  (typeof import("~/actions/team/read.action"))["getInviteManagement"];
+import { getInviteManagement } from "~/server/team/ui/queries";
 
 export const inviteManagementQuery = query(
-  async (...args: Parameters<GetInviteManagement>) => {
+  async () => {
     "use server";
-
-    const { getInviteManagement } = await import("~/actions/team/read.action");
-    return getInviteManagement(...args);
+    return getInviteManagement();
   },
   "team.invite-management",
 );

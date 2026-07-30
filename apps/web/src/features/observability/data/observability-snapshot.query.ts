@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetObservabilitySnapshot =
-  (typeof import("~/actions/admin/observability.action"))["getObservabilitySnapshot"];
+import { getObservabilitySnapshot } from "~/server/observability/ui/snapshot";
 
 export const observabilitySnapshotQuery = query(
-  async (...args: Parameters<GetObservabilitySnapshot>) => {
+  async (params?: unknown) => {
     "use server";
-
-    const { getObservabilitySnapshot } =
-      await import("~/actions/admin/observability.action");
-    return getObservabilitySnapshot(...args);
+    return getObservabilitySnapshot(params);
   },
   "observability.snapshot",
 );

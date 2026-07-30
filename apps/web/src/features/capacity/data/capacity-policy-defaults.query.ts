@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetPolicyDefaults =
-  (typeof import("~/actions/capacity/read.action"))["getPolicyDefaults"];
+import { getPolicyDefaults } from "~/server/capacity/ui/queries";
 
 export const capacityPolicyDefaultsQuery = query(
-  async (...args: Parameters<GetPolicyDefaults>) => {
+  async () => {
     "use server";
-
-    const { getPolicyDefaults } =
-      await import("~/actions/capacity/read.action");
-    return getPolicyDefaults(...args);
+    return getPolicyDefaults();
   },
   "capacity.policy-defaults",
 );

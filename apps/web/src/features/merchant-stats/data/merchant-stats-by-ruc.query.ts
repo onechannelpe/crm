@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetMerchantStatsForRuc =
-  (typeof import("~/actions/merchant-stats/org-stats.action"))["getMerchantStatsForRuc"];
+import { getMerchantStatsForRuc } from "~/server/merchant-stats/ui/org-stats";
 
 export const merchantStatsByRucQuery = query(
-  async (...args: Parameters<GetMerchantStatsForRuc>) => {
+  async (ruc: string) => {
     "use server";
-
-    const { getMerchantStatsForRuc } =
-      await import("~/actions/merchant-stats/org-stats.action");
-    return getMerchantStatsForRuc(...args);
+    return getMerchantStatsForRuc(ruc);
   },
   "merchant-stats.by-ruc",
 );

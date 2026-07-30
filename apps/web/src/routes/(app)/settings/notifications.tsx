@@ -2,7 +2,7 @@ import { createAsync, type RouteDefinition, useAction } from "@solidjs/router";
 import { createSignal, For, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import type { NotificationPreferencesView } from "~/actions/settings/notifications.action";
+import type { NotificationPreferencesView } from "~/server/notifications/ui/preferences";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import BrandWhatsapp from "~/components/icons/brand-whatsapp";
 import Mail from "~/components/icons/mail";

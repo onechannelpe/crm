@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetMyContactAssignmentCapacity =
-  (typeof import("~/actions/contact-assignments/read.action"))["getMyContactAssignmentCapacity"];
+import { getMyContactAssignmentCapacity } from "~/server/contact-assignments/ui/queries";
 
 export const myContactAssignmentCapacityQuery = query(
-  async (...args: Parameters<GetMyContactAssignmentCapacity>) => {
+  async () => {
     "use server";
-
-    const { getMyContactAssignmentCapacity } =
-      await import("~/actions/contact-assignments/read.action");
-    return getMyContactAssignmentCapacity(...args);
+    return getMyContactAssignmentCapacity();
   },
   "capacity.my-contact-assignment",
 );

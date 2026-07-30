@@ -1,15 +1,12 @@
 import { query } from "@solidjs/router";
 
-type GetGpvCulqi =
-  (typeof import("~/actions/merchant-stats/dashboard.action"))["getGpvCulqi"];
+import type { BookFilter } from "~/contracts/merchant-stats/views";
+import { getGpvCulqi } from "~/server/merchant-stats/ui/dashboard";
 
 export const gpvCulqiViewQuery = query(
-  async (...args: Parameters<GetGpvCulqi>) => {
+  async (input: { filter: BookFilter }) => {
     "use server";
-
-    const { getGpvCulqi } =
-      await import("~/actions/merchant-stats/dashboard.action");
-    return getGpvCulqi(...args);
+    return getGpvCulqi(input);
   },
   "merchant-stats.gpv-culqi",
 );

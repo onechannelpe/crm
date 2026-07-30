@@ -1,15 +1,12 @@
 import { query } from "@solidjs/router";
 
-type QueryAssignableExecutives =
-  (typeof import("~/actions/workflow/queries/records.action"))["queryAssignableExecutives"];
+import type { ListAssignableExecutivesInput } from "~/contracts/workflow/inputs";
+import { queryAssignableExecutives } from "~/server/workflow/ui/records";
 
 export const assignableExecutivesQuery = query(
-  async (...args: Parameters<QueryAssignableExecutives>) => {
+  async (input: ListAssignableExecutivesInput) => {
     "use server";
-
-    const { queryAssignableExecutives } =
-      await import("~/actions/workflow/queries/records.action");
-    return queryAssignableExecutives(...args);
+    return queryAssignableExecutives(input);
   },
   "workflow.assignable-executives",
 );

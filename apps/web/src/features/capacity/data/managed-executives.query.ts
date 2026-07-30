@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetManagedExecutivesList =
-  (typeof import("~/actions/capacity/read.action"))["getManagedExecutivesList"];
+import { getManagedExecutivesList } from "~/server/capacity/ui/queries";
 
 export const managedExecutivesQuery = query(
-  async (...args: Parameters<GetManagedExecutivesList>) => {
+  async () => {
     "use server";
-
-    const { getManagedExecutivesList } =
-      await import("~/actions/capacity/read.action");
-    return getManagedExecutivesList(...args);
+    return getManagedExecutivesList();
   },
   "capacity.managed-executives",
 );

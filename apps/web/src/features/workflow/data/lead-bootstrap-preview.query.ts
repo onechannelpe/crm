@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type QueryLeadBootstrapPreview =
-  (typeof import("~/actions/workflow/queries/records.action"))["queryLeadBootstrapPreview"];
+import { queryLeadBootstrapPreview } from "~/server/workflow/ui/records";
 
 export const leadBootstrapPreviewQuery = query(
-  async (...args: Parameters<QueryLeadBootstrapPreview>) => {
+  async (ruc: string) => {
     "use server";
-
-    const { queryLeadBootstrapPreview } =
-      await import("~/actions/workflow/queries/records.action");
-    return queryLeadBootstrapPreview(...args);
+    return queryLeadBootstrapPreview(ruc);
   },
   "workflow.lead-bootstrap-preview",
 );

@@ -1,14 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetMemberDetail =
-  (typeof import("~/actions/users/read.action"))["getMemberDetail"];
+import { getMemberDetail } from "~/server/users/ui/queries";
 
 export const memberDetailQuery = query(
-  async (...args: Parameters<GetMemberDetail>) => {
+  async (userId: unknown) => {
     "use server";
-
-    const { getMemberDetail } = await import("~/actions/users/read.action");
-    return getMemberDetail(...args);
+    return getMemberDetail(userId);
   },
   "team.member-detail",
 );

@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type GetExecutiveDetail =
-  (typeof import("~/actions/capacity/read.action"))["getExecutiveDetail"];
+import { getExecutiveDetail } from "~/server/capacity/ui/queries";
 
 export const executiveCapacityDetailQuery = query(
-  async (...args: Parameters<GetExecutiveDetail>) => {
+  async (userId: string) => {
     "use server";
-
-    const { getExecutiveDetail } =
-      await import("~/actions/capacity/read.action");
-    return getExecutiveDetail(...args);
+    return getExecutiveDetail(userId);
   },
   "capacity.executive-detail",
 );

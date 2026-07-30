@@ -7,7 +7,6 @@ import {
   type Accessor,
 } from "solid-js";
 
-import { getEventLogs } from "~/actions/audit/event-logs.action";
 import { useEventFeed } from "~/browser/realtime/use-event-feed";
 import {
   parseEventLogRecordText,
@@ -114,7 +113,7 @@ export function createEventLogQuery(options: {
     const generation = ++requestGeneration;
     setLoadingMore(true);
     try {
-      const nextPage = await getEventLogs({ ...input, after: cursor });
+      const nextPage = await eventLogsQuery({ ...input, after: cursor });
       if (generation !== requestGeneration || key !== activeKey()) return;
       setExtraPages((previous) => [...previous, nextPage]);
     } finally {

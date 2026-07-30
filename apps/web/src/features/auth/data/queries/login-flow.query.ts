@@ -1,8 +1,8 @@
 import { query } from "@solidjs/router";
 
-export const loginFlowQuery = query(async () => {
-  "use server";
+import { getLoginFlow } from "~/server/auth/ui/session";
 
-  const { getLoginFlow } = await import("~/actions/auth/session/index.action");
-  return getLoginFlow();
+export const loginFlowQuery = query(async (flowId: string) => {
+  "use server";
+  return getLoginFlow(flowId);
 }, "auth.login-flow");

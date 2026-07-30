@@ -1,15 +1,12 @@
 import { query } from "@solidjs/router";
 
-type GetGpvPerformance =
-  (typeof import("~/actions/merchant-stats/dashboard.action"))["getGpvPerformance"];
+import type { BookFilter } from "~/contracts/merchant-stats/views";
+import { getGpvPerformance } from "~/server/merchant-stats/ui/dashboard";
 
 export const gpvPerformanceViewQuery = query(
-  async (...args: Parameters<GetGpvPerformance>) => {
+  async (input: { filter: BookFilter }) => {
     "use server";
-
-    const { getGpvPerformance } =
-      await import("~/actions/merchant-stats/dashboard.action");
-    return getGpvPerformance(...args);
+    return getGpvPerformance(input);
   },
   "merchant-stats.gpv-performance",
 );

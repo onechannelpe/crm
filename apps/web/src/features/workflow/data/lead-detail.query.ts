@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type QueryLeadDetail =
-  (typeof import("~/actions/workflow/queries/records.action"))["queryLeadDetail"];
+import { queryLeadDetail } from "~/server/workflow/ui/records";
 
 export const leadDetailQuery = query(
-  async (...args: Parameters<QueryLeadDetail>) => {
+  async (leadId: string) => {
     "use server";
-
-    const { queryLeadDetail } =
-      await import("~/actions/workflow/queries/records.action");
-    return queryLeadDetail(...args);
+    return queryLeadDetail(leadId);
   },
   "workflow.lead-detail",
 );

@@ -1,15 +1,11 @@
 import { query } from "@solidjs/router";
 
-type QueryMyInquiries =
-  (typeof import("~/actions/workflow/queries/inquiries.action"))["queryMyInquiries"];
+import { queryMyInquiries } from "~/server/workflow/ui/inquiries";
 
 export const inquiryListQuery = query(
-  async (...args: Parameters<QueryMyInquiries>) => {
+  async () => {
     "use server";
-
-    const { queryMyInquiries } =
-      await import("~/actions/workflow/queries/inquiries.action");
-    return queryMyInquiries(...args);
+    return queryMyInquiries();
   },
   "workflow.inquiry-list",
 );
