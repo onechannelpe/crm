@@ -1,6 +1,7 @@
 import { action } from "@solidjs/router";
 import { redirect } from "@solidjs/router";
 
+import { acceptInvitePasswordStep } from "~/actions/auth/invite.action";
 import {
   passkeyStart,
   passwordLogin,
@@ -16,10 +17,7 @@ import type {
   PasskeyStartSubmissionResult,
   PasswordLoginSubmissionResult,
 } from "~/contracts/auth";
-import {
-  acceptInvitePasswordStep,
-  type AcceptInviteResult,
-} from "~/server/auth/ui/invites";
+import type { AcceptInviteResult } from "~/server/auth/ui/invites";
 
 export const logoutMutation = action(logout, "logout");
 
