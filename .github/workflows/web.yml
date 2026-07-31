@@ -116,7 +116,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: web-generated-artifacts
-          path: .
+          path: packages/email-composer/src/templates/compiled
 
       - name: lint
         run: bun run check:lint
@@ -145,7 +145,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: web-generated-artifacts
-          path: .
+          path: packages/email-composer/src/templates/compiled
 
       - name: type check
         working-directory: apps/web
@@ -175,7 +175,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: web-generated-artifacts
-          path: .
+          path: packages/email-composer/src/templates/compiled
 
       - name: build
         working-directory: apps/web
@@ -229,7 +229,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: web-generated-artifacts
-          path: .
+          path: packages/email-composer/src/templates/compiled
 
       - name: test
         working-directory: apps/web
@@ -273,7 +273,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: web-generated-artifacts
-          path: .
+          path: packages/email-composer/src/templates/compiled
 
       - name: perf test
         working-directory: apps/web
