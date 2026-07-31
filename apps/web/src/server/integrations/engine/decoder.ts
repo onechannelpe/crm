@@ -1,8 +1,8 @@
 import type {
   RecordCandidate,
   RecordCandidatesResponse,
-  SearchResponse,
-} from "~/server/integrations/engine/types";
+} from "~/contracts/engine/record-api.generated";
+import type { SearchResponse } from "~/contracts/search/engine-results.generated";
 import { isPlainRecord } from "~/shared/type-guards";
 
 function isArray(value: unknown): value is unknown[] {

@@ -7,27 +7,6 @@ import {
 } from "./group.ts";
 import type { ProjectionField, ProjectionSpec } from "./parse.ts";
 
-// TS consumers only need the path list (server/shared/engine/validation.ts reads it).
-// The Rust projection contract emits more for its schema guard; TS does not.
-export function renderProjectionContractTs(
-  spec: ProjectionSpec,
-  prefix: string,
-  sourceFile: string,
-): string {
-  const allPaths = spec.fields.map((f) => f.path);
-  const renderArray = (values: string[]): string =>
-    `[\n${values.map((v) => `  ${JSON.stringify(v)},`).join("\n")}\n]`;
-
-  return [
-    "// GENERATED FILE. DO NOT EDIT.",
-    `// Source: ${sourceFile}`,
-    "// Generator: tools/codegen/bin/generate.ts",
-    "",
-    `export const ${prefix}_PATHS = ${renderArray(allPaths)} as const;`,
-    "",
-  ].join("\n");
-}
-
 export function renderResultContractTs(
   docSpec: ProjectionSpec,
   companySpec: ProjectionSpec,
@@ -39,7 +18,7 @@ export function renderResultContractTs(
   const defined = new Set<string>();
 
   const lines = [
-    "// GENERATED FILE. DO NOT EDIT BY HAND.",
+    "// GENERATED FILE. DO NOT EDIT.",
     "// Source: contracts/engine/doc-projection.json + contracts/engine/company-projection.json",
     "// Generator: tools/codegen/bin/generate.ts",
     "",

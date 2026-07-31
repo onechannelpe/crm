@@ -1,6 +1,7 @@
 import { APP_LOCALE } from "~/shared/locale";
 
 import {
+  addCalendarDays,
   addCalendarMonths,
   calendarDateFromParts,
   calendarDateParts,
@@ -11,16 +12,14 @@ import {
   type CalendarMonth,
 } from "./calendar-date";
 
-/**
- * Application time policy:
- * - Persist and compare real instants as UTC Date values or epoch milliseconds.
- * - Carry date-only and month-only intent as CalendarDate and CalendarMonth.
- * - Convert calendar boundaries once, using the fixed UTC-05:00 business offset.
- * - Render instants through this module so SSR and the browser produce the same text.
- */
-
 export const APP_UTC_OFFSET_MINUTES = -5 * 60;
+
 const APP_UTC_OFFSET_MS = APP_UTC_OFFSET_MINUTES * 60_000;
+
+export type InstantRange = {
+  start: Date;
+  endExclusive: Date;
+};
 
 const APP_DATE_FORMAT = new Intl.DateTimeFormat(APP_LOCALE, {
   day: "2-digit",
@@ -47,10 +46,6 @@ const APP_MONTH_NAME_FORMAT = new Intl.DateTimeFormat(APP_LOCALE, {
   timeZone: "UTC",
 });
 
-/**
- * The locale's month names, index 0 = January. Values are locale-natural
- * (lowercase in es-PE); capitalize at the call site when a heading needs it.
- */
 export const APP_MONTH_NAMES: readonly string[] = Array.from(
   { length: 12 },
   (_, index) => APP_MONTH_NAME_FORMAT.format(Date.UTC(2000, index, 1)),
@@ -74,14 +69,19 @@ export function appCalendarDateBefore(instant: Date | number): CalendarDate {
   return appCalendarDateAt(toEpochMilliseconds(instant) - 1);
 }
 
+export function appInstantAt(date: CalendarDate, hour = 0, minute = 0): Date {
+  const wallClock = utcDate(calendarDateParts(date));
+
+  wallClock.setUTCHours(hour, minute, 0, 0);
+
+  return new Date(wallClock.getTime() - APP_UTC_OFFSET_MS);
+}
+
 export function appDayRange(date: CalendarDate): InstantRange {
-  const localMidnight = utcDate(calendarDateParts(date));
-  const start = new Date(localMidnight.getTime() - APP_UTC_OFFSET_MS);
-
-  localMidnight.setUTCDate(localMidnight.getUTCDate() + 1);
-  const endExclusive = new Date(localMidnight.getTime() - APP_UTC_OFFSET_MS);
-
-  return { start, endExclusive };
+  return {
+    start: appInstantAt(date),
+    endExclusive: appInstantAt(addCalendarDays(date, 1)),
+  };
 }
 
 export function appMonthRange(instant: Date): {
@@ -127,11 +127,9 @@ function toEpochMilliseconds(instant: Date | number): number {
 
 function utcDate(parts: { year: number; month: number; day: number }): Date {
   const date = new Date(0);
+
   date.setUTCFullYear(parts.year, parts.month - 1, parts.day);
   date.setUTCHours(0, 0, 0, 0);
+
   return date;
 }
-export type InstantRange = {
-  start: Date;
-  endExclusive: Date;
-};

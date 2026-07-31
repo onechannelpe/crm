@@ -60,23 +60,15 @@ jobs:
         with:
           bun-version: "1.3.14"
 
-      - name: install dependencies
-        run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile
 
-      - name: generate artifacts
-        run: bun run generate
+      - run: bun run generate:templates
 
-      - name: upload generated artifacts
-        uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7
         with:
           name: web-generated-artifacts
           if-no-files-found: error
-          path: |
-            apps/web/src/server/shared/engine/record-contract.ts
-            apps/web/src/server/shared/engine/doc-projection-contract.ts
-            apps/web/src/server/shared/engine/company-projection-contract.ts
-            apps/web/src/server/shared/engine/result-contract.ts
-            packages/email-composer/src/templates/compiled/**
+          path: packages/email-composer/src/templates/compiled/**
 
   format:
     name: Format check

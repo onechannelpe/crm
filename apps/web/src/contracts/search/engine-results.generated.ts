@@ -1,4 +1,4 @@
-// GENERATED FILE. DO NOT EDIT BY HAND.
+// GENERATED FILE. DO NOT EDIT.
 // Source: contracts/engine/doc-projection.json + contracts/engine/company-projection.json
 // Generator: tools/codegen/bin/generate.ts
 

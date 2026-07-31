@@ -7,12 +7,12 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import type { RecordCandidate } from "~/contracts/engine/record-api.generated";
 import { external, type DomainError } from "~/domain/errors";
 import { appCalendarDateAt, appDayRange } from "~/domain/time/app-time";
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
 import type { EngineClient } from "~/server/integrations/engine/client";
-import type { RecordCandidate } from "~/server/integrations/engine/record-contract";
 import { Err, Ok, type Result } from "~/shared/result";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;

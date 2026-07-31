@@ -1,3 +1,4 @@
+import type { RecordCandidate } from "~/contracts/engine/record-api.generated";
 import type { DomainError } from "~/domain/errors";
 import type {
   OrganizationId,
@@ -8,7 +9,6 @@ import { createAssignment } from "~/server/contact-assignments/domain/assignment
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
 import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import type { ContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
-import type { RecordCandidate } from "~/server/integrations/engine/record-contract";
 import type { OrganizationRepository } from "~/server/organization/organization-repo";
 import type { AppUow } from "~/server/platform/database/uow";
 import { Ok, type Result } from "~/shared/result";

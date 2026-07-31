@@ -7,10 +7,10 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import type { SearchResult } from "~/contracts/search/engine-results.generated";
 import { external, type DomainError } from "~/domain/errors";
 import { appMonthRange } from "~/domain/time/app-time";
 import type { EngineClient } from "~/server/integrations/engine/client";
-import type { SearchResult } from "~/server/integrations/engine/types";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { createSearchUsageReservationPorts } from "~/server/search/ui/composition";
 import { Err, Ok, type Result } from "~/shared/result";

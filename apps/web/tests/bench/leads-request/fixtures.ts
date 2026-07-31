@@ -2,6 +2,8 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
+import type { RecordCandidate } from "~/contracts/engine/record-api.generated";
+import type { SearchResult } from "~/contracts/search/engine-results.generated";
 import type { SearchIntent } from "~/contracts/search/vocabulary";
 import type { DomainError } from "~/domain/errors";
 import { BranchId, UserId } from "~/domain/ids";
@@ -9,10 +11,6 @@ import type {
   EngineClient,
   RecordCandidatesRequest,
 } from "~/server/integrations/engine/client";
-import type {
-  RecordCandidate,
-  SearchResult,
-} from "~/server/integrations/engine/types";
 import { Ok, type Result } from "~/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
