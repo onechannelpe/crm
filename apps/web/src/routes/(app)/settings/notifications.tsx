@@ -12,6 +12,7 @@ import {
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Toggle } from "~/components/ui/input/toggle";
 import { actionErrorMessage } from "~/contracts/errors";
+import type { NotificationPreferencesView } from "~/contracts/notifications";
 import { setNotificationPreferenceMutation } from "~/features/notifications/data/mutations";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
@@ -19,7 +20,6 @@ import {
   type TabIconComponent,
 } from "~/features/side-panel/components/tab-strip";
 import { notificationPreferencesQuery } from "~/rpc/notifications/notification-preferences.query";
-import type { NotificationPreferencesView } from "~/server/notifications/ui/preferences";
 
 import styles from "./notifications.module.css";
 

@@ -25,8 +25,8 @@ bypass session checks. Authenticated requests store their session on
 
 Authenticated routes live under [`src/routes/(app)/`](src/routes/%28app%29/),
 and public routes live under [`src/routes/(public)/`](src/routes/%28public%29/).
-Routes and features call server functions in [`src/actions/`](src/actions/).
-Each action validates transport input and delegates to its product capability.
+Routes and features call server functions in [`src/rpc/`](src/rpc/). Each RPC
+module validates transport input and delegates to its product capability.
 
 Domain services and repositories live under [`src/server/`](src/server/).
 [`src/server/platform/action/`](src/server/platform/action/) runs actions with

@@ -7,11 +7,11 @@ import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import { codeIs } from "~/contracts/error-codes";
 import { parseWireError } from "~/contracts/errors";
+import { parseLoginFlowId } from "~/domain/auth/login-flow/parse-id";
 import { recoveryLoginMutation } from "~/features/auth/data/mutations";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { loginFlowQuery } from "~/rpc/auth/login-flow.query";
-import { parseLoginFlowId } from "~/server/auth/login-flow/parse-id";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";

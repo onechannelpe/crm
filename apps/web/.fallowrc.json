@@ -7,7 +7,7 @@
     "src/middleware.ts",
     "src/workers/maintenance-runner.ts",
     "src/routes/**/*.{ts,tsx}",
-    "src/actions/**/*.{ts,tsx}",
+    "src/rpc/**/*.{ts,tsx}",
     "src/server/platform/database/migrate-cli.ts",
     "src/server/platform/database/seed.ts",
     "src/workers/maintenance-runner.ts",
@@ -59,8 +59,8 @@
         "autoDiscover": ["src/server"]
       },
       {
-        "name": "actions",
-        "patterns": ["src/actions/**"]
+        "name": "rpc",
+        "patterns": ["src/rpc/**"]
       },
       {
         "name": "features",
@@ -324,13 +324,13 @@
         ]
       },
       {
-        "from": "actions",
-        "allow": ["actions", "contracts", "domain", "server", "shared"]
+        "from": "rpc",
+        "allow": ["rpc", "contracts", "domain", "server", "shared"]
       },
       {
         "from": "features",
         "allow": [
-          "actions",
+          "rpc",
           "browser",
           "components",
           "contracts",
@@ -342,7 +342,7 @@
       {
         "from": "components",
         "allow": [
-          "actions",
+          "rpc",
           "browser",
           "components",
           "contracts",
@@ -354,7 +354,7 @@
       {
         "from": "routes",
         "allow": [
-          "actions",
+          "rpc",
           "browser",
           "components",
           "contracts",

@@ -1,4 +1,5 @@
 import "server-only";
+import type { NotificationPreferencesView } from "~/contracts/notifications";
 import {
   CATEGORY_META,
   EXTERNAL_CHANNELS,
@@ -11,29 +12,7 @@ import { executeSessionServerFunction } from "~/server/platform/action";
 import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
 import { Ok } from "~/shared/result";
 
-export interface NotificationChannelPreference {
-  channel: (typeof EXTERNAL_CHANNELS)[number];
-  controllable: boolean;
-  available: boolean;
-  enabled: boolean;
-}
-
-export interface NotificationChannelAvailability {
-  channel: (typeof EXTERNAL_CHANNELS)[number];
-  available: boolean;
-}
-
-export interface NotificationCategoryPreference {
-  category: (typeof NOTIFICATION_CATEGORIES)[number];
-  label: string;
-  description: string;
-  channels: NotificationChannelPreference[];
-}
-
-export interface NotificationPreferencesView {
-  channels: NotificationChannelAvailability[];
-  categories: NotificationCategoryPreference[];
-}
+export type { NotificationPreferencesView } from "~/contracts/notifications";
 
 // Default-on: a row in notification_opt_outs means "this user silenced this
 // category on this channel"; absence means on.

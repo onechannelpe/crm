@@ -6,13 +6,13 @@ import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { codeIs } from "~/contracts/error-codes";
 import { parseWireError } from "~/contracts/errors";
+import { parseLoginFlowId } from "~/domain/auth/login-flow/parse-id";
 import { totpLoginMutation } from "~/features/auth/data/mutations";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import { loginFlowQuery } from "~/rpc/auth/login-flow.query";
-import { parseLoginFlowId } from "~/server/auth/login-flow/parse-id";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";
