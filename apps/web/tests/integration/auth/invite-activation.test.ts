@@ -99,8 +99,9 @@ describe("invite activation", () => {
       const pendingInvite = await ctx.repos.userInvites.findById(
         invite.inviteId,
       );
+      if (!pendingInvite) throw new Error("expected pending invitation");
       const sessions = await ctx.repos.sessions.listForUser(
-        pendingInvite!.user_id,
+        pendingInvite.user_id,
       );
       expect(sessions).toHaveLength(0);
     },
