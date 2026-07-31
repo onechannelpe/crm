@@ -37,8 +37,20 @@
   min-height: 0;
 }
 
+.statusRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+}
+
 .recordCount {
-  align-self: flex-end;
   color: var(--foreground-secondary);
+  font-size: var(--font-size-sm);
+  margin-left: auto;
+}
+
+.offlineNotice {
+  color: var(--warning);
   font-size: var(--font-size-sm);
 }

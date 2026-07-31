@@ -10,21 +10,23 @@ import {
   For,
   Match,
   on,
-  onCleanup,
   Show,
   Suspense,
   Switch,
 } from "solid-js";
 
-import type { StateSubscription } from "~/browser/realtime/subscribe-state";
+import { createTopicState } from "~/browser/realtime/create-topic-state";
 import { actionErrorMessage } from "~/contracts/errors";
-import { type GpvSnapshotProgressEvent } from "~/contracts/merchant-stats/imports";
+import {
+  parseGpvSnapshotProgressMessage,
+  type GpvSnapshotProgressEvent,
+} from "~/contracts/merchant-stats/imports";
+import { REALTIME_CHANNELS } from "~/contracts/realtime/channel";
 import { formatAppDateTime } from "~/domain/time/app-time";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 import { gpvSnapshotQuery } from "~/rpc/merchant-stats/gpv-snapshot";
 
-import { subscribeToGpvSnapshotImport } from "../data/import-subscription";
 import { resolveGpvImportIssueMutation } from "../data/mutations";
 import { formatInteger } from "../format";
 import { refreshPublishedGpvData } from "../revalidate";
@@ -35,40 +37,48 @@ export function ImportStatus(props: { snapshotId: string }) {
   const snapshot = createAsync(() => gpvSnapshotQuery(props.snapshotId));
   const resolveIssue = useAction(resolveGpvImportIssueMutation);
   const resolution = useSubmission(resolveGpvImportIssueMutation);
-  let subscription: StateSubscription | null = null;
   let refreshedActiveSnapshotId: string | null = null;
 
-  const jobId = () => snapshot()?.job?.jobId ?? null;
+  // Finished jobs don't publish progress.
+  const jobId = () => {
+    const job = snapshot()?.job;
+
+    return !job || isTerminalJob(job.queueState) ? null : job.jobId;
+  };
+
+  // Refresh the snapshot instead of applying progress updates locally.
+  const importProgress = createTopicState({
+    channel: REALTIME_CHANNELS.gpvSnapshot,
+    id: jobId,
+    parse: parseGpvSnapshotProgressMessage,
+    isFinal: (event) => isTerminalJob(event.queueState),
+  });
 
   createEffect(
-    on(jobId, (id) => {
-      subscription?.stop();
-      subscription = null;
-      if (!id || isTerminalJob(snapshot()?.job?.queueState)) {
+    on(importProgress, (event) => {
+      if (!event) {
         return;
       }
 
-      subscription = subscribeToGpvSnapshotImport(id, () => {
-        void revalidate(gpvSnapshotQuery.key);
-      });
+      void revalidate(gpvSnapshotQuery.key);
     }),
   );
 
   createEffect(() => {
     const view = snapshot();
+
     if (
       view?.state !== "active" ||
       refreshedActiveSnapshotId === view.snapshotId
     ) {
       return;
     }
+
     refreshedActiveSnapshotId = view.snapshotId;
     void refreshPublishedGpvData();
   });
 
-  onCleanup(() => subscription?.stop());
-
-  async function decide(
+  async function submitDecision(
     issueId: string,
     choice:
       | "keep_previous"
@@ -110,6 +120,7 @@ export function ImportStatus(props: { snapshotId: string }) {
                     </p>
                   )}
                 </Show>
+
                 <Switch>
                   <Match
                     when={
@@ -118,29 +129,36 @@ export function ImportStatus(props: { snapshotId: string }) {
                   >
                     <ImportProgress job={view().job} />
                   </Match>
+
                   <Match when={view().state === "needs_review"}>
                     <p class={styles.statusError}>
                       Esta actualización necesita una decisión antes de
                       publicarse.
                     </p>
+
                     <For each={view().issues}>
                       {(issue) => (
                         <div class={styles.reviewIssue}>
                           <p>{issue.detail}</p>
+
                           <div class={styles.reviewActions}>
                             <Show when={issue.type !== "row_rejected"}>
                               <DecisionButton
                                 disabled={Boolean(resolution.pending)}
                                 onClick={() =>
-                                  void decide(issue.id, "keep_previous")
+                                  void submitDecision(issue.id, "keep_previous")
                                 }
                               >
                                 Mantener anterior
                               </DecisionButton>
+
                               <DecisionButton
                                 disabled={Boolean(resolution.pending)}
                                 onClick={() =>
-                                  void decide(issue.id, "accept_candidate")
+                                  void submitDecision(
+                                    issue.id,
+                                    "accept_candidate",
+                                  )
                                 }
                               >
                                 {issue.type === "placement_missing"
@@ -148,20 +166,25 @@ export function ImportStatus(props: { snapshotId: string }) {
                                   : "Usar nuevo"}
                               </DecisionButton>
                             </Show>
+
                             <Show when={issue.type === "row_rejected"}>
                               <DecisionButton
                                 disabled={Boolean(resolution.pending)}
                                 onClick={() =>
-                                  void decide(issue.id, "exclude_candidate")
+                                  void submitDecision(
+                                    issue.id,
+                                    "exclude_candidate",
+                                  )
                                 }
                               >
                                 Omitir fila inválida
                               </DecisionButton>
                             </Show>
+
                             <DecisionButton
                               disabled={Boolean(resolution.pending)}
                               onClick={() =>
-                                void decide(issue.id, "reject_snapshot")
+                                void submitDecision(issue.id, "reject_snapshot")
                               }
                             >
                               Descartar actualización
@@ -171,26 +194,31 @@ export function ImportStatus(props: { snapshotId: string }) {
                       )}
                     </For>
                   </Match>
+
                   <Match when={view().state === "active"}>
                     <p class={styles.statusDone}>
                       La actualización está publicada.
                     </p>
                   </Match>
+
                   <Match when={view().state === "ready"}>
                     <p class={styles.statusDone}>
                       La actualización está lista para publicarse.
                     </p>
                   </Match>
+
                   <Match when={view().state === "superseded"}>
                     <p class={styles.status}>
                       Esta actualización fue reemplazada por una más reciente.
                     </p>
                   </Match>
+
                   <Match when={view().state === "rejected"}>
                     <p class={styles.status}>
                       La actualización fue descartada.
                     </p>
                   </Match>
+
                   <Match when={view().state === "failed"}>
                     <p class={styles.statusError}>
                       {view().job?.errorMessage ?? "La importación falló."}
@@ -207,7 +235,7 @@ export function ImportStatus(props: { snapshotId: string }) {
 }
 
 function ImportProgress(props: { job: GpvSnapshotProgressEvent | null }) {
-  const settled = () =>
+  const completed = () =>
     (props.job?.rowsApplied ?? 0) + (props.job?.rowsFailed ?? 0);
   const total = () => props.job?.rowsTotal ?? 0;
 
@@ -216,15 +244,16 @@ function ImportProgress(props: { job: GpvSnapshotProgressEvent | null }) {
       <p class={styles.status}>
         {total() === 0
           ? "Leyendo el archivo…"
-          : `Procesando ${formatInteger(settled())} de ${formatInteger(
+          : `Procesando ${formatInteger(completed())} de ${formatInteger(
               total(),
             )} filas...`}
       </p>
+
       <div class={styles.bar}>
         <div
           class={styles.barFill}
           style={{
-            width: `${total() ? (settled() / total()) * 100 : 0}%`,
+            width: `${total() ? (completed() / total()) * 100 : 0}%`,
           }}
         />
       </div>
@@ -242,7 +271,7 @@ function DecisionButton(props: {
       type="button"
       class={styles.close}
       disabled={props.disabled}
-      onClick={() => props.onClick()}
+      onClick={props.onClick}
     >
       {props.children}
     </button>

@@ -1,82 +1,83 @@
+import type { RealtimeMessage } from "~/contracts/realtime/channel";
+
+// send() never reports broken connections; h3 reports them through onClosed.
 export interface RealtimePeer {
-  send: (message: string) => unknown;
+  send: (message: RealtimeMessage) => void;
+  ping: () => void;
+  close: () => void;
+}
+
+interface PeerRecord {
+  topic: string;
+  openedAt: number;
 }
 
 export class TopicHub {
+  private readonly peers = new Map<RealtimePeer, PeerRecord>();
   private readonly peersByTopic = new Map<string, Set<RealtimePeer>>();
-  private readonly topicsByPeer = new Map<RealtimePeer, Set<string>>();
 
-  subscribe(peer: RealtimePeer, topic: string): void {
-    const peers = this.peersByTopic.get(topic) ?? new Set<RealtimePeer>();
-    peers.add(peer);
-    this.peersByTopic.set(topic, peers);
+  subscribe(peer: RealtimePeer, topic: string, openedAt: number): void {
+    this.peers.set(peer, { topic, openedAt });
 
-    const topics = this.topicsByPeer.get(peer) ?? new Set<string>();
-    topics.add(topic);
-    this.topicsByPeer.set(peer, topics);
+    const existing = this.peersByTopic.get(topic);
+
+    if (existing) {
+      existing.add(peer);
+      return;
+    }
+
+    this.peersByTopic.set(topic, new Set([peer]));
   }
 
-  unsubscribe(peer: RealtimePeer, topic: string): void {
+  remove(peer: RealtimePeer): void {
+    const record = this.peers.get(peer);
+
+    if (!record) {
+      return;
+    }
+
+    this.peers.delete(peer);
+
+    const peers = this.peersByTopic.get(record.topic);
+
+    if (!peers) {
+      return;
+    }
+
+    peers.delete(peer);
+
+    if (peers.size === 0) {
+      this.peersByTopic.delete(record.topic);
+    }
+  }
+
+  broadcast(topic: string, message: RealtimeMessage): void {
     const peers = this.peersByTopic.get(topic);
-    if (peers) {
-      peers.delete(peer);
-      if (peers.size === 0) {
-        this.peersByTopic.delete(topic);
-      }
-    }
 
-    const topics = this.topicsByPeer.get(peer);
-    if (!topics) {
+    if (!peers) {
       return;
     }
 
-    topics.delete(topic);
-    if (topics.size === 0) {
-      this.topicsByPeer.delete(peer);
+    for (const peer of peers) {
+      peer.send(message);
     }
   }
 
-  topics(): string[] {
-    return [...this.peersByTopic.keys()];
+  closeAll(): void {
+    for (const peer of this.peers.keys()) {
+      peer.close();
+    }
   }
 
-  removePeer(peer: RealtimePeer): void {
-    const topics = this.topicsByPeer.get(peer);
-    if (!topics) {
-      return;
-    }
-
-    for (const topic of topics) {
-      const peers = this.peersByTopic.get(topic);
-      if (!peers) {
+  // Keep idle connections alive. Expired connections reconnect and re-authorize.
+  sweep(now: number, maxAgeMs: number): void {
+    for (const [peer, record] of this.peers) {
+      if (now - record.openedAt >= maxAgeMs) {
+        peer.close();
         continue;
       }
-      peers.delete(peer);
-      if (peers.size === 0) {
-        this.peersByTopic.delete(topic);
-      }
-    }
 
-    this.topicsByPeer.delete(peer);
-  }
-
-  broadcast(topic: string, payload: string): void {
-    const peers = this.peersByTopic.get(topic);
-    if (!peers || peers.size === 0) {
-      return;
-    }
-
-    const failedPeers: RealtimePeer[] = [];
-    for (const peer of peers) {
-      try {
-        peer.send(payload);
-      } catch {
-        failedPeers.push(peer);
-      }
-    }
-
-    for (const peer of failedPeers) {
-      this.removePeer(peer);
+      peer.ping();
     }
   }
 }

@@ -1,9 +1,8 @@
 # System architecture
 
 Culqi360 runs as a web application, a maintenance worker, a search engine, and a
-browser extension. PostgreSQL stores application state and durable queue
-records. The search engine reads SQLite datasets built by the source-data
-pipeline.
+browser extension. PostgreSQL stores application state and the worker queue. The
+search engine reads SQLite datasets built by the source-data pipeline.
 
 ```mermaid
 flowchart LR
@@ -25,13 +24,14 @@ organizations, workflow state, sales data, notification state, and reporting
 data in PostgreSQL. Search and candidate assignment are delegated to the engine.
 
 The maintenance worker uses the same application services and PostgreSQL
-database as the web server. Queue rows are durable database records. PostgreSQL
-`LISTEN`/`NOTIFY` wakes the worker when work is available, and a one-second poll
-recovers missed notifications.
+database as the web application. PostgreSQL `LISTEN`/`NOTIFY` wakes the worker
+when work is available, and a one-second poll recovers missed notifications.
 
 Realtime browser delivery is separate from queue execution. Record-import
-progress and event logs use server-sent events. Other features, including GPV
-report imports, poll their server actions.
+progress, GPV report imports, and event logs all use the same server-sent event
+pipeline, backed by one PostgreSQL `LISTEN` connection per process. Each
+connection reads the subscriber's current state in the same query that
+authorizes it, so reconnects lose no events.
 
 See the [web application guide](../apps/web/readme.md) for request handling,
 persistence, and background processing.
@@ -39,7 +39,7 @@ persistence, and background processing.
 ## Search data
 
 The pipeline validates source files and publishes SQLite datasets. The engine
-serves those datasets through signed HTTP endpoints for search, candidate
+serves those datasets over signed HTTP endpoints for search, candidate
 selection, record imports, and health checks.
 
 Engine HTTP and projection contracts live in
@@ -57,7 +57,7 @@ The implementation entry points are:
 
 ## Browser extension
 
-The extension receives signed handoff messages from Culqi360 and synchronizes
-call state through extension API routes. Start with
+The extension receives signed handoff messages and synchronizes call state
+through extension API routes. Start with
 [`runtime.ts`](../apps/extension/src/background/runtime.ts) and
 [`external-auth.ts`](../apps/extension/src/services/external-auth.ts).

@@ -1,24 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import type {
-  RecordImportProgressEvent,
-  RecordImportType,
-} from "~/contracts/records/imports";
-import type { Role } from "~/domain/auth/access/rbac";
+import type { RecordImportType } from "~/contracts/records/imports";
 import { fail, invalid, type DomainError } from "~/domain/errors";
-import type { BranchId, UserId } from "~/domain/ids";
-import { IntegrationJobId } from "~/domain/ids";
 import { composeFiles } from "~/server/files/ui/composition";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
-import type { IntegrationJobRow } from "~/server/integrations/types";
 import { composeIntegrations } from "~/server/integrations/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import {
-  parseObject,
-  validationFail,
-} from "~/server/platform/action/input-reader";
-import { canAccessRecordImportJob } from "~/server/records/imports/api";
 import { parseImportFile } from "~/server/records/imports/intake";
 import {
   buildRecordImportProgressEvent,
@@ -63,33 +51,6 @@ function parseImportUpload(
   }
 
   return Ok({ file, extension });
-}
-
-async function getAuthorizedRecordImportJob(
-  actor: {
-    userId: UserId;
-    branchId: BranchId;
-    role: Role;
-  },
-  jobId: IntegrationJobId,
-): Promise<IntegrationJobRow> {
-  const { integration } = composeIntegrations();
-  const job = await integration.jobs.findById(jobId);
-
-  if (
-    !job ||
-    (job.type !== "import_status" && job.type !== "import_prioridad")
-  ) {
-    throwDomain(fail("import_job_not_found"));
-  }
-
-  const canAccess = await canAccessRecordImportJob(actor, job, integration);
-
-  if (!canAccess) {
-    throwDomain(fail("import_job_not_found"));
-  }
-
-  return job;
 }
 
 export async function uploadRecordImportFile(formData: FormData): Promise<{
@@ -151,36 +112,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         buildRecordImportProgressEvent(job),
       );
 
-      return Ok({
-        jobId: job.id,
-        importType,
-        rowsTotal,
-      });
-    },
-  });
-}
-
-// Fallback when the progress stream is unavailable.
-export async function getRecordImportProgress(
-  rawJobId: string,
-): Promise<RecordImportProgressEvent> {
-  "use server";
-
-  return executeSessionServerFunction({
-    name: "records.import.progress",
-    access: { kind: "permission", permission: "integration:manage" },
-
-    parse: () =>
-      parseObject({ jobId: rawJobId }, validationFail, (reader) => ({
-        jobId: reader.id("jobId", IntegrationJobId),
-      })),
-
-    audit: ({ jobId }) => ({ jobId }),
-
-    execute: async (ctx, { jobId }) => {
-      const job = await getAuthorizedRecordImportJob(ctx.actor, jobId);
-
-      return Ok(buildRecordImportProgressEvent(job));
+      return Ok({ jobId: job.id, importType, rowsTotal });
     },
   });
 }

@@ -1,4 +1,3 @@
-import { defineTopic } from "~/contracts/realtime/topic";
 import { isQueueState, type QueueState } from "~/domain/jobs/queue-state";
 import type { GpvSnapshotState } from "~/domain/merchant-stats/snapshot";
 
@@ -17,15 +16,13 @@ export interface GpvSnapshotView {
   state: GpvSnapshotState;
   cutAt: string;
   job: GpvSnapshotProgressEvent | null;
-  issues: Array<{
+  issues: readonly {
     id: string;
     type: string;
     detail: string;
     entityKey: string | null;
-  }>;
+  }[];
 }
-
-export const gpvSnapshotTopic = defineTopic("gpv.snapshot.import");
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;

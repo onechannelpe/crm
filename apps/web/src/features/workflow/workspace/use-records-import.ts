@@ -1,23 +1,25 @@
-import { onCleanup } from "solid-js";
+import { createEffect, createSignal, on } from "solid-js";
 
-import {
-  subscribeState,
-  type StateSubscription,
-} from "~/browser/realtime/subscribe-state";
+import { createTopicState } from "~/browser/realtime/create-topic-state";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { actionErrorMessage } from "~/contracts/errors";
+import { REALTIME_CHANNELS } from "~/contracts/realtime/channel";
 import {
   parseRecordImportProgressMessage,
   type RecordImportProgressEvent,
   type RecordImportType,
 } from "~/contracts/records/imports";
-import {
-  getRecordImportProgress,
-  uploadRecordImportFile,
-} from "~/rpc/records/imports";
+import { uploadRecordImportFile } from "~/rpc/records/imports";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 4_000;
+
+type ImportProgress = {
+  importType: RecordImportType;
+  rowsApplied: number;
+  rowsFailed: number;
+  rowsTotal: number;
+};
 
 function importTypeLabel(type: RecordImportType): string {
   if (type === "import_status") {
@@ -35,12 +37,7 @@ function importTypeUnit(type: RecordImportType, count: number): string {
   return count === 1 ? "prioridad" : "prioridades";
 }
 
-function buildProgressMessage(event: {
-  importType: RecordImportType;
-  rowsApplied: number;
-  rowsFailed: number;
-  rowsTotal: number;
-}): string {
+function buildProgressMessage(event: ImportProgress): string {
   if (event.rowsTotal <= 0) {
     return `Procesando ${importTypeLabel(event.importType)}...`;
   }
@@ -50,12 +47,7 @@ function buildProgressMessage(event: {
   return `Procesando ${importTypeUnit(event.importType, event.rowsTotal)}: ${processed} de ${event.rowsTotal}`;
 }
 
-function buildCompletedMessage(event: {
-  importType: RecordImportType;
-  rowsApplied: number;
-  rowsFailed: number;
-  rowsTotal: number;
-}): string {
+function buildCompletedMessage(event: ImportProgress): string {
   const unit = importTypeUnit(event.importType, event.rowsTotal);
 
   if (event.rowsFailed > 0) {
@@ -80,19 +72,23 @@ export function useRecordsImport() {
     useSnackBar();
 
   let fileInputRef: HTMLInputElement | undefined;
-  let subscription: StateSubscription | null = null;
+  let snackBarId: string | null = null;
 
-  function stopSubscription(): void {
-    subscription?.stop();
-    subscription = null;
-  }
+  const [jobId, setJobId] = createSignal<string | null>(null);
+
+  const progress = createTopicState({
+    channel: REALTIME_CHANNELS.recordImport,
+    id: jobId,
+    parse: parseRecordImportProgressMessage,
+    isFinal: isTerminal,
+  });
 
   function updateImportSnackBar(
-    toastId: string,
+    id: string,
     event: RecordImportProgressEvent,
   ): void {
     if (event.queueState === "done") {
-      updateSnackBar(toastId, {
+      updateSnackBar(id, {
         message: buildCompletedMessage(event),
         variant: event.rowsFailed > 0 ? "warning" : "success",
         duration: IMPORT_COMPLETED_DURATION_MS,
@@ -102,7 +98,7 @@ export function useRecordsImport() {
     }
 
     if (event.queueState === "failed") {
-      updateSnackBar(toastId, {
+      updateSnackBar(id, {
         message: event.errorMessage ?? "La importación falló",
         variant: "error",
         duration: IMPORT_COMPLETED_DURATION_MS,
@@ -111,10 +107,20 @@ export function useRecordsImport() {
       return;
     }
 
-    updateSnackBar(toastId, {
+    updateSnackBar(id, {
       message: buildProgressMessage(event),
     });
   }
+
+  createEffect(
+    on(progress, (event) => {
+      if (!event || snackBarId === null) {
+        return;
+      }
+
+      updateImportSnackBar(snackBarId, event);
+    }),
+  );
 
   async function importFile(file: File): Promise<void> {
     if (!isSupportedFile(file)) {
@@ -128,7 +134,7 @@ export function useRecordsImport() {
     try {
       const result = await uploadRecordImportFile(formData);
 
-      const toastId = enqueueInfoSnackBar(
+      snackBarId = enqueueInfoSnackBar(
         buildProgressMessage({
           importType: result.importType,
           rowsApplied: 0,
@@ -138,15 +144,7 @@ export function useRecordsImport() {
         { duration: IMPORT_PROGRESS_DURATION_MS },
       );
 
-      stopSubscription();
-
-      subscription = subscribeState({
-        streamUrl: `/api/records/imports/${result.jobId}/stream`,
-        parse: parseRecordImportProgressMessage,
-        fetchLatest: () => getRecordImportProgress(result.jobId),
-        onEvent: (event) => updateImportSnackBar(toastId, event),
-        until: isTerminal,
-      });
+      setJobId(result.jobId);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
     }
@@ -179,8 +177,6 @@ export function useRecordsImport() {
 
     target.value = "";
   }
-
-  onCleanup(stopSubscription);
 
   return {
     bindFileInput,

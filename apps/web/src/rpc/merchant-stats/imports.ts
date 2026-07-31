@@ -1,6 +1,5 @@
-import type { GpvSnapshotProgressEvent } from "~/contracts/merchant-stats/imports";
 import { fail, type DomainError } from "~/domain/errors";
-import { GpvSnapshotIssueId, GpvSnapshotJobId } from "~/domain/ids";
+import { GpvSnapshotIssueId } from "~/domain/ids";
 import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import {
@@ -32,10 +31,15 @@ interface Upload {
 
 function parseUpload(formData: FormData): Result<Upload, DomainError> {
   const file = formData.get("file");
-  if (!(file instanceof File)) return Err(fail("file_required"));
+
+  if (!(file instanceof File)) {
+    return Err(fail("file_required"));
+  }
+
   if (!file.name.toLowerCase().endsWith(".xlsx")) {
     return Err(fail("unsupported_file_type"));
   }
+
   if (file.size > maxUploadBytesForFilePurpose("merchant_gpv_snapshot")) {
     return Err(fail("file_too_large"));
   }
@@ -45,7 +49,10 @@ function parseUpload(formData: FormData): Result<Upload, DomainError> {
     typeof rawCutAt === "string" && rawCutAt.length > 0
       ? cutAtFromInput(rawCutAt)
       : cutAtFromFilename(file.name);
-  if (!cutAt) return Err(fail("gpv_cut_required"));
+
+  if (!cutAt) {
+    return Err(fail("gpv_cut_required"));
+  }
 
   return Ok({ file, cutAt });
 }
@@ -56,12 +63,15 @@ export async function uploadMerchantReport(formData: FormData) {
   return executeSessionServerFunctionResult({
     name: "merchantStats.import.upload",
     access: { kind: "permission", permission: "dashboards:manage" },
+
     parse: () => parseUpload(formData),
+
     audit: ({ file, cutAt }) => ({
       fileName: file.name,
       fileSize: file.size,
       cutAt: cutAt.toISOString(),
     }),
+
     execute: async (context, { file, cutAt }) => {
       const submitted = await composeMerchantStats().imports.submit({
         file: {
@@ -73,7 +83,10 @@ export async function uploadMerchantReport(formData: FormData) {
         uploadedBy: context.actor.userId,
         now: context.now(),
       });
-      if (!submitted.ok) return submitted;
+
+      if (!submitted.ok) {
+        return submitted;
+      }
 
       return Ok({
         snapshotId: submitted.value.snapshotId,
@@ -81,28 +94,6 @@ export async function uploadMerchantReport(formData: FormData) {
         cutAt: submitted.value.cutAt.toISOString(),
         duplicate: submitted.value.duplicate,
       });
-    },
-  });
-}
-
-export async function getGpvSnapshotProgress(
-  jobId: string,
-): Promise<GpvSnapshotProgressEvent> {
-  "use server";
-
-  return executeSessionServerFunction({
-    name: "merchantStats.import.progress",
-    access: { kind: "permission", permission: "dashboards:read" },
-    parse: () =>
-      parseObject({ jobId }, validationFail, (reader) => ({
-        jobId: reader.id("jobId", GpvSnapshotJobId),
-      })),
-    audit: (input) => ({ jobId: input.jobId }),
-    execute: async (_context, input) => {
-      const progress = await composeMerchantStats().imports.progress(
-        input.jobId,
-      );
-      return progress ? Ok(progress) : Err(fail("import_job_not_found"));
     },
   });
 }
@@ -116,16 +107,19 @@ export async function resolveGpvImportIssue(input: {
   return executeSessionServerFunction({
     name: "merchantStats.import.issue.resolve",
     access: { kind: "permission", permission: "dashboards:manage" },
+
     parse: () =>
       parseObject(input, validationFail, (reader) => ({
         issueId: reader.id("issueId", GpvSnapshotIssueId),
         resolution: reader.enum("resolution", SNAPSHOT_RESOLUTIONS),
       })),
+
     audit: ({ issueId, resolution }) => ({ issueId, resolution }),
-    execute: ({ actor }, command) =>
+
+    execute: ({ actor }, { issueId, resolution }) =>
       composeMerchantStats().imports.resolveIssue({
-        issueId: command.issueId,
-        resolution: command.resolution,
+        issueId,
+        resolution,
         resolvedBy: actor.userId,
       }),
   });

@@ -1,47 +1,32 @@
-import {
-  gpvSnapshotTopic,
-  parseGpvSnapshotProgressMessage,
-  type GpvSnapshotProgressEvent,
-} from "~/contracts/merchant-stats/imports";
+import { parseGpvSnapshotProgressMessage } from "~/contracts/merchant-stats/imports";
+import { REALTIME_CHANNELS } from "~/contracts/realtime/channel";
+import { hasPermission } from "~/domain/auth/access/rbac";
 import { GpvSnapshotJobId } from "~/domain/ids";
+import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
 import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
-import {
-  createTopicRealtimeChannel,
-  snapshotReconciler,
-} from "~/server/realtime/topic-realtime-channel";
+import { defineRealtimeChannel } from "~/server/realtime/channel";
 import { isErr } from "~/shared/result";
 
-import { buildGpvSnapshotProgressEvent } from "./progress";
-import { type createGpvSnapshotJobRepo } from "./repo";
+export const gpvSnapshotChannel = defineRealtimeChannel({
+  name: REALTIME_CHANNELS.gpvSnapshot,
+  pgChannel: GPV_SNAPSHOT_PROGRESS_CHANNEL,
 
-type GpvSnapshotJobReader = Pick<
-  ReturnType<typeof createGpvSnapshotJobRepo>,
-  "findById"
->;
+  parseId: (raw) => {
+    const parsed = GpvSnapshotJobId.parse(raw);
 
-export async function gpvSnapshotJobSnapshot(
-  jobs: GpvSnapshotJobReader,
-  jobId: GpvSnapshotJobId,
-): Promise<string | null> {
-  const job = await jobs.findById(jobId);
+    return isErr(parsed) ? null : parsed.value;
+  },
 
-  return job ? JSON.stringify(buildGpvSnapshotProgressEvent(job)) : null;
-}
+  open: async (session, jobId) => {
+    if (!hasPermission(session.role, "dashboards:read")) {
+      return null;
+    }
 
-export function createGpvSnapshotsRealtime(jobs: GpvSnapshotJobReader) {
-  return createTopicRealtimeChannel<GpvSnapshotProgressEvent>({
-    name: "gpv-snapshots",
-    channel: GPV_SNAPSHOT_PROGRESS_CHANNEL,
-    parseEvent: parseGpvSnapshotProgressMessage,
-    topicForEvent: (event) => gpvSnapshotTopic.of(event.jobId),
-    reconcile: snapshotReconciler(gpvSnapshotTopic, async (raw) => {
-      const jobId = GpvSnapshotJobId.parse(raw);
+    const progress = await composeMerchantStats().imports.progress(jobId);
 
-      if (isErr(jobId)) {
-        return null;
-      }
+    return progress ? [{ data: JSON.stringify(progress) }] : null;
+  },
 
-      return gpvSnapshotJobSnapshot(jobs, jobId.value);
-    }),
-  });
-}
+  topicIdOfPayload: (payload) =>
+    parseGpvSnapshotProgressMessage(payload)?.jobId ?? null,
+});

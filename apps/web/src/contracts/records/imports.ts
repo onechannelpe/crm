@@ -1,4 +1,3 @@
-import { defineTopic } from "~/contracts/realtime/topic";
 import { isQueueState, type QueueState } from "~/domain/jobs/queue-state";
 
 export type RecordImportType = "import_status" | "import_prioridad";
@@ -13,8 +12,6 @@ export interface RecordImportProgressEvent {
   rowsTotal: number;
   errorMessage: string | null;
 }
-
-export const recordImportTopic = defineTopic("records.import.job");
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;

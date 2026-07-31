@@ -24,10 +24,6 @@ import type {
 } from "~/server/files/service/contracts";
 import type { FileStorage } from "~/server/files/storage";
 import { createGpvSnapshotQueue } from "~/server/merchant-stats/snapshot/queue";
-import {
-  createGpvSnapshotsRealtime,
-  gpvSnapshotJobSnapshot,
-} from "~/server/merchant-stats/snapshot/realtime";
 import { createGpvSnapshotJobRepo } from "~/server/merchant-stats/snapshot/repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { Result } from "~/shared/result";
@@ -126,9 +122,6 @@ export function createMerchantStatsRuntime(deps: MerchantStatsRuntimeDeps) {
         resolution: GpvSnapshotIssueResolution;
         resolvedBy: UserId;
       }) => resolveGpvSnapshotIssue(deps.db, { ...input, now: deps.now() }),
-      snapshotValue: (jobId: GpvSnapshotJobId) =>
-        gpvSnapshotJobSnapshot(jobs, jobId),
-      realtime: createGpvSnapshotsRealtime(jobs),
       createQueue: (workerId: string) =>
         createGpvSnapshotQueue(workerId, {
           db: deps.db,

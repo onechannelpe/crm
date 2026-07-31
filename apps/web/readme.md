@@ -41,29 +41,22 @@ PostgreSQL stores application state. Database infrastructure lives under
 live under
 [`src/server/platform/database/schema/modules/`](src/server/platform/database/schema/modules/).
 
-Culqi360 builds a new database from the current schema modules. It stores a hash
-of that schema and stops startup when an existing database has a different hash.
-Development databases are disposable; reset the database after changing a schema
-module.
-
-See [Database development](docs/database.md) for initialization, reset, and
-schema-change commands.
+See [Database development](docs/database.md).
 
 ## Background processing
 
-Queue records are stored in PostgreSQL. The maintenance worker listens for
-PostgreSQL notifications and checks the affected queues when notified. It also
-checks every queue once per second, so a missed notification does not strand a
-job. The worker entry point is
-[`maintenance-runner.ts`](src/workers/maintenance-runner.ts), and queue
+The maintenance worker executes durable jobs stored in PostgreSQL. PostgreSQL
+`LISTEN`/`NOTIFY` wakes the worker when work is available, and a one-second poll
+recovers missed notifications.
+
+Browser updates use the realtime pipeline in
+[`src/server/realtime/`](src/server/realtime/). See
+[Realtime](docs/realtime.md).
+
+The worker entry point is
+[`maintenance-runner.ts`](src/workers/maintenance-runner.ts). Queue
 infrastructure lives in
 [`src/server/platform/jobs/`](src/server/platform/jobs/).
-
-Browser updates use feature-specific transports:
-
-- Record-import progress and event logs use server-sent events.
-- GPV report imports poll their job status every 1.5 seconds.
-- Queue execution does not depend on an active browser connection.
 
 ## Engine integration
 
@@ -83,57 +76,17 @@ bun run dev:infra:setup
 bun run dev
 ```
 
-The setup command is required once for a new checkout. Normal development uses
-`bun run dev`, which starts PostgreSQL, the engine, the web server, and the
-worker.
+The setup command is required once for a new checkout. `bun run dev` starts the
+web application, maintenance worker, PostgreSQL, and the engine.
 
-The root package also provides focused process commands:
-
-- `bun run dev:infra`
-- `bun run dev:web`
-- `bun run dev:engine`
-- `bun run dev:worker`
-
-From `apps/web`, the common commands are:
-
-```sh
-bun run dev
-bun run check
-bun run test
-bun run test:e2e
-bun run build
-```
-
-Production entry points are `start`, `migrate:prod`, `provision:prod`, and
-`worker:maintenance:prod` in [`package.json`](package.json). Deployment must
-provide the environment instead of relying on a local env file.
-
-## Diagnostics
-
-Diagnostics cover SSR, hydration, and request tracing. They are separate from
-audit and operational logs.
-
-Server channels use `DEBUG_DIAGNOSTICS`. Browser channels use
-`VITE_DEBUG_DIAGNOSTICS`. Filters use `DEBUG_DIAGNOSTICS_FILTER` and
-`VITE_DEBUG_DIAGNOSTICS_FILTER`.
-
-```sh
-DEBUG_DIAGNOSTICS=ssr bun run dev
-VITE_DEBUG_DIAGNOSTICS=hydration bun run dev
-DEBUG_DIAGNOSTICS=requests bun run dev
-DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS=verbose bun run dev
-DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS_SLOW_MS=500 bun run dev
-```
-
-The available channels are `ssr`, `hydration`, and `requests`. Request tracing
-includes document navigations, server functions, API routes, mutations, slow
-responses, failures, and aborted requests. Verbose request diagnostics also
-include asset traffic.
+See the repository README for additional development commands.
 
 ## Further reading
 
 - [Web configuration](docs/configuration.md)
 - [Database development](docs/database.md)
+- [Realtime](docs/realtime.md)
+- [Diagnostics](docs/diagnostics.md)
 - [End-to-end testing](docs/e2e-testing.md)
 - [Merchant GPV](docs/merchant-gpv.md)
 - [User-facing terminology](docs/glossary.md)
