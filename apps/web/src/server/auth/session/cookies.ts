@@ -1,4 +1,5 @@
 import { getCookie, setCookie, deleteCookie } from "@solidjs/start/http";
+import { serializeCookie } from "cookie-es";
 
 import { isProduction } from "~/shared/observability/runtime-env";
 
@@ -8,18 +9,6 @@ const COOKIE_NAME = "session";
 const IMPERSONATOR_COOKIE_NAME = "impersonator_session";
 
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
-
-function serializeSessionCookieValue(
-  token: string,
-  options?: { maxAge?: number },
-): string {
-  const secure = isProduction() ? "; Secure" : "";
-  const maxAge =
-    options?.maxAge === undefined
-      ? `; Max-Age=${COOKIE_MAX_AGE}`
-      : `; Max-Age=${options.maxAge}`;
-  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly${secure}; SameSite=Lax${maxAge}`;
-}
 
 export function getSessionCookie(): string | undefined {
   return getCookie(COOKIE_NAME);
@@ -45,7 +34,16 @@ export function deleteSessionCookie(): void {
 }
 
 export function appendSessionCookie(headers: Headers, token: string): void {
-  headers.append("Set-Cookie", serializeSessionCookieValue(token));
+  headers.append(
+    "Set-Cookie",
+    serializeCookie(COOKIE_NAME, token, {
+      path: "/",
+      httpOnly: true,
+      secure: isProduction(),
+      sameSite: "lax",
+      maxAge: COOKIE_MAX_AGE,
+    }),
+  );
 }
 
 export function getImpersonatorCookie(): string | undefined {
