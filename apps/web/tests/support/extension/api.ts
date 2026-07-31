@@ -1,10 +1,6 @@
-import { createExtensionService } from "~/server/extension/service";
-import type {
-  BranchId,
-  OrganizationPersonId,
-  UserId,
-} from "~/domain/ids";
+import type { BranchId, OrganizationPersonId, UserId } from "~/domain/ids";
 import { ContactAssignmentId } from "~/domain/ids";
+import { createExtensionService } from "~/server/extension/service";
 import { Err, type Result } from "~/shared/result";
 
 import { TEST_FIXTURES, type TestDbContext } from "../runtime/db";

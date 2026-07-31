@@ -1,12 +1,8 @@
 import { bench, describe } from "vitest";
 
+import { OrganizationId, OrganizationPersonId, UserId } from "~/domain/ids";
 import { createAssignment } from "~/server/contact-assignments/domain/assignment";
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
-import {
-  OrganizationId,
-  OrganizationPersonId,
-  UserId,
-} from "~/domain/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 

@@ -1,6 +1,7 @@
 import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/server";
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
+import type { UserId } from "~/domain/ids";
 import {
   createPasskeyProvider,
   PasskeyRequestError,
@@ -8,7 +9,6 @@ import {
   type PasskeyProviderDeps,
   type VerifiedRegistrationCredential,
 } from "~/server/auth/factors/passkey-provider";
-import type { UserId } from "~/domain/ids";
 
 import type { TestDbContext } from "../runtime/db";
 

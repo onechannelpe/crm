@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createObservabilityService } from "~/server/observability/service";
 import { UserId } from "~/domain/ids";
+import { createObservabilityService } from "~/server/observability/service";
 import { isErr } from "~/shared/result";
 
 function createUnexpectedRepos() {

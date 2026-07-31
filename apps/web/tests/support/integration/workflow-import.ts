@@ -1,10 +1,6 @@
+import type { IntegrationJobId, UserId, WorkflowLeadId } from "~/domain/ids";
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
-import type {
-  IntegrationJobId,
-  UserId,
-  WorkflowLeadId,
-} from "~/domain/ids";
 
 import type { TestActorKey } from "../database/workflow-fixtures";
 import { actorBy } from "../database/workflow-fixtures";

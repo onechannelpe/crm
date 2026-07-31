@@ -1,9 +1,9 @@
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
+import { BranchId, UserId } from "~/domain/ids";
 import type { InviteService } from "~/server/invites/application/types";
 import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
-import { BranchId, UserId } from "~/domain/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";

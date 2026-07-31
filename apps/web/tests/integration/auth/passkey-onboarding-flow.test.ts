@@ -4,12 +4,12 @@ import { createRegistrationChallenge } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { AuthSession } from "~/domain/auth/access/session-types";
-import { sessionCache } from "~/server/auth/session/session-cache";
-import { hashSessionToken } from "~/server/auth/session/tokens";
 import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
 import { acknowledgeRecoverySetup } from "~/server/auth/recovery/recovery-setup";
+import { sessionCache } from "~/server/auth/session/session-cache";
+import { hashSessionToken } from "~/server/auth/session/tokens";
 import { isErr } from "~/shared/result";
 
 describe("passkey onboarding flow", () => {

@@ -1,10 +1,10 @@
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createSessionService } from "~/server/auth/session/session.service";
-import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import type { SearchResult } from "~/server/integrations/engine/types";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
+import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 
 import {
   cleanupTestDb,

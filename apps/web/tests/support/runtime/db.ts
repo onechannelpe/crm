@@ -4,10 +4,6 @@ import { join } from "node:path";
 import { sql, type Kysely } from "kysely";
 import { Client } from "pg";
 
-import { createDb } from "~/server/platform/database/client";
-import { migrateToLatest } from "~/server/platform/database/migrate";
-import { REFERENCE_DATA_MODULES } from "~/server/platform/database/schema";
-import type { Database } from "~/server/platform/database/types";
 import {
   BranchId,
   OrganizationId,
@@ -15,6 +11,10 @@ import {
   PersonId,
   UserId,
 } from "~/domain/ids";
+import { createDb } from "~/server/platform/database/client";
+import { migrateToLatest } from "~/server/platform/database/migrate";
+import { REFERENCE_DATA_MODULES } from "~/server/platform/database/schema";
+import type { Database } from "~/server/platform/database/types";
 
 import {
   createTestRepositories,

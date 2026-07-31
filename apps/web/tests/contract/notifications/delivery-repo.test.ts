@@ -6,11 +6,11 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { NotificationIntentId, UserId } from "~/domain/ids";
 import {
   createDeliveryRepository,
   type PlannedDeliveryRow,
 } from "~/server/notifications/repos/delivery-repo";
-import { NotificationIntentId, UserId } from "~/domain/ids";
 
 const NOW = new Date(1_700_000_000_000);
 const RETRY_AT = new Date(NOW.getTime() + 5_000);

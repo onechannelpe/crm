@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { UserId } from "~/domain/ids";
 import {
   evaluateLoginPolicy,
   type LoginPolicyInput,
 } from "~/server/auth/policy/engine";
-import { UserId } from "~/domain/ids";
 
 function createInput(overrides?: {
   proof?: LoginPolicyInput["proof"];

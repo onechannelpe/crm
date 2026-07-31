@@ -3,6 +3,7 @@ import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
 import type { Json } from "~/contracts/json";
+import { BranchId, NotificationIntentId, UserId } from "~/domain/ids";
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import {
   createDeliveryRepository,
@@ -10,7 +11,6 @@ import {
 } from "~/server/notifications/repos/delivery-repo";
 import type { IntentJob } from "~/server/notifications/repos/intent-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
-import { BranchId, NotificationIntentId, UserId } from "~/domain/ids";
 
 import { BENCH_NOW, benchDate } from "../_shared/constants";
 

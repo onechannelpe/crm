@@ -1,7 +1,4 @@
-import type {
-  WorkflowLeadId,
-  WorkflowRateProposalId,
-} from "~/domain/ids";
+import type { WorkflowLeadId, WorkflowRateProposalId } from "~/domain/ids";
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 
 import type { TestActor } from "../database/workflow-fixtures";

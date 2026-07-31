@@ -2,9 +2,9 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
+import { BranchId, UserId } from "~/domain/ids";
 import { hashAuthKey } from "~/server/auth/password/key-hash";
 import { hashPassword } from "~/server/auth/password/password";
-import { BranchId, UserId } from "~/domain/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 

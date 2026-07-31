@@ -11,13 +11,13 @@ import {
 } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { WebauthnChallengeId } from "~/domain/ids";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import {
   persistPasskeyEnrollmentChallenge,
   preparePasskeyEnrollment,
   verifyPasskeyEnrollment,
 } from "~/server/auth/factors/passkey/service";
-import { WebauthnChallengeId } from "~/domain/ids";
 
 describe("passkey registration", () => {
   const scenario = createAuthScenario("passkey-registration");

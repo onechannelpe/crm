@@ -1,8 +1,8 @@
 import { createRoot } from "solid-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { usePasskeyEnrollment } from "~/features/auth/security/use-passkey-enrollment";
 import { ActionError } from "~/contracts/errors";
+import { usePasskeyEnrollment } from "~/features/auth/security/use-passkey-enrollment";
 
 const {
   beginPasskeyEnrollment,

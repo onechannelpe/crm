@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
+import type { UserId } from "~/domain/ids";
+import { SearchReservationId } from "~/domain/ids";
 import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
 import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
 import { createServerInfra } from "~/server/platform/container/infra";
 import { createSearchRuntime } from "~/server/platform/container/search-runtime";
-import type { UserId } from "~/domain/ids";
-import { SearchReservationId } from "~/domain/ids";
 import { Ok } from "~/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";

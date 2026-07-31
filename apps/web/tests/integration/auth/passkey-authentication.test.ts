@@ -9,6 +9,7 @@ import {
 } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { AuthLoginFlowId } from "~/domain/ids";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { verifyPasskeyLogin } from "~/server/auth/factors/passkey/service";
 import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
@@ -17,7 +18,6 @@ import {
   createAuthLoginContext,
   type AuthLoginContext,
 } from "~/server/auth/infrastructure/login-context";
-import { AuthLoginFlowId } from "~/domain/ids";
 import { isErr } from "~/shared/result";
 
 async function finishPasskeyLogin(

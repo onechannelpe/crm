@@ -1,3 +1,4 @@
+import type { CapacityRequestId, UserId } from "~/domain/ids";
 import type {
   CapacityGrantTx,
   CapacityManageTx,
@@ -11,9 +12,8 @@ import {
   createSearchCapacityGrantsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
 import type { AppContext } from "~/server/platform/action/context";
-import { createExecutorUow } from "~/server/platform/database/uow";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import type { CapacityRequestId, UserId } from "~/domain/ids";
+import { createExecutorUow } from "~/server/platform/database/uow";
 
 import { TEST_FIXTURES, type TestDbContext } from "../runtime/db";
 

@@ -1,10 +1,10 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
+import type { UserId } from "~/domain/ids";
 import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
 } from "~/server/security/action-rate-limit";
-import type { UserId } from "~/domain/ids";
 
 export function createSecurityTestKit(ctx: TestDbContext) {
   return {

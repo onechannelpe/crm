@@ -16,14 +16,14 @@ import {
   it,
 } from "vitest";
 
+import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
+import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { sessionCache } from "~/server/auth/session/session-cache";
+import { createSessionService } from "~/server/auth/session/session.service";
 import {
   generateSessionToken,
   hashSessionToken,
 } from "~/server/auth/session/tokens";
-import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
-import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
-import { createSessionService } from "~/server/auth/session/session.service";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 
 const IDENTITY = getSeededIdentity("execOne");

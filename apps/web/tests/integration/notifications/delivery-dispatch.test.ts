@@ -12,10 +12,10 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import type { NotificationIntent } from "~/server/notifications/types";
-import { openSession } from "~/server/notifications/whatsapp-session";
 import type { UserId } from "~/domain/ids";
 import { NotificationIntentId } from "~/domain/ids";
+import type { NotificationIntent } from "~/server/notifications/types";
+import { openSession } from "~/server/notifications/whatsapp-session";
 
 const NOW_MS = 1_700_000_000_000;
 const NOW = new Date(NOW_MS);

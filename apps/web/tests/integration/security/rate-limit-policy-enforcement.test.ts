@@ -16,11 +16,11 @@ import {
   vi,
 } from "vitest";
 
+import { ActionError } from "~/contracts/errors";
 import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
 } from "~/server/security/action-rate-limit";
-import { ActionError } from "~/contracts/errors";
 
 describe("rate limit policy enforcement", () => {
   let ctx: TestDbContext;

@@ -8,11 +8,11 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { EventId, NotificationIntentId } from "~/domain/ids";
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import { parseNotificationChannels } from "~/server/notifications/intent/payload";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { openSession } from "~/server/notifications/whatsapp-session";
-import { EventId, NotificationIntentId } from "~/domain/ids";
 import { reactToFulfillmentChanges } from "~/server/workflow/effects/reactors/fulfillment-notify";
 import { reactToStageChanges } from "~/server/workflow/effects/reactors/notify";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";

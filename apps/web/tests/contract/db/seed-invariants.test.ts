@@ -6,13 +6,13 @@ import {
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { changeInstallationPassword } from "~/server/auth/flows/change-installation-password";
+import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { verifyPassword } from "~/server/auth/password/password";
+import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
 import { migrateToLatest } from "~/server/platform/database/migrate";
 import { seedIfEmpty } from "~/server/platform/database/seed";
-import { changeInstallationPassword } from "~/server/auth/flows/change-installation-password";
-import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
-import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import { isErr } from "~/shared/result";
 
 describe("seed invariants", () => {

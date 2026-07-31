@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createDeliverySender } from "~/server/notifications/dispatch/send-delivery";
-import type { DeliveryJob } from "~/server/notifications/repos/delivery-repo";
 import {
   NotificationDeliveryId,
   NotificationIntentId,
   UserId,
 } from "~/domain/ids";
+import { createDeliverySender } from "~/server/notifications/dispatch/send-delivery";
+import type { DeliveryJob } from "~/server/notifications/repos/delivery-repo";
 
 import {
   createScriptedMessagingGateway,

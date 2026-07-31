@@ -4,6 +4,7 @@ import { randomUUIDv7 } from "bun";
 
 import type { SearchIntent } from "~/contracts/search/vocabulary";
 import type { DomainError } from "~/domain/errors";
+import { BranchId, UserId } from "~/domain/ids";
 import type {
   EngineClient,
   RecordCandidatesRequest,
@@ -12,7 +13,6 @@ import type {
   RecordCandidate,
   SearchResult,
 } from "~/server/integrations/engine/types";
-import { BranchId, UserId } from "~/domain/ids";
 import { Ok, type Result } from "~/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";

@@ -15,16 +15,16 @@ import {
   it,
 } from "vitest";
 
-import { sessionCache } from "~/server/auth/session/session-cache";
+import { InstallationId } from "~/domain/ids";
 import { revokeAllUserSessions } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession } from "~/server/auth/flows/revoke-user-session";
 import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
+import { sessionCache } from "~/server/auth/session/session-cache";
 import { createSessionService } from "~/server/auth/session/session.service";
-import type { AppContext } from "~/server/platform/action/context";
-import { InstallationId } from "~/domain/ids";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
+import type { AppContext } from "~/server/platform/action/context";
 
 const ADMIN = getSeededIdentity("superuser");
 const TARGET = getSeededIdentity("execOne");

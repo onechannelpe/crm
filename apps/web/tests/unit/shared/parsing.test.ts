@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { parseObject, validationFail } from "~/server/platform/action/input-reader";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 
 function expectErrCode(
   result:

@@ -1,14 +1,14 @@
 import type { Insertable } from "kysely";
 
-import type {
-  NotificationDeliveriesTable,
-  NotificationIntentsTable,
-} from "~/server/platform/database/types";
+import { NotificationIntentId, UserId } from "~/domain/ids";
 import type {
   NotificationAudience,
   NotificationChannel,
 } from "~/server/notifications/types";
-import { NotificationIntentId, UserId } from "~/domain/ids";
+import type {
+  NotificationDeliveriesTable,
+  NotificationIntentsTable,
+} from "~/server/platform/database/types";
 
 type IntentRow = Insertable<NotificationIntentsTable>;
 type DeliveryRow = Insertable<NotificationDeliveriesTable>;

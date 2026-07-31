@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
-import { createLogger } from "~/shared/observability/runtime-logger";
+import type { UserId } from "~/domain/ids";
 import { createIntentExpander } from "~/server/notifications/expansion/expand-intent";
 import { createRecipientPlanner } from "~/server/notifications/expansion/plan-recipients";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import type { IntentJob } from "~/server/notifications/repos/intent-repo";
-import type { UserId } from "~/domain/ids";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";

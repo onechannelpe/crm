@@ -6,8 +6,8 @@ import {
 import { describe, expect, it } from "vitest";
 
 import type { Role } from "~/domain/auth/access/rbac";
-import { canManageExecutive } from "~/server/capacity/application/authorize-capacity-actor";
 import { BranchId, TeamId, UserId } from "~/domain/ids";
+import { canManageExecutive } from "~/server/capacity/application/authorize-capacity-actor";
 
 type TargetUser = {
   role: Role;

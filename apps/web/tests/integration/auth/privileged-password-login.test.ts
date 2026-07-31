@@ -2,9 +2,9 @@ import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { AuthLoginFlowId } from "~/domain/ids";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
-import { AuthLoginFlowId } from "~/domain/ids";
 import { isErr } from "~/shared/result";
 
 describe("privileged password login", () => {
