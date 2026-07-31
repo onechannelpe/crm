@@ -1,15 +1,15 @@
-import type { AuthFunnelClientEventPayload } from "~/domain/observability/auth-funnel";
 import {
-  isAuthAnalyticsScreen,
-  recordAuthAnalyticsEvent as recordAuthAnalytics,
-} from "~/server/auth/auth-analytics";
+  isAuthFunnelScreen,
+  type AuthFunnelClientEventPayload,
+} from "~/domain/observability/auth-funnel";
+import { recordAuthAnalyticsEvent as recordAuthAnalytics } from "~/server/auth/auth-analytics";
 import { composeAuth } from "~/server/auth/ui/composition";
 import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
 function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
   if (input.kind === "screen_viewed") {
-    if (!isAuthAnalyticsScreen(input.screen)) {
+    if (!isAuthFunnelScreen(input.screen)) {
       throw new Error("Invalid auth analytics screen");
     }
     return input;

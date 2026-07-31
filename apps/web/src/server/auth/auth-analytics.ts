@@ -1,5 +1,4 @@
 import {
-  isAuthFunnelScreen,
   type AuthFunnelEvent,
   type AuthFunnelScreen,
 } from "~/domain/observability/auth-funnel";
@@ -24,12 +23,6 @@ export interface AuthAnalyticsRecorder {
     code: string | null;
     createdAt: Date;
   }): Promise<void>;
-}
-
-export function isAuthAnalyticsScreen(
-  value: unknown,
-): value is AuthFunnelScreen {
-  return isAuthFunnelScreen(value);
 }
 
 export function recordAuthAnalyticsEvent(
