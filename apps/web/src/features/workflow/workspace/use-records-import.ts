@@ -77,7 +77,7 @@ export function useRecordsImport() {
 
   const [jobId, setJobId] = createSignal<string | null>(null);
 
-  const progress = createTopicState({
+  const importProgress = createTopicState({
     channel: REALTIME_CHANNELS.recordImport,
     id: jobId,
     parse: parseRecordImportProgressMessage,
@@ -86,21 +86,21 @@ export function useRecordsImport() {
 
   function updateImportSnackBar(
     id: string,
-    progress: RecordImportProgressEvent,
+    event: RecordImportProgressEvent,
   ): void {
-    if (progress.queueState === "done") {
+    if (event.queueState === "done") {
       updateSnackBar(id, {
-        message: buildCompletedMessage(progress),
-        variant: progress.rowsFailed > 0 ? "warning" : "success",
+        message: buildCompletedMessage(event),
+        variant: event.rowsFailed > 0 ? "warning" : "success",
         duration: IMPORT_COMPLETED_DURATION_MS,
       });
 
       return;
     }
 
-    if (progress.queueState === "failed") {
+    if (event.queueState === "failed") {
       updateSnackBar(id, {
-        message: progress.errorMessage ?? "La importación falló",
+        message: event.errorMessage ?? "La importación falló",
         variant: "error",
         duration: IMPORT_COMPLETED_DURATION_MS,
       });
@@ -109,22 +109,22 @@ export function useRecordsImport() {
     }
 
     updateSnackBar(id, {
-      message: buildProgressMessage(progress),
+      message: buildProgressMessage(event),
     });
   }
 
   createEffect(
-    on(progress.value, (value) => {
-      if (!value || snackBarId === null) {
+    on(importProgress.value, (event) => {
+      if (!event || snackBarId === null) {
         return;
       }
 
-      updateImportSnackBar(snackBarId, value);
+      updateImportSnackBar(snackBarId, event);
     }),
   );
 
   createEffect(
-    on(progress.connection, (state) => {
+    on(importProgress.connection, (state) => {
       if (snackBarId === null) {
         return;
       }
