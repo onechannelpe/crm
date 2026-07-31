@@ -5,8 +5,6 @@ import type { TileColor } from "~/shared/ui/tile-color";
 
 import styles from "./tinted-icon-tile.module.css";
 
-export type { TileColor } from "~/shared/ui/tile-color";
-
 type TileIcon = (props: { size?: number; color?: string }) => JSX.Element;
 
 export function TintedIconTile(props: {

@@ -12,8 +12,6 @@ import { executeSessionServerFunction } from "~/server/platform/action";
 import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
 import { Ok } from "~/shared/result";
 
-export type { NotificationPreferencesView } from "~/contracts/notifications";
-
 // Default-on: a row in notification_opt_outs means "this user silenced this
 // category on this channel"; absence means on.
 export async function getNotificationPreferences(): Promise<NotificationPreferencesView> {

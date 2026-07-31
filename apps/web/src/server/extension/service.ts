@@ -9,8 +9,6 @@ import {
 import { refreshInstallationSession } from "./service/session";
 import type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
 
-export type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
-
 type CreateHandoffTokenInput = Parameters<typeof createHandoffToken>[1];
 type ClaimInstallationSessionInput = Parameters<
   typeof claimInstallationSession
