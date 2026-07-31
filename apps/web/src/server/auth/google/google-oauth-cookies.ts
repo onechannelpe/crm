@@ -1,3 +1,5 @@
+import { isProduction } from "~/shared/observability/runtime-env";
+
 const COOKIE_MAX_AGE = 600;
 const STATE_COOKIE_NAME = "google_oauth_state";
 const CODE_VERIFIER_COOKIE_NAME = "google_code_verifier";
@@ -7,7 +9,7 @@ function serializeOAuthCookie(
   value: string,
   maxAge: number,
 ): string {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  const secure = isProduction() ? "; Secure" : "";
   return `${name}=${value}; Path=/; HttpOnly${secure}; SameSite=Lax; Max-Age=${maxAge}`;
 }
 

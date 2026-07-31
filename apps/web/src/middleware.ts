@@ -11,6 +11,7 @@ import {
   buildRequestContext,
 } from "./server/platform/http/request-context";
 import { generateRequestId, generateTraceId } from "./shared/observability/ids";
+import { isProduction } from "./shared/observability/runtime-env";
 
 type StartMiddleware = Extract<
   Parameters<typeof createMiddleware>[0],
@@ -61,7 +62,7 @@ const applySecurityResponseState: StartMiddleware = async (event, next) => {
     default-src 'self';
     script-src 'nonce-${nonce}' 'strict-dynamic';
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data: blob: https:;
+    img-src 'self' data: blob:;
     font-src 'self' data:;
     connect-src 'self'${sentryConnectSrc};
     object-src 'none';
@@ -71,6 +72,19 @@ const applySecurityResponseState: StartMiddleware = async (event, next) => {
   `.replace(/\s+/g, " ");
 
   event.res.headers.set("Content-Security-Policy", csp);
+  event.res.headers.set("X-Frame-Options", "DENY");
+  event.res.headers.set("X-Content-Type-Options", "nosniff");
+  event.res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  event.res.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  );
+  if (isProduction()) {
+    event.res.headers.set(
+      "Strict-Transport-Security",
+      "max-age=63072000; includeSubDomains",
+    );
+  }
   return next();
 };
 

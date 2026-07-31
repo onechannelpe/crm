@@ -5,8 +5,37 @@ import {
   enforceCsrfRequestPolicy,
   enforceAuthRequest,
 } from "~/server/platform/http/request-auth";
+import { verifyCsrf } from "~/server/platform/security/csrf";
 
 const LOCAL_ORIGIN = "http://localhost:3000";
+
+describe("verifyCsrf", () => {
+  it("accepts a header token matching the expected token", () => {
+    const request = new Request("http://localhost:3000/home", {
+      headers: { "x-csrf-token": "expected-token" },
+    });
+    expect(verifyCsrf(request, "expected-token")).toBe(true);
+  });
+
+  it("rejects a header token of the same length that doesn't match", () => {
+    const request = new Request("http://localhost:3000/home", {
+      headers: { "x-csrf-token": "wrong-toroken" },
+    });
+    expect(verifyCsrf(request, "expected-token")).toBe(false);
+  });
+
+  it("rejects a header token of a different length", () => {
+    const request = new Request("http://localhost:3000/home", {
+      headers: { "x-csrf-token": "short" },
+    });
+    expect(verifyCsrf(request, "expected-token")).toBe(false);
+  });
+
+  it("rejects a request with no CSRF header at all", () => {
+    const request = new Request("http://localhost:3000/home");
+    expect(verifyCsrf(request, "expected-token")).toBe(false);
+  });
+});
 
 describe("auth middleware csrf policy", () => {
   it("allows same-origin unsafe requests via fetch metadata", () => {
@@ -106,6 +135,23 @@ describe("auth middleware csrf policy", () => {
       },
     });
     expect(decision.kind).toBe("reject");
+  });
+
+  it("allows an unsafe request carrying a matching synchronizer token", async () => {
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/login", {
+        method: "POST",
+        headers: {
+          origin: "http://localhost:3000",
+          "x-csrf-token": "csrf-token",
+        },
+      }),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(null, "csrf-token"),
+      },
+    });
+    expect(decision.kind).toBe("allow");
   });
 
   it("allows GET requests even when Origin does not match Host", async () => {

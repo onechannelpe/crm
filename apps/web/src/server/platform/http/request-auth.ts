@@ -141,7 +141,7 @@ export async function enforceAuthRequest(
         ? requestContext.csrf.token
         : null;
     const isCsrfValid = csrfToken
-      ? await verifyCsrf(event.request, csrfToken)
+      ? verifyCsrf(event.request, csrfToken)
       : false;
     if (!isCsrfValid) {
       logCsrfReject(event, "CSRF validation failed", targetOrigin);

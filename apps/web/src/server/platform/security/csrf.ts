@@ -1,28 +1,21 @@
+import { timingSafeEqual } from "node:crypto";
+
 import { CSRF_CONFIG } from "~/shared/csrf-config";
 
-export async function verifyCsrf(
-  request: Request,
-  expectedToken: string,
-): Promise<boolean> {
-  if (!expectedToken) return false;
-
+export function verifyCsrf(request: Request, expectedToken: string): boolean {
   const headerToken = request.headers.get(CSRF_CONFIG.HEADER_NAME);
-  if (headerToken === expectedToken) return true;
 
-  const contentType = request.headers.get("content-type");
-  const isForm =
-    contentType?.includes("application/x-www-form-urlencoded") ||
-    contentType?.includes("multipart/form-data");
-
-  if (!isForm) {
+  if (!headerToken) {
     return false;
   }
 
-  try {
-    const formData = await request.clone().formData();
-    const formToken = formData.get(CSRF_CONFIG.FORM_FIELD);
-    return formToken === expectedToken;
-  } catch {
+  // timingSafeEqual throws if the buffers have different lengths.
+  const headerBuf = Buffer.from(headerToken, "utf8");
+  const expectedBuf = Buffer.from(expectedToken, "utf8");
+
+  if (headerBuf.length !== expectedBuf.length) {
     return false;
   }
+
+  return timingSafeEqual(headerBuf, expectedBuf);
 }

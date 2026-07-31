@@ -1,11 +1,9 @@
 import { deleteCookie, getCookie, setCookie } from "@solidjs/start/http";
 
+import { isProduction } from "~/shared/observability/runtime-env";
+
 const COOKIE_NAME = "request_session";
 const COOKIE_MAX_AGE = 60 * 60 * 24;
-
-function isProduction(): boolean {
-  return process.env.NODE_ENV === "production";
-}
 
 export function getRequestSessionCookie(): string | undefined {
   return getCookie(COOKIE_NAME);
