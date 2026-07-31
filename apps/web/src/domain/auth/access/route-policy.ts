@@ -13,7 +13,7 @@ function isAppPath(p: string): p is AppPath {
   return p in ROUTE_MANIFEST;
 }
 
-function resolvePermission(pathname: string): Permission | null {
+export function getRoutePermission(pathname: string): Permission | null {
   const dynamic = DYNAMIC_ROUTES.find((r) => r.pattern.test(pathname));
   if (dynamic) return dynamic.permission ?? null;
 
@@ -28,12 +28,8 @@ function resolvePermission(pathname: string): Permission | null {
   return prefix ? (ROUTE_MANIFEST[prefix].permission ?? null) : null;
 }
 
-export function getRoutePermission(pathname: string): Permission | null {
-  return resolvePermission(pathname);
-}
-
 export function canAccessPath(role: Role, pathname: string): boolean {
-  const permission = resolvePermission(pathname);
+  const permission = getRoutePermission(pathname);
   if (!permission) return true;
   return hasPermission(role, permission);
 }

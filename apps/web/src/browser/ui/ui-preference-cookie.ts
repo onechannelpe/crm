@@ -20,10 +20,6 @@ export const booleanUiPreferenceCookieCodec = {
   encode: String,
 } satisfies UiPreferenceCookieCodec<boolean>;
 
-function readBrowserCookie(name: string): string | null {
-  return readCookieHeader(document.cookie, name);
-}
-
 function readServerCookie(name: string): string | null {
   const cookieHeader = getRequestEvent()?.request.headers.get("cookie");
   return cookieHeader ? readCookieHeader(cookieHeader, name) : null;
@@ -53,7 +49,7 @@ export function defineUiPreferenceCookie<T>(
     read(): T | null {
       const raw = isServer
         ? readServerCookie(options.name)
-        : readBrowserCookie(options.name);
+        : readCookieHeader(document.cookie, options.name);
 
       return raw === null ? null : options.codec.decode(raw);
     },
