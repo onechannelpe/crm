@@ -1,4 +1,4 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
 
 // Generate a deterministic 32-character session token from a seed.
 function token32(seed: string): string {

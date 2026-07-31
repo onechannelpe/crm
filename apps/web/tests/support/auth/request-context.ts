@@ -1,5 +1,5 @@
-import type { AuthSession } from "~/lib/auth/access/session-types";
-import type { RequestContext } from "~/lib/http/request-context";
+import type { AuthSession } from "~/domain/auth/access/session-types";
+import type { RequestContext } from "~/server/platform/http/request-context";
 
 export function createRequestContext(
   session: AuthSession | null,

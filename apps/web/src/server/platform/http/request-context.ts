@@ -53,7 +53,7 @@ interface RequestSessionStore {
 }
 
 export interface RequestContextDeps {
-  resolveAuthSession(token: string): Promise<AuthSession | null>;
+  resolveAuthSession(this: void, token: string): Promise<AuthSession | null>;
   requestSessions: RequestSessionStore;
 }
 

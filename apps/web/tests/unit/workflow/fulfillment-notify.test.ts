@@ -6,7 +6,7 @@ import {
   FulfillmentOrderId,
   UserId,
   WorkflowLeadId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 import {
   deriveFulfillmentNotification,
   formatPaymentReadyBody,

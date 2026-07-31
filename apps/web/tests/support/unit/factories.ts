@@ -1,6 +1,6 @@
-import type { AuthSession } from "~/lib/auth/access/session-types";
+import type { AuthSession } from "~/domain/auth/access/session-types";
+import { BranchId, UserId } from "~/domain/ids";
 import type { AppContext } from "~/server/platform/action/context";
-import { BranchId, UserId } from "~/server/shared/ids";
 
 export function makeAuthSession(
   overrides: Partial<AuthSession> = {},

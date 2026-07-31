@@ -2,7 +2,7 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
-import { BranchId, UserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/domain/ids";
 
 import { BENCH_NOW, benchDate } from "../_shared/constants";
 

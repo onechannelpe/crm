@@ -2,9 +2,9 @@ import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createSessionService } from "~/server/auth/session/session.service";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
-import type { EngineClient } from "~/server/shared/engine/client";
-import type { SearchResult } from "~/server/shared/engine/types";
-import { createEventsRepo } from "~/server/shared/repos-events";
+import type { EngineClient } from "~/server/integrations/engine/client";
+import type { SearchResult } from "~/server/integrations/engine/types";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 
 import {
   cleanupTestDb,

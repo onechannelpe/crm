@@ -3,12 +3,12 @@ import type { Insertable } from "kysely";
 import type {
   NotificationDeliveriesTable,
   NotificationIntentsTable,
-} from "~/lib/db/types";
+} from "~/server/platform/database/types";
 import type {
   NotificationAudience,
   NotificationChannel,
 } from "~/server/notifications/types";
-import { NotificationIntentId, UserId } from "~/server/shared/ids";
+import { NotificationIntentId, UserId } from "~/domain/ids";
 
 type IntentRow = Insertable<NotificationIntentsTable>;
 type DeliveryRow = Insertable<NotificationDeliveriesTable>;

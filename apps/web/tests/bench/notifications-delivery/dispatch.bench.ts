@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
-import { createLogger } from "~/lib/observability/logger";
+import { createLogger } from "~/shared/observability/runtime-logger";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import { createDeliverySender } from "~/server/notifications/dispatch/send-delivery";
 import type { DeliveryJob } from "~/server/notifications/repos/delivery-repo";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";

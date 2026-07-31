@@ -77,6 +77,7 @@ describe("workflow lead mutation metadata", () => {
       key: "metadata-reassign",
       organization: { key: "metadata-reassign" },
     });
+    runtime.now.set(new Date(runtime.now.get().getTime() + 1));
 
     const reassignResult = await reassignLeadCommand(
       {

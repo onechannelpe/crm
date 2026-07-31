@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { appMonthRange } from "~/lib/time/app-time";
-import type { UserId } from "~/server/shared/ids";
+import { appMonthRange } from "~/domain/time/app-time";
+import type { UserId } from "~/domain/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { seedQuotaUser } from "./fixtures";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loadServerEnv, validateSecret } from "~/lib/env";
+import { loadServerEnv, validateSecret } from "~/server/platform/config/env";
 
 describe("env validation", () => {
   const baseEnv = {

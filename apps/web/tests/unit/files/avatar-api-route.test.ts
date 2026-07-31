@@ -5,7 +5,7 @@ const { getSessionMock, getMock } = vi.hoisted(() => ({
   getMock: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("~/lib/auth/access/session", () => ({
+vi.mock("~/server/platform/action/session", () => ({
   getSession: getSessionMock,
 }));
 

@@ -4,9 +4,8 @@ import {
   getInviteExpiryFieldError,
   getMinInviteExpiryDate,
   INVITE_EXPIRY_ERROR_TEXT,
-  INVALID_INVITE_EXPIRY_ERROR_TEXT,
   parseInviteExpiryDate,
-} from "~/features/settings-members/team-invite-expiry";
+} from "~/features/team-management/team-invite-expiry";
 
 describe("team invite expiry helpers", () => {
   const fixedNow = new Date(2026, 2, 24, 12, 0, 0, 0).getTime();
@@ -25,11 +24,11 @@ describe("team invite expiry helpers", () => {
   it("rejects malformed dates", () => {
     expect(parseInviteExpiryDate("2026-03", fixedNow)).toEqual({
       isErr: true,
-      error: INVALID_INVITE_EXPIRY_ERROR_TEXT,
+      error: "Ingresa una fecha válida.",
     });
     expect(parseInviteExpiryDate("2026-02-31", fixedNow)).toEqual({
       isErr: true,
-      error: INVALID_INVITE_EXPIRY_ERROR_TEXT,
+      error: "Ingresa una fecha válida.",
     });
   });
 

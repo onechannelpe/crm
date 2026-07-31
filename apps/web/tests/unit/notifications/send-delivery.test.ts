@@ -6,7 +6,7 @@ import {
   NotificationDeliveryId,
   NotificationIntentId,
   UserId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 import {
   createScriptedMessagingGateway,

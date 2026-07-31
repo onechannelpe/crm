@@ -18,7 +18,7 @@ import {
 import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
-} from "~/lib/security/action-rate-limit";
+} from "~/server/security/action-rate-limit";
 
 describe("rate limit audit", () => {
   let ctx: TestDbContext;

@@ -16,15 +16,15 @@ import {
   it,
 } from "vitest";
 
-import { sessionCache } from "~/lib/auth/session/session-cache";
+import { sessionCache } from "~/server/auth/session/session-cache";
 import {
   generateSessionToken,
   hashSessionToken,
-} from "~/lib/auth/session/tokens";
+} from "~/server/auth/session/tokens";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createSessionService } from "~/server/auth/session/session.service";
-import { createEventsRepo } from "~/server/shared/repos-events";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 
 const IDENTITY = getSeededIdentity("execOne");
 const NOW = new Date("2026-07-15T12:00:00.000Z");

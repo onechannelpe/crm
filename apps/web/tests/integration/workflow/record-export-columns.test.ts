@@ -10,7 +10,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { WorkflowRateProposalId } from "~/server/shared/ids";
+import { WorkflowRateProposalId } from "~/domain/ids";
 import { createLeadQueries } from "~/server/workflow/lead/read/lead-queries";
 
 describe("integration record export columns", () => {

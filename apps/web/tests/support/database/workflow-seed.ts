@@ -9,8 +9,8 @@ import type {
   IntegrationJobId,
   WorkflowLeadId,
   WorkflowRateProposalId,
-} from "~/server/shared/ids";
-import { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
+} from "~/domain/ids";
+import { BranchId, OrganizationId, UserId } from "~/domain/ids";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
 import type { TestRuntime } from "../runtime/app";
@@ -107,7 +107,6 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
     .values({
       id: input.id,
       organization_id: organizationId,
-      executive_id: input.executiveId,
       stage: input.stage,
       status: input.status,
       priority: input.priority,
@@ -124,6 +123,19 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       settlement_bank: commercial.settlementBank,
       pos_count: commercial.posCount,
       reservation_expires_at: input.reservationExpiresAt ?? null,
+    })
+    .execute();
+
+  await runtime.ctx.db
+    .insertInto("organization_owner_assignments")
+    .values({
+      organization_id: organizationId,
+      executive_id: input.executiveId,
+      valid_from: createdAt,
+      valid_until: null,
+      assigned_by: input.createdBy ?? input.executiveId,
+      reason: "test_seed",
+      created_at: createdAt,
     })
     .execute();
 }

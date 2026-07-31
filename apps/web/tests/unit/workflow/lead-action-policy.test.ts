@@ -5,14 +5,14 @@ import {
   MAX_RATE_REVISION_FILES,
   MAX_RATE_REVISION_ROUNDS,
 } from "~/contracts/workflow/limits";
-import { hydrateRuc } from "~/server/shared/document";
+import { hydrateRuc } from "~/domain/identity/document";
 import {
   OrganizationId,
   UserId,
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 import {
   closeLead,
   qualifyLead,

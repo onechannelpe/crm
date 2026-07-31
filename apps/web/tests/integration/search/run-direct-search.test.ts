@@ -7,13 +7,13 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { appMonthRange } from "~/lib/time/app-time";
+import { appMonthRange } from "~/domain/time/app-time";
 import { createSearchUsageReservationPorts } from "~/server/platform/container/search-runtime";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { external, type DomainError } from "~/server/shared/domain-error";
-import type { EngineClient } from "~/server/shared/engine/client";
-import type { SearchResult } from "~/server/shared/engine/types";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { external, type DomainError } from "~/domain/errors";
+import type { EngineClient } from "~/server/integrations/engine/client";
+import type { SearchResult } from "~/server/integrations/engine/types";
+import { Err, Ok, type Result } from "~/shared/result";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;
 const MONTHLY_LIMIT = 250; // config.searchAccess.defaultMonthlyLimit

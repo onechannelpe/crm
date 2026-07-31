@@ -6,7 +6,7 @@ import {
   OrganizationId,
   OrganizationPersonId,
   UserId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 

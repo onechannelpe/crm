@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolvePublicOrigin } from "~/lib/http/public-origin";
+import { resolvePublicOrigin } from "~/server/platform/http/public-origin";
 
 const FORWARDED_ORIGIN =
   "https://5173-firebase-crm-1772279181549.cluster-zhw3w37rxzgkutusbbhib6qhra.cloudworkstations.dev";

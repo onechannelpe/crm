@@ -46,7 +46,12 @@ export async function persistDemoMerchantStats(
     merchants,
   });
 
-  await persistTargets(db, merchants, context);
+  await persistTargets(
+    db,
+    merchants,
+    new Set(linkedOrganizations.map(({ ruc }) => ruc)),
+    context,
+  );
 }
 
 interface SnapshotInput {
@@ -113,12 +118,14 @@ async function applySnapshot(
 async function persistTargets(
   db: Kysely<Database>,
   merchants: readonly MerchantSpec[],
+  targetableRucs: ReadonlySet<string>,
   context: SeedContext,
 ): Promise<void> {
   const setAt = daysBefore(context, 30);
   const byRuc = new Map<string, MerchantSpec>();
 
   for (const merchant of merchants) {
+    if (!targetableRucs.has(merchant.ruc)) continue;
     if (merchant.projectedGpv != null && !byRuc.has(merchant.ruc)) {
       byRuc.set(merchant.ruc, merchant);
     }

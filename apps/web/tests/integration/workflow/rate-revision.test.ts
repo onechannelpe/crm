@@ -15,11 +15,11 @@ import {
 import { randomUUIDv7 } from "bun";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
+import type { UserId, WorkflowLeadId } from "~/domain/ids";
 import {
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 

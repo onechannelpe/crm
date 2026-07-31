@@ -2,7 +2,7 @@ import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createAuthThrottleKit } from "@tests/support/auth/throttle-kit";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { AUTH_THROTTLE_POLICY } from "~/lib/auth/password/throttle-policy";
+import { AUTH_THROTTLE_POLICY } from "~/server/auth/password/throttle-policy";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 
 describe("auth throttle windowing", () => {

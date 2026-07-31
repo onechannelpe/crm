@@ -10,7 +10,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { WorkflowInquiryId } from "~/server/shared/ids";
+import { WorkflowInquiryId } from "~/domain/ids";
 import { createInquiry } from "~/server/workflow/inquiry/create-inquiry";
 import { registerLead } from "~/server/workflow/lead/commands/register-lead";
 

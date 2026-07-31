@@ -11,7 +11,7 @@ import {
 } from "vitest";
 
 import { createObservabilityService } from "~/server/observability/service";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 describe("auth funnel observability snapshot", () => {
   const scenario = createAuthScenario("auth-funnel-observability");

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildEngineClientConfig } from "~/server/shared/engine/config";
+import { buildEngineClientConfig } from "~/server/integrations/engine/config";
 
 const VALID_HMAC = {
   engineHmacKeyId: "web",

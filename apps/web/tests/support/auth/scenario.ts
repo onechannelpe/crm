@@ -15,14 +15,14 @@ import {
 } from "@tests/support/runtime/db";
 import { vi } from "vitest";
 
-import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
-import { generateCurrentTotpCode } from "~/lib/auth/totp/totp";
+import { decryptTotpSecret } from "~/server/auth/totp/secret-crypto";
+import { generateCurrentTotpCode } from "~/server/auth/totp/totp";
 import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
 import { verifyTotpLoginProof } from "~/server/auth/flows/verify-pending-login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import type { AuthLoginFlowId } from "~/server/shared/ids";
-import { Err, isErr, Ok } from "~/server/shared/result";
+import type { AuthLoginFlowId } from "~/domain/ids";
+import { Err, isErr, Ok } from "~/shared/result";
 
 interface RequestMeta {
   ipAddress: string;

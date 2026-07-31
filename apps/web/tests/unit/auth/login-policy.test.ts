@@ -4,7 +4,7 @@ import {
   evaluateLoginPolicy,
   type LoginPolicyInput,
 } from "~/server/auth/policy/engine";
-import { UserId } from "~/server/shared/ids";
+import { UserId } from "~/domain/ids";
 
 function createInput(overrides?: {
   proof?: LoginPolicyInput["proof"];

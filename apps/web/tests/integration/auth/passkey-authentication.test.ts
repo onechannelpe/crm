@@ -17,8 +17,8 @@ import {
   createAuthLoginContext,
   type AuthLoginContext,
 } from "~/server/auth/infrastructure/login-context";
-import { AuthLoginFlowId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { AuthLoginFlowId } from "~/domain/ids";
+import { isErr } from "~/shared/result";
 
 async function finishPasskeyLogin(
   login: AuthLoginContext,

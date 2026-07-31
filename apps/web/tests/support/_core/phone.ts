@@ -1,4 +1,4 @@
-import { parsePhone, type Phone } from "~/lib/phone/pe-mobile";
+import { parsePhone, type Phone } from "~/domain/phone/pe-mobile";
 
 const DEFAULT_PHONE = "999888777";
 

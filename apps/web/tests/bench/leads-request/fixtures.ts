@@ -3,17 +3,17 @@ import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
 import type { SearchIntent } from "~/contracts/search/vocabulary";
-import type { DomainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/domain/errors";
 import type {
   EngineClient,
   RecordCandidatesRequest,
-} from "~/server/shared/engine/client";
+} from "~/server/integrations/engine/client";
 import type {
   RecordCandidate,
   SearchResult,
-} from "~/server/shared/engine/types";
-import { BranchId, UserId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+} from "~/server/integrations/engine/types";
+import { BranchId, UserId } from "~/domain/ids";
+import { Ok, type Result } from "~/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
 

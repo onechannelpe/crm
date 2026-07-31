@@ -4,9 +4,9 @@ import { executeWithUsageReservation } from "~/server/capacity/application/usage
 import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
 import { createServerInfra } from "~/server/platform/container/infra";
 import { createSearchRuntime } from "~/server/platform/container/search-runtime";
-import type { UserId } from "~/server/shared/ids";
-import { SearchReservationId } from "~/server/shared/ids";
-import { Ok } from "~/server/shared/result";
+import type { UserId } from "~/domain/ids";
+import { SearchReservationId } from "~/domain/ids";
+import { Ok } from "~/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";

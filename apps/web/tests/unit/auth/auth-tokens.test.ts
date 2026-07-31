@@ -4,7 +4,7 @@ import {
   generateSessionToken,
   hashSessionToken,
   isValidTokenFormat,
-} from "~/lib/auth/session/tokens";
+} from "~/server/auth/session/tokens";
 
 describe("session tokens", () => {
   it("generates valid token format", () => {

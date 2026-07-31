@@ -5,9 +5,9 @@ import {
 } from "@tests/support/unit/scope-access-fakes";
 import { describe, expect, it } from "vitest";
 
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
 import { canManageExecutive } from "~/server/capacity/application/authorize-capacity-actor";
-import { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import { BranchId, TeamId, UserId } from "~/domain/ids";
 
 type TargetUser = {
   role: Role;

@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import { createAuditActionPoliciesRepo } from "~/server/audit-reader/audit-policy-repo";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
@@ -26,6 +26,8 @@ import {
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import { createContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
+import { createInteractionLogsRepo } from "~/server/contact-assignments/infrastructure/interaction-logs-repo";
+import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createIntegrationJobRepo } from "~/server/integrations/infrastructure/integration-job-repo";
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
@@ -33,13 +35,10 @@ import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
+import type { Database } from "~/server/platform/database/types";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
-import { createAgentStatusRepo } from "~/server/shared/repos-agent-status";
-import { createAuditActionPoliciesRepo } from "~/server/shared/repos-audit-action-policies";
-import { createEventsRepo } from "~/server/shared/repos-events";
-import { createInteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createTeamsRepo } from "~/server/users/repos-teams";
@@ -82,7 +81,6 @@ export function createTestRepositories(db: Kysely<Database>) {
     extensionRuntime: createExtensionRuntimeRepo(db),
     events: createEventsRepo(db),
     auditActionPolicies: createAuditActionPoliciesRepo(db),
-    agentStatus: createAgentStatusRepo(db),
     passkeys: createPasskeysRepo(db),
     webauthnChallenges: createWebauthnChallengesRepo(db),
     oauthAccounts: createOAuthAccountsRepo(db),

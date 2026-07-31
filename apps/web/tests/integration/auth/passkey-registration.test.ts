@@ -17,7 +17,7 @@ import {
   preparePasskeyEnrollment,
   verifyPasskeyEnrollment,
 } from "~/server/auth/factors/passkey/service";
-import { WebauthnChallengeId } from "~/server/shared/ids";
+import { WebauthnChallengeId } from "~/domain/ids";
 
 describe("passkey registration", () => {
   const scenario = createAuthScenario("passkey-registration");

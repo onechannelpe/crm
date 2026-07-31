@@ -9,7 +9,7 @@ import {
   resendTeamInvite,
   revokeTeamInvite,
 } from "~/actions/team/invites.action";
-import { ActionError } from "~/lib/wire-error";
+import { ActionError } from "~/contracts/errors";
 
 async function rejectionCode(run: Promise<unknown>): Promise<unknown> {
   try {

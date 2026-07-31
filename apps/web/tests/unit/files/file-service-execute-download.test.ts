@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { FileAssetId, FileDownloadTokenId, UserId } from "~/domain/ids";
 import { executeDownload } from "~/server/files/service/execute-download";
 import type { FileAsset } from "~/server/files/types";
-import { FileAssetId, FileDownloadTokenId, UserId } from "~/server/shared/ids";
 
 const fileAsset: FileAsset = {
   id: FileAssetId.trust("file-20"),
@@ -42,6 +42,7 @@ describe("executeDownload", () => {
           assets: {
             findById: async () => fileAsset,
             insert: async () => fileAsset.id,
+            delete: async () => [],
           },
         },
         storage: {

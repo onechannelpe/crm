@@ -16,7 +16,7 @@ import {
   vi,
 } from "vitest";
 
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 const EXEC_USER_ID = TEST_FIXTURES.users.execOne.id;
 const SUPERUSER_ID = TEST_FIXTURES.users.superUser.id;

@@ -6,14 +6,14 @@ import {
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { verifyPassword } from "~/lib/auth/password/password";
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
-import { migrateToLatest } from "~/lib/db/migrate";
-import { seedIfEmpty } from "~/lib/db/seed";
+import { verifyPassword } from "~/server/auth/password/password";
+import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
+import { migrateToLatest } from "~/server/platform/database/migrate";
+import { seedIfEmpty } from "~/server/platform/database/seed";
 import { changeInstallationPassword } from "~/server/auth/flows/change-installation-password";
 import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 describe("seed invariants", () => {
   let ctx: FreshDbContext | null = null;

@@ -4,7 +4,7 @@ import type {
   IntegrationJobId,
   UserId,
   WorkflowLeadId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 import type { TestActorKey } from "../database/workflow-fixtures";
 import { actorBy } from "../database/workflow-fixtures";

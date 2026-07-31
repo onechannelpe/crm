@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";

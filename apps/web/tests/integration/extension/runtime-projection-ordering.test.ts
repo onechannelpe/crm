@@ -8,7 +8,7 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { EventId } from "~/server/shared/ids";
+import { EventId } from "~/domain/ids";
 
 describe("extension runtime projection ordering", () => {
   let ctx: TestDbContext;

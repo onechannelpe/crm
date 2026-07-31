@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";

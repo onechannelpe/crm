@@ -4,7 +4,7 @@ import { workflowRepos } from "@tests/support/integration/workflow-ports";
 import type { TestRuntime } from "@tests/support/runtime/app";
 
 import type { LeadStatus } from "~/contracts/workflow/vocabulary";
-import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
+import type { UserId, WorkflowLeadId } from "~/domain/ids";
 import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 // Lead invariants are asserted through getLeadDetail, the same read model production

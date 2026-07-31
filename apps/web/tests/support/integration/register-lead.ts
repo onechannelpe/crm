@@ -4,7 +4,7 @@ import type {
   OrganizationId,
   UserId,
   WorkflowLeadId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/commands/register-lead";
 
 import { actorBy } from "../database/workflow-fixtures";

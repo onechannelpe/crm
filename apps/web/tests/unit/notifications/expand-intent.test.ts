@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createIntentExpander } from "~/server/notifications/expansion/expand-intent";
 import type { RecipientPlan } from "~/server/notifications/expansion/plan-recipients";
 import type { IntentJob } from "~/server/notifications/repos/intent-repo";
-import { NotificationIntentId, UserId } from "~/server/shared/ids";
+import { NotificationIntentId, UserId } from "~/domain/ids";
 
 const NOW = new Date(5_000);
 

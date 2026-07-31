@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Err, Ok } from "~/server/shared/result";
+import { Err, Ok } from "~/shared/result";
 
 const mocks = vi.hoisted(() => ({
   completeGoogleOAuthCallback: vi.fn<() => Promise<unknown>>(),

@@ -4,17 +4,17 @@ import { join } from "node:path";
 import { sql, type Kysely } from "kysely";
 import { Client } from "pg";
 
-import { createDb } from "~/lib/db/client";
-import { migrateToLatest } from "~/lib/db/migrate";
-import { REFERENCE_DATA_MODULES } from "~/lib/db/schema";
-import type { Database } from "~/lib/db/types";
+import { createDb } from "~/server/platform/database/client";
+import { migrateToLatest } from "~/server/platform/database/migrate";
+import { REFERENCE_DATA_MODULES } from "~/server/platform/database/schema";
+import type { Database } from "~/server/platform/database/types";
 import {
   BranchId,
   OrganizationId,
   OrganizationPersonId,
   PersonId,
   UserId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 import {
   createTestRepositories,

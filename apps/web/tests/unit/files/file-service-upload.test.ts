@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { BranchId, FileAssetId, UserId } from "~/domain/ids";
 import type { InsertFileAssetInput } from "~/server/files/repo/types";
 import { storeUploadedFile } from "~/server/files/service/store-uploaded-file";
 import type { FileAsset } from "~/server/files/types";
 import type { AppContext } from "~/server/platform/action/context";
-import { BranchId, FileAssetId, UserId } from "~/server/shared/ids";
 
 const NOW = new Date(1_700_000_123_456);
 const CSV_BYTES = new TextEncoder().encode("id,name\n1,test\n");
@@ -74,6 +74,7 @@ describe("storeUploadedFile", () => {
               return id;
             },
             findById: async () => asset,
+            delete: async () => [],
           },
         },
         storage: {
@@ -115,6 +116,7 @@ describe("storeUploadedFile", () => {
             assets: {
               insert: async () => FileAssetId.trust("unused"),
               findById: async () => null,
+              delete: async () => [],
             },
           },
           storage: {

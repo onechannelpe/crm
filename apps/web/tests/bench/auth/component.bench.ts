@@ -1,7 +1,7 @@
 import { bench, describe } from "vitest";
 
-import { hashAuthKey } from "~/lib/auth/password/key-hash";
-import { buildThrottleKeys } from "~/lib/auth/password/throttle-keys";
+import { hashAuthKey } from "~/server/auth/password/key-hash";
+import { buildThrottleKeys } from "~/server/auth/password/throttle-keys";
 
 describe("auth login component benchmark", () => {
   bench("component path: build throttle keys", () => {

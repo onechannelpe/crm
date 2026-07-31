@@ -8,7 +8,7 @@ import {
   type PasskeyProviderDeps,
   type VerifiedRegistrationCredential,
 } from "~/server/auth/factors/passkey-provider";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 
 import type { TestDbContext } from "../runtime/db";
 

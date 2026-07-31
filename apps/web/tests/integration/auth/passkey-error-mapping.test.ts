@@ -16,7 +16,7 @@ import {
 import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
 import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 describe("passkey error mapping", () => {
   const scenario = createAuthScenario("passkey-error-mapping");

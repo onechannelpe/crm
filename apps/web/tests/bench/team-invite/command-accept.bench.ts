@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
 import { bindInviteRepos } from "~/server/invites/infrastructure/invite-service-factory";
-import { createExecutorUow } from "~/server/shared/application/uow";
+import { createExecutorUow } from "~/server/platform/database/uow";
 
 import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";

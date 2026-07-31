@@ -6,7 +6,7 @@ import {
   getYearOptions,
   isPreviousMonthDisabled,
 } from "~/components/ui/date-picker/date-picker-model";
-import { parseCalendarDate } from "~/lib/time/calendar-date";
+import { parseCalendarDate } from "~/domain/time/calendar-date";
 
 function date(value: string) {
   const parsed = parseCalendarDate(value);

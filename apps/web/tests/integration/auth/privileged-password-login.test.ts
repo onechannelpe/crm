@@ -4,8 +4,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
-import { AuthLoginFlowId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { AuthLoginFlowId } from "~/domain/ids";
+import { isErr } from "~/shared/result";
 
 describe("privileged password login", () => {
   const scenario = createAuthScenario("privileged-password-login");

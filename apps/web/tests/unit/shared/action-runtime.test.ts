@@ -1,20 +1,23 @@
 import { makeAuthSession } from "@tests/support/unit/factories";
 import { describe, expect, it, vi } from "vitest";
 
-import { authenticate, authorizePermission } from "~/lib/auth/access/session";
-import type { AuthSession } from "~/lib/auth/access/session-types";
-import { createActionRunner } from "~/server/platform/action";
-import type { AppContext } from "~/server/platform/action/context";
+import type { AuthSession } from "~/domain/auth/access/session-types";
 import {
   external,
   forbidden,
   invalid,
   rateLimited,
   unauthenticated,
-} from "~/server/shared/domain-error";
-import { Err, isErr, Ok } from "~/server/shared/result";
+} from "~/domain/errors";
+import { createActionRunner } from "~/server/platform/action";
+import type { AppContext } from "~/server/platform/action/context";
+import {
+  authenticate,
+  authorizePermission,
+} from "~/server/platform/action/session";
+import { Err, isErr, Ok } from "~/shared/result";
 
-vi.mock("~/lib/auth/access/session", () => ({
+vi.mock("~/server/platform/action/session", () => ({
   authenticate: vi.fn<() => Promise<unknown>>(),
   authenticateSession: vi.fn<() => Promise<unknown>>(),
   authorizePermission: vi.fn<() => unknown>(),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { BranchId, UserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/domain/ids";
 import { deriveLeadStageNotifications } from "~/server/workflow/effects/reactors/notify";
 
 const baseInput = {

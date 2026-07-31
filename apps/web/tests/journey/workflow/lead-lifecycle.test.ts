@@ -13,7 +13,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { WorkflowVenueId } from "~/server/shared/ids";
+import { WorkflowVenueId } from "~/domain/ids";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 import { registerLead } from "~/server/workflow/lead/commands/register-lead";

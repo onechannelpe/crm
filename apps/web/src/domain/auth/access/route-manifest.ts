@@ -19,6 +19,7 @@ export type AppPath =
   | "/rate-simulator"
   | "/home"
   | "/dashboards"
+  | "/dashboards/merchant-gpv"
   | "/schedule"
   | "/settings/profile"
   | "/settings/appearance"
@@ -54,6 +55,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
   "/home": { permission: "lead:work", landingPriority: 1 },
   "/dashboards": { permission: "dashboards:read" },
+  "/dashboards/merchant-gpv": { permission: "dashboards:read" },
   "/schedule": {},
   "/settings/profile": {},
   "/settings/appearance": {},

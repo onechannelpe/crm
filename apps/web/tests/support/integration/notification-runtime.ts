@@ -1,4 +1,4 @@
-import { createLogger } from "~/lib/observability/logger";
+import { createLogger } from "~/shared/observability/runtime-logger";
 import {
   createRecipientPlanner,
   projectIntentForPlanning,
@@ -7,7 +7,7 @@ import { createDeliveryRepository } from "~/server/notifications/repos/delivery-
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { assembleNotificationPipeline } from "~/server/platform/container/notifications-runtime";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 import { createScriptedMessagingGateway } from "../fakes/messaging-gateway";
 import type { TestRuntime } from "../runtime/app";

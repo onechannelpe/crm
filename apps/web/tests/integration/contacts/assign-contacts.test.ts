@@ -7,13 +7,13 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { appCalendarDateAt, appDayRange } from "~/lib/time/app-time";
+import { appCalendarDateAt, appDayRange } from "~/domain/time/app-time";
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
-import { external, type DomainError } from "~/server/shared/domain-error";
-import type { EngineClient } from "~/server/shared/engine/client";
-import type { RecordCandidate } from "~/server/shared/engine/record-contract";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { external, type DomainError } from "~/domain/errors";
+import type { EngineClient } from "~/server/integrations/engine/client";
+import type { RecordCandidate } from "~/server/integrations/engine/record-contract";
+import { Err, Ok, type Result } from "~/shared/result";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;
 const BRANCH_ID = TEST_FIXTURES.branches.lima.id;

@@ -15,7 +15,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import type { BranchId, WorkflowLeadId } from "~/server/shared/ids";
+import type { BranchId, WorkflowLeadId } from "~/domain/ids";
 import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
 import { registerLead } from "~/server/workflow/lead/commands/register-lead";
 

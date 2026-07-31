@@ -1,7 +1,7 @@
 import type { TestDbContext } from "@tests/support/runtime/db";
 
-import type { WireKind } from "~/lib/wire-error";
-import type { UserId } from "~/server/shared/ids";
+import type { WireKind } from "~/contracts/errors";
+import type { UserId } from "~/domain/ids";
 
 export async function seedEvent(
   ctx: TestDbContext,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { classifyRequest } from "~/lib/auth/access/request-class";
+import { classifyRequest } from "~/server/platform/http/request-class";
 
 describe("classifyRequest", () => {
   it("classifies provider webhooks as machine", () => {

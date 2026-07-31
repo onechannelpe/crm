@@ -12,13 +12,13 @@ import {
 
 import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { Err, Ok, isErr } from "~/server/shared/result";
+import { Err, Ok, isErr } from "~/shared/result";
 
 const mocks = vi.hoisted(() => ({
   authenticateGoogleAuthorizationCode: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("~/lib/auth/google/google-oauth", () => ({
+vi.mock("~/server/auth/google/google-oauth", () => ({
   authenticateGoogleAuthorizationCode:
     mocks.authenticateGoogleAuthorizationCode,
 }));

@@ -3,9 +3,9 @@ import type {
   BranchId,
   OrganizationPersonId,
   UserId,
-} from "~/server/shared/ids";
-import { ContactAssignmentId } from "~/server/shared/ids";
-import { Err, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
+import { ContactAssignmentId } from "~/domain/ids";
+import { Err, type Result } from "~/shared/result";
 
 import { TEST_FIXTURES, type TestDbContext } from "../runtime/db";
 import { createTestRepositories } from "../runtime/repos";

@@ -9,8 +9,8 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createBlobStore } from "~/server/shared/blob-store";
-import { UserId } from "~/server/shared/ids";
+import { createBlobStore } from "~/server/platform/files/blob-store";
+import { UserId } from "~/domain/ids";
 import {
   createAvatarService,
   type AvatarUsersRepository,

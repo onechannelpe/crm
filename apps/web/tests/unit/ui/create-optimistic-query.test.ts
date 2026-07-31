@@ -34,7 +34,7 @@ vi.mock("@solidjs/router", () => ({
   revalidate: router.revalidate,
 }));
 
-import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
+import { createOptimisticQuery } from "~/browser/ui/create-optimistic-query";
 
 describe("createOptimisticQuery", () => {
   it("retains defined data while the resource is temporarily undefined", () => {

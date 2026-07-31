@@ -11,7 +11,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { NotificationIntentId } from "~/server/shared/ids";
+import { NotificationIntentId } from "~/domain/ids";
 
 describe("outbox delivery", () => {
   let runtime: TestRuntime;

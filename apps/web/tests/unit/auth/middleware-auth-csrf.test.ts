@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   enforceCsrfRequestPolicy,
   enforceAuthRequest,
-} from "~/lib/auth/access/request-auth";
+} from "~/server/platform/http/request-auth";
 
 const LOCAL_ORIGIN = "http://localhost:3000";
 

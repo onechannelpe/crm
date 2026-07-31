@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { issueRecoveryCodesForEnrollment } from "~/server/auth/recovery/issue-recovery-codes";
-import { isErr, Ok } from "~/server/shared/result";
+import { isErr, Ok } from "~/shared/result";
 
 function runSeries(count: number, task: () => Promise<void>): Promise<void> {
   let sequence = Promise.resolve();

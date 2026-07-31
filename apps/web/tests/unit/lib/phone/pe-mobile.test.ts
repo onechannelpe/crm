@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizePhoneInput, parsePhone } from "~/lib/phone/pe-mobile";
+import { normalizePhoneInput, parsePhone } from "~/domain/phone/pe-mobile";
 
 describe("pe-mobile phone helpers", () => {
   it("normalizes a +51 prefixed mobile to local format", () => {

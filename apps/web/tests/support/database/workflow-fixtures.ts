@@ -5,14 +5,14 @@ import type {
   LeadPriority,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { Role } from "~/lib/auth/access/rbac";
-import type { BranchId, FulfillmentOrderId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { BranchId, FulfillmentOrderId } from "~/domain/ids";
 import {
   UserId,
   WorkflowLeadId,
   WorkflowRateProposalId,
   WorkflowVenueId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 import { createDeterministicIdFactory } from "../_core/ids";
 import { ISOLATED_DB_IDENTITIES } from "../identities/catalog";

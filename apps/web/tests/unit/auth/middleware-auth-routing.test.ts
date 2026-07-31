@@ -2,7 +2,7 @@ import { createRequestContext } from "@tests/support/auth/request-context";
 import { makeAuthSession } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
-import { enforceAuthRequest } from "~/lib/auth/access/request-auth";
+import { enforceAuthRequest } from "~/server/platform/http/request-auth";
 
 describe("auth middleware routing", () => {
   it("redirects to /login when private route has no session", async () => {

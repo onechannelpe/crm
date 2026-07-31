@@ -19,8 +19,8 @@ import {
 import {
   ACTION_RATE_LIMIT_POLICY,
   checkActionRateLimit,
-} from "~/lib/security/action-rate-limit";
-import { ActionError } from "~/lib/wire-error";
+} from "~/server/security/action-rate-limit";
+import { ActionError } from "~/contracts/errors";
 
 describe("rate limit retry after", () => {
   let ctx: TestDbContext;

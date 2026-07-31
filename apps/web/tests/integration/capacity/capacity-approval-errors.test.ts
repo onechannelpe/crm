@@ -18,7 +18,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { approveCapacityRequest } from "~/server/capacity/application/use-cases/approve-capacity-request";
 import { rejectCapacityRequest } from "~/server/capacity/application/use-cases/reject-capacity-request";
-import { CapacityRequestId } from "~/server/shared/ids";
+import { CapacityRequestId } from "~/domain/ids";
 
 describe("capacity approval failures", () => {
   let ctx: TestDbContext;

@@ -3,7 +3,7 @@ import type {
   InviteDeps,
   InviteService,
 } from "~/server/invites/application/types";
-import { runResultTransaction } from "~/server/shared/application/uow";
+import { runResultTransaction } from "~/server/platform/database/uow";
 
 import type { TestDbContext } from "../runtime/db";
 import { createTestRepositories } from "../runtime/repos";

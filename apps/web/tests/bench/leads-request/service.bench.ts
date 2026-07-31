@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
 import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { BranchId, UserId } from "~/domain/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";

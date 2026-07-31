@@ -1,4 +1,4 @@
-import type { SearchResult } from "~/server/shared/engine/types";
+import type { SearchResult } from "~/server/integrations/engine/types";
 
 export function makeDocumentResult(partial: {
   doc_type?: string;

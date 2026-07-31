@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { canRemoveStrongAuthFactor } from "~/lib/auth/security/factor-management-policy";
+import { canRemoveStrongAuthFactor } from "~/server/auth/security/factor-management-policy";
 
 describe("security factor management policy", () => {
   it("blocks removing the only passkey for protected roles", () => {

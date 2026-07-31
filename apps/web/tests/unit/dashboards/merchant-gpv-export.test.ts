@@ -5,7 +5,7 @@ import type { CohortSaleRow } from "~/contracts/merchant-stats/views";
 import {
   parseCalendarDate,
   parseCalendarMonth,
-} from "~/lib/time/calendar-date";
+} from "~/domain/time/calendar-date";
 import { validateUploadFile } from "~/server/files/validators";
 import { buildMerchantGpvWorkbook } from "~/server/merchant-stats/export/workbook";
 
