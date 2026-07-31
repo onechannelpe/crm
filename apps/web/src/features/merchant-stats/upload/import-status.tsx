@@ -55,7 +55,7 @@ export function ImportStatus(props: { snapshotId: string }) {
   });
 
   createEffect(
-    on(importProgress, (event) => {
+    on(importProgress.value, (event) => {
       if (!event) {
         return;
       }
@@ -128,6 +128,15 @@ export function ImportStatus(props: { snapshotId: string }) {
                     }
                   >
                     <ImportProgress job={view().job} />
+
+                    <Show when={importProgress.connection() === "offline"}>
+                      <p class={styles.status}>Sin conexión. Reintentando...</p>
+                    </Show>
+                    <Show when={importProgress.connection() === "denied"}>
+                      <p class={styles.statusError}>
+                        Se perdió la conexión. Recarga la página.
+                      </p>
+                    </Show>
                   </Match>
 
                   <Match when={view().state === "needs_review"}>

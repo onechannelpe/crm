@@ -37,24 +37,25 @@ function importTypeUnit(type: RecordImportType, count: number): string {
   return count === 1 ? "prioridad" : "prioridades";
 }
 
-function buildProgressMessage(event: ImportProgress): string {
-  if (event.rowsTotal <= 0) {
-    return `Procesando ${importTypeLabel(event.importType)}...`;
+function buildProgressMessage(progress: ImportProgress): string {
+  if (progress.rowsTotal <= 0) {
+    return `Procesando ${importTypeLabel(progress.importType)}...`;
   }
 
-  const processed = event.rowsApplied + event.rowsFailed;
+  const processed = progress.rowsApplied + progress.rowsFailed;
+  const unit = importTypeUnit(progress.importType, progress.rowsTotal);
 
-  return `Procesando ${importTypeUnit(event.importType, event.rowsTotal)}: ${processed} de ${event.rowsTotal}`;
+  return `Procesando ${unit}: ${processed} de ${progress.rowsTotal}`;
 }
 
-function buildCompletedMessage(event: ImportProgress): string {
-  const unit = importTypeUnit(event.importType, event.rowsTotal);
+function buildCompletedMessage(progress: ImportProgress): string {
+  const unit = importTypeUnit(progress.importType, progress.rowsTotal);
 
-  if (event.rowsFailed > 0) {
-    return `Procesados ${event.rowsTotal} ${unit} (${event.rowsFailed} con error)`;
+  if (progress.rowsFailed > 0) {
+    return `Procesados ${progress.rowsTotal} ${unit} (${progress.rowsFailed} con error)`;
   }
 
-  return `Procesados ${event.rowsTotal} ${unit}`;
+  return `Procesados ${progress.rowsTotal} ${unit}`;
 }
 
 function isSupportedFile(file: File): boolean {
@@ -63,8 +64,8 @@ function isSupportedFile(file: File): boolean {
   return name.endsWith(".csv") || name.endsWith(".xlsx");
 }
 
-function isTerminal(event: RecordImportProgressEvent): boolean {
-  return event.queueState === "done" || event.queueState === "failed";
+function isTerminal(progress: RecordImportProgressEvent): boolean {
+  return progress.queueState === "done" || progress.queueState === "failed";
 }
 
 export function useRecordsImport() {
@@ -85,21 +86,21 @@ export function useRecordsImport() {
 
   function updateImportSnackBar(
     id: string,
-    event: RecordImportProgressEvent,
+    progress: RecordImportProgressEvent,
   ): void {
-    if (event.queueState === "done") {
+    if (progress.queueState === "done") {
       updateSnackBar(id, {
-        message: buildCompletedMessage(event),
-        variant: event.rowsFailed > 0 ? "warning" : "success",
+        message: buildCompletedMessage(progress),
+        variant: progress.rowsFailed > 0 ? "warning" : "success",
         duration: IMPORT_COMPLETED_DURATION_MS,
       });
 
       return;
     }
 
-    if (event.queueState === "failed") {
+    if (progress.queueState === "failed") {
       updateSnackBar(id, {
-        message: event.errorMessage ?? "La importación falló",
+        message: progress.errorMessage ?? "La importación falló",
         variant: "error",
         duration: IMPORT_COMPLETED_DURATION_MS,
       });
@@ -108,17 +109,42 @@ export function useRecordsImport() {
     }
 
     updateSnackBar(id, {
-      message: buildProgressMessage(event),
+      message: buildProgressMessage(progress),
     });
   }
 
   createEffect(
-    on(progress, (event) => {
-      if (!event || snackBarId === null) {
+    on(progress.value, (value) => {
+      if (!value || snackBarId === null) {
         return;
       }
 
-      updateImportSnackBar(snackBarId, event);
+      updateImportSnackBar(snackBarId, value);
+    }),
+  );
+
+  createEffect(
+    on(progress.connection, (state) => {
+      if (snackBarId === null) {
+        return;
+      }
+
+      if (state === "denied") {
+        updateSnackBar(snackBarId, {
+          message: "Se perdió el seguimiento. Recarga la página.",
+          variant: "warning",
+          duration: IMPORT_COMPLETED_DURATION_MS,
+        });
+
+        return;
+      }
+
+      // The import continues while the connection is offline.
+      if (state === "offline") {
+        updateSnackBar(snackBarId, {
+          message: "Sin conexión. La importación continúa...",
+        });
+      }
     }),
   );
 
@@ -145,8 +171,8 @@ export function useRecordsImport() {
       );
 
       setJobId(result.jobId);
-    } catch (caught: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } catch (error: unknown) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
     }
   }
 

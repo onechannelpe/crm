@@ -2,9 +2,10 @@ import { createEffect, createSignal, on, type Accessor } from "solid-js";
 
 import type { RealtimeChannelName } from "~/contracts/realtime/channel";
 
+import type { ConnectionState } from "./connection-lifecycle";
 import { createTopicConnection } from "./create-topic-connection";
 
-export interface TopicStateOptions<T> {
+interface TopicStateOptions<T> {
   channel: RealtimeChannelName;
   id: Accessor<string | null>;
   parse: (raw: string) => T | null;
@@ -13,9 +14,10 @@ export interface TopicStateOptions<T> {
   isFinal?: (value: T) => boolean;
 }
 
-export function createTopicState<T>(
-  options: TopicStateOptions<T>,
-): Accessor<T | undefined> {
+export function createTopicState<T>(options: TopicStateOptions<T>): {
+  value: Accessor<T | undefined>;
+  connection: Accessor<ConnectionState>;
+} {
   const [value, setValue] = createSignal<T | undefined>();
   const [final, setFinal] = createSignal(false);
 
@@ -26,7 +28,7 @@ export function createTopicState<T>(
     }),
   );
 
-  createTopicConnection({
+  const connection = createTopicConnection({
     channel: options.channel,
     id: options.id,
     stopped: final,
@@ -45,5 +47,5 @@ export function createTopicState<T>(
     },
   });
 
-  return value;
+  return { value, connection };
 }

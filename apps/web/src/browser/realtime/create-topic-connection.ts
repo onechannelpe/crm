@@ -8,7 +8,7 @@ import type {
 import { startConnection, type ConnectionState } from "./connection-lifecycle";
 import { readRealtimeStream } from "./read-realtime-stream";
 
-export interface TopicConnectionOptions {
+interface TopicConnectionOptions {
   channel: RealtimeChannelName;
 
   // Null disconnects until a target is provided.
