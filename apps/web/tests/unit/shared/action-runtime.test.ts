@@ -9,8 +9,8 @@ import {
   rateLimited,
   unauthenticated,
 } from "~/domain/errors";
-import { createActionRunner } from "~/server/platform/action";
 import type { AppContext } from "~/server/platform/action/context";
+import { createServerFunctionExecutor } from "~/server/platform/action/run";
 import {
   authenticate,
   authorizePermission,
@@ -52,9 +52,9 @@ const okExecute = () =>
 describe("action runtime", () => {
   it("returns a validation wire error from parse before auth, with no telemetry row", async () => {
     const p = ports();
-    const { runActionResult } = createActionRunner(p);
+    const { executeResult } = createServerFunctionExecutor(p);
 
-    const result = await runActionResult({
+    const result = await executeResult({
       name: "test.parse.validation",
       access: { kind: "auth" },
       parse: () => Err(invalid({ code: "bad_input" })),
@@ -75,11 +75,11 @@ describe("action runtime", () => {
 
   it("reports an unexpected parse throw and surfaces a generic internal error, no row", async () => {
     const p = ports();
-    const { runActionResult } = createActionRunner(p);
+    const { executeResult } = createServerFunctionExecutor(p);
     const parserError = new Error("raw parser detail");
     const execute = okExecute();
 
-    const result = await runActionResult({
+    const result = await executeResult({
       name: "test.parse.throw",
       access: { kind: "auth" },
       parse: () => {
@@ -103,9 +103,9 @@ describe("action runtime", () => {
   it("distinguishes unauthenticated from forbidden", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Err(unauthenticated()));
     const p = ports();
-    const { runActionResult } = createActionRunner(p);
+    const { executeResult } = createServerFunctionExecutor(p);
 
-    const result = await runActionResult({
+    const result = await executeResult({
       name: "test.unauthenticated",
       access: { kind: "permission", permission: "lead:work" },
       execute: async () => Ok("x"),
@@ -121,10 +121,10 @@ describe("action runtime", () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
     vi.mocked(authorizePermission).mockReturnValueOnce(Err(forbidden()));
     const p = ports();
-    const { runActionResult } = createActionRunner(p);
+    const { executeResult } = createServerFunctionExecutor(p);
     const execute = okExecute();
 
-    const result = await runActionResult({
+    const result = await executeResult({
       name: "test.forbidden",
       access: { kind: "permission", permission: "lead:work" },
       execute,
@@ -143,13 +143,13 @@ describe("action runtime", () => {
   it("hides an external fault behind a generic internal wire error and reports it", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
     const p = ports();
-    const { runActionResult } = createActionRunner(p);
+    const { executeResult } = createServerFunctionExecutor(p);
     const fault = external("Stripe 500", {
       code: "provider_down",
       details: { secret: "leak" },
     });
 
-    const result = await runActionResult({
+    const result = await executeResult({
       name: "test.external",
       access: { kind: "auth" },
       execute: async () => Err(fault),
@@ -172,9 +172,9 @@ describe("action runtime", () => {
   it("carries retryAfterSeconds through a rate-limited failure and records a row", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
     const p = ports();
-    const { runActionResult } = createActionRunner(p);
+    const { executeResult } = createServerFunctionExecutor(p);
 
-    const result = await runActionResult({
+    const result = await executeResult({
       name: "test.rate_limited",
       access: { kind: "auth" },
       execute: async () => Err(rateLimited(42)),
@@ -196,9 +196,9 @@ describe("action runtime", () => {
   it("records a success row and returns the value", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
     const p = ports();
-    const { runActionResult } = createActionRunner(p);
+    const { executeResult } = createServerFunctionExecutor(p);
 
-    const result = await runActionResult({
+    const result = await executeResult({
       name: "test.ok",
       access: { kind: "auth" },
       audit: () => ({ leadId: "L1" }),

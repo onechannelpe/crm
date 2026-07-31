@@ -11,8 +11,8 @@ import { external, type DomainError } from "~/domain/errors";
 import { appMonthRange } from "~/domain/time/app-time";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import type { SearchResult } from "~/server/integrations/engine/types";
-import { createSearchUsageReservationPorts } from "~/server/platform/container/search-runtime";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
+import { createSearchUsageReservationPorts } from "~/server/search/ui/composition";
 import { Err, Ok, type Result } from "~/shared/result";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;

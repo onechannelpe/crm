@@ -6,18 +6,18 @@ export function createRequestContext(
   csrfToken: string | null = "csrf-token",
 ): RequestContext {
   return {
+    traceId: "trace-id",
+    requestId: "request-id",
+    route: "/home",
+    method: "GET",
+    startedAt: 1_700_000_000_000,
+    nonce: "nonce",
+    csrf: csrfToken
+      ? { kind: "available", token: csrfToken }
+      : { kind: "missing" },
+    principal: session,
     publicOrigin: "http://localhost:3000",
     clientIp: "127.0.0.1",
     userAgent: "vitest",
-    observability: {
-      traceId: "trace-id",
-      requestId: "request-id",
-      routePath: "/home",
-      httpMethod: "GET",
-      requestStartedAt: 1_700_000_000_000,
-    },
-    csrfToken,
-    getAuthSession: async () => session,
-    getRequestCsrfToken: async () => csrfToken,
   };
 }

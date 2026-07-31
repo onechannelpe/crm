@@ -5,7 +5,7 @@ import {
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
-import { assembleNotificationPipeline } from "~/server/platform/container/notifications-runtime";
+import { assembleNotificationPipeline } from "~/server/notifications/ui/composition";
 import { createLogger } from "~/shared/observability/runtime-logger";
 import { isErr } from "~/shared/result";
 

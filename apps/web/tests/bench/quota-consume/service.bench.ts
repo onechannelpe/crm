@@ -4,8 +4,7 @@ import type { UserId } from "~/domain/ids";
 import { SearchReservationId } from "~/domain/ids";
 import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
 import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
-import { createServerInfra } from "~/server/platform/container/infra";
-import { createSearchRuntime } from "~/server/platform/container/search-runtime";
+import { createSearchUsageReservationPorts } from "~/server/search/ui/composition";
 import { Ok } from "~/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -19,9 +18,7 @@ describe("search capacity consume service benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    usageReservationPorts = createSearchRuntime(
-      createServerInfra(ctx.db),
-    ).usageReservationPorts;
+    usageReservationPorts = createSearchUsageReservationPorts(ctx.db);
     userId = await seedQuotaUser(ctx);
   });
 

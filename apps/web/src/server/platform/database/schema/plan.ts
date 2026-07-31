@@ -20,7 +20,7 @@ import * as sales from "./modules/sales";
 import * as search from "./modules/search";
 import * as workflow from "./modules/workflow";
 
-export const SCHEMA_MODULES = [
+export const SCHEMA_MODULES: readonly SchemaModule[] = [
   core,
   identity,
   auth,
@@ -39,4 +39,4 @@ export const SCHEMA_MODULES = [
   sales,
   fulfillment,
   merchantStats,
-] as const satisfies readonly SchemaModule[];
+];
