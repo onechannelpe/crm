@@ -1,7 +1,7 @@
 import { join } from "node:path";
 
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import {
@@ -25,5 +25,5 @@ export function createAvatarComposition(
 }
 
 export function composeAvatar() {
-  return createAvatarComposition(serverInfrastructure, uploadsConfig());
+  return createAvatarComposition(defaultServerInfrastructure, uploadsConfig());
 }

@@ -1,3 +1,4 @@
+import "server-only";
 import type { AuthSession } from "~/domain/auth/access/session-types";
 import type { WorkflowActor } from "~/server/workflow/actor";
 

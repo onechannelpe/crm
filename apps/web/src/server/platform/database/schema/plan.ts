@@ -1,5 +1,3 @@
-import type { Kysely } from "kysely";
-
 import type { SchemaModule } from ".";
 import * as auth from "./modules/auth";
 import * as capacity from "./modules/capacity";

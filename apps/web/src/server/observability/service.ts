@@ -70,6 +70,30 @@ export interface RecordAuthFunnelEventInput {
   createdAt: Date;
 }
 
+export async function recordActionObservation(
+  actionObservations: ObservabilityRepos["actionObservations"],
+  input: RecordActionObservationInput,
+): Promise<void> {
+  const errorDetails = resolveErrorDetails(input.status, input.errorCode);
+  await actionObservations.create({
+    trace_id: input.traceId,
+    request_id: input.requestId,
+    route_path: input.routePath,
+    http_method: input.httpMethod,
+    action_name: input.actionName,
+    actor_user_id: input.actorUserId,
+    actor_role: input.actorRole,
+    status: input.status,
+    duration_ms: Math.max(0, Math.round(input.durationMs)),
+    error_code: errorDetails.code,
+    error_category: errorDetails.category,
+    public_error: errorDetails.publicError,
+    is_sensitive: errorDetails.isSensitive,
+    input_summary: summarizeInput(input.input),
+    created_at: input.createdAt,
+  });
+}
+
 function summarizeInput(input: unknown): string | null {
   const serialized = serializeEventPayload(input);
   if (!serialized) return null;
@@ -316,25 +340,8 @@ function parseAuthFunnelSnapshotFilter(
 
 export function createObservabilityService(repos: ObservabilityRepos) {
   return {
-    async recordAction(input: RecordActionObservationInput): Promise<void> {
-      const errorDetails = resolveErrorDetails(input.status, input.errorCode);
-      await repos.actionObservations.create({
-        trace_id: input.traceId,
-        request_id: input.requestId,
-        route_path: input.routePath,
-        http_method: input.httpMethod,
-        action_name: input.actionName,
-        actor_user_id: input.actorUserId,
-        actor_role: input.actorRole,
-        status: input.status,
-        duration_ms: Math.max(0, Math.round(input.durationMs)),
-        error_code: errorDetails.code,
-        error_category: errorDetails.category,
-        public_error: errorDetails.publicError,
-        is_sensitive: errorDetails.isSensitive,
-        input_summary: summarizeInput(input.input),
-        created_at: input.createdAt,
-      });
+    recordAction(input: RecordActionObservationInput): Promise<void> {
+      return recordActionObservation(repos.actionObservations, input);
     },
 
     async recordAuthFunnelEvent(

@@ -1,3 +1,4 @@
+import "server-only";
 import { redirect } from "@solidjs/router";
 import { createMiddleware } from "@solidjs/start/middleware";
 import type { FetchEvent } from "@solidjs/start/server";

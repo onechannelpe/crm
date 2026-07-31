@@ -1,3 +1,4 @@
+import "server-only";
 import type { MemberDetail, MembersRoster } from "~/contracts/members";
 import { UserId } from "~/domain/ids";
 import { executeSessionServerFunction } from "~/server/platform/action";

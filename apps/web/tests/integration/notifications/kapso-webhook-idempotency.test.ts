@@ -21,15 +21,16 @@ const state = vi.hoisted(() => ({
       },
 }));
 
-vi.mock("~/server/platform/container", () => ({
-  getServerRuntime: () => {
-    if (!state.runtime) throw new Error("test runtime not installed");
-    return {
-      infra: {
-        db: state.runtime.ctx.db,
-        now: state.runtime.now.get,
-      },
-    };
+vi.mock("~/server/platform/composition/infrastructure", () => ({
+  serverInfrastructure: {
+    get db() {
+      if (!state.runtime) throw new Error("test runtime not installed");
+      return state.runtime.ctx.db;
+    },
+    now: () => {
+      if (!state.runtime) throw new Error("test runtime not installed");
+      return state.runtime.now.get();
+    },
   },
 }));
 
@@ -91,15 +92,9 @@ describe("kapso webhook idempotency", () => {
   it("deduplicates provider retries and batch fallback redelivery", async () => {
     const messageId = "wamid.same-message";
 
-    await expect(postWebhook("delivery-1", messageId)).resolves.toMatchObject({
-      status: 200,
-    });
-    await expect(postWebhook("delivery-1", messageId)).resolves.toMatchObject({
-      status: 200,
-    });
-    await expect(postWebhook("delivery-2", messageId)).resolves.toMatchObject({
-      status: 200,
-    });
+    expect((await postWebhook("delivery-1", messageId)).status).toBe(200);
+    expect((await postWebhook("delivery-1", messageId)).status).toBe(200);
+    expect((await postWebhook("delivery-2", messageId)).status).toBe(200);
 
     const deliveries = await runtime.ctx.db
       .selectFrom("kapso_webhook_deliveries")

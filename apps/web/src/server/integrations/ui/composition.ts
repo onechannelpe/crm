@@ -1,6 +1,6 @@
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
@@ -16,5 +16,5 @@ export function createIntegrationsComposition(
 }
 
 export function composeIntegrations() {
-  return createIntegrationsComposition(serverInfrastructure);
+  return createIntegrationsComposition(defaultServerInfrastructure);
 }

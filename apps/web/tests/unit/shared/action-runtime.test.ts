@@ -73,31 +73,26 @@ describe("action runtime", () => {
     expect(p.report).not.toHaveBeenCalled();
   });
 
-  it("reports an unexpected parse throw and surfaces a generic internal error, no row", async () => {
+  it("propagates an unexpected parse throw without recording telemetry", async () => {
     const p = ports();
     const { executeResult } = createServerFunctionExecutor(p);
     const parserError = new Error("raw parser detail");
     const execute = okExecute();
 
-    const result = await executeResult({
-      name: "test.parse.throw",
-      access: { kind: "auth" },
-      parse: () => {
-        throw parserError;
-      },
-      execute,
-    });
+    await expect(
+      executeResult({
+        name: "test.parse.throw",
+        access: { kind: "auth" },
+        parse: () => {
+          throw parserError;
+        },
+        execute,
+      }),
+    ).rejects.toBe(parserError);
 
     expect(execute).not.toHaveBeenCalled();
-    expect(p.report).toHaveBeenCalledWith(parserError);
+    expect(p.report).not.toHaveBeenCalled();
     expect(p.record).not.toHaveBeenCalled();
-    expect(isErr(result)).toBe(true);
-    if (!isErr(result)) return;
-    expect(result.error).toEqual({
-      kind: "internal",
-      code: null,
-      message: "Ocurrió un error inesperado.",
-    });
   });
 
   it("distinguishes unauthenticated from forbidden", async () => {

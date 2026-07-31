@@ -9,7 +9,7 @@ import { createOrganizationEnrichmentProjection } from "~/server/organization/ap
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
@@ -42,7 +42,7 @@ export function createClientSearchComposition(
 
 export function composeClientSearch() {
   return createClientSearchComposition(
-    serverInfrastructure,
+    defaultServerInfrastructure,
     composeEngineClient(),
   );
 }

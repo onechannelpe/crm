@@ -1,7 +1,7 @@
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import { composeNotifications } from "~/server/notifications/ui/composition";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import { appConfig } from "~/server/platform/config/env";
@@ -33,7 +33,7 @@ export function createTeamComposition(
 
 export function composeTeam() {
   return createTeamComposition(
-    serverInfrastructure,
+    defaultServerInfrastructure,
     appConfig().publicOrigin,
     composeNotifications().messaging,
   );

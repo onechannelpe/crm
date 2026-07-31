@@ -30,7 +30,7 @@ import {
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createWhatsAppInboundQueue } from "~/server/notifications/whatsapp-inbound/queue";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import {
@@ -181,7 +181,7 @@ export function createNotificationsRuntime(
 
 export function composeNotifications() {
   return createNotificationsRuntime(
-    serverInfrastructure,
+    defaultServerInfrastructure,
     notificationsConfig(),
     appConfig(),
   );

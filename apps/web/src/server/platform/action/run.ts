@@ -95,7 +95,7 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
     def: ActionCommon,
     startedAt: Date,
     audit: AuditFields,
-    execute: (ctx: AppContext) => Promise<Result<TOut, WireError>>,
+    executeAction: (ctx: AppContext) => Promise<Result<TOut, WireError>>,
   ): Promise<Result<TOut, WireError>> {
     const identity: Result<AuthSession, DomainError> = await authenticateAccess(
       def.access,
@@ -117,7 +117,7 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
       return Err(wire);
     }
 
-    const executed = await execute(ctx);
+    const executed = await executeAction(ctx);
     if (isErr(executed)) {
       ports.record(errorRow(tele, executed.error));
       return executed;

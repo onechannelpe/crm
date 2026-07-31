@@ -29,7 +29,7 @@ import {
 import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
@@ -116,5 +116,5 @@ export function createCapacityComposition(
 }
 
 export function composeCapacity() {
-  return createCapacityComposition(serverInfrastructure);
+  return createCapacityComposition(defaultServerInfrastructure);
 }

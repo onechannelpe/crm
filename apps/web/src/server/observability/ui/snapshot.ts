@@ -1,3 +1,4 @@
+import "server-only";
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
 import { composeObservability } from "~/server/observability/ui/composition";
 import { executeAdminServerFunction } from "~/server/platform/action";

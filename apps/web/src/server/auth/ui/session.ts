@@ -1,3 +1,4 @@
+import "server-only";
 import type { CurrentUserView } from "~/contracts/auth";
 import { AuthLoginFlowId } from "~/domain/ids";
 import { getCurrentUser } from "~/server/auth/application/queries/get-current-user";

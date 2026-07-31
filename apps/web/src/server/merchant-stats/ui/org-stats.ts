@@ -1,3 +1,4 @@
+import "server-only";
 import type { RucMerchantStats } from "~/contracts/merchant-stats/views";
 import { fail, type DomainError } from "~/domain/errors";
 import { getMerchantStatsForViewer } from "~/server/merchant-stats/read/ruc-stats";

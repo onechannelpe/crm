@@ -5,7 +5,7 @@ import { createTokensRepo } from "~/server/files/repo/tokens";
 import type { FileRepos } from "~/server/files/service/contracts";
 import { createFileStorage, type FileStorage } from "~/server/files/storage";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import {
@@ -36,5 +36,5 @@ export function createFilesComposition(
 }
 
 export function composeFiles() {
-  return createFilesComposition(serverInfrastructure, uploadsConfig());
+  return createFilesComposition(defaultServerInfrastructure, uploadsConfig());
 }

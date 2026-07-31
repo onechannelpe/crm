@@ -1,3 +1,4 @@
+import "server-only";
 import { WorkflowLeadId } from "~/domain/ids";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {

@@ -1,3 +1,4 @@
+import "server-only";
 import { captureException } from "@sentry/bun";
 import type { ServerFunctionErrorHandler } from "@solidjs/start/server";
 

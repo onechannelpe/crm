@@ -1,3 +1,4 @@
+import "server-only";
 import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createSessionService } from "~/server/auth/session/session.service";
@@ -22,7 +23,7 @@ export function createRequestContextDependencies(): RequestContextDeps {
   });
 
   return {
-    resolveAuthSession: sessionService.resolve,
+    resolveAuthSession: (token) => sessionService.resolve(token),
     requestSessions: createRequestSessionsRepo(db),
   };
 }

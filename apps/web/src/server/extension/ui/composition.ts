@@ -12,7 +12,7 @@ import {
   type OrganizationRepository,
 } from "~/server/organization/organization-repo";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import { createExecutorUow } from "~/server/platform/database/uow";
@@ -51,5 +51,5 @@ export function createExtensionComposition(
 }
 
 export function composeExtension() {
-  return createExtensionComposition(serverInfrastructure);
+  return createExtensionComposition(defaultServerInfrastructure);
 }

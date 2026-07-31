@@ -1,3 +1,4 @@
+import "server-only";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { getRateProposalPolicy } from "~/server/workflow/policy/read/get-rate-proposal-policy";
 import { composeWorkflow } from "~/server/workflow/ui/composition";

@@ -1,3 +1,4 @@
+import "server-only";
 import type { AuditPolicySnapshot } from "~/contracts/audit-reader/policy";
 import { composeAdmin } from "~/server/admin/ui/composition";
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";

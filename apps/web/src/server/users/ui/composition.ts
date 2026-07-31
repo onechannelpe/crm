@@ -5,7 +5,7 @@ import { composeAuth } from "~/server/auth/ui/composition";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { AppContext } from "~/server/platform/action/context";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import type {
@@ -107,7 +107,7 @@ export function createUsersComposition(
 
 export function composeUsers() {
   return createUsersComposition(
-    serverInfrastructure,
+    defaultServerInfrastructure,
     composeAuth().sessionService,
     composeAvatar().avatarService,
   );

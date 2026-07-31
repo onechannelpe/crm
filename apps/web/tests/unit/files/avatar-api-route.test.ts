@@ -9,12 +9,10 @@ vi.mock("~/server/platform/action/session", () => ({
   getSession: getSessionMock,
 }));
 
-vi.mock("~/server/platform/container", () => ({
-  getServerRuntime: () => ({
-    avatar: {
-      avatarService: {
-        get: getMock,
-      },
+vi.mock("~/server/users/ui/avatar-composition", () => ({
+  composeAvatar: () => ({
+    avatarService: {
+      get: getMock,
     },
   }),
 }));

@@ -1,6 +1,6 @@
 import { createEventLogsService } from "~/server/event-logs/service";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
@@ -13,5 +13,5 @@ export function createEventLogsComposition(
 }
 
 export function composeEventLogs() {
-  return createEventLogsComposition(serverInfrastructure);
+  return createEventLogsComposition(defaultServerInfrastructure);
 }

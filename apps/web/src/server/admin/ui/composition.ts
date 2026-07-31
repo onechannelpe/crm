@@ -1,7 +1,7 @@
 import { createAuditActionPoliciesRepo } from "~/server/audit-reader/audit-policy-repo";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
@@ -15,5 +15,5 @@ export function createAdminComposition(
 }
 
 export function composeAdmin() {
-  return createAdminComposition(serverInfrastructure);
+  return createAdminComposition(defaultServerInfrastructure);
 }

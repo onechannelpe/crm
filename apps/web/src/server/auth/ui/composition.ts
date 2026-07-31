@@ -26,7 +26,7 @@ import { composeNotifications } from "~/server/notifications/ui/composition";
 import { composeObservability } from "~/server/observability/ui/composition";
 import type { AppContext } from "~/server/platform/action/context";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import { createUsersRepo } from "~/server/users/repos-users";
@@ -105,7 +105,7 @@ export function createAuthComposition(
 
 export function composeAuth() {
   return createAuthComposition(
-    serverInfrastructure,
+    defaultServerInfrastructure,
     composeNotifications(),
     composeObservability().observabilityService,
   );

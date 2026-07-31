@@ -1,3 +1,4 @@
+import "server-only";
 import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { Ok } from "~/shared/result";

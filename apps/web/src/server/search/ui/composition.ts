@@ -12,7 +12,7 @@ import {
 } from "~/server/capacity/infrastructure/usage-repo";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
@@ -65,5 +65,5 @@ export function createSearchComposition(
 }
 
 export function composeSearch() {
-  return createSearchComposition(serverInfrastructure);
+  return createSearchComposition(defaultServerInfrastructure);
 }

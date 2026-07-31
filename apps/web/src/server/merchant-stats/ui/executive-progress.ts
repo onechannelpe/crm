@@ -1,3 +1,4 @@
+import "server-only";
 import type { ExecutiveGpvProgressView } from "~/contracts/merchant-stats/views";
 import { loadExecutiveGpvProgress } from "~/server/merchant-stats/read/executive-portfolio";
 import { executeSessionServerFunction } from "~/server/platform/action";

@@ -2,7 +2,7 @@ import { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-c
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
@@ -23,5 +23,5 @@ export function createSecurityComposition(
 }
 
 export function composeSecurity() {
-  return createSecurityComposition(serverInfrastructure);
+  return createSecurityComposition(defaultServerInfrastructure);
 }

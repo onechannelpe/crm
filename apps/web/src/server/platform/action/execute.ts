@@ -1,3 +1,4 @@
+import "server-only";
 import { captureException } from "@sentry/bun";
 
 import type { WireError } from "~/contracts/errors";

@@ -2,7 +2,7 @@ import { createContactAssignmentsContext } from "~/server/contact-assignments/in
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { composeEngineClient } from "~/server/integrations/ui/engine-client";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
@@ -18,7 +18,7 @@ export function createContactAssignmentsComposition(
 
 export function composeContactAssignments() {
   return createContactAssignmentsComposition(
-    serverInfrastructure,
+    defaultServerInfrastructure,
     composeEngineClient(),
   );
 }

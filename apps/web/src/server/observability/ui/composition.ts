@@ -2,7 +2,7 @@ import { createActionObservationsRepo } from "~/server/observability/repos-actio
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createObservabilityService } from "~/server/observability/service";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
@@ -18,5 +18,5 @@ export function createObservabilityComposition(
 }
 
 export function composeObservability() {
-  return createObservabilityComposition(serverInfrastructure);
+  return createObservabilityComposition(defaultServerInfrastructure);
 }

@@ -9,7 +9,7 @@ import { composeEngineClient } from "~/server/integrations/ui/engine-client";
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
 import {
-  serverInfrastructure,
+  serverInfrastructure as defaultServerInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 import { createLeadFilesService } from "~/server/workflow/lead/files/lead-files";
@@ -64,7 +64,7 @@ export function createWorkflowComposition(
 
 export function composeWorkflow() {
   return createWorkflowComposition(
-    serverInfrastructure,
+    defaultServerInfrastructure,
     composeEngineClient(),
     composeFiles(),
   );
