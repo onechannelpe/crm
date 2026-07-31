@@ -5,7 +5,6 @@ import type {
   PasskeyStartSubmissionResult,
   PasswordLoginSubmissionResult,
 } from "~/contracts/auth";
-import type { AcceptInviteResult } from "~/contracts/auth";
 import { acceptInvitePasswordStep } from "~/rpc/auth/invite";
 import {
   passkeyStart,
@@ -52,7 +51,7 @@ export const resetPasswordMutation = action(
 );
 
 export const acceptInvitePasswordMutation = action(
-  async (formData: FormData): Promise<AcceptInviteResult> => {
+  async (formData: FormData) => {
     const token = formData.get("token");
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
@@ -62,10 +61,7 @@ export const acceptInvitePasswordMutation = action(
       confirmPassword:
         typeof confirmPassword === "string" ? confirmPassword : undefined,
     });
-    if (result.ok) {
-      throw redirect(result.redirectTo);
-    }
-    return result;
+    throw redirect(result.redirectTo);
   },
   "acceptInvitePassword",
 );

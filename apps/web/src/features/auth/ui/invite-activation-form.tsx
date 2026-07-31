@@ -4,6 +4,7 @@ import { createMemo, createSignal } from "solid-js";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
 import type { InviteActivationView } from "~/contracts/auth";
+import { parseWireError } from "~/contracts/errors";
 import { acceptInvitePasswordMutation } from "~/features/auth/data/mutations";
 
 import { LoginFeedback } from "./login-feedback";
@@ -24,10 +25,8 @@ export function InviteActivationForm(props: {
       : undefined,
   );
 
-  const actionError = createMemo(() => {
-    const result = submission.result;
-    return result && !result.ok ? result.message : undefined;
-  });
+  const actionError = () =>
+    submission.error ? parseWireError(submission.error).message : undefined;
 
   return (
     <form

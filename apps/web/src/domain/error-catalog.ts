@@ -289,6 +289,26 @@ export const ERROR_CATALOG = {
     kind: "conflict",
     message: "El usuario invitado ya está activo.",
   },
+  invite_token_malformed: {
+    kind: "validation",
+    message: "El enlace de invitación no es válido.",
+  },
+  invite_password_too_short: {
+    kind: "validation",
+    message: "La contraseña debe tener al menos 12 caracteres.",
+  },
+  invite_password_missing_uppercase: {
+    kind: "validation",
+    message: "La contraseña debe incluir una letra mayúscula.",
+  },
+  invite_password_missing_lowercase: {
+    kind: "validation",
+    message: "La contraseña debe incluir una letra minúscula.",
+  },
+  invite_password_missing_number: {
+    kind: "validation",
+    message: "La contraseña debe incluir un número.",
+  },
   invite_not_pending: {
     kind: "conflict",
     message: "Solo se pueden gestionar invitaciones pendientes.",
