@@ -1,4 +1,3 @@
-import "server-only";
 import type { Role } from "~/domain/auth/access/rbac";
 import { PLATFORM_NAME } from "~/domain/branding";
 import { external, type DomainError } from "~/domain/errors";

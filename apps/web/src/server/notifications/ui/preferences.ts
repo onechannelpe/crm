@@ -1,4 +1,3 @@
-import "server-only";
 import {
   CATEGORY_META,
   EXTERNAL_CHANNELS,

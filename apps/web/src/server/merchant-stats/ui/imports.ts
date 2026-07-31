@@ -1,4 +1,3 @@
-import "server-only";
 import type { GpvSnapshotView } from "~/contracts/merchant-stats/imports";
 import { GpvSnapshotId } from "~/domain/ids";
 import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";

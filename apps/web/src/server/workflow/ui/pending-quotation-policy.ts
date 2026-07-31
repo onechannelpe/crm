@@ -1,4 +1,3 @@
-import "server-only";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { getPendingQuotationPolicy } from "~/server/workflow/policy/read/get-pending-quotation-policy";
 import { composeWorkflow } from "~/server/workflow/ui/composition";

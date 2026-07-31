@@ -1,5 +1,3 @@
-import "server-only";
-
 export interface MiddlewareConfig {
   sentryIngestHost: string | null;
   trustedProxy: boolean;

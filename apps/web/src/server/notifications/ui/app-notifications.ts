@@ -1,4 +1,3 @@
-import "server-only";
 import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { Ok } from "~/shared/result";

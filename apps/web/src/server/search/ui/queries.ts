@@ -1,4 +1,3 @@
-import "server-only";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { composeSearch } from "~/server/search/ui/composition";

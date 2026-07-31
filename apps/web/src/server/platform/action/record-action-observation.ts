@@ -1,4 +1,3 @@
-import "server-only";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createObservabilityService } from "~/server/observability/service";
 import { db } from "~/server/platform/database/db";

@@ -1,4 +1,3 @@
-import "server-only";
 import type { InquiryListView } from "~/contracts/workflow/views";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { db } from "~/server/platform/database/db";

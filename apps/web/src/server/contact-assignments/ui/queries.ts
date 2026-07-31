@@ -1,4 +1,3 @@
-import "server-only";
 import type { LeadCapacitySnapshot } from "~/contracts/capacity";
 import type { ActiveContactAssignmentView } from "~/contracts/contact-assignments/views";
 import { getActiveContactAssignments as getActiveContactAssignmentsUseCase } from "~/server/contact-assignments/application/get-active-contact-assignments";
