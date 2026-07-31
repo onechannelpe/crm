@@ -26,6 +26,7 @@ export function CommercialScopeFields(props: {
             value={props.values.currentProvider}
             onChange={(value) => props.onChange("currentProvider", value)}
             required
+            aria-label="Proveedor actual"
           />
         </FieldInputValue>
       </FieldRow>
@@ -39,6 +40,7 @@ export function CommercialScopeFields(props: {
             value={props.values.currentDebitRate}
             onChange={(value) => props.onChange("currentDebitRate", value)}
             required
+            aria-label="Tasa débito actual"
           />
         </FieldInputValue>
       </FieldRow>
@@ -52,6 +54,7 @@ export function CommercialScopeFields(props: {
             value={props.values.currentCreditRate}
             onChange={(value) => props.onChange("currentCreditRate", value)}
             required
+            aria-label="Tasa crédito actual"
           />
         </FieldInputValue>
       </FieldRow>
@@ -65,6 +68,7 @@ export function CommercialScopeFields(props: {
             value={props.values.gpv}
             onChange={(value) => props.onChange("gpv", value)}
             required
+            aria-label="GPV"
           />
         </FieldInputValue>
       </FieldRow>
@@ -78,6 +82,7 @@ export function CommercialScopeFields(props: {
             value={props.values.ticket}
             onChange={(value) => props.onChange("ticket", value)}
             required
+            aria-label="Ticket"
           />
         </FieldInputValue>
       </FieldRow>
@@ -88,6 +93,7 @@ export function CommercialScopeFields(props: {
             value={props.values.lineOfBusiness}
             onChange={(value) => props.onChange("lineOfBusiness", value)}
             required
+            aria-label="Giro de negocio"
           />
         </FieldInputValue>
       </FieldRow>
@@ -102,6 +108,7 @@ export function CommercialScopeFields(props: {
               )
             }
             required
+            aria-label="Banco de abono"
           >
             <option value="">Seleccionar banco...</option>
             <For each={SETTLEMENT_BANKS}>
@@ -120,6 +127,7 @@ export function CommercialScopeFields(props: {
             value={props.values.posCount}
             onChange={(value) => props.onChange("posCount", value)}
             required
+            aria-label="Cantidad de POS"
           />
         </FieldInputValue>
       </FieldRow>

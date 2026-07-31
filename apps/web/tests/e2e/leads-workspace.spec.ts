@@ -35,14 +35,26 @@ test.describe("leads workspace", () => {
       .getByRole("button", { name: "Añadir un cliente" })
       .click();
     await asExecutive.getByRole("textbox", { name: "RUC" }).fill("20987654321");
-    await asExecutive.getByRole("textbox").nth(1).fill("Proveedor de prueba");
-    await asExecutive.getByRole("spinbutton").nth(0).fill("1.5");
-    await asExecutive.getByRole("spinbutton").nth(1).fill("2.5");
-    await asExecutive.getByRole("spinbutton").nth(2).fill("1000");
-    await asExecutive.getByRole("spinbutton").nth(3).fill("100");
-    await asExecutive.getByRole("textbox").nth(2).fill("Comercio");
-    await asExecutive.getByRole("combobox").selectOption("BCP");
-    await asExecutive.getByRole("spinbutton").nth(4).fill("1");
+    await asExecutive
+      .getByRole("textbox", { name: "Proveedor actual" })
+      .fill("Proveedor de prueba");
+    await asExecutive
+      .getByRole("spinbutton", { name: "Tasa débito actual" })
+      .fill("1.5");
+    await asExecutive
+      .getByRole("spinbutton", { name: "Tasa crédito actual" })
+      .fill("2.5");
+    await asExecutive.getByRole("spinbutton", { name: "GPV" }).fill("1000");
+    await asExecutive.getByRole("spinbutton", { name: "Ticket" }).fill("100");
+    await asExecutive
+      .getByRole("textbox", { name: "Giro de negocio" })
+      .fill("Comercio");
+    await asExecutive
+      .getByRole("combobox", { name: "Banco de abono" })
+      .selectOption("BCP");
+    await asExecutive
+      .getByRole("spinbutton", { name: "Cantidad de POS" })
+      .fill("1");
 
     await asExecutive.getByRole("button", { name: "Crear cliente" }).click();
 
