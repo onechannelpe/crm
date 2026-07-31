@@ -4,135 +4,95 @@ import {
   type RealtimeMessage,
 } from "~/contracts/realtime/channel";
 
-const EVENT_SOURCE_CLOSED = 2;
+import type { ReadRealtimeStream } from "./read-realtime-stream";
 
-// EventSource does not retry after every failed HTTP response, so closed
-// connections are reopened here with exponential backoff.
 const RECONNECT_BASE_MS = 1_000;
 const RECONNECT_MAX_MS = 30_000;
 
-// Spread reconnections across time after a server restart.
-function withJitter(delayMs: number): number {
+function applyJitter(delayMs: number): number {
   return delayMs * (0.5 + Math.random());
 }
 
-export type ConnectionState = "idle" | "connecting" | "live" | "offline";
-
-export interface StreamMessageEvent {
-  data: string;
-  lastEventId: string;
-}
-
-export interface RealtimeStreamSource {
-  readonly readyState: number;
-  close: () => void;
-  addEventListener: {
-    (type: "open", listener: () => void): void;
-    (type: "message", listener: (event: StreamMessageEvent) => void): void;
-    (type: "error", listener: () => void): void;
-  };
-}
+export type ConnectionState =
+  | "idle"
+  | "connecting"
+  | "live"
+  | "offline"
+  | "denied";
 
 export interface ConnectionParams {
   channel: RealtimeChannelName;
   id: string;
   onMessage: (message: RealtimeMessage) => void;
-  openEventSource: (url: string) => RealtimeStreamSource;
+  readStream: ReadRealtimeStream;
   setState: (state: ConnectionState) => void;
 }
 
 export function startConnection(params: ConnectionParams): () => void {
-  let source: RealtimeStreamSource | null = null;
+  let controller: AbortController | null = null;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectDelayMs = RECONNECT_BASE_MS;
   let cursor: string | null = null;
   let disposed = false;
 
-  function closeSource(): void {
-    if (!source) {
-      return;
-    }
-
-    source.close();
-    source = null;
-  }
-
   function scheduleReconnect(): void {
-    if (reconnectTimer !== null) {
-      return;
-    }
-
-    closeSource();
-    params.setState("offline");
-
     const delay = reconnectDelayMs;
+
     reconnectDelayMs = Math.min(reconnectDelayMs * 2, RECONNECT_MAX_MS);
 
     reconnectTimer = setTimeout(() => {
       reconnectTimer = null;
 
       if (!disposed) {
-        openStream();
+        void openStream();
       }
-    }, withJitter(delay));
+    }, applyJitter(delay));
   }
 
-  function openStream(): void {
-    closeSource();
+  async function openStream(): Promise<void> {
+    controller = new AbortController();
     params.setState("connecting");
 
-    const next = params.openEventSource(
-      realtimeStreamUrl(params.channel, params.id, cursor),
-    );
+    const outcome = await params.readStream({
+      url: realtimeStreamUrl(params.channel, params.id),
+      cursor,
+      signal: controller.signal,
 
-    source = next;
+      onOpen: () => {
+        reconnectDelayMs = RECONNECT_BASE_MS;
+        params.setState("live");
+      },
 
-    next.addEventListener("open", () => {
-      if (source !== next) {
-        return;
-      }
+      onMessage: (message) => {
+        if (message.id) {
+          cursor = message.id;
+        }
 
-      reconnectDelayMs = RECONNECT_BASE_MS;
-      params.setState("live");
+        params.onMessage(message);
+      },
     });
 
-    next.addEventListener("message", (event) => {
-      if (source !== next) {
-        return;
-      }
+    if (disposed) {
+      return;
+    }
 
-      params.setState("live");
+    // Reconnecting cannot change an authorization failure.
+    if (outcome.kind === "denied") {
+      params.setState("denied");
+      return;
+    }
 
-      if (event.lastEventId) {
-        cursor = event.lastEventId;
-      }
+    // Clean closes are normal stream rollovers, not connectivity failures.
+    params.setState(outcome.kind === "closed" ? "connecting" : "offline");
 
-      params.onMessage({
-        data: event.data,
-        id: event.lastEventId || undefined,
-      });
-    });
-
-    next.addEventListener("error", () => {
-      if (source !== next) {
-        return;
-      }
-
-      // CLOSED means the browser has stopped retrying.
-      if (next.readyState === EVENT_SOURCE_CLOSED) {
-        scheduleReconnect();
-        return;
-      }
-
-      params.setState("connecting");
-    });
+    scheduleReconnect();
   }
 
-  openStream();
+  void openStream();
 
   return () => {
     disposed = true;
-    closeSource();
+    controller?.abort();
 
     if (reconnectTimer !== null) {
       clearTimeout(reconnectTimer);

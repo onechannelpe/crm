@@ -62,6 +62,11 @@ export function SettingsLogs(props: {
               Sin conexión. Intentando reconectar...
             </span>
           </Show>
+          <Show when={query.connection() === "denied"}>
+            <span class={styles.deniedNotice}>
+              Sesión expirada. Recarga la página.
+            </span>
+          </Show>
           <span class={styles.recordCount}>
             {query.records().length} de {query.totalCount()}
           </span>

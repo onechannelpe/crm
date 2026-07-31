@@ -54,3 +54,8 @@
   color: var(--warning);
   font-size: var(--font-size-sm);
 }
+
+.deniedNotice {
+  color: var(--destructive);
+  font-size: var(--font-size-sm);
+}

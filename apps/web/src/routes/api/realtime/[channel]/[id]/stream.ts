@@ -8,15 +8,6 @@ import { ensureRealtimeStarted } from "~/server/realtime/runtime";
 import { openRealtimeStream } from "~/server/realtime/stream";
 import { isErr } from "~/shared/result";
 
-// Browser retries send Last-Event-ID. Explicit reconnects use the URL cursor.
-// Prefer the header because it reflects the latest received event.
-function readCursor(request: Request): string | null {
-  return (
-    request.headers.get("last-event-id") ??
-    new URL(request.url).searchParams.get("cursor")
-  );
-}
-
 export async function GET(
   event: Pick<APIEvent, "params" | "request" | "nativeEvent">,
 ) {
@@ -34,9 +25,8 @@ export async function GET(
   const stream = await openRealtimeStream(
     event.nativeEvent,
     entry.value,
-    readCursor(event.request),
+    event.request.headers.get("last-event-id"),
   );
 
-  // h3 writes the stream and its headers.
   return stream ?? realtimeErrorResponse("not_found");
 }

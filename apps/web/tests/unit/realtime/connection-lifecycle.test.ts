@@ -3,86 +3,25 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   startConnection,
   type ConnectionState,
-  type RealtimeStreamSource,
-  type StreamMessageEvent,
 } from "~/browser/realtime/connection-lifecycle";
+import type {
+  ReadRealtimeStreamParams,
+  StreamOutcome,
+} from "~/browser/realtime/read-realtime-stream";
 import {
   REALTIME_CHANNELS,
   type RealtimeMessage,
 } from "~/contracts/realtime/channel";
 
-class FakeEventSource implements RealtimeStreamSource {
-  static instances: FakeEventSource[] = [];
-
-  readyState = 0;
-  closed = false;
-
-  private readonly listeners = new Map<
-    string,
-    ((event: StreamMessageEvent) => void)[]
-  >();
-
-  constructor(readonly url: string) {
-    FakeEventSource.instances.push(this);
-  }
-
-  addEventListener(
-    type: string,
-    listener: (event: StreamMessageEvent) => void,
-  ): void {
-    const existing = this.listeners.get(type) ?? [];
-
-    existing.push(listener);
-    this.listeners.set(type, existing);
-  }
-
-  close(): void {
-    this.closed = true;
-    this.readyState = 2;
-  }
-
-  emitOpen(): void {
-    this.readyState = 1;
-    this.emit("open");
-  }
-
-  emitMessage(data: string, lastEventId = ""): void {
-    this.readyState = 1;
-    this.emit("message", { data, lastEventId });
-  }
-
-  // EventSource reaches CLOSED only after giving up reconnecting.
-  emitFatalError(): void {
-    this.readyState = 2;
-    this.emit("error");
-  }
-
-  emitTransientError(): void {
-    this.readyState = 0;
-    this.emit("error");
-  }
-
-  private emit(
-    type: string,
-    event: StreamMessageEvent = { data: "", lastEventId: "" },
-  ): void {
-    for (const listener of this.listeners.get(type) ?? []) {
-      listener(event);
-    }
-  }
-}
-
-function latestSource(): FakeEventSource {
-  const source = FakeEventSource.instances.at(-1);
-
-  if (!source) {
-    throw new Error("no stream was opened");
-  }
-
-  return source;
+// One recorded connection attempt. The test resolves it to drive the outcome
+// the lifecycle has to react to.
+interface Attempt {
+  params: ReadRealtimeStreamParams;
+  end: (outcome: StreamOutcome) => void;
 }
 
 function connect() {
+  const attempts: Attempt[] = [];
   const received: RealtimeMessage[] = [];
   const states: ConnectionState[] = [];
 
@@ -90,39 +29,57 @@ function connect() {
     channel: REALTIME_CHANNELS.recordImport,
     id: "job-1",
     onMessage: (message) => received.push(message),
-    openEventSource: (url) => new FakeEventSource(url),
     setState: (state) => states.push(state),
+    readStream: (params) =>
+      new Promise<StreamOutcome>((resolve) => {
+        attempts.push({ params, end: resolve });
+      }),
   });
 
+  function latest(): Attempt {
+    const attempt = attempts.at(-1);
+
+    if (!attempt) {
+      throw new Error("no stream was opened");
+    }
+
+    return attempt;
+  }
+
   return {
+    attempts,
     received,
     states,
+    latest,
     dispose,
     state: () => states.at(-1),
   };
 }
 
-function useFixedJitter(): void {
-  // Fix the jitter so reconnect delays are deterministic.
-  vi.spyOn(Math, "random").mockReturnValue(0.5);
-}
-
 afterEach(() => {
-  FakeEventSource.instances = [];
   vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
+// Reconnect delays are jittered so tabs do not come back in lockstep. Pinning
+// the jitter to its midpoint makes the schedule exact: the factor becomes 1.
+function useFixedJitter(): void {
+  vi.spyOn(Math, "random").mockReturnValue(0.5);
+}
+
 describe("startConnection", () => {
-  it("opens the stream for its topic and reports live on the first message", () => {
+  it("opens the stream for its topic and reports live once it is open", () => {
     const connection = connect();
 
-    expect(latestSource().url).toBe(
+    expect(connection.latest().params.url).toBe(
       "/api/realtime/records-import/job-1/stream",
     );
+    expect(connection.latest().params.cursor).toBeNull();
 
-    latestSource().emitOpen();
-    latestSource().emitMessage('{"rows":1}', "cursor-1");
+    connection.latest().params.onOpen();
+    connection
+      .latest()
+      .params.onMessage({ data: '{"rows":1}', id: "cursor-1" });
 
     expect(connection.state()).toBe("live");
     expect(connection.received).toEqual([
@@ -132,41 +89,62 @@ describe("startConnection", () => {
     connection.dispose();
   });
 
-  it("keeps waiting through a drop the browser retries itself", () => {
-    const connection = connect();
-
-    latestSource().emitOpen();
-    latestSource().emitTransientError();
-
-    expect(connection.state()).toBe("connecting");
-    expect(FakeEventSource.instances).toHaveLength(1);
-
-    connection.dispose();
-  });
-
-  it("reports offline and reopens from the last cursor once the browser gives up", async () => {
+  it("resumes from the last cursor after the stream drops", async () => {
     vi.useFakeTimers();
     useFixedJitter();
 
     const connection = connect();
 
-    latestSource().emitMessage('{"rows":1}', "cursor-1");
-    latestSource().emitFatalError();
-
-    expect(connection.state()).toBe("offline");
-    expect(FakeEventSource.instances).toHaveLength(1);
-
+    connection.latest().params.onOpen();
+    connection
+      .latest()
+      .params.onMessage({ data: '{"rows":1}', id: "cursor-1" });
+    connection.latest().end({ kind: "failed" });
     await vi.advanceTimersByTimeAsync(1_000);
 
-    expect(latestSource().url).toBe(
-      "/api/realtime/records-import/job-1/stream?cursor=cursor-1",
-    );
-    expect(connection.state()).toBe("connecting");
+    expect(connection.attempts).toHaveLength(2);
+    expect(connection.latest().params.cursor).toBe("cursor-1");
 
     connection.dispose();
   });
 
-  it("backs off exponentially up to the cap while the stream keeps being refused", async () => {
+  // A refused stream is refused for a reason retrying cannot change. This is
+  // the case the fetch transport exists to detect.
+  it("stops for good once the server refuses the stream", async () => {
+    vi.useFakeTimers();
+
+    const connection = connect();
+
+    connection.latest().end({ kind: "denied", status: 401 });
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(connection.state()).toBe("denied");
+    expect(connection.attempts).toHaveLength(1);
+
+    connection.dispose();
+  });
+
+  // The server caps stream age and closes every peer after a missed
+  // notification, so a clean close is routine and must not look like an outage.
+  it("reopens after a clean close without reporting offline", async () => {
+    vi.useFakeTimers();
+    useFixedJitter();
+
+    const connection = connect();
+
+    connection.latest().params.onOpen();
+    connection.latest().end({ kind: "closed" });
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(connection.attempts).toHaveLength(2);
+    expect(connection.states).not.toContain("offline");
+
+    connection.dispose();
+  });
+
+  // A tab whose server is down has to settle into a slow retry instead of
+  // hammering the route.
+  it("backs off exponentially up to the cap while the stream keeps failing", async () => {
     vi.useFakeTimers();
     useFixedJitter();
 
@@ -174,20 +152,22 @@ describe("startConnection", () => {
     const schedule = [1_000, 2_000, 4_000, 8_000, 16_000, 30_000, 30_000];
 
     for (const [attempt, delay] of schedule.entries()) {
-      latestSource().emitFatalError();
+      connection.latest().end({ kind: "failed" });
 
+      // Let the awaited outcome settle before inspecting the timer.
+      // eslint-disable-next-line no-await-in-loop
+      await vi.advanceTimersByTimeAsync(0);
       expect(connection.state()).toBe("offline");
 
-      // One tick early: the reconnect should not have happened yet.
+      // One tick short of the delay nothing has reopened yet, which is what
+      // makes this a test of the schedule and not just of eventual retry.
       // eslint-disable-next-line no-await-in-loop
       await vi.advanceTimersByTimeAsync(delay - 1);
-
-      expect(FakeEventSource.instances).toHaveLength(attempt + 1);
+      expect(connection.attempts).toHaveLength(attempt + 1);
 
       // eslint-disable-next-line no-await-in-loop
       await vi.advanceTimersByTimeAsync(1);
-
-      expect(FakeEventSource.instances).toHaveLength(attempt + 2);
+      expect(connection.attempts).toHaveLength(attempt + 2);
     }
 
     connection.dispose();
@@ -199,38 +179,39 @@ describe("startConnection", () => {
 
     const connection = connect();
 
+    // Climb to an 8 second delay, then let a stream open.
     for (const delay of [1_000, 2_000, 4_000]) {
-      latestSource().emitFatalError();
-
+      connection.latest().end({ kind: "failed" });
       // eslint-disable-next-line no-await-in-loop
       await vi.advanceTimersByTimeAsync(delay);
     }
 
-    latestSource().emitOpen();
+    connection.latest().params.onOpen();
 
-    const beforeLastFailure = FakeEventSource.instances.length;
-
-    latestSource().emitFatalError();
+    const beforeLastFailure = connection.attempts.length;
+    connection.latest().end({ kind: "failed" });
     await vi.advanceTimersByTimeAsync(1_000);
 
-    expect(FakeEventSource.instances).toHaveLength(beforeLastFailure + 1);
+    // Without the reset the next attempt would still be 8 seconds away.
+    expect(connection.attempts).toHaveLength(beforeLastFailure + 1);
 
     connection.dispose();
   });
 
-  it("closes the stream and cancels a pending reconnect when disposed", async () => {
+  it("aborts the stream and cancels a pending reconnect when disposed", async () => {
     vi.useFakeTimers();
 
     const connection = connect();
+    const { signal } = connection.latest().params;
 
-    latestSource().emitFatalError();
-
-    const opened = FakeEventSource.instances.length;
+    connection.latest().end({ kind: "failed" });
+    await vi.advanceTimersByTimeAsync(0);
+    const opened = connection.attempts.length;
 
     connection.dispose();
     await vi.advanceTimersByTimeAsync(60_000);
 
-    expect(latestSource().closed).toBe(true);
-    expect(FakeEventSource.instances).toHaveLength(opened);
+    expect(signal.aborted).toBe(true);
+    expect(connection.attempts).toHaveLength(opened);
   });
 });

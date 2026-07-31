@@ -54,13 +54,9 @@ describe("defineRealtimeChannel", () => {
 });
 
 describe("realtimeStreamUrl", () => {
-  it("carries the cursor a self-opened reconnect has to resume from", () => {
-    expect(
-      realtimeStreamUrl(REALTIME_CHANNELS.eventLogs, "domain_event", "a/b"),
-    ).toBe("/api/realtime/event-logs/domain_event/stream?cursor=a%2Fb");
-
-    expect(
-      realtimeStreamUrl(REALTIME_CHANNELS.eventLogs, "domain_event", null),
-    ).toBe("/api/realtime/event-logs/domain_event/stream");
+  it("escapes the id so it cannot break out of the path", () => {
+    expect(realtimeStreamUrl(REALTIME_CHANNELS.eventLogs, "a/b")).toBe(
+      "/api/realtime/event-logs/a%2Fb/stream",
+    );
   });
 });

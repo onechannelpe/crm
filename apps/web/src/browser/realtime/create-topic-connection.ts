@@ -6,6 +6,7 @@ import type {
 } from "~/contracts/realtime/channel";
 
 import { startConnection, type ConnectionState } from "./connection-lifecycle";
+import { readRealtimeStream } from "./read-realtime-stream";
 
 export interface TopicConnectionOptions {
   channel: RealtimeChannelName;
@@ -36,7 +37,7 @@ export function createTopicConnection(
       channel: options.channel,
       id,
       onMessage: options.onMessage,
-      openEventSource: (url) => new EventSource(url),
+      readStream: readRealtimeStream,
       setState,
     });
 
