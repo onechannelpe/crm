@@ -1,5 +1,6 @@
+import { clsx } from "clsx";
+
 import { springTransform } from "~/components/ui/animation/spring-transform";
-import { cn } from "~/shared/classnames";
 
 import styles from "./toggle.module.css";
 
@@ -16,7 +17,7 @@ export function Toggle(props: {
   return (
     <label
       aria-label={props.ariaLabel}
-      class={cn(
+      class={clsx(
         styles.track,
         props.value && styles.trackOn,
         props.disabled && styles.disabled,

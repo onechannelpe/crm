@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { type ParentProps } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
 import { NavigationDrawerSection } from "../section/navigation-drawer-section";
@@ -12,7 +11,7 @@ export function NavigationDrawerFixedContent(props: ParentProps) {
 
   return (
     <div
-      class={cn(
+      class={clsx(
         styles.fixedContent,
         isSettingsDrawer() && styles.fixedContentSettings,
       )}

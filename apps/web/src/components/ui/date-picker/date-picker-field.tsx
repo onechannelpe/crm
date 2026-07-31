@@ -1,3 +1,4 @@
+import { clsx } from "clsx";
 import {
   createEffect,
   createMemo,
@@ -11,7 +12,6 @@ import { useHotkey } from "~/browser/hotkey/use-hotkey";
 import CalendarDays from "~/components/icons/calendar-days";
 import { appCalendarDateAt } from "~/domain/time/app-time";
 import { parseCalendarDate } from "~/domain/time/calendar-date";
-import { cn } from "~/shared/classnames";
 
 import { getVisibleMonth, shiftVisibleMonth } from "./date-picker-model";
 import { DatePickerPopover } from "./date-picker-popover";
@@ -110,7 +110,7 @@ export function DatePicker(props: DatePickerProps) {
         </label>
       )}
       <div
-        class={cn(
+        class={clsx(
           styles.controlShell,
           props.error ? styles.errorShell : undefined,
           isOpen() ? styles.openShell : undefined,

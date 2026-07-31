@@ -1,7 +1,7 @@
+import { clsx } from "clsx";
 import { splitProps, type JSX } from "solid-js";
 
 import Search from "~/components/icons/search";
-import { cn } from "~/shared/classnames";
 
 import styles from "./search-input.module.css";
 
@@ -21,7 +21,7 @@ export function SearchInput(props: SearchInputProps) {
   ]);
 
   return (
-    <div class={cn(styles.wrapper, local.class)}>
+    <div class={clsx(styles.wrapper, local.class)}>
       <div class={styles.inputContainer}>
         <span class={styles.iconContainer} aria-hidden="true">
           <Search size={16} />

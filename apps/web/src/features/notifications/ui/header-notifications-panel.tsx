@@ -1,4 +1,5 @@
 import { useAction } from "@solidjs/router";
+import { clsx } from "clsx";
 import { createSignal, For, Show } from "solid-js";
 
 import { createOptimisticQuery } from "~/browser/ui/create-optimistic-query";
@@ -12,7 +13,6 @@ import {
   markNotificationReadMutation,
 } from "~/features/notifications/data/mutations";
 import { headerNotificationsQuery } from "~/rpc/notifications/header-notifications";
-import { cn } from "~/shared/classnames";
 
 import styles from "./header-notifications-panel.module.css";
 
@@ -125,7 +125,7 @@ export function HeaderNotificationsPanel() {
               <For each={feed().notifications}>
                 {(item) => (
                   <article
-                    class={cn(
+                    class={clsx(
                       styles.item,
                       item.readAt === null && styles.itemUnread,
                     )}

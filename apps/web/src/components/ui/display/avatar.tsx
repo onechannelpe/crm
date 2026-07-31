@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { Show, createEffect, createSignal, on } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import styles from "./avatar.module.css";
 
@@ -27,11 +26,11 @@ export function Avatar(props: AvatarProps) {
   const showImage = () => Boolean(props.imageUrl) && !hasImageError();
 
   return (
-    <span class={cn(styles.root, props.class)} aria-hidden="true">
+    <span class={clsx(styles.root, props.class)} aria-hidden="true">
       <Show
         when={showImage()}
         fallback={
-          <span class={cn(styles.fallback, props.fallbackClass)}>
+          <span class={clsx(styles.fallback, props.fallbackClass)}>
             {props.fallback}
           </span>
         }
@@ -39,7 +38,7 @@ export function Avatar(props: AvatarProps) {
         <img
           src={props.imageUrl ?? undefined}
           alt=""
-          class={cn(styles.image, props.imageClass)}
+          class={clsx(styles.image, props.imageClass)}
           onError={() => setHasImageError(true)}
         />
       </Show>

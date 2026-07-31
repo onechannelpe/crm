@@ -1,5 +1,6 @@
+import { clsx } from "clsx";
+
 import LoaderCircle from "~/components/icons/loader-circle";
-import { cn } from "~/shared/classnames";
 
 import styles from "./screen.module.css";
 
@@ -21,7 +22,7 @@ export function Loading(props: LoadingProps) {
 
   return (
     <div class={styles.root}>
-      <LoaderCircle class={cn(styles.spinner, sizeClass())} />
+      <LoaderCircle class={clsx(styles.spinner, sizeClass())} />
     </div>
   );
 }

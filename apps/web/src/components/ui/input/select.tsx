@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { createUniqueId, type JSX, splitProps } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import { InputErrorHelper } from "./input-error-helper";
 import { InputLabel } from "./input-label";
@@ -33,7 +32,7 @@ export function Select(props: SelectProps) {
       )}
       <select
         id={selectId()}
-        class={cn(
+        class={clsx(
           styles.control,
           local.error ? styles.errorControl : undefined,
           local.class,

@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { createSignal, type JSX, splitProps } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import styles from "./file-dropzone.module.css";
 
@@ -111,7 +110,11 @@ export function FileDropzone(props: FileDropzoneProps) {
       <button
         {...rest}
         type={local.type ?? "button"}
-        class={cn(styles.host, local.disabled && styles.disabled, local.class)}
+        class={clsx(
+          styles.host,
+          local.disabled && styles.disabled,
+          local.class,
+        )}
         disabled={local.disabled}
         onClick={onClick}
         onDragEnter={onDragEnter}

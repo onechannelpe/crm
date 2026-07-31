@@ -1,8 +1,8 @@
+import { clsx } from "clsx";
 import { children, type Accessor, type JSX } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
 import { TintedIconTile } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
-import { cn } from "~/shared/classnames";
 
 import { NavigationDrawerAnimatedCollapseWrapper } from "./navigation-drawer-animated-collapse-wrapper";
 import { NavigationDrawerItemBreadcrumb } from "./navigation-drawer-item-breadcrumb";
@@ -34,7 +34,7 @@ export function NavigationDrawerItemFrame(
     props.isMobile || Boolean(props.alwaysShowRightOptions);
 
   const classProp = () =>
-    cn(
+    clsx(
       "navigation-drawer-item",
       styles.item,
       props.class,
@@ -62,7 +62,7 @@ export function NavigationDrawerItemFrame(
       ) : null}
 
       <span
-        class={cn(
+        class={clsx(
           styles.itemLabelParent,
           props.collapsedMain && styles.itemLabelCollapsed,
         )}

@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import type { JSX } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import { SIDE_PANEL_CLICK_OUTSIDE_ID } from "../constants/side-panel-click-outside-id";
 
@@ -14,7 +13,7 @@ type ResizeGapFrameProps = {
 export function ResizeGapFrame(props: ResizeGapFrameProps) {
   return (
     <hr
-      class={cn(styles.gap, !props.isOpen && styles.gapClosed)}
+      class={clsx(styles.gap, !props.isOpen && styles.gapClosed)}
       onPointerDown={props.onPointerDown}
       data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
       aria-orientation="vertical"

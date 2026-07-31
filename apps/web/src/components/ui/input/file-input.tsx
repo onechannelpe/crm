@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { createUniqueId, type JSX, splitProps } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import { InputErrorHelper } from "./input-error-helper";
 import { InputLabel } from "./input-label";
@@ -27,7 +26,7 @@ export function FileInput(props: FileInputProps) {
       <input
         id={inputId}
         type="file"
-        class={cn(
+        class={clsx(
           styles.fileControl,
           local.error ? styles.errorControl : undefined,
           local.class,

@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { splitProps, type JSX } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import styles from "./card.module.css";
 
@@ -22,7 +21,7 @@ export const Card = (props: CardProps) => {
     <div
       data-full-width={local.fullWidth ? "" : undefined}
       data-rounded={local.rounded ? "" : undefined}
-      class={cn(styles.card, local.class)}
+      class={clsx(styles.card, local.class)}
       style={{
         ...(typeof local.style === "object" ? local.style : {}),
         ...(local.backgroundColor

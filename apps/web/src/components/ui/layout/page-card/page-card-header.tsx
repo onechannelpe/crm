@@ -1,8 +1,8 @@
+import { clsx } from "clsx";
 import { Show, children, type JSX } from "solid-js";
 
 import LayoutSidebarLeftExpand from "~/components/icons/layout-sidebar-left-expand";
 import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
-import { cn } from "~/shared/classnames";
 
 import styles from "./page-card-header.module.css";
 
@@ -41,7 +41,7 @@ export function PageCardHeader(props: PageCardHeaderProps) {
 
   return (
     <div
-      class={cn(styles.header, !shouldCenterTitle() && styles.headerNoCenter)}
+      class={clsx(styles.header, !shouldCenterTitle() && styles.headerNoCenter)}
     >
       <div class={styles.left}>
         <Show when={!expanded()}>
@@ -61,13 +61,13 @@ export function PageCardHeader(props: PageCardHeaderProps) {
       </div>
 
       <Show when={shouldCenterTitle()}>
-        <div class={cn(styles.title, styles.centeredTitle)}>
+        <div class={clsx(styles.title, styles.centeredTitle)}>
           {titleContent()}
         </div>
       </Show>
 
       <div
-        class={cn(styles.right, !shouldCenterTitle() && styles.rightNoCenter)}
+        class={clsx(styles.right, !shouldCenterTitle() && styles.rightNoCenter)}
         data-click-outside-id="page-action-container"
       >
         {actionButton()}

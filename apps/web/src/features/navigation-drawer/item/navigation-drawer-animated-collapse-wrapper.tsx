@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { Show, children, type ParentProps } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
 import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
@@ -14,7 +13,9 @@ export function NavigationDrawerAnimatedCollapseWrapper(props: ParentProps) {
 
   return (
     <Show when={!isSettingsPage()} fallback={content()}>
-      <span class={cn(styles.wrapper, !expanded() && styles.wrapperCollapsed)}>
+      <span
+        class={clsx(styles.wrapper, !expanded() && styles.wrapperCollapsed)}
+      >
         {content()}
       </span>
     </Show>

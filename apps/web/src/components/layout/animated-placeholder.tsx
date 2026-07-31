@@ -1,7 +1,7 @@
+import { clsx } from "clsx";
 import { createSignal, onCleanup, onMount } from "solid-js";
 
 import { SpringParallax } from "~/components/ui/animation/spring-parallax";
-import { cn } from "~/shared/classnames";
 
 import styles from "./animated-placeholder.module.css";
 
@@ -76,7 +76,7 @@ export function AnimatedPlaceholder(props: AnimatedPlaceholderProps) {
       <img
         src={bg()}
         alt=""
-        class={cn(styles.bg, isError() && styles.error)}
+        class={clsx(styles.bg, isError() && styles.error)}
         aria-hidden="true"
       />
 
@@ -85,7 +85,7 @@ export function AnimatedPlaceholder(props: AnimatedPlaceholderProps) {
           <img
             src={fg()}
             alt=""
-            class={cn(styles.fg, isError() && styles.error)}
+            class={clsx(styles.fg, isError() && styles.error)}
             aria-hidden="true"
           />
         </div>

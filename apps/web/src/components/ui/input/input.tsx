@@ -1,3 +1,4 @@
+import { clsx } from "clsx";
 import {
   createSignal,
   createUniqueId,
@@ -5,8 +6,6 @@ import {
   type JSX,
   splitProps,
 } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import { InputErrorHelper } from "./input-error-helper";
 import { InputHint } from "./input-hint";
@@ -67,7 +66,7 @@ export function Input(props: InputProps) {
           type={
             isPassword() ? (showPassword() ? "text" : "password") : local.type
           }
-          class={cn(
+          class={clsx(
             styles.control,
             isPassword() ? styles.controlWithReveal : undefined,
             local.error ? styles.errorControl : undefined,

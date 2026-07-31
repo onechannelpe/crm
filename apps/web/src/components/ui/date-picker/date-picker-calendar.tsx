@@ -1,9 +1,9 @@
+import { clsx } from "clsx";
 import { For } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
 import ChevronRight from "~/components/icons/chevron-right";
 import type { CalendarDate } from "~/domain/time/calendar-date";
-import { cn } from "~/shared/classnames";
 
 import {
   DAY_NAMES,
@@ -113,7 +113,7 @@ function CalendarDayButton(props: {
   return (
     <button
       type="button"
-      class={cn(
+      class={clsx(
         styles.dayButton,
         !props.cell.isCurrentMonth ? styles.dayOutsideMonth : undefined,
         props.cell.isSelected ? styles.daySelected : undefined,

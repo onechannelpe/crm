@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { type JSX, Show, onCleanup, onMount } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import {
   SIDE_PANEL_CLICK_OUTSIDE_ID,
@@ -56,7 +55,7 @@ export function PanelShell(props: PanelShellProps) {
 
   return (
     <div
-      class={cn(
+      class={clsx(
         styles.wrapper,
         isOpen() && styles.wrapperOpen,
         props.isResizing && styles.wrapperResizing,

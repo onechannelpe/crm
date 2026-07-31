@@ -1,7 +1,6 @@
+import { clsx } from "clsx";
 import type { JSX, ParentProps } from "solid-js";
 import { children, Show } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import styles from "./primitives.module.css";
 
@@ -51,7 +50,7 @@ export function ActivityListRow(
       {(onClick) => (
         <button
           type="button"
-          class={cn(styles.listRow, styles.listRowClickable)}
+          class={clsx(styles.listRow, styles.listRowClickable)}
           onClick={onClick()}
         >
           {content()}

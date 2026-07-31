@@ -1,4 +1,5 @@
 import { useAction, useLocation, useNavigate } from "@solidjs/router";
+import { clsx } from "clsx";
 import { Show, createSignal, type JSX } from "solid-js";
 
 import LayoutSidebarLeftCollapse from "~/components/icons/layout-sidebar-left-collapse";
@@ -10,7 +11,6 @@ import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
 import { shortName } from "~/domain/identity/display-name";
 import { logoutMutation } from "~/features/auth/data/mutations";
-import { cn } from "~/shared/classnames";
 
 import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "../constants/navigation-drawer-click-outside-id";
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
@@ -77,7 +77,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     >
       <NavigationDrawerWidthEffect />
       <div
-        class={cn(
+        class={clsx(
           styles.drawer,
           resizing() && styles.drawerResizing,
           props.className,
@@ -92,7 +92,10 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
             when={!isMobile() && isSettingsDrawer()}
             fallback={
               <header
-                class={cn(styles.header, !expanded() && styles.headerCollapsed)}
+                class={clsx(
+                  styles.header,
+                  !expanded() && styles.headerCollapsed,
+                )}
               >
                 <AccountMenu
                   label={shortName(currentUser())}
@@ -142,7 +145,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
           <Show when={!isMobile() && !isSettingsDrawer() && expanded()}>
             <button
               type="button"
-              class={cn(styles.resizeHandle, resizing() && styles.resizing)}
+              class={clsx(styles.resizeHandle, resizing() && styles.resizing)}
               onPointerDown={onPointerDown}
               aria-label="Redimensionar barra lateral"
             />

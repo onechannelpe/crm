@@ -1,8 +1,8 @@
+import { clsx } from "clsx";
 import { createSignal, For, onMount, Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { cn } from "~/shared/classnames";
 
 import styles from "./styles.module.css";
 
@@ -175,7 +175,7 @@ export function InlineOptionsEditor<T extends string>(
             <li>
               <button
                 type="button"
-                class={cn(
+                class={clsx(
                   styles.item,
                   option === props.selected && styles.itemSelected,
                 )}

@@ -1,5 +1,6 @@
+import { clsx } from "clsx";
+
 import type { TabIconComponent } from "~/features/side-panel/components/tab-strip/types";
-import { cn } from "~/shared/classnames";
 
 import styles from "./styles.module.css";
 
@@ -16,7 +17,7 @@ export function TabButton(props: TabButtonProps) {
     <button
       type="button"
       data-testid={props.dataTestId}
-      class={cn(styles.tabButton, props.active && styles.tabButtonActive)}
+      class={clsx(styles.tabButton, props.active && styles.tabButtonActive)}
       onClick={props.onClick}
     >
       <TabButtonContent title={props.title} icon={props.icon} />

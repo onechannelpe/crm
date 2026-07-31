@@ -1,7 +1,7 @@
+import { clsx } from "clsx";
 import { type JSX, type ParentProps } from "solid-js";
 
 import { springTransform } from "~/components/ui/animation/spring-transform";
-import { cn } from "~/shared/classnames";
 
 import styles from "./radio.module.css";
 
@@ -21,7 +21,7 @@ export function Radio(props: {
   const initialInputTransform = inputTransform();
 
   return (
-    <label class={cn(styles.container, props.disabled && styles.disabled)}>
+    <label class={clsx(styles.container, props.disabled && styles.disabled)}>
       <input
         ref={springTransform(inputTransform)}
         type="radio"

@@ -1,3 +1,4 @@
+import { clsx } from "clsx";
 import { For, Show } from "solid-js";
 
 import Check from "~/components/icons/check";
@@ -6,7 +7,6 @@ import { Input } from "~/components/ui/input/input";
 import { useTheme } from "~/components/ui/theme/theme-context";
 import type { ThemeMode } from "~/components/ui/theme/theme-mode";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { cn } from "~/shared/classnames";
 
 import styles from "./settings-page.module.css";
 
@@ -32,7 +32,7 @@ export default function AppearanceSettingsPage() {
               return (
                 <button
                   type="button"
-                  class={cn(
+                  class={clsx(
                     styles.themeCard,
                     selected() && styles.themeCardActive,
                   )}

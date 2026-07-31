@@ -1,7 +1,7 @@
+import { clsx } from "clsx";
 import { Show } from "solid-js";
 
 import X from "~/components/icons/x";
-import { cn } from "~/shared/classnames";
 
 import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
@@ -30,7 +30,7 @@ export function TopBar(props: { isMobile: boolean }) {
   };
 
   return (
-    <div class={cn(styles.topBar, props.isMobile && styles.topBarMobile)}>
+    <div class={clsx(styles.topBar, props.isMobile && styles.topBarMobile)}>
       <div class={styles.content}>
         <div class={styles.leftControls}>
           <BackButton visible={showBackButton()} />

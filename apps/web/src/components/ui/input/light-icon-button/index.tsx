@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { type JSX, splitProps } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import styles from "./styles.module.css";
 
@@ -23,7 +22,7 @@ export function LightIconButton(props: LightIconButtonProps) {
 
   return (
     <button
-      class={cn(
+      class={clsx(
         styles.button,
         local.accent === "tertiary" && styles.tertiary,
         local.size === "medium" && styles.medium,

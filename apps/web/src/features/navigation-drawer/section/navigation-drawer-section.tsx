@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import type { ParentProps } from "solid-js";
-
-import { cn } from "~/shared/classnames";
 
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
 import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
@@ -17,7 +16,7 @@ export function NavigationDrawerSection(props: NavigationDrawerSectionProps) {
 
   return (
     <section
-      class={cn(
+      class={clsx(
         styles.section,
         isSettingsDrawer() && styles.sectionSettings,
         props.class,

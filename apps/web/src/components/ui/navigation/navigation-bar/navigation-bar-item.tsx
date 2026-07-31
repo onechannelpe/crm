@@ -1,8 +1,8 @@
+import { clsx } from "clsx";
 import type { Component } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 import type { IconProps } from "~/components/icons/icon-base";
-import { cn } from "~/shared/classnames";
 
 import styles from "./navigation-bar.module.css";
 
@@ -17,7 +17,7 @@ export function NavigationBarItem(props: {
   return (
     <button
       type="button"
-      class={cn(styles.item, props.isActive && styles.itemActive)}
+      class={clsx(styles.item, props.isActive && styles.itemActive)}
       onClick={() => props.onClick()}
       aria-label={props.label}
     >

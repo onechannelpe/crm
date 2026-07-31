@@ -1,3 +1,4 @@
+import { clsx } from "clsx";
 import {
   createEffect,
   onCleanup,
@@ -6,8 +7,6 @@ import {
   type JSX,
 } from "solid-js";
 import { Portal } from "solid-js/web";
-
-import { cn } from "~/shared/classnames";
 
 import styles from "./anchored-popover.module.css";
 
@@ -110,7 +109,7 @@ export function AnchoredPopover(props: {
       <div
         ref={(element) => (panel = element)}
         id={props.id}
-        class={cn(
+        class={clsx(
           props.variant === "positioner" ? styles.positioner : styles.panel,
           props.class,
         )}
