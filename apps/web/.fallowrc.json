@@ -19,11 +19,17 @@
   "ignorePatterns": [
     "**/*.generated.ts",
     "**/*.generated.tsx",
+    "**/*.module.css",
     "public/**",
     ".output/**",
     "stats.html",
     "content/**"
   ],
+  "typeAware": {
+    "enabled": true,
+    "projects": ["tsconfig.json"],
+    "require": "best-effort"
+  },
   "ignoreUnresolvedImports": [
     "~/*",
     "@tests/*",
