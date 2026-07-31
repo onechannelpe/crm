@@ -10,10 +10,10 @@ import {
   approveCapacityRequestMutation,
   rejectCapacityRequestMutation,
 } from "~/features/capacity/data/mutations";
-import { pendingCapacityRequestsQuery } from "~/features/capacity/data/pending-capacity-requests.query";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
+import { pendingCapacityRequestsQuery } from "~/rpc/capacity/pending-capacity-requests.query";
 
 import styles from "./requests-page.module.css";
 

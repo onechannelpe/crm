@@ -3,7 +3,7 @@ import {
   createAuditPolicyService,
   type UpsertAuditPolicyInput,
 } from "~/server/audit-reader/policy-service";
-import { executeAdminServerFunction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -13,7 +13,7 @@ import { Ok } from "~/shared/result";
 export async function upsertAuditPolicy(input: unknown): Promise<void> {
   "use server";
 
-  return executeAdminServerFunction({
+  return executeSessionServerFunction({
     name: "admin.audit_policy.upsert",
     access: { kind: "role", role: "admin" },
 

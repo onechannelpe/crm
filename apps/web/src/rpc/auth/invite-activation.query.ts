@@ -1,6 +1,6 @@
 import { query } from "@solidjs/router";
 
-import { getInviteActivationView } from "~/actions/auth/invite.action";
+import { getInviteActivationView } from "~/server/auth/ui/invites";
 
 export const inviteActivationViewQuery = query(async (token: string) => {
   "use server";

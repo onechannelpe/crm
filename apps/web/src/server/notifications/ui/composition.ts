@@ -1,3 +1,4 @@
+import "server-only";
 import { createEmailComposer } from "@crm/email-composer";
 import {
   createKapsoProvider,

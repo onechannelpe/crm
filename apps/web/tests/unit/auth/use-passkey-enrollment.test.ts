@@ -20,7 +20,7 @@ const {
   isPasskeyRegistrationSupported: vi.fn<() => boolean>(),
 }));
 
-vi.mock("~/actions/auth/security/passkey.action", () => ({
+vi.mock("~/rpc/auth/security/passkey.action", () => ({
   beginPasskeyEnrollment,
   finishPasskeyEnrollment,
 }));

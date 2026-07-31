@@ -18,7 +18,7 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 import { createLeadRecordCreateSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 import { createInquiryMutation } from "~/features/workflow/data/command-mutations";
-import { inquiryListQuery } from "~/features/workflow/data/inquiry-list.query";
+import { inquiryListQuery } from "~/rpc/workflow/inquiry-list.query";
 import { capitalize } from "~/shared/text";
 
 import { inquiryStateLabel } from "./display";

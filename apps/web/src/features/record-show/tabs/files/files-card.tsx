@@ -1,10 +1,5 @@
 import { createSignal, For, Show } from "solid-js";
 
-import { requestFulfillmentDownloadToken } from "~/actions/workflow/commands/fulfillment.action";
-import {
-  requestLeadSaleProofDownloadToken,
-  requestRateRevisionFileDownloadToken,
-} from "~/actions/workflow/files.action";
 import Plus from "~/components/icons/plus";
 import { Button } from "~/components/ui/input/button";
 import { actionErrorMessage } from "~/contracts/errors";
@@ -23,6 +18,11 @@ import {
   ActivityRowMeta,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
+import { requestFulfillmentDownloadToken } from "~/rpc/workflow/commands/fulfillment.action";
+import {
+  requestLeadSaleProofDownloadToken,
+  requestRateRevisionFileDownloadToken,
+} from "~/rpc/workflow/files.action";
 
 import { AttachmentList } from "./attachment-list";
 import { PreviewModal, type PreviewModalState } from "./preview-modal";

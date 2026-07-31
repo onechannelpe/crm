@@ -2,7 +2,7 @@ import "server-only";
 import type { AuditPolicySnapshot } from "~/contracts/audit-reader/policy";
 import { composeAdmin } from "~/server/admin/ui/composition";
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
-import { executeAdminServerFunction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import { getSession, hasRole } from "~/server/platform/action/session";
 import { Ok } from "~/shared/result";
 
@@ -13,7 +13,7 @@ function auditPolicyService() {
 }
 
 export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {
-  return executeAdminServerFunction({
+  return executeSessionServerFunction({
     name: "admin.audit_policy.snapshot.read",
     access: { kind: "permission", permission: "audit:read" },
 

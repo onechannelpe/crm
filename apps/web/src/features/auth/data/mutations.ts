@@ -1,23 +1,23 @@
 import { action } from "@solidjs/router";
 import { redirect } from "@solidjs/router";
 
-import { acceptInvitePasswordStep } from "~/actions/auth/invite.action";
-import {
-  passkeyStart,
-  passwordLogin,
-  recoveryLogin,
-  totpLogin,
-} from "~/actions/auth/login/index.action";
-import {
-  requestPasswordReset,
-  resetPassword,
-} from "~/actions/auth/reset-password.action";
-import { logout } from "~/actions/auth/session/index.action";
 import type {
   PasskeyStartSubmissionResult,
   PasswordLoginSubmissionResult,
 } from "~/contracts/auth";
 import type { AcceptInviteResult } from "~/contracts/auth";
+import { acceptInvitePasswordStep } from "~/rpc/auth/invite.action";
+import {
+  passkeyStart,
+  passwordLogin,
+  recoveryLogin,
+  totpLogin,
+} from "~/rpc/auth/login/index.action";
+import {
+  requestPasswordReset,
+  resetPassword,
+} from "~/rpc/auth/reset-password.action";
+import { logout } from "~/rpc/auth/session/index.action";
 
 export const logoutMutation = action(logout, "logout");
 

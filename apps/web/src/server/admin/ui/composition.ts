@@ -1,3 +1,4 @@
+import "server-only";
 import { createAuditActionPoliciesRepo } from "~/server/audit-reader/audit-policy-repo";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import {

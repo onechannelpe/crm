@@ -1,3 +1,4 @@
+import "server-only";
 import type { UserId } from "~/domain/ids";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { AuthAnalyticsRecorder } from "~/server/auth/auth-analytics";

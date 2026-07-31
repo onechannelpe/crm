@@ -1,3 +1,4 @@
+import "server-only";
 import { getExecutiveDetail } from "~/server/capacity/application/queries/get-executive-detail";
 import { getPolicyDefaults } from "~/server/capacity/application/queries/get-policy-defaults";
 import { listManagedExecutives } from "~/server/capacity/application/queries/list-managed-executives";

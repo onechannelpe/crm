@@ -23,14 +23,6 @@ const serverFunctionExecutor = createServerFunctionExecutor({
   },
 });
 
-export function executeSessionServerFunction<
-  TInput,
-  TOutput,
-  TError extends DomainError,
->(definition: ActionDef<TInput, TOutput, TError>) {
-  return serverFunctionExecutor.execute(definition);
-}
-
 export function executeSessionServerFunctionResult<
   TInput,
   TOutput,
@@ -41,7 +33,7 @@ export function executeSessionServerFunctionResult<
   return serverFunctionExecutor.executeResult(definition);
 }
 
-export function executeAdminServerFunction<
+export function executeSessionServerFunction<
   TInput,
   TOutput,
   TError extends DomainError,

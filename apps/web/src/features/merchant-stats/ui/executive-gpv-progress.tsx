@@ -22,10 +22,10 @@ import {
 } from "~/domain/time/calendar-date";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import { executiveGpvProgressQuery } from "~/features/merchant-stats/data/executive-gpv-progress.query";
 import { formatSoles } from "~/features/merchant-stats/format";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
+import { executiveGpvProgressQuery } from "~/rpc/merchant-stats/executive-gpv-progress.query";
 
 import styles from "./executive-gpv-progress.module.css";
 

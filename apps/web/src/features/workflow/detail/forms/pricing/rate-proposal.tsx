@@ -1,7 +1,6 @@
 import { useAction } from "@solidjs/router";
 import { createSignal, createUniqueId, For, Show } from "solid-js";
 
-import { uploadLeadRateRevisionFile } from "~/actions/workflow/files.action";
 import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Paperclip from "~/components/icons/paperclip";
@@ -38,6 +37,7 @@ import {
   formatAmount,
   formatRate,
 } from "~/features/workflow/presentation/format";
+import { uploadLeadRateRevisionFile } from "~/rpc/workflow/files.action";
 
 import {
   acceptRateMutation,

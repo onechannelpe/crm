@@ -6,9 +6,9 @@ import type {
   EventLogTable,
 } from "~/contracts/event-logs/event-log";
 import { SettingsLogs } from "~/features/event-logs/components/settings-logs";
-import { eventLogsQuery } from "~/features/event-logs/data/event-logs.query";
 import { eventLogInputFromQuery } from "~/features/event-logs/model/event-log-location";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
+import { eventLogsQuery } from "~/rpc/event-logs/event-logs.query";
 
 export const route = {
   preload: ({ location }) => {

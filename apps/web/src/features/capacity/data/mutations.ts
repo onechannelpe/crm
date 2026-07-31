@@ -5,21 +5,21 @@ import {
   grantMoreLeadRefill,
   grantMoreSearches,
   rejectCapacity,
-} from "~/actions/capacity/approvals.action";
+} from "~/rpc/capacity/approvals.action";
+import { capacityPolicyDefaultsQuery } from "~/rpc/capacity/capacity-policy-defaults.query";
+import { executiveCapacityDetailQuery } from "~/rpc/capacity/executive-capacity-detail.query";
+import { managedExecutivesQuery } from "~/rpc/capacity/managed-executives.query";
+import { myContactAssignmentCapacityQuery } from "~/rpc/capacity/my-contact-assignment-capacity.query";
+import { mySearchAllowanceQuery } from "~/rpc/capacity/my-search-allowance.query";
+import { pendingCapacityRequestsQuery } from "~/rpc/capacity/pending-capacity-requests.query";
 import {
   updateExecutivePolicyOverride,
   updateScopePolicy,
-} from "~/actions/capacity/policies.action";
+} from "~/rpc/capacity/policies.action";
 import {
   requestMoreLeadRefill,
   requestMoreSearches,
-} from "~/actions/capacity/requests.action";
-import { capacityPolicyDefaultsQuery } from "~/features/capacity/data/capacity-policy-defaults.query";
-import { executiveCapacityDetailQuery } from "~/features/capacity/data/executive-capacity-detail.query";
-import { managedExecutivesQuery } from "~/features/capacity/data/managed-executives.query";
-import { myContactAssignmentCapacityQuery } from "~/features/capacity/data/my-contact-assignment-capacity.query";
-import { mySearchAllowanceQuery } from "~/features/capacity/data/my-search-allowance.query";
-import { pendingCapacityRequestsQuery } from "~/features/capacity/data/pending-capacity-requests.query";
+} from "~/rpc/capacity/requests.action";
 
 export const requestMoreSearchesMutation = action(
   async (amount: number, reason: string) => {

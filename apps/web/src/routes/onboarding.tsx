@@ -15,12 +15,6 @@ import {
   Switch,
 } from "solid-js";
 
-import { changeOnboardingPassword } from "~/actions/auth/onboarding/change-password.action";
-import { completeOnboardingAction } from "~/actions/auth/onboarding/complete.action";
-import { submitOnboardingProfile } from "~/actions/auth/onboarding/submit-profile.action";
-import { acknowledgeRecoveryCodes } from "~/actions/auth/recovery-codes.action";
-import { beginPasskeyEnrollment } from "~/actions/auth/security/passkey.action";
-import { beginTotpEnrollment } from "~/actions/auth/security/totp.action";
 import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
@@ -30,7 +24,6 @@ import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-b
 import type { OnboardingSnapshot } from "~/contracts/auth";
 import { actionErrorMessage } from "~/contracts/errors";
 import { normalizePhoneInput, isValidPhone } from "~/domain/phone/pe-mobile";
-import { onboardingSnapshotQuery } from "~/features/onboarding/data/onboarding-snapshot.query";
 import {
   resolveOnboardingStep,
   type RequestedSecurityStep,
@@ -42,6 +35,13 @@ import { OnboardingProfileStep } from "~/features/onboarding/ui/onboarding-profi
 import { OnboardingSecurityStep } from "~/features/onboarding/ui/onboarding-security-step";
 import { OnboardingShell } from "~/features/onboarding/ui/onboarding-shell";
 import { OnboardingTotpStep } from "~/features/onboarding/ui/onboarding-totp-step";
+import { changeOnboardingPassword } from "~/rpc/auth/onboarding/change-password.action";
+import { completeOnboardingAction } from "~/rpc/auth/onboarding/complete.action";
+import { submitOnboardingProfile } from "~/rpc/auth/onboarding/submit-profile.action";
+import { acknowledgeRecoveryCodes } from "~/rpc/auth/recovery-codes.action";
+import { beginPasskeyEnrollment } from "~/rpc/auth/security/passkey.action";
+import { beginTotpEnrollment } from "~/rpc/auth/security/totp.action";
+import { onboardingSnapshotQuery } from "~/rpc/onboarding/onboarding-snapshot.query";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 

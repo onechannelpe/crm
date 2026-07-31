@@ -1,3 +1,4 @@
+import "server-only";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
 import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";

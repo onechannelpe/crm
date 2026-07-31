@@ -1,10 +1,6 @@
 import { onCleanup } from "solid-js";
 
 import {
-  getRecordImportProgress,
-  uploadRecordImportFile,
-} from "~/actions/records/imports.action";
-import {
   subscribeState,
   type StateSubscription,
 } from "~/browser/realtime/subscribe-state";
@@ -15,6 +11,10 @@ import {
   type RecordImportProgressEvent,
   type RecordImportType,
 } from "~/contracts/records/imports";
+import {
+  getRecordImportProgress,
+  uploadRecordImportFile,
+} from "~/rpc/records/imports.action";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 4_000;

@@ -6,7 +6,7 @@ import { useAuthenticatedSession } from "~/components/providers/authenticated-se
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
 import { createLeadMutation } from "~/features/workflow/data/command-mutations";
-import { leadBootstrapPreviewQuery } from "~/features/workflow/data/lead-bootstrap-preview.query";
+import { leadBootstrapPreviewQuery } from "~/rpc/workflow/lead-bootstrap-preview.query";
 
 import { SidePanelPage } from "../../components/page";
 import { SidePanelFooter } from "../../components/panel-footer";

@@ -1,3 +1,4 @@
+import "server-only";
 import { databaseConfig } from "~/server/platform/config/env";
 
 import { createDb } from "./client";

@@ -1,3 +1,4 @@
+import "server-only";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import {
   serverInfrastructure as defaultServerInfrastructure,

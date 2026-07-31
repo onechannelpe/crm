@@ -1,3 +1,4 @@
+import "server-only";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createObservabilityService } from "~/server/observability/service";

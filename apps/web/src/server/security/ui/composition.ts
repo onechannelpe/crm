@@ -1,3 +1,4 @@
+import "server-only";
 import { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createEventsRepo } from "~/server/event-logs/events-repo";

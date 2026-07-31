@@ -1,3 +1,4 @@
+import "server-only";
 import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { composeEngineClient } from "~/server/integrations/ui/engine-client";

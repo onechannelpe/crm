@@ -1,10 +1,10 @@
-import { cohortRowsQuery } from "~/features/merchant-stats/data/cohort-rows.query";
-import { executiveGpvProgressQuery } from "~/features/merchant-stats/data/executive-gpv-progress.query";
-import { gpvCulqiViewQuery } from "~/features/merchant-stats/data/gpv-culqi-view.query";
-import { gpvPerformanceViewQuery } from "~/features/merchant-stats/data/gpv-performance-view.query";
-import { merchantFilterOptionsQuery } from "~/features/merchant-stats/data/merchant-filter-options.query";
-import { merchantStatsByRucQuery } from "~/features/merchant-stats/data/merchant-stats-by-ruc.query";
-import { qualityRowsQuery } from "~/features/merchant-stats/data/quality-rows.query";
+import { cohortRowsQuery } from "~/rpc/merchant-stats/cohort-rows.query";
+import { executiveGpvProgressQuery } from "~/rpc/merchant-stats/executive-gpv-progress.query";
+import { gpvCulqiViewQuery } from "~/rpc/merchant-stats/gpv-culqi-view.query";
+import { gpvPerformanceViewQuery } from "~/rpc/merchant-stats/gpv-performance-view.query";
+import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options.query";
+import { merchantStatsByRucQuery } from "~/rpc/merchant-stats/merchant-stats-by-ruc.query";
+import { qualityRowsQuery } from "~/rpc/merchant-stats/quality-rows.query";
 
 export const ATTRIBUTION_GPV_QUERY_KEYS = [
   cohortRowsQuery.key,

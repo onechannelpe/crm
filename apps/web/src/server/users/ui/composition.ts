@@ -1,3 +1,4 @@
+import "server-only";
 import type { UserId } from "~/domain/ids";
 import type { Phone } from "~/domain/phone/pe-mobile";
 import type { SessionService } from "~/server/auth/session/session.service";

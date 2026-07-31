@@ -4,8 +4,8 @@ import { Show, createMemo, type ParentProps } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
 import { PageCardHeader } from "~/components/ui/layout/page-card/page-card-header";
-import { leadDetailQuery } from "~/features/workflow/data/lead-detail.query";
-import { leadListQuery } from "~/features/workflow/data/lead-list.query";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail.query";
+import { leadListQuery } from "~/rpc/workflow/lead-list.query";
 
 import styles from "./record-show-header.module.css";
 

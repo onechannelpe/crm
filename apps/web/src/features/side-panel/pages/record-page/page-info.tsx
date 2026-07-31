@@ -3,11 +3,11 @@ import { Show } from "solid-js";
 
 import { Avatar } from "~/components/ui/display/avatar";
 import { Tag } from "~/components/ui/tag/tag";
-import { leadDetailQuery } from "~/features/workflow/data/lead-detail.query";
 import {
   leadStageColor,
   leadStageLabel,
 } from "~/features/workflow/presentation/lead-display";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail.query";
 
 import { PageInfoLayout } from "../../top-bar/page-info-layout";
 import { useLeadRecordPageState } from "./state";

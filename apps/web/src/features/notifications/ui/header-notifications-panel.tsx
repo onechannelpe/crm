@@ -7,11 +7,11 @@ import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
 import { formatAppDateTime } from "~/domain/time/app-time";
-import { headerNotificationsQuery } from "~/features/notifications/data/header-notifications.query";
 import {
   markAllNotificationsReadMutation,
   markNotificationReadMutation,
 } from "~/features/notifications/data/mutations";
+import { headerNotificationsQuery } from "~/rpc/notifications/header-notifications.query";
 import { cn } from "~/shared/classnames";
 
 import styles from "./header-notifications-panel.module.css";

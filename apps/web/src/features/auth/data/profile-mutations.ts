@@ -1,11 +1,11 @@
 import { action, json } from "@solidjs/router";
 
+import { meQuery } from "~/rpc/auth/me.query";
 import {
   removeUserAvatar,
   uploadUserAvatar,
-} from "~/actions/settings/avatar.action";
-import { updateUserProfile } from "~/actions/settings/profile.action";
-import { meQuery } from "~/features/auth/data/queries/me.query";
+} from "~/rpc/settings/avatar.action";
+import { updateUserProfile } from "~/rpc/settings/profile.action";
 
 export const updateUserProfileMutation = action(
   async (phone: string) =>

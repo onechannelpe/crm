@@ -1,5 +1,4 @@
 export {
-  executeAdminServerFunction,
   executeSessionServerFunction,
   executeSessionServerFunctionResult,
 } from "./execute";

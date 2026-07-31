@@ -3,7 +3,7 @@ import { UserId } from "~/domain/ids";
 import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession as revokeUserSessionService } from "~/server/auth/flows/revoke-user-session";
 import { composeAuth } from "~/server/auth/ui/composition";
-import { executeAdminServerFunction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -15,7 +15,7 @@ export async function revokeUserSession(
 ): Promise<ActionSuccess> {
   "use server";
 
-  return executeAdminServerFunction({
+  return executeSessionServerFunction({
     name: "admin.sessions.revoke",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
@@ -46,7 +46,7 @@ export async function revokeAllUserSessions(
 ): Promise<ActionSuccess> {
   "use server";
 
-  return executeAdminServerFunction({
+  return executeSessionServerFunction({
     name: "admin.sessions.revoke_all",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",

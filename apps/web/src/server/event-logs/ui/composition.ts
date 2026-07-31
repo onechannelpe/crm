@@ -1,3 +1,4 @@
+import "server-only";
 import { createEventLogsService } from "~/server/event-logs/service";
 import {
   serverInfrastructure as defaultServerInfrastructure,

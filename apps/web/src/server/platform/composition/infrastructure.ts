@@ -1,3 +1,4 @@
+import "server-only";
 import type { Kysely } from "kysely";
 
 import { db } from "~/server/platform/database/db";

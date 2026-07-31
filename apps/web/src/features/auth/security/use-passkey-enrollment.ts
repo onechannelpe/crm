@@ -1,14 +1,14 @@
 import { createSignal, onMount } from "solid-js";
 
 import {
-  beginPasskeyEnrollment,
-  finishPasskeyEnrollment,
-} from "~/actions/auth/security/passkey.action";
-import {
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
 } from "~/browser/auth/passkey/registration-client";
 import { actionErrorMessage } from "~/contracts/errors";
+import {
+  beginPasskeyEnrollment,
+  finishPasskeyEnrollment,
+} from "~/rpc/auth/security/passkey.action";
 
 interface PasskeyEnrollmentOptions {
   enqueueSuccessSnackBar: (message: string) => void;

@@ -19,11 +19,11 @@ import {
   TabStrip,
   type TabItem,
 } from "~/features/side-panel/components/tab-strip";
-import { memberDetailQuery } from "~/features/team-management/data/member-detail.query";
 import { MemberAdminActions } from "~/features/team-management/member-admin-actions";
 import { MemberCapacityTab } from "~/features/team-management/member-capacity-tab";
 import { MemberInfoTab } from "~/features/team-management/member-info-tab";
 import { MemberPermissionsTab } from "~/features/team-management/member-permissions-tab";
+import { memberDetailQuery } from "~/rpc/team-management/member-detail.query";
 
 import styles from "~/features/team-management/team-management.module.css";
 

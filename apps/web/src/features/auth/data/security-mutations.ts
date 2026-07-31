@@ -1,17 +1,17 @@
 import { action, json } from "@solidjs/router";
 
-import { getUserLoginRetryReport } from "~/actions/admin/auth-security.action";
+import { getUserLoginRetryReport } from "~/rpc/admin/auth-security.action";
+import { meQuery } from "~/rpc/auth/me.query";
 import {
   acknowledgeRecoveryCodes,
   regenerateRecoveryCodes,
-} from "~/actions/auth/recovery-codes.action";
+} from "~/rpc/auth/recovery-codes.action";
+import { recoveryCodesStatusQuery } from "~/rpc/auth/recovery-codes.query";
 import {
   changePassword,
   disableTotp,
   removeAllPasskeys,
-} from "~/actions/settings/security.action";
-import { meQuery } from "~/features/auth/data/queries/me.query";
-import { recoveryCodesStatusQuery } from "~/features/auth/data/queries/recovery-codes.query";
+} from "~/rpc/settings/security.action";
 
 const SECURITY_STATUS_KEYS = [meQuery.key, recoveryCodesStatusQuery.key];
 

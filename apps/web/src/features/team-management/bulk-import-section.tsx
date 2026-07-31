@@ -1,10 +1,6 @@
 import { createAsync } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, on } from "solid-js";
 
-import {
-  applyBulkImport,
-  previewBulkCsv,
-} from "~/actions/team/bulk-import.action";
 import { readFileText } from "~/browser/file/read-file-text";
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
@@ -26,7 +22,8 @@ import type {
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
 import { formatCalendarDate } from "~/domain/time/app-time";
-import { bulkImportSetupQuery } from "~/features/team-management/data/bulk-import-setup.query";
+import { bulkImportSetupQuery } from "~/rpc/team-management/bulk-import-setup.query";
+import { applyBulkImport, previewBulkCsv } from "~/rpc/team/bulk-import.action";
 
 import styles from "./team-management.module.css";
 

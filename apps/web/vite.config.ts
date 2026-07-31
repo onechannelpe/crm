@@ -58,7 +58,7 @@ export default defineConfig({
       },
       serverFunctions: {
         filter: {
-          include: ["src/**/*.query.ts", "src/**/*.action.ts"],
+          include: ["src/rpc/**/*.query.ts", "src/rpc/**/*.action.ts"],
         },
         onError: "./src/server-function-error.ts",
       },

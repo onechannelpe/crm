@@ -13,12 +13,12 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Toggle } from "~/components/ui/input/toggle";
 import { actionErrorMessage } from "~/contracts/errors";
 import { setNotificationPreferenceMutation } from "~/features/notifications/data/mutations";
-import { notificationPreferencesQuery } from "~/features/notifications/data/notification-preferences.query";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   TabStrip,
   type TabIconComponent,
 } from "~/features/side-panel/components/tab-strip";
+import { notificationPreferencesQuery } from "~/rpc/notifications/notification-preferences.query";
 import type { NotificationPreferencesView } from "~/server/notifications/ui/preferences";
 
 import styles from "./notifications.module.css";

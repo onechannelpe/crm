@@ -1,7 +1,6 @@
 import { useAction, useNavigate } from "@solidjs/router";
 import { createMemo, createSignal, onMount } from "solid-js";
 
-import { finishPasskeyLogin } from "~/actions/auth/login/passkey.action";
 import {
   createAuthenticationResponse,
   isPasskeyAuthenticationSupported,
@@ -11,6 +10,7 @@ import { actionErrorMessage, parseWireError } from "~/contracts/errors";
 import type { PasskeyLoginFlowState } from "~/domain/auth/passkey/types";
 import { trackAuthClientEventMutation } from "~/features/auth/data/analytics-mutations";
 import { passkeyStartMutation } from "~/features/auth/data/mutations";
+import { finishPasskeyLogin } from "~/rpc/auth/login/passkey.action";
 
 export type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
 export type PasskeySupportStatus = "unknown" | "supported" | "unsupported";

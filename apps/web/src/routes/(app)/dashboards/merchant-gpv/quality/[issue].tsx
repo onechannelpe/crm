@@ -1,10 +1,10 @@
 import { type RouteDefinition } from "@solidjs/router";
 
 import { isQualityIssue } from "~/contracts/merchant-stats/vocabulary";
-import { merchantFilterOptionsQuery } from "~/features/merchant-stats/data/merchant-filter-options.query";
-import { qualityRowsQuery } from "~/features/merchant-stats/data/quality-rows.query";
 import { GPV_GRID_PAGE_SIZE } from "~/features/merchant-stats/grids/use-dashboard-grid";
 import { QualityPage } from "~/features/merchant-stats/quality/quality-page";
+import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options.query";
+import { qualityRowsQuery } from "~/rpc/merchant-stats/quality-rows.query";
 
 export const route = {
   preload: ({ params }) => {

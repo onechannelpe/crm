@@ -1,9 +1,16 @@
 import { action, json } from "@solidjs/router";
 
+import type {
+  ChangeMemberRoleInput,
+  UpdateMemberExpiryInput,
+  UpdateMemberProfileInput,
+} from "~/contracts/members";
+import { memberDetailQuery } from "~/rpc/team-management/member-detail.query";
+import { membersRosterQuery } from "~/rpc/team-management/members-roster.query";
 import {
   startImpersonation,
   stopImpersonation,
-} from "~/actions/users/impersonation.action";
+} from "~/rpc/users/impersonation.action";
 import {
   changeMemberRole,
   deactivateMember,
@@ -11,14 +18,7 @@ import {
   reactivateMember,
   updateMemberExpiry,
   updateMemberProfile,
-} from "~/actions/users/write.action";
-import type {
-  ChangeMemberRoleInput,
-  UpdateMemberExpiryInput,
-  UpdateMemberProfileInput,
-} from "~/contracts/members";
-import { memberDetailQuery } from "~/features/team-management/data/member-detail.query";
-import { membersRosterQuery } from "~/features/team-management/data/members-roster.query";
+} from "~/rpc/users/write.action";
 
 const revalidateMember = [membersRosterQuery.key, memberDetailQuery.key];
 

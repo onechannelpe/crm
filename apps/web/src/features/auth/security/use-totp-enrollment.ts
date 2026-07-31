@@ -1,10 +1,10 @@
 import { createSignal } from "solid-js";
 
+import { actionErrorMessage } from "~/contracts/errors";
 import {
   beginTotpEnrollment,
   finishTotpEnrollment,
-} from "~/actions/auth/security/totp.action";
-import { actionErrorMessage } from "~/contracts/errors";
+} from "~/rpc/auth/security/totp.action";
 
 export interface TotpEnrollmentState {
   qrCodeDataUrl: string;

@@ -1,3 +1,4 @@
+import "server-only";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import { composeNotifications } from "~/server/notifications/ui/composition";
 import {

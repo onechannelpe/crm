@@ -1,3 +1,4 @@
+import "server-only";
 import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";

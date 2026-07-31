@@ -1,6 +1,6 @@
 import { longName } from "~/domain/identity/display-name";
 import { composeAuth } from "~/server/auth/ui/composition";
-import { executeAdminServerFunction } from "~/server/platform/action";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
@@ -31,7 +31,7 @@ export async function getUserLoginRetryReport(
 ): Promise<UserLoginRetryReport | null> {
   "use server";
 
-  return executeAdminServerFunction({
+  return executeSessionServerFunction({
     name: "admin.auth.login_retry_report.read",
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",

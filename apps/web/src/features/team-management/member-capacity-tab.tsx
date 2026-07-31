@@ -16,12 +16,12 @@ import type {
   PolicySource,
 } from "~/contracts/capacity";
 import { actionErrorMessage } from "~/contracts/errors";
-import { executiveCapacityDetailQuery } from "~/features/capacity/data/executive-capacity-detail.query";
 import {
   grantMoreLeadRefillMutation,
   grantMoreSearchesMutation,
   updateExecutivePolicyOverrideMutation,
 } from "~/features/capacity/data/mutations";
+import { executiveCapacityDetailQuery } from "~/rpc/capacity/executive-capacity-detail.query";
 
 import styles from "./team-management.module.css";
 
