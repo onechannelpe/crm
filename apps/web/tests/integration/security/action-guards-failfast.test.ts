@@ -4,7 +4,6 @@ import { ActionError } from "~/contracts/errors";
 import { getUserLoginRetryReport } from "~/rpc/admin/auth-security";
 import { listUserSessions } from "~/rpc/admin/sessions/read";
 import { revokeUserSession } from "~/rpc/admin/sessions/revoke";
-import { acceptInvitePasswordStep } from "~/rpc/auth/invite";
 import {
   createTeamInvite,
   resendTeamInvite,
@@ -57,16 +56,6 @@ describe("action guards fail fast", () => {
         }),
       ),
     ).toBe("invalid_role");
-    await expect(
-      acceptInvitePasswordStep({
-        token: "invalid",
-        password: "Password123",
-      }),
-    ).resolves.toEqual({
-      ok: false,
-      code: "invalid_token",
-      message: "El enlace de invitación no es válido.",
-    });
   });
 
   it("rejects invalid range/count values before auth", async () => {

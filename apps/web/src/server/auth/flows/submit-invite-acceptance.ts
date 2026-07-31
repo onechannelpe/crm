@@ -1,3 +1,7 @@
+import {
+  validateInviteAcceptance,
+  type InviteAcceptanceInput,
+} from "~/domain/auth/invite/activation-input";
 import type { DomainError } from "~/domain/errors";
 import { createSessionService } from "~/server/auth/session/session.service";
 import type { EventsRepo } from "~/server/event-logs/events-repo";
@@ -19,12 +23,14 @@ export async function submitInviteAcceptance(
     ipAddress: string;
     userAgent: string | null;
   },
-  input: {
-    token: string;
-    password: string;
-  },
+  input: InviteAcceptanceInput,
 ): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
-  const accepted = await deps.inviteService.acceptInvite(input);
+  const validated = validateInviteAcceptance(input);
+  if (isErr(validated)) {
+    return validated;
+  }
+
+  const accepted = await deps.inviteService.acceptInvite(validated.value);
   if (isErr(accepted)) {
     return accepted;
   }
