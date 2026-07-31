@@ -6,7 +6,7 @@ import {
   parseGpvSnapshotProgressMessage,
   type GpvSnapshotProgressEvent,
 } from "~/contracts/merchant-stats/imports";
-import { getGpvSnapshotProgress } from "~/rpc/merchant-stats/imports.action";
+import { getGpvSnapshotProgress } from "~/rpc/merchant-stats/imports";
 
 function isTerminal(event: GpvSnapshotProgressEvent): boolean {
   return event.queueState === "done" || event.queueState === "failed";

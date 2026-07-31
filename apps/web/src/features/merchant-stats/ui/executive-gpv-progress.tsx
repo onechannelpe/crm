@@ -25,7 +25,7 @@ import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatSoles } from "~/features/merchant-stats/format";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
-import { executiveGpvProgressQuery } from "~/rpc/merchant-stats/executive-gpv-progress.query";
+import { executiveGpvProgressQuery } from "~/rpc/merchant-stats/executive-gpv-progress";
 
 import styles from "./executive-gpv-progress.module.css";
 

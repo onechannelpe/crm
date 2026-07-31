@@ -12,9 +12,9 @@ import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type { RecordIndexDefinition } from "~/features/record-index/model/definition";
 import { mergeLeadRows } from "~/features/workflow/data/merge-lead-rows";
 import { getOptimisticLeadRows } from "~/features/workflow/data/optimistic-leads";
-import { requestWorkflowLeadsExportDownloadToken } from "~/rpc/workflow/files.action";
-import { leadListQuery } from "~/rpc/workflow/lead-list.query";
-import { pendingQuotationCountQuery } from "~/rpc/workflow/pending-quotation-count.query";
+import { requestWorkflowLeadsExportDownloadToken } from "~/rpc/workflow/files";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
+import { pendingQuotationCountQuery } from "~/rpc/workflow/pending-quotation-count";
 
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";

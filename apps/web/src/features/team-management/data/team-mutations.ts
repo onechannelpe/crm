@@ -1,12 +1,12 @@
 import { action, json } from "@solidjs/router";
 
 import type { CreateTeamInviteInput } from "~/contracts/team";
-import { inviteManagementQuery } from "~/rpc/team-management/invite-management.query";
+import { inviteManagementQuery } from "~/rpc/team-management/invite-management";
 import {
   createTeamInvite,
   resendTeamInvite,
   revokeTeamInvite,
-} from "~/rpc/team/invites.action";
+} from "~/rpc/team/invites";
 
 export const createTeamInviteMutation = action(
   async (input: CreateTeamInviteInput) => {

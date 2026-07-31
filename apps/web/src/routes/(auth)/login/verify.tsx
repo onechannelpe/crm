@@ -12,7 +12,7 @@ import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
-import { loginFlowQuery } from "~/rpc/auth/login-flow.query";
+import { loginFlowQuery } from "~/rpc/auth/login-flow";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";

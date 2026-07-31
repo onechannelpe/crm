@@ -17,7 +17,7 @@ import type {
 import { actionErrorMessage } from "~/contracts/errors";
 import { updateScopePolicyMutation } from "~/features/capacity/data/mutations";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { capacityPolicyDefaultsQuery } from "~/rpc/capacity/capacity-policy-defaults.query";
+import { capacityPolicyDefaultsQuery } from "~/rpc/capacity/capacity-policy-defaults";
 
 import styles from "./settings-page.module.css";
 

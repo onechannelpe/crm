@@ -4,7 +4,7 @@ import { actionErrorMessage } from "~/contracts/errors";
 import {
   beginTotpEnrollment,
   finishTotpEnrollment,
-} from "~/rpc/auth/security/totp.action";
+} from "~/rpc/auth/security/totp";
 
 export interface TotpEnrollmentState {
   qrCodeDataUrl: string;

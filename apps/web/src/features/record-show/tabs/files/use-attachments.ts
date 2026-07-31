@@ -1,7 +1,7 @@
 import { createAsync, revalidate } from "@solidjs/router";
 import type { Accessor } from "solid-js";
 
-import { leadSaleProofFilesQuery } from "~/rpc/workflow/lead-sale-proof-files.query";
+import { leadSaleProofFilesQuery } from "~/rpc/workflow/lead-sale-proof-files";
 
 export function useAttachments(leadId: Accessor<string | null>) {
   const attachments = createAsync(async () => {

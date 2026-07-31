@@ -19,7 +19,7 @@ import {
   TabStrip,
   type TabIconComponent,
 } from "~/features/side-panel/components/tab-strip";
-import { notificationPreferencesQuery } from "~/rpc/notifications/notification-preferences.query";
+import { notificationPreferencesQuery } from "~/rpc/notifications/notification-preferences";
 
 import styles from "./notifications.module.css";
 

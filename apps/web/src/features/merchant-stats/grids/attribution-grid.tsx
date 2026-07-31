@@ -15,8 +15,8 @@ import type { CohortSaleRow } from "~/contracts/merchant-stats/views";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import { cohortRowsQuery } from "~/rpc/merchant-stats/cohort-rows.query";
-import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options.query";
+import { cohortRowsQuery } from "~/rpc/merchant-stats/cohort-rows";
+import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options";
 
 import {
   adjustMonthCreditMutation,

@@ -13,7 +13,7 @@ import { createGridSource } from "~/features/data-grid/model/create-grid-source"
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import { observabilitySnapshotQuery } from "~/rpc/observability/observability-snapshot.query";
+import { observabilitySnapshotQuery } from "~/rpc/observability/observability-snapshot";
 
 import styles from "./monitoring-page.module.css";
 

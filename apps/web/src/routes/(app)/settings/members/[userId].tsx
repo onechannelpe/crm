@@ -23,7 +23,7 @@ import { MemberAdminActions } from "~/features/team-management/member-admin-acti
 import { MemberCapacityTab } from "~/features/team-management/member-capacity-tab";
 import { MemberInfoTab } from "~/features/team-management/member-info-tab";
 import { MemberPermissionsTab } from "~/features/team-management/member-permissions-tab";
-import { memberDetailQuery } from "~/rpc/team-management/member-detail.query";
+import { memberDetailQuery } from "~/rpc/team-management/member-detail";
 
 import styles from "~/features/team-management/team-management.module.css";
 

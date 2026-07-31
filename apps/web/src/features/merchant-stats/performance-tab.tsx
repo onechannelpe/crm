@@ -12,7 +12,7 @@ import {
   type WidgetSpan,
 } from "~/features/widgets/widget-layout";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
-import { gpvPerformanceViewQuery } from "~/rpc/merchant-stats/gpv-performance-view.query";
+import { gpvPerformanceViewQuery } from "~/rpc/merchant-stats/gpv-performance-view";
 
 import {
   formatInteger,

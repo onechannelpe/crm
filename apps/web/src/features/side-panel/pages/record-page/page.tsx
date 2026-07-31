@@ -17,8 +17,8 @@ import {
   nextActionCta,
   type NextActionTarget,
 } from "~/features/record-show/workflow/next-action";
-import { leadDetailQuery } from "~/rpc/workflow/lead-detail.query";
-import { leadListQuery } from "~/rpc/workflow/lead-list.query";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
 
 import { SidePanelPage } from "../../components/page";
 import {

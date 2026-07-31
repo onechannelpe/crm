@@ -35,13 +35,13 @@ import { OnboardingProfileStep } from "~/features/onboarding/ui/onboarding-profi
 import { OnboardingSecurityStep } from "~/features/onboarding/ui/onboarding-security-step";
 import { OnboardingShell } from "~/features/onboarding/ui/onboarding-shell";
 import { OnboardingTotpStep } from "~/features/onboarding/ui/onboarding-totp-step";
-import { changeOnboardingPassword } from "~/rpc/auth/onboarding/change-password.action";
-import { completeOnboardingAction } from "~/rpc/auth/onboarding/complete.action";
-import { submitOnboardingProfile } from "~/rpc/auth/onboarding/submit-profile.action";
-import { acknowledgeRecoveryCodes } from "~/rpc/auth/recovery-codes.action";
-import { beginPasskeyEnrollment } from "~/rpc/auth/security/passkey.action";
-import { beginTotpEnrollment } from "~/rpc/auth/security/totp.action";
-import { onboardingSnapshotQuery } from "~/rpc/onboarding/onboarding-snapshot.query";
+import { changeOnboardingPassword } from "~/rpc/auth/onboarding/change-password";
+import { completeOnboardingAction } from "~/rpc/auth/onboarding/complete";
+import { submitOnboardingProfile } from "~/rpc/auth/onboarding/submit-profile";
+import { acknowledgeRecoveryCodes } from "~/rpc/auth/recovery-codes";
+import { beginPasskeyEnrollment } from "~/rpc/auth/security/passkey";
+import { beginTotpEnrollment } from "~/rpc/auth/security/totp";
+import { onboardingSnapshotQuery } from "~/rpc/onboarding/onboarding-snapshot";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 

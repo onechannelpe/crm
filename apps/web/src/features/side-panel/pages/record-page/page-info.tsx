@@ -7,7 +7,7 @@ import {
   leadStageColor,
   leadStageLabel,
 } from "~/features/workflow/presentation/lead-display";
-import { leadDetailQuery } from "~/rpc/workflow/lead-detail.query";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
 
 import { PageInfoLayout } from "../../top-bar/page-info-layout";
 import { useLeadRecordPageState } from "./state";

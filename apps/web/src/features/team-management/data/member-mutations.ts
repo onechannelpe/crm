@@ -5,12 +5,12 @@ import type {
   UpdateMemberExpiryInput,
   UpdateMemberProfileInput,
 } from "~/contracts/members";
-import { memberDetailQuery } from "~/rpc/team-management/member-detail.query";
-import { membersRosterQuery } from "~/rpc/team-management/members-roster.query";
+import { memberDetailQuery } from "~/rpc/team-management/member-detail";
+import { membersRosterQuery } from "~/rpc/team-management/members-roster";
 import {
   startImpersonation,
   stopImpersonation,
-} from "~/rpc/users/impersonation.action";
+} from "~/rpc/users/impersonation";
 import {
   changeMemberRole,
   deactivateMember,
@@ -18,7 +18,7 @@ import {
   reactivateMember,
   updateMemberExpiry,
   updateMemberProfile,
-} from "~/rpc/users/write.action";
+} from "~/rpc/users/write";
 
 const revalidateMember = [membersRosterQuery.key, memberDetailQuery.key];
 

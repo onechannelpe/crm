@@ -32,7 +32,7 @@ import {
   WidgetCardHeader,
   WidgetCardTitle,
 } from "~/features/widgets/widget-card";
-import { requestFulfillmentDownloadToken } from "~/rpc/workflow/commands/fulfillment.action";
+import { requestFulfillmentDownloadToken } from "~/rpc/workflow/commands/fulfillment";
 
 import {
   chooseFulfillmentProductMutation,

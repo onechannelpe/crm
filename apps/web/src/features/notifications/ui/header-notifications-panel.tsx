@@ -11,7 +11,7 @@ import {
   markAllNotificationsReadMutation,
   markNotificationReadMutation,
 } from "~/features/notifications/data/mutations";
-import { headerNotificationsQuery } from "~/rpc/notifications/header-notifications.query";
+import { headerNotificationsQuery } from "~/rpc/notifications/header-notifications";
 import { cn } from "~/shared/classnames";
 
 import styles from "./header-notifications-panel.module.css";

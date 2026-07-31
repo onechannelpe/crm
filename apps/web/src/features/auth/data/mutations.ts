@@ -6,18 +6,15 @@ import type {
   PasswordLoginSubmissionResult,
 } from "~/contracts/auth";
 import type { AcceptInviteResult } from "~/contracts/auth";
-import { acceptInvitePasswordStep } from "~/rpc/auth/invite.action";
+import { acceptInvitePasswordStep } from "~/rpc/auth/invite";
 import {
   passkeyStart,
   passwordLogin,
   recoveryLogin,
   totpLogin,
-} from "~/rpc/auth/login/index.action";
-import {
-  requestPasswordReset,
-  resetPassword,
-} from "~/rpc/auth/reset-password.action";
-import { logout } from "~/rpc/auth/session/index.action";
+} from "~/rpc/auth/login/index";
+import { requestPasswordReset, resetPassword } from "~/rpc/auth/reset-password";
+import { logout } from "~/rpc/auth/session/index";
 
 export const logoutMutation = action(logout, "logout");
 

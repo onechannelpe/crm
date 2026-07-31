@@ -2,7 +2,7 @@ import type { RouteDefinition, RouteSectionProps } from "@solidjs/router";
 
 import { AuthenticatedAppFrame } from "~/components/layout/app-shell/authenticated-app-frame";
 import { RecordIndexAppShell } from "~/components/layout/app-shell/record-index-app-shell";
-import { meQuery } from "~/rpc/auth/me.query";
+import { meQuery } from "~/rpc/auth/me";
 
 export const route = {
   preload: () => meQuery(),

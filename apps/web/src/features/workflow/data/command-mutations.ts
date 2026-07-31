@@ -33,16 +33,16 @@ import {
   uploadFulfillmentDocument,
   uploadFulfillmentPaymentProof,
   validateFulfillmentPayment,
-} from "~/rpc/workflow/commands/fulfillment.action";
-import { requestInquiryCreation } from "~/rpc/workflow/commands/inquiries.action";
-import { addLeadNote } from "~/rpc/workflow/commands/interactions.action";
+} from "~/rpc/workflow/commands/fulfillment";
+import { requestInquiryCreation } from "~/rpc/workflow/commands/inquiries";
+import { addLeadNote } from "~/rpc/workflow/commands/interactions";
 import {
   requestRateAcceptance,
   requestRateProposal,
   requestLeadClosure,
   requestRateProposalEdit,
   requestRateRevision,
-} from "~/rpc/workflow/commands/rate.action";
+} from "~/rpc/workflow/commands/rate";
 import {
   requestAddLeadToFavorites,
   requestEditCommercialScope,
@@ -54,14 +54,14 @@ import {
   requestRecordRepLegal,
   requestRemoveLeadFromFavorites,
   requestSaveDigitalPolicy,
-} from "~/rpc/workflow/commands/records.action";
+} from "~/rpc/workflow/commands/records";
 import {
   requestVenueAccountsAddition,
   requestVenueCreation,
   requestVenueUpdate,
-} from "~/rpc/workflow/commands/sales.action";
-import { inquiryListQuery } from "~/rpc/workflow/inquiry-list.query";
-import { leadListQuery } from "~/rpc/workflow/lead-list.query";
+} from "~/rpc/workflow/commands/sales";
+import { inquiryListQuery } from "~/rpc/workflow/inquiry-list";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
 
 export const createLeadMutation = action(async (input: CreateLeadInput) => {
   const result = await requestLeadCreation(input);

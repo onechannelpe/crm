@@ -14,7 +14,7 @@ import {
   type EventLogQueryResult,
   type EventLogRecord,
 } from "~/contracts/event-logs/event-log";
-import { eventLogsQuery } from "~/rpc/event-logs/event-logs.query";
+import { eventLogsQuery } from "~/rpc/event-logs/event-logs";
 
 import { hasEventLogFilters } from "../model/event-log-location";
 

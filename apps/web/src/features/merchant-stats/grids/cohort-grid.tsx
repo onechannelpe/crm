@@ -11,7 +11,7 @@ import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import { cohortRowsQuery } from "~/rpc/merchant-stats/cohort-rows.query";
+import { cohortRowsQuery } from "~/rpc/merchant-stats/cohort-rows";
 
 import { formatInteger, formatMonth, formatSolesCompact } from "../format";
 import { GpvFilterBar } from "../gpv-filter-bar";

@@ -23,8 +23,8 @@ import {
   updatePendingQuotationPolicyMutation,
   updateRateProposalPolicyMutation,
 } from "~/features/workflow/data/settings-mutations";
-import { pendingQuotationPolicyQuery } from "~/rpc/workflow/pending-quotation-policy.query";
-import { rateProposalPolicyQuery } from "~/rpc/workflow/rate-proposal-policy.query";
+import { pendingQuotationPolicyQuery } from "~/rpc/workflow/pending-quotation-policy";
+import { rateProposalPolicyQuery } from "~/rpc/workflow/rate-proposal-policy";
 
 import styles from "./settings-page.module.css";
 

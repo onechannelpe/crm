@@ -27,7 +27,7 @@ import { useTotpEnrollment } from "~/features/auth/security/use-totp-enrollment"
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import { useConfirmDialog } from "~/hooks/use-confirm-dialog";
-import { recoveryCodesStatusQuery } from "~/rpc/auth/recovery-codes.query";
+import { recoveryCodesStatusQuery } from "~/rpc/auth/recovery-codes";
 
 import styles from "./security.module.css";
 import base from "./settings-page.module.css";

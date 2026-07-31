@@ -22,8 +22,8 @@ import type {
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
 import { formatCalendarDate } from "~/domain/time/app-time";
-import { bulkImportSetupQuery } from "~/rpc/team-management/bulk-import-setup.query";
-import { applyBulkImport, previewBulkCsv } from "~/rpc/team/bulk-import.action";
+import { bulkImportSetupQuery } from "~/rpc/team-management/bulk-import-setup";
+import { applyBulkImport, previewBulkCsv } from "~/rpc/team/bulk-import";
 
 import styles from "./team-management.module.css";
 

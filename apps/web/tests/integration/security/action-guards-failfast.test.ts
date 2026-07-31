@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import { ActionError } from "~/contracts/errors";
-import { getUserLoginRetryReport } from "~/rpc/admin/auth-security.action";
-import { listUserSessions } from "~/rpc/admin/sessions/read.action";
-import { revokeUserSession } from "~/rpc/admin/sessions/revoke.action";
-import { acceptInvitePasswordStep } from "~/rpc/auth/invite.action";
+import { getUserLoginRetryReport } from "~/rpc/admin/auth-security";
+import { listUserSessions } from "~/rpc/admin/sessions/read";
+import { revokeUserSession } from "~/rpc/admin/sessions/revoke";
+import { acceptInvitePasswordStep } from "~/rpc/auth/invite";
 import {
   createTeamInvite,
   resendTeamInvite,
   revokeTeamInvite,
-} from "~/rpc/team/invites.action";
+} from "~/rpc/team/invites";
 
 async function rejectionCode(run: Promise<unknown>): Promise<unknown> {
   try {

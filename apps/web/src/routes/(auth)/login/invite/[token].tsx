@@ -4,7 +4,7 @@ import { Match, Switch } from "solid-js";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { InviteActivationForm } from "~/features/auth/ui/invite-activation-form";
-import { inviteActivationViewQuery } from "~/rpc/auth/invite-activation.query";
+import { inviteActivationViewQuery } from "~/rpc/auth/invite-activation";
 
 import pageStyles from "~/features/auth/ui/login-page.module.css";
 

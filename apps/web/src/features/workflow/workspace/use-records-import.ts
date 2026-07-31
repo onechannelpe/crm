@@ -14,7 +14,7 @@ import {
 import {
   getRecordImportProgress,
   uploadRecordImportFile,
-} from "~/rpc/records/imports.action";
+} from "~/rpc/records/imports";
 
 const IMPORT_PROGRESS_DURATION_MS = 0;
 const IMPORT_COMPLETED_DURATION_MS = 4_000;

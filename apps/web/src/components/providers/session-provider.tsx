@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 
 import type { CurrentUserView } from "~/contracts/auth";
-import { meQuery } from "~/rpc/auth/me.query";
+import { meQuery } from "~/rpc/auth/me";
 
 interface SessionContextValue {
   user: () => CurrentUserView | null | undefined;

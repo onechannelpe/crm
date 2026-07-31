@@ -1,7 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { For, Show } from "solid-js";
 
-import { merchantStatsByRucQuery } from "~/rpc/merchant-stats/merchant-stats-by-ruc.query";
+import { merchantStatsByRucQuery } from "~/rpc/merchant-stats/merchant-stats-by-ruc";
 
 import { Gauge } from "../charts/gauge";
 import { LineChart } from "../charts/line-chart";

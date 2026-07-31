@@ -9,8 +9,8 @@ import {
   requestMoreSearchesMutation,
 } from "~/features/capacity/data/mutations";
 import { SettingsPageContainer } from "~/features/settings-shell/content/settings-page-container";
-import { myContactAssignmentCapacityQuery } from "~/rpc/capacity/my-contact-assignment-capacity.query";
-import { mySearchAllowanceQuery } from "~/rpc/capacity/my-search-allowance.query";
+import { myContactAssignmentCapacityQuery } from "~/rpc/capacity/my-contact-assignment-capacity";
+import { mySearchAllowanceQuery } from "~/rpc/capacity/my-search-allowance";
 
 import styles from "./capacity-page.module.css";
 

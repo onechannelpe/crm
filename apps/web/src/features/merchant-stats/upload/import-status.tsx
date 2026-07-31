@@ -22,7 +22,7 @@ import { type GpvSnapshotProgressEvent } from "~/contracts/merchant-stats/import
 import { formatAppDateTime } from "~/domain/time/app-time";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
-import { gpvSnapshotQuery } from "~/rpc/merchant-stats/gpv-snapshot.query";
+import { gpvSnapshotQuery } from "~/rpc/merchant-stats/gpv-snapshot";
 
 import { subscribeToGpvSnapshotImport } from "../data/import-subscription";
 import { resolveGpvImportIssueMutation } from "../data/mutations";

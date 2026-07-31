@@ -8,7 +8,7 @@ import { ProposeRateSection } from "~/features/workflow/detail/forms/pricing/pro
 import { RateProposalSection } from "~/features/workflow/detail/forms/pricing/rate-proposal";
 import { ExpiredPanel } from "~/features/workflow/detail/forms/review/expired-panel";
 import { QualifyForm } from "~/features/workflow/detail/forms/review/qualify-form";
-import { leadDetailQuery } from "~/rpc/workflow/lead-detail.query";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
 
 import { SidePanelPage } from "../../components/page";
 import { useSidePanel } from "../../state/use-side-panel";

@@ -3,14 +3,14 @@ import { action, json } from "@solidjs/router";
 import {
   adjustMonthCredit,
   setMerchantTarget,
-} from "~/rpc/merchant-stats/attribution.action";
-import { requestMerchantGpvExportDownloadToken } from "~/rpc/merchant-stats/dashboard.action";
-import { gpvSnapshotQuery } from "~/rpc/merchant-stats/gpv-snapshot.query";
+} from "~/rpc/merchant-stats/attribution";
+import { requestMerchantGpvExportDownloadToken } from "~/rpc/merchant-stats/dashboard";
+import { gpvSnapshotQuery } from "~/rpc/merchant-stats/gpv-snapshot";
 import {
   resolveGpvImportIssue,
   uploadMerchantReport,
-} from "~/rpc/merchant-stats/imports.action";
-import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options.query";
+} from "~/rpc/merchant-stats/imports";
+import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options";
 
 import {
   ATTRIBUTION_GPV_QUERY_KEYS,

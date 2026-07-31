@@ -37,7 +37,7 @@ import {
   formatAmount,
   formatRate,
 } from "~/features/workflow/presentation/format";
-import { uploadLeadRateRevisionFile } from "~/rpc/workflow/files.action";
+import { uploadLeadRateRevisionFile } from "~/rpc/workflow/files";
 
 import {
   acceptRateMutation,

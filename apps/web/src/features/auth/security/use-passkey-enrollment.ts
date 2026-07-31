@@ -8,7 +8,7 @@ import { actionErrorMessage } from "~/contracts/errors";
 import {
   beginPasskeyEnrollment,
   finishPasskeyEnrollment,
-} from "~/rpc/auth/security/passkey.action";
+} from "~/rpc/auth/security/passkey";
 
 interface PasskeyEnrollmentOptions {
   enqueueSuccessSnackBar: (message: string) => void;

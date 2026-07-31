@@ -10,7 +10,7 @@ import { OnboardingStepHeading } from "~/features/onboarding/ui/onboarding-step-
 import {
   acknowledgeRecoveryCodes,
   regenerateRecoveryCodes,
-} from "~/rpc/auth/recovery-codes.action";
+} from "~/rpc/auth/recovery-codes";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 

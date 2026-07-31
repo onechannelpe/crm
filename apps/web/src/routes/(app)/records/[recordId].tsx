@@ -1,7 +1,7 @@
 import { type RouteDefinition, useParams } from "@solidjs/router";
 
 import { RecordShowPage } from "~/features/record-show/page/record-show-page";
-import { leadDetailQuery } from "~/rpc/workflow/lead-detail.query";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
 
 // Warm the lead detail on the server so the record page streams with data instead
 // of fetching on mount.

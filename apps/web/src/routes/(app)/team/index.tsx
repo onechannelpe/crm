@@ -11,7 +11,7 @@ import type { ManagedExecutiveView } from "~/contracts/capacity";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import { managedExecutivesQuery } from "~/rpc/capacity/managed-executives.query";
+import { managedExecutivesQuery } from "~/rpc/capacity/managed-executives";
 import { capitalize } from "~/shared/text";
 
 import styles from "./team-page.module.css";

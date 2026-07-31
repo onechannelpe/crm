@@ -8,7 +8,7 @@ import type {
 import { SettingsLogs } from "~/features/event-logs/components/settings-logs";
 import { eventLogInputFromQuery } from "~/features/event-logs/model/event-log-location";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { eventLogsQuery } from "~/rpc/event-logs/event-logs.query";
+import { eventLogsQuery } from "~/rpc/event-logs/event-logs";
 
 export const route = {
   preload: ({ location }) => {

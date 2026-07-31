@@ -21,7 +21,7 @@ import {
   grantMoreSearchesMutation,
   updateExecutivePolicyOverrideMutation,
 } from "~/features/capacity/data/mutations";
-import { executiveCapacityDetailQuery } from "~/rpc/capacity/executive-capacity-detail.query";
+import { executiveCapacityDetailQuery } from "~/rpc/capacity/executive-capacity-detail";
 
 import styles from "./team-management.module.css";
 

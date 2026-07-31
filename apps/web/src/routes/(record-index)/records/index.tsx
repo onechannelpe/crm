@@ -5,8 +5,8 @@ import {
   resolveLeadListQueryInput,
 } from "~/features/workflow/workspace/lead-list-query";
 import { LeadsWorkspace } from "~/features/workflow/workspace/leads-workspace";
-import { meQuery } from "~/rpc/auth/me.query";
-import { leadListQuery } from "~/rpc/workflow/lead-list.query";
+import { meQuery } from "~/rpc/auth/me";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
 
 // Shared input normalization makes the preload warm the workspace query key.
 export const route = {

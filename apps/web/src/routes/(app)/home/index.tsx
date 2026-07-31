@@ -2,7 +2,7 @@ import type { RouteDefinition } from "@solidjs/router";
 
 import { AppPage } from "~/components/layout/page";
 import { ExecutiveGpvProgress } from "~/features/merchant-stats/ui/executive-gpv-progress";
-import { executiveGpvProgressQuery } from "~/rpc/merchant-stats/executive-gpv-progress.query";
+import { executiveGpvProgressQuery } from "~/rpc/merchant-stats/executive-gpv-progress";
 
 export const route = {
   preload: () => executiveGpvProgressQuery(),

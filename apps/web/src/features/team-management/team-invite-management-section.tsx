@@ -2,7 +2,7 @@ import { createAsync } from "@solidjs/router";
 import { Show } from "solid-js";
 
 import { SettingsSection } from "~/components/settings/SettingsSection";
-import { inviteManagementQuery } from "~/rpc/team-management/invite-management.query";
+import { inviteManagementQuery } from "~/rpc/team-management/invite-management";
 
 import { InviteForm } from "./invite-form";
 import { PendingInvitesTable } from "./pending-invites-table";

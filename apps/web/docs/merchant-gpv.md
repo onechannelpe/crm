@@ -21,9 +21,9 @@ flowchart LR
     Review --> Activate
 ```
 
-[`uploadMerchantReport`](../src/rpc/merchant-stats/imports.action.ts) stores the
-file and creates a queued snapshot. The maintenance worker uses the
-merchant-stats runtime to process its job. Parsing is isolated in
+[`uploadMerchantReport`](../src/rpc/merchant-stats/imports.ts) stores the file
+and creates a queued snapshot. The maintenance worker uses the merchant-stats
+runtime to process its job. Parsing is isolated in
 [`intake/`](../src/server/merchant-stats/intake/); staging, validation, and
 activation live in [`snapshot/`](../src/server/merchant-stats/snapshot/).
 
@@ -46,7 +46,7 @@ only when they are its current CRM owner; managers can read the team view.
 Monthly merchant credit is frozen when a snapshot first exposes the month. Later
 ownership reassignment therefore does not rewrite historical progress. Managers
 can record an explicit monthly credit correction through
-[`adjustMonthCredit`](../src/rpc/merchant-stats/attribution.action.ts).
+[`adjustMonthCredit`](../src/rpc/merchant-stats/attribution.ts).
 
 Targets are effective-dated per RUC. Updating the same RUC and effective month
 replaces that target; adding a later effective month preserves earlier periods.

@@ -17,8 +17,8 @@ import {
 import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
 import { upsertAuditPolicyMutation } from "~/features/audit-policies/data/mutations";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { auditPolicySnapshotQuery } from "~/rpc/audit-policies/audit-policy-snapshot.query";
-import { canManageAuditPoliciesQuery } from "~/rpc/audit-policies/can-manage-audit-policies.query";
+import { auditPolicySnapshotQuery } from "~/rpc/audit-policies/audit-policy-snapshot";
+import { canManageAuditPoliciesQuery } from "~/rpc/audit-policies/can-manage-audit-policies";
 
 import styles from "./settings-page.module.css";
 

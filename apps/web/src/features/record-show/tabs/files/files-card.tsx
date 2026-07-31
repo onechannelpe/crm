@@ -18,11 +18,11 @@ import {
   ActivityRowMeta,
   ActivityTabContainer,
 } from "~/features/side-panel/components/activity-tabs/primitives";
-import { requestFulfillmentDownloadToken } from "~/rpc/workflow/commands/fulfillment.action";
+import { requestFulfillmentDownloadToken } from "~/rpc/workflow/commands/fulfillment";
 import {
   requestLeadSaleProofDownloadToken,
   requestRateRevisionFileDownloadToken,
-} from "~/rpc/workflow/files.action";
+} from "~/rpc/workflow/files";
 
 import { AttachmentList } from "./attachment-list";
 import { PreviewModal, type PreviewModalState } from "./preview-modal";
