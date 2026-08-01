@@ -1,10 +1,5 @@
 export {
-  subscribeToActiveWebGlContextCount,
-  tryReserveWebGlContextSlot,
-} from "./active-webgl-context-budget";
-export {
   createSiteWebGlRenderer,
-  SITE_WEBGL_CONTEXT_LOST_EVENT,
   type SiteWebGlRendererCreationFailureHandler,
   type SiteWebGlRendererParameters,
 } from "./create-site-webgl-renderer";
@@ -20,7 +15,6 @@ export {
   type VisualRenderLoopScheduler,
 } from "./visual-render-loop";
 export {
-  scheduleVisualMount,
   type ScheduleVisualMountOptions,
   type VisualMountPriority,
 } from "./visual-mount-scheduler";

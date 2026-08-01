@@ -10,7 +10,7 @@ export type FieldChange = {
   to: FieldChangeValue;
 };
 
-export function isFieldChangeValue(value: unknown): value is FieldChangeValue {
+function isFieldChangeValue(value: unknown): value is FieldChangeValue {
   return (
     value === null ||
     typeof value === "string" ||

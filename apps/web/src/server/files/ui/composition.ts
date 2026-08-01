@@ -19,7 +19,7 @@ export type FilesComposition = {
   storage: FileStorage;
 };
 
-export function createFilesComposition(
+function createFilesComposition(
   serverInfrastructure: ServerInfrastructure,
   config: UploadsConfig,
 ): FilesComposition {

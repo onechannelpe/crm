@@ -32,7 +32,7 @@ import {
 } from "~/server/platform/composition/infrastructure";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-export function createAuthComposition(
+function createAuthComposition(
   serverInfrastructure: ServerInfrastructure,
   notifications: {
     messaging: MessagingGateway;

@@ -10,7 +10,7 @@ import { createTeamInviteContext } from "~/server/team/infrastructure/invite-con
 import { createInviteDelivery } from "~/server/team/infrastructure/invite-delivery";
 import { createInviteManagementContext } from "~/server/team/infrastructure/invite-management-context";
 
-export function createTeamComposition(
+function createTeamComposition(
   serverInfrastructure: ServerInfrastructure,
   publicOrigin: string,
   messaging: MessagingGateway,

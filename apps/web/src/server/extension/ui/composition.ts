@@ -38,7 +38,7 @@ function buildRepos(db: ServerInfrastructure["db"]): ExtensionCompositionRepos {
   };
 }
 
-export function createExtensionComposition(
+function createExtensionComposition(
   serverInfrastructure: ServerInfrastructure,
 ) {
   const extensionService = createExtensionService(

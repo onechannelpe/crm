@@ -125,7 +125,7 @@ export function assembleNotificationPipeline(
   };
 }
 
-export function createNotificationsRuntime(
+function createNotificationsRuntime(
   serverInfrastructure: ServerInfrastructure,
   config: NotificationsConfig,
   app: AppConfig,

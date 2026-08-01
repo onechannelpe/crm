@@ -7,7 +7,7 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createObservabilityComposition(
+function createObservabilityComposition(
   serverInfrastructure: ServerInfrastructure,
 ) {
   return {

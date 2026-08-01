@@ -5,7 +5,7 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createIntegrationsComposition(
+function createIntegrationsComposition(
   serverInfrastructure: ServerInfrastructure,
 ) {
   return {

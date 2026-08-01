@@ -10,9 +10,7 @@ import { createRequestSessionsRepo } from "~/server/security/repos-request-sessi
 import { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-export function createSecurityComposition(
-  serverInfrastructure: ServerInfrastructure,
-) {
+function createSecurityComposition(serverInfrastructure: ServerInfrastructure) {
   return {
     requestSessions: createRequestSessionsRepo(serverInfrastructure.db),
     users: createUsersRepo(serverInfrastructure.db),

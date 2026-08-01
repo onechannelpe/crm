@@ -14,7 +14,7 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createClientSearchComposition(
+function createClientSearchComposition(
   serverInfrastructure: ServerInfrastructure,
   engine: EngineClient,
 ) {

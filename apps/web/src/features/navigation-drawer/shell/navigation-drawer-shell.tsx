@@ -155,5 +155,3 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     </aside>
   );
 }
-
-export { NavigationDrawer as NavigationDrawerShell };

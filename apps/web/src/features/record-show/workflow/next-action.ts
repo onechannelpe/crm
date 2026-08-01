@@ -19,7 +19,7 @@ export type NextAction =
       disqualification: LeadDetailView["disqualification"];
     };
 
-export function resolveNextAction(data: LeadDetailView): NextAction {
+function resolveNextAction(data: LeadDetailView): NextAction {
   const { stage } = data.lead;
   const actions = data.availableActions;
 

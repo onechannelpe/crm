@@ -59,9 +59,7 @@ function createCapacityRepos(executor: DatabaseExecutor) {
   };
 }
 
-export function createCapacityComposition(
-  serverInfrastructure: ServerInfrastructure,
-) {
+function createCapacityComposition(serverInfrastructure: ServerInfrastructure) {
   const readRepos = createCapacityRepos(serverInfrastructure.db);
   const uow = createExecutorUow(serverInfrastructure.db, (txDb) =>
     createCapacityRepos(txDb),

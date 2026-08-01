@@ -8,7 +8,7 @@ import { Err, Ok, type Result } from "~/shared/result";
 import { dateFromStorage, monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";
 
-export async function getMerchantStatsByRuc(
+async function getMerchantStatsByRuc(
   db: DatabaseExecutor,
   ruc: string,
 ): Promise<RucMerchantStats> {

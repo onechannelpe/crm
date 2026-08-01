@@ -7,7 +7,7 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createContactAssignmentsComposition(
+function createContactAssignmentsComposition(
   serverInfrastructure: ServerInfrastructure,
   engine: EngineClient,
 ) {

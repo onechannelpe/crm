@@ -135,7 +135,7 @@ function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === "string";
 }
 
-export function parseEventLogRecord(value: unknown): EventLogParseResult {
+function parseEventLogRecord(value: unknown): EventLogParseResult {
   if (!isObject(value) || !hasBaseRecord(value)) {
     return {
       ok: false,

@@ -138,9 +138,7 @@ export function pendingOwnerForStep(
 }
 
 // Shared actions are validated against the current step by their command.
-export function stepForAction(
-  action: FulfillmentAction,
-): FulfillmentStep | null {
+function stepForAction(action: FulfillmentAction): FulfillmentStep | null {
   if (action === "choose_product") return "CHOOSE_PRODUCT";
   for (const step of FULFILLMENT_STEPS) {
     if (STEP_DEFINITIONS[step].action === action) return step;
@@ -171,10 +169,6 @@ export function nextStep(
 
 export function stepsForProduct(productKind: ProductKind): FulfillmentStep[] {
   return STEP_SEQUENCE[productKind];
-}
-
-export function isTerminalStep(step: FulfillmentStep): boolean {
-  return step === "COMPLETED";
 }
 
 export function backOfficeQueueSteps(): FulfillmentStep[] {

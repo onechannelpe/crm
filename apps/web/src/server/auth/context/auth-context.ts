@@ -1,6 +1,5 @@
 import type { Selectable } from "kysely";
 
-import type { UserId } from "~/domain/ids";
 import type { AuthContextDeps } from "~/server/auth/types";
 import type { UsersTable } from "~/server/platform/database/types";
 
@@ -55,13 +54,4 @@ export async function loadActiveAuthContextForUser(
     recoveryCodesAcknowledgementRequired:
       recoveryCodeSet !== null && recoveryCodeSet.acknowledgedAt === null,
   };
-}
-
-export async function loadActiveAuthContext(
-  userId: UserId,
-  deps: AuthContextDeps,
-  now: Date,
-): Promise<AuthContext | null> {
-  const user = await deps.users.findById(userId);
-  return user ? loadActiveAuthContextForUser(user, deps, now) : null;
 }

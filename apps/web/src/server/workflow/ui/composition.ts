@@ -17,7 +17,7 @@ import { createLeadFilesService } from "~/server/workflow/lead/files/lead-files"
 import { createLeadRepo } from "~/server/workflow/lead/write/lead-repo";
 import { createWorkflowRepos } from "~/server/workflow/repos";
 
-export function createWorkflowComposition(
+function createWorkflowComposition(
   serverInfrastructure: ServerInfrastructure,
   engine: EngineClient,
   files: Pick<FilesComposition, "repo" | "storage">,

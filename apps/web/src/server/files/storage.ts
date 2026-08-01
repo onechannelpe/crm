@@ -13,10 +13,3 @@ const WORKFLOW_FILES_DIR = "workflow-files";
 export function createFileStorage(baseDir: string): FileStorage {
   return createBlobStore(join(baseDir, WORKFLOW_FILES_DIR));
 }
-
-export function readStoredFile(
-  baseDir: string,
-  key: string,
-): Promise<Uint8Array> {
-  return createFileStorage(baseDir).getBytes(key);
-}

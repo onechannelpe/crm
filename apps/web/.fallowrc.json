@@ -30,6 +30,16 @@
     "projects": ["tsconfig.json"],
     "require": "best-effort"
   },
+  "ignoreExports": [
+    {
+      "file": "src/domain/ids/registry.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "src/features/updates/components/index.ts",
+      "exports": ["Collapsible", "UpdateLabel"]
+    }
+  ],
   "ignoreUnresolvedImports": [
     "~/*",
     "@tests/*",

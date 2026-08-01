@@ -12,7 +12,7 @@ import { createBlobStore } from "~/server/platform/files/blob-store";
 import { createAvatarService } from "~/server/users/avatar-service";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-export function createAvatarComposition(
+function createAvatarComposition(
   serverInfrastructure: ServerInfrastructure,
   config: UploadsConfig,
 ) {

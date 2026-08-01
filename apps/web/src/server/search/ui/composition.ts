@@ -50,9 +50,7 @@ export function createSearchUsageReservationPorts(
   };
 }
 
-export function createSearchComposition(
-  serverInfrastructure: ServerInfrastructure,
-) {
+function createSearchComposition(serverInfrastructure: ServerInfrastructure) {
   return {
     repos: buildSearchUsageRepos(serverInfrastructure.db),
     usageReservationPorts: createSearchUsageReservationPorts(

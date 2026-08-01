@@ -5,7 +5,7 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createEventLogsComposition(
+function createEventLogsComposition(
   serverInfrastructure: ServerInfrastructure,
 ) {
   return {

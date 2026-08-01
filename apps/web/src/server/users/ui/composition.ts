@@ -33,7 +33,7 @@ import { createUsersRepo } from "~/server/users/repos-users";
 import { composeAvatar } from "~/server/users/ui/avatar-composition";
 import { Err, Ok, type Result } from "~/shared/result";
 
-export function createUsersComposition(
+function createUsersComposition(
   serverInfrastructure: ServerInfrastructure,
   sessionService: Pick<SessionService, "revokeAllForUser">,
   avatarService: AvatarService,

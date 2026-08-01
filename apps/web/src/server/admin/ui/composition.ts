@@ -6,9 +6,7 @@ import {
   type ServerInfrastructure,
 } from "~/server/platform/composition/infrastructure";
 
-export function createAdminComposition(
-  serverInfrastructure: ServerInfrastructure,
-) {
+function createAdminComposition(serverInfrastructure: ServerInfrastructure) {
   return {
     events: createEventsRepo(serverInfrastructure.db),
     auditActionPolicies: createAuditActionPoliciesRepo(serverInfrastructure.db),
