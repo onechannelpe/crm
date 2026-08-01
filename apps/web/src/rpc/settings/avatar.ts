@@ -37,8 +37,7 @@ export async function uploadUserAvatar(
     },
 
     execute: async (ctx, file) => {
-      const { avatarService } = application.avatar;
-      const result = await avatarService.upload(
+      const result = await application.avatar.upload(
         ctx.actor.userId,
         file,
         ctx.operationAt,
@@ -64,8 +63,7 @@ export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
     access: { kind: "session" },
 
     execute: async (ctx) => {
-      const { avatarService } = application.avatar;
-      const result = await avatarService.remove(
+      const result = await application.avatar.remove(
         ctx.actor.userId,
         ctx.operationAt,
       );

@@ -11,6 +11,7 @@ import {
 import type { Kysely } from "kysely";
 
 import type { AppNotificationId, UserId } from "~/domain/ids";
+import { receiveKapsoWebhook } from "~/server/integrations/kapso/webhooks/receive-webhook";
 import type {
   ExternalChannel,
   NotificationCategory,
@@ -52,6 +53,7 @@ export interface NotificationPipelineDeps {
   messaging: MessagingGateway;
   publicOrigin: string;
   logger: Logger;
+  whatsappWebhookVerifyToken: string;
 }
 
 export interface NotificationPipeline {
@@ -91,6 +93,15 @@ export interface NotificationPipeline {
     outboundWhatsApp: QueueRunner;
   };
   enqueue(intents: NotificationIntent[], now: Date): Promise<void>;
+  webhooks: {
+    verifyWhatsAppSubscription(input: {
+      mode: string | null;
+      token: string | null;
+    }): boolean;
+    receiveKapso: (
+      input: Parameters<typeof receiveKapsoWebhook>[1],
+    ) => ReturnType<typeof receiveKapsoWebhook>;
+  };
 }
 
 export function assembleNotificationPipeline(
@@ -162,6 +173,14 @@ export function assembleNotificationPipeline(
     enqueue(intentsToEnqueue, now) {
       return enqueueNotifications(deps.db, intentsToEnqueue, now);
     },
+    webhooks: {
+      verifyWhatsAppSubscription({ mode, token }) {
+        return (
+          mode === "subscribe" && token === deps.whatsappWebhookVerifyToken
+        );
+      },
+      receiveKapso: (input) => receiveKapsoWebhook(deps.db, input),
+    },
   };
 }
 
@@ -216,5 +235,6 @@ export function createNotificationsRuntime(
     messaging,
     publicOrigin: app.publicOrigin,
     logger,
+    whatsappWebhookVerifyToken: config.whatsappWebhookVerifyToken,
   });
 }

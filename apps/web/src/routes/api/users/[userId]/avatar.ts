@@ -41,8 +41,7 @@ export async function GET(event: APIEvent): Promise<Response> {
     }
     const userId = parsedUserId.value;
 
-    const { avatarService } = application.avatar;
-    const avatarResult = await avatarService.get(userId);
+    const avatarResult = await application.avatar.get(userId);
     if (!avatarResult.ok) {
       return new Response("Profile picture unavailable", {
         status: mapAvatarErrorStatus(avatarResult.error.code),

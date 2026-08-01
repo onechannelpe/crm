@@ -6,8 +6,6 @@ import {
   validationFail,
 } from "~/server/platform/action/input-reader";
 import { application } from "~/server/platform/composition/application";
-import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 
 export async function searchDirect(
   input: unknown,
@@ -27,20 +25,11 @@ export async function searchDirect(
 
     audit: (command) => ({ intent: command.intent }),
 
-    execute: async (ctx, command) => {
-      const { usageReservationPorts, rateLimitDeps } = application.search;
-      await checkActionRateLimit(
-        "search.use",
-        ctx.actor.userId,
-        rateLimitDeps,
-        ctx.operationAt,
-      );
-
-      return runDirectSearch(
-        { ...command, actorUserId: ctx.actor.userId, at: ctx.operationAt },
-        usageReservationPorts,
-        application.engine,
-      );
-    },
+    execute: (ctx, command) =>
+      application.search.runDirect(ctx, {
+        ...command,
+        actorUserId: ctx.actor.userId,
+        at: ctx.operationAt,
+      }),
   });
 }

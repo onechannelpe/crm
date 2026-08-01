@@ -1,7 +1,5 @@
 import type { ApiRequestEvent } from "~/routes/api/request-event";
-import { receiveKapsoWebhook } from "~/server/integrations/kapso/webhooks/receive-webhook";
-import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
-import { notificationsConfig } from "~/server/platform/config/env";
+import { application } from "~/server/platform/composition/application";
 import { getRequestInstant } from "~/server/platform/http/request-context";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
@@ -12,12 +10,12 @@ export function GET(event: ApiRequestEvent): Response {
   const mode = url.searchParams.get("hub.mode");
   const token = url.searchParams.get("hub.verify_token");
   const challenge = url.searchParams.get("hub.challenge");
-  const { whatsappWebhookVerifyToken } = notificationsConfig();
-
   if (
-    mode === "subscribe" &&
     challenge &&
-    token === whatsappWebhookVerifyToken
+    application.notifications.webhooks.verifyWhatsAppSubscription({
+      mode,
+      token,
+    })
   ) {
     return new Response(challenge, {
       status: 200,
@@ -30,7 +28,7 @@ export function GET(event: ApiRequestEvent): Response {
 
 export async function POST(event: ApiRequestEvent): Promise<Response> {
   try {
-    const result = await receiveKapsoWebhook(serverInfrastructure.db, {
+    const result = await application.notifications.webhooks.receiveKapso({
       idempotencyKey: event.request.headers.get("x-idempotency-key"),
       eventType: event.request.headers.get("x-webhook-event"),
       payloadVersion: event.request.headers.get("x-webhook-payload-version"),

@@ -32,13 +32,12 @@ function mapAvatarErrorResponse(
 
 export async function GET(event: Pick<APIEvent, "request">): Promise<Response> {
   try {
-    const { avatarService } = application.avatar;
     const session = await getSession();
     if (!session) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const avatarResult = await avatarService.get(session.userId);
+    const avatarResult = await application.avatar.get(session.userId);
 
     if (!avatarResult.ok) {
       const errorResponse = mapAvatarErrorResponse(avatarResult.error.code);

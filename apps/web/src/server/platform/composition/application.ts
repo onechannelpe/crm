@@ -104,7 +104,7 @@ export function createApplication(infrastructure: ServerInfrastructure) {
   const users = createUsersComposition(
     infrastructure,
     { revokeAllForUser: auth.sessions.invalidateUser },
-    avatar.avatarService,
+    avatar,
   );
   const accountLifecycle = createAccountLifecycleMaintenance({
     executor: infrastructure.db,
@@ -129,7 +129,6 @@ export function createApplication(infrastructure: ServerInfrastructure) {
       engine,
     }),
     eventLogs: createEventLogsService(infrastructure.db),
-    engine,
     extension: createExtensionComposition(infrastructure),
     files: {
       download: (token: string, now: Date) =>
@@ -156,7 +155,7 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     },
     notifications,
     observability,
-    search: createSearchComposition(infrastructure),
+    search: createSearchComposition(infrastructure, engine),
     team: createTeamComposition(
       infrastructure,
       applicationConfig.publicOrigin,

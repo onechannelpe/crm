@@ -96,7 +96,6 @@ export function createUsersComposition(
   }
 
   return {
-    users: usersRepo,
     updatePhone,
     members,
   };
