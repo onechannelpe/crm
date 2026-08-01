@@ -37,7 +37,7 @@ export async function GET(event: Pick<APIEvent, "request">): Promise<Response> {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const avatarResult = await application.avatar.get(session.userId);
+    const avatarResult = await application.users.avatars.get(session.userId);
 
     if (!avatarResult.ok) {
       const errorResponse = mapAvatarErrorResponse(avatarResult.error.code);

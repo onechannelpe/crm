@@ -69,7 +69,7 @@ import type { ServerInfrastructure } from "~/server/platform/composition/infrast
 import { createUsersRepo } from "~/server/users/repos-users";
 import { Err, Ok } from "~/shared/result";
 
-export function createAuthComposition(
+export function createAuthRuntime(
   serverInfrastructure: ServerInfrastructure,
   notifications: {
     messaging: MessagingGateway;

@@ -10,7 +10,7 @@ import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 
-export function createClientSearchComposition(
+export function createClientSearchRuntime(
   serverInfrastructure: ServerInfrastructure,
   engine: EngineClient,
 ) {
@@ -25,8 +25,20 @@ export function createClientSearchComposition(
   );
 
   return {
-    enrichmentCommand,
-    enrichmentQuery,
+    requestEnrichment: (
+      document: Parameters<typeof enrichmentCommand.enqueueRequest>[0],
+      requestedByUserId: Parameters<typeof enrichmentCommand.enqueueRequest>[1],
+      requestedAt: Parameters<typeof enrichmentCommand.enqueueRequest>[2],
+    ) =>
+      enrichmentCommand.enqueueRequest(
+        document,
+        requestedByUserId,
+        requestedAt,
+      ),
+    getEnrichmentStatus: (
+      document: Parameters<typeof enrichmentQuery.getStatus>[0],
+      evaluatedAt: Parameters<typeof enrichmentQuery.getStatus>[1],
+    ) => enrichmentQuery.getStatus(document, evaluatedAt),
     createEnrichmentQueue: (workerId: string) =>
       createEnrichmentQueue(workerId, {
         registry,

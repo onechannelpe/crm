@@ -50,7 +50,7 @@ export function createSearchUsageReservationPorts(
   };
 }
 
-export function createSearchComposition(
+export function createSearchRuntime(
   serverInfrastructure: ServerInfrastructure,
   engine: Pick<EngineClient, "search">,
 ) {

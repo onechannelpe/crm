@@ -6,20 +6,17 @@ import { createTokensRepo } from "~/server/files/repo/tokens";
 import type { FileRepos } from "~/server/files/service/contracts";
 import { createFileStorage, type FileStorage } from "~/server/files/storage";
 import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
-import {
-  uploadsConfig,
-  type UploadsConfig,
-} from "~/server/platform/config/env";
+import type { UploadsConfig } from "~/server/platform/config/env";
 
-export type FilesComposition = {
+export type FilesRuntime = {
   repo: FileRepos;
   storage: FileStorage;
 };
 
-export function createFilesComposition(
+export function createFilesRuntime(
   serverInfrastructure: ServerInfrastructure,
   config: UploadsConfig,
-): FilesComposition {
+): FilesRuntime {
   const repo: FileRepos = {
     assets: createAssetsRepo(serverInfrastructure.db),
     tokens: createTokensRepo(serverInfrastructure.db),

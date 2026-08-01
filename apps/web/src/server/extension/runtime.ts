@@ -19,14 +19,14 @@ import {
   type SessionRepository,
 } from "~/server/sessions/repos-sessions";
 
-export type ExtensionCompositionRepos = {
+export type ExtensionRuntimeRepos = {
   contactAssignments: ContactAssignmentsRepo;
   extensionRuntime: ExtensionRuntimeRepo;
   organization: OrganizationRepository;
   sessions: SessionRepository;
 };
 
-function buildRepos(db: ServerInfrastructure["db"]): ExtensionCompositionRepos {
+function buildRepos(db: ServerInfrastructure["db"]): ExtensionRuntimeRepos {
   return {
     contactAssignments: createContactAssignmentsRepo(db),
     extensionRuntime: createExtensionRuntimeRepo(db),
@@ -35,7 +35,7 @@ function buildRepos(db: ServerInfrastructure["db"]): ExtensionCompositionRepos {
   };
 }
 
-export function createExtensionComposition(
+export function createExtensionRuntime(
   serverInfrastructure: ServerInfrastructure,
 ) {
   const extensionService = createExtensionService(
@@ -45,5 +45,5 @@ export function createExtensionComposition(
     },
   );
 
-  return { extensionService };
+  return extensionService;
 }

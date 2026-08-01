@@ -4,6 +4,7 @@ import { createMiddleware } from "@solidjs/start/middleware";
 import type { FetchEvent } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";
 
+import { application } from "./server/platform/composition/application";
 import { middlewareConfig } from "./server/platform/config/middleware-config";
 import { enforceAuthRequest } from "./server/platform/http/request-auth";
 import {
@@ -102,8 +103,6 @@ const resolveSession: StartMiddleware = async (_event, next) => {
     return next();
   }
 
-  const { createRequestContextDependencies } =
-    await import("./server/auth/ui/resolve-request-context");
   const { trustedProxy } = middlewareConfig();
 
   requestEvent.locals.requestContext = await buildRequestContext(
@@ -115,7 +114,7 @@ const resolveSession: StartMiddleware = async (_event, next) => {
       startedTicks: current.startedTicks,
       nonce: current.nonce,
     },
-    createRequestContextDependencies(),
+    application.http.requestContext,
     trustedProxy,
   );
 

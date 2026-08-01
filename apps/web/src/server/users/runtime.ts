@@ -1,10 +1,14 @@
 import "server-only";
+import { join } from "node:path";
+
 import type { UserId } from "~/domain/ids";
 import type { Phone } from "~/domain/phone/pe-mobile";
 import type { SessionService } from "~/server/auth/session/session.service";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { AppContext } from "~/server/platform/action/context";
 import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
+import type { UploadsConfig } from "~/server/platform/config/env";
+import { createBlobStore } from "~/server/platform/files/blob-store";
 import type {
   ChangeMemberRoleCommand,
   MemberIdCommand,
@@ -21,19 +25,23 @@ import { removeMemberAvatar } from "~/server/users/application/use-cases/remove-
 import { updateMemberAvatar } from "~/server/users/application/use-cases/update-member-avatar";
 import { updateMemberExpiry } from "~/server/users/application/use-cases/update-member-expiry";
 import { updateMemberProfile } from "~/server/users/application/use-cases/update-member-profile";
-import type { AvatarService } from "~/server/users/avatar-service";
+import { createAvatarService } from "~/server/users/avatar-service";
 import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createMemberWorkloadRepo } from "~/server/users/repos-member-workload";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { Err, Ok, type Result } from "~/shared/result";
 
-export function createUsersComposition(
+export function createUsersRuntime(
   serverInfrastructure: ServerInfrastructure,
   sessionService: Pick<SessionService, "revokeAllForUser">,
-  avatarService: AvatarService,
+  uploads: UploadsConfig,
 ) {
   const usersRepo = createUsersRepo(serverInfrastructure.db);
+  const avatarService = createAvatarService(
+    { users: usersRepo },
+    createBlobStore(join(uploads.storageRoot, "avatars")),
+  );
   const userChannelAddressesRepo = createUserChannelAddressRepo(
     serverInfrastructure.db,
   );
@@ -96,6 +104,7 @@ export function createUsersComposition(
   }
 
   return {
+    avatars: avatarService,
     updatePhone,
     members,
   };

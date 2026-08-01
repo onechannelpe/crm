@@ -56,7 +56,7 @@ function createCapacityRepos(executor: DatabaseExecutor) {
   };
 }
 
-export function createCapacityComposition(
+export function createCapacityRuntime(
   serverInfrastructure: ServerInfrastructure,
 ) {
   const readRepos = createCapacityRepos(serverInfrastructure.db);

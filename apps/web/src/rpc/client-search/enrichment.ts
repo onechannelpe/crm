@@ -22,8 +22,7 @@ export async function requestSearchEnrichment(input: unknown) {
     parse: () => parseDocumentInput(input),
 
     execute: async (ctx, document) => {
-      const { enrichmentCommand } = application.clientSearch;
-      const jobId = await enrichmentCommand.enqueueRequest(
+      const jobId = await application.clientSearch.requestEnrichment(
         document,
         ctx.actor.userId,
         ctx.operationAt,
@@ -46,8 +45,10 @@ export async function getSearchEnrichmentStatus(
     parse: () => parseDocumentInput({ documentType, documentValue }),
 
     execute: async (ctx, document) => {
-      const { enrichmentQuery } = application.clientSearch;
-      const status = await enrichmentQuery.getStatus(document, ctx.operationAt);
+      const status = await application.clientSearch.getEnrichmentStatus(
+        document,
+        ctx.operationAt,
+      );
       return Ok(status);
     },
   });

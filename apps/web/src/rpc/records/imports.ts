@@ -84,7 +84,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         JSON.stringify({ validRows, invalidRows }),
       );
 
-      const job = await application.integration.records.createImport({
+      const job = await application.integration.records.create({
         type: importType,
         requestedByUserId: ctx.actor.userId,
         rowsTotal,

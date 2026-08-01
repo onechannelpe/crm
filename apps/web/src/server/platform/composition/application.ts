@@ -1,23 +1,20 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
-
-import type { RecordImportType } from "~/contracts/records/imports";
 import { createAuditActionPoliciesRepo } from "~/server/audit-reader/audit-policy-repo";
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
+import { createAuthRuntime } from "~/server/auth/runtime";
 import { runSessionCleanupTick } from "~/server/auth/session/cleanup";
-import { createAuthComposition } from "~/server/auth/ui/composition";
-import { createCapacityComposition } from "~/server/capacity/ui/composition";
-import { createClientSearchComposition } from "~/server/client-search/ui/composition";
+import { createCapacityRuntime } from "~/server/capacity/runtime";
+import { createClientSearchRuntime } from "~/server/client-search/runtime";
 import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
 import { createEventLogsService } from "~/server/event-logs/service";
-import { createExtensionComposition } from "~/server/extension/ui/composition";
+import { createExtensionRuntime } from "~/server/extension/runtime";
+import { createFilesRuntime } from "~/server/files/runtime";
 import { executeDownload } from "~/server/files/service/execute-download";
-import { createFilesComposition } from "~/server/files/ui/composition";
+import { createEngineClient } from "~/server/integrations/infrastructure/engine-client";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
-import { createEngineClient } from "~/server/integrations/ui/engine-client";
 import { createMerchantStatsRuntime } from "~/server/merchant-stats/infrastructure/runtime";
-import { createNotificationsRuntime } from "~/server/notifications/ui/composition";
+import { createNotificationsRuntime } from "~/server/notifications/runtime";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createObservabilityService } from "~/server/observability/service";
@@ -30,23 +27,18 @@ import {
   notificationsConfig,
   uploadsConfig,
 } from "~/server/platform/config/env";
-import { canAccessRecordImportJob } from "~/server/records/imports/api";
-import {
-  buildRecordImportProgressEvent,
-  publishRecordImportProgress,
-} from "~/server/records/imports/progress-events";
-import { createSearchComposition } from "~/server/search/ui/composition";
+import { createRecordImportsRuntime } from "~/server/records/imports/runtime";
+import { createSearchRuntime } from "~/server/search/runtime";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
-import { createTeamComposition } from "~/server/team/ui/composition";
+import { createTeamRuntime } from "~/server/team/runtime";
 import { createAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
-import { createAvatarComposition } from "~/server/users/ui/avatar-composition";
-import { createUsersComposition } from "~/server/users/ui/composition";
+import { createUsersRuntime } from "~/server/users/runtime";
 import { createLeadReservationMaintenance } from "~/server/workflow/maintenance/lead-reservation-maintenance";
-import { createWorkflowComposition } from "~/server/workflow/ui/composition";
+import { createWorkflowRuntime } from "~/server/workflow/runtime";
 
 export function createApplication(infrastructure: ServerInfrastructure) {
   const applicationConfig = appConfig();
-  const files = createFilesComposition(infrastructure, uploadsConfig());
+  const files = createFilesRuntime(infrastructure, uploadsConfig());
   const notifications = createNotificationsRuntime(
     infrastructure,
     notificationsConfig(),
@@ -61,50 +53,13 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     executor: infrastructure.db,
   });
   const integration = {
-    records: {
-      async createImport(input: {
-        type: RecordImportType;
-        requestedByUserId: Parameters<
-          typeof integrationRuntime.jobs.insert
-        >[0]["requested_by_user_id"];
-        rowsTotal: number;
-        payload: Uint8Array;
-        createdAt: Date;
-      }) {
-        const storageKey = `imports/${randomUUID()}.json`;
-        await files.storage.putBytes(storageKey, input.payload);
-        const job = await integrationRuntime.jobs.insert({
-          type: input.type,
-          requested_by_user_id: input.requestedByUserId,
-          file_path: storageKey,
-          rows_total: input.rowsTotal,
-          max_attempts: 3,
-          created_at: input.createdAt,
-        });
-        publishRecordImportProgress(
-          integrationRuntime.executor,
-          buildRecordImportProgressEvent(job),
-        );
-        return job;
-      },
-      find: (jobId: Parameters<typeof integrationRuntime.jobs.findById>[0]) =>
-        integrationRuntime.jobs.findById(jobId),
-      canAccess: (
-        actor: Parameters<typeof canAccessRecordImportJob>[0],
-        job: Parameters<typeof canAccessRecordImportJob>[1],
-      ) => canAccessRecordImportJob(actor, job, integrationRuntime),
-    },
+    records: createRecordImportsRuntime(integrationRuntime, files.storage),
   };
-  const auth = createAuthComposition(
-    infrastructure,
-    notifications,
-    observability,
-  );
-  const avatar = createAvatarComposition(infrastructure, uploadsConfig());
-  const users = createUsersComposition(
+  const auth = createAuthRuntime(infrastructure, notifications, observability);
+  const users = createUsersRuntime(
     infrastructure,
     { revokeAllForUser: auth.sessions.invalidateUser },
-    avatar,
+    uploadsConfig(),
   );
   const accountLifecycle = createAccountLifecycleMaintenance({
     executor: infrastructure.db,
@@ -121,15 +76,14 @@ export function createApplication(infrastructure: ServerInfrastructure) {
       auditActionPolicies: createAuditActionPoliciesRepo(infrastructure.db),
     }),
     auth,
-    avatar,
-    capacity: createCapacityComposition(infrastructure),
-    clientSearch: createClientSearchComposition(infrastructure, engine),
+    capacity: createCapacityRuntime(infrastructure),
+    clientSearch: createClientSearchRuntime(infrastructure, engine),
     contactAssignments: createContactAssignmentsContext({
       executor: infrastructure.db,
       engine,
     }),
     eventLogs: createEventLogsService(infrastructure.db),
-    extension: createExtensionComposition(infrastructure),
+    extension: createExtensionRuntime(infrastructure),
     files: {
       download: (token: string, now: Date) =>
         executeDownload(token, files, now),
@@ -155,14 +109,14 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     },
     notifications,
     observability,
-    search: createSearchComposition(infrastructure, engine),
-    team: createTeamComposition(
+    search: createSearchRuntime(infrastructure, engine),
+    team: createTeamRuntime(
       infrastructure,
       applicationConfig.publicOrigin,
       notifications.messaging,
     ),
     users,
-    workflow: createWorkflowComposition(infrastructure, engine, files),
+    workflow: createWorkflowRuntime(infrastructure, engine, files),
   };
 }
 

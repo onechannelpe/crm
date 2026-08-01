@@ -1,7 +1,8 @@
 import "server-only";
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
-import type { FilesComposition } from "~/server/files/ui/composition";
+import type { FileRepos } from "~/server/files/service/contracts";
+import type { FileStorage } from "~/server/files/storage";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
@@ -61,10 +62,10 @@ function bindWorkflowCommand<TInput, TOutput>(
     command(input, { executor, operationAt });
 }
 
-export function createWorkflowComposition(
+export function createWorkflowRuntime(
   serverInfrastructure: ServerInfrastructure,
   engine: EngineClient,
-  files: Pick<FilesComposition, "repo" | "storage">,
+  files: { repo: FileRepos; storage: FileStorage },
 ) {
   const organizationEnrichment = createOrganizationEnrichment(engine);
   const repos = createWorkflowRepos(serverInfrastructure.db);
