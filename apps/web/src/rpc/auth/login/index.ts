@@ -2,16 +2,6 @@ import { redirect } from "@solidjs/router";
 
 import type { PasskeyLoginFlowState } from "~/domain/auth/passkey/types";
 import { fail, internal } from "~/domain/errors";
-import { recordAuthAnalyticsEvent as recordAuthAnalytics } from "~/server/auth/auth-analytics";
-import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
-import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
-import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
-import {
-  verifyRecoveryLoginProof,
-  verifyTotpLoginProof,
-} from "~/server/auth/flows/verify-pending-login";
-import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { composeAuth } from "~/server/auth/ui/composition";
 import {
   completeLoginAndRedirect,
   readLoginFlowId,
@@ -19,24 +9,21 @@ import {
   readPasskeyStartMode,
 } from "~/server/auth/ui/login-support";
 import { throwDomain } from "~/server/platform/action/domain-error";
+import { application } from "~/server/platform/composition/application";
 import {
   getRequestClientMetadata,
+  getRequestContext,
   getRequestInstant,
 } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
 
 function recordAuthAnalyticsEvent(
-  event: Parameters<typeof recordAuthAnalytics>[0],
-  context: Parameters<typeof recordAuthAnalytics>[1],
+  event: Parameters<typeof application.auth.analytics>[0],
+  context: Parameters<typeof application.auth.analytics>[1],
   occurredAt: Date,
 ) {
-  return recordAuthAnalytics(
-    event,
-    context,
-    composeAuth().analytics,
-    occurredAt,
-  );
+  return application.auth.analytics(event, context, occurredAt);
 }
 
 export async function passwordLogin(
@@ -48,18 +35,16 @@ export async function passwordLogin(
   const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
-  const loginContext = composeAuth().login;
   const now = getRequestInstant();
 
-  const result = await submitPasswordLogin(
+  const result = await application.auth.login.password(
     {
       identifier,
       password,
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,
     },
-    loginContext,
-    createRequestPasskeyProvider(loginContext.repos),
+    getRequestContext().publicOrigin,
     now,
   );
 
@@ -135,7 +120,6 @@ export async function passkeyStart(
 
   const request = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
-  const loginContext = composeAuth().login;
   const now = getRequestInstant();
 
   const command =
@@ -150,10 +134,9 @@ export async function passkeyStart(
           mode,
         };
 
-  const result = await startPasskeyLogin(
+  const result = await application.auth.login.startPasskey(
     command,
-    loginContext,
-    createRequestPasskeyProvider(loginContext.repos),
+    getRequestContext().publicOrigin,
     now,
   );
 
@@ -197,10 +180,9 @@ export async function totpLogin(formData: FormData): Promise<void> {
 
   const request = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
-  const loginContext = composeAuth().login;
   const now = getRequestInstant();
   const verifiedAt = now;
-  const verified = await verifyTotpLoginProof(loginContext, {
+  const verified = await application.auth.login.verifyTotp({
     flowId,
     totpCode,
     ipAddress: request.ipAddress,
@@ -237,7 +219,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
     throwDomain(fail("totp_code_invalid"));
   }
 
-  const completed = await completePendingLogin(loginContext, {
+  const completed = await application.auth.login.complete({
     proof: verified.value,
     occurredAt: verifiedAt,
     ipAddress: request.ipAddress,
@@ -277,9 +259,8 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
   }
 
   const request = getRequestClientMetadata();
-  const loginContext = composeAuth().login;
   const verifiedAt = getRequestInstant();
-  const verified = await verifyRecoveryLoginProof(loginContext, {
+  const verified = await application.auth.login.verifyRecovery({
     flowId,
     recoveryCode,
     ipAddress: request.ipAddress,
@@ -296,7 +277,7 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
     );
   }
 
-  const completed = await completePendingLogin(loginContext, {
+  const completed = await application.auth.login.complete({
     proof: verified.value,
     occurredAt: verifiedAt,
     ipAddress: request.ipAddress,

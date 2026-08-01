@@ -1,7 +1,5 @@
-import { requestPasswordReset as requestPasswordResetService } from "~/server/auth/flows/request-password-reset";
-import { resetPassword as resetPasswordService } from "~/server/auth/flows/reset-password";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { throwDomain } from "~/server/platform/action/domain-error";
+import { application } from "~/server/platform/composition/application";
 import {
   getRequestContext,
   getRequestInstant,
@@ -18,8 +16,7 @@ export async function requestPasswordReset(
 
   const request = getRequestContext();
 
-  const result = await requestPasswordResetService({
-    deps: composeAuth().passwordReset,
+  const result = await application.auth.passwordReset.request({
     email,
     origin: request.publicOrigin,
     requestedAt: request.startedAt,
@@ -43,8 +40,7 @@ export async function resetPassword(formData: FormData): Promise<{ ok: true }> {
   const password = typeof rawPassword === "string" ? rawPassword : "";
   const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
 
-  const result = await resetPasswordService({
-    deps: composeAuth().passwordReset,
+  const result = await application.auth.passwordReset.reset({
     token,
     password,
     confirmPassword,

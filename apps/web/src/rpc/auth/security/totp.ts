@@ -1,10 +1,7 @@
 import { fail } from "~/domain/errors";
-import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
-import { completeFactorEnrollment } from "~/server/auth/flows/complete-factor-enrollment";
-import { startTotpEnrollment } from "~/server/auth/flows/start-totp-enrollment";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
+import { application } from "~/server/platform/composition/application";
 import { Err, isErr, Ok } from "~/shared/result";
 
 export async function beginTotpEnrollment(): Promise<{
@@ -17,7 +14,7 @@ export async function beginTotpEnrollment(): Promise<{
     name: "auth.totp.begin",
     access: { kind: "session" },
 
-    execute: (ctx) => startTotpEnrollment(ctx, composeAuth().setup),
+    execute: (ctx) => application.auth.security.startTotpEnrollment(ctx),
   });
 }
 
@@ -38,23 +35,8 @@ export async function finishTotpEnrollment(
       return Ok({ code: rawCode });
     },
 
-    execute: async ({ actor, ...ctx }, command) => {
-      const setup = composeAuth().setup;
-
-      const verified = await verifyTotpEnrollment(setup.repos, {
-        userId: actor.userId,
-        code: command.code,
-      });
-
-      if (isErr(verified)) {
-        return verified;
-      }
-
-      return completeFactorEnrollment({ actor, ...ctx }, setup, {
-        method: "totp",
-        enrollment: verified.value,
-      });
-    },
+    execute: (ctx, command) =>
+      application.auth.security.finishTotpEnrollment(ctx, command.code),
   });
 
   setSessionCookie(result.sessionToken);

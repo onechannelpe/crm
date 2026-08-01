@@ -67,7 +67,7 @@ export function createLoggerWithConfig(
     );
 
     const payload = {
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString(), // clock-boundary: log emission
       level,
       component,
       message,

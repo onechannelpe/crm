@@ -1,9 +1,6 @@
 import { join } from "node:path";
 
-import {
-  serverInfrastructure as defaultServerInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import {
   uploadsConfig,
   type UploadsConfig,
@@ -12,7 +9,7 @@ import { createBlobStore } from "~/server/platform/files/blob-store";
 import { createAvatarService } from "~/server/users/avatar-service";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-function createAvatarComposition(
+export function createAvatarComposition(
   serverInfrastructure: ServerInfrastructure,
   config: UploadsConfig,
 ) {
@@ -22,8 +19,4 @@ function createAvatarComposition(
       createBlobStore(join(config.storageRoot, "avatars")),
     ),
   };
-}
-
-export function composeAvatar() {
-  return createAvatarComposition(defaultServerInfrastructure, uploadsConfig());
 }

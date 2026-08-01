@@ -5,7 +5,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { composeUsers } from "~/server/users/ui/composition";
+import { application } from "~/server/platform/composition/application";
 import { Err, isErr, Ok } from "~/shared/result";
 
 export async function updateUserProfile(
@@ -36,7 +36,7 @@ export async function updateUserProfile(
     },
 
     execute: async (ctx, command) => {
-      const result = await composeUsers().updatePhone(
+      const result = await application.users.updatePhone(
         ctx.actor.userId,
         command.phone,
         ctx.operationAt,

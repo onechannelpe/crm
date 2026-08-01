@@ -34,7 +34,7 @@ const identifyRequest: StartMiddleware = async (event, next) => {
   const identity = {
     traceId: generateTraceId(),
     requestId: generateRequestId(),
-    startedAt: new Date(),
+    startedAt: new Date(), // clock-boundary: HTTP request arrival
     startedTicks: performance.now(),
     nonce,
   };

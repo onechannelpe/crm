@@ -19,6 +19,10 @@ import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createExecutorUow } from "~/server/platform/database/uow";
 import { isErr, Ok } from "~/shared/result";
 
+import { assignContacts } from "../application/assign-contacts";
+import { completeContactAssignmentCall } from "../application/complete-contact-assignment-call";
+import { getContactAssignmentCapacity } from "../application/get-contact-assignment-capacity";
+
 export type ContactAssignmentRepos = {
   users: ReturnType<typeof createCapacityUsersRepo>;
   leadPolicyDefaults: ReturnType<typeof createLeadPolicyDefaultsRepo>;
@@ -74,15 +78,29 @@ export function createContactAssignmentsContext(
 ) {
   const { executor, engine } = deps;
 
+  const repos = buildRepos(executor);
+  const interactionUow = createExecutorUow(executor, (txDb) => ({
+    contactAssignments: createContactAssignmentsRepo(txDb),
+    interactionLogs: createInteractionLogsRepo(txDb),
+  }));
+  const uow = createExecutorUow(executor, buildRepos);
+  const leadUsageReservationPorts = buildLeadUsageReservationPorts(executor);
+
   return {
-    repos: buildRepos(executor),
-    engine,
-    interactionUow: createExecutorUow(executor, (txDb) => ({
-      contactAssignments: createContactAssignmentsRepo(txDb),
-      interactionLogs: createInteractionLogsRepo(txDb),
-    })),
-    uow: createExecutorUow(executor, buildRepos),
-    leadUsageReservationPorts: buildLeadUsageReservationPorts(executor),
+    getCapacity: (
+      actorUserId: Parameters<typeof getContactAssignmentCapacity>[0],
+      evaluatedAt: Date,
+    ) => getContactAssignmentCapacity(actorUserId, repos, evaluatedAt),
+    assign: (command: Parameters<typeof assignContacts>[0]) =>
+      assignContacts(command, {
+        repos,
+        uow,
+        engine,
+        leadUsageReservationPorts,
+      }),
+    completeCall: (
+      command: Parameters<typeof completeContactAssignmentCall>[0],
+    ) => completeContactAssignmentCall(command, interactionUow),
   };
 }
 

@@ -1,11 +1,11 @@
 import type { DomainError } from "~/domain/errors";
 import { CapacityRequestId, UserId } from "~/domain/ids";
-import { composeCapacity } from "~/server/capacity/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import type { Result } from "~/shared/result";
 
 type CapacityDecision = {
@@ -61,7 +61,7 @@ export async function approveCapacity(
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
     audit: (decision) => ({ requestId: decision.requestId }),
     execute: (ctx, decision) =>
-      composeCapacity().useCases.approveCapacityRequest(ctx, decision),
+      application.capacity.approveCapacityRequest(ctx, decision),
   });
 }
 
@@ -74,7 +74,7 @@ export async function rejectCapacity(rawRequestId: unknown, rawNote: unknown) {
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
     audit: (decision) => ({ requestId: decision.requestId }),
     execute: (ctx, decision) =>
-      composeCapacity().useCases.rejectCapacityRequest(ctx, decision),
+      application.capacity.rejectCapacityRequest(ctx, decision),
   });
 }
 
@@ -94,7 +94,7 @@ export async function grantMoreSearches(
       amount: grant.amount,
     }),
     execute: (ctx, grant) =>
-      composeCapacity().useCases.grantSearchCapacityDirect(ctx, {
+      application.capacity.grantSearchCapacityDirect(ctx, {
         targetUserId: grant.targetUserId,
         amount: grant.amount,
         reason: grant.reason,
@@ -118,7 +118,7 @@ export async function grantMoreLeadRefill(
       amount: grant.amount,
     }),
     execute: (ctx, grant) =>
-      composeCapacity().useCases.grantLeadCapacityDirect(ctx, {
+      application.capacity.grantLeadCapacityDirect(ctx, {
         targetUserId: grant.targetUserId,
         amount: grant.amount,
         reason: grant.reason,

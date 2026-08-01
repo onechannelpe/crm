@@ -28,7 +28,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
     const { signature, timestamp } = signRequest(
       body,
       config.hmacSecret,
-      Date.now(),
+      Date.now(), // clock-boundary: outbound Engine request signing
     );
 
     const controller = new AbortController();

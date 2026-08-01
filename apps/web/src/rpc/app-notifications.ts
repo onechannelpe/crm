@@ -1,10 +1,10 @@
 import { AppNotificationId } from "~/domain/ids";
-import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function markNotificationRead(
@@ -21,7 +21,7 @@ export async function markNotificationRead(
       })),
     audit: (command) => ({ notificationId: command.notificationId }),
     execute: async ({ actor, operationAt: now }, command) => {
-      await composeNotifications().appNotifications.markRead(
+      await application.notifications.markRead(
         actor.userId,
         command.notificationId,
         now,
@@ -38,10 +38,7 @@ export async function markAllNotificationsRead(): Promise<void> {
     name: "notifications.mark_all_read",
     access: { kind: "auth" },
     execute: async ({ actor, operationAt: now }) => {
-      await composeNotifications().appNotifications.markAllRead(
-        actor.userId,
-        now,
-      );
+      await application.notifications.markAllRead(actor.userId, now);
       return Ok(undefined);
     },
   });

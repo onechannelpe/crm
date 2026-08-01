@@ -5,6 +5,7 @@ import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { TickContext } from "~/server/platform/operation/context";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
@@ -125,47 +126,40 @@ async function cleanupStaleActionRateLimits(
   }
 }
 
-export function startSessionCleanupScheduler(
+export async function runSessionCleanupTick(
   executor: DatabaseExecutor,
-  intervalMs = 60 * 60 * 1000,
-): () => void {
-  const timer = setInterval(() => {
-    // One sweep, one instant: every retention cut-off below is measured from
-    // the same tick rather than from eight separate clock reads.
-    const sweptAt = new Date();
+  context: TickContext<"session-cleanup">,
+): Promise<void> {
+  const sweptAt = context.operationAt;
 
+  await Promise.all([
     cleanupExpiredSessions(executor, sweptAt).catch((error: unknown) => {
       logger.error("expired_sessions_cleanup_failed", { error });
-    });
+    }),
     cleanupExpiredRequestSessions(executor, sweptAt).catch((error: unknown) => {
       logger.error("expired_request_sessions_cleanup_failed", { error });
-    });
+    }),
     cleanupExpiredWebauthnChallenges(executor, sweptAt).catch(
       (error: unknown) => {
         logger.error("webauthn_challenges_cleanup_failed", { error });
       },
-    );
+    ),
     cleanupStaleAuthThrottle(executor, sweptAt).catch((error: unknown) => {
       logger.error("auth_throttle_cleanup_failed", { error });
-    });
+    }),
     cleanupStaleAuthEvents(executor, sweptAt).catch((error: unknown) => {
       logger.error("auth_events_cleanup_failed", { error });
-    });
+    }),
     cleanupStaleActionObservations(executor, sweptAt).catch(
       (error: unknown) => {
         logger.error("action_observations_cleanup_failed", { error });
       },
-    );
+    ),
     cleanupStaleAuthFunnelEvents(executor, sweptAt).catch((error: unknown) => {
       logger.error("auth_funnel_events_cleanup_failed", { error });
-    });
+    }),
     cleanupStaleActionRateLimits(executor, sweptAt).catch((error: unknown) => {
       logger.error("action_rate_limits_cleanup_failed", { error });
-    });
-  }, intervalMs);
-  logger.info("cleanup_scheduler_started", {
-    intervalSeconds: Math.round(intervalMs / 1000),
-  });
-
-  return () => clearInterval(timer);
+    }),
+  ]);
 }

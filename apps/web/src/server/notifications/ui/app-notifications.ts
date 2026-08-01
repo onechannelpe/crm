@@ -1,6 +1,6 @@
 import "server-only";
-import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function getHeaderNotifications() {
@@ -9,12 +9,8 @@ export async function getHeaderNotifications() {
     access: { kind: "auth" },
 
     execute: async ({ actor }) => {
-      const appNotifications = composeNotifications().appNotifications;
-
-      const [unreadCount, notifications] = await Promise.all([
-        appNotifications.countUnreadByUser(actor.userId),
-        appNotifications.listByUser(actor.userId, 20),
-      ]);
+      const { unreadCount, notifications } =
+        await application.notifications.getHeader(actor.userId, 20);
 
       return Ok({
         unreadCount,

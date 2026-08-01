@@ -3,13 +3,9 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { isRegistrationResponse } from "~/domain/auth/passkey/credential-response";
 import { fail, type DomainError } from "~/domain/errors";
 import { WebauthnChallengeId } from "~/domain/ids";
-import { verifyPasskeyEnrollment } from "~/server/auth/factors/passkey/service";
-import { verifyTotpEnrollment } from "~/server/auth/factors/totp-enrollment";
-import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
+import { application } from "~/server/platform/composition/application";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 import { isPlainRecord } from "~/shared/type-guards";
 
@@ -66,42 +62,16 @@ export async function completeOnboardingAction(
     access: { kind: "session" },
     parse: () => parseCompletionInput(input),
     execute: async (ctx, command) => {
-      const setup = composeAuth().setup;
-
       switch (command.method) {
         case "none":
-          return completeOnboarding(ctx, setup, command);
-        case "passkey": {
-          const verified = await verifyPasskeyEnrollment(
-            setup.repos,
-            createRequestPasskeyProvider(setup.repos),
-            {
-              userId: ctx.actor.userId,
-              challengeId: command.challengeId,
-              response: command.response,
-              ipAddress: ctx.ipAddress,
-              verifiedAt: ctx.operationAt,
-            },
+          return application.auth.onboarding.completeWithoutFactor(ctx);
+        case "passkey":
+          return application.auth.onboarding.completeWithPasskey(ctx, command);
+        case "totp":
+          return application.auth.onboarding.completeWithTotp(
+            ctx,
+            command.code,
           );
-          if (isErr(verified)) return verified;
-
-          return completeOnboarding(ctx, setup, {
-            method: command.method,
-            enrollment: verified.value,
-          });
-        }
-        case "totp": {
-          const verified = await verifyTotpEnrollment(setup.repos, {
-            userId: ctx.actor.userId,
-            code: command.code,
-          });
-          if (isErr(verified)) return verified;
-
-          return completeOnboarding(ctx, setup, {
-            method: command.method,
-            enrollment: verified.value,
-          });
-        }
         default:
           return command satisfies never;
       }

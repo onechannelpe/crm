@@ -11,8 +11,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { workflow } from "~/server/workflow/ui/composition";
 import { isErr, Ok } from "~/shared/result";
 
 function parseLeadRef(input: unknown) {
@@ -25,7 +25,7 @@ export async function requestLeadCreation(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.register_lead",
+    name: "application.workflow.register_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -43,7 +43,7 @@ export async function requestLeadCreation(input: unknown) {
       })),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.registerLead(
+      application.workflow.commands.registerLead(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -54,7 +54,7 @@ export async function requestEditCommercialScope(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.edit_commercial_scope",
+    name: "application.workflow.edit_commercial_scope",
     access: { kind: "auth" },
 
     parse: () =>
@@ -73,7 +73,7 @@ export async function requestEditCommercialScope(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.editCommercialScope(
+      application.workflow.commands.editCommercialScope(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -84,7 +84,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.save_digital_policy",
+    name: "application.workflow.save_digital_policy",
     access: { kind: "auth" },
 
     parse: () =>
@@ -101,7 +101,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.saveDigitalPolicy(
+      application.workflow.commands.saveDigitalPolicy(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -112,7 +112,7 @@ export async function requestRecordRepLegal(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.record_rep_legal",
+    name: "application.workflow.record_rep_legal",
     access: { kind: "auth" },
 
     parse: () =>
@@ -129,7 +129,7 @@ export async function requestRecordRepLegal(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.recordRepLegal(
+      application.workflow.commands.recordRepLegal(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -140,7 +140,7 @@ export async function requestLeadReview(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.review_lead",
+    name: "application.workflow.review_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -154,7 +154,7 @@ export async function requestLeadReview(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.reviewLead(
+      application.workflow.commands.reviewLead(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -165,13 +165,13 @@ export async function requestQuotationRestart(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.restart_quotation",
+    name: "application.workflow.restart_quotation",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, { leadId }) =>
-      workflow.commands.restartQuotation(
+      application.workflow.commands.restartQuotation(
         { actor: workflowActor(actor), leadId },
         now,
       ),
@@ -182,7 +182,7 @@ export async function requestLeadReassignment(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.reassign_lead",
+    name: "application.workflow.reassign_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -194,7 +194,7 @@ export async function requestLeadReassignment(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.reassignLead(
+      application.workflow.commands.reassignLead(
         {
           actor: workflowActor(actor),
           leadId: payload.leadId,
@@ -209,13 +209,13 @@ export async function requestAddLeadToFavorites(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.add_lead_to_favorites",
+    name: "application.workflow.add_lead_to_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
     execute: async ({ actor, operationAt: now }, { leadId }) => {
-      const result = await workflow.commands.addToFavorites(
+      const result = await application.workflow.commands.addToFavorites(
         {
           actor: workflowActor(actor),
           leadId,
@@ -236,13 +236,13 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.remove_lead_from_favorites",
+    name: "application.workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
     execute: async ({ actor, operationAt: now }, { leadId }) => {
-      const result = await workflow.commands.removeFromFavorites(
+      const result = await application.workflow.commands.removeFromFavorites(
         {
           actor: workflowActor(actor),
           leadId,
@@ -263,13 +263,13 @@ export async function requestLeadDeletion(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.delete_lead",
+    name: "application.workflow.delete_lead",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, { leadId }) =>
-      workflow.commands.deleteLead(
+      application.workflow.commands.deleteLead(
         {
           actor: workflowActor(actor),
           leadId,
@@ -283,13 +283,13 @@ export async function requestLeadSunatRefresh(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.request_sunat_refresh",
+    name: "application.workflow.request_sunat_refresh",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, { leadId }) =>
-      workflow.commands.requestSunatRefresh(
+      application.workflow.commands.requestSunatRefresh(
         {
           actor: workflowActor(actor),
           leadId,

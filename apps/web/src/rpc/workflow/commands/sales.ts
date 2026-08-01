@@ -17,8 +17,8 @@ import {
   validationFail,
   type Reader,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { workflow } from "~/server/workflow/ui/composition";
 
 function venueFields(r: Reader<DomainError>): Omit<
   CreateVenueInput,
@@ -62,7 +62,7 @@ export async function requestVenueCreation(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.create_venue",
+    name: "application.workflow.create_venue",
     access: { kind: "auth" },
 
     parse: () => parseObject(input, validationFail, venueFields),
@@ -70,7 +70,7 @@ export async function requestVenueCreation(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.createVenue(
+      application.workflow.commands.createVenue(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -81,7 +81,7 @@ export async function requestVenueUpdate(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.update_venue",
+    name: "application.workflow.update_venue",
     access: { kind: "auth" },
 
     parse: () =>
@@ -102,7 +102,7 @@ export async function requestVenueUpdate(input: unknown) {
     audit: ({ leadId, venueId }) => ({ leadId, venueId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.updateVenue(
+      application.workflow.commands.updateVenue(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -113,7 +113,7 @@ export async function requestVenueAccountsAddition(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.add_venue_accounts",
+    name: "application.workflow.add_venue_accounts",
     access: { kind: "auth" },
 
     parse: () =>
@@ -138,7 +138,7 @@ export async function requestVenueAccountsAddition(input: unknown) {
     audit: ({ leadId, venueId }) => ({ leadId, venueId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.addVenueAccounts(
+      application.workflow.commands.addVenueAccounts(
         { actor: workflowActor(actor), ...payload },
         now,
       ),

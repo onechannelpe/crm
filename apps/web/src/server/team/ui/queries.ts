@@ -1,11 +1,8 @@
 import "server-only";
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import {
-  getBulkImportSetup as getBulkImportSetupService,
-  getInviteManagement as getInviteManagementService,
-} from "~/server/team/application/invites";
-import { composeTeam } from "~/server/team/ui/composition";
+import { application } from "~/server/platform/composition/application";
+import { getBulkImportSetup as getBulkImportSetupService } from "~/server/team/application/invites";
 import { isErr, Ok } from "~/shared/result";
 
 export async function getInviteManagement(): Promise<
@@ -15,11 +12,7 @@ export async function getInviteManagement(): Promise<
     name: "team.invite_management.read",
     access: { kind: "permission", permission: "hr:manage" },
     execute: async (ctx) => {
-      const management = await getInviteManagementService(
-        ctx,
-        composeTeam().inviteManagement,
-        composeTeam().publicOrigin,
-      );
+      const management = await application.team.management.get(ctx);
       if (isErr(management)) return management;
 
       return Ok({

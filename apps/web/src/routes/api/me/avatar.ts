@@ -1,8 +1,8 @@
 import type { APIEvent } from "@solidjs/start/server";
 
 import { getSession } from "~/server/platform/action/session";
+import { application } from "~/server/platform/composition/application";
 import type { AvatarDomainErrorCode } from "~/server/users/avatar-service";
-import { composeAvatar } from "~/server/users/ui/avatar-composition";
 
 interface AvatarErrorResponse {
   status: number;
@@ -32,7 +32,7 @@ function mapAvatarErrorResponse(
 
 export async function GET(event: Pick<APIEvent, "request">): Promise<Response> {
   try {
-    const { avatarService } = composeAvatar();
+    const { avatarService } = application.avatar;
     const session = await getSession();
     if (!session) {
       return new Response("Unauthorized", { status: 401 });

@@ -10,14 +10,14 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { workflow } from "~/server/workflow/ui/composition";
 
 export async function requestRateProposal(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.propose_rate",
+    name: "application.workflow.propose_rate",
     access: { kind: "auth" },
 
     parse: () =>
@@ -34,7 +34,7 @@ export async function requestRateProposal(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.proposeRate(
+      application.workflow.commands.proposeRate(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -45,7 +45,7 @@ export async function requestRateProposalEdit(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.edit_rate_proposal",
+    name: "application.workflow.edit_rate_proposal",
     access: { kind: "auth" },
 
     parse: () =>
@@ -63,7 +63,7 @@ export async function requestRateProposalEdit(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.editRateProposal(
+      application.workflow.commands.editRateProposal(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -74,7 +74,7 @@ export async function requestRateAcceptance(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.accept_rate",
+    name: "application.workflow.accept_rate",
     access: { kind: "auth" },
 
     parse: () =>
@@ -86,7 +86,7 @@ export async function requestRateAcceptance(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.acceptRate(
+      application.workflow.commands.acceptRate(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -97,7 +97,7 @@ export async function requestLeadClosure(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.close_lead",
+    name: "application.workflow.close_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -110,7 +110,7 @@ export async function requestLeadClosure(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.closeLead(
+      application.workflow.commands.closeLead(
         { actor: workflowActor(actor), ...payload },
         now,
       ),
@@ -121,7 +121,7 @@ export async function requestRateRevision(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.request_rate_revision",
+    name: "application.workflow.request_rate_revision",
     access: { kind: "auth" },
 
     parse: () =>
@@ -138,7 +138,7 @@ export async function requestRateRevision(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.requestRateRevision(
+      application.workflow.commands.requestRateRevision(
         {
           actor: workflowActor(actor),
           leadId: payload.leadId,

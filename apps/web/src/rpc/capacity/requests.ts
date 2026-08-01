@@ -1,10 +1,10 @@
 import type { DomainError } from "~/domain/errors";
-import { composeCapacity } from "~/server/capacity/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import type { Result } from "~/shared/result";
 
 function parseCapacityRequest(
@@ -34,7 +34,7 @@ export async function requestMoreSearches(
     audit: (request) => ({ amount: request.amount }),
 
     execute: (ctx, request) =>
-      composeCapacity().useCases.requestCapacity(ctx, {
+      application.capacity.requestCapacity(ctx, {
         kind: "search_extra",
         amount: request.amount,
         reason: request.reason,
@@ -55,7 +55,7 @@ export async function requestMoreLeadRefill(
     audit: (request) => ({ amount: request.amount }),
 
     execute: (ctx, request) =>
-      composeCapacity().useCases.requestCapacity(ctx, {
+      application.capacity.requestCapacity(ctx, {
         kind: "lead_refill",
         amount: request.amount,
         reason: request.reason,

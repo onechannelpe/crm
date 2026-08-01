@@ -12,10 +12,7 @@ import {
   createOrganizationRepo,
   type OrganizationRepository,
 } from "~/server/organization/organization-repo";
-import {
-  serverInfrastructure as defaultServerInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import { createExecutorUow } from "~/server/platform/database/uow";
 import {
   createSessionRepository,
@@ -38,7 +35,7 @@ function buildRepos(db: ServerInfrastructure["db"]): ExtensionCompositionRepos {
   };
 }
 
-function createExtensionComposition(
+export function createExtensionComposition(
   serverInfrastructure: ServerInfrastructure,
 ) {
   const extensionService = createExtensionService(
@@ -49,8 +46,4 @@ function createExtensionComposition(
   );
 
   return { extensionService };
-}
-
-export function composeExtension() {
-  return createExtensionComposition(defaultServerInfrastructure);
 }

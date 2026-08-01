@@ -29,10 +29,7 @@ import {
 } from "~/server/capacity/infrastructure/usage-repo";
 import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
-import {
-  serverInfrastructure as defaultServerInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createExecutorUow } from "~/server/platform/database/uow";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
@@ -59,7 +56,9 @@ function createCapacityRepos(executor: DatabaseExecutor) {
   };
 }
 
-function createCapacityComposition(serverInfrastructure: ServerInfrastructure) {
+export function createCapacityComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
   const readRepos = createCapacityRepos(serverInfrastructure.db);
   const uow = createExecutorUow(serverInfrastructure.db, (txDb) =>
     createCapacityRepos(txDb),
@@ -70,50 +69,43 @@ function createCapacityComposition(serverInfrastructure: ServerInfrastructure) {
   };
 
   return {
-    useCases: {
-      requestCapacity: (
-        ctx: Parameters<typeof requestCapacity>[0],
-        input: Parameters<typeof requestCapacity>[2],
-      ) => requestCapacity(ctx, { rateLimitDeps, uow }, input),
-      approveCapacityRequest: (
-        ctx: Parameters<typeof approveCapacityRequest>[0],
-        input: Parameters<typeof approveCapacityRequest>[2],
-      ) => approveCapacityRequest(ctx, { rateLimitDeps, uow }, input),
-      rejectCapacityRequest: (
-        ctx: Parameters<typeof rejectCapacityRequest>[0],
-        input: Parameters<typeof rejectCapacityRequest>[2],
-      ) => rejectCapacityRequest(ctx, { rateLimitDeps, uow }, input),
-      grantSearchCapacityDirect: (
-        ctx: Parameters<typeof grantSearchCapacityDirect>[0],
-        input: Parameters<typeof grantSearchCapacityDirect>[2],
-      ) => grantSearchCapacityDirect(ctx, { uow }, input),
-      grantLeadCapacityDirect: (
-        ctx: Parameters<typeof grantLeadCapacityDirect>[0],
-        input: Parameters<typeof grantLeadCapacityDirect>[2],
-      ) => grantLeadCapacityDirect(ctx, { uow }, input),
-      updateScopePolicy: (
-        ctx: Parameters<typeof updateScopePolicy>[0],
-        input: Parameters<typeof updateScopePolicy>[2],
-      ) => updateScopePolicy(ctx, { uow }, input),
-      updateExecutivePolicyOverride: (
-        ctx: Parameters<typeof updateExecutivePolicyOverride>[0],
-        input: Parameters<typeof updateExecutivePolicyOverride>[2],
-      ) => updateExecutivePolicyOverride(ctx, { uow }, input),
-      listManagedExecutives: (
-        ctx: Parameters<typeof listManagedExecutives>[0],
-      ) => listManagedExecutives(ctx, { repos: readRepos }),
-      getExecutiveDetail: (
-        ctx: Parameters<typeof getExecutiveDetail>[0],
-        input: Parameters<typeof getExecutiveDetail>[2],
-      ) => getExecutiveDetail(ctx, { repos: readRepos }, input),
-      listPendingRequests: (ctx: Parameters<typeof listPendingRequests>[0]) =>
-        listPendingRequests(ctx, { repos: readRepos }),
-      getPolicyDefaults: (ctx: Parameters<typeof getPolicyDefaults>[0]) =>
-        getPolicyDefaults(ctx, { repos: readRepos }),
-    },
+    requestCapacity: (
+      ctx: Parameters<typeof requestCapacity>[0],
+      input: Parameters<typeof requestCapacity>[2],
+    ) => requestCapacity(ctx, { rateLimitDeps, uow }, input),
+    approveCapacityRequest: (
+      ctx: Parameters<typeof approveCapacityRequest>[0],
+      input: Parameters<typeof approveCapacityRequest>[2],
+    ) => approveCapacityRequest(ctx, { rateLimitDeps, uow }, input),
+    rejectCapacityRequest: (
+      ctx: Parameters<typeof rejectCapacityRequest>[0],
+      input: Parameters<typeof rejectCapacityRequest>[2],
+    ) => rejectCapacityRequest(ctx, { rateLimitDeps, uow }, input),
+    grantSearchCapacityDirect: (
+      ctx: Parameters<typeof grantSearchCapacityDirect>[0],
+      input: Parameters<typeof grantSearchCapacityDirect>[2],
+    ) => grantSearchCapacityDirect(ctx, { uow }, input),
+    grantLeadCapacityDirect: (
+      ctx: Parameters<typeof grantLeadCapacityDirect>[0],
+      input: Parameters<typeof grantLeadCapacityDirect>[2],
+    ) => grantLeadCapacityDirect(ctx, { uow }, input),
+    updateScopePolicy: (
+      ctx: Parameters<typeof updateScopePolicy>[0],
+      input: Parameters<typeof updateScopePolicy>[2],
+    ) => updateScopePolicy(ctx, { uow }, input),
+    updateExecutivePolicyOverride: (
+      ctx: Parameters<typeof updateExecutivePolicyOverride>[0],
+      input: Parameters<typeof updateExecutivePolicyOverride>[2],
+    ) => updateExecutivePolicyOverride(ctx, { uow }, input),
+    listManagedExecutives: (ctx: Parameters<typeof listManagedExecutives>[0]) =>
+      listManagedExecutives(ctx, { repos: readRepos }),
+    getExecutiveDetail: (
+      ctx: Parameters<typeof getExecutiveDetail>[0],
+      input: Parameters<typeof getExecutiveDetail>[2],
+    ) => getExecutiveDetail(ctx, { repos: readRepos }, input),
+    listPendingRequests: (ctx: Parameters<typeof listPendingRequests>[0]) =>
+      listPendingRequests(ctx, { repos: readRepos }),
+    getPolicyDefaults: (ctx: Parameters<typeof getPolicyDefaults>[0]) =>
+      getPolicyDefaults(ctx, { repos: readRepos }),
   };
-}
-
-export function composeCapacity() {
-  return createCapacityComposition(defaultServerInfrastructure);
 }

@@ -1,6 +1,5 @@
-import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
-import { composeContactAssignments } from "~/server/contact-assignments/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
+import { application } from "~/server/platform/composition/application";
 
 export async function assignCurrentUserContacts() {
   "use server";
@@ -8,17 +7,11 @@ export async function assignCurrentUserContacts() {
   return executeSessionServerFunction({
     name: "contact_assignments.assign_current_user",
     access: { kind: "permission", permission: "lead:work" },
-    execute: (ctx) => {
-      const { repos, uow, engine, leadUsageReservationPorts } =
-        composeContactAssignments();
-      return assignContacts(
-        {
-          actorUserId: ctx.actor.userId,
-          branchId: ctx.actor.branchId,
-          at: ctx.operationAt,
-        },
-        { repos, uow, engine, leadUsageReservationPorts },
-      );
-    },
+    execute: (ctx) =>
+      application.contactAssignments.assign({
+        actorUserId: ctx.actor.userId,
+        branchId: ctx.actor.branchId,
+        at: ctx.operationAt,
+      }),
   });
 }

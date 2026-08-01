@@ -1,6 +1,6 @@
 import { isExtensionRuntimeEventEnvelope } from "~/server/extension/contracts";
-import { composeExtension } from "~/server/extension/ui/composition";
 import { toWire } from "~/server/platform/action/domain-error";
+import { application } from "~/server/platform/composition/application";
 import { getRequestInstant } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
@@ -33,7 +33,7 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
       );
     }
 
-    const result = await composeExtension().extensionService.ingestRuntimeEvent(
+    const result = await application.extension.ingestRuntimeEvent(
       {
         sessionToken,
         event: body,

@@ -1,7 +1,7 @@
 import { invalid } from "~/domain/errors";
 import { parseDocument } from "~/domain/identity/document";
-import { composeClientSearch } from "~/server/client-search/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
+import { application } from "~/server/platform/composition/application";
 import { Err, Ok } from "~/shared/result";
 import { isPlainRecord } from "~/shared/type-guards";
 
@@ -22,7 +22,7 @@ export async function requestSearchEnrichment(input: unknown) {
     parse: () => parseDocumentInput(input),
 
     execute: async (ctx, document) => {
-      const { enrichmentCommand } = composeClientSearch();
+      const { enrichmentCommand } = application.clientSearch;
       const jobId = await enrichmentCommand.enqueueRequest(
         document,
         ctx.actor.userId,
@@ -46,7 +46,7 @@ export async function getSearchEnrichmentStatus(
     parse: () => parseDocumentInput({ documentType, documentValue }),
 
     execute: async (ctx, document) => {
-      const { enrichmentQuery } = composeClientSearch();
+      const { enrichmentQuery } = application.clientSearch;
       const status = await enrichmentQuery.getStatus(document, ctx.operationAt);
       return Ok(status);
     },

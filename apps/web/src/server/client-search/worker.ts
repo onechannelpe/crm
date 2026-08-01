@@ -51,7 +51,7 @@ export function createEnrichmentQueue(
     // The Engine response is an external observation, not a consequence of
     // claiming this job. Its freshness window starts when that response is
     // received, so a slow fallback cannot be stored as already stale.
-    const fetchedAt = new Date();
+    const fetchedAt = new Date(); // clock-boundary: external engine observation
     return {
       documentType: "ruc",
       documentValue: job.document_value,
@@ -76,8 +76,12 @@ export function createEnrichmentQueue(
     maxConcurrency: 3,
     workerId,
     store: registry.store,
-    handle: async (job, signal) => {
-      const result = await processEnrichmentJob(job, scraper, signal);
+    handle: async (job, context) => {
+      const result = await processEnrichmentJob(
+        job,
+        scraper,
+        context.abortSignal,
+      );
 
       if (result.ok) {
         // Result columns ride the engine's settle. The org projection is an

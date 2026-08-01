@@ -2,30 +2,22 @@ import { getSessionPath } from "~/domain/auth/access/route-policy";
 import { isAuthenticationResponse } from "~/domain/auth/passkey/credential-response";
 import { fail } from "~/domain/errors";
 import { AuthLoginFlowId } from "~/domain/ids";
-import { recordAuthAnalyticsEvent as recordAuthAnalytics } from "~/server/auth/auth-analytics";
-import { verifyPasskeyLogin } from "~/server/auth/factors/passkey/service";
-import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
-import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { throwDomain } from "~/server/platform/action/domain-error";
+import { application } from "~/server/platform/composition/application";
 import {
   getRequestClientMetadata,
+  getRequestContext,
   getRequestInstant,
 } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
 
 function recordAuthAnalyticsEvent(
-  event: Parameters<typeof recordAuthAnalytics>[0],
-  context: Parameters<typeof recordAuthAnalytics>[1],
+  event: Parameters<typeof application.auth.analytics>[0],
+  context: Parameters<typeof application.auth.analytics>[1],
 ) {
-  return recordAuthAnalytics(
-    event,
-    context,
-    composeAuth().analytics,
-    getRequestInstant(),
-  );
+  return application.auth.analytics(event, context, getRequestInstant());
 }
 
 export async function finishPasskeyLogin(
@@ -34,7 +26,6 @@ export async function finishPasskeyLogin(
 ): Promise<{ redirectTo: string }> {
   "use server";
 
-  const login = composeAuth().login;
   const clientMetadata = getRequestClientMetadata();
   const requestContext = getActionRequestContext();
 
@@ -45,13 +36,15 @@ export async function finishPasskeyLogin(
   }
 
   const verifiedAt = getRequestInstant();
-  const verified = await verifyPasskeyLogin(login.repos, {
-    flowId: parsedFlowId.value,
-    response,
-    ipAddress: clientMetadata.ipAddress,
-    occurredAt: verifiedAt,
-    webauthnProvider: createRequestPasskeyProvider(login.repos),
-  });
+  const verified = await application.auth.login.verifyPasskey(
+    {
+      flowId: parsedFlowId.value,
+      response,
+      ipAddress: clientMetadata.ipAddress,
+      occurredAt: verifiedAt,
+    },
+    getRequestContext().publicOrigin,
+  );
 
   if (isErr(verified)) {
     await recordAuthAnalyticsEvent(
@@ -67,7 +60,7 @@ export async function finishPasskeyLogin(
     throwDomain(fail(verified.error.kind));
   }
 
-  const completed = await completePendingLogin(login, {
+  const completed = await application.auth.login.complete({
     proof: verified.value,
     occurredAt: verifiedAt,
     ipAddress: clientMetadata.ipAddress,

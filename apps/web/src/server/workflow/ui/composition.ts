@@ -1,18 +1,11 @@
 import "server-only";
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
-import {
-  composeFiles,
-  type FilesComposition,
-} from "~/server/files/ui/composition";
+import type { FilesComposition } from "~/server/files/ui/composition";
 import type { EngineClient } from "~/server/integrations/engine/client";
-import { composeEngineClient } from "~/server/integrations/ui/engine-client";
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
-import {
-  serverInfrastructure as defaultServerInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import { createInquiry } from "~/server/workflow/inquiry/create-inquiry";
 import { listInquiriesForExecutive } from "~/server/workflow/inquiry/inquiry-queries";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
@@ -236,9 +229,3 @@ export function createWorkflowComposition(
     },
   };
 }
-
-export const workflow = createWorkflowComposition(
-  defaultServerInfrastructure,
-  composeEngineClient(),
-  composeFiles(),
-);

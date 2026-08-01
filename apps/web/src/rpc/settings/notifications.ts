@@ -4,14 +4,12 @@ import {
   isChannelControllable,
   NOTIFICATION_CATEGORIES,
 } from "~/server/notifications/categories";
-import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
-import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
+import { application } from "~/server/platform/composition/application";
 import { Err, Ok } from "~/shared/result";
 
 export async function setNotificationPreference(
@@ -40,13 +38,13 @@ export async function setNotificationPreference(
         return Err(invalid({ code: "channel_not_controllable" }));
       }
 
-      const addresses = createUserChannelAddressRepo(serverInfrastructure.db);
-      const verified = await addresses.listVerifiedChannels(actor.userId);
+      const { verifiedChannels: verified } =
+        await application.notifications.listPreferences(actor.userId);
       if (!verified.includes(command.channel)) {
         return Err(invalid({ code: "channel_unavailable" }));
       }
 
-      await composeNotifications().preferences.setOptedOut({
+      await application.notifications.setPreference({
         userId: actor.userId,
         category: command.category,
         channel: command.channel,

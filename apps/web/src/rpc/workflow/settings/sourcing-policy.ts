@@ -4,14 +4,14 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { workflow } from "~/server/workflow/ui/composition";
 
 export async function querySourcingPolicy(rawBranchId: string) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.get_sourcing_policy",
+    name: "application.workflow.get_sourcing_policy",
     access: { kind: "auth" },
 
     parse: () =>
@@ -22,7 +22,7 @@ export async function querySourcingPolicy(rawBranchId: string) {
     audit: ({ branchId }) => ({ branchId }),
 
     execute: ({ actor }, query) =>
-      workflow.queries.getSourcingPolicy({
+      application.workflow.queries.getSourcingPolicy({
         actorRole: actor.role,
         branchId: query.branchId,
       }),
@@ -36,7 +36,7 @@ export async function saveSourcingPolicy(input: {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.update_sourcing_policy",
+    name: "application.workflow.update_sourcing_policy",
     access: { kind: "auth" },
 
     parse: () =>
@@ -48,7 +48,7 @@ export async function saveSourcingPolicy(input: {
     audit: ({ branchId }) => ({ branchId }),
 
     execute: ({ actor, operationAt: now }, command) =>
-      workflow.commands.updateSourcingPolicy(
+      application.workflow.commands.updateSourcingPolicy(
         {
           actor: workflowActor(actor),
           branchId: command.branchId,

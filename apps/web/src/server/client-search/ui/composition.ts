@@ -5,16 +5,12 @@ import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import { createEnrichmentQueue } from "~/server/client-search/worker";
 import type { EngineClient } from "~/server/integrations/engine/client";
-import { composeEngineClient } from "~/server/integrations/ui/engine-client";
 import { createOrganizationEnrichmentProjection } from "~/server/organization/apply-enrichment";
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
-import {
-  serverInfrastructure as defaultServerInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 
-function createClientSearchComposition(
+export function createClientSearchComposition(
   serverInfrastructure: ServerInfrastructure,
   engine: EngineClient,
 ) {
@@ -39,11 +35,4 @@ function createClientSearchComposition(
         projectOrganization,
       }),
   };
-}
-
-export function composeClientSearch() {
-  return createClientSearchComposition(
-    defaultServerInfrastructure,
-    composeEngineClient(),
-  );
 }

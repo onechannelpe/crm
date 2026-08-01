@@ -1,13 +1,14 @@
-import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
 import {
   appendClearedGoogleOAuthCookies,
   readGoogleOAuthCookies,
 } from "~/server/auth/google/google-oauth-cookies";
-import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
 import { getClientIp } from "~/server/auth/password/client-ip";
 import { appendSessionCookie } from "~/server/auth/session/cookies";
-import { composeAuth } from "~/server/auth/ui/composition";
-import { getRequestInstant } from "~/server/platform/http/request-context";
+import { application } from "~/server/platform/composition/application";
+import {
+  getRequestContext,
+  getRequestInstant,
+} from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";
@@ -34,8 +35,7 @@ export async function GET(event: ApiRequestEvent): Promise<Response> {
 
   const ipAddress = getClientIp(event.request.headers);
   const userAgent = event.request.headers.get("user-agent") ?? null;
-  const runtime = composeAuth().login;
-  const result = await completeGoogleOAuthCallback(
+  const result = await application.auth.login.completeGoogleOAuth(
     {
       code,
       state,
@@ -44,8 +44,7 @@ export async function GET(event: ApiRequestEvent): Promise<Response> {
       ipAddress,
       userAgent,
     },
-    runtime,
-    createRequestPasskeyProvider(runtime.repos),
+    getRequestContext().publicOrigin,
     getRequestInstant(),
   );
   if (isErr(result)) {

@@ -9,7 +9,7 @@ import {
   type RealtimeMessage,
 } from "~/contracts/realtime/channel";
 import { hasPermission } from "~/domain/auth/access/rbac";
-import { composeEventLogs } from "~/server/event-logs/ui/composition";
+import { application } from "~/server/platform/composition/application";
 import { defineRealtimeChannel } from "~/server/realtime/channel";
 
 import {
@@ -51,7 +51,7 @@ export const eventLogsChannel = defineRealtimeChannel({
       return [];
     }
 
-    const missed = await composeEventLogs().eventLogsService.replayAfter(
+    const missed = await application.eventLogs.replayAfter(
       table,
       decoded,
       REPLAY_LIMIT,

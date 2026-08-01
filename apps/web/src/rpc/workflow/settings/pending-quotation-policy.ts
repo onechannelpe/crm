@@ -3,8 +3,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { workflow } from "~/server/workflow/ui/composition";
 
 export type SavePendingQuotationPolicyInput =
   | { enabled: false }
@@ -16,7 +16,7 @@ export async function savePendingQuotationPolicy(
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.update_pending_quotation_policy",
+    name: "application.workflow.update_pending_quotation_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
     parse: () =>
       parseObject(input, validationFail, (reader) =>
@@ -29,7 +29,7 @@ export async function savePendingQuotationPolicy(
       limit: payload.enabled ? payload.limit : 0,
     }),
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.updatePendingQuotationPolicy(
+      application.workflow.commands.updatePendingQuotationPolicy(
         { actor: workflowActor(actor), ...payload },
         now,
       ),

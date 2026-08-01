@@ -4,14 +4,14 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { workflow } from "~/server/workflow/ui/composition";
 
 export async function addLeadNote(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.add_note",
+    name: "application.workflow.add_note",
     access: { kind: "auth" },
 
     parse: () =>
@@ -23,7 +23,7 @@ export async function addLeadNote(input: unknown) {
     audit: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.addLeadNote(
+      application.workflow.commands.addLeadNote(
         { actor: workflowActor(actor), ...payload },
         now,
       ),

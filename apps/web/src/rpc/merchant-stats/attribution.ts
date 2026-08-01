@@ -1,11 +1,11 @@
 import { UserId } from "~/domain/ids";
 import type { CalendarMonth } from "~/domain/time/calendar-date";
-import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { isErr, Ok } from "~/shared/result";
 
 export async function adjustMonthCredit(raw: {
@@ -31,7 +31,7 @@ export async function adjustMonthCredit(raw: {
     audit: ({ ruc, month }) => ({ ruc, month }),
 
     execute: async ({ actor, operationAt: now }, input) => {
-      const resolved = await composeMerchantStats().attribution.adjust(
+      const resolved = await application.merchantStats.attribution.adjust(
         {
           ruc: input.ruc,
           month: input.month,
@@ -70,7 +70,7 @@ export async function setMerchantTarget(raw: {
     audit: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
 
     execute: async ({ actor, operationAt: now }, input) => {
-      const updated = await composeMerchantStats().attribution.setTarget(
+      const updated = await application.merchantStats.attribution.setTarget(
         {
           ruc: input.ruc,
           effectiveFrom: input.effectiveFrom,

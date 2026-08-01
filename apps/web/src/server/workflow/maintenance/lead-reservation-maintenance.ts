@@ -1,4 +1,5 @@
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { TickContext } from "~/server/platform/operation/context";
 import { expireLapsedReservations } from "~/server/workflow/lead/commands/expire-reservation";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
@@ -9,10 +10,11 @@ interface LeadReservationMaintenanceDeps {
   executor: DatabaseExecutor;
 }
 
-async function runReservationSweepTick(
+export async function runReservationSweepTick(
   deps: LeadReservationMaintenanceDeps,
-  sweptAt: Date,
+  context: TickContext<"reservation-sweep">,
 ) {
+  const sweptAt = context.operationAt;
   try {
     const expiredCount = await expireLapsedReservations(
       { executor: deps.executor },
@@ -30,13 +32,11 @@ async function runReservationSweepTick(
 
 // Cadence bounds stale visibility only; the registration path releases
 // reservations on its own, not via this sweep.
-export function startLeadReservationMaintenance(
+export function createLeadReservationMaintenance(
   deps: LeadReservationMaintenanceDeps,
-): () => void {
-  const timer = setInterval(() => {
-    // One sweep, one instant.
-    void runReservationSweepTick(deps, new Date());
-  }, SWEEP_INTERVAL_MS);
-
-  return () => clearInterval(timer);
+) {
+  return {
+    sweepReservations: (context: TickContext<"reservation-sweep">) =>
+      runReservationSweepTick(deps, context),
+  };
 }

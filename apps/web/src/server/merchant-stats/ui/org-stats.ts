@@ -1,9 +1,8 @@
 import "server-only";
 import type { RucMerchantStats } from "~/contracts/merchant-stats/views";
 import { fail, type DomainError } from "~/domain/errors";
-import { getMerchantStatsForViewer } from "~/server/merchant-stats/read/ruc-stats";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { db } from "~/server/platform/database/db";
+import { application } from "~/server/platform/composition/application";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export async function getMerchantStatsForRuc(
@@ -24,7 +23,7 @@ export async function getMerchantStatsForRuc(
     audit: ({ ruc }) => ({ ruc }),
 
     execute: ({ actor }, { ruc }) =>
-      getMerchantStatsForViewer(db, {
+      application.merchantStats.executive.rucStats({
         ruc,
         role: actor.role,
         userId: actor.userId,

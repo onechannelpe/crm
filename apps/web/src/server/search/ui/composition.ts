@@ -12,10 +12,7 @@ import {
   createSearchUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
-import {
-  serverInfrastructure as defaultServerInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { isErr, Ok } from "~/shared/result";
@@ -50,9 +47,16 @@ export function createSearchUsageReservationPorts(
   };
 }
 
-function createSearchComposition(serverInfrastructure: ServerInfrastructure) {
+export function createSearchComposition(
+  serverInfrastructure: ServerInfrastructure,
+) {
+  const repos = buildSearchUsageRepos(serverInfrastructure.db);
+
   return {
-    repos: buildSearchUsageRepos(serverInfrastructure.db),
+    getAllowance: (
+      userId: Parameters<typeof getSearchCapacitySnapshot>[0],
+      evaluatedAt: Date,
+    ) => getSearchCapacitySnapshot(userId, repos, evaluatedAt),
     usageReservationPorts: createSearchUsageReservationPorts(
       serverInfrastructure.db,
     ),
@@ -61,8 +65,4 @@ function createSearchComposition(serverInfrastructure: ServerInfrastructure) {
       events: createEventsRepo(serverInfrastructure.db),
     },
   };
-}
-
-export function composeSearch() {
-  return createSearchComposition(defaultServerInfrastructure);
 }

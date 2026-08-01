@@ -2,13 +2,9 @@ import "server-only";
 import type { UserId } from "~/domain/ids";
 import type { Phone } from "~/domain/phone/pe-mobile";
 import type { SessionService } from "~/server/auth/session/session.service";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { AppContext } from "~/server/platform/action/context";
-import {
-  serverInfrastructure as defaultServerInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import type {
   ChangeMemberRoleCommand,
   MemberIdCommand,
@@ -30,10 +26,9 @@ import { createBranchesRepo } from "~/server/users/repos-branches";
 import { createMemberWorkloadRepo } from "~/server/users/repos-member-workload";
 import { createTeamsRepo } from "~/server/users/repos-teams";
 import { createUsersRepo } from "~/server/users/repos-users";
-import { composeAvatar } from "~/server/users/ui/avatar-composition";
 import { Err, Ok, type Result } from "~/shared/result";
 
-function createUsersComposition(
+export function createUsersComposition(
   serverInfrastructure: ServerInfrastructure,
   sessionService: Pick<SessionService, "revokeAllForUser">,
   avatarService: AvatarService,
@@ -105,12 +100,4 @@ function createUsersComposition(
     updatePhone,
     members,
   };
-}
-
-export function composeUsers() {
-  return createUsersComposition(
-    defaultServerInfrastructure,
-    composeAuth().sessionService,
-    composeAvatar().avatarService,
-  );
 }

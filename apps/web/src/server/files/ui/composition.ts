@@ -5,10 +5,7 @@ import { createSalesRepo } from "~/server/files/repo/sales";
 import { createTokensRepo } from "~/server/files/repo/tokens";
 import type { FileRepos } from "~/server/files/service/contracts";
 import { createFileStorage, type FileStorage } from "~/server/files/storage";
-import {
-  serverInfrastructure as defaultServerInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import {
   uploadsConfig,
   type UploadsConfig,
@@ -19,7 +16,7 @@ export type FilesComposition = {
   storage: FileStorage;
 };
 
-function createFilesComposition(
+export function createFilesComposition(
   serverInfrastructure: ServerInfrastructure,
   config: UploadsConfig,
 ): FilesComposition {
@@ -34,8 +31,4 @@ function createFilesComposition(
     repo,
     storage: createFileStorage(config.storageRoot),
   };
-}
-
-export function composeFiles() {
-  return createFilesComposition(defaultServerInfrastructure, uploadsConfig());
 }

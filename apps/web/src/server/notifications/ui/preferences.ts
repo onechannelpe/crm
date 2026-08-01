@@ -6,10 +6,8 @@ import {
   isChannelControllable,
   NOTIFICATION_CATEGORIES,
 } from "~/server/notifications/categories";
-import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
-import { composeNotifications } from "~/server/notifications/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 // Default-on: a row in notification_opt_outs means "this user silenced this
@@ -20,12 +18,8 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
     access: { kind: "session" },
 
     execute: async (ctx) => {
-      const addresses = createUserChannelAddressRepo(serverInfrastructure.db);
-
-      const [optOuts, verifiedChannels] = await Promise.all([
-        composeNotifications().preferences.listForUser(ctx.actor.userId),
-        addresses.listVerifiedChannels(ctx.actor.userId),
-      ]);
+      const { optOuts, verifiedChannels } =
+        await application.notifications.listPreferences(ctx.actor.userId);
       const optedOut = new Set(
         optOuts.map((row) => `${row.category}:${row.channel}`),
       );

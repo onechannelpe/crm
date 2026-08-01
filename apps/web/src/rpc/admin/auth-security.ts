@@ -1,10 +1,10 @@
 import { longName } from "~/domain/identity/display-name";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export interface UserLoginRetryReport {
@@ -42,34 +42,25 @@ export async function getUserLoginRetryReport(
       })),
 
     execute: async ({ operationAt: now }, input) => {
-      const { users, authEvents } = composeAuth().login.repos;
-
-      const user = await users.findByUsername(input.username);
-
-      if (!user) {
+      const report = await application.auth.admin.loginRetries(
+        input.username,
+        now,
+      );
+      if (!report) {
         return Ok(null);
       }
 
-      const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60_000);
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60_000);
-
-      const [retryCount15m, retryCount24h, recentRetries] = await Promise.all([
-        authEvents.countLoginRetriesSince(user.id, fifteenMinutesAgo),
-        authEvents.countLoginRetriesSince(user.id, twentyFourHoursAgo),
-        authEvents.findRecentLoginRetriesByUser(user.id, 25),
-      ]);
-
       return Ok({
         user: {
-          id: user.id,
-          email: user.email,
-          fullName: longName(user),
-          role: user.role,
-          isActive: user.is_active,
+          id: report.user.id,
+          email: report.user.email,
+          fullName: longName(report.user),
+          role: report.user.role,
+          isActive: report.user.is_active,
         },
-        retryCount15m,
-        retryCount24h,
-        recentRetries: recentRetries.map((event) => ({
+        retryCount15m: report.retryCount15m,
+        retryCount24h: report.retryCount24h,
+        recentRetries: report.recentRetries.map((event) => ({
           id: event.id,
           createdAt: event.created_at.getTime(),
           stage: event.stage,

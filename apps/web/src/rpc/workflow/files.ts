@@ -11,7 +11,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { workflow } from "~/server/workflow/ui/composition";
+import { application } from "~/server/platform/composition/application";
 import { Err, Ok, type Result } from "~/shared/result";
 
 interface LeadUpload {
@@ -69,10 +69,10 @@ export async function requestWorkflowLeadsExportDownloadToken(): Promise<{
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.request_leads_export_download_token",
+    name: "application.workflow.request_leads_export_download_token",
     access: { kind: "auth" },
     execute: (context) =>
-      workflow.files.requestLeadsExportDownloadToken({
+      application.workflow.files.requestLeadsExportDownloadToken({
         ctx: context,
       }),
   });
@@ -82,7 +82,7 @@ export async function uploadLeadSaleProofFile(formData: FormData) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.upload_sale_proof_file",
+    name: "application.workflow.upload_sale_proof_file",
     access: { kind: "auth" },
     parse: () => parseLeadUpload(formData),
     audit: ({ leadId, file }) => ({
@@ -91,7 +91,7 @@ export async function uploadLeadSaleProofFile(formData: FormData) {
       sizeBytes: file.sizeBytes,
     }),
     execute: (context, { leadId, file }) =>
-      workflow.files.uploadSaleProofFile({
+      application.workflow.files.uploadSaleProofFile({
         ctx: context,
         leadId,
         file,
@@ -106,7 +106,7 @@ export async function requestLeadSaleProofDownloadToken(input: {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.request_sale_proof_download_token",
+    name: "application.workflow.request_sale_proof_download_token",
     access: { kind: "auth" },
     parse: () =>
       parseObject(input, validationFail, (reader) => ({
@@ -115,7 +115,7 @@ export async function requestLeadSaleProofDownloadToken(input: {
       })),
     audit: ({ leadId, fileAssetId }) => ({ leadId, fileAssetId }),
     execute: (context, { leadId, fileAssetId }) =>
-      workflow.files.requestSaleProofDownloadToken({
+      application.workflow.files.requestSaleProofDownloadToken({
         ctx: context,
         leadId,
         fileAssetId,
@@ -130,7 +130,7 @@ export async function uploadLeadRateRevisionFile(
 
   return executeFileOperation(
     executeSessionServerFunction({
-      name: "workflow.upload_rate_revision_file",
+      name: "application.workflow.upload_rate_revision_file",
       access: { kind: "auth" },
       parse: () => parseLeadUpload(formData),
       audit: ({ leadId, file }) => ({
@@ -139,7 +139,7 @@ export async function uploadLeadRateRevisionFile(
         sizeBytes: file.sizeBytes,
       }),
       execute: (context, { leadId, file }) =>
-        workflow.files.uploadRateRevisionFile({
+        application.workflow.files.uploadRateRevisionFile({
           ctx: context,
           leadId,
           file,
@@ -156,7 +156,7 @@ export async function requestRateRevisionFileDownloadToken(input: {
 
   return executeFileOperation(
     executeSessionServerFunction({
-      name: "workflow.request_rate_revision_download_token",
+      name: "application.workflow.request_rate_revision_download_token",
       access: { kind: "auth" },
       parse: () =>
         parseObject(input, validationFail, (reader) => ({
@@ -165,7 +165,7 @@ export async function requestRateRevisionFileDownloadToken(input: {
         })),
       audit: ({ leadId, fileId }) => ({ leadId, fileId }),
       execute: (context, { leadId, fileId }) =>
-        workflow.files.requestRateRevisionDownloadToken({
+        application.workflow.files.requestRateRevisionDownloadToken({
           ctx: context,
           leadId,
           fileId,

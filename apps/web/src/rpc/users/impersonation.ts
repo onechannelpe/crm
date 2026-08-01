@@ -6,12 +6,12 @@ import {
   setImpersonatorCookie,
   setSessionCookie,
 } from "~/server/auth/session/cookies";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { isErr, Ok } from "~/shared/result";
 
 export async function startImpersonation(
@@ -31,7 +31,7 @@ export async function startImpersonation(
       // Read the administrator's own cookie before the swap so exiting
       // impersonation can restore it.
       const adminToken = getSessionCookie();
-      const result = await composeAuth().impersonation.start(ctx, command);
+      const result = await application.auth.impersonation.start(ctx, command);
       if (isErr(result)) return result;
 
       if (adminToken) setImpersonatorCookie(adminToken);
@@ -48,7 +48,7 @@ export async function stopImpersonation(): Promise<{ message: string }> {
     name: "members.impersonation.stop",
     access: { kind: "auth" },
     execute: async (ctx) => {
-      const result = await composeAuth().impersonation.stop(ctx);
+      const result = await application.auth.impersonation.stop(ctx);
       if (isErr(result)) return result;
 
       const adminToken = getImpersonatorCookie();

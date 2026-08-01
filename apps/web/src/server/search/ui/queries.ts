@@ -1,7 +1,6 @@
 import "server-only";
-import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { composeSearch } from "~/server/search/ui/composition";
+import { application } from "~/server/platform/composition/application";
 
 export async function getMySearchAllowance() {
   return executeSessionServerFunction({
@@ -9,10 +8,6 @@ export async function getMySearchAllowance() {
     access: { kind: "permission", permission: "capacity:read:self" },
 
     execute: (ctx) =>
-      getSearchCapacitySnapshot(
-        ctx.actor.userId,
-        composeSearch().repos,
-        ctx.operationAt,
-      ),
+      application.search.getAllowance(ctx.actor.userId, ctx.operationAt),
   });
 }

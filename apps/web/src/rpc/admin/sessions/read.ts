@@ -1,14 +1,11 @@
 import type { SessionInfo } from "~/contracts/auth";
 import { UserId } from "~/domain/ids";
-import { countActiveSessions as countActiveSessionsService } from "~/server/auth/application/queries/count-active-sessions";
-import { listAllActiveSessions as listAllActiveSessionsService } from "~/server/auth/application/queries/list-all-active-sessions";
-import { listUserSessions as listUserSessionsService } from "~/server/auth/application/queries/list-user-sessions";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function listUserSessions(rawUserId: unknown) {
@@ -27,13 +24,7 @@ export async function listUserSessions(rawUserId: unknown) {
     audit: (query) => ({ userId: query.userId }),
 
     execute: async (ctx, parsed) =>
-      Ok(
-        await listUserSessionsService(
-          ctx,
-          composeAuth().adminSessionsRead,
-          parsed,
-        ),
-      ),
+      Ok(await application.auth.sessions.listForUser(ctx, parsed)),
   });
 }
 
@@ -46,12 +37,7 @@ export async function getActiveSessionsCount(): Promise<number> {
     stepUp: "recent_strong_auth",
 
     execute: async (ctx) =>
-      Ok(
-        await countActiveSessionsService(
-          composeAuth().adminSessionsRead,
-          ctx.operationAt,
-        ),
-      ),
+      Ok(await application.auth.sessions.countActive(ctx.operationAt)),
   });
 }
 
@@ -64,11 +50,6 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
     stepUp: "recent_strong_auth",
 
     execute: async (ctx) =>
-      Ok(
-        await listAllActiveSessionsService(
-          composeAuth().adminSessionsRead,
-          ctx.operationAt,
-        ),
-      ),
+      Ok(await application.auth.sessions.listActive(ctx.operationAt)),
   });
 }

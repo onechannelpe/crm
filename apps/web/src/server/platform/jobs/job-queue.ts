@@ -1,3 +1,4 @@
+import type { JobContext } from "~/server/platform/operation/context";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
 import { nextClaimableAt } from "./backoff";
@@ -87,7 +88,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
         jobId,
         workerId,
         leaseMs,
-        new Date(),
+        new Date(), // clock-boundary: lease heartbeat
       );
 
       if (!renewed) {
@@ -104,8 +105,13 @@ export function createJobQueue<TJob extends QueueJobBase>(
     }
   }
 
-  async function processJob(job: TJob, claimedAt: Date): Promise<void> {
+  async function processJob(job: TJob, operationAt: Date): Promise<void> {
     const controller = new AbortController();
+    const context: JobContext = {
+      operationAt,
+      abortSignal: controller.signal,
+      workerId,
+    };
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     const renewalInterval = setInterval(() => {
       void renewLease(job.id, controller);
@@ -115,7 +121,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
       let settlement: Settlement;
 
       try {
-        settlement = await config.handle(job, controller.signal, claimedAt);
+        settlement = await config.handle(job, context);
 
         if (controller.signal.aborted) {
           throw new Error("Job aborted after processing");
@@ -139,7 +145,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
       // completion time in the past and schedule the retry backoff from an
       // instant that has already elapsed. One read for the whole settlement,
       // so the retry schedule and the stored timestamp still agree.
-      const settledAt = new Date();
+      const settledAt = new Date(); // clock-boundary: job settlement
       const outcome = resolve(job, settlement, settledAt);
 
       let settled: boolean;
@@ -195,7 +201,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
 
         // The inbound event for this batch. Every job in it, and everything
         // those handlers write, inherits this instant.
-        const claimedAt = new Date();
+        const claimedAt = new Date(); // clock-boundary: job claim batch
         const jobs = await store.claim(
           workerId,
           claimedAt,

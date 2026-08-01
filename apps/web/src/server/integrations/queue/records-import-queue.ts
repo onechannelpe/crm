@@ -52,8 +52,12 @@ export function createRecordsImportQueue(
     workerId,
     store: runtime.jobs.store,
 
-    handle: async (job, signal, claimedAt) => {
-      const result = await runner.process(job, signal, claimedAt);
+    handle: async (job, context) => {
+      const result = await runner.process(
+        job,
+        context.abortSignal,
+        context.operationAt,
+      );
 
       // The queue store writes queue_state and completed_at.
       return {

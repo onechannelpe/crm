@@ -21,11 +21,11 @@ export function createWhatsAppInboundQueue(
     maxConcurrency: 8,
     workerId,
     store: createWhatsAppInboundEventRepo(db),
-    handle: async (event, _signal, claimedAt) => {
+    handle: async (event, context) => {
       const { outcome, enqueuedReply } = await processInboundWhatsAppEvent(
         db,
         event,
-        claimedAt,
+        context.operationAt,
       );
 
       if (enqueuedReply) {

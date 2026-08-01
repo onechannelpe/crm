@@ -1,8 +1,7 @@
 import "server-only";
 import type { ExecutiveGpvProgressView } from "~/contracts/merchant-stats/views";
-import { loadExecutiveGpvProgress } from "~/server/merchant-stats/read/executive-portfolio";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { db } from "~/server/platform/database/db";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function getExecutiveGpvProgress(): Promise<ExecutiveGpvProgressView> {
@@ -11,6 +10,6 @@ export async function getExecutiveGpvProgress(): Promise<ExecutiveGpvProgressVie
     access: { kind: "permission", permission: "dashboards:read:own" },
 
     execute: async ({ actor, operationAt: now }) =>
-      Ok(await loadExecutiveGpvProgress(db, actor.userId, now)),
+      Ok(await application.merchantStats.executive.progress(actor.userId, now)),
   });
 }

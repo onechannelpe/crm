@@ -1,7 +1,7 @@
 import { fail, type DomainError } from "~/domain/errors";
 import { executeSessionServerFunction } from "~/server/platform/action";
+import { application } from "~/server/platform/composition/application";
 import { toAvatarDomainError } from "~/server/users/avatar-error";
-import { composeAvatar } from "~/server/users/ui/avatar-composition";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 function avatarUrl(version: number): string {
@@ -37,7 +37,7 @@ export async function uploadUserAvatar(
     },
 
     execute: async (ctx, file) => {
-      const { avatarService } = composeAvatar();
+      const { avatarService } = application.avatar;
       const result = await avatarService.upload(
         ctx.actor.userId,
         file,
@@ -64,7 +64,7 @@ export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
     access: { kind: "session" },
 
     execute: async (ctx) => {
-      const { avatarService } = composeAvatar();
+      const { avatarService } = application.avatar;
       const result = await avatarService.remove(
         ctx.actor.userId,
         ctx.operationAt,

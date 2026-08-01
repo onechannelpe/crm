@@ -1,12 +1,12 @@
 import "server-only";
 import type { GpvSnapshotView } from "~/contracts/merchant-stats/imports";
 import { GpvSnapshotId } from "~/domain/ids";
-import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 
 export async function getGpvSnapshot(
   rawSnapshotId: string,
@@ -20,6 +20,6 @@ export async function getGpvSnapshot(
       })),
     audit: ({ snapshotId }) => ({ snapshotId }),
     execute: async (_ctx, { snapshotId }) =>
-      composeMerchantStats().imports.snapshot(snapshotId),
+      application.merchantStats.imports.snapshot(snapshotId),
   });
 }

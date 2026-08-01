@@ -7,7 +7,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { composeUsers } from "~/server/users/ui/composition";
+import { application } from "~/server/platform/composition/application";
 import { Err, isErr, Ok } from "~/shared/result";
 
 const EXECUTIVE_CATEGORIES = [
@@ -38,7 +38,10 @@ export async function updateMemberProfile(
     audit: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await composeUsers().members.updateProfile(ctx, command);
+      const result = await application.users.members.updateProfile(
+        ctx,
+        command,
+      );
       if (isErr(result)) return result;
       return Ok({ message: "Perfil actualizado" });
     },
@@ -75,7 +78,7 @@ export async function changeMemberRole(
     audit: (command) => ({ userId: command.userId, role: command.role }),
 
     execute: async (ctx, command) => {
-      const result = await composeUsers().members.changeRole(ctx, command);
+      const result = await application.users.members.changeRole(ctx, command);
       if (isErr(result)) return result;
       return Ok({ message: "Rol actualizado" });
     },
@@ -96,7 +99,7 @@ export async function deactivateMember(
       })),
     audit: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
-      const result = await composeUsers().members.deactivate(ctx, command);
+      const result = await application.users.members.deactivate(ctx, command);
       if (isErr(result)) return result;
       return Ok({ message: "Usuario desactivado" });
     },
@@ -117,7 +120,7 @@ export async function reactivateMember(
       })),
     audit: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
-      const result = await composeUsers().members.reactivate(ctx, command);
+      const result = await application.users.members.reactivate(ctx, command);
       if (isErr(result)) return result;
       return Ok({ message: "Usuario reactivado" });
     },
@@ -142,7 +145,7 @@ export async function updateMemberExpiry(
     audit: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await composeUsers().members.updateExpiry(ctx, command);
+      const result = await application.users.members.updateExpiry(ctx, command);
       if (isErr(result)) return result;
       return Ok({ message: "Vencimiento actualizado" });
     },
@@ -163,7 +166,7 @@ export async function deleteMember(
       })),
     audit: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
-      const result = await composeUsers().members.remove(ctx, command);
+      const result = await application.users.members.remove(ctx, command);
       if (isErr(result)) return result;
       return Ok({ message: "Usuario eliminado" });
     },

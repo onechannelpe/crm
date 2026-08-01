@@ -2,7 +2,7 @@ import { parseGpvSnapshotProgressMessage } from "~/contracts/merchant-stats/impo
 import { REALTIME_CHANNELS } from "~/contracts/realtime/channel";
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { GpvSnapshotJobId } from "~/domain/ids";
-import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
+import { application } from "~/server/platform/composition/application";
 import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 import { defineRealtimeChannel } from "~/server/realtime/channel";
 import { isErr } from "~/shared/result";
@@ -22,7 +22,7 @@ export const gpvSnapshotChannel = defineRealtimeChannel({
       return null;
     }
 
-    const progress = await composeMerchantStats().imports.progress(jobId);
+    const progress = await application.merchantStats.imports.progress(jobId);
 
     return progress ? [{ data: JSON.stringify(progress) }] : null;
   },

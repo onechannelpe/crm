@@ -1,11 +1,11 @@
 import "server-only";
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
-import { composeObservability } from "~/server/observability/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function getObservabilitySnapshot(
@@ -29,6 +29,6 @@ export async function getObservabilitySnapshot(
     },
 
     execute: ({ operationAt: now }, input) =>
-      composeObservability().observabilityService.getActionSnapshot(input, now),
+      application.observability.getActionSnapshot(input, now),
   });
 }

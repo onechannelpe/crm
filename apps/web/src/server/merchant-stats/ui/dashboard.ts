@@ -9,20 +9,13 @@ import type {
   PublishedPage,
 } from "~/contracts/merchant-stats/views";
 import type { DomainError } from "~/domain/errors";
-import { getCohortRows as readCohortRows } from "~/server/merchant-stats/read/cohort";
-import {
-  getGpvCulqiView,
-  getGpvPerformanceView,
-} from "~/server/merchant-stats/read/dashboard-views";
-import { getFilterOptions as readFilterOptions } from "~/server/merchant-stats/read/options";
-import { readPublishedGpvPage } from "~/server/merchant-stats/read/published-page";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
   type Reader,
 } from "~/server/platform/action/input-reader";
-import { db } from "~/server/platform/database/db";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 const DEFAULT_PAGE_SIZE = 60;
@@ -65,7 +58,12 @@ export async function getGpvPerformance(raw: {
       })),
 
     execute: async (ctx, input) =>
-      Ok(await getGpvPerformanceView(db, input.filter, ctx.operationAt)),
+      Ok(
+        await application.merchantStats.dashboard.performance(
+          input.filter,
+          ctx.operationAt,
+        ),
+      ),
   });
 }
 
@@ -81,7 +79,8 @@ export async function getGpvCulqi(raw: {
         filter: r.obj("filter", readFilter),
       })),
 
-    execute: async (_ctx, input) => Ok(await getGpvCulqiView(db, input.filter)),
+    execute: async (_ctx, input) =>
+      Ok(await application.merchantStats.dashboard.culqi(input.filter)),
   });
 }
 
@@ -99,12 +98,13 @@ export async function getCohortRows(raw: {
         page: r.obj("page", readPage),
       })),
 
-    execute: async (_ctx, input) => {
-      const rows = await readPublishedGpvPage(db, (transaction) =>
-        readCohortRows(transaction, input.filter, input.page),
-      );
-      return Ok(rows);
-    },
+    execute: async (_ctx, input) =>
+      Ok(
+        await application.merchantStats.dashboard.cohorts(
+          input.filter,
+          input.page,
+        ),
+      ),
   });
 }
 
@@ -114,6 +114,7 @@ export async function getFilterOptions(): Promise<FilterOptions> {
     access: { kind: "permission", permission: "dashboards:read" },
     parse: () => Ok(undefined),
 
-    execute: async () => Ok(await readFilterOptions(db)),
+    execute: async () =>
+      Ok(await application.merchantStats.dashboard.filterOptions()),
   });
 }

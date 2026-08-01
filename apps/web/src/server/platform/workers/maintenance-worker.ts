@@ -1,12 +1,4 @@
-import { startSessionCleanupScheduler } from "~/server/auth/session/cleanup";
-import { composeAuth } from "~/server/auth/ui/composition";
-import { composeClientSearch } from "~/server/client-search/ui/composition";
-import { composeFiles } from "~/server/files/ui/composition";
-import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
-import { composeIntegrations } from "~/server/integrations/ui/composition";
-import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
-import { composeNotifications } from "~/server/notifications/ui/composition";
-import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
+import { application } from "~/server/platform/composition/application";
 import { dbUrl } from "~/server/platform/database/db";
 import {
   createPgListener,
@@ -14,14 +6,16 @@ import {
 } from "~/server/platform/database/notify";
 import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 import type { QueueRunner } from "~/server/platform/jobs/types";
-import { startAccountLifecycleMaintenance } from "~/server/users/account-lifecycle-maintenance";
-import { startLeadReservationMaintenance } from "~/server/workflow/maintenance/lead-reservation-maintenance";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
 const WORKER_ID = `bg-${process.pid}`;
 
 // Polling recovers jobs missed when LISTEN/NOTIFY fails.
 const POLL_FLOOR_MS = 1_000;
+const ACCOUNT_EXPIRY_INTERVAL_MS = 60_000;
+const EXPIRY_NOTIFICATION_INTERVAL_MS = 24 * 60 * 60_000;
+const RESERVATION_SWEEP_INTERVAL_MS = 60_000;
+const SESSION_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
@@ -59,22 +53,30 @@ function makeWaker(run: () => Promise<void>): () => void {
   };
 }
 
+function startScheduledTick<TTick extends string>(
+  tick: TTick,
+  intervalMs: number,
+  run: (context: { operationAt: Date; tick: TTick }) => Promise<void>,
+): () => void {
+  const execute = () => {
+    void run({ operationAt: new Date(), tick }); // clock-boundary: scheduled tick
+  };
+
+  return () => clearInterval(setInterval(execute, intervalMs));
+}
+
 export function startMaintenanceWorker(): { stop(): Promise<void> } {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
 
-  const { integration } = composeIntegrations();
-
-  const recordsImportQueue = createRecordsImportQueue(WORKER_ID, {
-    runtime: integration,
-    readFile: (storageKey) => composeFiles().storage.getBytes(storageKey),
-  });
+  const recordsImportQueue =
+    application.maintenance.createRecordsImportQueue(WORKER_ID);
 
   const gpvSnapshotQueue =
-    composeMerchantStats().imports.createQueue(WORKER_ID);
+    application.merchantStats.imports.createQueue(WORKER_ID);
 
   const enrichmentQueue =
-    composeClientSearch().createEnrichmentQueue(WORKER_ID);
-  const notificationQueues = composeNotifications().createQueues(WORKER_ID);
+    application.clientSearch.createEnrichmentQueue(WORKER_ID);
+  const notificationQueues = application.notifications.createQueues(WORKER_ID);
 
   const queuesByChannel: Record<string, QueueRunner[]> = {
     [JOB_TABLE_CHANNELS.workflow_integration_jobs]: [recordsImportQueue],
@@ -108,18 +110,25 @@ export function startMaintenanceWorker(): { stop(): Promise<void> } {
     }
   };
 
-  const stopAccountLifecycleMaintenance = startAccountLifecycleMaintenance({
-    executor: serverInfrastructure.db,
-    messaging: composeNotifications().messaging,
-    invalidateUserSessions: (userId) =>
-      composeAuth().sessionService.revokeAllForUser(userId),
-  });
-
-  const stopLeadReservationMaintenance = startLeadReservationMaintenance({
-    executor: serverInfrastructure.db,
-  });
-  const stopSessionCleanup = startSessionCleanupScheduler(
-    serverInfrastructure.db,
+  const stopAccountExpiry = startScheduledTick(
+    "account-expiry",
+    ACCOUNT_EXPIRY_INTERVAL_MS,
+    application.maintenance.accountLifecycle.expireAccounts,
+  );
+  const stopExpiryNotification = startScheduledTick(
+    "expiry-notification",
+    EXPIRY_NOTIFICATION_INTERVAL_MS,
+    application.maintenance.accountLifecycle.notifyExpiringAccounts,
+  );
+  const stopReservationSweep = startScheduledTick(
+    "reservation-sweep",
+    RESERVATION_SWEEP_INTERVAL_MS,
+    application.maintenance.leadReservation.sweepReservations,
+  );
+  const stopSessionCleanup = startScheduledTick(
+    "session-cleanup",
+    SESSION_CLEANUP_INTERVAL_MS,
+    application.maintenance.cleanupSessions,
   );
 
   const pollTimer = setInterval(wakeAll, POLL_FLOOR_MS);
@@ -133,8 +142,9 @@ export function startMaintenanceWorker(): { stop(): Promise<void> } {
   return {
     async stop() {
       clearInterval(pollTimer);
-      stopAccountLifecycleMaintenance();
-      stopLeadReservationMaintenance();
+      stopAccountExpiry();
+      stopExpiryNotification();
+      stopReservationSweep();
       stopSessionCleanup();
       await listener.stop();
     },

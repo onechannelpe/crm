@@ -1,12 +1,12 @@
 import type { BookFilter } from "~/contracts/merchant-stats/views";
 import type { DomainError } from "~/domain/errors";
-import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
   type Reader,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 
 function readFilter(reader: Reader<DomainError>): BookFilter {
   return {
@@ -36,6 +36,6 @@ export async function requestMerchantGpvExportDownloadToken(
       product: input.filter.product ?? null,
     }),
     execute: (context, input) =>
-      composeMerchantStats().dashboard.export(context, input.filter),
+      application.merchantStats.dashboard.export(context, input.filter),
   });
 }

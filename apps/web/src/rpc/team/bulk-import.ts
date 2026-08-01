@@ -8,11 +8,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import {
-  applyBulkImport as applyBulkImportService,
-  previewBulkImport as previewBulkImportService,
-} from "~/server/team/application/bulk-import";
-import { composeTeam } from "~/server/team/ui/composition";
+import { application } from "~/server/platform/composition/application";
+import { previewBulkImport as previewBulkImportService } from "~/server/team/application/bulk-import";
 
 export async function previewBulkCsv(
   csvContent: unknown,
@@ -58,7 +55,7 @@ export async function applyBulkImport(
     audit: (input) => ({ role: input.role }),
 
     execute: (ctx, input) =>
-      applyBulkImportService(ctx, composeTeam().invites, {
+      application.team.invites.applyBulkImport(ctx, {
         csvContent: input.csvContent,
         role: input.role,
       }),

@@ -1,13 +1,12 @@
 import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignments/vocabulary";
 import { ContactAssignmentId, OrganizationPersonId } from "~/domain/ids";
-import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
-import { composeContactAssignments } from "~/server/contact-assignments/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 
 export async function completeContactAssignmentCall(
   input: unknown,
@@ -32,16 +31,13 @@ export async function completeContactAssignmentCall(
     }),
 
     execute: ({ actor, operationAt: now }, command) =>
-      completeContactAssignmentCallUseCase(
-        {
-          actorUserId: actor.userId,
-          assignmentId: command.assignmentId,
-          contactId: command.contactId,
-          outcome: command.outcome,
-          notes: command.notes,
-          at: now,
-        },
-        composeContactAssignments().interactionUow,
-      ),
+      application.contactAssignments.completeCall({
+        actorUserId: actor.userId,
+        assignmentId: command.assignmentId,
+        contactId: command.contactId,
+        outcome: command.outcome,
+        notes: command.notes,
+        at: now,
+      }),
   });
 }

@@ -5,11 +5,11 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { workflow } from "~/server/workflow/ui/composition";
+import { application } from "~/server/platform/composition/application";
 
 export async function listLeadSaleProofFiles(leadId: string) {
   return executeSessionServerFunction({
-    name: "workflow.list_sale_proof_files",
+    name: "application.workflow.list_sale_proof_files",
     access: { kind: "auth" },
     parse: () =>
       parseObject({ leadId }, validationFail, (reader) => ({
@@ -17,7 +17,7 @@ export async function listLeadSaleProofFiles(leadId: string) {
       })),
     audit: (input) => ({ leadId: input.leadId }),
     execute: (context, input) =>
-      workflow.files.listSaleProofFiles({
+      application.workflow.files.listSaleProofFiles({
         ctx: context,
         leadId: input.leadId,
       }),

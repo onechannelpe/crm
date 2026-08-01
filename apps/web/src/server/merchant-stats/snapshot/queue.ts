@@ -38,8 +38,12 @@ export function createGpvSnapshotQueue(
     leaseMs: 60_000,
     workerId,
     store: repo.store,
-    handle: async (job, signal, claimedAt) => {
-      const result = await runner.process(job, signal, claimedAt);
+    handle: async (job, context) => {
+      const result = await runner.process(
+        job,
+        context.abortSignal,
+        context.operationAt,
+      );
 
       return {
         kind: "done",

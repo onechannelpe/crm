@@ -1,10 +1,8 @@
 import type { OnboardingSnapshot } from "~/contracts/auth";
-import { changeInstallationPassword } from "~/server/auth/flows/change-installation-password";
-import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { validationFail } from "~/server/platform/action/input-reader";
 import { parseObject } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 
 export async function changeOnboardingPassword(input: {
   password: unknown;
@@ -21,16 +19,12 @@ export async function changeOnboardingPassword(input: {
         confirmPassword: reader.str("confirmPassword"),
       })),
     execute: async (ctx, password) => {
-      const setup = composeAuth().setup;
-      const changed = await changeInstallationPassword(setup, {
-        userId: ctx.actor.userId,
-        currentSessionId: ctx.actor.id,
-        password: password.password,
-        confirmPassword: password.confirmPassword,
-        now: ctx.operationAt,
-      });
+      const changed = await application.auth.onboarding.changePassword(
+        ctx,
+        password,
+      );
       if (!changed.ok) return changed;
-      return loadOnboardingSnapshot(setup.repos, ctx.actor.userId);
+      return application.auth.onboarding.snapshot(ctx.actor.userId);
     },
   });
 }

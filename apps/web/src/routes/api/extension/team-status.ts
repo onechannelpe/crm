@@ -1,5 +1,5 @@
-import { composeExtension } from "~/server/extension/ui/composition";
 import { toWire } from "~/server/platform/action/domain-error";
+import { application } from "~/server/platform/composition/application";
 import { getRequestInstant } from "~/server/platform/http/request-context";
 import { authorizeRoutePermission } from "~/server/platform/http/route-access";
 import { isErr } from "~/shared/result";
@@ -9,8 +9,7 @@ export async function GET(): Promise<Response> {
   if (isErr(auth)) return auth.error;
   const session = auth.value;
 
-  const { extensionService } = composeExtension();
-  const result = await extensionService.listTeamExecutiveStatuses(
+  const result = await application.extension.listTeamExecutiveStatuses(
     {
       role: session.role,
       userId: session.userId,

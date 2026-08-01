@@ -1,20 +1,11 @@
-import { randomUUID } from "node:crypto";
-
 import type { RecordImportType } from "~/contracts/records/imports";
 import { fail, invalid, type DomainError } from "~/domain/errors";
-import { composeFiles } from "~/server/files/ui/composition";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
-import { composeIntegrations } from "~/server/integrations/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
+import { application } from "~/server/platform/composition/application";
 import { parseImportFile } from "~/server/records/imports/intake";
-import {
-  buildRecordImportProgressEvent,
-  publishRecordImportProgress,
-} from "~/server/records/imports/progress-events";
 import { Err, Ok, type Result } from "~/shared/result";
-
-const IMPORT_JOB_MAX_ATTEMPTS = 3;
 
 type ImportUpload = {
   file: File;
@@ -72,8 +63,6 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
     }),
 
     execute: async (ctx, { file, extension }) => {
-      const { storage } = composeFiles();
-      const { integration } = composeIntegrations();
       const buffer = await file.arrayBuffer();
 
       let parsedImport: ReturnType<typeof parseImportFile>;
@@ -91,26 +80,17 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
 
       const { importType, validRows, invalidRows } = parsedImport;
       const rowsTotal = validRows.length + invalidRows.length;
-      const storageKey = `imports/${randomUUID()}.json`;
       const storagePayload = new TextEncoder().encode(
         JSON.stringify({ validRows, invalidRows }),
       );
 
-      await storage.putBytes(storageKey, storagePayload);
-
-      const job = await integration.jobs.insert({
+      const job = await application.integration.records.createImport({
         type: importType,
-        requested_by_user_id: ctx.actor.userId,
-        file_path: storageKey,
-        rows_total: rowsTotal,
-        max_attempts: IMPORT_JOB_MAX_ATTEMPTS,
-        created_at: ctx.operationAt,
+        requestedByUserId: ctx.actor.userId,
+        rowsTotal,
+        payload: storagePayload,
+        createdAt: ctx.operationAt,
       });
-
-      publishRecordImportProgress(
-        integration.executor,
-        buildRecordImportProgressEvent(job),
-      );
 
       return Ok({ jobId: job.id, importType, rowsTotal });
     },

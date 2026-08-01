@@ -3,14 +3,14 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { workflow } from "~/server/workflow/ui/composition";
 
 export async function requestInquiryCreation(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "workflow.create_inquiry",
+    name: "application.workflow.create_inquiry",
     access: { kind: "auth" },
 
     parse: () =>
@@ -19,7 +19,7 @@ export async function requestInquiryCreation(input: unknown) {
       })),
 
     execute: ({ actor, operationAt: now }, payload) =>
-      workflow.commands.createInquiry(
+      application.workflow.commands.createInquiry(
         { ruc: payload.ruc, actor: workflowActor(actor) },
         now,
       ),

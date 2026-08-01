@@ -6,7 +6,6 @@ import {
   cutAtFromFilename,
   cutAtFromInput,
 } from "~/server/merchant-stats/intake/cut-at";
-import { composeMerchantStats } from "~/server/merchant-stats/ui/composition";
 import {
   executeSessionServerFunction,
   executeSessionServerFunctionResult,
@@ -15,6 +14,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { Err, Ok, type Result } from "~/shared/result";
 
 const SNAPSHOT_RESOLUTIONS = [
@@ -73,7 +73,7 @@ export async function uploadMerchantReport(formData: FormData) {
     }),
 
     execute: async (context, { file, cutAt }) => {
-      const submitted = await composeMerchantStats().imports.submit({
+      const submitted = await application.merchantStats.imports.submit({
         file: {
           name: file.name,
           sizeBytes: file.size,
@@ -117,7 +117,7 @@ export async function resolveGpvImportIssue(input: {
     audit: ({ issueId, resolution }) => ({ issueId, resolution }),
 
     execute: ({ actor, operationAt: now }, { issueId, resolution }) =>
-      composeMerchantStats().imports.resolveIssue(
+      application.merchantStats.imports.resolveIssue(
         {
           issueId,
           resolution,

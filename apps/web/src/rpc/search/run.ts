@@ -1,13 +1,12 @@
 import type { SearchDirectResult } from "~/contracts/search/results";
 import { SEARCH_INTENTS } from "~/contracts/search/vocabulary";
-import { composeEngineClient } from "~/server/integrations/ui/engine-client";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { composeSearch } from "~/server/search/ui/composition";
 import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 
 export async function searchDirect(
@@ -29,7 +28,7 @@ export async function searchDirect(
     audit: (command) => ({ intent: command.intent }),
 
     execute: async (ctx, command) => {
-      const { usageReservationPorts, rateLimitDeps } = composeSearch();
+      const { usageReservationPorts, rateLimitDeps } = application.search;
       await checkActionRateLimit(
         "search.use",
         ctx.actor.userId,
@@ -40,7 +39,7 @@ export async function searchDirect(
       return runDirectSearch(
         { ...command, actorUserId: ctx.actor.userId, at: ctx.operationAt },
         usageReservationPorts,
-        composeEngineClient(),
+        application.engine,
       );
     },
   });

@@ -4,6 +4,7 @@ import { formatAppLongDate } from "~/domain/time/app-time";
 import { addMilliseconds } from "~/domain/time/clock";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { TickContext } from "~/server/platform/operation/context";
 import { PLATFORM_NAME } from "~/shared/branding";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
@@ -19,7 +20,11 @@ interface AccountLifecycleDeps {
   invalidateUserSessions: (userId: UserId) => Promise<void>;
 }
 
-async function runAccountExpiryTick(deps: AccountLifecycleDeps, sweptAt: Date) {
+export async function runAccountExpiryTick(
+  deps: AccountLifecycleDeps,
+  context: TickContext<"account-expiry">,
+) {
+  const sweptAt = context.operationAt;
   try {
     const expiredCount = await expireUsersAndInvalidateSessions(sweptAt, {
       executor: deps.executor,
@@ -35,11 +40,12 @@ async function runAccountExpiryTick(deps: AccountLifecycleDeps, sweptAt: Date) {
   }
 }
 
-async function runExpiryNotificationTick(
+export async function runExpiryNotificationTick(
   users: ReturnType<typeof createUsersRepo>,
   messaging: MessagingGateway,
-  sweptAt: Date,
+  context: TickContext<"expiry-notification">,
 ) {
+  const sweptAt = context.operationAt;
   const threshold = addMilliseconds(sweptAt, EXPIRY_NOTIFICATION_THRESHOLD_MS);
   const expiringUsers = await users.findExpiringBefore(threshold);
   const outcomes = await Promise.all(
@@ -87,26 +93,13 @@ async function runExpiryNotificationTick(
   }
 }
 
-export function startAccountLifecycleMaintenance(
-  deps: AccountLifecycleDeps,
-): () => void {
+export function createAccountLifecycleMaintenance(deps: AccountLifecycleDeps) {
   const users = createUsersRepo(deps.executor);
 
-  // Each timer is its own inbound event, so each reads the clock once and every
-  // row that tick touches carries the same instant.
-  const expiryTimer = setInterval(() => {
-    void runAccountExpiryTick(deps, new Date());
-  }, 60_000);
-
-  const notificationTimer = setInterval(
-    () => {
-      void runExpiryNotificationTick(users, deps.messaging, new Date());
-    },
-    24 * 60 * 60_000,
-  );
-
-  return () => {
-    clearInterval(expiryTimer);
-    clearInterval(notificationTimer);
+  return {
+    expireAccounts: (context: TickContext<"account-expiry">) =>
+      runAccountExpiryTick(deps, context),
+    notifyExpiringAccounts: (context: TickContext<"expiry-notification">) =>
+      runExpiryNotificationTick(users, deps.messaging, context),
   };
 }

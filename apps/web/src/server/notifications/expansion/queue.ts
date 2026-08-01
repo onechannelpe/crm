@@ -24,8 +24,8 @@ export function createIntentExpansionQueue(
     maxConcurrency: 4,
     workerId,
     store: deps.intents.store,
-    handle: async (job, _signal, claimedAt) => {
-      const outcome = await deps.expand(job, claimedAt);
+    handle: async (job, context) => {
+      const outcome = await deps.expand(job, context.operationAt);
       if (outcome.kind !== "expanded") {
         return { kind: "fail", reason: outcome.reason };
       }

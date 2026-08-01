@@ -1,9 +1,8 @@
 import type { OnboardingSnapshot } from "~/contracts/auth";
 import { fail, type DomainError } from "~/domain/errors";
 import { parsePhone } from "~/domain/phone/pe-mobile";
-import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
+import { application } from "~/server/platform/composition/application";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export async function submitOnboardingProfile(input: {
@@ -23,10 +22,6 @@ export async function submitOnboardingProfile(input: {
       return phone ? Ok(phone) : Err(fail("invalid_phone"));
     },
     execute: (ctx, phone) =>
-      saveOnboardingProfile(composeAuth().setup, {
-        userId: ctx.actor.userId,
-        phone,
-        now: ctx.operationAt,
-      }),
+      application.auth.onboarding.saveProfile(ctx, phone),
   });
 }

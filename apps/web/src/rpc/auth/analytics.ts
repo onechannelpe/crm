@@ -2,8 +2,7 @@ import {
   isAuthFunnelScreen,
   type AuthFunnelClientEventPayload,
 } from "~/domain/observability/auth-funnel";
-import { recordAuthAnalyticsEvent as recordAuthAnalytics } from "~/server/auth/auth-analytics";
-import { composeAuth } from "~/server/auth/ui/composition";
+import { application } from "~/server/platform/composition/application";
 import { getRequestInstant } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
@@ -34,13 +33,12 @@ export async function trackAuthClientEvent(
   "use server";
 
   const event = readClientAuthAnalyticsEvent(input);
-  await recordAuthAnalytics(
+  await application.auth.analytics(
     {
       source: "client",
       ...event,
     },
     getActionRequestContext(),
-    composeAuth().analytics,
     getRequestInstant(),
   );
 }

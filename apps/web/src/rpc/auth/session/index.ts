@@ -1,7 +1,6 @@
-import { logoutUser } from "~/server/auth/flows/logout-user";
 import { deleteSessionCookie } from "~/server/auth/session/cookies";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
+import { application } from "~/server/platform/composition/application";
 
 export async function logout(): Promise<void> {
   "use server";
@@ -9,7 +8,7 @@ export async function logout(): Promise<void> {
   await executeSessionServerFunction({
     name: "auth.session.logout",
     access: { kind: "session" },
-    execute: (context) => logoutUser(context, composeAuth().sessionLogout),
+    execute: (context) => application.auth.sessions.logout(context),
   });
 
   // Only reached once revocation succeeded, so a cookie that survives an early

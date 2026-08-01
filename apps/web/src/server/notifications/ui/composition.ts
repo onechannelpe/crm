@@ -10,6 +10,11 @@ import {
 } from "@crm/message-channels";
 import type { Kysely } from "kysely";
 
+import type { AppNotificationId, UserId } from "~/domain/ids";
+import type {
+  ExternalChannel,
+  NotificationCategory,
+} from "~/server/notifications/categories";
 import {
   createMessagingGateway,
   type MessagingGateway,
@@ -24,16 +29,11 @@ import { createOutboundWhatsAppQueue } from "~/server/notifications/outbound/que
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
-import {
-  createNotificationOptOutRepo,
-  type NotificationOptOutRepo,
-} from "~/server/notifications/repos/opt-out-repo";
+import { createNotificationOptOutRepo } from "~/server/notifications/repos/opt-out-repo";
+import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createWhatsAppInboundQueue } from "~/server/notifications/whatsapp-inbound/queue";
-import {
-  serverInfrastructure as defaultServerInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import {
   appConfig,
   notificationsConfig,
@@ -56,8 +56,34 @@ export interface NotificationPipelineDeps {
 
 export interface NotificationPipeline {
   messaging: MessagingGateway;
-  appNotifications: ReturnType<typeof createAppNotificationRepo>;
-  preferences: NotificationOptOutRepo;
+  getHeader(
+    userId: UserId,
+    limit: number,
+  ): Promise<{
+    unreadCount: number;
+    notifications: Awaited<
+      ReturnType<ReturnType<typeof createAppNotificationRepo>["listByUser"]>
+    >;
+  }>;
+  markRead(
+    userId: UserId,
+    notificationId: AppNotificationId,
+    readAt: Date,
+  ): Promise<void>;
+  markAllRead(userId: UserId, readAt: Date): Promise<void>;
+  listPreferences(userId: UserId): Promise<{
+    optOuts: Awaited<
+      ReturnType<ReturnType<typeof createNotificationOptOutRepo>["listForUser"]>
+    >;
+    verifiedChannels: ExternalChannel[];
+  }>;
+  setPreference(input: {
+    userId: UserId;
+    category: NotificationCategory;
+    channel: ExternalChannel;
+    optedOut: boolean;
+    now: Date;
+  }): Promise<void>;
   createQueues(workerId: string): {
     expansion: QueueRunner;
     dispatch: QueueRunner;
@@ -74,6 +100,7 @@ export function assembleNotificationPipeline(
   const deliveries = createDeliveryRepository(deps.db);
   const appNotifications = createAppNotificationRepo(deps.db);
   const preferences = createNotificationOptOutRepo(deps.db);
+  const channelAddresses = createUserChannelAddressRepo(deps.db);
 
   const expand = createIntentExpander({
     planRecipients: createRecipientPlanner(deps.db, deps.logger),
@@ -89,8 +116,29 @@ export function assembleNotificationPipeline(
 
   return {
     messaging: deps.messaging,
-    appNotifications,
-    preferences,
+    async getHeader(userId, limit) {
+      const [unreadCount, notifications] = await Promise.all([
+        appNotifications.countUnreadByUser(userId),
+        appNotifications.listByUser(userId, limit),
+      ]);
+      return { unreadCount, notifications };
+    },
+    async markRead(userId, notificationId, readAt) {
+      await appNotifications.markRead(userId, notificationId, readAt);
+    },
+    async markAllRead(userId, readAt) {
+      await appNotifications.markAllRead(userId, readAt);
+    },
+    async listPreferences(userId) {
+      const [optOuts, verifiedChannels] = await Promise.all([
+        preferences.listForUser(userId),
+        channelAddresses.listVerifiedChannels(userId),
+      ]);
+      return { optOuts, verifiedChannels };
+    },
+    async setPreference(input) {
+      await preferences.setOptedOut(input);
+    },
     createQueues(workerId) {
       return {
         expansion: createIntentExpansionQueue(workerId, {
@@ -117,7 +165,7 @@ export function assembleNotificationPipeline(
   };
 }
 
-function createNotificationsRuntime(
+export function createNotificationsRuntime(
   serverInfrastructure: ServerInfrastructure,
   config: NotificationsConfig,
   app: AppConfig,
@@ -169,12 +217,4 @@ function createNotificationsRuntime(
     publicOrigin: app.publicOrigin,
     logger,
   });
-}
-
-export function composeNotifications() {
-  return createNotificationsRuntime(
-    defaultServerInfrastructure,
-    notificationsConfig(),
-    appConfig(),
-  );
 }

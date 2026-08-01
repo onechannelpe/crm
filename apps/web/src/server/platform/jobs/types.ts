@@ -1,3 +1,5 @@
+import type { JobContext } from "~/server/platform/operation/context";
+
 import type { DomainPatch, JobStore } from "./job-store";
 
 export interface QueueJobBase {
@@ -33,11 +35,10 @@ export interface JobQueueConfig<
   store: JobStore<TId, TJob>;
 
   /**
-   * `claimedAt` is the instant the batch containing this job was claimed. It is
-   * the operation instant for the handler: everything the handler writes stamps
-   * with it, so one job run cannot record two different times.
+   * The claim boundary creates one context per job. Its operation instant is
+   * shared by every write the handler performs.
    */
-  handle(job: TJob, signal: AbortSignal, claimedAt: Date): Promise<Settlement>;
+  handle(job: TJob, context: JobContext): Promise<Settlement>;
   onSettled?(job: TJob, outcome: SettleOutcome): void | Promise<void>;
 }
 

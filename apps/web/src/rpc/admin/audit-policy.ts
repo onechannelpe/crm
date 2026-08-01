@@ -1,13 +1,10 @@
-import { composeAdmin } from "~/server/admin/ui/composition";
-import {
-  createAuditPolicyService,
-  type UpsertAuditPolicyInput,
-} from "~/server/audit-reader/policy-service";
+import type { UpsertAuditPolicyInput } from "~/server/audit-reader/policy-service";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function upsertAuditPolicy(input: unknown): Promise<void> {
@@ -27,11 +24,7 @@ export async function upsertAuditPolicy(input: unknown): Promise<void> {
     audit: ({ action, isActive }) => ({ action, isActive }),
 
     execute: async ({ actor, operationAt: now }, fields) => {
-      const policies = createAuditPolicyService({
-        auditActionPolicies: composeAdmin().auditActionPolicies,
-      });
-
-      await policies.upsertPolicy({
+      await application.admin.upsertPolicy({
         action: fields.action,
         riskLevel: fields.riskLevel,
         isActive: fields.isActive,

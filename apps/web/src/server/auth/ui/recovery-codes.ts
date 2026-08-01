@@ -1,6 +1,6 @@
 import "server-only";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
+import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function getRecoveryCodesStatus(): Promise<{
@@ -13,17 +13,7 @@ export async function getRecoveryCodesStatus(): Promise<{
     name: "auth.recovery.status",
     access: { kind: "session" },
 
-    execute: async ({ actor }) => {
-      const recoveryCodes = composeAuth().setup.repos.userRecoveryCodes;
-
-      const active = await recoveryCodes.getActiveSet(actor.userId);
-
-      return Ok({
-        hasActiveSet: active !== null,
-        total: active?.total ?? 0,
-        unused: active?.unused ?? 0,
-        acknowledged: active?.acknowledgedAt != null,
-      });
-    },
+    execute: async ({ actor }) =>
+      Ok(await application.auth.recoveryCodes.status(actor.userId)),
   });
 }

@@ -5,14 +5,9 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { getRequestInstant } from "~/server/platform/http/request-context";
-import {
-  createTeamInvite as createTeamInviteService,
-  resendTeamInvite as resendTeamInviteService,
-  revokeTeamInvite as revokeTeamInviteService,
-} from "~/server/team/application/invites";
 import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
-import { composeTeam } from "~/server/team/ui/composition";
 import { isErr, Ok } from "~/shared/result";
 
 export async function createTeamInvite(input: unknown): Promise<{
@@ -56,11 +51,7 @@ export async function createTeamInvite(input: unknown): Promise<{
     }),
 
     execute: async (ctx, command) => {
-      const result = await createTeamInviteService(
-        ctx,
-        composeTeam().invites,
-        command,
-      );
+      const result = await application.team.invites.create(ctx, command);
 
       if (isErr(result)) {
         return result;
@@ -91,11 +82,7 @@ export async function resendTeamInvite(
     audit: (command) => ({ inviteId: command.inviteId }),
 
     execute: async (ctx, command) => {
-      const result = await resendTeamInviteService(
-        ctx,
-        composeTeam().invites,
-        command,
-      );
+      const result = await application.team.invites.resend(ctx, command);
 
       if (isErr(result)) {
         return result;
@@ -126,11 +113,7 @@ export async function revokeTeamInvite(
     audit: (command) => ({ inviteId: command.inviteId }),
 
     execute: async (ctx, command) => {
-      const result = await revokeTeamInviteService(
-        ctx,
-        composeTeam().invites,
-        command,
-      );
+      const result = await application.team.invites.revoke(ctx, command);
 
       if (isErr(result)) {
         return result;

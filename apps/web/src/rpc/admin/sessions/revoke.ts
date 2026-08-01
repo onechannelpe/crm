@@ -1,13 +1,11 @@
 import type { ActionSuccess } from "~/contracts/common";
 import { UserId } from "~/domain/ids";
-import { revokeAllUserSessions as revokeAllUserSessionsService } from "~/server/auth/flows/revoke-all-user-sessions";
-import { revokeUserSession as revokeUserSessionService } from "~/server/auth/flows/revoke-user-session";
-import { composeAuth } from "~/server/auth/ui/composition";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 
 export async function revokeUserSession(
   rawSessionId: unknown,
@@ -32,12 +30,7 @@ export async function revokeUserSession(
 
     audit: (command) => ({ targetUserId: command.targetUserId }),
 
-    execute: (ctx, input) =>
-      revokeUserSessionService(
-        ctx,
-        composeAuth().adminSessionRevocation,
-        input,
-      ),
+    execute: (ctx, input) => application.auth.sessions.revoke(ctx, input),
   });
 }
 
@@ -58,11 +51,6 @@ export async function revokeAllUserSessions(
 
     audit: (command) => ({ targetUserId: command.targetUserId }),
 
-    execute: (ctx, input) =>
-      revokeAllUserSessionsService(
-        ctx,
-        composeAuth().adminSessionRevocation,
-        input,
-      ),
+    execute: (ctx, input) => application.auth.sessions.revokeAll(ctx, input),
   });
 }

@@ -22,8 +22,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { workflow } from "~/server/workflow/ui/composition";
 import { isErr, Ok } from "~/shared/result";
 
 const SORT_FIELDS = ["createdAt", "updatedAt", "registeredBy", "ruc"] as const;
@@ -32,7 +32,7 @@ export async function queryLeadList(
   filters: ListLeadsFiltersInput,
 ): Promise<LeadListView> {
   return executeSessionServerFunction({
-    name: "workflow.list_leads",
+    name: "application.workflow.list_leads",
     access: { kind: "auth" },
 
     parse: () =>
@@ -57,7 +57,7 @@ export async function queryLeadList(
     execute: ({ actor, operationAt: now }, parsedFilters) => {
       const { userId, role, branchId } = workflowActor(actor);
 
-      return workflow.queries.listLeads({
+      return application.workflow.queries.listLeads({
         actorUserId: userId,
         actorRole: role,
         actorBranchId: branchId,
@@ -72,7 +72,7 @@ export async function queryLeadDetail(
   rawLeadId: string,
 ): Promise<LeadDetailView & { evaluatedAt: number }> {
   return executeSessionServerFunction({
-    name: "workflow.get_lead_detail",
+    name: "application.workflow.get_lead_detail",
     access: { kind: "auth" },
 
     parse: () =>
@@ -85,7 +85,7 @@ export async function queryLeadDetail(
     execute: async ({ actor, operationAt: now }, query) => {
       const { userId, role } = workflowActor(actor);
 
-      const detail = await workflow.queries.getLeadDetail({
+      const detail = await application.workflow.queries.getLeadDetail({
         actorUserId: userId,
         actorRole: role,
         leadId: query.leadId,
@@ -105,12 +105,12 @@ export async function queryFulfillmentQueue(): Promise<
   FulfillmentQueueView & { evaluatedAt: number }
 > {
   return executeSessionServerFunction({
-    name: "workflow.list_fulfillment_queue",
+    name: "application.workflow.list_fulfillment_queue",
     access: { kind: "auth" },
 
     execute: async ({ actor, operationAt: now }) => {
       const { role, branchId } = workflowActor(actor);
-      const queue = await workflow.queries.listFulfillmentQueue({
+      const queue = await application.workflow.queries.listFulfillmentQueue({
         actorRole: role,
         actorBranchId: branchId,
       });
@@ -126,13 +126,13 @@ export async function queryFulfillmentQueue(): Promise<
 
 export async function queryPendingQuotationCount(): Promise<PendingQuotationCountView> {
   return executeSessionServerFunction({
-    name: "workflow.pending_quotation_count",
+    name: "application.workflow.pending_quotation_count",
     access: { kind: "auth" },
 
     execute: ({ actor, operationAt: now }) => {
       const { userId, branchId } = workflowActor(actor);
 
-      return workflow.queries
+      return application.workflow.queries
         .pendingQuotationCount(userId, branchId, now)
         .then(Ok);
     },
@@ -143,7 +143,7 @@ export async function queryLeadBootstrapPreview(
   rawRuc: string,
 ): Promise<LeadBootstrapPreviewView> {
   return executeSessionServerFunction({
-    name: "workflow.get_lead_bootstrap_preview",
+    name: "application.workflow.get_lead_bootstrap_preview",
     access: { kind: "auth" },
 
     parse: () =>
@@ -153,7 +153,8 @@ export async function queryLeadBootstrapPreview(
 
     audit: ({ ruc }) => ({ ruc }),
 
-    execute: (_ctx, query) => workflow.queries.getLeadBootstrapPreview(query),
+    execute: (_ctx, query) =>
+      application.workflow.queries.getLeadBootstrapPreview(query),
   });
 }
 
@@ -161,7 +162,7 @@ export async function queryAssignableExecutives(
   input: ListAssignableExecutivesInput,
 ): Promise<AssignableExecutiveView[]> {
   return executeSessionServerFunction({
-    name: "workflow.list_assignable_executives",
+    name: "application.workflow.list_assignable_executives",
     access: { kind: "auth" },
 
     parse: () =>
@@ -176,7 +177,7 @@ export async function queryAssignableExecutives(
     execute: ({ actor }, query) => {
       const { userId, role, branchId } = workflowActor(actor);
 
-      return workflow.queries.listAssignableExecutives({
+      return application.workflow.queries.listAssignableExecutives({
         actorUserId: userId,
         actorRole: role,
         actorBranchId: branchId,
