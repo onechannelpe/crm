@@ -1,6 +1,7 @@
 import type { Selectable } from "kysely";
 
 import type { InvalidCredentialsError } from "~/domain/auth/errors";
+import type { Clock } from "~/domain/time/clock";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
@@ -29,7 +30,7 @@ export interface PasswordCredentialInput {
 
 export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
-  deps: { repos: Deps; now: () => Date },
+  deps: { repos: Deps; now: Clock },
 ): Promise<Result<UserRow, InvalidCredentialsError>> {
   const safeUsername = input.username.trim();
   const safePassword = input.password;

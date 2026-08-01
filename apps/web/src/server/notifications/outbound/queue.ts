@@ -1,6 +1,7 @@
 import type { Kysely } from "kysely";
 
 import { toE164Peru } from "~/domain/phone/pe-mobile";
+import type { Clock } from "~/domain/time/clock";
 import type { Database } from "~/server/platform/database/types";
 import { createJobQueue } from "~/server/platform/jobs/job-queue";
 import type { QueueRunner } from "~/server/platform/jobs/types";
@@ -15,7 +16,7 @@ export function createOutboundWhatsAppQueue(
   db: Kysely<Database>,
   messaging: Pick<MessagingGateway, "sendWhatsAppText">,
   workerId: string,
-  now: () => Date,
+  now: Clock,
 ): QueueRunner {
   return createJobQueue({
     name: "outbound-whatsapp-messages",

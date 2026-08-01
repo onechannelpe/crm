@@ -1,3 +1,4 @@
+import type { Clock } from "~/domain/time/clock";
 import { createJobQueue } from "~/server/platform/jobs/job-queue";
 import type { QueueRunner } from "~/server/platform/jobs/types";
 
@@ -11,14 +12,14 @@ export function createDeliveryDispatchQueue(
   deps: {
     deliveries: DeliveryRepository;
     send: DeliverySender;
-    clock: () => Date;
+    now: Clock;
   },
 ): QueueRunner {
   return createJobQueue<DeliveryJob>({
     name: "notifications-deliveries",
     leaseMs: LEASE_MS,
     maxConcurrency: 8,
-    now: deps.clock,
+    now: deps.now,
     workerId,
     store: deps.deliveries.store,
     handle: async (job) => {

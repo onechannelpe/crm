@@ -18,6 +18,7 @@ import type {
   UserId,
 } from "~/domain/ids";
 import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
+import type { Clock } from "~/domain/time/clock";
 import type {
   FileOperationContext,
   FileRepos,
@@ -51,7 +52,7 @@ import { submitGpvSnapshot } from "../snapshot/submit";
 
 interface MerchantStatsRuntimeDeps {
   db: DatabaseExecutor;
-  now: () => Date;
+  now: Clock;
   files: {
     repo: FileRepos;
     storage: FileStorage;

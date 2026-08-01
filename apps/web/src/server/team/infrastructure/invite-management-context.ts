@@ -1,3 +1,4 @@
+import type { Clock } from "~/domain/time/clock";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
@@ -9,7 +10,7 @@ import type { InviteManagementQueryPort } from "../application/ports";
 
 export function createInviteManagementContext(
   executor: DatabaseExecutor,
-  now: () => Date,
+  now: Clock,
 ): InviteManagementQueryPort {
   const inviteService = createInviteServiceForExecutor(executor, now);
   const repos = {

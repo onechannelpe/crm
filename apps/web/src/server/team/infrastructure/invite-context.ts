@@ -1,4 +1,5 @@
 import type { UserId } from "~/domain/ids";
+import type { Clock } from "~/domain/time/clock";
 import type {
   InviteService,
   TeamInviteReadRepos,
@@ -24,7 +25,7 @@ interface TeamInviteContext {
 export function createTeamInviteContext(
   executor: DatabaseExecutor,
   publicOrigin: string,
-  now: () => Date,
+  now: Clock,
   delivery: InviteDelivery,
 ): TeamInviteContext {
   const repos = bindInviteRepos(executor);

@@ -1,3 +1,4 @@
+import type { Clock } from "~/domain/time/clock";
 import { createJobQueue } from "~/server/platform/jobs/job-queue";
 import type { QueueRunner } from "~/server/platform/jobs/types";
 
@@ -15,7 +16,7 @@ export function createIntentExpansionQueue(
   deps: {
     intents: IntentRepository;
     expand: IntentExpander;
-    clock: () => Date;
+    now: Clock;
     onExpanded: () => void;
   },
 ): QueueRunner {
@@ -23,11 +24,11 @@ export function createIntentExpansionQueue(
     name: "notifications-intents",
     leaseMs: LEASE_MS,
     maxConcurrency: 4,
-    now: deps.clock,
+    now: deps.now,
     workerId,
     store: deps.intents.store,
     handle: async (job) => {
-      const outcome = await deps.expand(job, deps.clock());
+      const outcome = await deps.expand(job, deps.now());
       if (outcome.kind !== "expanded") {
         return { kind: "fail", reason: outcome.reason };
       }

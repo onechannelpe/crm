@@ -1,5 +1,6 @@
 import type { Kysely } from "kysely";
 
+import type { Clock } from "~/domain/time/clock";
 import { notify } from "~/server/platform/database/notify";
 import type { Database } from "~/server/platform/database/types";
 import { createJobQueue } from "~/server/platform/jobs/job-queue";
@@ -14,7 +15,7 @@ const LEASE_MS = 30_000;
 export function createWhatsAppInboundQueue(
   db: Kysely<Database>,
   workerId: string,
-  now: () => Date,
+  now: Clock,
 ): QueueRunner {
   return createJobQueue({
     name: "whatsapp-inbound-events",

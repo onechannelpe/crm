@@ -1,3 +1,4 @@
+import type { Clock } from "~/domain/time/clock";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
 import type { Overlay } from "~/server/client-search/model";
 import type {
@@ -23,7 +24,7 @@ type EnrichmentWorkerDeps = {
   scraper: SunatScraperClient;
   engineFallback: EngineFallback;
   projectOrganization: (input: OrganizationProjection) => Promise<void>;
-  now?: () => Date;
+  now?: Clock;
 };
 
 const DEGRADED_TTL_MS = 60 * 60 * 1000; // 1 hour

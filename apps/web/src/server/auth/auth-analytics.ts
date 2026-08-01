@@ -2,6 +2,7 @@ import {
   type AuthFunnelEvent,
   type AuthFunnelScreen,
 } from "~/domain/observability/auth-funnel";
+import type { Clock } from "~/domain/time/clock";
 import type { ActionRequestContext } from "~/server/platform/observability/context";
 
 export interface AuthAnalyticsRecorder {
@@ -29,7 +30,7 @@ export function recordAuthAnalyticsEvent(
   event: AuthFunnelEvent,
   requestContext: ActionRequestContext,
   recorder: AuthAnalyticsRecorder,
-  now: () => Date,
+  now: Clock,
 ): Promise<void> {
   return recorder.recordAuthFunnelEvent({
     traceId: requestContext.traceId,

@@ -1,3 +1,4 @@
+import type { Clock } from "~/domain/time/clock";
 import { buildThrottleKeys } from "~/server/auth/password/throttle-keys";
 import {
   AUTH_THROTTLE_POLICY,
@@ -14,7 +15,7 @@ type CheckResult = { allowed: true } | { allowed: false; retryAfterMs: number };
 
 export interface AuthThrottleServiceDeps {
   authThrottle: AuthThrottleRepo;
-  now?: () => Date;
+  now?: Clock;
 }
 
 export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {

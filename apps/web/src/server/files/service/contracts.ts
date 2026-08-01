@@ -1,5 +1,6 @@
 import type { DomainError } from "~/domain/errors";
 import type { FileAssetId, UserId } from "~/domain/ids";
+import type { Clock } from "~/domain/time/clock";
 import type { Result } from "~/shared/result";
 
 import type { createAssetsRepo } from "../repo/assets";
@@ -18,7 +19,7 @@ export interface FileRepos {
 
 export interface FileOperationContext {
   actor: { userId: UserId };
-  now: () => Date;
+  now: Clock;
 }
 
 export interface StoreUploadInput {

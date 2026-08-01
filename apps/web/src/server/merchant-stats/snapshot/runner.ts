@@ -1,4 +1,5 @@
 import type { GpvSnapshotJobId } from "~/domain/ids";
+import type { Clock } from "~/domain/time/clock";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { isErr } from "~/shared/result";
 
@@ -20,7 +21,7 @@ interface GpvSnapshotProcessResult extends GpvSnapshotProgress {
 
 export function createGpvSnapshotRunner(deps: {
   db: DatabaseExecutor;
-  now: () => Date;
+  now: Clock;
   readFile: (storageKey: string) => Promise<Uint8Array>;
   reportProgress: (
     id: GpvSnapshotJobId,

@@ -21,7 +21,7 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
   const pipeline = assembleNotificationPipeline({
     db: runtime.ctx.db,
     messaging: messages.gateway,
-    clock: () => runtime.now.get(),
+    now: () => runtime.now.get(),
     publicOrigin: "https://app.example.test",
     logger,
   });

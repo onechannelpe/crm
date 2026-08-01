@@ -1,4 +1,5 @@
 import type { IntegrationJobId } from "~/domain/ids";
+import type { Clock } from "~/domain/time/clock";
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 import type { IntegrationJobRow } from "~/server/integrations/types";
@@ -17,7 +18,7 @@ interface StoredRows {
 
 export function createRecordImportRunner(deps: {
   executor: DatabaseExecutor;
-  now: () => Date;
+  now: Clock;
   readFile: (filePath: string) => Promise<Uint8Array>;
   reportProgress: (
     jobId: IntegrationJobId,

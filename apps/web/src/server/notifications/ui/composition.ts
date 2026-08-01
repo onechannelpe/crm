@@ -10,6 +10,7 @@ import {
 } from "@crm/message-channels";
 import type { Kysely } from "kysely";
 
+import type { Clock } from "~/domain/time/clock";
 import {
   createMessagingGateway,
   type MessagingGateway,
@@ -50,7 +51,7 @@ import { createLogger } from "~/shared/observability/runtime-logger";
 export interface NotificationPipelineDeps {
   db: Kysely<Database>;
   messaging: MessagingGateway;
-  clock: () => Date;
+  now: Clock;
   publicOrigin: string;
   logger: Logger;
 }
@@ -97,29 +98,29 @@ export function assembleNotificationPipeline(
         expansion: createIntentExpansionQueue(workerId, {
           intents,
           expand,
-          clock: deps.clock,
+          now: deps.now,
           onExpanded: () =>
             notify(deps.db, JOB_TABLE_CHANNELS.notification_deliveries),
         }),
         dispatch: createDeliveryDispatchQueue(workerId, {
           deliveries,
           send,
-          clock: deps.clock,
+          now: deps.now,
         }),
         whatsappInbound: createWhatsAppInboundQueue(
           deps.db,
           workerId,
-          deps.clock,
+          deps.now,
         ),
         outboundWhatsApp: createOutboundWhatsAppQueue(
           deps.db,
           deps.messaging,
           workerId,
-          deps.clock,
+          deps.now,
         ),
       };
     },
-    enqueue(intentsToEnqueue, now = deps.clock()) {
+    enqueue(intentsToEnqueue, now = deps.now()) {
       return enqueueNotifications(deps.db, intentsToEnqueue, now);
     },
   };
@@ -174,7 +175,7 @@ function createNotificationsRuntime(
   return assembleNotificationPipeline({
     db: serverInfrastructure.db,
     messaging,
-    clock: () => new Date(),
+    now: serverInfrastructure.now,
     publicOrigin: app.publicOrigin,
     logger,
   });

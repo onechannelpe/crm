@@ -2,6 +2,7 @@ import type { Role } from "~/domain/auth/access/rbac";
 import type { DomainError } from "~/domain/errors";
 import type { ExecutiveCategory } from "~/domain/identity/executive-category";
 import type { BranchId, TeamId, UserId, UserInviteId } from "~/domain/ids";
+import type { Clock } from "~/domain/time/clock";
 import type { EventsRepo } from "~/server/event-logs/events-repo";
 import type { AppUow } from "~/server/platform/database/uow";
 import type { TeamsRepo } from "~/server/users/repos-teams";
@@ -36,13 +37,13 @@ export interface InviteDeps {
 
 export interface InviteServiceDeps {
   inviteTtlMs?: number;
-  now: () => Date;
+  now: Clock;
   uow: AppUow<InviteDeps>;
   hashPassword?: (password: string) => Promise<string>;
 }
 
 export interface InviteRuntime {
-  now: () => Date;
+  now: Clock;
   inviteTtlMs: number;
   uow: AppUow<InviteDeps>;
   hashPassword: (password: string) => Promise<string>;

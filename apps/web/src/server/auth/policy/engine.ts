@@ -1,5 +1,6 @@
 import type { Role } from "~/domain/auth/access/rbac";
 import { resolveSessionClass } from "~/domain/auth/core/session-contract";
+import type { Clock } from "~/domain/time/clock";
 
 import { requiresStrongAuthRole } from "./rules/role";
 import type { AuthProof, LoginDecision } from "./types";
@@ -18,7 +19,7 @@ export interface LoginPolicyInput {
     };
     recoveryCodesAcknowledgementRequired: boolean;
   };
-  now?: () => Date;
+  now?: Clock;
 }
 
 export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {

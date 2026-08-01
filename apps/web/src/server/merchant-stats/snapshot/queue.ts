@@ -1,3 +1,4 @@
+import type { Clock } from "~/domain/time/clock";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createJobQueue } from "~/server/platform/jobs/job-queue";
 
@@ -10,7 +11,7 @@ import { createGpvSnapshotRunner, type GpvSnapshotRunner } from "./runner";
 
 interface GpvSnapshotQueueDeps {
   db: DatabaseExecutor;
-  now: () => Date;
+  now: Clock;
   readFile: (storageKey: string) => Promise<Uint8Array>;
   runner?: GpvSnapshotRunner;
 }

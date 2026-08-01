@@ -1,4 +1,5 @@
 import type { AuthSession } from "~/domain/auth/access/session-types";
+import type { Clock } from "~/domain/time/clock";
 import { getRequestContext } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
@@ -9,12 +10,12 @@ export interface AppContext {
   ipAddress: string;
   userAgent: string | null;
   publicOrigin: string;
-  now: () => Date;
+  now: Clock;
 }
 
 export function createAppContext(
   actor: AuthSession,
-  now: () => Date,
+  now: Clock,
 ): AppContext {
   const request = getRequestContext();
   const action = getActionRequestContext();

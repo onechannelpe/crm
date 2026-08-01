@@ -1,3 +1,5 @@
+import type { Clock } from "~/domain/time/clock";
+
 import type { DomainPatch, JobStore } from "./job-store";
 
 export interface QueueJobBase {
@@ -28,7 +30,7 @@ export interface JobQueueConfig<
   timeoutMs?: number;
 
   // Inject time so tests can control retry scheduling.
-  now: () => Date;
+  now: Clock;
 
   // Reject stale workers after a lease is reclaimed.
   workerId: string;
