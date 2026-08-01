@@ -19,9 +19,9 @@ import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createExecutorUow } from "~/server/platform/database/uow";
 import { isErr, Ok } from "~/shared/result";
 
-import { assignContacts } from "../application/assign-contacts";
-import { completeContactAssignmentCall } from "../application/complete-contact-assignment-call";
-import { getContactAssignmentCapacity } from "../application/get-contact-assignment-capacity";
+import { assignContacts } from "./application/assign-contacts";
+import { completeContactAssignmentCall } from "./application/complete-contact-assignment-call";
+import { getContactAssignmentCapacity } from "./application/get-contact-assignment-capacity";
 
 export type ContactAssignmentRepos = {
   users: ReturnType<typeof createCapacityUsersRepo>;
@@ -35,7 +35,7 @@ export type ContactAssignmentRepos = {
   cadence: ReturnType<typeof createContactCadenceRepo>;
 };
 
-interface ContactAssignmentsContextDeps {
+interface ContactAssignmentsRuntimeDeps {
   executor: DatabaseExecutor;
   engine: Pick<EngineClient, "requestCandidates">;
 }
@@ -73,8 +73,8 @@ function buildLeadUsageReservationPorts(
   };
 }
 
-export function createContactAssignmentsContext(
-  deps: ContactAssignmentsContextDeps,
+export function createContactAssignmentsRuntime(
+  deps: ContactAssignmentsRuntimeDeps,
 ) {
   const { executor, engine } = deps;
 
@@ -104,6 +104,6 @@ export function createContactAssignmentsContext(
   };
 }
 
-export type ContactAssignmentsContext = ReturnType<
-  typeof createContactAssignmentsContext
+export type ContactAssignmentsRuntime = ReturnType<
+  typeof createContactAssignmentsRuntime
 >;

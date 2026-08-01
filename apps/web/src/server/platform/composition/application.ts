@@ -5,14 +5,12 @@ import { createAuthRuntime } from "~/server/auth/runtime";
 import { runSessionCleanupTick } from "~/server/auth/session/cleanup";
 import { createCapacityRuntime } from "~/server/capacity/runtime";
 import { createClientSearchRuntime } from "~/server/client-search/runtime";
-import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
+import { createContactAssignmentsRuntime } from "~/server/contact-assignments/runtime";
 import { createEventLogsService } from "~/server/event-logs/service";
 import { createExtensionRuntime } from "~/server/extension/runtime";
 import { createFilesRuntime } from "~/server/files/runtime";
-import { executeDownload } from "~/server/files/service/execute-download";
-import { createEngineClient } from "~/server/integrations/infrastructure/engine-client";
+import { createDefaultEngineClient } from "~/server/integrations/engine/client";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
-import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
 import { createMerchantStatsRuntime } from "~/server/merchant-stats/infrastructure/runtime";
 import { createNotificationsRuntime } from "~/server/notifications/runtime";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
@@ -24,6 +22,7 @@ import {
 } from "~/server/platform/composition/infrastructure";
 import {
   appConfig,
+  engineConfig,
   notificationsConfig,
   uploadsConfig,
 } from "~/server/platform/config/env";
@@ -48,13 +47,14 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     actionObservations: createActionObservationsRepo(infrastructure.db),
     authFunnelEvents: createAuthFunnelEventsRepo(infrastructure.db),
   });
-  const engine = createEngineClient();
+  const engine = createDefaultEngineClient(engineConfig());
   const integrationRuntime = createIntegrationRuntime({
     executor: infrastructure.db,
   });
-  const integration = {
-    records: createRecordImportsRuntime(integrationRuntime, files.storage),
-  };
+  const recordImports = createRecordImportsRuntime(
+    integrationRuntime,
+    files.storage,
+  );
   const auth = createAuthRuntime(infrastructure, notifications, observability);
   const users = createUsersRuntime(
     infrastructure,
@@ -78,15 +78,14 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     auth,
     capacity: createCapacityRuntime(infrastructure),
     clientSearch: createClientSearchRuntime(infrastructure, engine),
-    contactAssignments: createContactAssignmentsContext({
+    contactAssignments: createContactAssignmentsRuntime({
       executor: infrastructure.db,
       engine,
     }),
     eventLogs: createEventLogsService(infrastructure.db),
     extension: createExtensionRuntime(infrastructure),
     files: {
-      download: (token: string, now: Date) =>
-        executeDownload(token, files, now),
+      download: files.download,
     },
     http: {
       requestContext: {
@@ -94,18 +93,14 @@ export function createApplication(infrastructure: ServerInfrastructure) {
         requestSessions,
       },
     },
-    integration,
+    integration: { records: recordImports },
     merchantStats: createMerchantStatsRuntime({ db: infrastructure.db, files }),
     maintenance: {
       accountLifecycle,
       cleanupSessions: (context: Parameters<typeof runSessionCleanupTick>[1]) =>
         runSessionCleanupTick(infrastructure.db, context),
       leadReservation,
-      createRecordsImportQueue: (workerId: string) =>
-        createRecordsImportQueue(workerId, {
-          runtime: integrationRuntime,
-          readFile: (storageKey) => files.storage.getBytes(storageKey),
-        }),
+      createRecordsImportQueue: recordImports.createQueue,
     },
     notifications,
     observability,

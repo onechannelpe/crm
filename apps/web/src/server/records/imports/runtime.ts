@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { RecordImportType } from "~/contracts/records/imports";
 import type { UserId } from "~/domain/ids";
 import type { FileStorage } from "~/server/files/storage";
+import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
 import type { IntegrationRuntime } from "~/server/integrations/types";
 
 import { canAccessRecordImportJob } from "./api";
@@ -46,5 +47,10 @@ export function createRecordImportsRuntime(
       actor: Parameters<typeof canAccessRecordImportJob>[0],
       job: Parameters<typeof canAccessRecordImportJob>[1],
     ) => canAccessRecordImportJob(actor, job, integration),
+    createQueue: (workerId: string) =>
+      createRecordsImportQueue(workerId, {
+        runtime: integration,
+        readFile: (storageKey) => storage.getBytes(storageKey),
+      }),
   };
 }
