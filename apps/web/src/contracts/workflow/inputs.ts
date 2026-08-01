@@ -1,14 +1,14 @@
 import type { SaleVenueAccount, VenueDigitalConfig } from "./primitives";
 import type {
-  SettlementBank,
+  CloseReason,
+  CollectionMode,
+  Currency,
   LeadPriority,
   LeadStage,
   LeadStatus,
-  CollectionMode,
-  Currency,
-  CloseReason,
-  ProductScope,
   ProductKind,
+  ProductScope,
+  SettlementBank,
 } from "./vocabulary";
 
 export type ListLeadsFiltersInput = {
@@ -41,17 +41,18 @@ export type CommercialScope = {
   posCount: number;
 };
 
-// inquiryId links the registration back to the availability inquiry it came
-// from: the server marks it converted and, when the answer is fresh, carries
-// the imported status/priority onto the new lead.
 export type CreateLeadInput = {
   ruc: string;
   inquiryId?: string;
 } & CommercialScope;
 
-export type CreateInquiryInput = { ruc: string };
+export type CreateInquiryInput = {
+  ruc: string;
+};
 
-export type EditCommercialScopeInput = { leadId: string } & CommercialScope;
+export type EditCommercialScopeInput = {
+  leadId: string;
+} & CommercialScope;
 
 export type ReassignLeadInput = {
   leadId: string;
@@ -144,8 +145,12 @@ export type UpdateVenueInput = CreateVenueInput & {
 export type AddVenueAccountsInput = {
   leadId: string;
   venueId: string;
-  solesAccount: SaleVenueAccount & { currency: "PEN" };
-  dollarAccount?: SaleVenueAccount & { currency: "USD" };
+  solesAccount: SaleVenueAccount & {
+    currency: "PEN";
+  };
+  dollarAccount?: SaleVenueAccount & {
+    currency: "USD";
+  };
 };
 
 export type RequestRateRevisionInput = {

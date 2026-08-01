@@ -48,10 +48,8 @@ export interface PageHeaderRule {
   header: HeaderDescriptor;
 }
 
-// More specific rules must appear before broader patterns. tileColor mirrors
-// the sidebar entry for the same destination so the page header tile matches
-// the navigation tile.
-export const PAGE_HEADERS: PageHeaderRule[] = [
+// Put specific routes before broader matches.
+export const PAGE_HEADERS = [
   {
     match: /^\/records\/[^/]+$/,
     header: { label: "Registros", icon: "leads", tileColor: "blue" },
@@ -72,7 +70,10 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     match: "/inquiries",
     header: { label: "Consultas", icon: "search", tileColor: "yellow" },
   },
-  { match: "/search", header: { label: "Búsqueda", icon: "search" } },
+  {
+    match: "/search",
+    header: { label: "Búsqueda", icon: "search" },
+  },
   {
     match: "/rate-simulator",
     header: {
@@ -83,15 +84,35 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
   },
   {
     match: "/me/capacity",
-    header: { label: "Mi capacidad", icon: "capacity", tileColor: "turquoise" },
+    header: {
+      label: "Mi capacidad",
+      icon: "capacity",
+      tileColor: "turquoise",
+    },
   },
   {
     match: "/inventory",
-    header: { label: "Inventario", icon: "inventory", tileColor: "orange" },
+    header: {
+      label: "Inventario",
+      icon: "inventory",
+      tileColor: "orange",
+    },
   },
   {
     match: "/fulfillment",
-    header: { label: "Entregas", icon: "inventory", tileColor: "orange" },
+    header: {
+      label: "Entregas",
+      icon: "inventory",
+      tileColor: "orange",
+    },
+  },
+  {
+    match: "/team/requests",
+    header: {
+      label: "Solicitudes",
+      icon: "team",
+      tileColor: "turquoise",
+    },
   },
   {
     match: "/team",
@@ -102,29 +123,44 @@ export const PAGE_HEADERS: PageHeaderRule[] = [
     },
   },
   {
-    match: "/team/requests",
-    header: { label: "Solicitudes", icon: "team", tileColor: "turquoise" },
-  },
-  {
     match: "/monitoring",
-    header: { label: "Monitoreo", icon: "monitoring", tileColor: "yellow" },
+    header: {
+      label: "Monitoreo",
+      icon: "monitoring",
+      tileColor: "yellow",
+    },
   },
   {
     match: /^\/dashboards\/merchant-gpv(?:\/.*)?$/,
-    header: { label: "GPV de comercios", icon: "dashboards" },
+    header: {
+      label: "GPV de comercios",
+      icon: "dashboards",
+    },
   },
-  { match: "/settings/profile", header: { label: "Perfil", icon: "profile" } },
+  {
+    match: "/settings/profile",
+    header: {
+      label: "Perfil",
+      icon: "profile",
+    },
+  },
   {
     match: "/settings/capacity-policies",
-    header: { label: "Políticas comerciales", icon: "settings" },
+    header: {
+      label: "Políticas comerciales",
+      icon: "settings",
+    },
   },
   {
     match: "/settings/event-logs",
-    header: { label: "Registro de eventos", icon: "settings" },
+    header: {
+      label: "Registro de eventos",
+      icon: "settings",
+    },
   },
-];
+] satisfies PageHeaderRule[];
 
-export const SIDEBAR_ENTRIES: SidebarEntry[] = [
+export const SIDEBAR_ENTRIES = [
   {
     id: "home",
     href: "/home",
@@ -140,7 +176,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     href: "/schedule",
     activePrefixes: ["/schedule"],
     label: "Agenda",
-    navLabel: "Agenda",
     icon: "schedule",
     tileColor: "purple",
     section: "primary",
@@ -151,7 +186,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     href: "/records",
     activePrefixes: ["/records"],
     label: "Registros",
-    navLabel: "Registros",
     icon: "leads",
     tileColor: "blue",
     section: "secondary",
@@ -163,7 +197,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     href: "/inquiries",
     activePrefixes: ["/inquiries"],
     label: "Consultas",
-    navLabel: "Consultas",
     icon: "search",
     tileColor: "yellow",
     section: "secondary",
@@ -175,7 +208,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     href: "/rate-simulator",
     activePrefixes: ["/rate-simulator"],
     label: "Simulador de tasas",
-    navLabel: "Simulador de tasas",
     icon: "rate-simulator",
     tileColor: "green",
     section: "secondary",
@@ -187,7 +219,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     href: "/me/capacity",
     activePrefixes: ["/me/capacity"],
     label: "Mi capacidad",
-    navLabel: "Mi capacidad",
     icon: "capacity",
     tileColor: "turquoise",
     section: "secondary",
@@ -199,7 +230,6 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     href: "/inventory",
     activePrefixes: ["/inventory"],
     label: "Inventario",
-    navLabel: "Inventario",
     icon: "inventory",
     tileColor: "orange",
     section: "secondary",
@@ -207,23 +237,10 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     group: "Operaciones",
   },
   {
-    id: "fulfillment",
-    href: "/fulfillment",
-    activePrefixes: ["/fulfillment"],
-    label: "Entregas",
-    navLabel: "Entregas",
-    icon: "inventory",
-    tileColor: "orange",
-    section: "secondary",
-    order: 6,
-    group: "Operaciones",
-  },
-  {
     id: "team",
     href: "/team",
     activePrefixes: ["/team"],
     label: "Equipo",
-    navLabel: "Equipo",
     icon: "team",
     tileColor: "turquoise",
     section: "secondary",
@@ -235,11 +252,21 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     ],
   },
   {
+    id: "fulfillment",
+    href: "/fulfillment",
+    activePrefixes: ["/fulfillment"],
+    label: "Entregas",
+    icon: "inventory",
+    tileColor: "orange",
+    section: "secondary",
+    order: 6,
+    group: "Operaciones",
+  },
+  {
     id: "dashboards",
     href: "/dashboards/merchant-gpv",
     activePrefixes: ["/dashboards"],
     label: "GPV de comercios",
-    navLabel: "GPV de comercios",
     icon: "dashboards",
     tileColor: "green",
     section: "secondary",
@@ -251,11 +278,10 @@ export const SIDEBAR_ENTRIES: SidebarEntry[] = [
     href: "/monitoring",
     activePrefixes: ["/monitoring"],
     label: "Monitoreo",
-    navLabel: "Monitoreo",
     icon: "monitoring",
     tileColor: "yellow",
     section: "secondary",
     order: 8,
     group: "Administración",
   },
-];
+] satisfies SidebarEntry[];
