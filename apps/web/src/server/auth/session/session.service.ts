@@ -6,6 +6,7 @@ import {
   isStrongAuthMethod,
 } from "~/domain/auth/core/session-contract";
 import type { UserId } from "~/domain/ids";
+import { addMilliseconds } from "~/domain/time/clock";
 import { sessionCache } from "~/server/auth/session/session-cache";
 import {
   mapUserSessionRowToAuthSession,
@@ -31,10 +32,6 @@ const EXTENSION_THRESHOLD = 7 * 24 * 60 * 60 * 1000;
 const noopLogger = {
   error() {},
 };
-
-function addMilliseconds(date: Date, milliseconds: number): Date {
-  return new Date(date.getTime() + milliseconds);
-}
 
 export function createSessionService(deps: SessionServiceDeps) {
   const now = deps.now ?? (() => new Date());

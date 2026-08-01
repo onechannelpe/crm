@@ -12,8 +12,9 @@ import {
 
 import type { UserId } from "~/domain/ids";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import { PLATFORM_NAME } from "~/shared/branding";
 
-const rpName = "Culqi360";
+const rpName = PLATFORM_NAME;
 
 const REQUIRED_USER_VERIFICATION = "required";
 

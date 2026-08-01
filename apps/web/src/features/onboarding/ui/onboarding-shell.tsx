@@ -1,7 +1,7 @@
 import { ResponsiveImage } from "@crm/images";
 import { type JSX, Show } from "solid-js";
 
-import logo from "~/assets/images/logo/logo.webp?responsive";
+import { PLATFORM_LOGO, PLATFORM_NAME } from "~/shared/branding";
 
 import styles from "./onboarding-shell.module.css";
 
@@ -31,8 +31,8 @@ export function OnboardingShell(props: OnboardingShellProps) {
         </div>
         <div class={styles.headerCenter}>
           <ResponsiveImage
-            sources={logo}
-            alt="Culqi360"
+            sources={PLATFORM_LOGO}
+            alt={PLATFORM_NAME}
             width="24"
             height="24"
             class={styles.headerLogo}

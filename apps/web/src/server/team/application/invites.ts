@@ -4,7 +4,7 @@ import { getAssignableRoleOptions } from "~/domain/auth/access/role-display";
 import { fail, type DomainError } from "~/domain/errors";
 import { shortName } from "~/domain/identity/display-name";
 import type { UserInviteId } from "~/domain/ids";
-import { epochMilliseconds } from "~/domain/time/epoch";
+import { epochMilliseconds } from "~/domain/time/clock";
 import type { InviteService } from "~/server/invites/application/types";
 import { inviteLink } from "~/server/invites/domain/invite-link";
 import type { AppContext } from "~/server/platform/action/context";

@@ -2,7 +2,7 @@ import {
   addMilliseconds,
   epochMilliseconds,
   epochSeconds,
-} from "~/domain/time/epoch";
+} from "~/domain/time/clock";
 
 import {
   EXTENSION_HANDOFF_TOKEN_ISSUER,

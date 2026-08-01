@@ -1,10 +1,10 @@
 import "server-only";
 import type { Role } from "~/domain/auth/access/rbac";
-import { PLATFORM_NAME } from "~/domain/branding";
 import { external, type DomainError } from "~/domain/errors";
 import { formatAppLongDate } from "~/domain/time/app-time";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { InviteDelivery } from "~/server/team/application/ports";
+import { PLATFORM_NAME } from "~/shared/branding";
 import { Err, Ok, type Result } from "~/shared/result";
 
 async function sendInviteEmail(

@@ -1,7 +1,7 @@
 import { ResponsiveImage } from "@crm/images";
 import { type JSX } from "solid-js";
 
-import logo from "~/assets/images/logo/logo.webp?responsive";
+import { PLATFORM_LOGO, PLATFORM_NAME } from "~/shared/branding";
 
 import styles from "./auth-flow-shell.module.css";
 
@@ -23,8 +23,8 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
           ) : null}
           <div class={styles.logo}>
             <ResponsiveImage
-              sources={logo}
-              alt="Culqi360"
+              sources={PLATFORM_LOGO}
+              alt={PLATFORM_NAME}
               width="40"
               height="40"
               class={styles.logoImage}

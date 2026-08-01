@@ -1,6 +1,6 @@
 import { external, fail, invalid, type DomainError } from "~/domain/errors";
 import { InstallationId } from "~/domain/ids";
-import type { Clock } from "~/domain/time/epoch";
+import type { Clock } from "~/domain/time/clock";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 import type { RefreshExtensionSessionResponse } from "../contracts";

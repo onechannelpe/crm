@@ -1,6 +1,6 @@
 import type { PendingCapacityRequestView } from "~/contracts/capacity";
 import type { DomainError } from "~/domain/errors";
-import { epochMilliseconds } from "~/domain/time/epoch";
+import { epochMilliseconds } from "~/domain/time/clock";
 import type { CapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
 import type { AppContext } from "~/server/platform/action/context";
 import { Ok, type Result } from "~/shared/result";

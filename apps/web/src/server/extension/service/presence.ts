@@ -1,5 +1,5 @@
 import type { BranchId, UserId } from "~/domain/ids";
-import { epochMilliseconds } from "~/domain/time/epoch";
+import { epochMilliseconds } from "~/domain/time/clock";
 
 import type {
   ExtensionExecutivePresenceStatus,

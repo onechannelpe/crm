@@ -6,7 +6,7 @@ import {
   type BranchId,
   type UserId,
 } from "~/domain/ids";
-import { dateFromEpochMilliseconds, type Clock } from "~/domain/time/epoch";
+import { dateFromEpochMilliseconds, type Clock } from "~/domain/time/clock";
 import type { AppUow } from "~/server/platform/database/uow";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 

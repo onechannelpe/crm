@@ -1,6 +1,6 @@
 import type { ContactAssignmentStatus } from "~/contracts/contact-assignments/vocabulary";
 import type { OrganizationPersonId, UserId } from "~/domain/ids";
-import { addMilliseconds } from "~/domain/time/epoch";
+import { addMilliseconds } from "~/domain/time/clock";
 
 const DEFAULT_ASSIGNMENT_TTL_HOURS = 24;
 

@@ -1,7 +1,7 @@
 import { auditEntityId } from "~/domain/audit/entity";
 import { canAssignRole } from "~/domain/auth/access/rbac";
 import { fail, type DomainError } from "~/domain/errors";
-import { addMilliseconds, epochMilliseconds } from "~/domain/time/epoch";
+import { addMilliseconds, epochMilliseconds } from "~/domain/time/clock";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import type {

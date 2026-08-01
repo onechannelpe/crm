@@ -1,6 +1,7 @@
 import type { DeliveryProviderId } from "@crm/message-channels";
 
 import { toE164Peru } from "~/domain/phone/pe-mobile";
+import { PLATFORM_NAME } from "~/shared/branding";
 import type { Logger } from "~/shared/observability/logger";
 
 import type { MessagingGateway } from "../channels/messaging-gateway";
@@ -39,7 +40,7 @@ export function createDeliverySender(deps: {
             params: {
               title: job.title,
               bodyText: job.body_text,
-              platformName: "Culqi360",
+              platformName: PLATFORM_NAME,
             },
           })
         : await deps.messaging.sendWhatsAppText({

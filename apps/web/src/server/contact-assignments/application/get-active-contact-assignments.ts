@@ -1,6 +1,6 @@
 import type { ActiveContactAssignmentView } from "~/contracts/contact-assignments/views";
 import type { UserId } from "~/domain/ids";
-import { epochMilliseconds } from "~/domain/time/epoch";
+import { epochMilliseconds } from "~/domain/time/clock";
 import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 
 export type ContactAssignmentReadRepos = {

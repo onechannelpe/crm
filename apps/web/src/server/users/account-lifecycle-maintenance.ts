@@ -1,9 +1,9 @@
-import { PLATFORM_NAME } from "~/domain/branding";
 import { shortName } from "~/domain/identity/display-name";
 import type { UserId } from "~/domain/ids";
 import { formatAppLongDate } from "~/domain/time/app-time";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { PLATFORM_NAME } from "~/shared/branding";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
 import { expireUsersAndInvalidateSessions } from "./expire-users";

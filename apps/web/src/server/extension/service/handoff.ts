@@ -6,7 +6,7 @@ import {
   epochMilliseconds,
   epochSeconds,
   type Clock,
-} from "~/domain/time/epoch";
+} from "~/domain/time/clock";
 import { extensionConfig } from "~/server/platform/config/env";
 import type { AppUow } from "~/server/platform/database/uow";
 import { Err, Ok, isErr, type Result } from "~/shared/result";

@@ -1,4 +1,4 @@
-import type { Clock } from "~/domain/time/epoch";
+import type { Clock } from "~/domain/time/clock";
 import type { AuthLoginRepos } from "~/server/auth/flows/login-deps";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";

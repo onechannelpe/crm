@@ -2,7 +2,7 @@ import type { ExecutiveCapacityDetailView } from "~/contracts/capacity";
 import { fail, forbidden, type DomainError } from "~/domain/errors";
 import { longName } from "~/domain/identity/display-name";
 import type { UserId } from "~/domain/ids";
-import { epochMilliseconds } from "~/domain/time/epoch";
+import { epochMilliseconds } from "~/domain/time/clock";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { CapacityRequestsRepo } from "~/server/capacity/infrastructure/capacity-requests-repo";
