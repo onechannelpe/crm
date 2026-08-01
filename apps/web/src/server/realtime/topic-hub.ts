@@ -9,15 +9,17 @@ export interface RealtimePeer {
 
 interface PeerRecord {
   topic: string;
-  openedAt: number;
+  // Monotonic ticks, not a wall-clock instant: this only ever feeds the age
+  // comparison in sweep(), and it is never stored or sent anywhere.
+  openedTicks: number;
 }
 
 export class TopicHub {
   private readonly peers = new Map<RealtimePeer, PeerRecord>();
   private readonly peersByTopic = new Map<string, Set<RealtimePeer>>();
 
-  subscribe(peer: RealtimePeer, topic: string, openedAt: number): void {
-    this.peers.set(peer, { topic, openedAt });
+  subscribe(peer: RealtimePeer, topic: string, openedTicks: number): void {
+    this.peers.set(peer, { topic, openedTicks });
 
     const existing = this.peersByTopic.get(topic);
 
@@ -70,9 +72,9 @@ export class TopicHub {
   }
 
   // Keep idle connections alive. Expired connections reconnect and re-authorize.
-  sweep(now: number, maxAgeMs: number): void {
+  sweep(nowTicks: number, maxAgeMs: number): void {
     for (const [peer, record] of this.peers) {
-      if (now - record.openedAt >= maxAgeMs) {
+      if (nowTicks - record.openedTicks >= maxAgeMs) {
         peer.close();
         continue;
       }

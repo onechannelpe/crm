@@ -39,6 +39,7 @@ export async function updateUserProfile(
       const result = await composeUsers().updatePhone(
         ctx.actor.userId,
         command.phone,
+        ctx.operationAt,
       );
 
       if (isErr(result)) {

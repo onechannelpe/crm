@@ -42,7 +42,7 @@ export async function completeOnboarding(
     return Err(fail("invalid_input"));
   }
 
-  const completedAt = ctx.now();
+  const completedAt = ctx.operationAt;
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);

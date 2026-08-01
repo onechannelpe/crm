@@ -1,22 +1,22 @@
 import type { AuthSession } from "~/domain/auth/access/session-types";
-import type { Clock } from "~/domain/time/clock";
 import { getRequestContext } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
 export interface AppContext {
   actor: AuthSession;
-  requestId: string;
+  /**
+   * The instant this operation happened. See `~/domain/time/clock` for why
+   * everything one operation writes has to agree on it.
+   */
+  operationAt: Date;
   traceId: string;
+  requestId: string;
   ipAddress: string;
   userAgent: string | null;
   publicOrigin: string;
-  now: Clock;
 }
 
-export function createAppContext(
-  actor: AuthSession,
-  now: Clock,
-): AppContext {
+export function createAppContext(actor: AuthSession): AppContext {
   const request = getRequestContext();
   const action = getActionRequestContext();
   return {
@@ -26,6 +26,8 @@ export function createAppContext(
     ipAddress: request.clientIp,
     userAgent: request.userAgent,
     publicOrigin: request.publicOrigin,
-    now,
+    // Inherited, not read. A server function runs inside an HTTP request, so
+    // the action's instant is the request's instant.
+    operationAt: request.startedAt,
   };
 }

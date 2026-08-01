@@ -6,7 +6,7 @@ import {
   type BranchId,
   type UserId,
 } from "~/domain/ids";
-import { dateFromEpochMilliseconds, type Clock } from "~/domain/time/clock";
+import { dateFromEpochMilliseconds } from "~/domain/time/clock";
 import type { AppUow } from "~/server/platform/database/uow";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 
@@ -31,12 +31,12 @@ import {
 
 interface EventsWriteContext {
   repos: ExtensionRepos;
-  now: Clock;
+  now: Date;
   uow: AppUow<ExtensionRepos>;
 }
 interface EventsReadContext {
   repos: ExtensionRepos;
-  now: Clock;
+  now: Date;
 }
 
 function readAssignmentId(
@@ -74,7 +74,7 @@ export async function ingestRuntimeEvent(
       input.sessionToken,
       isExtensionInstallationSessionClaims,
     );
-    const currentTime = now();
+    const currentTime = now;
     if (isTokenExpired(sessionClaims.exp, currentTime)) {
       return Err(fail("extension_session_invalid"));
     }
@@ -239,7 +239,7 @@ export async function listTeamExecutiveStatuses(
           await repos.extensionRuntime.listTeamStatusesBySupervisor(
             input.userId,
           ),
-          now(),
+          now,
         ),
       );
     }
@@ -247,7 +247,7 @@ export async function listTeamExecutiveStatuses(
     return Ok(
       withDerivedProjectionStatuses(
         await repos.extensionRuntime.listBranchStatuses(input.branchId),
-        now(),
+        now,
       ),
     );
   } catch (error: unknown) {

@@ -1,6 +1,7 @@
 import { shortName } from "~/domain/identity/display-name";
 import type { UserId } from "~/domain/ids";
 import { formatAppLongDate } from "~/domain/time/app-time";
+import { addMilliseconds } from "~/domain/time/clock";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { PLATFORM_NAME } from "~/shared/branding";
@@ -18,9 +19,9 @@ interface AccountLifecycleDeps {
   invalidateUserSessions: (userId: UserId) => Promise<void>;
 }
 
-async function runAccountExpiryTick(deps: AccountLifecycleDeps) {
+async function runAccountExpiryTick(deps: AccountLifecycleDeps, sweptAt: Date) {
   try {
-    const expiredCount = await expireUsersAndInvalidateSessions(new Date(), {
+    const expiredCount = await expireUsersAndInvalidateSessions(sweptAt, {
       executor: deps.executor,
       invalidateUserSessions: deps.invalidateUserSessions,
     });
@@ -37,17 +38,17 @@ async function runAccountExpiryTick(deps: AccountLifecycleDeps) {
 async function runExpiryNotificationTick(
   users: ReturnType<typeof createUsersRepo>,
   messaging: MessagingGateway,
+  sweptAt: Date,
 ) {
-  const threshold = new Date(Date.now() + EXPIRY_NOTIFICATION_THRESHOLD_MS);
+  const threshold = addMilliseconds(sweptAt, EXPIRY_NOTIFICATION_THRESHOLD_MS);
   const expiringUsers = await users.findExpiringBefore(threshold);
   const outcomes = await Promise.all(
     expiringUsers.map(async (user) => {
-      const claimedAt = new Date();
       try {
         const claimed = await users.claimExpiryReminder(
           user.id,
           threshold,
-          claimedAt,
+          sweptAt,
         );
         if (!claimed || user.expires_at == null) {
           return false;
@@ -66,10 +67,10 @@ async function runExpiryNotificationTick(
           throw new Error(sent.error.message);
         }
 
-        await users.markExpiryNotified(user.id, new Date());
+        await users.markExpiryNotified(user.id, sweptAt);
         return true;
       } catch (error: unknown) {
-        await users.releaseExpiryReminderClaim(user.id, claimedAt);
+        await users.releaseExpiryReminderClaim(user.id, sweptAt);
         logger.error("expiry_notification_send_failed", {
           userId: user.id,
           error: error instanceof Error ? error.message : "Unknown error",
@@ -91,13 +92,15 @@ export function startAccountLifecycleMaintenance(
 ): () => void {
   const users = createUsersRepo(deps.executor);
 
+  // Each timer is its own inbound event, so each reads the clock once and every
+  // row that tick touches carries the same instant.
   const expiryTimer = setInterval(() => {
-    void runAccountExpiryTick(deps);
+    void runAccountExpiryTick(deps, new Date());
   }, 60_000);
 
   const notificationTimer = setInterval(
     () => {
-      void runExpiryNotificationTick(users, deps.messaging);
+      void runExpiryNotificationTick(users, deps.messaging, new Date());
     },
     24 * 60 * 60_000,
   );

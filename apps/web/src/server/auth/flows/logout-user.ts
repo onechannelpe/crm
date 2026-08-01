@@ -15,7 +15,7 @@ export async function logoutUser(
   port: AuthSessionLogoutPort,
 ): Promise<Result<void, DomainError>> {
   const { id, userId } = ctx.actor;
-  const now = ctx.now();
+  const now = ctx.operationAt;
 
   await port.revokeSession(id);
   await port.revokeInstallationSessionsByAuthSession(id, now);

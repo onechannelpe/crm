@@ -3,7 +3,6 @@ import { fail, type DomainError } from "~/domain/errors";
 import type { WorkflowLeadId } from "~/domain/ids";
 import { assignOrganizationOwner } from "~/server/organization/ownership";
 import { withAdvisoryLock } from "~/server/platform/database/advisory-lock";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { convertInquiryOnRegistration } from "~/server/workflow/inquiry/convert";
 import {
@@ -18,36 +17,32 @@ import {
   type LeadCommercialScope,
   type LeadState,
 } from "~/server/workflow/lead/domain/state";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { runLeadTransaction } from "../write/transition";
-
-type RegistrationPorts = {
-  executor: DatabaseExecutor;
-  now: Date;
-};
 
 export function reassignRegisteredLead(input: {
   leadId: WorkflowLeadId;
   actor: WorkflowActor;
   inquiry?: InquiryRow;
-  ports: RegistrationPorts;
+  scope: WorkflowWriteContext;
 }): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
-  return runLeadTransaction(input.ports, async (ctx) => {
+  return runLeadTransaction(input.scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
     const transition = reassignLead(state, {
       actor: input.actor,
       toExecutiveId: input.actor.userId,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
     if (!transition.ok) return transition;
 
     const committed = await ctx.commitTransition(transition.value, {
       toExecutiveId: input.actor.userId,
       assignedBy: input.actor.userId,
-      at: ctx.now,
+      at: ctx.operationAt,
     });
     if (!committed.ok) return committed;
 
@@ -57,7 +52,7 @@ export function reassignRegisteredLead(input: {
       await createInquiryRepo(ctx.tx).markConverted(
         input.inquiry.id,
         state.id,
-        ctx.now,
+        ctx.operationAt,
       );
     }
 
@@ -72,9 +67,9 @@ export function createRegisteredLead(input: {
   commercialScope: LeadCommercialScope;
   enrichment: { legalName: string | null; address: string | null } | null;
   inquiry?: InquiryRow;
-  ports: RegistrationPorts;
+  scope: WorkflowWriteContext;
 }): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
-  return runLeadTransaction(input.ports, (ctx) =>
+  return runLeadTransaction(input.scope, (ctx) =>
     // Locked per executive so the cap read and the insert that pushes past
     // it can never interleave: two concurrent registrations by the same
     // executive serialize here instead of both reading "under the cap".
@@ -91,7 +86,7 @@ export function createRegisteredLead(input: {
           const pendingDecisions =
             await ctx.repos.leads.countPendingQuotationDecisions(
               input.actor.userId,
-              ctx.now,
+              ctx.operationAt,
             );
           if (pendingDecisions >= limit) {
             return Err(fail("pending_quotation_limit"));
@@ -103,6 +98,7 @@ export function createRegisteredLead(input: {
           legalName: input.enrichment?.legalName ?? null,
           lineOfBusiness: input.command.lineOfBusiness,
           address: input.enrichment?.address ?? null,
+          at: ctx.operationAt,
         });
 
         const draft = createLeadDraft({
@@ -113,7 +109,7 @@ export function createRegisteredLead(input: {
           executiveId: input.actor.userId,
           createdBy: input.actor.userId,
           commercialScope: input.commercialScope,
-          now: ctx.now,
+          now: ctx.operationAt,
         });
         if (!draft.ok) return draft;
 
@@ -122,7 +118,7 @@ export function createRegisteredLead(input: {
           organizationId: organization.id,
           executiveId: input.actor.userId,
           assignedBy: input.actor.userId,
-          at: ctx.now,
+          at: ctx.operationAt,
           reason: "lead_registration",
         });
         if (!assigned.ok) return assigned;
@@ -133,7 +129,7 @@ export function createRegisteredLead(input: {
             eventType: "lead_registered",
             actorUserId: input.actor.userId,
             payload: { ruc: draft.value.ruc, toStage: "QUALIFYING" },
-            occurredAt: ctx.now,
+            occurredAt: ctx.operationAt,
           }),
           createHistoryEvent({
             leadId,
@@ -141,7 +137,7 @@ export function createRegisteredLead(input: {
             actorUserId: input.actor.userId,
             subjectUserId: input.actor.userId,
             payload: { executiveId: input.actor.userId },
-            occurredAt: ctx.now,
+            occurredAt: ctx.operationAt,
           }),
         ]);
         if (!appended.ok) return appended;

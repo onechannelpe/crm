@@ -11,10 +11,8 @@ export async function updatePendingQuotationPolicy(
   input: {
     actor: WorkflowActor;
   } & ({ enabled: false } | { enabled: true; limit: number }),
-  ports: {
-    pendingQuotationPolicies: PendingQuotationPolicyRepository;
-    now: Date;
-  },
+  pendingQuotationPolicies: PendingQuotationPolicyRepository,
+  updatedAt: Date,
 ): Promise<Result<{ branchId: BranchId; clientLimit: number }, DomainError>> {
   if (!hasPermission(input.actor.role, "quotation:policy:manage")) {
     return Err(forbidden());
@@ -32,10 +30,10 @@ export async function updatePendingQuotationPolicy(
     return validatedLimit;
   }
 
-  await ports.pendingQuotationPolicies.upsert({
+  await pendingQuotationPolicies.upsert({
     branchId: input.actor.branchId,
     clientLimit: validatedLimit.value,
-    updatedAt: ports.now,
+    updatedAt,
     updatedByUserId: input.actor.userId,
   });
 

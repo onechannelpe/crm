@@ -24,13 +24,14 @@ export async function submitInviteAcceptance(
     userAgent: string | null;
   },
   input: InviteAcceptanceInput,
+  now: Date,
 ): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
   const validated = validateInviteAcceptance(input);
   if (isErr(validated)) {
     return validated;
   }
 
-  const accepted = await deps.inviteService.acceptInvite(validated.value);
+  const accepted = await deps.inviteService.acceptInvite(validated.value, now);
   if (isErr(accepted)) {
     return accepted;
   }
@@ -40,14 +41,17 @@ export async function submitInviteAcceptance(
     throw new Error("No se pudo activar la cuenta");
   }
 
-  const issued = await createSessionService(deps.repos).establish({
-    user,
-    sessionClass: "pre_auth",
-    request,
-    primaryAuthMethod: "password",
-    strongAuthMethod: null,
-    strongAuthAt: null,
-  });
+  const issued = await createSessionService(deps.repos).establish(
+    {
+      user,
+      sessionClass: "pre_auth",
+      request,
+      primaryAuthMethod: "password",
+      strongAuthMethod: null,
+      strongAuthAt: null,
+    },
+    now,
+  );
 
   return Ok({
     sessionToken: issued.token,

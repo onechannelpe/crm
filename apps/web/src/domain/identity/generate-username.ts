@@ -27,7 +27,7 @@ export async function generateUsername(
     if (!(await exists(candidate))) return candidate;
   }
 
-  // 100 sequential names are taken, so the first.last namespace is exhausted;
-  // append a timestamp to land a unique value.
-  return `${first}.${fs}.${Date.now()}`;
+  // 100 sequential names are taken, so the first.last namespace is exhausted.
+  // This is an identifier suffix, not an event timestamp.
+  return `${first}.${fs}.${crypto.randomUUID().replaceAll("-", "")}`;
 }

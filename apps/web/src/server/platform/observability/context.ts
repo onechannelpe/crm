@@ -7,7 +7,6 @@ export interface ActionRequestContext {
   requestId: string;
   routePath: string | null;
   httpMethod: string | null;
-  requestStartedAt: number;
 }
 
 export function getActionRequestContext(): ActionRequestContext {
@@ -19,7 +18,6 @@ export function getActionRequestContext(): ActionRequestContext {
       requestId: context.requestId,
       routePath: context.route,
       httpMethod: context.method,
-      requestStartedAt: context.startedAt,
     };
   }
 
@@ -30,6 +28,5 @@ export function getActionRequestContext(): ActionRequestContext {
     requestId: generateRequestId(),
     routePath: requestUrl?.pathname ?? null,
     httpMethod: event?.request.method ?? null,
-    requestStartedAt: Date.now(),
   };
 }

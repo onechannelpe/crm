@@ -22,11 +22,13 @@ export async function getLeadDetail(
     actorUserId: UserId;
     actorRole: Role;
     leadId: WorkflowLeadId;
+    evaluatedAt: Date;
   },
 ): Promise<Result<LeadDetailView, DomainError>> {
   const loaded = await loadLeadDetailSections(deps, {
     leadId: input.leadId,
     actorUserId: input.actorUserId,
+    evaluatedAt: input.evaluatedAt,
   });
   if (!loaded.ok) {
     return loaded;
@@ -48,7 +50,7 @@ export async function getLeadDetail(
     : null;
 
   const latestProposal = loaded.value.rateProposals.at(-1);
-  const now = new Date();
+  const now = input.evaluatedAt;
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
   const availableActions = resolveAvailableActions(
     { userId: input.actorUserId, role: input.actorRole },

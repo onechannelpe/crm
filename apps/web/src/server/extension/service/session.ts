@@ -1,6 +1,5 @@
 import { external, fail, invalid, type DomainError } from "~/domain/errors";
 import { InstallationId } from "~/domain/ids";
-import type { Clock } from "~/domain/time/clock";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 import type { RefreshExtensionSessionResponse } from "../contracts";
@@ -18,7 +17,7 @@ import {
 
 interface SessionMethodContext {
   repos: ExtensionRepos;
-  now: Clock;
+  now: Date;
 }
 
 export async function refreshInstallationSession(
@@ -36,7 +35,7 @@ export async function refreshInstallationSession(
       return Err(invalid({ code: "installation_invalid" }));
     }
 
-    const currentTime = now();
+    const currentTime = now;
     const refreshTokenHash = await hashExtensionSecretToken(input.refreshToken);
     const session =
       await repos.extensionRuntime.findRefreshableInstallationSession(

@@ -8,11 +8,9 @@ export async function listPendingInvites(
   repos: InviteDeps,
   runtime: InviteRuntime,
   branchId: BranchId,
+  now: Date,
 ): Promise<Result<PendingBranchInvite[], DomainError>> {
-  const rows = await repos.userInvites.findLatestPendingByBranch(
-    branchId,
-    runtime.now(),
-  );
+  const rows = await repos.userInvites.findLatestPendingByBranch(branchId, now);
 
   return Ok(
     rows.map((row) => ({

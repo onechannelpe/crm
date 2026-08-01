@@ -4,8 +4,9 @@ import type { AdminSessionsReadContext } from "../../infrastructure/admin-sessio
 
 export async function listAllActiveSessions(
   deps: AdminSessionsReadContext,
+  asOf: Date,
 ): Promise<SessionInfo[]> {
-  const sessions = await deps.repos.sessions.listAllActive();
+  const sessions = await deps.repos.sessions.listAllActive(asOf);
 
   return sessions.map((session) => ({
     id: session.id,

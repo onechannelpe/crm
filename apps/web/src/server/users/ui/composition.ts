@@ -83,11 +83,12 @@ function createUsersComposition(
   async function updatePhone(
     userId: UserId,
     phone: Phone,
+    claimedAt: Date,
   ): Promise<Result<void, { kind: "address_already_claimed" }>> {
     const claimResult = await userChannelAddressesRepo.claimWhatsAppAddress({
       userId,
       address: phone,
-      now: new Date(),
+      now: claimedAt,
     });
 
     if (claimResult.kind === "already_claimed") {

@@ -24,7 +24,7 @@ export async function getInviteManagement(): Promise<
 
       return Ok({
         ...management.value,
-        evaluatedAt: ctx.now().getTime(),
+        evaluatedAt: ctx.operationAt.getTime(),
       });
     },
   });

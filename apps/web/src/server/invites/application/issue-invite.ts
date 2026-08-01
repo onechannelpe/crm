@@ -13,8 +13,8 @@ export async function issueInvite(
   repos: InviteDeps,
   runtime: InviteRuntime,
   input: IssueInviteInput,
+  issuedAt: Date,
 ): Promise<InviteIssueResult> {
-  const issuedAt = runtime.now();
   const expiresAt =
     input.expiresAt ?? addMilliseconds(issuedAt, runtime.inviteTtlMs);
 

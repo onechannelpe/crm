@@ -12,10 +12,8 @@ export async function updateRateProposalPolicy(
     actor: WorkflowActor;
     validityDays: number;
   },
-  ports: {
-    rateProposalPolicies: RateProposalPolicyRepository;
-    now: Date;
-  },
+  rateProposalPolicies: RateProposalPolicyRepository,
+  updatedAt: Date,
 ): Promise<Result<{ branchId: BranchId; validityDays: number }, DomainError>> {
   if (!hasPermission(input.actor.role, "quotation:policy:manage")) {
     return Err(forbidden());
@@ -29,10 +27,10 @@ export async function updateRateProposalPolicy(
     return parsedValidityDays;
   }
 
-  await ports.rateProposalPolicies.upsert({
+  await rateProposalPolicies.upsert({
     branchId: input.actor.branchId,
     validityDays: parsedValidityDays.value,
-    updatedAt: ports.now,
+    updatedAt,
     updatedByUserId: input.actor.userId,
   });
 

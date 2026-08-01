@@ -5,7 +5,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 export async function listLeadSaleProofFiles(leadId: string) {
   return executeSessionServerFunction({
@@ -17,7 +17,7 @@ export async function listLeadSaleProofFiles(leadId: string) {
       })),
     audit: (input) => ({ leadId: input.leadId }),
     execute: (context, input) =>
-      composeWorkflow().leadFiles.listSaleProofFiles({
+      workflow.files.listSaleProofFiles({
         ctx: context,
         leadId: input.leadId,
       }),

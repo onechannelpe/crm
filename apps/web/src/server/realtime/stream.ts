@@ -40,7 +40,7 @@ export async function attachRealtimeSubscription(
 
   // Every exit closes the sink, making its close handler the sole owner of
   // removing the peer.
-  hub.subscribe(peer, entry.topic, Date.now());
+  hub.subscribe(peer, entry.topic, performance.now());
   sink.onClosed(() => hub.remove(peer));
 
   const opening = await entry.open(cursor).catch((error: unknown) => {

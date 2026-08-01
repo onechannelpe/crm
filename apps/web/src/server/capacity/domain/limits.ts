@@ -53,12 +53,13 @@ export function validateLeadPolicyValues(values: {
 
 export function validateOverrideExpiry(
   expiresAt: number | null,
+  asOf: Date,
 ): Result<Date | null, DomainError> {
   if (expiresAt === null) return Ok(null);
   if (!Number.isInteger(expiresAt) || expiresAt < 1) {
     return Err(fail("invalid_expires_at"));
   }
-  if (expiresAt <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
+  if (expiresAt <= asOf.getTime() + MIN_EXPIRY_OFFSET_MS) {
     return Err(fail("expires_at_too_soon"));
   }
   return Ok(new Date(expiresAt));

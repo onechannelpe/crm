@@ -10,13 +10,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
-import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
-import { editRateProposalCommand } from "~/server/workflow/lead/commands/edit-rate-proposal";
-import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
-import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 export async function requestRateProposal(input: unknown) {
   "use server";
@@ -38,10 +33,10 @@ export async function requestRateProposal(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      proposeRateCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.proposeRate(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -67,10 +62,10 @@ export async function requestRateProposalEdit(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      editRateProposalCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.editRateProposal(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -90,10 +85,10 @@ export async function requestRateAcceptance(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      acceptRateCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.acceptRate(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -114,10 +109,10 @@ export async function requestLeadClosure(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      closeLeadCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.closeLead(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -142,15 +137,15 @@ export async function requestRateRevision(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      requestRateRevisionCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.requestRateRevision(
         {
           actor: workflowActor(actor),
           leadId: payload.leadId,
           justification: payload.justification,
           fileIds: payload.fileIds,
         },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }

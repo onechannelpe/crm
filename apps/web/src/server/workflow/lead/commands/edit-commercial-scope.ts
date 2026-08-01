@@ -2,8 +2,8 @@ import { diffFields } from "~/contracts/events";
 import type { EditCommercialScopeInput } from "~/contracts/workflow/inputs";
 import { fail, type DomainError } from "~/domain/errors";
 import type { WorkflowLeadId } from "~/domain/ids";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { editCommercialScope } from "../../lead/domain/decide";
@@ -36,12 +36,9 @@ export async function editCommercialScopeCommand(
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -86,7 +83,7 @@ export async function editCommercialScopeCommand(
     const transition = editCommercialScope(state, {
       actor: input.actor,
       changes,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -104,7 +101,7 @@ export async function editCommercialScopeCommand(
         settlementBank: input.settlementBank,
         posCount: input.posCount,
       },
-      ctx.now,
+      ctx.operationAt,
       input.actor.userId,
     );
 

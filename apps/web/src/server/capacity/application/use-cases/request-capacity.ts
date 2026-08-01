@@ -20,6 +20,7 @@ export async function requestCapacity(
     "capacity.request",
     ctx.actor.userId,
     deps.rateLimitDeps,
+    ctx.operationAt,
   );
   return deps.uow.run(async (tx) => {
     await tx.capacityRequests.create({
@@ -28,6 +29,8 @@ export async function requestCapacity(
       status: "pending",
       requested_amount: amount.value,
       reason: input.reason,
+      created_at: ctx.operationAt,
+      updated_at: ctx.operationAt,
     });
     return Ok({ success: true });
   });

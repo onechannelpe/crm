@@ -113,7 +113,7 @@ export type LeadDetailLoadedSections = {
 
 export async function loadLeadDetailSections(
   deps: LeadDetailQueryDeps,
-  input: { leadId: WorkflowLeadId; actorUserId: UserId },
+  input: { leadId: WorkflowLeadId; actorUserId: UserId; evaluatedAt: Date },
 ): Promise<Result<LeadDetailLoadedSections, DomainError>> {
   const lead = await deps.leads.findById(input.leadId);
   if (!lead) {
@@ -147,7 +147,7 @@ export async function loadLeadDetailSections(
     deps.leadVenues.listByLeadId(input.leadId),
     deps.rateRevisions.listByLeadId(input.leadId),
     deps.leadHistory.listByLeadId(input.leadId),
-    deps.sourceStatuses.findByRuc(lead.ruc),
+    deps.sourceStatuses.findByRuc(lead.ruc, input.evaluatedAt),
     deps.users.findByIds([
       lead.executiveId,
       lead.createdBy,

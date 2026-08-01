@@ -36,11 +36,11 @@ export function createSearchUsageReservationPorts(
 ): UsageReservationPorts<"search"> {
   return {
     executor,
-    async checkRemaining(trx, actorUserId) {
+    async checkRemaining(trx, actorUserId, evaluatedAt) {
       const snapshot = await getSearchCapacitySnapshot(
         actorUserId,
         buildSearchUsageRepos(trx),
-        new Date(),
+        evaluatedAt,
       );
       if (isErr(snapshot)) return snapshot;
       return Ok(snapshot.value.remaining);

@@ -13,7 +13,6 @@ import { type ActionDef, createServerFunctionExecutor } from "./run";
 const logger = createLogger("action-fault");
 
 const serverFunctionExecutor = createServerFunctionExecutor({
-  now: () => new Date(),
   record: (row) => {
     void recordActionObservation(row).catch(() => {});
   },

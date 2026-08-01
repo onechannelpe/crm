@@ -1,4 +1,3 @@
-import type { Clock } from "~/domain/time/clock";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createExecutorUow } from "~/server/platform/database/uow";
@@ -24,14 +23,10 @@ export function bindInviteRepos(db: DatabaseExecutor): InviteRepos {
   };
 }
 
-export function createInviteServiceForExecutor(
-  executor: DatabaseExecutor,
-  now: Clock,
-) {
+export function createInviteServiceForExecutor(executor: DatabaseExecutor) {
   const repos = bindInviteRepos(executor);
 
   return createInviteService(repos, {
     uow: createExecutorUow(executor, bindInviteRepos),
-    now,
   });
 }

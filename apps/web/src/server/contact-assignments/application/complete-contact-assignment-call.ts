@@ -24,6 +24,7 @@ async function completeAssignmentInteraction(
   const assignment = await repos.contactAssignments.findActiveByIdForUser(
     input.assignmentId,
     input.actorUserId,
+    input.at,
   );
   if (!assignment || assignment.contact_id !== input.contactId) {
     return Err(fail("assignment_inactive"));
@@ -39,7 +40,7 @@ async function completeAssignmentInteraction(
     outcome: input.outcome,
     notes: input.notes,
     duration_seconds: null,
-    created_at: new Date(),
+    created_at: input.at,
   });
 
   return Ok({ success: true });

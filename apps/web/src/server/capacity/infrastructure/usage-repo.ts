@@ -8,6 +8,10 @@ import type {
 import type { InstantRange } from "~/domain/time/app-time";
 import type { Database } from "~/server/platform/database/types";
 
+// These repos never read the clock. Timestamps arrive as values from the
+// operation that is writing, so every row one operation touches carries the
+// same instant.
+
 export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
   return {
     insert(values: {
@@ -15,10 +19,11 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
       amount: number;
       reason: string;
       actor_user_id: UserId;
+      created_at: Date;
     }): Promise<void> {
       return db
         .insertInto("search_capacity_grants")
-        .values({ ...values, created_at: new Date() })
+        .values(values)
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
@@ -37,16 +42,16 @@ export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
 
 export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: UserId; amount: number; reason: string }) {
-      const now = new Date();
+    insert(values: {
+      user_id: UserId;
+      amount: number;
+      reason: string;
+      created_at: Date;
+      updated_at: Date;
+    }) {
       return db
         .insertInto("search_usage_reservations")
-        .values({
-          ...values,
-          status: "pending",
-          created_at: now,
-          updated_at: now,
-        })
+        .values({ ...values, status: "pending" })
         .returning("id")
         .executeTakeFirstOrThrow();
     },
@@ -62,10 +67,11 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
     updateStatus(
       id: SearchReservationId,
       status: "committed" | "cancelled" | "expired",
+      updatedAt: Date,
     ): Promise<void> {
       return db
         .updateTable("search_usage_reservations")
-        .set({ status, updated_at: new Date() })
+        .set({ status, updated_at: updatedAt })
         .where("id", "=", id)
         .executeTakeFirst()
         .then(() => undefined);
@@ -78,10 +84,11 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
       id: SearchReservationId,
       amount: number,
       status: "committed" | "cancelled" | "expired",
+      updatedAt: Date,
     ): Promise<void> {
       return db
         .updateTable("search_usage_reservations")
-        .set({ amount, status, updated_at: new Date() })
+        .set({ amount, status, updated_at: updatedAt })
         .where("id", "=", id)
         .executeTakeFirst()
         .then(() => undefined);
@@ -104,10 +111,11 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
     insert(values: {
       reservation_id: SearchReservationId;
       amount: number;
+      created_at: Date;
     }): Promise<void> {
       return db
         .insertInto("search_usage_commits")
-        .values({ ...values, created_at: new Date() })
+        .values(values)
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
@@ -140,10 +148,11 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
       amount: number;
       reason: string;
       actor_user_id: UserId;
+      created_at: Date;
     }): Promise<void> {
       return db
         .insertInto("lead_capacity_grants")
-        .values({ ...values, created_at: new Date() })
+        .values(values)
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },
@@ -162,16 +171,16 @@ export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
 
 export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
   return {
-    insert(values: { user_id: UserId; amount: number; reason: string }) {
-      const now = new Date();
+    insert(values: {
+      user_id: UserId;
+      amount: number;
+      reason: string;
+      created_at: Date;
+      updated_at: Date;
+    }) {
       return db
         .insertInto("lead_usage_reservations")
-        .values({
-          ...values,
-          status: "pending",
-          created_at: now,
-          updated_at: now,
-        })
+        .values({ ...values, status: "pending" })
         .returning("id")
         .executeTakeFirstOrThrow();
     },
@@ -187,10 +196,11 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
     updateStatus(
       id: LeadReservationId,
       status: "committed" | "cancelled" | "expired",
+      updatedAt: Date,
     ): Promise<void> {
       return db
         .updateTable("lead_usage_reservations")
-        .set({ status, updated_at: new Date() })
+        .set({ status, updated_at: updatedAt })
         .where("id", "=", id)
         .executeTakeFirst()
         .then(() => undefined);
@@ -200,10 +210,11 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
       id: LeadReservationId,
       amount: number,
       status: "committed" | "cancelled" | "expired",
+      updatedAt: Date,
     ): Promise<void> {
       return db
         .updateTable("lead_usage_reservations")
-        .set({ amount, status, updated_at: new Date() })
+        .set({ amount, status, updated_at: updatedAt })
         .where("id", "=", id)
         .executeTakeFirst()
         .then(() => undefined);
@@ -226,10 +237,11 @@ export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
     insert(values: {
       reservation_id: LeadReservationId;
       amount: number;
+      created_at: Date;
     }): Promise<void> {
       return db
         .insertInto("lead_usage_commits")
-        .values({ ...values, created_at: new Date() })
+        .values(values)
         .executeTakeFirstOrThrow()
         .then(() => undefined);
     },

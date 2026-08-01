@@ -24,8 +24,8 @@ export async function startPasskeyLogin(
   input: StartPasskeyLoginInput,
   deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
+  occurredAt: Date,
 ) {
-  const occurredAt = deps.now();
   const prepared = await preparePasskeyLogin(
     deps.repos,
     webauthnProvider,

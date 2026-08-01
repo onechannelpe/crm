@@ -13,6 +13,7 @@ export async function resetPassword(input: {
   password: string;
   confirmPassword: string;
   deps: PasswordResetRequestContext;
+  resetAt: Date;
 }): Promise<Result<{ ok: true }, DomainError>> {
   if (!isValidPasswordResetTokenFormat(input.token)) {
     return Err(fail("invalid_token"));
@@ -24,7 +25,7 @@ export async function resetPassword(input: {
     return Err(fail("password_mismatch"));
   }
 
-  const now = new Date();
+  const now = input.resetAt;
   const record = await input.deps.repos.passwordResetTokens.findValidByHash(
     hashPasswordResetToken(input.token),
     now,

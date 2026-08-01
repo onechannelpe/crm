@@ -17,11 +17,8 @@ import {
   validationFail,
   type Reader,
 } from "~/server/platform/action/input-reader";
-import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
-import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
-import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 function venueFields(r: Reader<DomainError>): Omit<
   CreateVenueInput,
@@ -72,10 +69,10 @@ export async function requestVenueCreation(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      createVenueCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.createVenue(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -104,10 +101,10 @@ export async function requestVenueUpdate(input: unknown) {
 
     audit: ({ leadId, venueId }) => ({ leadId, venueId }),
 
-    execute: ({ actor }, payload) =>
-      updateVenueCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.updateVenue(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -140,10 +137,10 @@ export async function requestVenueAccountsAddition(input: unknown) {
 
     audit: ({ leadId, venueId }) => ({ leadId, venueId }),
 
-    execute: ({ actor }, payload) =>
-      addVenueAccountsCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.addVenueAccounts(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }

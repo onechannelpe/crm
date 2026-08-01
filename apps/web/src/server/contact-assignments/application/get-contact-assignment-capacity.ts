@@ -11,6 +11,7 @@ import type { AssignmentPlanRepos } from "./assignment-plan";
 export function getContactAssignmentCapacity(
   actorUserId: UserId,
   repos: AssignmentPlanRepos,
+  evaluatedAt: Date,
 ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
-  return getLeadCapacitySnapshot(actorUserId, repos, new Date());
+  return getLeadCapacitySnapshot(actorUserId, repos, evaluatedAt);
 }

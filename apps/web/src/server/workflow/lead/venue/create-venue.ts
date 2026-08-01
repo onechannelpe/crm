@@ -3,12 +3,12 @@ import { randomUUIDv7 } from "bun";
 import type { CreateVenueInput } from "~/contracts/workflow/inputs";
 import { fail, type DomainError } from "~/domain/errors";
 import { WorkflowVenueId, type WorkflowLeadId } from "~/domain/ids";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,
 } from "~/server/workflow/lead/digital-policy/domain";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { runLeadTransaction } from "../write/transition";
@@ -19,12 +19,9 @@ export async function createVenueCommand(
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -53,7 +50,7 @@ export async function createVenueCommand(
       actor: input.actor,
       venueId,
       tradeName: input.tradeName,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     if (!venueEvents.ok) {
@@ -77,7 +74,7 @@ export async function createVenueCommand(
         district: input.district,
         province: input.province,
         department: input.department,
-        created_at: ctx.now,
+        created_at: ctx.operationAt,
         created_by: input.actor.userId,
       })
       .executeTakeFirstOrThrow();

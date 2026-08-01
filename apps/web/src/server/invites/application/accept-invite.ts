@@ -14,9 +14,10 @@ export async function acceptInvite(
   repos: InviteDeps,
   runtime: InviteRuntime,
   input: AcceptInviteInput,
+  now: Date,
 ): Promise<Result<InviteAcceptedResult, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
-    const currentTime = runtime.now();
+    const currentTime = now;
 
     const invite = await transactionRepos.userInvites.findPendingByToken(
       input.token,

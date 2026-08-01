@@ -4,10 +4,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { getSourcingPolicy } from "~/server/workflow/policy/read/get-sourcing-policy";
-import { updateSourcingPolicy } from "~/server/workflow/policy/write/update-sourcing-policy";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 export async function querySourcingPolicy(rawBranchId: string) {
   "use server";
@@ -23,17 +21,11 @@ export async function querySourcingPolicy(rawBranchId: string) {
 
     audit: ({ branchId }) => ({ branchId }),
 
-    execute: ({ actor }, query) => {
-      const { sourcingPolicies } = composeWorkflow().repos;
-
-      return getSourcingPolicy(
-        { sourcingPolicies },
-        {
-          actorRole: actor.role,
-          branchId: query.branchId,
-        },
-      );
-    },
+    execute: ({ actor }, query) =>
+      workflow.queries.getSourcingPolicy({
+        actorRole: actor.role,
+        branchId: query.branchId,
+      }),
   });
 }
 
@@ -55,20 +47,14 @@ export async function saveSourcingPolicy(input: {
 
     audit: ({ branchId }) => ({ branchId }),
 
-    execute: ({ actor }, command) => {
-      const workflow = composeWorkflow();
-
-      return updateSourcingPolicy(
+    execute: ({ actor, operationAt: now }, command) =>
+      workflow.commands.updateSourcingPolicy(
         {
           actor: workflowActor(actor),
           branchId: command.branchId,
           engineAssignmentEnabled: command.engineAssignmentEnabled,
         },
-        {
-          sourcingPolicies: workflow.repos.sourcingPolicies,
-          now: workflow.now(),
-        },
-      );
-    },
+        now,
+      ),
   });
 }

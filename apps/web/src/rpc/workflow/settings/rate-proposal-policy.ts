@@ -3,9 +3,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { updateRateProposalPolicy } from "~/server/workflow/policy/write/update-rate-proposal-policy";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 export async function saveRateProposalPolicy(input: { validityDays: number }) {
   "use server";
@@ -18,18 +17,13 @@ export async function saveRateProposalPolicy(input: { validityDays: number }) {
         validityDays: reader.posInt("validityDays"),
       })),
     audit: ({ validityDays }) => ({ validityDays }),
-    execute: ({ actor }, payload) => {
-      const workflow = composeWorkflow();
-      return updateRateProposalPolicy(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.updateRateProposalPolicy(
         {
           actor: workflowActor(actor),
           validityDays: payload.validityDays,
         },
-        {
-          rateProposalPolicies: workflow.repos.rateProposalPolicies,
-          now: workflow.now(),
-        },
-      );
-    },
+        now,
+      ),
   });
 }

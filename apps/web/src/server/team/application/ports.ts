@@ -20,5 +20,6 @@ export interface InviteManagementQueryPort {
   ): Promise<Array<{ id: string; name: string }>>;
   listPendingInvites(
     branchId: BranchId,
+    now: Date,
   ): Promise<Result<PendingBranchInvite[], DomainError>>;
 }

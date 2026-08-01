@@ -3,8 +3,8 @@ import { randomUUIDv7 } from "bun";
 import type { ProposeRateInput } from "~/contracts/workflow/inputs";
 import { fail, type DomainError } from "~/domain/errors";
 import { WorkflowRateProposalId, type WorkflowLeadId } from "~/domain/ids";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { proposeRate } from "../../lead/domain/decide";
@@ -17,12 +17,9 @@ export async function proposeRateCommand(
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ proposalId: WorkflowRateProposalId }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -39,7 +36,7 @@ export async function proposeRateCommand(
     });
 
     const reservationExpiresAt = computeReservationExpiry({
-      now: ctx.now,
+      now: ctx.operationAt,
       validityDays: proposalPolicy.validityDays,
     });
 
@@ -49,7 +46,7 @@ export async function proposeRateCommand(
       round,
       currency: input.currency,
       reservationExpiresAt,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -67,7 +64,7 @@ export async function proposeRateCommand(
       paybackPricing: input.paybackPricing,
       currency: input.currency,
       proposedBy: input.actor.userId,
-      proposedAt: ctx.now,
+      proposedAt: ctx.operationAt,
       outcome: "pending",
       decidedAt: null,
     });

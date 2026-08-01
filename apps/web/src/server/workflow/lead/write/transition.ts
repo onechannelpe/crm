@@ -6,6 +6,7 @@ import {
   createWorkflowRepos,
   type WorkflowRepos,
 } from "~/server/workflow/repos";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, isErr, type Result } from "~/shared/result";
 
 import {
@@ -20,7 +21,7 @@ export type CommittedLeadEvent = { event: LeadHistoryEventDraft; id: string };
 export type LeadTransaction = {
   tx: DatabaseExecutor;
   repos: WorkflowRepos;
-  now: Date;
+  operationAt: Date;
   commitTransition(
     transition: LeadTransition,
     assignment?: LeadAssignment,
@@ -44,10 +45,10 @@ function zip(
 }
 
 export function runLeadTransaction<O>(
-  ports: { executor: DatabaseExecutor; now: Date },
+  scope: WorkflowWriteContext,
   body: (ctx: LeadTransaction) => Promise<Result<O, DomainError>>,
 ): Promise<Result<O, DomainError>> {
-  return ports.executor
+  return scope.executor
     .transaction()
     .execute(async (tx): Promise<Result<O, DomainError>> => {
       const committed: CommittedLeadEvent[] = [];
@@ -55,7 +56,7 @@ export function runLeadTransaction<O>(
       const result = await body({
         tx,
         repos: createWorkflowRepos(tx),
-        now: ports.now,
+        operationAt: scope.operationAt,
         commitTransition: async (transition, assignment) => {
           const outcome = await commitTransition(tx, transition, assignment);
           if (outcome.ok) {
@@ -64,7 +65,7 @@ export function runLeadTransaction<O>(
           return outcome;
         },
         appendFacts: async (events) => {
-          const outcome = await appendFacts(tx, events, ports.now);
+          const outcome = await appendFacts(tx, events, scope.operationAt);
           if (outcome.ok)
             committed.push(...zip(events, outcome.value.eventIds));
           return outcome;
@@ -74,7 +75,7 @@ export function runLeadTransaction<O>(
       if (isErr(result)) throw new LeadTransactionRollback(result.error);
 
       // Effects share the transaction with source events: no orphaned delivery.
-      await enqueueLeadEffects(tx, committed, ports.now);
+      await enqueueLeadEffects(tx, committed, scope.operationAt);
       return result;
     })
     .catch((error: unknown) => {

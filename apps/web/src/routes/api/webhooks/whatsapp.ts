@@ -2,6 +2,7 @@ import type { ApiRequestEvent } from "~/routes/api/request-event";
 import { receiveKapsoWebhook } from "~/server/integrations/kapso/webhooks/receive-webhook";
 import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
 import { notificationsConfig } from "~/server/platform/config/env";
+import { getRequestInstant } from "~/server/platform/http/request-context";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
 const logger = createLogger("whatsapp-webhook");
@@ -34,7 +35,7 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
       eventType: event.request.headers.get("x-webhook-event"),
       payloadVersion: event.request.headers.get("x-webhook-payload-version"),
       rawBody: await event.request.text(),
-      now: serverInfrastructure.now(),
+      now: getRequestInstant(),
     });
 
     if (!result.ok) {

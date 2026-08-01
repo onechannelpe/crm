@@ -1,4 +1,3 @@
-import type { Clock } from "~/domain/time/clock";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createJobQueue } from "~/server/platform/jobs/job-queue";
 
@@ -11,7 +10,6 @@ import { createGpvSnapshotRunner, type GpvSnapshotRunner } from "./runner";
 
 interface GpvSnapshotQueueDeps {
   db: DatabaseExecutor;
-  now: Clock;
   readFile: (storageKey: string) => Promise<Uint8Array>;
   runner?: GpvSnapshotRunner;
 }
@@ -25,7 +23,6 @@ export function createGpvSnapshotQueue(
     deps.runner ??
     createGpvSnapshotRunner({
       db: deps.db,
-      now: deps.now,
       readFile: deps.readFile,
       reportProgress: async (id, progress) => {
         const persisted = await repo.updateProgress(id, progress);
@@ -39,11 +36,10 @@ export function createGpvSnapshotQueue(
   return createJobQueue<GpvSnapshotJobRow>({
     name: "gpv-snapshot-import",
     leaseMs: 60_000,
-    now: deps.now,
     workerId,
     store: repo.store,
-    handle: async (job, signal) => {
-      const result = await runner.process(job, signal);
+    handle: async (job, signal, claimedAt) => {
+      const result = await runner.process(job, signal, claimedAt);
 
       return {
         kind: "done",

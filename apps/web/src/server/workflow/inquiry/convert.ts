@@ -32,14 +32,14 @@ export async function convertInquiryOnRegistration(
   await createInquiryRepo(ctx.tx).markConverted(
     inquiry.id,
     input.leadId,
-    ctx.now,
+    ctx.operationAt,
   );
 
   if (
     inquiry.status === null ||
     inquiry.answeredAt === null ||
     inquiry.answeredBy === null ||
-    !isAnswerFresh(inquiry.answeredAt, ctx.now)
+    !isAnswerFresh(inquiry.answeredAt, ctx.operationAt)
   ) {
     return Ok(undefined);
   }
@@ -59,7 +59,7 @@ export async function convertInquiryOnRegistration(
     status: inquiry.status,
     priority: input.bornState.priority,
     reason: CARRYOVER_REASON,
-    now: ctx.now,
+    now: ctx.operationAt,
   });
   if (!statusTransition.ok) return Ok(undefined);
 
@@ -76,7 +76,7 @@ export async function convertInquiryOnRegistration(
     status: statusTransition.value.next.status,
     priority: inquiry.priority,
     reason: CARRYOVER_REASON,
-    now: ctx.now,
+    now: ctx.operationAt,
   });
   if (!priorityTransition.ok) return Ok(undefined);
 

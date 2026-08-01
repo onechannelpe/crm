@@ -2,8 +2,8 @@ import type { RecordRepLegalInput } from "~/contracts/workflow/inputs";
 import { fail, type DomainError } from "~/domain/errors";
 import type { WorkflowLeadId } from "~/domain/ids";
 import { LEGAL_REPRESENTATIVE_ROLE } from "~/server/organization/organization-repo";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { recordRepLegal } from "../../lead/domain/decide";
@@ -14,12 +14,9 @@ export async function recordRepLegalCommand(
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -34,7 +31,7 @@ export async function recordRepLegalCommand(
       dni: input.dni,
       telefono: input.telefono,
       email: input.email,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -52,11 +49,13 @@ export async function recordRepLegalCommand(
       },
       phone: input.telefono,
       email: input.email,
+      at: ctx.operationAt,
     });
     await ctx.repos.organization.setPrimaryRole({
       organizationId: state.organizationId,
       organizationPersonId: membership.id,
       role: LEGAL_REPRESENTATIVE_ROLE,
+      at: ctx.operationAt,
     });
 
     const committed = await ctx.commitTransition(transition.value);

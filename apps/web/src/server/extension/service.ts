@@ -25,11 +25,10 @@ export function createExtensionService(
   repos: ExtensionRepos,
   deps: ExtensionServiceDeps,
 ) {
-  const now = deps.now ?? (() => new Date());
   const uow = deps.uow;
 
   return {
-    createHandoffToken: (input: CreateHandoffTokenInput) =>
+    createHandoffToken: (input: CreateHandoffTokenInput, now: Date) =>
       createHandoffToken(
         {
           repos,
@@ -39,7 +38,10 @@ export function createExtensionService(
         input,
       ),
 
-    claimInstallationSession: (input: ClaimInstallationSessionInput) =>
+    claimInstallationSession: (
+      input: ClaimInstallationSessionInput,
+      now: Date,
+    ) =>
       claimInstallationSession(
         {
           repos,
@@ -49,7 +51,10 @@ export function createExtensionService(
         input,
       ),
 
-    refreshInstallationSession: (input: RefreshInstallationSessionInput) =>
+    refreshInstallationSession: (
+      input: RefreshInstallationSessionInput,
+      now: Date,
+    ) =>
       refreshInstallationSession(
         {
           repos,
@@ -58,7 +63,7 @@ export function createExtensionService(
         input,
       ),
 
-    ingestRuntimeEvent: (input: IngestRuntimeEventInput) =>
+    ingestRuntimeEvent: (input: IngestRuntimeEventInput, now: Date) =>
       ingestRuntimeEvent(
         {
           repos,
@@ -68,7 +73,10 @@ export function createExtensionService(
         input,
       ),
 
-    listTeamExecutiveStatuses: (input: ListTeamExecutiveStatusesInput) =>
+    listTeamExecutiveStatuses: (
+      input: ListTeamExecutiveStatusesInput,
+      now: Date,
+    ) =>
       listTeamExecutiveStatuses(
         {
           repos,

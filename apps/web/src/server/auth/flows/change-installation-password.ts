@@ -43,7 +43,6 @@ export async function changeInstallationPassword(
       sessions: repos.sessions,
       users: repos.users,
       events: repos.events,
-      now: () => input.now,
     }).revokeOtherForUser(user.id, input.currentSessionId);
     await repos.events.append({
       type: "password_changed",

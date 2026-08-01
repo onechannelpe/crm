@@ -202,6 +202,7 @@ export function createUsersRepo(db: DatabaseExecutor) {
       role: UserRole;
       executive_category?: ExecutiveCategory | null;
       is_active: boolean;
+      created_at: Date;
     }) {
       return (
         db
@@ -214,7 +215,6 @@ export function createUsersRepo(db: DatabaseExecutor) {
             executive_category: values.executive_category ?? null,
             password_change_required: false,
             onboarding_completed_at: null,
-            created_at: new Date(),
           })
           // A unique conflict must not abort the caller's transaction.
           .onConflict((oc) => oc.doNothing())

@@ -1,4 +1,3 @@
-import type { Clock } from "~/domain/time/clock";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
 import type { Overlay } from "~/server/client-search/model";
 import type {
@@ -24,7 +23,6 @@ type EnrichmentWorkerDeps = {
   scraper: SunatScraperClient;
   engineFallback: EngineFallback;
   projectOrganization: (input: OrganizationProjection) => Promise<void>;
-  now?: Clock;
 };
 
 const DEGRADED_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -34,7 +32,6 @@ export function createEnrichmentQueue(
   deps: EnrichmentWorkerDeps,
 ) {
   const { registry, scraper, engineFallback, projectOrganization } = deps;
-  const now = deps.now ?? (() => new Date());
 
   async function project(overlay: Overlay): Promise<void> {
     if (overlay.documentType !== "ruc") return;
@@ -51,7 +48,10 @@ export function createEnrichmentQueue(
     if (job.document_type !== "ruc") return null;
     const hit = await engineFallback(job.document_value);
     if (!hit) return null;
-    const fetchedAt = now();
+    // The Engine response is an external observation, not a consequence of
+    // claiming this job. Its freshness window starts when that response is
+    // received, so a slow fallback cannot be stored as already stale.
+    const fetchedAt = new Date();
     return {
       documentType: "ruc",
       documentValue: job.document_value,
@@ -74,11 +74,10 @@ export function createEnrichmentQueue(
     name: "enrichment",
     leaseMs: 30_000,
     maxConcurrency: 3,
-    now,
     workerId,
     store: registry.store,
     handle: async (job, signal) => {
-      const result = await processEnrichmentJob(job, scraper, signal, now());
+      const result = await processEnrichmentJob(job, scraper, signal);
 
       if (result.ok) {
         // Result columns ride the engine's settle. The org projection is an

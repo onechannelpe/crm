@@ -16,14 +16,17 @@ export async function expireLeadReservation(
   leadId: WorkflowLeadId,
   now: Date,
 ): Promise<Result<void, DomainError>> {
-  return runLeadTransaction({ executor, now }, async (ctx) => {
+  return runLeadTransaction({ executor, operationAt: now }, async (ctx) => {
     const state = await ctx.repos.leads.findById(leadId);
     if (!state) return Ok(undefined);
-    if (state.stage !== "PRICING" || !isReservationLapsed(state, ctx.now)) {
+    if (
+      state.stage !== "PRICING" ||
+      !isReservationLapsed(state, ctx.operationAt)
+    ) {
       return Ok(undefined);
     }
 
-    const transition = expireReservation(state, { now: ctx.now });
+    const transition = expireReservation(state, { now: ctx.operationAt });
     if (!transition.ok) return transition;
 
     const committed = await ctx.commitTransition(transition.value);

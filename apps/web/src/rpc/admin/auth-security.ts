@@ -41,7 +41,7 @@ export async function getUserLoginRetryReport(
         username: r.str("username").trim().toLowerCase(),
       })),
 
-    execute: async (_ctx, input) => {
+    execute: async ({ operationAt: now }, input) => {
       const { users, authEvents } = composeAuth().login.repos;
 
       const user = await users.findByUsername(input.username);
@@ -50,7 +50,6 @@ export async function getUserLoginRetryReport(
         return Ok(null);
       }
 
-      const now = new Date();
       const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60_000);
       const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60_000);
 

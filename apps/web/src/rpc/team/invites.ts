@@ -5,6 +5,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
+import { getRequestInstant } from "~/server/platform/http/request-context";
 import {
   createTeamInvite as createTeamInviteService,
   resendTeamInvite as resendTeamInviteService,
@@ -46,7 +47,7 @@ export async function createTeamInvite(input: unknown): Promise<{
         return command;
       }
 
-      return validateTeamInviteInput(command.value, new Date());
+      return validateTeamInviteInput(command.value, getRequestInstant());
     },
 
     audit: ({ role, teamId }) => ({

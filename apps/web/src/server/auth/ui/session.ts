@@ -8,6 +8,7 @@ import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/reque
 import { createAuthSessionReadContext } from "~/server/auth/infrastructure/session-context";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { db } from "~/server/platform/database/db";
+import { getRequestInstant } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
 const loginContext = createAuthLoginContext(db);
@@ -22,6 +23,7 @@ export async function getLoginFlow(flowId: string) {
     parsedFlowId.value,
     repos,
     createRequestPasskeyProvider(repos),
+    getRequestInstant(),
   );
 }
 

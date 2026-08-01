@@ -13,9 +13,12 @@ export type ContactAssignmentReadRepos = {
 export async function getActiveContactAssignments(
   actorUserId: UserId,
   repos: ContactAssignmentReadRepos,
+  asOf: Date,
 ): Promise<ActiveContactAssignmentView[]> {
-  const rows =
-    await repos.contactAssignments.findActiveByUserWithContacts(actorUserId);
+  const rows = await repos.contactAssignments.findActiveByUserWithContacts(
+    actorUserId,
+    asOf,
+  );
 
   return rows.map((row) => ({
     assignmentId: row.assignmentId,

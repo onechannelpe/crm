@@ -64,8 +64,8 @@ export async function getGpvPerformance(raw: {
         filter: r.obj("filter", readFilter),
       })),
 
-    execute: async (_ctx, input) =>
-      Ok(await getGpvPerformanceView(db, input.filter, new Date())),
+    execute: async (ctx, input) =>
+      Ok(await getGpvPerformanceView(db, input.filter, ctx.operationAt)),
   });
 }
 

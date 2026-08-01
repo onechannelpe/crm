@@ -25,7 +25,7 @@ export async function storeUploadedFile(
   input: StoreUploadInput,
   deps: StoreFileDeps,
 ): Promise<Result<FileAsset, DomainError>> {
-  const now = ctx.now();
+  const now = ctx.operationAt;
   const staticValidation = validateUploadMetadata(input.purpose, input.name);
   if (!staticValidation.ok) {
     return Err(invalid({ code: staticValidation.reason }));

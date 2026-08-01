@@ -80,7 +80,7 @@ export async function completeOnboardingAction(
               challengeId: command.challengeId,
               response: command.response,
               ipAddress: ctx.ipAddress,
-              verifiedAt: ctx.now(),
+              verifiedAt: ctx.operationAt,
             },
           );
           if (isErr(verified)) return verified;

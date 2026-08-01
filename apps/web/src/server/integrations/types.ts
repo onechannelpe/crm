@@ -1,7 +1,6 @@
 import type { Json } from "~/contracts/json";
 import type { IntegrationJobId, UserId } from "~/domain/ids";
 import type { QueueState } from "~/domain/jobs/queue-state";
-import type { Clock } from "~/domain/time/clock";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowIntegrationJobsTable } from "~/server/platform/database/types";
 import type { JobStore } from "~/server/platform/jobs/job-store";
@@ -53,7 +52,6 @@ export interface IntegrationJobsPort {
 
 export interface IntegrationRuntime {
   executor: DatabaseExecutor;
-  now: Clock;
   jobs: IntegrationJobsPort;
   leads: {
     findByRucMany(

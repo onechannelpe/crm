@@ -101,10 +101,10 @@ export async function checkActionRateLimit(
   actionName: RateLimitedAction,
   userId: UserId,
   deps: RateLimitDeps,
+  now: Date,
   ip: string = resolveRequestIp(),
 ): Promise<void> {
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
-  const now = new Date();
 
   // Skip the IP counter when the user is over their limit; incrementing it
   // would consume IP budget shared with legitimate users behind the same NAT.

@@ -18,6 +18,7 @@ export async function approveCapacityRequest(
     "capacity.approve",
     ctx.actor.userId,
     deps.rateLimitDeps,
+    ctx.operationAt,
     ctx.ipAddress,
   );
   return deps.uow.run(async (tx) => {
@@ -42,6 +43,7 @@ export async function approveCapacityRequest(
       request.id,
       ctx.actor.userId,
       note,
+      ctx.operationAt,
     );
     if (!approvedResult?.numUpdatedRows) {
       return Err(fail("request_not_pending"));
@@ -55,6 +57,7 @@ export async function approveCapacityRequest(
           targetUserId: request.user_id,
           amount: request.requested_amount,
           reason: note ?? request.reason,
+          at: ctx.operationAt,
         },
         { grants: tx.searchCapacityGrants },
       );
@@ -67,6 +70,7 @@ export async function approveCapacityRequest(
           targetUserId: request.user_id,
           amount: request.requested_amount,
           reason: note ?? request.reason,
+          at: ctx.operationAt,
         },
         { grants: tx.leadCapacityGrants },
       );

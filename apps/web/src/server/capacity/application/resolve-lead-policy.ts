@@ -25,6 +25,8 @@ export interface SetLeadUserOverrideCommand {
   bufferTarget: number;
   dailyLimit: number;
   expiresAt: Date | null;
+  /** Operation instant: when the override takes effect and is recorded. */
+  at: Date;
 }
 
 interface PolicyRepos {
@@ -79,6 +81,7 @@ interface LeadPolicyOverridesWriter {
       effective_from: Date;
       expires_at: Date | null;
       set_by_user_id: UserId;
+      created_at: Date;
     }): Promise<unknown>;
   };
 }
@@ -86,16 +89,16 @@ interface LeadPolicyOverridesWriter {
 export async function getEffectiveLeadPolicy(
   userId: UserId,
   repos: PolicyRepos,
+  evaluatedAt: Date,
 ): Promise<Result<LeadPolicy, DomainError>> {
   const user = await repos.users.findById(userId);
   if (!user) {
     return Err(fail("user_not_found"));
   }
 
-  const now = new Date();
   const userOverride = await repos.leadPolicyOverrides.findActiveForUser(
     userId,
-    now,
+    evaluatedAt,
   );
   const teamDefault = user.teamId
     ? await repos.leadPolicyDefaults.findForScope("team", user.teamId)
@@ -129,7 +132,8 @@ export async function setLeadUserOverride(
     user_id: command.targetUserId,
     active_buffer_target: command.bufferTarget,
     daily_refill_limit: command.dailyLimit,
-    effective_from: new Date(),
+    effective_from: command.at,
+    created_at: command.at,
     expires_at: command.expiresAt,
     set_by_user_id: command.actorUserId,
   });

@@ -7,6 +7,7 @@ import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/reque
 import { getClientIp } from "~/server/auth/password/client-ip";
 import { appendSessionCookie } from "~/server/auth/session/cookies";
 import { composeAuth } from "~/server/auth/ui/composition";
+import { getRequestInstant } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";
@@ -45,6 +46,7 @@ export async function GET(event: ApiRequestEvent): Promise<Response> {
     },
     runtime,
     createRequestPasskeyProvider(runtime.repos),
+    getRequestInstant(),
   );
   if (isErr(result)) {
     if (result.error.kind === "bad_request") {

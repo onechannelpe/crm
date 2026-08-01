@@ -21,13 +21,9 @@ function createTeamComposition(
     invites: createTeamInviteContext(
       serverInfrastructure.db,
       publicOrigin,
-      serverInfrastructure.now,
       delivery,
     ),
-    inviteManagement: createInviteManagementContext(
-      serverInfrastructure.db,
-      serverInfrastructure.now,
-    ),
+    inviteManagement: createInviteManagementContext(serverInfrastructure.db),
     publicOrigin,
   };
 }

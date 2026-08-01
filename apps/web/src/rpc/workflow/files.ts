@@ -11,7 +11,7 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 import { Err, Ok, type Result } from "~/shared/result";
 
 interface LeadUpload {
@@ -72,7 +72,7 @@ export async function requestWorkflowLeadsExportDownloadToken(): Promise<{
     name: "workflow.request_leads_export_download_token",
     access: { kind: "auth" },
     execute: (context) =>
-      composeWorkflow().leadFiles.requestLeadsExportDownloadToken({
+      workflow.files.requestLeadsExportDownloadToken({
         ctx: context,
       }),
   });
@@ -91,7 +91,7 @@ export async function uploadLeadSaleProofFile(formData: FormData) {
       sizeBytes: file.sizeBytes,
     }),
     execute: (context, { leadId, file }) =>
-      composeWorkflow().leadFiles.uploadSaleProofFile({
+      workflow.files.uploadSaleProofFile({
         ctx: context,
         leadId,
         file,
@@ -115,7 +115,7 @@ export async function requestLeadSaleProofDownloadToken(input: {
       })),
     audit: ({ leadId, fileAssetId }) => ({ leadId, fileAssetId }),
     execute: (context, { leadId, fileAssetId }) =>
-      composeWorkflow().leadFiles.requestSaleProofDownloadToken({
+      workflow.files.requestSaleProofDownloadToken({
         ctx: context,
         leadId,
         fileAssetId,
@@ -139,7 +139,7 @@ export async function uploadLeadRateRevisionFile(
         sizeBytes: file.sizeBytes,
       }),
       execute: (context, { leadId, file }) =>
-        composeWorkflow().leadFiles.uploadRateRevisionFile({
+        workflow.files.uploadRateRevisionFile({
           ctx: context,
           leadId,
           file,
@@ -165,7 +165,7 @@ export async function requestRateRevisionFileDownloadToken(input: {
         })),
       audit: ({ leadId, fileId }) => ({ leadId, fileId }),
       execute: (context, { leadId, fileId }) =>
-        composeWorkflow().leadFiles.requestRateRevisionDownloadToken({
+        workflow.files.requestRateRevisionDownloadToken({
           ctx: context,
           leadId,
           fileId,

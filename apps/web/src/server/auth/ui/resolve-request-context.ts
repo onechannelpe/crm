@@ -18,12 +18,11 @@ export function createRequestContextDependencies(): RequestContextDeps {
         );
       },
     },
-    now: () => new Date(),
     logger: createLogger("request-session-resolution"),
   });
 
   return {
-    resolveAuthSession: (token) => sessionService.resolve(token),
+    resolveAuthSession: (token, now) => sessionService.resolve(token, now),
     requestSessions: createRequestSessionsRepo(db),
   };
 }

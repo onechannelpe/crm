@@ -35,7 +35,7 @@ export async function setNotificationPreference(
       channel: command.channel,
       enabled: command.enabled,
     }),
-    execute: async ({ actor }, command) => {
+    execute: async ({ actor, operationAt: now }, command) => {
       if (!isChannelControllable(command.category, command.channel)) {
         return Err(invalid({ code: "channel_not_controllable" }));
       }
@@ -51,7 +51,7 @@ export async function setNotificationPreference(
         category: command.category,
         channel: command.channel,
         optedOut: !command.enabled,
-        now: new Date(),
+        now,
       });
 
       return Ok({

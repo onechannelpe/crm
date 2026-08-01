@@ -26,7 +26,7 @@ export async function upsertAuditPolicy(input: unknown): Promise<void> {
 
     audit: ({ action, isActive }) => ({ action, isActive }),
 
-    execute: async ({ actor }, fields) => {
+    execute: async ({ actor, operationAt: now }, fields) => {
       const policies = createAuditPolicyService({
         auditActionPolicies: composeAdmin().auditActionPolicies,
       });
@@ -36,6 +36,7 @@ export async function upsertAuditPolicy(input: unknown): Promise<void> {
         riskLevel: fields.riskLevel,
         isActive: fields.isActive,
         actorUserId: actor.userId,
+        updatedAt: now,
       } satisfies UpsertAuditPolicyInput);
 
       return Ok(undefined);

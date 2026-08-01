@@ -28,7 +28,7 @@ export async function getObservabilitySnapshot(
       }));
     },
 
-    execute: (_ctx, input) =>
-      composeObservability().observabilityService.getActionSnapshot(input),
+    execute: ({ operationAt: now }, input) =>
+      composeObservability().observabilityService.getActionSnapshot(input, now),
   });
 }

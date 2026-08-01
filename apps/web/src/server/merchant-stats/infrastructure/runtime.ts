@@ -18,7 +18,6 @@ import type {
   UserId,
 } from "~/domain/ids";
 import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
-import type { Clock } from "~/domain/time/clock";
 import type {
   FileOperationContext,
   FileRepos,
@@ -52,7 +51,6 @@ import { submitGpvSnapshot } from "../snapshot/submit";
 
 interface MerchantStatsRuntimeDeps {
   db: DatabaseExecutor;
-  now: Clock;
   files: {
     repo: FileRepos;
     storage: FileStorage;
@@ -64,8 +62,11 @@ export function createMerchantStatsRuntime(deps: MerchantStatsRuntimeDeps) {
 
   return {
     dashboard: {
-      performance: (filter: BookFilter): Promise<GpvPerformanceView> =>
-        getGpvPerformanceView(deps.db, filter, deps.now()),
+      performance: (
+        filter: BookFilter,
+        now: Date,
+      ): Promise<GpvPerformanceView> =>
+        getGpvPerformanceView(deps.db, filter, now),
       culqi: (filter: BookFilter): Promise<GpvCulqiView> =>
         getGpvCulqiView(deps.db, filter),
       cohorts: (
@@ -84,8 +85,8 @@ export function createMerchantStatsRuntime(deps: MerchantStatsRuntimeDeps) {
         }),
     },
     executive: {
-      progress: (userId: UserId) =>
-        loadExecutiveGpvProgress(deps.db, userId, deps.now()),
+      progress: (userId: UserId, now: Date) =>
+        loadExecutiveGpvProgress(deps.db, userId, now),
       rucStats: getMerchantStatsForViewer.bind(null, deps.db),
     },
     quality: {
@@ -100,12 +101,14 @@ export function createMerchantStatsRuntime(deps: MerchantStatsRuntimeDeps) {
     attribution: {
       adjust: (
         input: Omit<AdjustMerchantMonthCreditInput, "now">,
+        now: Date,
       ): Promise<Result<void, DomainError>> =>
-        adjustMerchantMonthCredit(deps.db, { ...input, now: deps.now() }),
+        adjustMerchantMonthCredit(deps.db, { ...input, now }),
       setTarget: (
         input: Omit<SetTargetInput, "now">,
+        now: Date,
       ): Promise<Result<void, DomainError>> =>
-        setTarget(deps.db, { ...input, now: deps.now() }),
+        setTarget(deps.db, { ...input, now }),
     },
     imports: {
       submit: (input: Parameters<typeof submitGpvSnapshot>[0]) =>
@@ -118,15 +121,17 @@ export function createMerchantStatsRuntime(deps: MerchantStatsRuntimeDeps) {
       },
       snapshot: (snapshotId: GpvSnapshotId) =>
         getGpvSnapshotDetail(deps.db, snapshotId),
-      resolveIssue: (input: {
-        issueId: GpvSnapshotIssueId;
-        resolution: GpvSnapshotIssueResolution;
-        resolvedBy: UserId;
-      }) => resolveGpvSnapshotIssue(deps.db, { ...input, now: deps.now() }),
+      resolveIssue: (
+        input: {
+          issueId: GpvSnapshotIssueId;
+          resolution: GpvSnapshotIssueResolution;
+          resolvedBy: UserId;
+        },
+        now: Date,
+      ) => resolveGpvSnapshotIssue(deps.db, { ...input, now }),
       createQueue: (workerId: string) =>
         createGpvSnapshotQueue(workerId, {
           db: deps.db,
-          now: deps.now,
           readFile: (storageKey) => deps.files.storage.getBytes(storageKey),
         }),
     },

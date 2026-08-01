@@ -65,7 +65,7 @@ export async function changePassword(
         newPassword: r.str("newPassword"),
       })),
 
-    execute: async ({ actor }, input) => {
+    execute: async ({ actor, operationAt: now }, input) => {
       const userId = actor.userId;
       const { users, events } = composeSecurity();
 
@@ -93,7 +93,7 @@ export async function changePassword(
         entityType: "user",
         entityId: auditEntityId("user", userId),
         actorUserId: userId,
-        occurredAt: new Date(),
+        occurredAt: now,
       });
 
       return Ok({ message: "Contraseña actualizada" });
@@ -108,7 +108,7 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
     name: "settings.security.remove_passkeys",
     access: { kind: "session" },
 
-    execute: async ({ actor }) => {
+    execute: async ({ actor, operationAt: now }) => {
       const userId = actor.userId;
       const { passkeys, userRecoveryCodes, events } = composeSecurity();
       const { user, strongAuthStatus } =
@@ -133,7 +133,7 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
         entityType: "user",
         entityId: auditEntityId("user", userId),
         actorUserId: userId,
-        occurredAt: new Date(),
+        occurredAt: now,
       });
 
       return Ok({ message: "Claves de acceso eliminadas" });
@@ -148,7 +148,7 @@ export async function disableTotp(): Promise<{ message: string }> {
     name: "settings.security.disable_totp",
     access: { kind: "session" },
 
-    execute: async ({ actor }) => {
+    execute: async ({ actor, operationAt: now }) => {
       const userId = actor.userId;
       const { userTotpFactors, userRecoveryCodes, events } = composeSecurity();
       const { user, strongAuthStatus } =
@@ -162,7 +162,7 @@ export async function disableTotp(): Promise<{ message: string }> {
         hasPasskey: strongAuthStatus.hasPasskey,
       });
 
-      await userTotpFactors.disable(userId, new Date());
+      await userTotpFactors.disable(userId, now);
       // Delete recovery codes only after the account loses its last strong factor.
       if (!strongAuthStatus.hasPasskey) {
         await userRecoveryCodes.deleteAllByUser(userId);
@@ -173,7 +173,7 @@ export async function disableTotp(): Promise<{ message: string }> {
         entityType: "user",
         entityId: auditEntityId("user", userId),
         actorUserId: userId,
-        occurredAt: new Date(),
+        occurredAt: now,
       });
 
       return Ok({ message: "Aplicación de autenticación desactivada" });

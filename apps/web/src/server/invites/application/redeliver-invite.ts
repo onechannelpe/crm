@@ -16,10 +16,9 @@ export async function redeliverInvite(
   repos: InviteDeps,
   runtime: InviteRuntime,
   input: RedeliverInviteInput,
+  now: Date,
 ): Promise<Result<InviteIssueResult, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
-    const now = runtime.now();
-
     const invite = await transactionRepos.userInvites.findById(input.inviteId);
     if (!invite) {
       return Err(fail("invite_not_found"));

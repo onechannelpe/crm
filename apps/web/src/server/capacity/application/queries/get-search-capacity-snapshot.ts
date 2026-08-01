@@ -35,7 +35,11 @@ export async function getSearchCapacitySnapshot(
   repos: SnapshotRepos,
   evaluatedAt: Date,
 ): Promise<Result<SearchCapacitySnapshot, DomainError>> {
-  const policyResult = await getEffectiveSearchPolicy(userId, repos);
+  const policyResult = await getEffectiveSearchPolicy(
+    userId,
+    repos,
+    evaluatedAt,
+  );
   if (!policyResult.ok) return policyResult;
 
   const range = appMonthRange(evaluatedAt);

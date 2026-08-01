@@ -4,7 +4,7 @@ import {
 } from "~/domain/observability/auth-funnel";
 import { recordAuthAnalyticsEvent as recordAuthAnalytics } from "~/server/auth/auth-analytics";
 import { composeAuth } from "~/server/auth/ui/composition";
-import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
+import { getRequestInstant } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
 function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
@@ -41,6 +41,6 @@ export async function trackAuthClientEvent(
     },
     getActionRequestContext(),
     composeAuth().analytics,
-    serverInfrastructure.now,
+    getRequestInstant(),
   );
 }

@@ -11,19 +11,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { addToFavoritesCommand } from "~/server/workflow/lead/commands/add-to-favorites";
-import { deleteLeadCommand } from "~/server/workflow/lead/commands/delete-lead";
-import { editCommercialScopeCommand } from "~/server/workflow/lead/commands/edit-commercial-scope";
-import { reassignLeadCommand } from "~/server/workflow/lead/commands/reassign-lead";
-import { recordRepLegalCommand } from "~/server/workflow/lead/commands/record-rep-legal";
-import { registerLead } from "~/server/workflow/lead/commands/register-lead";
-import { removeFromFavoritesCommand } from "~/server/workflow/lead/commands/remove-from-favorites";
-import { requestSunatRefresh } from "~/server/workflow/lead/commands/request-sunat-refresh";
-import { restartQuotationCommand } from "~/server/workflow/lead/commands/restart-quotation";
-import { reviewLeadCommand } from "~/server/workflow/lead/commands/review-lead";
-import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 import { isErr, Ok } from "~/shared/result";
 
 function parseLeadRef(input: unknown) {
@@ -53,13 +42,10 @@ export async function requestLeadCreation(input: unknown) {
         posCount: r.posInt("posCount"),
       })),
 
-    execute: ({ actor }, payload) =>
-      registerLead(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.registerLead(
         { actor: workflowActor(actor), ...payload },
-        {
-          ...composeWorkflow().ports(),
-          identity: composeWorkflow().organizationEnrichment,
-        },
+        now,
       ),
   });
 }
@@ -86,10 +72,10 @@ export async function requestEditCommercialScope(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      editCommercialScopeCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.editCommercialScope(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -114,10 +100,10 @@ export async function requestSaveDigitalPolicy(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      saveDigitalPolicyCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.saveDigitalPolicy(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -142,10 +128,10 @@ export async function requestRecordRepLegal(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      recordRepLegalCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.recordRepLegal(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -167,10 +153,10 @@ export async function requestLeadReview(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      reviewLeadCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.reviewLead(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -184,10 +170,10 @@ export async function requestQuotationRestart(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, { leadId }) =>
-      restartQuotationCommand(
+    execute: ({ actor, operationAt: now }, { leadId }) =>
+      workflow.commands.restartQuotation(
         { actor: workflowActor(actor), leadId },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -207,14 +193,14 @@ export async function requestLeadReassignment(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      reassignLeadCommand(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.reassignLead(
         {
           actor: workflowActor(actor),
           leadId: payload.leadId,
           toExecutiveId: payload.newExecutiveId,
         },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -228,13 +214,13 @@ export async function requestAddLeadToFavorites(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: async ({ actor }, { leadId }) => {
-      const result = await addToFavoritesCommand(
+    execute: async ({ actor, operationAt: now }, { leadId }) => {
+      const result = await workflow.commands.addToFavorites(
         {
           actor: workflowActor(actor),
           leadId,
         },
-        composeWorkflow().ports(),
+        now,
       );
 
       if (isErr(result)) {
@@ -255,13 +241,13 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: async ({ actor }, { leadId }) => {
-      const result = await removeFromFavoritesCommand(
+    execute: async ({ actor, operationAt: now }, { leadId }) => {
+      const result = await workflow.commands.removeFromFavorites(
         {
           actor: workflowActor(actor),
           leadId,
         },
-        composeWorkflow().ports(),
+        now,
       );
 
       if (isErr(result)) {
@@ -282,13 +268,13 @@ export async function requestLeadDeletion(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, { leadId }) =>
-      deleteLeadCommand(
+    execute: ({ actor, operationAt: now }, { leadId }) =>
+      workflow.commands.deleteLead(
         {
           actor: workflowActor(actor),
           leadId,
         },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }
@@ -302,16 +288,13 @@ export async function requestLeadSunatRefresh(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, { leadId }) =>
-      requestSunatRefresh(
+    execute: ({ actor, operationAt: now }, { leadId }) =>
+      workflow.commands.requestSunatRefresh(
         {
           actor: workflowActor(actor),
           leadId,
         },
-        {
-          leads: composeWorkflow().repos.leads,
-          enrichmentQueue: composeWorkflow().enrichmentQueue,
-        },
+        now,
       ),
   });
 }

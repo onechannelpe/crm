@@ -2,6 +2,7 @@ import { ContactAssignmentId } from "~/domain/ids";
 import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contracts";
 import { composeExtension } from "~/server/extension/ui/composition";
 import { toWire } from "~/server/platform/action/domain-error";
+import { getRequestInstant } from "~/server/platform/http/request-context";
 import { authorizeRoutePermission } from "~/server/platform/http/route-access";
 import { isErr } from "~/shared/result";
 
@@ -34,13 +35,16 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
   const session = auth.value;
 
   const origin = event.request.headers.get("origin") ?? "";
-  const result = await composeExtension().extensionService.createHandoffToken({
-    userId: session.userId,
-    authSessionId: session.id,
-    branchId: session.branchId,
-    assignmentId: assignmentId.value,
-    origin,
-  });
+  const result = await composeExtension().extensionService.createHandoffToken(
+    {
+      userId: session.userId,
+      authSessionId: session.id,
+      branchId: session.branchId,
+      assignmentId: assignmentId.value,
+      origin,
+    },
+    getRequestInstant(),
+  );
 
   if (isErr(result)) {
     const status =

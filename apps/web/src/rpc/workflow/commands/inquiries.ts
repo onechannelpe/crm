@@ -3,9 +3,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { createInquiry } from "~/server/workflow/inquiry/create-inquiry";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 export async function requestInquiryCreation(input: unknown) {
   "use server";
@@ -19,10 +18,10 @@ export async function requestInquiryCreation(input: unknown) {
         ruc: r.str("ruc"),
       })),
 
-    execute: ({ actor }, payload) =>
-      createInquiry(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.createInquiry(
         { ruc: payload.ruc, actor: workflowActor(actor) },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }

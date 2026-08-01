@@ -22,6 +22,7 @@ import {
   type AuthFunnelScreen,
   type AuthFunnelSource,
 } from "~/domain/observability/auth-funnel";
+import { addMilliseconds } from "~/domain/time/clock";
 import {
   parsePositiveIntegerAtMost,
   trimOrUndefined,
@@ -255,6 +256,7 @@ function parseAuthFunnelOutcome(
 
 function parseActionSnapshotFilter(
   input: ObservabilitySnapshotInput | undefined,
+  asOf: Date,
 ): Result<ActionSnapshotFilter, DomainError> {
   const parsedWindowMinutes = parsePositiveIntegerAtMost(
     input?.windowMinutes ?? OBSERVABILITY_DEFAULT_WINDOW_MINUTES,
@@ -280,13 +282,12 @@ function parseActionSnapshotFilter(
   if (isErr(parsedStatus)) return parsedStatus;
 
   const windowMinutes = parsedWindowMinutes.value;
-  const now = new Date();
 
   return Ok({
     windowMinutes,
     limit: parsedLimit.value,
-    fromInclusive: new Date(now.getTime() - windowMinutes * 60_000),
-    toInclusive: now,
+    fromInclusive: addMilliseconds(asOf, -windowMinutes * 60_000),
+    toInclusive: asOf,
     actionName: trimOrUndefined(input?.actionName),
     status: parsedStatus.value,
   });
@@ -294,6 +295,7 @@ function parseActionSnapshotFilter(
 
 function parseAuthFunnelSnapshotFilter(
   input: AuthFunnelSnapshotInput | undefined,
+  asOf: Date,
 ): Result<AuthFunnelSnapshotFilter, DomainError> {
   const parsedWindowMinutes = parsePositiveIntegerAtMost(
     input?.windowMinutes ?? OBSERVABILITY_DEFAULT_WINDOW_MINUTES,
@@ -325,13 +327,12 @@ function parseAuthFunnelSnapshotFilter(
   if (isErr(parsedOutcome)) return parsedOutcome;
 
   const windowMinutes = parsedWindowMinutes.value;
-  const now = new Date();
 
   return Ok({
     windowMinutes,
     limit: parsedLimit.value,
-    fromInclusive: new Date(now.getTime() - windowMinutes * 60_000),
-    toInclusive: now,
+    fromInclusive: addMilliseconds(asOf, -windowMinutes * 60_000),
+    toInclusive: asOf,
     eventName: parsedEventName.value,
     method: parsedMethod.value,
     outcome: parsedOutcome.value,
@@ -362,9 +363,10 @@ export function createObservabilityService(repos: ObservabilityRepos) {
     },
 
     async getActionSnapshot(
-      input?: ObservabilitySnapshotInput,
+      input: ObservabilitySnapshotInput | undefined,
+      asOf: Date,
     ): Promise<Result<ObservabilitySnapshot, DomainError>> {
-      const parsed = parseActionSnapshotFilter(input);
+      const parsed = parseActionSnapshotFilter(input, asOf);
       if (isErr(parsed)) return parsed;
 
       const filter = parsed.value;
@@ -411,9 +413,10 @@ export function createObservabilityService(repos: ObservabilityRepos) {
     },
 
     async getAuthFunnelSnapshot(
-      input?: AuthFunnelSnapshotInput,
+      input: AuthFunnelSnapshotInput | undefined,
+      asOf: Date,
     ): Promise<Result<AuthFunnelSnapshot, DomainError>> {
-      const parsed = parseAuthFunnelSnapshotFilter(input);
+      const parsed = parseAuthFunnelSnapshotFilter(input, asOf);
       if (isErr(parsed)) return parsed;
 
       const filter = parsed.value;

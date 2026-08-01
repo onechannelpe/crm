@@ -2,7 +2,6 @@ import type { Role } from "~/domain/auth/access/rbac";
 import type { DomainError } from "~/domain/errors";
 import type { ExecutiveCategory } from "~/domain/identity/executive-category";
 import type { BranchId, TeamId, UserId, UserInviteId } from "~/domain/ids";
-import type { Clock } from "~/domain/time/clock";
 import type { EventsRepo } from "~/server/event-logs/events-repo";
 import type { AppUow } from "~/server/platform/database/uow";
 import type { TeamsRepo } from "~/server/users/repos-teams";
@@ -37,13 +36,11 @@ export interface InviteDeps {
 
 export interface InviteServiceDeps {
   inviteTtlMs?: number;
-  now: Clock;
   uow: AppUow<InviteDeps>;
   hashPassword?: (password: string) => Promise<string>;
 }
 
 export interface InviteRuntime {
-  now: Clock;
   inviteTtlMs: number;
   uow: AppUow<InviteDeps>;
   hashPassword: (password: string) => Promise<string>;
@@ -122,19 +119,27 @@ export interface InviteAcceptedResult {
 export interface InviteService {
   listPendingInvites(
     branchId: BranchId,
+    now: Date,
   ): Promise<Result<PendingBranchInvite[], DomainError>>;
   createInvite(
     input: CreateInviteInput,
+    now: Date,
   ): Promise<Result<InviteIssueResult, DomainError>>;
   redeliverInvite(
     input: RedeliverInviteInput,
+    now: Date,
   ): Promise<Result<InviteIssueResult, DomainError>>;
-  revokeInvite(input: RevokeInviteInput): Promise<Result<void, DomainError>>;
+  revokeInvite(
+    input: RevokeInviteInput,
+    now: Date,
+  ): Promise<Result<void, DomainError>>;
   markInviteDelivered(
     inviteId: UserInviteId,
+    now: Date,
   ): Promise<Result<void, DomainError>>;
   acceptInvite(
     input: AcceptInviteInput,
+    now: Date,
   ): Promise<Result<InviteAcceptedResult, DomainError>>;
 }
 

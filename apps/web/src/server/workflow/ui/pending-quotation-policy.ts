@@ -1,7 +1,6 @@
 import "server-only";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { getPendingQuotationPolicy } from "~/server/workflow/policy/read/get-pending-quotation-policy";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 export async function queryPendingQuotationPolicy() {
   return executeSessionServerFunction({
@@ -10,18 +9,10 @@ export async function queryPendingQuotationPolicy() {
 
     audit: () => ({}),
 
-    execute: ({ actor }) => {
-      const workflow = composeWorkflow();
-
-      return getPendingQuotationPolicy(
-        {
-          pendingQuotationPolicies: workflow.repos.pendingQuotationPolicies,
-        },
-        {
-          actorRole: actor.role,
-          branchId: actor.branchId,
-        },
-      );
-    },
+    execute: ({ actor }) =>
+      workflow.queries.getPendingQuotationPolicy({
+        actorRole: actor.role,
+        branchId: actor.branchId,
+      }),
   });
 }

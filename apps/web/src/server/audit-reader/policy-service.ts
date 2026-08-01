@@ -46,6 +46,7 @@ export interface UpsertAuditPolicyInput {
   riskLevel: string;
   isActive: boolean;
   actorUserId: UserId;
+  updatedAt: Date;
 }
 
 function mapPolicyRow(row: {
@@ -111,14 +112,13 @@ export function createAuditPolicyService(deps: AuditPolicyServiceDeps) {
         }
       }
 
-      const now = new Date();
       await deps.auditActionPolicies.upsert({
         action,
         risk_level: riskLevel,
         is_active: isActive,
         is_protected: existing?.is_protected ?? false,
         updated_by_user_id: input.actorUserId,
-        now,
+        now: input.updatedAt,
       });
     },
   };

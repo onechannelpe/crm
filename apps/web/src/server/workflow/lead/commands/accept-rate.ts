@@ -1,8 +1,8 @@
 import type { AcceptRateInput } from "~/contracts/workflow/inputs";
 import { fail, type DomainError } from "~/domain/errors";
 import type { WorkflowLeadId, WorkflowRateProposalId } from "~/domain/ids";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { acceptRate } from "../../lead/domain/decide";
@@ -15,12 +15,9 @@ export async function acceptRateCommand(
     leadId: WorkflowLeadId;
     proposalId: WorkflowRateProposalId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -37,14 +34,14 @@ export async function acceptRateCommand(
       return Err(fail("rate_proposal_not_pending"));
     }
 
-    if (!isReservationActive(state, ctx.now)) {
+    if (!isReservationActive(state, ctx.operationAt)) {
       return Err(fail("rate_proposal_expired"));
     }
 
     const transition = acceptRate(state, {
       actor: input.actor,
       proposalId: input.proposalId,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -54,7 +51,7 @@ export async function acceptRateCommand(
     await ctx.repos.rateProposals.markOutcome(
       input.proposalId,
       "accepted",
-      ctx.now,
+      ctx.operationAt,
     );
 
     const committed = await ctx.commitTransition(transition.value);

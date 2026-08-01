@@ -28,7 +28,9 @@ interface SnapshotRepos {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  contactAssignments: { countActiveByUser(userId: UserId): Promise<number> };
+  contactAssignments: {
+    countActiveByUser(userId: UserId, asOf: Date): Promise<number>;
+  };
 }
 
 export async function getLeadCapacitySnapshot(
@@ -36,7 +38,7 @@ export async function getLeadCapacitySnapshot(
   repos: SnapshotRepos,
   evaluatedAt: Date,
 ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
-  const policyResult = await getEffectiveLeadPolicy(userId, repos);
+  const policyResult = await getEffectiveLeadPolicy(userId, repos, evaluatedAt);
   if (!policyResult.ok) return policyResult;
 
   const range = appDayRange(appCalendarDateAt(evaluatedAt));
@@ -44,7 +46,7 @@ export async function getLeadCapacitySnapshot(
     repos.leadCapacityGrants.findByUserAndRange(userId, range),
     repos.leadUsageReservations.findByUserAndRange(userId, range),
     repos.leadUsageCommits.findByUserAndRange(userId, range),
-    repos.contactAssignments.countActiveByUser(userId),
+    repos.contactAssignments.countActiveByUser(userId, evaluatedAt),
   ]);
 
   return Ok(

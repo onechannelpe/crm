@@ -12,10 +12,8 @@ export async function updateSourcingPolicy(
     branchId: BranchId;
     engineAssignmentEnabled: boolean;
   },
-  ports: {
-    sourcingPolicies: LeadSourcingPolicyRepository;
-    now: Date;
-  },
+  sourcingPolicies: LeadSourcingPolicyRepository,
+  updatedAt: Date,
 ): Promise<
   Result<{ branchId: string; engineAssignmentEnabled: boolean }, DomainError>
 > {
@@ -23,10 +21,10 @@ export async function updateSourcingPolicy(
     return Err(forbidden());
   }
 
-  await ports.sourcingPolicies.upsert({
+  await sourcingPolicies.upsert({
     branchId: input.branchId,
     engineAssignmentEnabled: input.engineAssignmentEnabled,
-    updatedAt: ports.now,
+    updatedAt,
     updatedByUserId: input.actor.userId,
   });
 

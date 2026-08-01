@@ -9,6 +9,11 @@ export async function getMyContactAssignmentCapacity(): Promise<LeadCapacitySnap
   return executeSessionServerFunction({
     name: "contact_assignments.get_capacity",
     access: { kind: "permission", permission: "capacity:read:self" },
-    execute: (ctx) => getContactAssignmentCapacity(ctx.actor.userId, readRepos),
+    execute: (ctx) =>
+      getContactAssignmentCapacity(
+        ctx.actor.userId,
+        readRepos,
+        ctx.operationAt,
+      ),
   });
 }

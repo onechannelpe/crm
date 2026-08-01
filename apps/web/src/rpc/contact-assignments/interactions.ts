@@ -31,7 +31,7 @@ export async function completeContactAssignmentCall(
       contactId,
     }),
 
-    execute: ({ actor }, command) =>
+    execute: ({ actor, operationAt: now }, command) =>
       completeContactAssignmentCallUseCase(
         {
           actorUserId: actor.userId,
@@ -39,6 +39,7 @@ export async function completeContactAssignmentCall(
           contactId: command.contactId,
           outcome: command.outcome,
           notes: command.notes,
+          at: now,
         },
         composeContactAssignments().interactionUow,
       ),

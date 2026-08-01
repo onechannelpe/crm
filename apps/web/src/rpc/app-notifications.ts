@@ -20,11 +20,11 @@ export async function markNotificationRead(
         notificationId: reader.id("notificationId", AppNotificationId),
       })),
     audit: (command) => ({ notificationId: command.notificationId }),
-    execute: async ({ actor }, command) => {
+    execute: async ({ actor, operationAt: now }, command) => {
       await composeNotifications().appNotifications.markRead(
         actor.userId,
         command.notificationId,
-        new Date(),
+        now,
       );
       return Ok(undefined);
     },
@@ -37,10 +37,10 @@ export async function markAllNotificationsRead(): Promise<void> {
   await executeSessionServerFunction({
     name: "notifications.mark_all_read",
     access: { kind: "auth" },
-    execute: async ({ actor }) => {
+    execute: async ({ actor, operationAt: now }) => {
       await composeNotifications().appNotifications.markAllRead(
         actor.userId,
-        new Date(),
+        now,
       );
       return Ok(undefined);
     },

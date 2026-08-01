@@ -12,14 +12,14 @@ export type TelemetryRow = RecordActionObservationInput;
 export type TelemetryContext = {
   actionName: string;
   ctx: AppContext;
-  startedAt: Date;
+  /** Monotonic reading from `performance.now()`, taken when the action began. */
+  startedTicks: number;
   audit: AuditFields;
 };
 
 function baseRow(
   t: TelemetryContext,
 ): Omit<TelemetryRow, "status" | "errorCode" | "errorMessage"> {
-  const at = t.ctx.now();
   return {
     traceId: t.ctx.traceId,
     requestId: t.ctx.requestId,
@@ -28,9 +28,13 @@ function baseRow(
     actionName: t.actionName,
     actorUserId: t.ctx.actor.userId,
     actorRole: t.ctx.actor.role,
-    durationMs: at.getTime() - t.startedAt.getTime(),
+    // Elapsed time comes from the monotonic timer so an NTP step mid-request
+    // cannot produce a negative or absurd duration. The row itself is stamped
+    // with the operation instant, which keeps every row from one request
+    // correlated on a single timestamp.
+    durationMs: Math.round(performance.now() - t.startedTicks),
     input: t.audit,
-    createdAt: at,
+    createdAt: t.ctx.operationAt,
   };
 }
 

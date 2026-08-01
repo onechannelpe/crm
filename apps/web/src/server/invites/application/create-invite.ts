@@ -55,6 +55,7 @@ export async function createInvite(
   repos: InviteDeps,
   runtime: InviteRuntime,
   input: CreateInviteInput,
+  now: Date,
 ): Promise<Result<InviteIssueResult, DomainError>> {
   if (!canAssignRole(input.actorRole, input.role)) {
     return Err(fail("role_not_assignable"));
@@ -95,6 +96,7 @@ export async function createInvite(
         firstSurname: input.firstSurname,
         secondSurname: input.secondSurname,
         executiveCategory: input.executiveCategory ?? null,
+        createdAt: now,
       });
 
       // Reuse the user created by a concurrent invite for the same email.
@@ -126,14 +128,19 @@ export async function createInvite(
       is_active: false,
     });
 
-    const issued = await issueInvite(transactionRepos, runtime, {
-      actorUserId: input.actorUserId,
-      branchId: input.branchId,
-      userId: user.id,
-      email: normalizedEmail,
-      role: input.role,
-      expiresAt: input.expiresAt ?? null,
-    });
+    const issued = await issueInvite(
+      transactionRepos,
+      runtime,
+      {
+        actorUserId: input.actorUserId,
+        branchId: input.branchId,
+        userId: user.id,
+        email: normalizedEmail,
+        role: input.role,
+        expiresAt: input.expiresAt ?? null,
+      },
+      now,
+    );
 
     return Ok(issued);
   });

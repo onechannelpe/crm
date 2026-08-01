@@ -29,19 +29,21 @@ export async function replaceSession(
     sessions: repos.sessions,
     users: repos.users,
     events: repos.events,
-    now: () => input.issuedAt,
   });
-  const issued = await sessionService.establish({
-    user: input.user,
-    sessionClass: input.sessionClass,
-    request: {
-      ipAddress: input.ipAddress,
-      userAgent: input.userAgent,
+  const issued = await sessionService.establish(
+    {
+      user: input.user,
+      sessionClass: input.sessionClass,
+      request: {
+        ipAddress: input.ipAddress,
+        userAgent: input.userAgent,
+      },
+      primaryAuthMethod: input.current.primaryAuthMethod,
+      strongAuthMethod: input.strongAuthMethod,
+      strongAuthAt: input.strongAuthAt,
     },
-    primaryAuthMethod: input.current.primaryAuthMethod,
-    strongAuthMethod: input.strongAuthMethod,
-    strongAuthAt: input.strongAuthAt,
-  });
+    input.issuedAt,
+  );
 
   await sessionService.revoke(input.current.id);
   return issued.token;

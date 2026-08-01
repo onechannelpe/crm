@@ -1,5 +1,4 @@
 import type { IntegrationJobId } from "~/domain/ids";
-import type { Clock } from "~/domain/time/clock";
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 import type { IntegrationJobRow } from "~/server/integrations/types";
@@ -18,7 +17,6 @@ interface StoredRows {
 
 export function createRecordImportRunner(deps: {
   executor: DatabaseExecutor;
-  now: Clock;
   readFile: (filePath: string) => Promise<Uint8Array>;
   reportProgress: (
     jobId: IntegrationJobId,
@@ -29,12 +27,13 @@ export function createRecordImportRunner(deps: {
     },
   ) => Promise<unknown>;
 }) {
-  const { executor, now, readFile, reportProgress } = deps;
+  const { executor, readFile, reportProgress } = deps;
 
   return {
     async process(
       job: IntegrationJobRow,
       signal: AbortSignal,
+      startedAt: Date,
     ): Promise<{
       rowsTotal: number;
       rowsApplied: number;
@@ -61,7 +60,6 @@ export function createRecordImportRunner(deps: {
         throw new Error("Job aborted");
       }
 
-      const startedAt = now();
       const applied = await applyImportRows(
         {
           jobId: job.id,

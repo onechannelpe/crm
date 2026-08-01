@@ -38,7 +38,11 @@ export async function uploadUserAvatar(
 
     execute: async (ctx, file) => {
       const { avatarService } = composeAvatar();
-      const result = await avatarService.upload(ctx.actor.userId, file);
+      const result = await avatarService.upload(
+        ctx.actor.userId,
+        file,
+        ctx.operationAt,
+      );
       if (isErr(result)) {
         return Err(toAvatarDomainError(result.error.code));
       }
@@ -61,7 +65,10 @@ export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
 
     execute: async (ctx) => {
       const { avatarService } = composeAvatar();
-      const result = await avatarService.remove(ctx.actor.userId);
+      const result = await avatarService.remove(
+        ctx.actor.userId,
+        ctx.operationAt,
+      );
       if (isErr(result)) {
         return Err(toAvatarDomainError(result.error.code));
       }

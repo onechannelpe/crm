@@ -55,10 +55,10 @@ async function prepareDiscoverableLogin(
 ): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
   const throttle = await createAuthThrottleService({
     authThrottle: repos.authThrottle,
-    now: () => input.occurredAt,
   }).checkPasskeyChallengeThrottle(
     DISCOVERABLE_PASSKEY_IDENTIFIER,
     input.ipAddress,
+    input.occurredAt,
   );
   if (!throttle.allowed) {
     await recordAuthEvent(repos, {
@@ -96,11 +96,11 @@ async function prepareIdentifiedLogin(
 
   const throttleService = createAuthThrottleService({
     authThrottle: repos.authThrottle,
-    now: () => input.occurredAt,
   });
   const throttle = await throttleService.checkPasskeyChallengeThrottle(
     identifier,
     input.ipAddress,
+    input.occurredAt,
   );
   const user =
     input.account.kind === "authenticated"
@@ -125,6 +125,7 @@ async function prepareIdentifiedLogin(
     await throttleService.recordPasskeyChallengeFailure(
       identifier,
       input.ipAddress,
+      input.occurredAt,
     );
     await recordAuthEvent(repos, {
       userId: user?.id ?? null,

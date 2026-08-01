@@ -52,7 +52,7 @@ export async function storeGeneratedFile(
     );
   }
 
-  const now = ctx.now();
+  const now = ctx.operationAt;
   const metadata = buildUploadMetadata(
     staticValidation.safeDisplayFilename,
     staticValidation.extension,

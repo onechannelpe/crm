@@ -1,6 +1,5 @@
 import type { Selectable } from "kysely";
 
-import type { Clock } from "~/domain/time/clock";
 import { verifyPasswordLoginCredentials } from "~/server/auth/password/password-login";
 import type { AuthProof } from "~/server/auth/policy/types";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
@@ -13,7 +12,7 @@ type PasswordProviderDeps = {
   users: ReturnType<typeof createUsersRepo>;
   authThrottle: ReturnType<typeof createAuthThrottleRepo>;
   authEvents: ReturnType<typeof createAuthEventsRepo>;
-  now: Clock;
+  now: Date;
 };
 
 interface AuthenticatedPassword {

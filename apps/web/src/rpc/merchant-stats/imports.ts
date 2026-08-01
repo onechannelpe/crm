@@ -81,7 +81,7 @@ export async function uploadMerchantReport(formData: FormData) {
         },
         cutAt,
         uploadedBy: context.actor.userId,
-        now: context.now(),
+        now: context.operationAt,
       });
 
       if (!submitted.ok) {
@@ -116,11 +116,14 @@ export async function resolveGpvImportIssue(input: {
 
     audit: ({ issueId, resolution }) => ({ issueId, resolution }),
 
-    execute: ({ actor }, { issueId, resolution }) =>
-      composeMerchantStats().imports.resolveIssue({
-        issueId,
-        resolution,
-        resolvedBy: actor.userId,
-      }),
+    execute: ({ actor, operationAt: now }, { issueId, resolution }) =>
+      composeMerchantStats().imports.resolveIssue(
+        {
+          issueId,
+          resolution,
+          resolvedBy: actor.userId,
+        },
+        now,
+      ),
   });
 }

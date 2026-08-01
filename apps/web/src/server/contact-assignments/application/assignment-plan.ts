@@ -24,7 +24,9 @@ export type AssignmentPlanRepos = {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  contactAssignments: { countActiveByUser(userId: UserId): Promise<number> };
+  contactAssignments: {
+    countActiveByUser(userId: UserId, asOf: Date): Promise<number>;
+  };
 };
 
 export type ContactAssignmentPlan = {
@@ -34,11 +36,12 @@ export type ContactAssignmentPlan = {
 export async function planContactAssignments(
   actorUserId: UserId,
   repos: AssignmentPlanRepos,
+  evaluatedAt: Date,
 ): Promise<Result<ContactAssignmentPlan, DomainError>> {
   const snapshotResult = await getLeadCapacitySnapshot(
     actorUserId,
     repos,
-    new Date(),
+    evaluatedAt,
   );
   if (isErr(snapshotResult)) {
     return snapshotResult;

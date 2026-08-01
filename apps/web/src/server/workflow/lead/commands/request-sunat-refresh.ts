@@ -7,7 +7,11 @@ import { Err, Ok, type Result } from "~/shared/result";
 
 export async function requestSunatRefresh(
   input: { actor: WorkflowActor; leadId: string },
-  ports: { leads: LeadReader; enrichmentQueue: OrganizationEnrichmentQueue },
+  ports: {
+    leads: LeadReader;
+    enrichmentQueue: OrganizationEnrichmentQueue;
+    now: Date;
+  },
 ): Promise<Result<void, DomainError>> {
   const lead = await ports.leads.findById(input.leadId);
   if (!lead) {
@@ -22,6 +26,7 @@ export async function requestSunatRefresh(
   await ports.enrichmentQueue.enqueueRucVerification(
     lead.ruc,
     input.actor.userId,
+    ports.now,
   );
 
   return Ok(void 0);

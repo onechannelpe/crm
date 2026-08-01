@@ -9,6 +9,7 @@ export async function revokeInvite(
   repos: InviteDeps,
   runtime: InviteRuntime,
   input: RevokeInviteInput,
+  now: Date,
 ): Promise<Result<void, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
     const invite = await transactionRepos.userInvites.findById(input.inviteId);
@@ -30,7 +31,7 @@ export async function revokeInvite(
       return Err(fail("role_not_assignable"));
     }
 
-    const revokedAt = runtime.now();
+    const revokedAt = now;
     await transactionRepos.userInvites.revokePendingByUser(
       invite.user_id,
       revokedAt,

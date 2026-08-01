@@ -9,8 +9,8 @@ import type {
   WorkflowLeadId,
   WorkflowVenueId,
 } from "~/domain/ids";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { completeFulfillment } from "../domain/decide";
@@ -28,11 +28,6 @@ import {
   stepDefinition,
   type UnitField,
 } from "./steps";
-
-type Ports = {
-  executor: DatabaseExecutor;
-  now: Date;
-};
 
 type LeadResult = Result<{ leadId: string }, DomainError>;
 
@@ -110,13 +105,13 @@ async function advance(
   const to = nextStep(input.productKind, from);
   const extra = input.extraEvents ?? [];
 
-  await ctx.repos.fulfillment.setStep(order.id, to, ctx.now);
+  await ctx.repos.fulfillment.setStep(order.id, to, ctx.operationAt);
 
   if (to === "COMPLETED") {
     const transition = completeFulfillment(loaded.state, {
       actor: input.actor,
       orderId: order.id,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -151,7 +146,7 @@ async function advance(
         to,
         action: input.action,
       },
-      occurredAt: ctx.now,
+      occurredAt: ctx.operationAt,
     }),
     ...extra,
   ]);
@@ -179,9 +174,9 @@ export async function chooseFulfillmentProductCommand(
     productKind: ProductKind;
     actor: WorkflowActor;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
 ): Promise<LeadResult> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const loaded = await loadForAction(ctx, {
       leadId: input.leadId,
       actor: input.actor,
@@ -197,7 +192,7 @@ export async function chooseFulfillmentProductCommand(
     await ctx.repos.fulfillment.setProductKind(
       order.id,
       input.productKind,
-      ctx.now,
+      ctx.operationAt,
     );
 
     const venuesResult = await ctx.repos.leadVenues.listByLeadId(input.leadId);
@@ -208,14 +203,14 @@ export async function chooseFulfillmentProductCommand(
 
     const units = buildUnits(input.productKind, venuesResult.value, {
       orderId: order.id,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     await ctx.repos.fulfillment.createUnits(units);
 
     const to = nextStep(input.productKind, "CHOOSE_PRODUCT");
 
-    await ctx.repos.fulfillment.setStep(order.id, to, ctx.now);
+    await ctx.repos.fulfillment.setStep(order.id, to, ctx.operationAt);
 
     const facts = await ctx.appendFacts([
       createHistoryEvent({
@@ -226,7 +221,7 @@ export async function chooseFulfillmentProductCommand(
           orderId: order.id,
           productKind: input.productKind,
         },
-        occurredAt: ctx.now,
+        occurredAt: ctx.operationAt,
       }),
       createHistoryEvent({
         leadId: input.leadId,
@@ -238,7 +233,7 @@ export async function chooseFulfillmentProductCommand(
           to,
           action: "choose_product",
         },
-        occurredAt: ctx.now,
+        occurredAt: ctx.operationAt,
       }),
     ]);
 
@@ -317,9 +312,9 @@ export async function attachFulfillmentDocumentCommand(
     action: FulfillmentAction;
     actor: WorkflowActor;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
 ): Promise<LeadResult> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const loaded = await loadForAction(ctx, {
       leadId: input.leadId,
       actor: input.actor,
@@ -347,7 +342,7 @@ export async function attachFulfillmentDocumentCommand(
       docKind: definition.docKind,
       fileAssetId: input.fileAssetId,
       uploadedByUserId: input.actor.userId,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     return advance(ctx, loaded.value, {
@@ -364,7 +359,7 @@ export async function attachFulfillmentDocumentCommand(
             docKind: definition.docKind,
             fileAssetId: input.fileAssetId,
           },
-          occurredAt: ctx.now,
+          occurredAt: ctx.operationAt,
         }),
       ],
     });
@@ -379,14 +374,14 @@ async function recordUnitValueCommand(
     action: FulfillmentAction;
     actor: WorkflowActor;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
   apply: (
     unit: FulfillmentUnit,
     ctx: LeadTransaction,
   ) => Promise<Result<void, DomainError>>,
   field: UnitField,
 ): Promise<LeadResult> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const loaded = await loadForAction(ctx, {
       leadId: input.leadId,
       actor: input.actor,
@@ -440,14 +435,14 @@ export async function recordUnitSerialCommand(
     serial: string;
     actor: WorkflowActor;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
 ): Promise<LeadResult> {
   return recordUnitValueCommand(
     {
       ...input,
       action: "record_serials",
     },
-    ports,
+    scope,
     async (unit, ctx) => {
       await ctx.repos.fulfillment.setUnitField(
         unit.id,
@@ -468,14 +463,14 @@ export async function registerUnitPaymentLinkCommand(
     paymentUrl: string;
     actor: WorkflowActor;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
 ): Promise<LeadResult> {
   return recordUnitValueCommand(
     {
       ...input,
       action: "register_payment_link",
     },
-    ports,
+    scope,
     async (unit, ctx) => {
       await ctx.repos.fulfillment.setUnitField(
         unit.id,
@@ -496,14 +491,14 @@ export async function uploadUnitPaymentProofCommand(
     fileAssetId: FileAssetId;
     actor: WorkflowActor;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
 ): Promise<LeadResult> {
   return recordUnitValueCommand(
     {
       ...input,
       action: "upload_payment_proof",
     },
-    ports,
+    scope,
     async (unit, ctx) => {
       await ctx.repos.fulfillment.setUnitField(
         unit.id,
@@ -516,7 +511,7 @@ export async function uploadUnitPaymentProofCommand(
         docKind: "payment_proof",
         fileAssetId: input.fileAssetId,
         uploadedByUserId: input.actor.userId,
-        now: ctx.now,
+        now: ctx.operationAt,
       });
 
       return Ok(undefined);
@@ -532,14 +527,14 @@ export async function registerUnitSaleCommand(
     serviceRef: string;
     actor: WorkflowActor;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
 ): Promise<LeadResult> {
   return recordUnitValueCommand(
     {
       ...input,
       action: "register_sale",
     },
-    ports,
+    scope,
     async (unit, ctx) => {
       await ctx.repos.fulfillment.setUnitField(
         unit.id,
@@ -559,9 +554,9 @@ export async function rejectFulfillmentStepCommand(
     reason: string;
     actor: WorkflowActor;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
 ): Promise<LeadResult> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -598,7 +593,11 @@ export async function rejectFulfillmentStepCommand(
       );
     }
 
-    await ctx.repos.fulfillment.setStep(details.order.id, rule.to, ctx.now);
+    await ctx.repos.fulfillment.setStep(
+      details.order.id,
+      rule.to,
+      ctx.operationAt,
+    );
 
     const facts = await ctx.appendFacts([
       createHistoryEvent({
@@ -611,7 +610,7 @@ export async function rejectFulfillmentStepCommand(
           to: rule.to,
           reason: input.reason,
         },
-        occurredAt: ctx.now,
+        occurredAt: ctx.operationAt,
       }),
     ]);
 
@@ -628,9 +627,9 @@ export async function validateFulfillmentPaymentCommand(
     leadId: WorkflowLeadId;
     actor: WorkflowActor;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
 ): Promise<LeadResult> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const loaded = await loadForAction(ctx, {
       leadId: input.leadId,
       actor: input.actor,

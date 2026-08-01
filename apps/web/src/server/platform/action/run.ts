@@ -93,7 +93,7 @@ async function runExecuteEmpty<TOut, E extends DomainError>(
 export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
   async function runAuthenticated<TOut>(
     def: ActionCommon,
-    startedAt: Date,
+    startedTicks: number,
     audit: AuditFields,
     executeAction: (ctx: AppContext) => Promise<Result<TOut, WireError>>,
   ): Promise<Result<TOut, WireError>> {
@@ -102,15 +102,20 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
     );
     if (isErr(identity)) return Err(projectFault(identity.error, ports));
 
-    const ctx = createAppContext(identity.value, ports.now);
+    const ctx = createAppContext(identity.value);
     const tele: TelemetryContext = {
       actionName: def.name,
       ctx,
-      startedAt,
+      startedTicks,
       audit,
     };
 
-    const authorized = authorizeAccess(identity.value, def.access, def.stepUp);
+    const authorized = authorizeAccess(
+      identity.value,
+      def.access,
+      def.stepUp,
+      ctx.operationAt,
+    );
     if (isErr(authorized)) {
       const wire = projectFault(authorized.error, ports);
       ports.record(errorRow(tele, wire));
@@ -130,19 +135,22 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
   async function executeResult<TIn, TOut, E extends DomainError>(
     def: ActionDef<TIn, TOut, E>,
   ): Promise<Result<TOut, WireError>> {
-    const startedAt = ports.now();
+    // Monotonic tick, not an instant. This measures how long the action takes;
+    // the instant it stamps its writes with comes from the request edge via
+    // ctx.operationAt. The wall clock is not monotonic, so it cannot time anything.
+    const startedTicks = performance.now();
 
     if (def.parse) {
       const parsed = runParse(def.parse, ports);
       if (isErr(parsed)) return parsed;
       const audit = def.audit?.(parsed.value) ?? {};
-      return runAuthenticated(def, startedAt, audit, (ctx) =>
+      return runAuthenticated(def, startedTicks, audit, (ctx) =>
         runExecute(ctx, parsed.value, def.execute, ports),
       );
     }
 
     const audit = def.audit?.() ?? {};
-    return runAuthenticated(def, startedAt, audit, (ctx) =>
+    return runAuthenticated(def, startedTicks, audit, (ctx) =>
       runExecuteEmpty(ctx, def.execute, ports),
     );
   }

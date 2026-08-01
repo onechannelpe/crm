@@ -9,8 +9,10 @@ import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/reque
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { composeAuth } from "~/server/auth/ui/composition";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
-import { getRequestClientMetadata } from "~/server/platform/http/request-context";
+import {
+  getRequestClientMetadata,
+  getRequestInstant,
+} from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
 
@@ -22,7 +24,7 @@ function recordAuthAnalyticsEvent(
     event,
     context,
     composeAuth().analytics,
-    serverInfrastructure.now,
+    getRequestInstant(),
   );
 }
 
@@ -42,7 +44,7 @@ export async function finishPasskeyLogin(
     throwDomain(fail("invalid_credentials"));
   }
 
-  const verifiedAt = login.now();
+  const verifiedAt = getRequestInstant();
   const verified = await verifyPasskeyLogin(login.repos, {
     flowId: parsedFlowId.value,
     response,

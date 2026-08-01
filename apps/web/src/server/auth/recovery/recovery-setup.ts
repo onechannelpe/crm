@@ -18,7 +18,7 @@ export function regenerateRecoverySetup(
 ): Promise<
   Result<{ recoveryCodes: string[]; sessionToken: string }, DomainError>
 > {
-  const regeneratedAt = ctx.now();
+  const regeneratedAt = ctx.operationAt;
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
@@ -54,7 +54,7 @@ export async function acknowledgeRecoverySetup(
   if (ctx.actor.sessionClass !== "recovery_setup") {
     return Err(fail("invalid_input"));
   }
-  const acknowledgedAt = ctx.now();
+  const acknowledgedAt = ctx.operationAt;
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);

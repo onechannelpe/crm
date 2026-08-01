@@ -27,7 +27,19 @@ export interface RequestContext {
   requestId: string;
   route: string;
   method: string;
-  startedAt: number;
+  /**
+   * The instant this request entered the system, read once by the identify
+   * middleware. Everything the request goes on to do inherits it, including
+   * server functions, so one request cannot stamp two different times.
+   */
+  startedAt: Date;
+  /**
+   * Monotonic origin for measuring how long the request took. Separate from
+   * `startedAt` on purpose: a stamp must be wall clock so it can be written and
+   * compared, an elapsed measurement must not be, or a clock adjustment
+   * mid-request turns into a negative duration.
+   */
+  startedTicks: number;
   nonce: string;
   csrf: CsrfState;
   principal: AuthPrincipal | null;
@@ -53,28 +65,40 @@ interface RequestSessionStore {
   }): Promise<void>;
 }
 
+export interface RequestIdentity {
+  traceId: string;
+  requestId: string;
+  startedAt: Date;
+  startedTicks: number;
+  nonce: string;
+}
+
 export interface RequestContextDeps {
-  resolveAuthSession(this: void, token: string): Promise<AuthSession | null>;
+  resolveAuthSession(
+    this: void,
+    token: string,
+    now: Date,
+  ): Promise<AuthSession | null>;
   requestSessions: RequestSessionStore;
 }
 
 export async function buildRequestContext(
   request: Request,
-  identity: {
-    traceId: string;
-    requestId: string;
-    startedAt: number;
-    nonce: string;
-  },
+  identity: RequestIdentity,
   deps: RequestContextDeps,
   trustedProxy: boolean,
 ): Promise<RequestContext> {
+  // Session expiry, activity refresh and request-session bootstrap all judge
+  // against the instant the request arrived, not against a second reading taken
+  // however long authentication happened to take.
+  const now = identity.startedAt;
   const [principal, requestSession] = await Promise.all([
-    loadRequestSession(deps.resolveAuthSession),
+    loadRequestSession(deps.resolveAuthSession, now),
     loadRequestSessionState(
       request,
       shouldBootstrapRequestSession(request),
       deps.requestSessions,
+      now,
     ),
   ]);
   const url = new URL(request.url);
@@ -97,12 +121,7 @@ export async function buildRequestContext(
 
 export function buildAnonymousRequestContext(
   request: Request,
-  identity: {
-    traceId: string;
-    requestId: string;
-    startedAt: number;
-    nonce: string;
-  },
+  identity: RequestIdentity,
   trustedProxy: boolean,
 ): RequestContext {
   const url = new URL(request.url);
@@ -128,6 +147,15 @@ export function getRequestContext(): RequestContext {
   return context;
 }
 
+/**
+ * The instant the current request arrived. Route handlers and unauthenticated
+ * server functions use this instead of `new Date()` so everything one request
+ * writes agrees on when it happened.
+ */
+export function getRequestInstant(): Date {
+  return getRequestContext().startedAt;
+}
+
 export function getRequestClientMetadata(): {
   ipAddress: string;
   userAgent: string | null;
@@ -141,24 +169,25 @@ export function getRequestClientMetadata(): {
 
 async function loadRequestSession(
   resolveAuthSession: RequestContextDeps["resolveAuthSession"],
+  now: Date,
 ): Promise<AuthSession | null> {
   const token = getSessionCookie();
   if (!token) {
     return null;
   }
 
-  return resolveAuthSession(token);
+  return resolveAuthSession(token, now);
 }
 
 async function loadRequestSessionState(
   request: Request,
   createIfMissing: boolean,
   requestSessions: RequestSessionStore,
+  now: Date,
 ): Promise<{ id: string; csrfToken: string } | null> {
   const existingId = getRequestSessionCookie();
   if (existingId) {
     const existing = await requestSessions.findById(existingId);
-    const now = new Date();
     if (existing && existing.expires_at >= now) {
       if (
         now.getTime() - existing.last_activity.getTime() >
@@ -175,7 +204,6 @@ async function loadRequestSessionState(
     return null;
   }
 
-  const now = new Date();
   const id = crypto.randomUUID();
   const csrfToken = crypto.randomUUID().replace(/-/g, "");
   const expiresAt = new Date(

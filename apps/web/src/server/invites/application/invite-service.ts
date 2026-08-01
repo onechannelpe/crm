@@ -14,23 +14,23 @@ export function createInviteService(
   const runtime = createInviteRuntime(runtimeOverrides);
 
   return {
-    listPendingInvites(branchId) {
-      return listPendingInvites(deps, runtime, branchId);
+    listPendingInvites(branchId, now) {
+      return listPendingInvites(deps, runtime, branchId, now);
     },
-    createInvite(input) {
-      return createInvite(deps, runtime, input);
+    createInvite(input, now) {
+      return createInvite(deps, runtime, input, now);
     },
-    redeliverInvite(input) {
-      return redeliverInvite(deps, runtime, input);
+    redeliverInvite(input, now) {
+      return redeliverInvite(deps, runtime, input, now);
     },
-    revokeInvite(input) {
-      return revokeInvite(deps, runtime, input);
+    revokeInvite(input, now) {
+      return revokeInvite(deps, runtime, input, now);
     },
-    markInviteDelivered(inviteId) {
-      return markInviteDelivered(deps, runtime, inviteId);
+    markInviteDelivered(inviteId, now) {
+      return markInviteDelivered(deps, runtime, inviteId, now);
     },
-    acceptInvite(input) {
-      return acceptInvite(deps, runtime, input);
+    acceptInvite(input, now) {
+      return acceptInvite(deps, runtime, input, now);
     },
   };
 }

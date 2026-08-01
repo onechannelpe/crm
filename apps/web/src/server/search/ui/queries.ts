@@ -12,7 +12,7 @@ export async function getMySearchAllowance() {
       getSearchCapacitySnapshot(
         ctx.actor.userId,
         composeSearch().repos,
-        ctx.now(),
+        ctx.operationAt,
       ),
   });
 }

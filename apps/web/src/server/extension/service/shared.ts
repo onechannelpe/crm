@@ -1,4 +1,3 @@
-import type { Clock } from "~/domain/time/clock";
 import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import type { OrganizationRepository } from "~/server/organization/organization-repo";
 import type { AppUow } from "~/server/platform/database/uow";
@@ -14,7 +13,6 @@ export type ExtensionRepos = {
 };
 
 export interface ExtensionServiceDeps {
-  now?: Clock;
   uow: AppUow<ExtensionRepos>;
 }
 

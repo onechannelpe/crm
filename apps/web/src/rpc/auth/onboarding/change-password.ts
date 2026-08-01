@@ -27,7 +27,7 @@ export async function changeOnboardingPassword(input: {
         currentSessionId: ctx.actor.id,
         password: password.password,
         confirmPassword: password.confirmPassword,
-        now: ctx.now(),
+        now: ctx.operationAt,
       });
       if (!changed.ok) return changed;
       return loadOnboardingSnapshot(setup.repos, ctx.actor.userId);

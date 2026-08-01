@@ -14,6 +14,8 @@ export interface SetSearchUserOverrideCommand {
   targetUserId: UserId;
   monthlyLimit: number;
   expiresAt: Date | null;
+  /** Operation instant: when the override takes effect and is recorded. */
+  at: Date;
 }
 
 interface PolicyRepos {
@@ -53,6 +55,7 @@ interface SearchPolicyOverridesWriter {
       effective_from: Date;
       expires_at: Date | null;
       set_by_user_id: UserId;
+      created_at: Date;
     }): Promise<unknown>;
   };
 }
@@ -60,16 +63,16 @@ interface SearchPolicyOverridesWriter {
 export async function getEffectiveSearchPolicy(
   userId: UserId,
   repos: PolicyRepos,
+  evaluatedAt: Date,
 ): Promise<Result<SearchPolicy, DomainError>> {
   const user = await repos.users.findById(userId);
   if (!user) {
     return Err(fail("user_not_found"));
   }
 
-  const now = new Date();
   const userOverride = await repos.searchPolicyOverrides.findActiveForUser(
     userId,
-    now,
+    evaluatedAt,
   );
   const teamDefault = user.teamId
     ? await repos.searchPolicyDefaults.findForScope("team", user.teamId)
@@ -102,7 +105,8 @@ export async function setSearchUserOverride(
   await repos.searchPolicyOverrides.replaceForUser({
     user_id: command.targetUserId,
     search_limit: command.monthlyLimit,
-    effective_from: new Date(),
+    effective_from: command.at,
+    created_at: command.at,
     expires_at: command.expiresAt,
     set_by_user_id: command.actorUserId,
   });

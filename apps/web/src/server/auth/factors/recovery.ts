@@ -40,6 +40,7 @@ export async function verifyRecoveryCode(params: {
   const throttle = await throttleService.checkRecoveryVerifyThrottle(
     identifier,
     ipAddress,
+    params.occurredAt,
   );
   if (!throttle.allowed) {
     await recordAuthEvent(deps, {

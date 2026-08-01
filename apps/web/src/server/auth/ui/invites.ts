@@ -5,7 +5,10 @@ import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-accept
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { composeAuth } from "~/server/auth/ui/composition";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { getRequestClientMetadata } from "~/server/platform/http/request-context";
+import {
+  getRequestClientMetadata,
+  getRequestInstant,
+} from "~/server/platform/http/request-context";
 import { getInviteInfo as getInviteInfoService } from "~/server/team/application/invites";
 import { composeTeam } from "~/server/team/ui/composition";
 import { isErr } from "~/shared/result";
@@ -20,6 +23,7 @@ export async function getInviteActivationView(
   const result = await getInviteInfoService({
     token: safeToken.value,
     repos: composeTeam().invites.repos,
+    asOf: getRequestInstant(),
   });
   if (isErr(result)) {
     throwDomain(result.error);
@@ -41,6 +45,7 @@ export async function acceptInvitePasswordStep(input: {
       userAgent: request.userAgent,
     },
     input,
+    getRequestInstant(),
   );
 
   if (isErr(result)) {

@@ -6,7 +6,6 @@ import { serverInfrastructure } from "~/server/platform/composition/infrastructu
 export function composeMerchantStats() {
   return createMerchantStatsRuntime({
     db: serverInfrastructure.db,
-    now: serverInfrastructure.now,
     files: composeFiles(),
   });
 }

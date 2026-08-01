@@ -55,11 +55,11 @@ function buildLeadUsageReservationPorts(
 ): UsageReservationPorts<"lead"> {
   return {
     executor,
-    async checkRemaining(trx, actorUserId) {
+    async checkRemaining(trx, actorUserId, evaluatedAt) {
       const snapshot = await getLeadCapacitySnapshot(
         actorUserId,
         buildRepos(trx),
-        new Date(),
+        evaluatedAt,
       );
       if (isErr(snapshot)) return snapshot;
       return Ok(snapshot.value.remaining);

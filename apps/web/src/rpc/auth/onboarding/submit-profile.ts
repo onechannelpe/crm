@@ -26,7 +26,7 @@ export async function submitOnboardingProfile(input: {
       saveOnboardingProfile(composeAuth().setup, {
         userId: ctx.actor.userId,
         phone,
-        now: ctx.now(),
+        now: ctx.operationAt,
       }),
   });
 }

@@ -13,6 +13,7 @@ export async function getLoginFlowState(
     "events" | "loginFlows" | "passkeys" | "webauthnChallenges"
   >,
   webauthnProvider: WebauthnProvider,
+  asOf: Date,
 ): Promise<LoginFlowState | null> {
   const flow = await deps.loginFlows.findById(flowId);
 
@@ -20,7 +21,7 @@ export async function getLoginFlowState(
     return null;
   }
 
-  if (flow.expires_at < new Date()) {
+  if (flow.expires_at < asOf) {
     await deleteLoginFlow(flow, deps);
     return null;
   }
@@ -36,7 +37,7 @@ export async function getLoginFlowState(
     case "passkey":
       return createPasskeyLoginStateService(deps, {
         webauthnProvider,
-      }).hydrateLoginFlow(flow);
+      }).hydrateLoginFlow(flow, asOf);
 
     default:
       await deleteLoginFlow(flow, deps);

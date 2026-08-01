@@ -1,5 +1,3 @@
-import type { Clock } from "~/domain/time/clock";
-
 import type { DomainPatch, JobStore } from "./job-store";
 
 export interface QueueJobBase {
@@ -29,14 +27,17 @@ export interface JobQueueConfig<
   maxConcurrency?: number;
   timeoutMs?: number;
 
-  // Inject time so tests can control retry scheduling.
-  now: Clock;
-
   // Reject stale workers after a lease is reclaimed.
   workerId: string;
 
   store: JobStore<TId, TJob>;
-  handle(job: TJob, signal: AbortSignal): Promise<Settlement>;
+
+  /**
+   * `claimedAt` is the instant the batch containing this job was claimed. It is
+   * the operation instant for the handler: everything the handler writes stamps
+   * with it, so one job run cannot record two different times.
+   */
+  handle(job: TJob, signal: AbortSignal, claimedAt: Date): Promise<Settlement>;
   onSettled?(job: TJob, outcome: SettleOutcome): void | Promise<void>;
 }
 

@@ -1,6 +1,7 @@
 import { isClaimExtensionSessionRequest } from "~/server/extension/contracts";
 import { composeExtension } from "~/server/extension/ui/composition";
 import { toWire } from "~/server/platform/action/domain-error";
+import { getRequestInstant } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";
@@ -21,7 +22,10 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
     }
 
     const result =
-      await composeExtension().extensionService.claimInstallationSession(body);
+      await composeExtension().extensionService.claimInstallationSession(
+        body,
+        getRequestInstant(),
+      );
     if (isErr(result)) {
       const status =
         result.error.code === "installation_invalid"

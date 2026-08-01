@@ -24,11 +24,11 @@ export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallen
     name: "auth.passkey.enroll.begin",
     access: { kind: "session" },
 
-    execute: ({ actor, ipAddress, now }) =>
+    execute: ({ actor, ipAddress, operationAt: now }) =>
       startPasskeyEnrollment(setup, {
         userId: actor.userId,
         ipAddress,
-        occurredAt: now(),
+        occurredAt: now,
         webauthnProvider,
       }),
   });
@@ -72,7 +72,7 @@ export async function finishPasskeyEnrollment(
           challengeId: command.challengeId,
           response: command.response,
           ipAddress: ctx.ipAddress,
-          verifiedAt: ctx.now(),
+          verifiedAt: ctx.operationAt,
         },
       );
       if (isErr(verified)) return verified;

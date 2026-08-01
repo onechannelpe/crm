@@ -40,6 +40,7 @@ async function deliverInviteEmail(
     inviteUrl: string;
     expiresAt: Date;
   },
+  now: Date,
 ): Promise<boolean> {
   const sent = await delivery.send({
     email: params.email,
@@ -58,7 +59,7 @@ async function deliverInviteEmail(
     return false;
   }
 
-  const marked = await inviteService.markInviteDelivered(params.inviteId);
+  const marked = await inviteService.markInviteDelivered(params.inviteId, now);
 
   if (isErr(marked)) {
     logger.error("invite.mark_delivered_failed", {
@@ -74,10 +75,11 @@ async function deliverInviteEmail(
 export async function getInviteInfo(input: {
   token: string;
   repos: TeamInviteRepos;
+  asOf: Date;
 }): Promise<Result<InviteInfo | null, DomainError>> {
   const invite = await input.repos.userInvites.findPendingByToken(
     input.token,
-    new Date(),
+    input.asOf,
   );
 
   if (!invite) {
@@ -98,7 +100,7 @@ export async function getInviteManagement(
 ): Promise<Result<InviteManagement, DomainError>> {
   const [teams, pendingInvites] = await Promise.all([
     port.listTeamsByBranch(ctx.actor.branchId),
-    port.listPendingInvites(ctx.actor.branchId),
+    port.listPendingInvites(ctx.actor.branchId, ctx.operationAt),
   ]);
 
   if (isErr(pendingInvites)) {
@@ -140,21 +142,24 @@ export async function createTeamInvite(
   deps: TeamInviteCreateContext,
   input: CreateTeamInviteCommand,
 ): Promise<Result<CreateTeamInviteResult, DomainError>> {
-  await deps.enforceInviteCreateRateLimit(ctx.actor.userId);
+  await deps.enforceInviteCreateRateLimit(ctx.actor.userId, ctx.operationAt);
 
-  const created = await deps.inviteService.createInvite({
-    actorUserId: ctx.actor.userId,
-    actorRole: ctx.actor.role,
-    branchId: ctx.actor.branchId,
-    names: input.names,
-    firstSurname: input.firstSurname,
-    secondSurname: input.secondSurname,
-    email: input.email,
-    role: input.role,
-    executiveCategory: input.executiveCategory,
-    teamId: input.teamId,
-    expiresAt: input.expiresAt,
-  });
+  const created = await deps.inviteService.createInvite(
+    {
+      actorUserId: ctx.actor.userId,
+      actorRole: ctx.actor.role,
+      branchId: ctx.actor.branchId,
+      names: input.names,
+      firstSurname: input.firstSurname,
+      secondSurname: input.secondSurname,
+      email: input.email,
+      role: input.role,
+      executiveCategory: input.executiveCategory,
+      teamId: input.teamId,
+      expiresAt: input.expiresAt,
+    },
+    ctx.operationAt,
+  );
 
   if (isErr(created)) {
     return created;
@@ -177,6 +182,7 @@ export async function createTeamInvite(
       inviteUrl,
       expiresAt: created.value.expiresAt,
     },
+    ctx.operationAt,
   );
 
   return Ok({
@@ -192,12 +198,15 @@ export async function resendTeamInvite(
   deps: TeamInviteResendContext,
   input: { inviteId: UserInviteId },
 ): Promise<Result<{ delivered: boolean }, DomainError>> {
-  const redelivered = await deps.inviteService.redeliverInvite({
-    actorUserId: ctx.actor.userId,
-    actorRole: ctx.actor.role,
-    branchId: ctx.actor.branchId,
-    inviteId: input.inviteId,
-  });
+  const redelivered = await deps.inviteService.redeliverInvite(
+    {
+      actorUserId: ctx.actor.userId,
+      actorRole: ctx.actor.role,
+      branchId: ctx.actor.branchId,
+      inviteId: input.inviteId,
+    },
+    ctx.operationAt,
+  );
 
   if (isErr(redelivered)) {
     return redelivered;
@@ -224,6 +233,7 @@ export async function resendTeamInvite(
       inviteUrl: inviteLink(deps.publicOrigin, redelivered.value.token),
       expiresAt: redelivered.value.expiresAt,
     },
+    ctx.operationAt,
   );
 
   return Ok({ delivered });
@@ -234,10 +244,13 @@ export async function revokeTeamInvite(
   deps: TeamInviteProvisioningContext,
   input: { inviteId: UserInviteId },
 ): Promise<Result<void, DomainError>> {
-  return deps.inviteService.revokeInvite({
-    actorUserId: ctx.actor.userId,
-    actorRole: ctx.actor.role,
-    branchId: ctx.actor.branchId,
-    inviteId: input.inviteId,
-  });
+  return deps.inviteService.revokeInvite(
+    {
+      actorUserId: ctx.actor.userId,
+      actorRole: ctx.actor.role,
+      branchId: ctx.actor.branchId,
+      inviteId: input.inviteId,
+    },
+    ctx.operationAt,
+  );
 }

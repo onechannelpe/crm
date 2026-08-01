@@ -35,7 +35,6 @@ export function createRecordsImportQueue(
     deps.runner ??
     createRecordImportRunner({
       executor: runtime.executor,
-      now: runtime.now,
       readFile: deps.readFile,
       reportProgress: async (jobId, progress) => {
         const persisted = await runtime.jobs.updateProgress(jobId, progress);
@@ -50,12 +49,11 @@ export function createRecordsImportQueue(
   return createJobQueue<IntegrationJobRow>({
     name: "records-import",
     leaseMs,
-    now: runtime.now,
     workerId,
     store: runtime.jobs.store,
 
-    handle: async (job, signal) => {
-      const result = await runner.process(job, signal);
+    handle: async (job, signal, claimedAt) => {
+      const result = await runner.process(job, signal, claimedAt);
 
       // The queue store writes queue_state and completed_at.
       return {

@@ -11,7 +11,6 @@ function createIntegrationsComposition(
   return {
     integration: createIntegrationRuntime({
       executor: serverInfrastructure.db,
-      now: serverInfrastructure.now,
     }),
   };
 }

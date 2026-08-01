@@ -20,16 +20,20 @@ export interface UsageReservationsRepo<K extends CapacityKind> {
     user_id: UserId;
     amount: number;
     reason: string;
+    created_at: Date;
+    updated_at: Date;
   }): Promise<{ id: string }>;
   findById(id: UsageReservationId<K>): Promise<unknown>;
   updateStatus(
     id: UsageReservationId<K>,
     status: "committed" | "cancelled" | "expired",
+    updatedAt: Date,
   ): Promise<void>;
   updateAmountAndStatus(
     id: UsageReservationId<K>,
     amount: number,
     status: "committed" | "cancelled" | "expired",
+    updatedAt: Date,
   ): Promise<void>;
 }
 
@@ -37,6 +41,7 @@ export interface UsageCommitsRepo<K extends CapacityKind> {
   insert(values: {
     reservation_id: UsageReservationId<K>;
     amount: number;
+    created_at: Date;
   }): Promise<void>;
 }
 
@@ -46,6 +51,7 @@ export interface UsageGrantsRepo {
     amount: number;
     reason: string;
     actor_user_id: UserId;
+    created_at: Date;
   }): Promise<void>;
 }
 
@@ -61,4 +67,6 @@ export interface GrantUsageCapacityCommand<K extends CapacityKind> {
   targetUserId: UserId;
   amount: number;
   reason: string;
+  /** Operation instant that stamps the grant row. */
+  at: Date;
 }

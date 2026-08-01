@@ -59,11 +59,11 @@ export async function verifyPasskeyLogin(
     : `challenge:${flow.challenge_id}`;
   const throttleService = createAuthThrottleService({
     authThrottle: repos.authThrottle,
-    now: () => input.occurredAt,
   });
   const throttle = await throttleService.checkPasskeyVerifyThrottle(
     identifier,
     input.ipAddress,
+    input.occurredAt,
   );
   if (!throttle.allowed) {
     await recordAuthEvent(repos, {
@@ -87,6 +87,7 @@ export async function verifyPasskeyLogin(
     await throttleService.recordPasskeyVerifyFailure(
       identifier,
       input.ipAddress,
+      input.occurredAt,
     );
     await recordAuthEvent(repos, {
       userId: challenge?.user_id ?? null,
@@ -128,6 +129,7 @@ export async function verifyPasskeyLogin(
     await throttleService.recordPasskeyVerifyFailure(
       identifier,
       input.ipAddress,
+      input.occurredAt,
     );
     await recordAuthEvent(repos, {
       userId: challenge.user_id,

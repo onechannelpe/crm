@@ -14,13 +14,14 @@ export async function requestPasswordReset(input: {
   email: string;
   origin: string;
   deps: PasswordResetRequestContext;
+  requestedAt: Date;
 }): Promise<Result<{ ok: true }, DomainError>> {
   const email = input.email.trim().toLowerCase();
   if (!email) {
     return Err(fail("email_required"));
   }
 
-  const now = new Date();
+  const now = input.requestedAt;
   const user = await input.deps.repos.users.findByEmail(email);
   if (!user || !user.is_active) {
     return Ok({ ok: true });

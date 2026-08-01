@@ -59,7 +59,7 @@ async function start(): Promise<void> {
   await listener.start();
 
   setInterval(
-    () => realtimeHub.sweep(Date.now(), MAX_STREAM_AGE_MS),
+    () => realtimeHub.sweep(performance.now(), MAX_STREAM_AGE_MS),
     PING_INTERVAL_MS,
   ).unref();
 

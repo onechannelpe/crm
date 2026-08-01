@@ -14,6 +14,8 @@ export interface RunDirectSearchCommand {
   intent: SearchIntent;
   query: string;
   limit: number;
+  /** Operation instant that stamps the usage reservation and its settlement. */
+  at: Date;
 }
 
 export async function runDirectSearch(
@@ -28,6 +30,7 @@ export async function runDirectSearch(
       requested: 1,
       reserveReason: "direct_search",
       brand: SearchReservationId.trust,
+      at: command.at,
     },
     usageReservationPorts,
     async () => {

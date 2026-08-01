@@ -36,7 +36,7 @@ function createAuthComposition(
   serverInfrastructure: ServerInfrastructure,
   notifications: {
     messaging: MessagingGateway;
-    enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
+    enqueue(intents: NotificationIntent[], now: Date): Promise<void>;
   },
   analytics: AuthAnalyticsRecorder,
 ) {
@@ -44,19 +44,14 @@ function createAuthComposition(
     sessions: createAuthSessionRepo(serverInfrastructure.db),
     users: createAuthUsersRepo(serverInfrastructure.db),
     events: createEventsRepo(serverInfrastructure.db),
-    now: serverInfrastructure.now,
     logger: serverInfrastructure.logger,
   });
 
   const authThrottleService = createAuthThrottleService({
     authThrottle: createAuthThrottleRepo(serverInfrastructure.db),
-    now: serverInfrastructure.now,
   });
   const setup = createAuthSetupContext(serverInfrastructure.db);
-  const inviteService = createInviteServiceForExecutor(
-    serverInfrastructure.db,
-    serverInfrastructure.now,
-  );
+  const inviteService = createInviteServiceForExecutor(serverInfrastructure.db);
 
   const impersonationDeps = {
     sessions: sessionService,
@@ -73,10 +68,7 @@ function createAuthComposition(
         startImpersonation(ctx, impersonationDeps, command),
       stop: (ctx: AppContext) => stopImpersonation(ctx, impersonationDeps),
     },
-    login: createAuthLoginContext(
-      serverInfrastructure.db,
-      serverInfrastructure.now,
-    ),
+    login: createAuthLoginContext(serverInfrastructure.db),
     setup,
     inviteAcceptance: {
       inviteService,

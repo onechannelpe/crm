@@ -109,10 +109,7 @@ type LeadFilesDeps = {
   fulfillment: FulfillmentRepository;
   filesRepo: FileRepos;
   filesStorage: FileStorage;
-  workflowPorts: () => {
-    executor: DatabaseExecutor;
-    now: Date;
-  };
+  executor: DatabaseExecutor;
 };
 
 type UploadedFile = {
@@ -232,7 +229,7 @@ export function createLeadFilesService(deps: LeadFilesDeps) {
           branchId: input.ctx.actor.branchId,
         },
       },
-      deps.workflowPorts(),
+      { executor: deps.executor, operationAt: input.ctx.operationAt },
     );
   }
 
@@ -250,10 +247,7 @@ export function createLeadFilesService(deps: LeadFilesDeps) {
         actorBranchId: input.ctx.actor.branchId,
       };
       const rows = await deps.leadQueries.export(filters);
-      const inquiryRows = await exportPendingInquiries(
-        deps.workflowPorts().executor,
-        filters,
-      );
+      const inquiryRows = await exportPendingInquiries(deps.executor, filters);
 
       const csv = buildRecordExportCsv(
         LEAD_EXPORT_COLUMNS.map((column) => column.header),
@@ -339,7 +333,7 @@ export function createLeadFilesService(deps: LeadFilesDeps) {
         return storedFile;
       }
 
-      const createdAt = input.ctx.now();
+      const createdAt = input.ctx.operationAt;
 
       const id = await deps.filesRepo.sales.insert({
         leadId: input.leadId,
@@ -425,7 +419,7 @@ export function createLeadFilesService(deps: LeadFilesDeps) {
         leadId: input.leadId,
         fileAssetId: storedFile.value.id,
         uploadedByUserId: input.ctx.actor.userId,
-        now: input.ctx.now(),
+        now: input.ctx.operationAt,
       });
 
       return Ok(mapRateRevisionFile(stagedFile));
@@ -517,7 +511,7 @@ export function createLeadFilesService(deps: LeadFilesDeps) {
             branchId: input.ctx.actor.branchId,
           },
         },
-        deps.workflowPorts(),
+        { executor: deps.executor, operationAt: input.ctx.operationAt },
       );
     },
 

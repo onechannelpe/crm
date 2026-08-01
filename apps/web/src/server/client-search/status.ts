@@ -5,14 +5,14 @@ import type { EnrichmentStatus, Overlay } from "./model";
 import type { CompanyRegistryPort, RegistryRow } from "./ports";
 
 export interface EnrichmentQuery {
-  getStatus(document: Document, now?: Date): Promise<EnrichmentStatus>;
+  getStatus(document: Document, now: Date): Promise<EnrichmentStatus>;
 }
 
 export function createEnrichmentQuery(
   repo: CompanyRegistryPort,
 ): EnrichmentQuery {
   return {
-    async getStatus(document, now = new Date()) {
+    async getStatus(document, now) {
       const record = await repo.getRecord(document.kind, document.value);
 
       return {

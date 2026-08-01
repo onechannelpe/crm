@@ -51,7 +51,7 @@ async function fetchDni(
   if (primary.ok) {
     const mapped = readDni(dni, primary.value);
     if (mapped) {
-      return { ok: true, data: mapped };
+      return { ok: true, data: mapped, observedAt: new Date() };
     }
   }
 
@@ -59,7 +59,7 @@ async function fetchDni(
   if (fallback.ok) {
     const mapped = readDni(dni, fallback.value);
     if (mapped) {
-      return { ok: true, data: mapped };
+      return { ok: true, data: mapped, observedAt: new Date() };
     }
   }
 
@@ -104,6 +104,7 @@ async function fetchRuc(
 
   return {
     ok: true,
+    observedAt: new Date(),
     data: {
       ...itfisData,
       contributorStatus: consultaSnapshot?.contributorStatus ?? null,

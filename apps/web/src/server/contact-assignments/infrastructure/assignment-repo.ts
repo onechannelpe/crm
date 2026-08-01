@@ -25,16 +25,16 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
     await db.insertInto("contact_assignments").values(assignments).execute();
   };
 
-  const findActiveByUser = (userId: UserId) =>
+  const findActiveByUser = (userId: UserId, asOf: Date) =>
     db
       .selectFrom("contact_assignments")
       .selectAll()
       .where("user_id", "=", userId)
       .where("status", "=", "active")
-      .where("expires_at", ">", new Date())
+      .where("expires_at", ">", asOf)
       .execute();
 
-  const findActiveByUserWithContacts = async (userId: UserId) => {
+  const findActiveByUserWithContacts = async (userId: UserId, asOf: Date) => {
     const rows = await db
       .selectFrom("contact_assignments")
       .innerJoin(
@@ -58,7 +58,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
       ])
       .where("contact_assignments.user_id", "=", userId)
       .where("contact_assignments.status", "=", "active")
-      .where("contact_assignments.expires_at", ">", new Date())
+      .where("contact_assignments.expires_at", ">", asOf)
       .orderBy("contact_assignments.assigned_at", "desc")
       .execute();
 
@@ -79,12 +79,12 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
     }));
   };
 
-  const countActiveByUser = async (userId: UserId) => {
-    const rows = await findActiveByUser(userId);
+  const countActiveByUser = async (userId: UserId, asOf: Date) => {
+    const rows = await findActiveByUser(userId, asOf);
     return rows.length;
   };
 
-  const countActiveByUsers = async (userIds: UserId[]) => {
+  const countActiveByUsers = async (userIds: UserId[], asOf: Date) => {
     if (userIds.length === 0) {
       return [] as Array<{ userId: UserId; activeCount: number }>;
     }
@@ -97,7 +97,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
       ])
       .where("user_id", "in", userIds)
       .where("status", "=", "active")
-      .where("expires_at", ">", new Date())
+      .where("expires_at", ">", asOf)
       .groupBy("user_id")
       .execute();
 
@@ -110,6 +110,7 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
   const findActiveForContact = (
     userId: UserId,
     contactId: OrganizationPersonId,
+    asOf: Date,
   ) =>
     db
       .selectFrom("contact_assignments")
@@ -117,25 +118,30 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
       .where("user_id", "=", userId)
       .where("contact_id", "=", contactId)
       .where("status", "=", "active")
-      .where("expires_at", ">", new Date())
+      .where("expires_at", ">", asOf)
       .executeTakeFirst();
 
   const hasActiveForContact = async (
     userId: UserId,
     contactId: OrganizationPersonId,
+    asOf: Date,
   ) => {
-    const row = await findActiveForContact(userId, contactId);
+    const row = await findActiveForContact(userId, contactId, asOf);
     return !!row;
   };
 
-  const findActiveByIdForUser = (id: ContactAssignmentId, userId: UserId) =>
+  const findActiveByIdForUser = (
+    id: ContactAssignmentId,
+    userId: UserId,
+    asOf: Date,
+  ) =>
     db
       .selectFrom("contact_assignments")
       .selectAll()
       .where("id", "=", id)
       .where("user_id", "=", userId)
       .where("status", "=", "active")
-      .where("expires_at", ">", new Date())
+      .where("expires_at", ">", asOf)
       .executeTakeFirst();
 
   const markCompleted = (id: ContactAssignmentId, userId: UserId) =>

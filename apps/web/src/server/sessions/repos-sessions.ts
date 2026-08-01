@@ -75,10 +75,10 @@ export function createSessionRepository(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteExpired(): Promise<number> {
+    async deleteExpired(asOf: Date): Promise<number> {
       const result = await db
         .deleteFrom("user_sessions")
-        .where("expires_at", "<", new Date())
+        .where("expires_at", "<", asOf)
         .executeTakeFirst();
 
       return Number(result.numDeletedRows ?? 0);
@@ -93,17 +93,17 @@ export function createSessionRepository(db: Kysely<Database>) {
         .execute();
     },
 
-    async countActive(): Promise<number> {
+    async countActive(asOf: Date): Promise<number> {
       const result = await db
         .selectFrom("user_sessions")
         .select((eb) => eb.fn.count<number>("id").as("count"))
-        .where("expires_at", ">", new Date())
+        .where("expires_at", ">", asOf)
         .executeTakeFirst();
 
       return result?.count ?? 0;
     },
 
-    async listAllActive(): Promise<
+    async listAllActive(asOf: Date): Promise<
       Array<{
         id: string;
         userId: UserId;
@@ -136,7 +136,7 @@ export function createSessionRepository(db: Kysely<Database>) {
           "user_sessions.last_activity as lastActivity",
           "user_sessions.expires_at as expiresAt",
         ])
-        .where("user_sessions.expires_at", ">", new Date())
+        .where("user_sessions.expires_at", ">", asOf)
         .orderBy("user_sessions.last_activity", "desc")
         .execute();
 

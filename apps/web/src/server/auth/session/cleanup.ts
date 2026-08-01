@@ -1,3 +1,4 @@
+import { addMilliseconds } from "~/domain/time/clock";
 import { AUTH_MAINTENANCE_RETENTION } from "~/server/auth/config";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
@@ -26,9 +27,10 @@ function createCleanupRepos(executor: DatabaseExecutor) {
 
 async function cleanupExpiredSessions(
   executor: DatabaseExecutor,
+  sweptAt: Date,
 ): Promise<void> {
   const repos = createCleanupRepos(executor);
-  const deleted = await repos.sessions.deleteExpired();
+  const deleted = await repos.sessions.deleteExpired(sweptAt);
   if (deleted > 0) {
     logger.info("expired_sessions_deleted", { deleted });
   }
@@ -36,9 +38,10 @@ async function cleanupExpiredSessions(
 
 async function cleanupExpiredRequestSessions(
   executor: DatabaseExecutor,
+  sweptAt: Date,
 ): Promise<void> {
   const repos = createCleanupRepos(executor);
-  const deleted = await repos.requestSessions.deleteExpired();
+  const deleted = await repos.requestSessions.deleteExpired(sweptAt);
   if (deleted > 0) {
     logger.info("expired_request_sessions_deleted", { deleted });
   }
@@ -46,9 +49,10 @@ async function cleanupExpiredRequestSessions(
 
 async function cleanupExpiredWebauthnChallenges(
   executor: DatabaseExecutor,
+  sweptAt: Date,
 ): Promise<void> {
   const repos = createCleanupRepos(executor);
-  const deleted = await repos.webauthnChallenges.deleteExpired();
+  const deleted = await repos.webauthnChallenges.deleteExpired(sweptAt);
   if (deleted > 0) {
     logger.info("expired_webauthn_challenges_deleted", { deleted });
   }
@@ -56,11 +60,12 @@ async function cleanupExpiredWebauthnChallenges(
 
 async function cleanupStaleAuthThrottle(
   executor: DatabaseExecutor,
+  sweptAt: Date,
 ): Promise<void> {
   const repos = createCleanupRepos(executor);
-  const expiredBlocks = await repos.authThrottle.deleteExpiredBlocks();
+  const expiredBlocks = await repos.authThrottle.deleteExpiredBlocks(sweptAt);
   const stale = await repos.authThrottle.deleteUpdatedBefore(
-    new Date(Date.now() - AUTH_MAINTENANCE_RETENTION.throttleMs),
+    addMilliseconds(sweptAt, -AUTH_MAINTENANCE_RETENTION.throttleMs),
   );
   const total = expiredBlocks + stale;
   if (total > 0) {
@@ -70,10 +75,11 @@ async function cleanupStaleAuthThrottle(
 
 async function cleanupStaleAuthEvents(
   executor: DatabaseExecutor,
+  sweptAt: Date,
 ): Promise<void> {
   const repos = createCleanupRepos(executor);
   const deleted = await repos.authEvents.deleteCreatedBefore(
-    new Date(Date.now() - AUTH_MAINTENANCE_RETENTION.eventsMs),
+    addMilliseconds(sweptAt, -AUTH_MAINTENANCE_RETENTION.eventsMs),
   );
   if (deleted > 0) {
     logger.info("stale_auth_events_deleted", { deleted });
@@ -82,10 +88,11 @@ async function cleanupStaleAuthEvents(
 
 async function cleanupStaleActionObservations(
   executor: DatabaseExecutor,
+  sweptAt: Date,
 ): Promise<void> {
   const repos = createCleanupRepos(executor);
   const deleted = await repos.actionObservations.deleteCreatedBefore(
-    new Date(Date.now() - AUTH_MAINTENANCE_RETENTION.observationsMs),
+    addMilliseconds(sweptAt, -AUTH_MAINTENANCE_RETENTION.observationsMs),
   );
   if (deleted > 0) {
     logger.info("stale_action_observations_deleted", { deleted });
@@ -94,10 +101,11 @@ async function cleanupStaleActionObservations(
 
 async function cleanupStaleAuthFunnelEvents(
   executor: DatabaseExecutor,
+  sweptAt: Date,
 ): Promise<void> {
   const repos = createCleanupRepos(executor);
   const deleted = await repos.authFunnelEvents.deleteCreatedBefore(
-    new Date(Date.now() - AUTH_MAINTENANCE_RETENTION.observationsMs),
+    addMilliseconds(sweptAt, -AUTH_MAINTENANCE_RETENTION.observationsMs),
   );
   if (deleted > 0) {
     logger.info("stale_auth_funnel_events_deleted", { deleted });
@@ -106,10 +114,11 @@ async function cleanupStaleAuthFunnelEvents(
 
 async function cleanupStaleActionRateLimits(
   executor: DatabaseExecutor,
+  sweptAt: Date,
 ): Promise<void> {
   const repos = createCleanupRepos(executor);
   const deleted = await repos.actionRateLimits.deleteUpdatedBefore(
-    new Date(Date.now() - AUTH_MAINTENANCE_RETENTION.rateLimitsMs),
+    addMilliseconds(sweptAt, -AUTH_MAINTENANCE_RETENTION.rateLimitsMs),
   );
   if (deleted > 0) {
     logger.info("stale_rate_limit_counters_deleted", { deleted });
@@ -121,28 +130,36 @@ export function startSessionCleanupScheduler(
   intervalMs = 60 * 60 * 1000,
 ): () => void {
   const timer = setInterval(() => {
-    cleanupExpiredSessions(executor).catch((error: unknown) => {
+    // One sweep, one instant: every retention cut-off below is measured from
+    // the same tick rather than from eight separate clock reads.
+    const sweptAt = new Date();
+
+    cleanupExpiredSessions(executor, sweptAt).catch((error: unknown) => {
       logger.error("expired_sessions_cleanup_failed", { error });
     });
-    cleanupExpiredRequestSessions(executor).catch((error: unknown) => {
+    cleanupExpiredRequestSessions(executor, sweptAt).catch((error: unknown) => {
       logger.error("expired_request_sessions_cleanup_failed", { error });
     });
-    cleanupExpiredWebauthnChallenges(executor).catch((error: unknown) => {
-      logger.error("webauthn_challenges_cleanup_failed", { error });
-    });
-    cleanupStaleAuthThrottle(executor).catch((error: unknown) => {
+    cleanupExpiredWebauthnChallenges(executor, sweptAt).catch(
+      (error: unknown) => {
+        logger.error("webauthn_challenges_cleanup_failed", { error });
+      },
+    );
+    cleanupStaleAuthThrottle(executor, sweptAt).catch((error: unknown) => {
       logger.error("auth_throttle_cleanup_failed", { error });
     });
-    cleanupStaleAuthEvents(executor).catch((error: unknown) => {
+    cleanupStaleAuthEvents(executor, sweptAt).catch((error: unknown) => {
       logger.error("auth_events_cleanup_failed", { error });
     });
-    cleanupStaleActionObservations(executor).catch((error: unknown) => {
-      logger.error("action_observations_cleanup_failed", { error });
-    });
-    cleanupStaleAuthFunnelEvents(executor).catch((error: unknown) => {
+    cleanupStaleActionObservations(executor, sweptAt).catch(
+      (error: unknown) => {
+        logger.error("action_observations_cleanup_failed", { error });
+      },
+    );
+    cleanupStaleAuthFunnelEvents(executor, sweptAt).catch((error: unknown) => {
       logger.error("auth_funnel_events_cleanup_failed", { error });
     });
-    cleanupStaleActionRateLimits(executor).catch((error: unknown) => {
+    cleanupStaleActionRateLimits(executor, sweptAt).catch((error: unknown) => {
       logger.error("action_rate_limits_cleanup_failed", { error });
     });
   }, intervalMs);

@@ -34,20 +34,23 @@ export async function startImpersonation(
     return Err(fail("cannot_impersonate"));
   }
 
-  const issued = await deps.sessions.establish({
-    user: {
-      id: target.id,
-      branch_id: target.branch_id,
-      role: target.role,
-      onboarding_completed_at: target.onboarding_completed_at,
+  const issued = await deps.sessions.establish(
+    {
+      user: {
+        id: target.id,
+        branch_id: target.branch_id,
+        role: target.role,
+        onboarding_completed_at: target.onboarding_completed_at,
+      },
+      sessionClass: "app",
+      request: { ipAddress: ctx.ipAddress, userAgent: ctx.userAgent },
+      primaryAuthMethod: ctx.actor.primaryAuthMethod,
+      strongAuthMethod: null,
+      strongAuthAt: null,
+      impersonatorUserId: ctx.actor.userId,
     },
-    sessionClass: "app",
-    request: { ipAddress: ctx.ipAddress, userAgent: ctx.userAgent },
-    primaryAuthMethod: ctx.actor.primaryAuthMethod,
-    strongAuthMethod: null,
-    strongAuthAt: null,
-    impersonatorUserId: ctx.actor.userId,
-  });
+    ctx.operationAt,
+  );
 
   await deps.events.append({
     type: "user.impersonation_started",
@@ -55,7 +58,7 @@ export async function startImpersonation(
     entityId: auditEntityId("user", target.id),
     actorUserId: ctx.actor.userId,
     subjectUserId: target.id,
-    occurredAt: ctx.now(),
+    occurredAt: ctx.operationAt,
   });
 
   return Ok({ token: issued.token });
@@ -78,7 +81,7 @@ export async function stopImpersonation(
     entityId: auditEntityId("user", ctx.actor.userId),
     actorUserId: impersonatorUserId,
     subjectUserId: ctx.actor.userId,
-    occurredAt: ctx.now(),
+    occurredAt: ctx.operationAt,
   });
 
   return Ok(undefined);

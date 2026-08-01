@@ -30,14 +30,17 @@ export async function adjustMonthCredit(raw: {
 
     audit: ({ ruc, month }) => ({ ruc, month }),
 
-    execute: async ({ actor }, input) => {
-      const resolved = await composeMerchantStats().attribution.adjust({
-        ruc: input.ruc,
-        month: input.month,
-        sellerUserId: input.sellerUserId,
-        reason: input.reason,
-        adjustedBy: actor.userId,
-      });
+    execute: async ({ actor, operationAt: now }, input) => {
+      const resolved = await composeMerchantStats().attribution.adjust(
+        {
+          ruc: input.ruc,
+          month: input.month,
+          sellerUserId: input.sellerUserId,
+          reason: input.reason,
+          adjustedBy: actor.userId,
+        },
+        now,
+      );
 
       if (isErr(resolved)) return resolved;
 
@@ -66,13 +69,16 @@ export async function setMerchantTarget(raw: {
 
     audit: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
 
-    execute: async ({ actor }, input) => {
-      const updated = await composeMerchantStats().attribution.setTarget({
-        ruc: input.ruc,
-        effectiveFrom: input.effectiveFrom,
-        projectedGpv: input.projectedGpv,
-        setBy: actor.userId,
-      });
+    execute: async ({ actor, operationAt: now }, input) => {
+      const updated = await composeMerchantStats().attribution.setTarget(
+        {
+          ruc: input.ruc,
+          effectiveFrom: input.effectiveFrom,
+          projectedGpv: input.projectedGpv,
+          setBy: actor.userId,
+        },
+        now,
+      );
 
       if (isErr(updated)) return updated;
 

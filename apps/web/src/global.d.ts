@@ -6,7 +6,6 @@ declare namespace App {
     requestId: string;
     routePath: string | null;
     httpMethod: string | null;
-    requestStartedAt: number;
   }
 
   interface RequestEventLocals {

@@ -54,11 +54,13 @@ export async function completePrimaryAuthProof(params: {
   context: AuthContext;
   deps: AuthLoginContext;
   webauthnProvider: WebauthnProvider;
+  now: Date;
 }): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
-  const authenticatedAt = params.deps.now();
+  const authenticatedAt = params.now;
   const decision = evaluateLoginPolicy({
     proof: params.proof,
     context: params.context,
+    now: authenticatedAt,
   });
 
   if (decision.kind === "deny") {
@@ -88,7 +90,6 @@ export async function completePrimaryAuthProof(params: {
       if (params.proof.kind === "password") {
         await createAuthThrottleService({
           authThrottle: repos.authThrottle,
-          now: () => authenticatedAt,
         }).clearLoginFailureState(params.identifier, params.request.ipAddress);
         await recordAuthEvent(repos, {
           userId: params.context.user.id,
@@ -132,17 +133,19 @@ export async function completePrimaryAuthProof(params: {
 
       const issued = await createSessionService({
         ...repos,
-        now: () => authenticatedAt,
-      }).establish({
-        user: params.context.user,
-        sessionClass: decision.sessionClass,
-        request: params.request,
-        primaryAuthMethod: params.proof.kind,
-        strongAuthMethod: decision.strongAuthMethod,
-        strongAuthAt: decision.strongAuthAt,
-        auditAction:
-          params.proof.kind === "passkey" ? "login_passkey" : "login",
-      });
+      }).establish(
+        {
+          user: params.context.user,
+          sessionClass: decision.sessionClass,
+          request: params.request,
+          primaryAuthMethod: params.proof.kind,
+          strongAuthMethod: decision.strongAuthMethod,
+          strongAuthAt: decision.strongAuthAt,
+          auditAction:
+            params.proof.kind === "passkey" ? "login_passkey" : "login",
+        },
+        authenticatedAt,
+      );
 
       return Ok({
         kind: "complete",

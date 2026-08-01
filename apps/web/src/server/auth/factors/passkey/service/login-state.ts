@@ -32,6 +32,7 @@ export function createPasskeyLoginStateService(
 ) {
   async function hydrateLoginFlow(
     flow: PasskeyFlowRecord,
+    asOf: Date,
   ): Promise<PasskeyLoginFlowState | null> {
     if (
       !flow ||
@@ -43,7 +44,7 @@ export function createPasskeyLoginStateService(
       return null;
     }
 
-    if (flow.expires_at < new Date()) {
+    if (flow.expires_at < asOf) {
       await deleteLoginFlow(flow, repos);
       return null;
     }
@@ -55,7 +56,7 @@ export function createPasskeyLoginStateService(
       !challenge ||
       challenge.type !== "authentication" ||
       challenge.user_id !== flow.user_id ||
-      challenge.expires_at < new Date()
+      challenge.expires_at < asOf
     ) {
       await deleteLoginFlow(flow, repos);
       return null;

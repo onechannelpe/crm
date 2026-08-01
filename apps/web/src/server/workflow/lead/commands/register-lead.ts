@@ -3,7 +3,6 @@ import { fail, type DomainError } from "~/domain/errors";
 import { parseRuc } from "~/domain/identity/document";
 import type { WorkflowInquiryId, WorkflowLeadId } from "~/domain/ids";
 import type { OrganizationEnrichment } from "~/server/organization/enrichment";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
   createInquiryRepo,
@@ -11,6 +10,7 @@ import {
 } from "~/server/workflow/inquiry/repo";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 import { createWorkflowRepos } from "~/server/workflow/repos";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, type Result } from "~/shared/result";
 
 import { requireCapability } from "../../lead/domain/policy";
@@ -30,15 +30,12 @@ export async function registerLead(
     actor: WorkflowActor;
     inquiryId?: WorkflowInquiryId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-    identity: OrganizationEnrichment;
-  },
+  scope: WorkflowWriteContext,
+  deps: { identity: OrganizationEnrichment },
 ): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   const actor = input.actor;
-  const now = ports.now;
-  const repos = createWorkflowRepos(ports.executor);
+  const now = scope.operationAt;
+  const repos = createWorkflowRepos(scope.executor);
 
   const canRegister = requireCapability("register", { role: actor.role });
 
@@ -56,7 +53,7 @@ export async function registerLead(
   // validate the link up front so a bad reference fails before any write.
   let inquiry: InquiryRow | undefined;
   if (input.inquiryId !== undefined) {
-    const found = await createInquiryRepo(ports.executor).findById(
+    const found = await createInquiryRepo(scope.executor).findById(
       input.inquiryId,
     );
     if (!found) return Err(fail("inquiry_not_found"));
@@ -83,7 +80,7 @@ export async function registerLead(
 
   if (heldLead && isReservationLapsed(heldLead, now)) {
     const released = await expireLeadReservation(
-      ports.executor,
+      scope.executor,
       heldLead.id,
       now,
     );
@@ -111,7 +108,7 @@ export async function registerLead(
       leadId: resolution.value.lead.id,
       actor,
       inquiry,
-      ports: { executor: ports.executor, now },
+      scope: { executor: scope.executor, operationAt: now },
     });
   }
 
@@ -130,7 +127,7 @@ export async function registerLead(
     posCount: input.posCount,
   };
 
-  const overlay = await ports.identity.enrichByRuc(ruc.value);
+  const overlay = await deps.identity.enrichByRuc(ruc.value);
 
   return createRegisteredLead({
     command: input,
@@ -139,6 +136,6 @@ export async function registerLead(
     commercialScope,
     enrichment: overlay,
     inquiry,
-    ports: { executor: ports.executor, now },
+    scope: { executor: scope.executor, operationAt: now },
   });
 }

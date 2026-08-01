@@ -4,6 +4,7 @@ import { buildFileDownloadHeaders } from "~/server/files/headers";
 import { executeDownload } from "~/server/files/service/execute-download";
 import { composeFiles } from "~/server/files/ui/composition";
 import { toWire } from "~/server/platform/action/domain-error";
+import { getRequestInstant } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
 export async function GET(
@@ -16,7 +17,7 @@ export async function GET(
     }
 
     const { repo, storage } = composeFiles();
-    const now = new Date();
+    const now = getRequestInstant();
 
     const result = await executeDownload(token, { repo, storage }, now);
 

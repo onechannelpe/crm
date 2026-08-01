@@ -31,7 +31,7 @@ export async function updateExecutivePolicyOverride(
   if (!monthlyLimit.ok) return monthlyLimit;
   const leadValues = validateLeadPolicyValues(input);
   if (!leadValues.ok) return leadValues;
-  const expiresAt = validateOverrideExpiry(input.expiresAt);
+  const expiresAt = validateOverrideExpiry(input.expiresAt, ctx.operationAt);
   if (!expiresAt.ok) return expiresAt;
 
   return deps.uow.run(async (tx) => {
@@ -45,6 +45,7 @@ export async function updateExecutivePolicyOverride(
         targetUserId: input.userId,
         monthlyLimit: monthlyLimit.value,
         expiresAt: expiresAt.value,
+        at: ctx.operationAt,
       },
       tx,
     );
@@ -57,6 +58,7 @@ export async function updateExecutivePolicyOverride(
         bufferTarget: leadValues.value.bufferTarget,
         dailyLimit: leadValues.value.dailyLimit,
         expiresAt: expiresAt.value,
+        at: ctx.operationAt,
       },
       tx,
     );

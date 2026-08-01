@@ -23,18 +23,20 @@ class SessionCache {
   private cache = new Map<string, CachedSession>();
   private readonly cacheTTL = 5 * 60 * 1000;
 
-  get(sessionId: string): CachedSession | null {
+  // Entries expire lazily on read, so the caller's instant is enough and the
+  // cache never needs a clock of its own.
+  get(sessionId: string, now: Date): CachedSession | null {
     const cached = this.cache.get(sessionId);
     if (!cached) return null;
 
-    const now = Date.now();
+    const at = now.getTime();
 
-    if (cached.cachedUntil < now) {
+    if (cached.cachedUntil < at) {
       this.cache.delete(sessionId);
       return null;
     }
 
-    if (cached.expiresAt.getTime() < now) {
+    if (cached.expiresAt.getTime() < at) {
       this.cache.delete(sessionId);
       return null;
     }
@@ -42,10 +44,14 @@ class SessionCache {
     return cached;
   }
 
-  set(sessionId: string, session: Omit<CachedSession, "cachedUntil">): void {
+  set(
+    sessionId: string,
+    session: Omit<CachedSession, "cachedUntil">,
+    now: Date,
+  ): void {
     this.cache.set(sessionId, {
       ...session,
-      cachedUntil: Date.now() + this.cacheTTL,
+      cachedUntil: now.getTime() + this.cacheTTL,
     });
   }
 
@@ -71,35 +77,6 @@ class SessionCache {
 
   clear(): void {
     this.cache.clear();
-  }
-
-  cleanup(): void {
-    const now = Date.now();
-    for (const [key, value] of this.cache.entries()) {
-      if (value.cachedUntil < now || value.expiresAt.getTime() < now) {
-        this.cache.delete(key);
-      }
-    }
-  }
-
-  size(): number {
-    return this.cache.size;
-  }
-
-  getStats() {
-    const now = Date.now();
-    let expired = 0;
-    let valid = 0;
-
-    for (const value of this.cache.values()) {
-      if (value.cachedUntil < now || value.expiresAt.getTime() < now) {
-        expired++;
-      } else {
-        valid++;
-      }
-    }
-
-    return { total: this.cache.size, valid, expired };
   }
 }
 

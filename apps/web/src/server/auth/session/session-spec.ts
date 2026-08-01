@@ -8,7 +8,6 @@ import type {
   StrongAuthMethod,
 } from "~/domain/auth/core/session-contract";
 import type { BranchId, UserId } from "~/domain/ids";
-import type { Clock } from "~/domain/time/clock";
 import type { UserSessionRow } from "~/server/auth/types";
 import type { EventsRepo } from "~/server/event-logs/events-repo";
 import type { UsersTable } from "~/server/platform/database/types";
@@ -91,7 +90,6 @@ export interface SessionServiceDeps {
   sessions: SessionRepositoryPort;
   users: SessionUsersPort;
   events: SessionEventPort;
-  now?: Clock;
   logger?: Pick<Logger, "error">;
 }
 

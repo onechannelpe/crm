@@ -19,7 +19,7 @@ export async function removeMemberAvatar(
   );
   if (isErr(target)) return target;
 
-  const result = await deps.avatars.remove(command.userId);
+  const result = await deps.avatars.remove(command.userId, ctx.operationAt);
   if (isErr(result)) return Err(toAvatarDomainError(result.error.code));
 
   return Ok({ avatarVersion: result.value.avatarVersion });

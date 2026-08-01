@@ -22,22 +22,12 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { db } from "~/server/platform/database/db";
-import { resolvePendingQuotationPolicy } from "~/server/workflow/lead/domain/pending-quotation";
-import { getLeadBootstrapPreview } from "~/server/workflow/lead/read/queries/get-lead-bootstrap-preview";
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
-import { listAssignableExecutives } from "~/server/workflow/lead/read/queries/list-assignable-executives";
-import { listFulfillmentQueue } from "~/server/workflow/lead/read/queries/list-fulfillment-queue";
-import { listLeads } from "~/server/workflow/lead/read/queries/list-leads";
-import { createWorkflowRepos } from "~/server/workflow/repos";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 import { isErr, Ok } from "~/shared/result";
 
 const SORT_FIELDS = ["createdAt", "updatedAt", "registeredBy", "ruc"] as const;
 const SORT_DIRECTIONS = ["asc", "desc"] as const;
-const workflowRepos = createWorkflowRepos(db);
-
 export async function queryLeadList(
   filters: ListLeadsFiltersInput,
 ): Promise<LeadListView> {
@@ -64,19 +54,16 @@ export async function queryLeadList(
       status: status ?? null,
     }),
 
-    execute: ({ actor }, parsedFilters) => {
+    execute: ({ actor, operationAt: now }, parsedFilters) => {
       const { userId, role, branchId } = workflowActor(actor);
 
-      return listLeads(
-        { leads: workflowRepos.leadQueries },
-        {
-          actorUserId: userId,
-          actorRole: role,
-          actorBranchId: branchId,
-          filters: parsedFilters,
-          evaluatedAt: new Date(),
-        },
-      );
+      return workflow.queries.listLeads({
+        actorUserId: userId,
+        actorRole: role,
+        actorBranchId: branchId,
+        filters: parsedFilters,
+        evaluatedAt: now,
+      });
     },
   });
 }
@@ -95,19 +82,20 @@ export async function queryLeadDetail(
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: async ({ actor, now }, query) => {
+    execute: async ({ actor, operationAt: now }, query) => {
       const { userId, role } = workflowActor(actor);
 
-      const detail = await getLeadDetail(workflowRepos, {
+      const detail = await workflow.queries.getLeadDetail({
         actorUserId: userId,
         actorRole: role,
         leadId: query.leadId,
+        evaluatedAt: now,
       });
       if (isErr(detail)) return detail;
 
       return Ok({
         ...detail.value,
-        evaluatedAt: now().getTime(),
+        evaluatedAt: now.getTime(),
       });
     },
   });
@@ -120,9 +108,9 @@ export async function queryFulfillmentQueue(): Promise<
     name: "workflow.list_fulfillment_queue",
     access: { kind: "auth" },
 
-    execute: async ({ actor, now }) => {
+    execute: async ({ actor, operationAt: now }) => {
       const { role, branchId } = workflowActor(actor);
-      const queue = await listFulfillmentQueue(db, {
+      const queue = await workflow.queries.listFulfillmentQueue({
         actorRole: role,
         actorBranchId: branchId,
       });
@@ -130,7 +118,7 @@ export async function queryFulfillmentQueue(): Promise<
 
       return Ok({
         ...queue.value,
-        evaluatedAt: now().getTime(),
+        evaluatedAt: now.getTime(),
       });
     },
   });
@@ -141,16 +129,12 @@ export async function queryPendingQuotationCount(): Promise<PendingQuotationCoun
     name: "workflow.pending_quotation_count",
     access: { kind: "auth" },
 
-    execute: ({ actor }) => {
+    execute: ({ actor, operationAt: now }) => {
       const { userId, branchId } = workflowActor(actor);
 
-      return Promise.all([
-        workflowRepos.leads.countPendingQuotationDecisions(userId, new Date()),
-        workflowRepos.pendingQuotationPolicies.findByBranchId(branchId),
-      ]).then(([count, branchPolicy]) => {
-        const { limit } = resolvePendingQuotationPolicy({ branchPolicy });
-        return Ok({ count, limit });
-      });
+      return workflow.queries
+        .pendingQuotationCount(userId, branchId, now)
+        .then(Ok);
     },
   });
 }
@@ -169,15 +153,7 @@ export async function queryLeadBootstrapPreview(
 
     audit: ({ ruc }) => ({ ruc }),
 
-    execute: async (_ctx, query) => {
-      const workflow = composeWorkflow();
-
-      return getLeadBootstrapPreview(
-        { organization: workflow.repos.organization },
-        workflow.organizationEnrichment,
-        { ruc: query.ruc },
-      );
-    },
+    execute: (_ctx, query) => workflow.queries.getLeadBootstrapPreview(query),
   });
 }
 
@@ -200,7 +176,7 @@ export async function queryAssignableExecutives(
     execute: ({ actor }, query) => {
       const { userId, role, branchId } = workflowActor(actor);
 
-      return listAssignableExecutives(workflowRepos, {
+      return workflow.queries.listAssignableExecutives({
         actorUserId: userId,
         actorRole: role,
         actorBranchId: branchId,

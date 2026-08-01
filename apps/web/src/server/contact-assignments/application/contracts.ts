@@ -10,6 +10,8 @@ import type {
 export interface AssignContactsCommand {
   actorUserId: UserId;
   branchId: BranchId;
+  /** Operation instant, shared by the reservation, the assignment rows and the commit. */
+  at: Date;
 }
 
 export interface AssignContactsResult {
@@ -25,4 +27,6 @@ export type CompleteContactAssignmentCallCommand = {
   contactId: OrganizationPersonId;
   outcome: ContactAssignmentCallOutcome;
   notes: string | null;
+  /** Operation instant: bounds the active-assignment check and stamps the log. */
+  at: Date;
 };

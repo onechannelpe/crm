@@ -1,8 +1,8 @@
 import type { AddVenueAccountsInput } from "~/contracts/workflow/inputs";
 import { fail, type DomainError } from "~/domain/errors";
 import type { WorkflowLeadId, WorkflowVenueId } from "~/domain/ids";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { addVenueAccounts } from "../../lead/domain/decide";
@@ -17,10 +17,7 @@ export async function addVenueAccountsCommand(
     leadId: WorkflowLeadId;
     venueId: WorkflowVenueId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
   const parsedAccounts = buildVenueAccounts(input);
 
@@ -28,7 +25,7 @@ export async function addVenueAccountsCommand(
     return parsedAccounts;
   }
 
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -61,7 +58,7 @@ export async function addVenueAccountsCommand(
       venueId: input.venueId,
       totalVenues,
       fundedVenues,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -71,7 +68,7 @@ export async function addVenueAccountsCommand(
     await ctx.repos.leadVenues.addAccounts(
       input.venueId,
       parsedAccounts.value,
-      ctx.now,
+      ctx.operationAt,
     );
 
     const committed = await ctx.commitTransition(transition.value);
@@ -85,7 +82,7 @@ export async function addVenueAccountsCommand(
         leadId: state.id,
         createdBy: input.actor.userId,
         currentStep: INITIAL_FULFILLMENT_STEP,
-        now: ctx.now,
+        now: ctx.operationAt,
       });
 
       const started = await ctx.appendFacts([
@@ -94,7 +91,7 @@ export async function addVenueAccountsCommand(
           eventType: "fulfillment_started",
           actorUserId: input.actor.userId,
           payload: { orderId, unitCount: 0 },
-          occurredAt: ctx.now,
+          occurredAt: ctx.operationAt,
         }),
       ]);
       if (!started.ok) return started;

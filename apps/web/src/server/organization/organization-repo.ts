@@ -55,6 +55,8 @@ export type OrganizationRepository = {
     address?: string | null;
     district?: string | null;
     department?: string | null;
+    /** Operation instant that stamps the row. */
+    at: Date;
   }): Promise<OrganizationProfile>;
   updateCommercialProfile(input: {
     organizationId: OrganizationId;
@@ -72,6 +74,8 @@ export type OrganizationRepository = {
     person: PersonIdentity;
     phone: string | null;
     email: string | null;
+    /** Operation instant that stamps the row. */
+    at: Date;
   }): Promise<Membership>;
   findMembership(input: {
     organizationId: OrganizationId;
@@ -82,6 +86,8 @@ export type OrganizationRepository = {
     organizationId: OrganizationId;
     organizationPersonId: OrganizationPersonId;
     role: string;
+    /** Operation instant that stamps the row. */
+    at: Date;
   }): Promise<void>;
   findPrimaryRepresentative(
     organizationId: OrganizationId,
@@ -172,8 +178,10 @@ export function createOrganizationRepo(
         "people.email as person_email",
       ]);
 
-  async function upsertPerson(person: PersonIdentity): Promise<PersonId> {
-    const now = new Date();
+  async function upsertPerson(
+    person: PersonIdentity,
+    now: Date,
+  ): Promise<PersonId> {
     await db
       .insertInto("people")
       .values({
@@ -243,7 +251,7 @@ export function createOrganizationRepo(
           address: input.address ?? null,
           district: input.district ?? null,
           department: input.department ?? null,
-          created_at: new Date(),
+          created_at: input.at,
         })
         .onConflict((oc) => oc.column("ruc").doNothing())
         .execute();
@@ -285,8 +293,8 @@ export function createOrganizationRepo(
     },
 
     async upsertMembership(input) {
-      const now = new Date();
-      const personId = await upsertPerson(input.person);
+      const now = input.at;
+      const personId = await upsertPerson(input.person, now);
 
       await db
         .insertInto("organization_people")
@@ -336,7 +344,7 @@ export function createOrganizationRepo(
     },
 
     async setPrimaryRole(input) {
-      const now = new Date();
+      const now = input.at;
       const memberIds = (
         await db
           .selectFrom("organization_people")

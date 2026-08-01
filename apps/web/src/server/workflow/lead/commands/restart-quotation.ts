@@ -1,8 +1,8 @@
 import type { RestartQuotationInput } from "~/contracts/workflow/inputs";
 import { fail, type DomainError } from "~/domain/errors";
 import type { WorkflowLeadId } from "~/domain/ids";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { restartQuotation } from "../../lead/domain/decide";
@@ -13,12 +13,9 @@ export async function restartQuotationCommand(
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -27,7 +24,7 @@ export async function restartQuotationCommand(
 
     const transition = restartQuotation(state, {
       actor: input.actor,
-      now: ctx.now,
+      now: ctx.operationAt,
     });
 
     if (!transition.ok) {

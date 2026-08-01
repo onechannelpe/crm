@@ -24,6 +24,7 @@ export interface UsageReservationPorts<K extends CapacityKind> {
   checkRemaining(
     trx: DatabaseExecutor,
     actorUserId: UserId,
+    evaluatedAt: Date,
   ): Promise<Result<number, DomainError>>;
   reservations(trx: DatabaseExecutor): UsageReservationsRepo<K>;
   commits(trx: DatabaseExecutor): UsageCommitsRepo<K>;
@@ -35,6 +36,8 @@ interface ReserveUsageCommand<K extends CapacityKind> {
   amount: number;
   reason: ReserveReason<K>;
   brand: (id: string) => UsageReservationId<K>;
+  /** Operation instant. Stamps the reservation and bounds the capacity read. */
+  at: Date;
 }
 
 // The read (remaining capacity) and the write (the reservation row) must
@@ -52,7 +55,11 @@ async function reserveUsage<K extends CapacityKind>(
   const lockKey = `usage:${command.kind}:${command.actorUserId}`;
   return ports.executor.transaction().execute((trx) =>
     withAdvisoryLock(trx, lockKey, async () => {
-      const remaining = await ports.checkRemaining(trx, command.actorUserId);
+      const remaining = await ports.checkRemaining(
+        trx,
+        command.actorUserId,
+        command.at,
+      );
       if (isErr(remaining)) return remaining;
 
       if (remaining.value < command.amount) {
@@ -63,6 +70,8 @@ async function reserveUsage<K extends CapacityKind>(
         user_id: command.actorUserId,
         amount: command.amount,
         reason: command.reason,
+        created_at: command.at,
+        updated_at: command.at,
       });
       return Ok(command.brand(row.id));
     }),
@@ -78,6 +87,7 @@ async function commitUsage<K extends CapacityKind>(
     UsageReservationPorts<K>,
     "executor" | "reservations" | "commits"
   >,
+  at: Date,
 ): Promise<Result<void, DomainError>> {
   const reservations = ports.reservations(ports.executor);
   const reservation = await reservations.findById(reservationId);
@@ -87,21 +97,28 @@ async function commitUsage<K extends CapacityKind>(
   await ports.commits(ports.executor).insert({
     reservation_id: reservationId,
     amount,
+    created_at: at,
   });
-  await reservations.updateAmountAndStatus(reservationId, amount, "committed");
+  await reservations.updateAmountAndStatus(
+    reservationId,
+    amount,
+    "committed",
+    at,
+  );
   return Ok(undefined);
 }
 
 async function cancelUsage<K extends CapacityKind>(
   reservationId: UsageReservationId<K>,
   ports: Pick<UsageReservationPorts<K>, "executor" | "reservations">,
+  at: Date,
 ): Promise<Result<void, DomainError>> {
   const reservations = ports.reservations(ports.executor);
   const reservation = await reservations.findById(reservationId);
   if (!reservation) {
     return Err(fail("reservation_not_found"));
   }
-  await reservations.updateStatus(reservationId, "cancelled");
+  await reservations.updateStatus(reservationId, "cancelled", at);
   return Ok(undefined);
 }
 
@@ -111,6 +128,8 @@ export interface ExecuteWithUsageReservationCommand<K extends CapacityKind> {
   requested: number;
   reserveReason: ReserveReason<K>;
   brand: (id: string) => UsageReservationId<K>;
+  /** Operation instant, shared by the reservation and its commit or cancel. */
+  at: Date;
 }
 
 export async function executeWithUsageReservation<K extends CapacityKind, T>(
@@ -127,6 +146,7 @@ export async function executeWithUsageReservation<K extends CapacityKind, T>(
       amount: command.requested,
       reason: command.reserveReason,
       brand: command.brand,
+      at: command.at,
     },
     ports,
   );
@@ -140,27 +160,32 @@ export async function executeWithUsageReservation<K extends CapacityKind, T>(
   try {
     runResult = await run(reservationId);
   } catch (error) {
-    await cancelUsage(reservationId, ports);
+    await cancelUsage(reservationId, ports, command.at);
     throw error;
   }
 
   if (isErr(runResult)) {
-    await cancelUsage(reservationId, ports);
+    await cancelUsage(reservationId, ports, command.at);
     return runResult;
   }
 
   const consumed = runResult.value.consumed;
   if (consumed < 0 || consumed > command.requested) {
-    await cancelUsage(reservationId, ports);
+    await cancelUsage(reservationId, ports, command.at);
     return Err(fail("invalid_consumed_amount"));
   }
 
   if (consumed === 0) {
-    await cancelUsage(reservationId, ports);
+    await cancelUsage(reservationId, ports, command.at);
     return Ok(runResult.value.value);
   }
 
-  const commitResult = await commitUsage(reservationId, consumed, ports);
+  const commitResult = await commitUsage(
+    reservationId,
+    consumed,
+    ports,
+    command.at,
+  );
   if (isErr(commitResult)) {
     return commitResult;
   }
@@ -177,6 +202,7 @@ export async function grantUsageCapacity<K extends CapacityKind>(
     amount: command.amount,
     reason: command.reason,
     actor_user_id: command.actorUserId,
+    created_at: command.at,
   });
   return Ok(undefined);
 }

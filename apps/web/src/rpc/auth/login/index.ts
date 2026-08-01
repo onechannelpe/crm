@@ -19,20 +19,23 @@ import {
   readPasskeyStartMode,
 } from "~/server/auth/ui/login-support";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { serverInfrastructure } from "~/server/platform/composition/infrastructure";
-import { getRequestClientMetadata } from "~/server/platform/http/request-context";
+import {
+  getRequestClientMetadata,
+  getRequestInstant,
+} from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
 
 function recordAuthAnalyticsEvent(
   event: Parameters<typeof recordAuthAnalytics>[0],
   context: Parameters<typeof recordAuthAnalytics>[1],
+  occurredAt: Date,
 ) {
   return recordAuthAnalytics(
     event,
     context,
     composeAuth().analytics,
-    serverInfrastructure.now,
+    occurredAt,
   );
 }
 
@@ -46,6 +49,7 @@ export async function passwordLogin(
   const request = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
   const loginContext = composeAuth().login;
+  const now = getRequestInstant();
 
   const result = await submitPasswordLogin(
     {
@@ -56,6 +60,7 @@ export async function passwordLogin(
     },
     loginContext,
     createRequestPasskeyProvider(loginContext.repos),
+    now,
   );
 
   if (isErr(result)) {
@@ -67,6 +72,7 @@ export async function passwordLogin(
         code: result.error.kind,
       },
       analyticsContext,
+      now,
     );
 
     throwDomain(fail(result.error.kind));
@@ -80,6 +86,7 @@ export async function passwordLogin(
         outcome: "totp_required",
       },
       analyticsContext,
+      now,
     );
 
     throw redirect(`/login/verify?flow=${result.value.flow.id}`);
@@ -93,6 +100,7 @@ export async function passwordLogin(
         outcome: "passkey_required",
       },
       analyticsContext,
+      now,
     );
 
     return {
@@ -108,6 +116,7 @@ export async function passwordLogin(
       outcome: "succeeded",
     },
     analyticsContext,
+    now,
   );
 
   return completeLoginAndRedirect(result.value.result);
@@ -127,6 +136,7 @@ export async function passkeyStart(
   const request = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
   const loginContext = composeAuth().login;
+  const now = getRequestInstant();
 
   const command =
     mode === "identified"
@@ -144,6 +154,7 @@ export async function passkeyStart(
     command,
     loginContext,
     createRequestPasskeyProvider(loginContext.repos),
+    now,
   );
 
   if (isErr(result)) {
@@ -155,6 +166,7 @@ export async function passkeyStart(
         code: "invalid_credentials",
       },
       analyticsContext,
+      now,
     );
 
     throwDomain(fail("invalid_credentials"));
@@ -167,6 +179,7 @@ export async function passkeyStart(
       outcome: "started",
     },
     analyticsContext,
+    now,
   );
 
   return { flow: result.value };
@@ -185,8 +198,8 @@ export async function totpLogin(formData: FormData): Promise<void> {
   const request = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
   const loginContext = composeAuth().login;
-
-  const verifiedAt = loginContext.now();
+  const now = getRequestInstant();
+  const verifiedAt = now;
   const verified = await verifyTotpLoginProof(loginContext, {
     flowId,
     totpCode,
@@ -204,6 +217,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
           code: "flow_expired",
         },
         analyticsContext,
+        now,
       );
 
       throwDomain(fail("flow_expired"));
@@ -217,6 +231,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
         code: "invalid_totp",
       },
       analyticsContext,
+      now,
     );
 
     throwDomain(fail("totp_code_invalid"));
@@ -245,6 +260,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
       outcome: "succeeded",
     },
     analyticsContext,
+    now,
   );
 
   return completeLoginAndRedirect(completed.value);
@@ -262,8 +278,7 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
 
   const request = getRequestClientMetadata();
   const loginContext = composeAuth().login;
-
-  const verifiedAt = loginContext.now();
+  const verifiedAt = getRequestInstant();
   const verified = await verifyRecoveryLoginProof(loginContext, {
     flowId,
     recoveryCode,

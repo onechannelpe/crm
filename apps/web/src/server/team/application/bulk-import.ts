@@ -43,7 +43,7 @@ export async function applyBulkImport(
   const parsed = await previewBulkImport(
     input.csvContent,
     input.role,
-    ctx.now(),
+    ctx.operationAt,
   );
   if (!parsed.ok) {
     return parsed;
@@ -84,8 +84,9 @@ export async function applyBulkImport(
             : (error.code ?? error.kind);
         throw new Error(message);
       }
-      await deps.inviteService.markInviteDelivered(inviteId);
+      await deps.inviteService.markInviteDelivered(inviteId, ctx.operationAt);
     },
+    ctx.operationAt,
   );
 
   return Ok(result);

@@ -30,6 +30,7 @@ export async function completeGoogleOAuthCallback(
   },
   deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
+  now: Date,
 ): Promise<
   Result<CompleteGoogleOAuthCallbackSuccess, CompleteGoogleOAuthCallbackError>
 > {
@@ -67,11 +68,7 @@ export async function completeGoogleOAuthCallback(
     return Err({ kind: "redirect_to_login", error: "google_not_linked" });
   }
 
-  const context = await loadActiveAuthContextForUser(
-    user,
-    deps.repos,
-    deps.now(),
-  );
+  const context = await loadActiveAuthContextForUser(user, deps.repos, now);
   if (!context) {
     return Err({ kind: "redirect_to_login", error: "google_not_linked" });
   }
@@ -89,6 +86,7 @@ export async function completeGoogleOAuthCallback(
     context,
     deps,
     webauthnProvider,
+    now,
   });
 
   if (isErr(loginResult)) {

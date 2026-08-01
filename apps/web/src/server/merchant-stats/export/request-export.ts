@@ -34,7 +34,7 @@ export async function requestMerchantGpvExport(
     ctx,
     {
       purpose: "merchant_gpv_export",
-      filename: exportFilename(cutAt ?? ctx.now()),
+      filename: exportFilename(cutAt ?? ctx.operationAt),
       bytes,
     },
     { repo: deps.filesRepo, storage: deps.filesStorage },

@@ -43,7 +43,11 @@ export async function assignContacts(
 ): Promise<Result<AssignContactsResult, DomainError>> {
   const { repos, uow, engine, leadUsageReservationPorts } = deps;
 
-  const plan = await planContactAssignments(command.actorUserId, repos);
+  const plan = await planContactAssignments(
+    command.actorUserId,
+    repos,
+    command.at,
+  );
   if (isErr(plan)) return plan;
 
   if (plan.value.requested === 0) return Ok({ requested: 0, assigned: 0 });
@@ -55,6 +59,7 @@ export async function assignContacts(
       requested: plan.value.requested,
       reserveReason: "lead_refill",
       brand: LeadReservationId.trust,
+      at: command.at,
     },
     leadUsageReservationPorts,
     async () => {
@@ -70,6 +75,7 @@ export async function assignContacts(
       const assigned = await createContactAssignmentsFromCandidates({
         actorUserId: command.actorUserId,
         candidates: candidatesResult.value,
+        at: command.at,
         uow,
       });
       if (isErr(assigned)) {

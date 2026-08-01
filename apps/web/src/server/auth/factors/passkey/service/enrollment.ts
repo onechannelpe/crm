@@ -50,10 +50,15 @@ interface PreparedPasskeyEnrollment extends EnrollmentActor {
 async function recordVerificationFailure(
   repos: PasskeyEnrollmentRepos,
   input: EnrollmentActor,
+  occurredAt: Date,
 ) {
   await createAuthThrottleService({
     authThrottle: repos.authThrottle,
-  }).recordPasskeyVerifyFailure(`user:${input.userId}`, input.ipAddress);
+  }).recordPasskeyVerifyFailure(
+    `user:${input.userId}`,
+    input.ipAddress,
+    occurredAt,
+  );
 }
 
 export async function persistVerifiedPasskeyEnrollment(
@@ -101,6 +106,7 @@ export async function preparePasskeyEnrollment(
   const throttle = await throttleService.checkPasskeyChallengeThrottle(
     `user:${input.userId}`,
     input.ipAddress,
+    input.occurredAt,
   );
   if (!throttle.allowed) {
     return Err(fail("invalid_passkey_request"));
@@ -145,6 +151,7 @@ export async function verifyPasskeyEnrollment(
   const throttle = await throttleService.checkPasskeyVerifyThrottle(
     identifier,
     input.ipAddress,
+    input.verifiedAt,
   );
   if (!throttle.allowed) {
     return Err(fail("invalid_passkey_request"));
@@ -156,12 +163,12 @@ export async function verifyPasskeyEnrollment(
     challenge.type !== "registration" ||
     challenge.user_id !== input.userId
   ) {
-    await recordVerificationFailure(repos, input);
+    await recordVerificationFailure(repos, input, input.verifiedAt);
     return Err(fail("invalid_passkey_request"));
   }
   if (challenge.expires_at < input.verifiedAt) {
     await repos.webauthnChallenges.delete(challenge.id);
-    await recordVerificationFailure(repos, input);
+    await recordVerificationFailure(repos, input, input.verifiedAt);
     return Err(fail("invalid_passkey_request"));
   }
 
@@ -172,7 +179,7 @@ export async function verifyPasskeyEnrollment(
       challenge.challenge,
     );
     if (!registration.verified) {
-      await recordVerificationFailure(repos, input);
+      await recordVerificationFailure(repos, input, input.verifiedAt);
       return Err(fail("invalid_passkey_request"));
     }
 
@@ -184,7 +191,7 @@ export async function verifyPasskeyEnrollment(
     });
   } catch (error: unknown) {
     if (!isPasskeyRequestError(error)) throw error;
-    await recordVerificationFailure(repos, input);
+    await recordVerificationFailure(repos, input, input.verifiedAt);
     return Err(fail("invalid_passkey_request"));
   }
 }

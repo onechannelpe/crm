@@ -4,9 +4,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { addLeadNote as addLeadNoteUseCase } from "~/server/workflow/lead/interaction/write";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 export async function addLeadNote(input: unknown) {
   "use server";
@@ -23,10 +22,10 @@ export async function addLeadNote(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      addLeadNoteUseCase(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.addLeadNote(
         { actor: workflowActor(actor), ...payload },
-        composeWorkflow().ports(),
+        now,
       ),
   });
 }

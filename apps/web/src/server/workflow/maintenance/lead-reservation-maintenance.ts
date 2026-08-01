@@ -9,11 +9,14 @@ interface LeadReservationMaintenanceDeps {
   executor: DatabaseExecutor;
 }
 
-async function runReservationSweepTick(deps: LeadReservationMaintenanceDeps) {
+async function runReservationSweepTick(
+  deps: LeadReservationMaintenanceDeps,
+  sweptAt: Date,
+) {
   try {
     const expiredCount = await expireLapsedReservations(
       { executor: deps.executor },
-      new Date(),
+      sweptAt,
     );
     if (expiredCount > 0) {
       logger.info("lead_reservations_expired", { count: expiredCount });
@@ -31,7 +34,8 @@ export function startLeadReservationMaintenance(
   deps: LeadReservationMaintenanceDeps,
 ): () => void {
   const timer = setInterval(() => {
-    void runReservationSweepTick(deps);
+    // One sweep, one instant.
+    void runReservationSweepTick(deps, new Date());
   }, SWEEP_INTERVAL_MS);
 
   return () => clearInterval(timer);

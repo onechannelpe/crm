@@ -17,6 +17,7 @@ export async function rejectCapacityRequest(
     "capacity.approve",
     ctx.actor.userId,
     deps.rateLimitDeps,
+    ctx.operationAt,
     ctx.ipAddress,
   );
   const note = normalizeDecisionNote(input.note);
@@ -45,6 +46,7 @@ export async function rejectCapacityRequest(
       request.id,
       ctx.actor.userId,
       note,
+      ctx.operationAt,
     );
     if (!rejectedResult?.numUpdatedRows) {
       return Err(fail("request_not_pending"));

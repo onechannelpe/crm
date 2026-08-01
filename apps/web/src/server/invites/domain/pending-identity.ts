@@ -19,8 +19,10 @@ export function buildPendingIdentity(input: {
   firstSurname: string;
   secondSurname: string;
   executiveCategory?: ExecutiveCategory | null;
+  createdAt: Date;
 }) {
   return {
+    created_at: input.createdAt,
     branch_id: input.branchId,
     team_id: input.teamId,
     username: input.username,

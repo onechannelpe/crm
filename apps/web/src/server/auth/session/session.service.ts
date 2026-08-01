@@ -34,7 +34,6 @@ const noopLogger = {
 };
 
 export function createSessionService(deps: SessionServiceDeps) {
-  const now = deps.now ?? (() => new Date());
   const logger = deps.logger ?? noopLogger;
   const revokeSession = async (sessionId: string): Promise<void> => {
     await deps.sessions.delete(sessionId);
@@ -46,12 +45,11 @@ export function createSessionService(deps: SessionServiceDeps) {
   };
 
   return {
-    async establish(spec: SessionSpec): Promise<IssuedSession> {
+    async establish(spec: SessionSpec, now: Date): Promise<IssuedSession> {
       const identity = mapUserToSessionIdentity(spec.user);
       const token = generateSessionToken();
       const sessionId = hashSessionToken(token);
-      const nowTs = now();
-      const expiresAt = addMilliseconds(nowTs, SESSION_DURATION);
+      const expiresAt = addMilliseconds(now, SESSION_DURATION);
 
       await deps.sessions.create({
         id: sessionId,
@@ -65,8 +63,8 @@ export function createSessionService(deps: SessionServiceDeps) {
         impersonator_user_id: spec.impersonatorUserId ?? null,
         ip_address: spec.request.ipAddress,
         user_agent: spec.request.userAgent,
-        created_at: nowTs,
-        last_activity: nowTs,
+        created_at: now,
+        last_activity: now,
         expires_at: expiresAt,
       });
 
@@ -76,7 +74,7 @@ export function createSessionService(deps: SessionServiceDeps) {
           entityType: "user",
           entityId: auditEntityId("user", spec.user.id),
           actorUserId: spec.user.id,
-          occurredAt: nowTs,
+          occurredAt: now,
         });
       }
 
@@ -91,15 +89,14 @@ export function createSessionService(deps: SessionServiceDeps) {
       };
     },
 
-    async resolve(token: string): Promise<AuthSession | null> {
+    async resolve(token: string, now: Date): Promise<AuthSession | null> {
       if (!isValidTokenFormat(token)) {
         return null;
       }
 
       const sessionId = hashSessionToken(token);
-      const nowTs = now();
 
-      const cached = sessionCache.get(sessionId);
+      const cached = sessionCache.get(sessionId, now);
       if (cached) {
         return {
           id: sessionId,
@@ -138,7 +135,7 @@ export function createSessionService(deps: SessionServiceDeps) {
         await revokeSession(sessionId);
         return null;
       }
-      if (dbSession.expires_at < nowTs) {
+      if (dbSession.expires_at < now) {
         await revokeSession(sessionId);
         return null;
       }
@@ -148,28 +145,26 @@ export function createSessionService(deps: SessionServiceDeps) {
         await revokeSession(sessionId);
         return null;
       }
-      if (user.expires_at !== null && user.expires_at <= nowTs) {
-        await deps.users.deactivateIfExpired(user.id, nowTs);
+      if (user.expires_at !== null && user.expires_at <= now) {
+        await deps.users.deactivateIfExpired(user.id, now);
         await revokeUserSessions(user.id);
         return null;
       }
 
       if (
-        nowTs.getTime() - dbSession.last_activity.getTime() >
+        now.getTime() - dbSession.last_activity.getTime() >
         ACTIVITY_UPDATE_THRESHOLD
       ) {
-        deps.sessions
-          .updateActivity(sessionId, nowTs)
-          .catch((error: unknown) => {
-            logger.error("update_activity_failed", { sessionId, error });
-          });
+        deps.sessions.updateActivity(sessionId, now).catch((error: unknown) => {
+          logger.error("update_activity_failed", { sessionId, error });
+        });
       }
 
       if (
-        dbSession.expires_at.getTime() - nowTs.getTime() <
+        dbSession.expires_at.getTime() - now.getTime() <
         EXTENSION_THRESHOLD
       ) {
-        const newExpiry = addMilliseconds(nowTs, SESSION_DURATION);
+        const newExpiry = addMilliseconds(now, SESSION_DURATION);
         deps.sessions
           .extendExpiry(sessionId, newExpiry)
           .catch((error: unknown) => {
@@ -180,17 +175,21 @@ export function createSessionService(deps: SessionServiceDeps) {
 
       const authSession = mapUserSessionRowToAuthSession(sessionId, dbSession);
 
-      sessionCache.set(sessionId, {
-        userId: authSession.userId,
-        branchId: authSession.branchId,
-        role: authSession.role,
-        sessionClass: authSession.sessionClass,
-        primaryAuthMethod: authSession.primaryAuthMethod,
-        strongAuthMethod: authSession.strongAuthMethod,
-        strongAuthAt: authSession.strongAuthAt,
-        impersonatorUserId: authSession.impersonatorUserId,
-        expiresAt: dbSession.expires_at,
-      });
+      sessionCache.set(
+        sessionId,
+        {
+          userId: authSession.userId,
+          branchId: authSession.branchId,
+          role: authSession.role,
+          sessionClass: authSession.sessionClass,
+          primaryAuthMethod: authSession.primaryAuthMethod,
+          strongAuthMethod: authSession.strongAuthMethod,
+          strongAuthAt: authSession.strongAuthAt,
+          impersonatorUserId: authSession.impersonatorUserId,
+          expiresAt: dbSession.expires_at,
+        },
+        now,
+      );
 
       return authSession;
     },

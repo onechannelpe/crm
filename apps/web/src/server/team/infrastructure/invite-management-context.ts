@@ -1,4 +1,3 @@
-import type { Clock } from "~/domain/time/clock";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
@@ -10,9 +9,8 @@ import type { InviteManagementQueryPort } from "../application/ports";
 
 export function createInviteManagementContext(
   executor: DatabaseExecutor,
-  now: Clock,
 ): InviteManagementQueryPort {
-  const inviteService = createInviteServiceForExecutor(executor, now);
+  const inviteService = createInviteServiceForExecutor(executor);
   const repos = {
     events: createEventsRepo(executor),
     teams: createTeamsRepo(executor),
@@ -25,8 +23,8 @@ export function createInviteManagementContext(
       const teams = await repos.teams.findByBranch(branchId);
       return teams.map((team) => ({ id: team.id, name: team.name }));
     },
-    listPendingInvites(branchId) {
-      return inviteService.listPendingInvites(branchId);
+    listPendingInvites(branchId, now) {
+      return inviteService.listPendingInvites(branchId, now);
     },
   };
 }

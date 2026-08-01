@@ -5,7 +5,6 @@ import {
   addMilliseconds,
   epochMilliseconds,
   epochSeconds,
-  type Clock,
 } from "~/domain/time/clock";
 import { extensionConfig } from "~/server/platform/config/env";
 import type { AppUow } from "~/server/platform/database/uow";
@@ -38,7 +37,7 @@ const EXTENSION_HANDOFF_TTL_MS = 120_000;
 
 interface HandoffMethodContext {
   repos: ExtensionRepos;
-  now: Clock;
+  now: Date;
   uow: AppUow<ExtensionRepos>;
 }
 
@@ -79,6 +78,7 @@ export async function createHandoffToken(
     const assignment = await repos.contactAssignments.findActiveByIdForUser(
       assignmentId,
       input.userId,
+      now,
     );
 
     if (!assignment) {
@@ -100,7 +100,7 @@ export async function createHandoffToken(
     const organization = await repos.organization.findOrganizationById(
       contact.organizationId,
     );
-    const issuedAt = now();
+    const issuedAt = now;
     const handoffExpiresAt = addMilliseconds(
       issuedAt,
       EXTENSION_HANDOFF_TTL_MS,
@@ -175,7 +175,7 @@ export async function claimInstallationSession(
   }
 
   try {
-    const claimedAt = now();
+    const claimedAt = now;
     const handoffClaims = await verifyExtensionToken(
       input.handoffToken,
       isExtensionHandoffClaims,

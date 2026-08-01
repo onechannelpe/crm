@@ -14,7 +14,7 @@ export async function issueDownloadToken(
   fileAssetId: FileAssetId,
   deps: DownloadTokenDeps,
 ): Promise<Result<{ token: string }, DomainError>> {
-  const now = ctx.now();
+  const now = ctx.operationAt;
   const rawToken = generateDownloadToken();
   const tokenHash = hashToken(rawToken);
   const expiresAt = new Date(now.getTime() + DOWNLOAD_TOKEN_TTL_MS);

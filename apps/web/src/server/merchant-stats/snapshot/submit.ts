@@ -38,7 +38,7 @@ export async function submitGpvSnapshot(
   const file = await storeUploadedFile(
     {
       actor: { userId: input.uploadedBy },
-      now: () => input.now,
+      operationAt: input.now,
     },
     {
       purpose: "merchant_gpv_snapshot",

@@ -82,9 +82,8 @@ export async function sendBroadcastNotification(
 
     audit: ({ audience }) => ({ audienceKind: audience.kind }),
 
-    execute: async ({ actor }, input) => {
+    execute: async ({ actor, operationAt: now }, input) => {
       const notifications = composeNotifications();
-      const now = new Date();
 
       await notifications.enqueue(
         [

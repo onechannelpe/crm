@@ -36,20 +36,14 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
     scope_id: DefaultScopeId;
     period_type: "month";
     search_limit: number;
+    created_at: Date;
+    updated_at: Date;
   }): Promise<void> => {
-    const now = new Date();
-
     await db
       .insertInto("search_policy_defaults")
-      .values({
-        ...values,
-        created_at: now,
-        updated_at: now,
-      })
+      .values(values)
       .onConflict((oc) =>
-        oc
-          .columns(["scope_type", "scope_id"])
-          .doUpdateSet({ ...values, updated_at: now }),
+        oc.columns(["scope_type", "scope_id"]).doUpdateSet(values),
       )
       .execute();
   };
@@ -98,6 +92,7 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
     effective_from: Date;
     expires_at: Date | null;
     set_by_user_id: UserId;
+    created_at: Date;
   }): Promise<void> => {
     await db.transaction().execute(async (trx) => {
       await trx
@@ -107,10 +102,7 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
 
       await trx
         .insertInto("search_policy_overrides")
-        .values({
-          ...values,
-          created_at: new Date(),
-        })
+        .values(values)
         .executeTakeFirstOrThrow();
     });
   };
@@ -152,20 +144,14 @@ export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
     scope_id: DefaultScopeId;
     active_buffer_target: number;
     daily_refill_limit: number;
+    created_at: Date;
+    updated_at: Date;
   }): Promise<void> => {
-    const now = new Date();
-
     await db
       .insertInto("lead_policy_defaults")
-      .values({
-        ...values,
-        created_at: now,
-        updated_at: now,
-      })
+      .values(values)
       .onConflict((oc) =>
-        oc
-          .columns(["scope_type", "scope_id"])
-          .doUpdateSet({ ...values, updated_at: now }),
+        oc.columns(["scope_type", "scope_id"]).doUpdateSet(values),
       )
       .execute();
   };
@@ -215,6 +201,7 @@ export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
     effective_from: Date;
     expires_at: Date | null;
     set_by_user_id: UserId;
+    created_at: Date;
   }): Promise<void> => {
     await db.transaction().execute(async (trx) => {
       await trx
@@ -224,10 +211,7 @@ export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
 
       await trx
         .insertInto("lead_policy_overrides")
-        .values({
-          ...values,
-          created_at: new Date(),
-        })
+        .values(values)
         .executeTakeFirstOrThrow();
     });
   };

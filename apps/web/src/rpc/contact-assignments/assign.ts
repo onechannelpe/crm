@@ -15,6 +15,7 @@ export async function assignCurrentUserContacts() {
         {
           actorUserId: ctx.actor.userId,
           branchId: ctx.actor.branchId,
+          at: ctx.operationAt,
         },
         { repos, uow, engine, leadUsageReservationPorts },
       );

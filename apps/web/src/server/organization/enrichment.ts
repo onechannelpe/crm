@@ -12,7 +12,11 @@ export type OrganizationEnrichment = {
 
 // Enqueues a RUC verification for the enrichment worker to process later.
 export type OrganizationEnrichmentQueue = {
-  enqueueRucVerification(ruc: Ruc, requestedByUserId: string): Promise<void>;
+  enqueueRucVerification(
+    ruc: Ruc,
+    requestedByUserId: string,
+    now: Date,
+  ): Promise<void>;
 };
 
 export function createOrganizationEnrichment(

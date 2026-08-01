@@ -1,7 +1,6 @@
 import "server-only";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { getRateProposalPolicy } from "~/server/workflow/policy/read/get-rate-proposal-policy";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 export async function queryRateProposalPolicy() {
   return executeSessionServerFunction({
@@ -10,18 +9,10 @@ export async function queryRateProposalPolicy() {
 
     audit: () => ({}),
 
-    execute: ({ actor }) => {
-      const workflow = composeWorkflow();
-
-      return getRateProposalPolicy(
-        {
-          rateProposalPolicies: workflow.repos.rateProposalPolicies,
-        },
-        {
-          actorRole: actor.role,
-          branchId: actor.branchId,
-        },
-      );
-    },
+    execute: ({ actor }) =>
+      workflow.queries.getRateProposalPolicy({
+        actorRole: actor.role,
+        branchId: actor.branchId,
+      }),
   });
 }

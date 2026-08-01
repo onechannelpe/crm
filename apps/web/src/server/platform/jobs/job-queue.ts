@@ -13,10 +13,35 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown error";
 }
 
+function resolve(
+  job: QueueJobBase,
+  settlement: Settlement,
+  now: Date,
+): SettleOutcome {
+  if (settlement.kind !== "retry") {
+    return settlement;
+  }
+
+  if (job.attempt_count >= job.max_attempts) {
+    return {
+      kind: "fail",
+      reason: settlement.reason ?? "Max attempts reached",
+      patch: settlement.patch,
+    };
+  }
+
+  return {
+    kind: "retry",
+    claimableAt: nextClaimableAt(job.attempt_count, now),
+    reason: settlement.reason,
+    patch: settlement.patch,
+  };
+}
+
 export function createJobQueue<TJob extends QueueJobBase>(
   config: JobQueueConfig<TJob>,
 ): QueueRunner {
-  const { name, leaseMs, store, workerId, now } = config;
+  const { name, leaseMs, store, workerId } = config;
   const maxConcurrency = config.maxConcurrency ?? 1;
   const timeoutMs = config.timeoutMs ?? 120_000;
 
@@ -24,30 +49,13 @@ export function createJobQueue<TJob extends QueueJobBase>(
 
   const logger = createLogger(`queue:${name}`);
 
-  function resolve(job: TJob, settlement: Settlement): SettleOutcome {
-    if (settlement.kind !== "retry") {
-      return settlement;
-    }
-
-    if (job.attempt_count >= job.max_attempts) {
-      return {
-        kind: "fail",
-        reason: settlement.reason ?? "Max attempts reached",
-        patch: settlement.patch,
-      };
-    }
-
-    return {
-      kind: "retry",
-      claimableAt: nextClaimableAt(job.attempt_count, now()),
-      reason: settlement.reason,
-      patch: settlement.patch,
-    };
-  }
-
-  function settle(jobId: TJob["id"], outcome: SettleOutcome): Promise<boolean> {
+  function settle(
+    jobId: TJob["id"],
+    outcome: SettleOutcome,
+    now: Date,
+  ): Promise<boolean> {
     if (outcome.kind === "done") {
-      return store.markDone(jobId, workerId, now(), outcome.patch);
+      return store.markDone(jobId, workerId, now, outcome.patch);
     }
 
     if (outcome.kind === "retry") {
@@ -63,7 +71,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
     return store.markFailed(
       jobId,
       workerId,
-      now(),
+      now,
       outcome.reason,
       outcome.patch,
     );
@@ -74,7 +82,13 @@ export function createJobQueue<TJob extends QueueJobBase>(
     controller: AbortController,
   ): Promise<void> {
     try {
-      const renewed = await store.extendLease(jobId, workerId, leaseMs, now());
+      // Heartbeat tick, not an operation: no caller instant to inherit.
+      const renewed = await store.extendLease(
+        jobId,
+        workerId,
+        leaseMs,
+        new Date(),
+      );
 
       if (!renewed) {
         logger.error("lease_stolen", { jobId });
@@ -90,7 +104,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
     }
   }
 
-  async function processJob(job: TJob): Promise<void> {
+  async function processJob(job: TJob, claimedAt: Date): Promise<void> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     const renewalInterval = setInterval(() => {
@@ -101,7 +115,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
       let settlement: Settlement;
 
       try {
-        settlement = await config.handle(job, controller.signal);
+        settlement = await config.handle(job, controller.signal, claimedAt);
 
         if (controller.signal.aborted) {
           throw new Error("Job aborted after processing");
@@ -120,12 +134,18 @@ export function createJobQueue<TJob extends QueueJobBase>(
         settlement = { kind: "retry", reason };
       }
 
-      const outcome = resolve(job, settlement);
+      // Settling is its own event, not part of the claim: the handler may have
+      // been running for minutes, so reusing `claimedAt` here would stamp a
+      // completion time in the past and schedule the retry backoff from an
+      // instant that has already elapsed. One read for the whole settlement,
+      // so the retry schedule and the stored timestamp still agree.
+      const settledAt = new Date();
+      const outcome = resolve(job, settlement, settledAt);
 
       let settled: boolean;
 
       try {
-        settled = await settle(job.id, outcome);
+        settled = await settle(job.id, outcome, settledAt);
       } catch (error: unknown) {
         logger.error("settle_failed", {
           jobId: job.id,
@@ -173,9 +193,12 @@ export function createJobQueue<TJob extends QueueJobBase>(
           return;
         }
 
+        // The inbound event for this batch. Every job in it, and everything
+        // those handlers write, inherits this instant.
+        const claimedAt = new Date();
         const jobs = await store.claim(
           workerId,
-          now(),
+          claimedAt,
           availableSlots,
           leaseMs,
         );
@@ -186,7 +209,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
 
         runningCount += jobs.length;
 
-        await Promise.all(jobs.map((job) => processJob(job)));
+        await Promise.all(jobs.map((job) => processJob(job, claimedAt)));
 
         if (jobs.length < availableSlots) {
           return;

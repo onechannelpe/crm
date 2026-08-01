@@ -28,6 +28,7 @@ export type AssignContactsUow = AppUow<AssignContactsTransactionRepos>;
 async function upsertOrganizationsByRuc(
   candidates: RecordCandidate[],
   organizations: AssignContactsTransactionRepos["organization"],
+  at: Date,
 ): Promise<Map<string, OrganizationId>> {
   const byRuc = new Map<string, RecordCandidate>();
   for (const candidate of candidates) {
@@ -39,6 +40,7 @@ async function upsertOrganizationsByRuc(
       const organization = await organizations.upsertOrganization({
         ruc,
         legalName: candidate.organization_name,
+        at,
       });
       return [ruc, organization.id] as const;
     }),
@@ -51,6 +53,7 @@ async function upsertMembershipsForCandidates(
   candidates: RecordCandidate[],
   organizationIdsByRuc: Map<string, OrganizationId>,
   organizations: AssignContactsTransactionRepos["organization"],
+  at: Date,
 ): Promise<OrganizationPersonId[]> {
   const byKey = new Map<
     string,
@@ -76,6 +79,7 @@ async function upsertMembershipsForCandidates(
         },
         phone: candidate.phone_primary,
         email: null,
+        at,
       });
       return membership.id;
     }),
@@ -86,26 +90,30 @@ export async function createContactAssignmentsFromCandidates(input: {
   actorUserId: UserId;
   candidates: RecordCandidate[];
   uow: AssignContactsUow;
+  at: Date;
 }): Promise<Result<number, DomainError>> {
   return input.uow.run(async (repos) => {
     const organizationIdsByRuc = await upsertOrganizationsByRuc(
       input.candidates,
       repos.organization,
+      input.at,
     );
     const membershipIds = await upsertMembershipsForCandidates(
       input.candidates,
       organizationIdsByRuc,
       repos.organization,
+      input.at,
     );
 
     const cadenceById = await repos.cadence.findMany(membershipIds);
     const assignments = membershipIds
       .filter((id) =>
-        canContactNow({
-          cooldown_until: cadenceById.get(id)?.cooldownUntil ?? null,
-        }),
+        canContactNow(
+          { cooldown_until: cadenceById.get(id)?.cooldownUntil ?? null },
+          input.at,
+        ),
       )
-      .map((id) => createAssignment(input.actorUserId, id));
+      .map((id) => createAssignment(input.actorUserId, id, input.at));
 
     if (assignments.length > 0) {
       await repos.contactAssignments.createMany(assignments);

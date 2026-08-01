@@ -63,6 +63,7 @@ export async function verifyTotpStepUp(params: {
   const throttle = await throttleService.checkTotpVerifyThrottle(
     identifier,
     ipAddress,
+    params.occurredAt,
   );
   if (!throttle.allowed) {
     await recordAuthEvent(deps, {
@@ -87,7 +88,11 @@ export async function verifyTotpStepUp(params: {
     });
   }
 
-  await throttleService.recordTotpVerifyFailure(identifier, ipAddress);
+  await throttleService.recordTotpVerifyFailure(
+    identifier,
+    ipAddress,
+    params.occurredAt,
+  );
   await recordAuthEvent(deps, {
     userId: user.id,
     identifier,

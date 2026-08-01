@@ -18,21 +18,24 @@ type StartMiddleware = Extract<
   readonly unknown[]
 >[number];
 
-function fetchEvent(): FetchEvent {
+function getRequestEventOrThrow(): FetchEvent {
   const event = getRequestEvent();
+
   if (!event) {
     throw new Error("Missing SolidStart request event");
   }
+
   return event;
 }
 
 const identifyRequest: StartMiddleware = async (event, next) => {
-  const requestEvent = fetchEvent();
+  const requestEvent = getRequestEventOrThrow();
   const nonce = crypto.randomUUID().replaceAll("-", "");
   const identity = {
     traceId: generateTraceId(),
     requestId: generateRequestId(),
-    startedAt: Date.now(),
+    startedAt: new Date(),
+    startedTicks: performance.now(),
     nonce,
   };
   const { trustedProxy } = middlewareConfig();
@@ -51,13 +54,14 @@ const identifyRequest: StartMiddleware = async (event, next) => {
 };
 
 const applySecurityResponseState: StartMiddleware = async (event, next) => {
-  const requestEvent = fetchEvent();
+  const requestEvent = getRequestEventOrThrow();
   const nonce = requestEvent.locals.requestContext.nonce;
-
   const { sentryIngestHost } = middlewareConfig();
+
   const sentryConnectSrc = sentryIngestHost
     ? ` https://${sentryIngestHost}`
     : "";
+
   const csp = `
     default-src 'self';
     script-src 'nonce-${nonce}' 'strict-dynamic';
@@ -79,18 +83,21 @@ const applySecurityResponseState: StartMiddleware = async (event, next) => {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   );
+
   if (isProduction()) {
     event.res.headers.set(
       "Strict-Transport-Security",
       "max-age=63072000; includeSubDomains",
     );
   }
+
   return next();
 };
 
 const resolveSession: StartMiddleware = async (_event, next) => {
-  const event = fetchEvent();
-  const current = event.locals.requestContext;
+  const requestEvent = getRequestEventOrThrow();
+  const current = requestEvent.locals.requestContext;
+
   if (isPrerenderRoute(current.route)) {
     return next();
   }
@@ -99,12 +106,13 @@ const resolveSession: StartMiddleware = async (_event, next) => {
     await import("./server/auth/ui/resolve-request-context");
   const { trustedProxy } = middlewareConfig();
 
-  event.locals.requestContext = await buildRequestContext(
-    event.request,
+  requestEvent.locals.requestContext = await buildRequestContext(
+    requestEvent.request,
     {
       traceId: current.traceId,
       requestId: current.requestId,
       startedAt: current.startedAt,
+      startedTicks: current.startedTicks,
       nonce: current.nonce,
     },
     createRequestContextDependencies(),
@@ -115,33 +123,37 @@ const resolveSession: StartMiddleware = async (_event, next) => {
 };
 
 const enforceNavigationPolicy: StartMiddleware = async (_event, next) => {
-  const event = fetchEvent();
-  const decision = await enforceAuthRequest(event);
+  const requestEvent = getRequestEventOrThrow();
+  const decision = await enforceAuthRequest(requestEvent);
 
-  if (decision.kind === "allow") {
-    return next();
-  }
-  if (decision.kind === "reject") {
-    return decision.response;
-  }
-  if (decision.kind === "redirect_login") {
-    return redirect("/login");
-  }
-  if (decision.kind === "redirect_onboarding") {
-    return redirect("/onboarding");
-  }
-  if (decision.kind === "redirect_recovery_setup") {
-    return redirect("/recovery-codes");
-  }
+  switch (decision.kind) {
+    case "allow":
+      return next();
 
-  return redirect(decision.to);
+    case "reject":
+      return decision.response;
+
+    case "redirect_login":
+      return redirect("/login");
+
+    case "redirect_onboarding":
+      return redirect("/onboarding");
+
+    case "redirect_recovery_setup":
+      return redirect("/recovery-codes");
+
+    default:
+      return redirect(decision.to);
+  }
 };
 
 const recordRequestTiming: StartMiddleware = async (event, next) => {
   const response = await next();
-  const context = fetchEvent().locals.requestContext;
-  const duration = Date.now() - context.startedAt;
+  const context = getRequestEventOrThrow().locals.requestContext;
+  const duration = Math.round(performance.now() - context.startedTicks);
+
   event.res.headers.set("Server-Timing", `app;dur=${duration}`);
+
   return response;
 };
 

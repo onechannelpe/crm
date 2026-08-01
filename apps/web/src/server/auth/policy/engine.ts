@@ -1,6 +1,5 @@
 import type { Role } from "~/domain/auth/access/rbac";
 import { resolveSessionClass } from "~/domain/auth/core/session-contract";
-import type { Clock } from "~/domain/time/clock";
 
 import { requiresStrongAuthRole } from "./rules/role";
 import type { AuthProof, LoginDecision } from "./types";
@@ -19,12 +18,11 @@ export interface LoginPolicyInput {
     };
     recoveryCodesAcknowledgementRequired: boolean;
   };
-  now?: Clock;
+  now: Date;
 }
 
 export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
-  const now = input.now ?? (() => new Date());
-  const { proof, context } = input;
+  const { proof, context, now } = input;
   const onboardingCompleted = context.user.onboarding_completed_at !== null;
   const sessionClass = resolveSessionClass({
     onboardingCompleted,
@@ -37,7 +35,7 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
       kind: "issue_session",
       sessionClass,
       strongAuthMethod: "passkey",
-      strongAuthAt: now(),
+      strongAuthAt: now,
     };
   }
 
@@ -46,7 +44,7 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
       kind: "issue_session",
       sessionClass,
       strongAuthMethod: "federated",
-      strongAuthAt: now(),
+      strongAuthAt: now,
     };
   }
 

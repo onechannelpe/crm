@@ -1,7 +1,7 @@
 import { fail, type DomainError } from "~/domain/errors";
 import type { WorkflowLeadId } from "~/domain/ids";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { authorizeLeadAction } from "../../lead/domain/policy";
@@ -9,9 +9,9 @@ import { runLeadTransaction } from "../write/transition";
 
 export async function addToFavoritesCommand(
   input: { actor: WorkflowActor; leadId: WorkflowLeadId },
-  ports: { executor: DatabaseExecutor; now: Date },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
     if (!state) return Err(fail("lead_not_found"));
 
@@ -21,7 +21,7 @@ export async function addToFavoritesCommand(
     await ctx.repos.leadFavorites.addForUser({
       leadId: input.leadId,
       userId: input.actor.userId,
-      createdAt: ctx.now,
+      createdAt: ctx.operationAt,
     });
 
     return Ok({ leadId: input.leadId });

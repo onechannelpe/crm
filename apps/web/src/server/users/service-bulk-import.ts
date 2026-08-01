@@ -43,6 +43,7 @@ export async function applyImport(
     token: string;
     expiresAt: Date;
   }) => Promise<void>,
+  now: Date,
 ): Promise<BulkApplyResult> {
   let created = 0;
   let skipped = 0;
@@ -53,21 +54,24 @@ export async function applyImport(
       // Invites are provisioned sequentially so each row observes current
       // duplicate and pending-invite state before delivery is recorded.
       // eslint-disable-next-line no-await-in-loop
-      const result = await provisioning.createInvite({
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        branchId: actor.branchId,
-        names: row.names,
-        firstSurname: row.firstSurname,
-        secondSurname: row.secondSurname,
-        email: row.email,
-        role: safeRole,
-        executiveCategory: row.executiveCategory,
-        teamId: null,
-        expiresAt: row.expiresOn
-          ? appDayRange(row.expiresOn).endExclusive
-          : null,
-      });
+      const result = await provisioning.createInvite(
+        {
+          actorUserId: actor.userId,
+          actorRole: actor.role,
+          branchId: actor.branchId,
+          names: row.names,
+          firstSurname: row.firstSurname,
+          secondSurname: row.secondSurname,
+          email: row.email,
+          role: safeRole,
+          executiveCategory: row.executiveCategory,
+          teamId: null,
+          expiresAt: row.expiresOn
+            ? appDayRange(row.expiresOn).endExclusive
+            : null,
+        },
+        now,
+      );
 
       if (!result.ok) {
         if (

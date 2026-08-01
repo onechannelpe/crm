@@ -29,7 +29,7 @@ export async function listManagedExecutives(
     ctx.actor.role === "superuser"
       ? await deps.repos.users.findAllActive()
       : await deps.repos.users.findByBranch(ctx.actor.branchId);
-  const evaluatedAt = ctx.now();
+  const evaluatedAt = ctx.operationAt;
 
   const summaries = await Promise.all(
     users.map(async (user) => {

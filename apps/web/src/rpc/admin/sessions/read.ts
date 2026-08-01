@@ -45,8 +45,13 @@ export async function getActiveSessionsCount(): Promise<number> {
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
 
-    execute: async () =>
-      Ok(await countActiveSessionsService(composeAuth().adminSessionsRead)),
+    execute: async (ctx) =>
+      Ok(
+        await countActiveSessionsService(
+          composeAuth().adminSessionsRead,
+          ctx.operationAt,
+        ),
+      ),
   });
 }
 
@@ -58,7 +63,12 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
 
-    execute: async () =>
-      Ok(await listAllActiveSessionsService(composeAuth().adminSessionsRead)),
+    execute: async (ctx) =>
+      Ok(
+        await listAllActiveSessionsService(
+          composeAuth().adminSessionsRead,
+          ctx.operationAt,
+        ),
+      ),
   });
 }

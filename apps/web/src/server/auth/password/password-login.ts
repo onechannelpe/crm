@@ -1,7 +1,6 @@
 import type { Selectable } from "kysely";
 
 import type { InvalidCredentialsError } from "~/domain/auth/errors";
-import type { Clock } from "~/domain/time/clock";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
@@ -30,11 +29,11 @@ export interface PasswordCredentialInput {
 
 export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
-  deps: { repos: Deps; now: Clock },
+  deps: { repos: Deps; now: Date },
 ): Promise<Result<UserRow, InvalidCredentialsError>> {
   const safeUsername = input.username.trim();
   const safePassword = input.password;
-  const occurredAt = deps.now();
+  const occurredAt = deps.now;
   if (safeUsername.length === 0 || safePassword.length === 0) {
     return Err({ kind: "invalid_credentials" });
   }
@@ -45,6 +44,7 @@ export async function verifyPasswordLoginCredentials(
   const throttle = await throttleService.checkLoginThrottle(
     safeUsername,
     input.ipAddress,
+    occurredAt,
   );
 
   if (!throttle.allowed) {
@@ -70,7 +70,11 @@ export async function verifyPasswordLoginCredentials(
 
   if (!user || !user.is_active) {
     await verifyPassword(await DUMMY_HASH, safePassword);
-    await throttleService.recordLoginFailure(safeUsername, input.ipAddress);
+    await throttleService.recordLoginFailure(
+      safeUsername,
+      input.ipAddress,
+      occurredAt,
+    );
     await recordAuthEvent(resolvedDeps, {
       userId: user?.id ?? null,
       identifier: safeUsername,
@@ -85,7 +89,11 @@ export async function verifyPasswordLoginCredentials(
   }
 
   if (!(await verifyPassword(user.password_hash, safePassword))) {
-    await throttleService.recordLoginFailure(safeUsername, input.ipAddress);
+    await throttleService.recordLoginFailure(
+      safeUsername,
+      input.ipAddress,
+      occurredAt,
+    );
     await recordAuthEvent(resolvedDeps, {
       userId: user.id,
       identifier: safeUsername,

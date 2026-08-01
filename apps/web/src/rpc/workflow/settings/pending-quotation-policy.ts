@@ -3,9 +3,8 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { updatePendingQuotationPolicy } from "~/server/workflow/policy/write/update-pending-quotation-policy";
 import { workflowActor } from "~/server/workflow/ui/actor";
-import { composeWorkflow } from "~/server/workflow/ui/composition";
+import { workflow } from "~/server/workflow/ui/composition";
 
 export type SavePendingQuotationPolicyInput =
   | { enabled: false }
@@ -29,15 +28,10 @@ export async function savePendingQuotationPolicy(
       enabled: payload.enabled,
       limit: payload.enabled ? payload.limit : 0,
     }),
-    execute: ({ actor }, payload) => {
-      const workflow = composeWorkflow();
-      return updatePendingQuotationPolicy(
+    execute: ({ actor, operationAt: now }, payload) =>
+      workflow.commands.updatePendingQuotationPolicy(
         { actor: workflowActor(actor), ...payload },
-        {
-          pendingQuotationPolicies: workflow.repos.pendingQuotationPolicies,
-          now: workflow.now(),
-        },
-      );
-    },
+        now,
+      ),
   });
 }

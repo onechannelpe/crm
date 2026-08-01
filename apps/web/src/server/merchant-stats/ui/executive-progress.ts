@@ -10,7 +10,7 @@ export async function getExecutiveGpvProgress(): Promise<ExecutiveGpvProgressVie
     name: "merchantStats.executiveProgress.read",
     access: { kind: "permission", permission: "dashboards:read:own" },
 
-    execute: async ({ actor }) =>
-      Ok(await loadExecutiveGpvProgress(db, actor.userId, new Date())),
+    execute: async ({ actor, operationAt: now }) =>
+      Ok(await loadExecutiveGpvProgress(db, actor.userId, now)),
   });
 }

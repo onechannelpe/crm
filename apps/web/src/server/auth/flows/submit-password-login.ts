@@ -19,6 +19,7 @@ export async function submitPasswordLogin(
   },
   deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
+  now: Date,
 ): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const safeIdentifier = input.identifier.trim();
   const authenticated = await authenticatePassword(
@@ -27,7 +28,7 @@ export async function submitPasswordLogin(
       password: input.password,
       ipAddress: input.ipAddress,
     },
-    { ...deps.repos, now: deps.now },
+    { ...deps.repos, now },
   );
   if (isErr(authenticated)) {
     return Err(authenticated.error);
@@ -36,7 +37,7 @@ export async function submitPasswordLogin(
   const context = await loadActiveAuthContextForUser(
     authenticated.value.user,
     deps.repos,
-    deps.now(),
+    now,
   );
   if (!context) {
     return Err({ kind: "invalid_credentials" });
@@ -52,5 +53,6 @@ export async function submitPasswordLogin(
     context,
     deps,
     webauthnProvider,
+    now,
   });
 }

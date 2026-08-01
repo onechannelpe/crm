@@ -1,4 +1,3 @@
-import type { Clock } from "~/domain/time/clock";
 import type { AuthLoginRepos } from "~/server/auth/flows/login-deps";
 import { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
@@ -35,12 +34,8 @@ function createAuthLoginRepos(executor: DatabaseExecutor): AuthLoginRepos {
   };
 }
 
-export function createAuthLoginContext(
-  executor: DatabaseExecutor,
-  now: Clock = () => new Date(),
-) {
+export function createAuthLoginContext(executor: DatabaseExecutor) {
   return {
-    now,
     repos: createAuthLoginRepos(executor),
     uow: createExecutorUow(executor, createAuthLoginRepos),
   };

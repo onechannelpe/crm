@@ -30,10 +30,15 @@ export async function searchDirect(
 
     execute: async (ctx, command) => {
       const { usageReservationPorts, rateLimitDeps } = composeSearch();
-      await checkActionRateLimit("search.use", ctx.actor.userId, rateLimitDeps);
+      await checkActionRateLimit(
+        "search.use",
+        ctx.actor.userId,
+        rateLimitDeps,
+        ctx.operationAt,
+      );
 
       return runDirectSearch(
-        { ...command, actorUserId: ctx.actor.userId },
+        { ...command, actorUserId: ctx.actor.userId, at: ctx.operationAt },
         usageReservationPorts,
         composeEngineClient(),
       );

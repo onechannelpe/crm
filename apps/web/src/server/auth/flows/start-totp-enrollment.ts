@@ -30,7 +30,7 @@ export async function startTotpEnrollment(
   const encrypted = await encryptTotpSecret(secret);
   const otpauthUri = buildTotpProvisioningUri(secret, user.email);
   const qrCodeDataUrl = await QRCode.toDataURL(otpauthUri);
-  const changedAt = ctx.now();
+  const changedAt = ctx.operationAt;
 
   const persisted = await deps.uow.run(async (repos) => {
     const lockedUser = await repos.users.findByIdForUpdate(ctx.actor.userId);

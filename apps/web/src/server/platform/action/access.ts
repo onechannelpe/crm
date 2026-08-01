@@ -49,12 +49,13 @@ export function authorizeAccess(
   actor: AuthSession,
   access: ActionAccess,
   stepUp: ActionStepUpRequirement["stepUp"],
+  asOf: Date,
 ): Result<AuthSession, DomainError> {
   const authorized = authorizeFor(actor, access);
   if (isErr(authorized)) return authorized;
 
   if (stepUp === "recent_strong_auth") {
-    const strong = checkRecentStrongAuth(actor);
+    const strong = checkRecentStrongAuth(actor, asOf);
     if (isErr(strong)) return strong;
   }
 

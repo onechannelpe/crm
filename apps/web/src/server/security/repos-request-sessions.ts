@@ -29,7 +29,7 @@ export function createRequestSessionsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteExpired(now = new Date()): Promise<number> {
+    async deleteExpired(now: Date): Promise<number> {
       const result = await db
         .deleteFrom("request_sessions")
         .where("expires_at", "<", now)

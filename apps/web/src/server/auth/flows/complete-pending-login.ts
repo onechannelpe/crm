@@ -95,7 +95,6 @@ async function recordSuccessfulProof(
 ): Promise<void> {
   const throttle = createAuthThrottleService({
     authThrottle: repos.authThrottle,
-    now: () => occurredAt,
   });
   const identifier =
     proof.method === "passkey" ? proof.identifier : `user:${proof.userId}`;
@@ -179,20 +178,22 @@ export async function completePendingLogin(
     });
     const session = await createSessionService({
       ...repos,
-      now: () => input.occurredAt,
-    }).establish({
-      user: context.user,
-      sessionClass,
-      request: {
-        ipAddress: input.ipAddress,
-        userAgent: input.userAgent,
+    }).establish(
+      {
+        user: context.user,
+        sessionClass,
+        request: {
+          ipAddress: input.ipAddress,
+          userAgent: input.userAgent,
+        },
+        primaryAuthMethod: flow.primary_auth_method,
+        strongAuthMethod: input.proof.method,
+        strongAuthAt: input.occurredAt,
+        auditAction:
+          flow.primary_auth_method === "passkey" ? "login_passkey" : "login",
       },
-      primaryAuthMethod: flow.primary_auth_method,
-      strongAuthMethod: input.proof.method,
-      strongAuthAt: input.occurredAt,
-      auditAction:
-        flow.primary_auth_method === "passkey" ? "login_passkey" : "login",
-    });
+      input.occurredAt,
+    );
     await repos.loginFlows.delete(flow.id);
 
     return Ok({
@@ -214,8 +215,7 @@ export async function completePendingLogin(
   const identifier = `user:${input.proof.userId}`;
   await createAuthThrottleService({
     authThrottle: deps.repos.authThrottle,
-    now: () => input.occurredAt,
-  }).recordRecoveryVerifyFailure(identifier, input.ipAddress);
+  }).recordRecoveryVerifyFailure(identifier, input.ipAddress, input.occurredAt);
   await recordAuthEvent(deps.repos, {
     userId: input.proof.userId,
     identifier,

@@ -19,7 +19,11 @@ export async function updateMemberAvatar(
   );
   if (isErr(target)) return target;
 
-  const result = await deps.avatars.upload(command.userId, command.file);
+  const result = await deps.avatars.upload(
+    command.userId,
+    command.file,
+    ctx.operationAt,
+  );
   if (isErr(result)) return Err(toAvatarDomainError(result.error.code));
 
   return Ok({ avatarVersion: result.value.avatarVersion });

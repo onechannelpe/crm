@@ -21,8 +21,8 @@ export type DataGridPagination = {
 export type DataGridProps<T> = {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
-  columns: ReadonlyArray<DataGridColumn<T>>;
-  /** The grid styles text empty states. Pass an element for richer content. */
+  columns: readonly DataGridColumn<T>[];
+  /** Pass an element when the empty state needs richer content. */
   emptyState: JSX.Element;
   errorState?: JSX.Element;
   loadMore?: DataGridLoadMore;
@@ -30,7 +30,6 @@ export type DataGridProps<T> = {
   onRowOpen?: (row: T) => void;
   pagination?: DataGridPagination;
   reorder?: DataGridReorderConfig<T>;
-  /** Stable identity per row. The grid keys, selects, and reorders on this. */
   rowId: (row: T) => string;
   rowOpenIndicator?: DataGridRowOpenIndicator;
   selection?: DataGridSelectionController;

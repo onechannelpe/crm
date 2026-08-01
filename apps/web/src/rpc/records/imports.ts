@@ -104,7 +104,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         file_path: storageKey,
         rows_total: rowsTotal,
         max_attempts: IMPORT_JOB_MAX_ATTEMPTS,
-        created_at: ctx.now(),
+        created_at: ctx.operationAt,
       });
 
       publishRecordImportProgress(

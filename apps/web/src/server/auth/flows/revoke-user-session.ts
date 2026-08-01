@@ -10,7 +10,7 @@ export async function revokeUserSession(
   port: AdminSessionRevocationPort,
   input: { sessionId: string; targetUserId: UserId },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const now = ctx.now();
+  const now = ctx.operationAt;
   await port.revokeSession(input.sessionId);
   await port.revokeInstallationSessionsByAuthSession(input.sessionId, now);
   await port.updateExecutiveSyncHealth({

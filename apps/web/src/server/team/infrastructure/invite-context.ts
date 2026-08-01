@@ -1,5 +1,4 @@
 import type { UserId } from "~/domain/ids";
-import type { Clock } from "~/domain/time/clock";
 import type {
   InviteService,
   TeamInviteReadRepos,
@@ -19,17 +18,16 @@ interface TeamInviteContext {
   inviteService: InviteService;
   delivery: InviteDelivery;
   publicOrigin: string;
-  enforceInviteCreateRateLimit(userId: UserId): Promise<void>;
+  enforceInviteCreateRateLimit(userId: UserId, now: Date): Promise<void>;
 }
 
 export function createTeamInviteContext(
   executor: DatabaseExecutor,
   publicOrigin: string,
-  now: Clock,
   delivery: InviteDelivery,
 ): TeamInviteContext {
   const repos = bindInviteRepos(executor);
-  const inviteService = createInviteServiceForExecutor(executor, now);
+  const inviteService = createInviteServiceForExecutor(executor);
 
   return {
     repos: {
@@ -40,11 +38,16 @@ export function createTeamInviteContext(
     inviteService,
     delivery,
     publicOrigin,
-    async enforceInviteCreateRateLimit(userId: UserId) {
-      await checkActionRateLimit("team.invite.create", userId, {
-        actionRateLimits: createActionRateLimitsRepo(executor),
-        events: repos.events,
-      });
+    async enforceInviteCreateRateLimit(userId: UserId, now: Date) {
+      await checkActionRateLimit(
+        "team.invite.create",
+        userId,
+        {
+          actionRateLimits: createActionRateLimitsRepo(executor),
+          events: repos.events,
+        },
+        now,
+      );
     },
   };
 }

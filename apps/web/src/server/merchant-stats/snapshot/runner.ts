@@ -1,5 +1,4 @@
 import type { GpvSnapshotJobId } from "~/domain/ids";
-import type { Clock } from "~/domain/time/clock";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { isErr } from "~/shared/result";
 
@@ -21,7 +20,6 @@ interface GpvSnapshotProcessResult extends GpvSnapshotProgress {
 
 export function createGpvSnapshotRunner(deps: {
   db: DatabaseExecutor;
-  now: Clock;
   readFile: (storageKey: string) => Promise<Uint8Array>;
   reportProgress: (
     id: GpvSnapshotJobId,
@@ -32,6 +30,7 @@ export function createGpvSnapshotRunner(deps: {
     async process(
       job: GpvSnapshotJobRow,
       signal: AbortSignal,
+      now: Date,
     ): Promise<GpvSnapshotProcessResult> {
       const snapshot = await deps.db
         .selectFrom("gpv_snapshots as snapshot")
@@ -59,7 +58,7 @@ export function createGpvSnapshotRunner(deps: {
         const activated = await activateGpvSnapshot(deps.db, {
           snapshotId: snapshot.id,
           activatedBy: snapshot.created_by_user_id,
-          now: deps.now(),
+          now,
         });
 
         if (!activated.ok) {
@@ -101,7 +100,6 @@ export function createGpvSnapshotRunner(deps: {
         throw new Error("Job aborted");
       }
 
-      const now = deps.now();
       const staged = await deps.db.transaction().execute(async (tx) => {
         return stageGpvSnapshot(tx, snapshot.id, parsed.value, now);
       });
