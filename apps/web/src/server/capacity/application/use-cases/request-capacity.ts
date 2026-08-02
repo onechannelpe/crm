@@ -20,7 +20,7 @@ export async function requestCapacity(
     "capacity.request",
     ctx.actor.userId,
     deps.rateLimitDeps,
-    ctx.operationAt,
+    ctx,
   );
   return deps.uow.run(async (tx) => {
     await tx.capacityRequests.create({

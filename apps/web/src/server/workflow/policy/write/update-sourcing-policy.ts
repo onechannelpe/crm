@@ -1,6 +1,7 @@
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { forbidden, type DomainError } from "~/domain/errors";
 import type { BranchId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -13,7 +14,7 @@ export async function updateSourcingPolicy(
     engineAssignmentEnabled: boolean;
   },
   sourcingPolicies: LeadSourcingPolicyRepository,
-  updatedAt: Date,
+  operation: OperationContext,
 ): Promise<
   Result<{ branchId: string; engineAssignmentEnabled: boolean }, DomainError>
 > {
@@ -24,7 +25,7 @@ export async function updateSourcingPolicy(
   await sourcingPolicies.upsert({
     branchId: input.branchId,
     engineAssignmentEnabled: input.engineAssignmentEnabled,
-    updatedAt,
+    updatedAt: operation.operationAt,
     updatedByUserId: input.actor.userId,
   });
 

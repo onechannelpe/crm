@@ -21,6 +21,7 @@ import { recordAuthEvent } from "~/server/auth/security/auth-events";
 import { enqueueAlertOnNewLoginSource } from "~/server/auth/security/login-source-alert";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
 import { createSessionService } from "~/server/auth/session/session.service";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 async function createTotpLoginFlow(
@@ -54,13 +55,13 @@ export async function completePrimaryAuthProof(params: {
   context: AuthContext;
   deps: AuthLoginContext;
   webauthnProvider: WebauthnProvider;
-  now: Date;
+  operation: OperationContext;
 }): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
-  const authenticatedAt = params.now;
+  const authenticatedAt = params.operation.operationAt;
   const decision = evaluateLoginPolicy({
     proof: params.proof,
     context: params.context,
-    now: authenticatedAt,
+    provedAt: authenticatedAt,
   });
 
   if (decision.kind === "deny") {
@@ -144,7 +145,7 @@ export async function completePrimaryAuthProof(params: {
           auditAction:
             params.proof.kind === "passkey" ? "login_passkey" : "login",
         },
-        authenticatedAt,
+        params.operation,
       );
 
       return Ok({

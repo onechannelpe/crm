@@ -69,7 +69,7 @@ describe("avatar service", () => {
     await blobStore.putBytes(oldKey, new Uint8Array([9, 9, 9]));
     await seedAvatar({ storageKey: oldKey, mimeType: "image/png", version: 2 });
 
-    const result = await service.upload(TARGET_ID, pngFile());
+    const result = await service.upload(TARGET_ID, pngFile(), new Date());
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("expected success");
@@ -98,7 +98,7 @@ describe("avatar service", () => {
       version: 2,
     });
 
-    const result = await service.upload(TARGET_ID, pngFile());
+    const result = await service.upload(TARGET_ID, pngFile(), new Date());
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("expected success");
@@ -113,7 +113,7 @@ describe("avatar service", () => {
       version: 9,
     });
 
-    const result = await service.remove(TARGET_ID);
+    const result = await service.remove(TARGET_ID, new Date());
 
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("expected success");
@@ -144,7 +144,7 @@ describe("avatar service", () => {
     };
     const service = createAvatarService({ users }, blobStore);
 
-    const result = await service.upload(TARGET_ID, pngFile());
+    const result = await service.upload(TARGET_ID, pngFile(), new Date());
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failure");
@@ -166,8 +166,8 @@ describe("avatar service", () => {
     const missingId = UserId.trust(crypto.randomUUID());
 
     const [uploadResult, removeResult] = await Promise.all([
-      service.upload(missingId, pngFile()),
-      service.remove(missingId),
+      service.upload(missingId, pngFile(), new Date()),
+      service.remove(missingId, new Date()),
     ]);
 
     expect(uploadResult.ok).toBe(false);
@@ -184,7 +184,7 @@ describe("avatar service", () => {
     const file = new File([new Uint8Array([1])], "avatar.webp", {
       type: "image/webp",
     });
-    const result = await service.upload(TARGET_ID, file);
+    const result = await service.upload(TARGET_ID, file, new Date());
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failure");
     expect(result.error.code).toBe("unsupported_mime");
@@ -193,7 +193,7 @@ describe("avatar service", () => {
   it("rejects an empty file", async () => {
     const { service } = makeService();
     const file = new File([], "avatar.png", { type: "image/png" });
-    const result = await service.upload(TARGET_ID, file);
+    const result = await service.upload(TARGET_ID, file, new Date());
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failure");
     expect(result.error.code).toBe("invalid_file");
@@ -206,7 +206,7 @@ describe("avatar service", () => {
       "avatar.png",
       { type: "image/png" },
     );
-    const result = await service.upload(TARGET_ID, file);
+    const result = await service.upload(TARGET_ID, file, new Date());
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failure");
     expect(result.error.code).toBe("too_large");

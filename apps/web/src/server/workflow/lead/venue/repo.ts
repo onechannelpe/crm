@@ -53,7 +53,7 @@ export type LeadVenueRepository = {
   addAccounts(
     venueId: WorkflowVenueId,
     accounts: LeadVenueAccounts,
-    now: Date,
+    createdAt: Date,
   ): Promise<void>;
   findById(
     id: WorkflowVenueId,

@@ -1,7 +1,7 @@
 import "server-only";
 import type { InquiryListView } from "~/contracts/workflow/views";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
 import { Ok } from "~/shared/result";
 

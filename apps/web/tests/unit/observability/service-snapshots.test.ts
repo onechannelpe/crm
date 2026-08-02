@@ -42,7 +42,10 @@ describe("observability service snapshots", () => {
   it("rejects invalid action snapshot filters before querying repos", async () => {
     const service = createObservabilityService(createUnexpectedRepos());
 
-    const result = await service.getActionSnapshot({ status: "pending" });
+    const result = await service.getActionSnapshot(
+      { status: "pending" },
+      new Date(),
+    );
 
     expect(isErr(result)).toBe(true);
     expect(isErr(result) && result.error.code).toBe("invalid_status");
@@ -113,12 +116,15 @@ describe("observability service snapshots", () => {
       authFunnelEvents: createUnexpectedRepos().authFunnelEvents,
     } satisfies Parameters<typeof createObservabilityService>[0]);
 
-    const result = await service.getActionSnapshot({
-      windowMinutes: 120,
-      limit: 25,
-      actionName: " team.invite.create ",
-      status: "error",
-    });
+    const result = await service.getActionSnapshot(
+      {
+        windowMinutes: 120,
+        limit: 25,
+        actionName: " team.invite.create ",
+        status: "error",
+      },
+      now,
+    );
 
     expect(isErr(result)).toBe(false);
     if (isErr(result)) return;
@@ -156,7 +162,10 @@ describe("observability service snapshots", () => {
   it("rejects invalid auth funnel filters before querying repos", async () => {
     const service = createObservabilityService(createUnexpectedRepos());
 
-    const result = await service.getAuthFunnelSnapshot({ eventName: "login" });
+    const result = await service.getAuthFunnelSnapshot(
+      { eventName: "login" },
+      new Date(),
+    );
 
     expect(isErr(result)).toBe(true);
     expect(isErr(result) && result.error.code).toBe("invalid_event_name");
@@ -225,13 +234,16 @@ describe("observability service snapshots", () => {
       },
     } satisfies Parameters<typeof createObservabilityService>[0]);
 
-    const result = await service.getAuthFunnelSnapshot({
-      windowMinutes: 30,
-      limit: 10,
-      eventName: "password_result",
-      method: "password",
-      outcome: "failed",
-    });
+    const result = await service.getAuthFunnelSnapshot(
+      {
+        windowMinutes: 30,
+        limit: 10,
+        eventName: "password_result",
+        method: "password",
+        outcome: "failed",
+      },
+      now,
+    );
 
     expect(isErr(result)).toBe(false);
     if (isErr(result)) return;

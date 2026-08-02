@@ -1,8 +1,8 @@
 import { ContactAssignmentId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contracts";
 import { toWire } from "~/server/platform/action/domain-error";
-import { application } from "~/server/platform/composition/application";
-import { getRequestInstant } from "~/server/platform/http/request-context";
+import { getRequestOperation } from "~/server/platform/http/request-context";
 import { authorizeRoutePermission } from "~/server/platform/http/route-access";
 import { isErr } from "~/shared/result";
 
@@ -43,7 +43,7 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
       assignmentId: assignmentId.value,
       origin,
     },
-    getRequestInstant(),
+    getRequestOperation(),
   );
 
   if (isErr(result)) {

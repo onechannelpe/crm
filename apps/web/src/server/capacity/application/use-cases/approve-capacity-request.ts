@@ -18,7 +18,7 @@ export async function approveCapacityRequest(
     "capacity.approve",
     ctx.actor.userId,
     deps.rateLimitDeps,
-    ctx.operationAt,
+    ctx,
     ctx.ipAddress,
   );
   return deps.uow.run(async (tx) => {
@@ -57,9 +57,9 @@ export async function approveCapacityRequest(
           targetUserId: request.user_id,
           amount: request.requested_amount,
           reason: note ?? request.reason,
-          at: ctx.operationAt,
         },
         { grants: tx.searchCapacityGrants },
+        ctx,
       );
       if (isErr(granted)) return granted;
     } else {
@@ -70,9 +70,9 @@ export async function approveCapacityRequest(
           targetUserId: request.user_id,
           amount: request.requested_amount,
           reason: note ?? request.reason,
-          at: ctx.operationAt,
         },
         { grants: tx.leadCapacityGrants },
+        ctx,
       );
       if (isErr(granted)) return granted;
     }

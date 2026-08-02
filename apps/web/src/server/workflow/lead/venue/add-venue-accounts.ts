@@ -58,7 +58,7 @@ export async function addVenueAccountsCommand(
       venueId: input.venueId,
       totalVenues,
       fundedVenues,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -82,7 +82,7 @@ export async function addVenueAccountsCommand(
         leadId: state.id,
         createdBy: input.actor.userId,
         currentStep: INITIAL_FULFILLMENT_STEP,
-        now: ctx.operationAt,
+        createdAt: ctx.operationAt,
       });
 
       const started = await ctx.appendFacts([

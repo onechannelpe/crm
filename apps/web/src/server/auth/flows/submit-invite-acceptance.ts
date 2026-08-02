@@ -6,6 +6,7 @@ import type { DomainError } from "~/domain/errors";
 import { createSessionService } from "~/server/auth/session/session.service";
 import type { EventsRepo } from "~/server/event-logs/events-repo";
 import type { InviteService } from "~/server/invites/application/types";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
 import type { UsersRepo } from "~/server/users/repos-users";
 import { isErr, Ok, type Result } from "~/shared/result";
@@ -24,14 +25,17 @@ export async function submitInviteAcceptance(
     userAgent: string | null;
   },
   input: InviteAcceptanceInput,
-  now: Date,
+  operation: OperationContext,
 ): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
   const validated = validateInviteAcceptance(input);
   if (isErr(validated)) {
     return validated;
   }
 
-  const accepted = await deps.inviteService.acceptInvite(validated.value, now);
+  const accepted = await deps.inviteService.acceptInvite(
+    validated.value,
+    operation,
+  );
   if (isErr(accepted)) {
     return accepted;
   }
@@ -50,7 +54,7 @@ export async function submitInviteAcceptance(
       strongAuthMethod: null,
       strongAuthAt: null,
     },
-    now,
+    operation,
   );
 
   return Ok({

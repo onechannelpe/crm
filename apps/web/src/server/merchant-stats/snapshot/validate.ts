@@ -12,21 +12,21 @@ type IssueInsert = Insertable<Database["gpv_snapshot_issues"]>;
 export async function validateGpvSnapshot(
   db: DatabaseExecutor,
   snapshotId: GpvSnapshotId,
-  now: Date,
+  validatedAt: Date,
 ): Promise<{ blocking: number; warnings: number }> {
   if (db.isTransaction) {
-    return validateInTransaction(db, snapshotId, now);
+    return validateInTransaction(db, snapshotId, validatedAt);
   }
 
   return db
     .transaction()
-    .execute((tx) => validateInTransaction(tx, snapshotId, now));
+    .execute((tx) => validateInTransaction(tx, snapshotId, validatedAt));
 }
 
 async function validateInTransaction(
   db: DatabaseExecutor,
   snapshotId: GpvSnapshotId,
-  now: Date,
+  validatedAt: Date,
 ): Promise<{ blocking: number; warnings: number }> {
   await db
     .selectFrom("merchant_gpv_dataset")
@@ -52,8 +52,10 @@ async function validateInTransaction(
     .where("state", "=", "active")
     .executeTakeFirst();
   const issues = [
-    ...(active ? await compareSnapshots(db, active.id, snapshotId, now) : []),
-    ...(await findCrmWarnings(db, snapshotId, now)),
+    ...(active
+      ? await compareSnapshots(db, active.id, snapshotId, validatedAt)
+      : []),
+    ...(await findCrmWarnings(db, snapshotId, validatedAt)),
   ];
 
   for (const chunk of chunks(issues, ISSUE_CHUNK)) {
@@ -95,7 +97,7 @@ async function compareSnapshots(
   db: DatabaseExecutor,
   previousSnapshotId: GpvSnapshotId,
   candidateSnapshotId: GpvSnapshotId,
-  now: Date,
+  createdAt: Date,
 ): Promise<IssueInsert[]> {
   const [previous, candidate] = await Promise.all([
     loadPlacementComparisonRows(db, previousSnapshotId),
@@ -123,7 +125,7 @@ async function compareSnapshots(
           "La colocación estaba en el corte anterior y falta en el nuevo.",
         previous_value: JSON.stringify(oldPlacement),
         candidate_value: null,
-        created_at: now,
+        created_at: createdAt,
       });
       continue;
     }
@@ -138,7 +140,7 @@ async function compareSnapshots(
         detail: "La colocación cambió de RUC entre cortes.",
         previous_value: JSON.stringify({ ruc: oldPlacement.ruc }),
         candidate_value: JSON.stringify({ ruc: nextPlacement.ruc }),
-        created_at: now,
+        created_at: createdAt,
       });
     }
 
@@ -154,7 +156,7 @@ async function compareSnapshots(
         candidate_value: JSON.stringify({
           saleMonth: nextPlacement.sale_month,
         }),
-        created_at: now,
+        created_at: createdAt,
       });
     }
   }
@@ -176,7 +178,7 @@ function loadPlacementComparisonRows(
 async function findCrmWarnings(
   db: DatabaseExecutor,
   snapshotId: GpvSnapshotId,
-  now: Date,
+  createdAt: Date,
 ): Promise<IssueInsert[]> {
   const rows = await db
     .selectFrom("gpv_snapshot_placements as placement")
@@ -211,7 +213,7 @@ async function findCrmWarnings(
           detail: "El RUC no existe todavía en CRM.",
           previous_value: null,
           candidate_value: JSON.stringify({ ruc: row.ruc }),
-          created_at: now,
+          created_at: createdAt,
         },
       ];
     }
@@ -226,7 +228,7 @@ async function findCrmWarnings(
           detail: "El RUC no tiene un ejecutivo actual en CRM.",
           previous_value: null,
           candidate_value: JSON.stringify({ ruc: row.ruc }),
-          created_at: now,
+          created_at: createdAt,
         },
       ];
     }

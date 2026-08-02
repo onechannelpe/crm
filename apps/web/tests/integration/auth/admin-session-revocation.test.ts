@@ -5,6 +5,7 @@ import {
   resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { makeAppContext, makeAuthSession } from "@tests/support/unit/factories";
 import {
   afterAll,
   afterEach,
@@ -31,25 +32,20 @@ const TARGET = getSeededIdentity("execOne");
 const NOW = new Date("2026-07-15T12:00:00.000Z");
 
 function makeAdminContext(): AppContext {
-  return {
-    actor: {
+  return makeAppContext({
+    actor: makeAuthSession({
       id: "admin-session",
       userId: ADMIN.userId,
       role: "superuser",
       branchId: ADMIN.branchId,
-      sessionClass: "app",
-      primaryAuthMethod: "password",
       strongAuthMethod: "totp",
       strongAuthAt: NOW,
-      impersonatorUserId: null,
-    },
+    }),
     requestId: "req-test",
     traceId: "trace-test",
-    ipAddress: "127.0.0.1",
     userAgent: null,
-    publicOrigin: "http://localhost:3000",
-    now: () => NOW,
-  };
+    operationAt: NOW,
+  });
 }
 
 describe("admin session revocation", () => {
@@ -77,7 +73,6 @@ describe("admin session revocation", () => {
       sessions: createAuthSessionRepo(ctx.db),
       users: createAuthUsersRepo(ctx.db),
       events: createEventsRepo(ctx.db),
-      now: () => NOW,
       logger: { error() {} },
     });
     return createAdminSessionRevocationContext({

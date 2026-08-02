@@ -8,6 +8,7 @@ import {
 } from "~/domain/ids";
 import { dateFromEpochMilliseconds } from "~/domain/time/clock";
 import type { AppUow } from "~/server/platform/database/uow";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 import {
@@ -29,14 +30,12 @@ import {
   parseSubjectUserId,
 } from "./validators";
 
-interface EventsWriteContext {
+interface EventsWriteContext extends OperationContext {
   repos: ExtensionRepos;
-  now: Date;
   uow: AppUow<ExtensionRepos>;
 }
-interface EventsReadContext {
+interface EventsReadContext extends OperationContext {
   repos: ExtensionRepos;
-  now: Date;
 }
 
 function readAssignmentId(
@@ -67,14 +66,14 @@ export async function ingestRuntimeEvent(
     event: ExtensionRuntimeEventEnvelope;
   },
 ): Promise<Result<void, DomainError>> {
-  const { now, uow } = context;
+  const { uow } = context;
 
   try {
     const sessionClaims = await verifyExtensionToken(
       input.sessionToken,
       isExtensionInstallationSessionClaims,
     );
-    const currentTime = now;
+    const currentTime = context.operationAt;
     if (isTokenExpired(sessionClaims.exp, currentTime)) {
       return Err(fail("extension_session_invalid"));
     }
@@ -230,7 +229,7 @@ export async function listTeamExecutiveStatuses(
     branchId: BranchId;
   },
 ): Promise<Result<TeamExecutiveStatusView[], DomainError>> {
-  const { repos, now } = context;
+  const { repos } = context;
 
   try {
     if (input.role === "supervisor") {
@@ -239,7 +238,7 @@ export async function listTeamExecutiveStatuses(
           await repos.extensionRuntime.listTeamStatusesBySupervisor(
             input.userId,
           ),
-          now,
+          context.operationAt,
         ),
       );
     }
@@ -247,7 +246,7 @@ export async function listTeamExecutiveStatuses(
     return Ok(
       withDerivedProjectionStatuses(
         await repos.extensionRuntime.listBranchStatuses(input.branchId),
-        now,
+        context.operationAt,
       ),
     );
   } catch (error: unknown) {

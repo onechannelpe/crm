@@ -111,7 +111,7 @@ async function advance(
     const transition = completeFulfillment(loaded.state, {
       actor: input.actor,
       orderId: order.id,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -203,7 +203,7 @@ export async function chooseFulfillmentProductCommand(
 
     const units = buildUnits(input.productKind, venuesResult.value, {
       orderId: order.id,
-      now: ctx.operationAt,
+      createdAt: ctx.operationAt,
     });
 
     await ctx.repos.fulfillment.createUnits(units);
@@ -254,13 +254,13 @@ function buildUnits(
   }>,
   context: {
     orderId: FulfillmentOrderId;
-    now: Date;
+    createdAt: Date;
   },
 ): Array<{
   orderId: FulfillmentOrderId;
   venueId: WorkflowVenueId | null;
   label: string;
-  now: Date;
+  createdAt: Date;
 }> {
   if (productKind === "digital_only") {
     return [
@@ -268,7 +268,7 @@ function buildUnits(
         orderId: context.orderId,
         venueId: null,
         label: "Registro digital",
-        now: context.now,
+        createdAt: context.createdAt,
       },
     ];
   }
@@ -277,7 +277,7 @@ function buildUnits(
     orderId: FulfillmentOrderId;
     venueId: WorkflowVenueId | null;
     label: string;
-    now: Date;
+    createdAt: Date;
   }> = [];
 
   for (const venue of venues) {
@@ -288,7 +288,7 @@ function buildUnits(
         orderId: context.orderId,
         venueId: venue.id,
         label: `${venue.tradeName} POS ${index}`,
-        now: context.now,
+        createdAt: context.createdAt,
       });
     }
   }
@@ -298,7 +298,7 @@ function buildUnits(
       orderId: context.orderId,
       venueId: null,
       label: "POS 1",
-      now: context.now,
+      createdAt: context.createdAt,
     });
   }
 
@@ -342,7 +342,7 @@ export async function attachFulfillmentDocumentCommand(
       docKind: definition.docKind,
       fileAssetId: input.fileAssetId,
       uploadedByUserId: input.actor.userId,
-      now: ctx.operationAt,
+      createdAt: ctx.operationAt,
     });
 
     return advance(ctx, loaded.value, {
@@ -511,7 +511,7 @@ export async function uploadUnitPaymentProofCommand(
         docKind: "payment_proof",
         fileAssetId: input.fileAssetId,
         uploadedByUserId: input.actor.userId,
-        now: ctx.operationAt,
+        createdAt: ctx.operationAt,
       });
 
       return Ok(undefined);

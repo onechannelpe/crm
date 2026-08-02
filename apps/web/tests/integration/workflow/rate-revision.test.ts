@@ -94,6 +94,7 @@ describe("request rate revision command", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId,
+        evaluatedAt: runtime.now.get(),
       }),
     );
   }

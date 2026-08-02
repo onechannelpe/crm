@@ -3,13 +3,13 @@ import { randomUUIDv7 } from "bun";
 import { isRole } from "~/domain/auth/access/rbac";
 import { invalid, type DomainError } from "~/domain/errors";
 import { NotificationIntentId, TeamId, UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import type { NotificationAudience } from "~/server/notifications/types";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 const AUDIENCE_TYPES = ["user_ids", "global_roles", "team"] as const;
@@ -82,14 +82,14 @@ export async function sendBroadcastNotification(
 
     audit: ({ audience }) => ({ audienceKind: audience.kind }),
 
-    execute: async ({ actor, operationAt: now }, input) => {
+    execute: async (ctx, input) => {
       const notifications = application.notifications;
 
       await notifications.enqueue(
         [
           {
             id: NotificationIntentId.trust(
-              `broadcast:${actor.userId}:${randomUUIDv7()}`,
+              `broadcast:${ctx.actor.userId}:${randomUUIDv7()}`,
             ),
             eventType: "broadcast.general",
             audience: input.audience,
@@ -100,7 +100,7 @@ export async function sendBroadcastNotification(
             actionUrl: null,
           },
         ],
-        now,
+        ctx,
       );
 
       return Ok(undefined);

@@ -27,7 +27,7 @@ export async function reviewLeadCommand(
       status: input.status,
       priority: input.priority,
       reason: input.reason,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

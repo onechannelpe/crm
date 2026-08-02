@@ -9,12 +9,14 @@ vi.mock("~/server/platform/action/session", () => ({
   getSession: getSessionMock,
 }));
 
-vi.mock("~/server/users/ui/avatar-composition", () => ({
-  composeAvatar: () => ({
-    avatarService: {
-      get: getMock,
+vi.mock("~/server/platform/composition/application", () => ({
+  application: {
+    users: {
+      avatars: {
+        get: getMock,
+      },
     },
-  }),
+  },
 }));
 
 import { GET } from "~/routes/api/me/avatar";

@@ -7,7 +7,7 @@ export interface AssignOrganizationOwnerInput {
   organizationId: OrganizationId;
   executiveId: UserId;
   assignedBy: UserId;
-  at: Date;
+  assignedAt: Date;
   reason?: string | null;
 }
 
@@ -48,14 +48,14 @@ async function assignInTransaction(
   if (current?.executive_id === input.executiveId) {
     return Ok(undefined);
   }
-  if (current && input.at <= current.valid_from) {
+  if (current && input.assignedAt <= current.valid_from) {
     return Err(fail("organization_assignment_time_invalid"));
   }
 
   if (current) {
     await tx
       .updateTable("organization_owner_assignments")
-      .set({ valid_until: input.at })
+      .set({ valid_until: input.assignedAt })
       .where("id", "=", current.id)
       .execute();
   }
@@ -65,11 +65,11 @@ async function assignInTransaction(
     .values({
       organization_id: input.organizationId,
       executive_id: input.executiveId,
-      valid_from: input.at,
+      valid_from: input.assignedAt,
       valid_until: null,
       assigned_by: input.assignedBy,
       reason: input.reason ?? null,
-      created_at: input.at,
+      created_at: input.assignedAt,
     })
     .execute();
 

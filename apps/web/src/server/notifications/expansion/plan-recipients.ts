@@ -67,7 +67,7 @@ export function createRecipientPlanner(
 
   return async function planRecipients(
     input: RecipientPlannerInput,
-    now: Date,
+    plannedAt: Date,
   ): Promise<RecipientPlan> {
     const recipients = await repository.resolveAudience(input.audience);
     const inAppRecipients = input.channels.includes("in_app") ? recipients : [];
@@ -95,7 +95,7 @@ export function createRecipientPlanner(
         })),
       ),
       externalChannels.includes("whatsapp")
-        ? repository.findActiveWhatsAppUsers(recipients, now)
+        ? repository.findActiveWhatsAppUsers(recipients, plannedAt)
         : Promise.resolve(new Set<UserId>()),
     ]);
 

@@ -4,6 +4,7 @@ import type { StoreFileDeps } from "~/server/files/service/contracts";
 import { storeUploadedFile } from "~/server/files/service/store-uploaded-file";
 import type { FileStorage } from "~/server/files/storage";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Ok, type Result } from "~/shared/result";
 
 import { acceptGpvSnapshot } from "./accept";
@@ -16,7 +17,6 @@ export interface SubmitGpvSnapshotInput {
   };
   cutAt: Date;
   uploadedBy: UserId;
-  now: Date;
 }
 
 export interface SubmitGpvSnapshotDeps {
@@ -34,11 +34,12 @@ export interface SubmittedGpvSnapshot {
 export async function submitGpvSnapshot(
   input: SubmitGpvSnapshotInput,
   deps: SubmitGpvSnapshotDeps,
+  operation: OperationContext,
 ): Promise<Result<SubmittedGpvSnapshot, DomainError>> {
   const file = await storeUploadedFile(
     {
       actor: { userId: input.uploadedBy },
-      operationAt: input.now,
+      operationAt: operation.operationAt,
     },
     {
       purpose: "merchant_gpv_snapshot",
@@ -56,7 +57,7 @@ export async function submitGpvSnapshot(
     fileAssetId: file.value.id,
     contentSha256: file.value.sha256Hex,
     cutAt: input.cutAt,
-    now: input.now,
+    uploadedAt: operation.operationAt,
   });
 
   if (accepted.kind === "duplicate") {

@@ -83,7 +83,7 @@ export async function editCommercialScopeCommand(
     const transition = editCommercialScope(state, {
       actor: input.actor,
       changes,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

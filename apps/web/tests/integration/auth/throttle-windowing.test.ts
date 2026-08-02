@@ -29,6 +29,7 @@ describe("auth throttle windowing", () => {
     const status = await svc.checkLoginThrottle(
       "exec1@test.local",
       "198.51.100.2",
+      new Date(),
     );
     expect(status).toEqual({ allowed: true });
   });
@@ -52,6 +53,7 @@ describe("auth throttle windowing", () => {
     const status = await svc.checkLoginThrottle(
       "exec1@test.local",
       "198.51.100.5",
+      new Date(now),
     );
     expect(status.allowed).toBe(false);
     if (status.allowed) throw new Error("expected blocked status");
@@ -79,11 +81,21 @@ describe("auth throttle windowing", () => {
     });
 
     expect(
-      (await svc.checkLoginThrottle("other@test.local", ipAddress)).allowed,
+      (
+        await svc.checkLoginThrottle(
+          "other@test.local",
+          ipAddress,
+          new Date(now),
+        )
+      ).allowed,
     ).toBe(true);
-    await svc.recordLoginFailure(identifier, ipAddress);
+    await svc.recordLoginFailure(identifier, ipAddress, new Date(now));
 
-    const status = await svc.checkLoginThrottle("other@test.local", ipAddress);
+    const status = await svc.checkLoginThrottle(
+      "other@test.local",
+      ipAddress,
+      new Date(now),
+    );
     expect(status.allowed).toBe(false);
   });
 
@@ -108,7 +120,7 @@ describe("auth throttle windowing", () => {
       ),
     });
 
-    await svc.recordLoginFailure(identifier, ipAddress);
+    await svc.recordLoginFailure(identifier, ipAddress, new Date(now));
 
     const row = await throttle.readCounter({
       endpoint: "password_login",

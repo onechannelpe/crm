@@ -6,6 +6,7 @@ import { loadActiveAuthContextForUser } from "~/server/auth/context/auth-context
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { authenticatePassword } from "~/server/auth/factors/password";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, type Result } from "~/shared/result";
 
 import { completePrimaryAuthProof } from "./primary-login";
@@ -19,7 +20,7 @@ export async function submitPasswordLogin(
   },
   deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
-  now: Date,
+  operation: OperationContext,
 ): Promise<Result<SubmitPrimaryLoginResult, SubmitPrimaryLoginError>> {
   const safeIdentifier = input.identifier.trim();
   const authenticated = await authenticatePassword(
@@ -28,7 +29,8 @@ export async function submitPasswordLogin(
       password: input.password,
       ipAddress: input.ipAddress,
     },
-    { ...deps.repos, now },
+    deps.repos,
+    operation,
   );
   if (isErr(authenticated)) {
     return Err(authenticated.error);
@@ -37,7 +39,7 @@ export async function submitPasswordLogin(
   const context = await loadActiveAuthContextForUser(
     authenticated.value.user,
     deps.repos,
-    now,
+    operation,
   );
   if (!context) {
     return Err({ kind: "invalid_credentials" });
@@ -53,6 +55,6 @@ export async function submitPasswordLogin(
     context,
     deps,
     webauthnProvider,
-    now,
+    operation,
   });
 }

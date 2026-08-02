@@ -9,16 +9,20 @@ import {
   calendarMonthStart,
 } from "~/domain/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 import { creditFilter } from "./filter";
 
 export async function getLifecycle(
   db: DatabaseExecutor,
   filter: BookFilter,
-  now: Date,
+  operation: OperationContext,
 ): Promise<LifecycleSummary> {
   const selectedMonth = filter.month ? calendarMonthStart(filter.month) : null;
-  const cutoff = addCalendarDays(appCalendarDateAt(now), -DORMANT_AFTER_DAYS);
+  const cutoff = addCalendarDays(
+    appCalendarDateAt(operation.operationAt),
+    -DORMANT_AFTER_DAYS,
+  );
 
   const row = await db
     .selectFrom("merchant_sales as s")

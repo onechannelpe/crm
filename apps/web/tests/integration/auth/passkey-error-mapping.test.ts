@@ -41,6 +41,7 @@ describe("passkey error mapping", () => {
       { identifier: "   ", ipAddress, mode: "identified" },
       login,
       createTestPasskeyProvider(login.repos),
+      new Date(),
     );
 
     const error = expectErr(result);
@@ -94,7 +95,7 @@ describe("passkey error mapping", () => {
     });
 
     const login = createAuthLoginContext(scenario.ctx.db);
-    const occurredAt = login.now();
+    const occurredAt = new Date();
     const verified = await verifyPasskeyLogin(login.repos, {
       flowId,
       response: buildAssertionResponse("missing-passkey"),

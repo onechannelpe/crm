@@ -5,6 +5,8 @@
 // stamps it fresh.
 export const INQUIRY_CARRYOVER_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-export function isAnswerFresh(answeredAt: Date, now: Date): boolean {
-  return now.getTime() - answeredAt.getTime() <= INQUIRY_CARRYOVER_WINDOW_MS;
+export function isAnswerFresh(answeredAt: Date, freshAsOf: Date): boolean {
+  return (
+    freshAsOf.getTime() - answeredAt.getTime() <= INQUIRY_CARRYOVER_WINDOW_MS
+  );
 }

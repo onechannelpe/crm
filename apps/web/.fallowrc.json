@@ -75,6 +75,10 @@
         "autoDiscover": ["src/server"]
       },
       {
+        "name": "composition",
+        "patterns": ["src/server/composition/**"]
+      },
+      {
         "name": "rpc",
         "patterns": ["src/rpc/**"]
       },
@@ -111,6 +115,10 @@
       {
         "from": "server",
         "allow": ["contracts", "domain", "server/platform", "shared"]
+      },
+      {
+        "from": "composition",
+        "allow": ["contracts", "domain", "server", "shared"]
       },
       {
         "from": "server/auth",

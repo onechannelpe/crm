@@ -4,6 +4,7 @@ import { getRequestEvent } from "solid-js/web";
 import type { AuthSession } from "~/domain/auth/access/session-types";
 import { getClientIp } from "~/server/auth/password/client-ip";
 import { getSessionCookie } from "~/server/auth/session/cookies";
+import type { OperationContext } from "~/server/platform/operation/context";
 import {
   deleteRequestSessionCookie,
   getRequestSessionCookie,
@@ -55,7 +56,7 @@ interface RequestSessionStore {
     expires_at: Date;
     last_activity: Date;
   } | null>;
-  updateActivity(id: string, now: Date): Promise<void>;
+  updateActivity(id: string, lastActivity: Date): Promise<void>;
   create(input: {
     id: string;
     csrf_token: string;
@@ -77,7 +78,7 @@ export interface RequestContextDeps {
   resolveAuthSession(
     this: void,
     token: string,
-    now: Date,
+    operation: OperationContext,
   ): Promise<AuthSession | null>;
   requestSessions: RequestSessionStore;
 }
@@ -91,14 +92,14 @@ export async function buildRequestContext(
   // Session expiry, activity refresh and request-session bootstrap all judge
   // against the instant the request arrived, not against a second reading taken
   // however long authentication happened to take.
-  const now = identity.startedAt;
+  const requestedAt = identity.startedAt;
   const [principal, requestSession] = await Promise.all([
-    loadRequestSession(deps.resolveAuthSession, now),
+    loadRequestSession(deps.resolveAuthSession, { operationAt: requestedAt }),
     loadRequestSessionState(
       request,
       shouldBootstrapRequestSession(request),
       deps.requestSessions,
-      now,
+      requestedAt,
     ),
   ]);
   const url = new URL(request.url);
@@ -148,12 +149,13 @@ export function getRequestContext(): RequestContext {
 }
 
 /**
- * The instant the current request arrived. Route handlers and unauthenticated
- * server functions use this instead of `new Date()` so everything one request
- * writes agrees on when it happened.
+ * The current request as an operation. Route handlers and unauthenticated
+ * server functions use this instead of `new Date()`, so everything one request
+ * writes agrees on when it happened. Authenticated server functions get the
+ * same instant through `AppContext`, which inherits it from here.
  */
-export function getRequestInstant(): Date {
-  return getRequestContext().startedAt;
+export function getRequestOperation(): OperationContext {
+  return { operationAt: getRequestContext().startedAt };
 }
 
 export function getRequestClientMetadata(): {
@@ -169,31 +171,33 @@ export function getRequestClientMetadata(): {
 
 async function loadRequestSession(
   resolveAuthSession: RequestContextDeps["resolveAuthSession"],
-  now: Date,
+  operation: OperationContext,
 ): Promise<AuthSession | null> {
   const token = getSessionCookie();
   if (!token) {
     return null;
   }
 
-  return resolveAuthSession(token, now);
+  return resolveAuthSession(token, operation);
 }
 
 async function loadRequestSessionState(
   request: Request,
   createIfMissing: boolean,
   requestSessions: RequestSessionStore,
-  now: Date,
+  requestedAt: Date,
 ): Promise<{ id: string; csrfToken: string } | null> {
   const existingId = getRequestSessionCookie();
   if (existingId) {
     const existing = await requestSessions.findById(existingId);
-    if (existing && existing.expires_at >= now) {
+    if (existing && existing.expires_at >= requestedAt) {
       if (
-        now.getTime() - existing.last_activity.getTime() >
+        requestedAt.getTime() - existing.last_activity.getTime() >
         REQUEST_SESSION_ACTIVITY_UPDATE_MS
       ) {
-        void requestSessions.updateActivity(existing.id, now).catch(() => {});
+        void requestSessions
+          .updateActivity(existing.id, requestedAt)
+          .catch(() => {});
       }
       return { id: existing.id, csrfToken: existing.csrf_token };
     }
@@ -207,14 +211,14 @@ async function loadRequestSessionState(
   const id = crypto.randomUUID();
   const csrfToken = crypto.randomUUID().replace(/-/g, "");
   const expiresAt = new Date(
-    now.getTime() + getRequestSessionMaxAgeSeconds() * 1000,
+    requestedAt.getTime() + getRequestSessionMaxAgeSeconds() * 1000,
   );
 
   await requestSessions.create({
     id,
     csrf_token: csrfToken,
-    created_at: now,
-    last_activity: now,
+    created_at: requestedAt,
+    last_activity: requestedAt,
     expires_at: expiresAt,
   });
   setRequestSessionCookie(id);

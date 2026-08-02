@@ -22,7 +22,7 @@ export async function addLeadNote(
     const events = recordNote(state, {
       actor: input.actor,
       body: input.body,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
     if (isErr(events)) return Err(events.error);
 

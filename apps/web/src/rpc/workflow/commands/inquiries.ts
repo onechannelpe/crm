@@ -1,9 +1,9 @@
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
 
 export async function requestInquiryCreation(input: unknown) {
@@ -18,10 +18,10 @@ export async function requestInquiryCreation(input: unknown) {
         ruc: r.str("ruc"),
       })),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.createInquiry(
-        { ruc: payload.ruc, actor: workflowActor(actor) },
-        now,
+        { ruc: payload.ruc, actor: workflowActor(ctx.actor) },
+        ctx,
       ),
   });
 }

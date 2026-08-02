@@ -59,7 +59,7 @@ export async function convertInquiryOnRegistration(
     status: inquiry.status,
     priority: input.bornState.priority,
     reason: CARRYOVER_REASON,
-    now: ctx.operationAt,
+    occurredAt: ctx.operationAt,
   });
   if (!statusTransition.ok) return Ok(undefined);
 
@@ -76,7 +76,7 @@ export async function convertInquiryOnRegistration(
     status: statusTransition.value.next.status,
     priority: inquiry.priority,
     reason: CARRYOVER_REASON,
-    now: ctx.operationAt,
+    occurredAt: ctx.operationAt,
   });
   if (!priorityTransition.ok) return Ok(undefined);
 

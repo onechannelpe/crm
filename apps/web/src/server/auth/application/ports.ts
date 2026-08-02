@@ -5,9 +5,12 @@ export interface AdminSessionRevocationPort {
   revokeUserSessions(userId: UserId): Promise<void>;
   revokeInstallationSessionsByAuthSession(
     sessionId: string,
-    now: Date,
+    revokedAt: Date,
   ): Promise<void>;
-  revokeInstallationSessionsByUser(userId: UserId, now: Date): Promise<void>;
+  revokeInstallationSessionsByUser(
+    userId: UserId,
+    revokedAt: Date,
+  ): Promise<void>;
   updateExecutiveSyncHealth(input: {
     userId: UserId;
     syncHealth: "ok" | "stale" | "reauth_required";
@@ -27,7 +30,7 @@ export interface AuthSessionLogoutPort {
   revokeSession(sessionId: string): Promise<void>;
   revokeInstallationSessionsByAuthSession(
     sessionId: string,
-    now: Date,
+    revokedAt: Date,
   ): Promise<void>;
   updateExecutiveSyncHealth(input: {
     userId: UserId;

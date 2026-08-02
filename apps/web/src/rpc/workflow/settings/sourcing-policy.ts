@@ -1,10 +1,10 @@
 import { BranchId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
 
 export async function querySourcingPolicy(rawBranchId: string) {
@@ -47,14 +47,14 @@ export async function saveSourcingPolicy(input: {
 
     audit: ({ branchId }) => ({ branchId }),
 
-    execute: ({ actor, operationAt: now }, command) =>
+    execute: (ctx, command) =>
       application.workflow.commands.updateSourcingPolicy(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           branchId: command.branchId,
           engineAssignmentEnabled: command.engineAssignmentEnabled,
         },
-        now,
+        ctx,
       ),
   });
 }

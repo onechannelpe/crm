@@ -124,11 +124,14 @@ describe("extension runtime projection ordering", () => {
       })
       .execute();
 
-    const result = await scenario.service.listTeamExecutiveStatuses({
-      role: "sales_manager",
-      userId: backOne.id,
-      branchId: lima.id,
-    });
+    const result = await scenario.service.listTeamExecutiveStatuses(
+      {
+        role: "sales_manager",
+        userId: backOne.id,
+        branchId: lima.id,
+      },
+      fixedNow,
+    );
 
     const value = expectOk(result);
     expect(value[0]?.presenceStatus).toBe("offline");
@@ -158,11 +161,14 @@ describe("extension runtime projection ordering", () => {
       })
       .execute();
 
-    const result = await scenario.service.listTeamExecutiveStatuses({
-      role: "sales_manager",
-      userId: backOne.id,
-      branchId: lima.id,
-    });
+    const result = await scenario.service.listTeamExecutiveStatuses(
+      {
+        role: "sales_manager",
+        userId: backOne.id,
+        branchId: lima.id,
+      },
+      fixedNow,
+    );
 
     const value = expectOk(result);
     expect(value[0]?.presenceStatus).toBe("ready");

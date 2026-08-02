@@ -18,6 +18,7 @@ import {
   type CsvDelimiter,
 } from "~/server/csv/core";
 import type { InviteService } from "~/server/invites/application/types";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 type ProvisioningInterface = Pick<
@@ -43,7 +44,7 @@ export async function applyImport(
     token: string;
     expiresAt: Date;
   }) => Promise<void>,
-  now: Date,
+  operation: OperationContext,
 ): Promise<BulkApplyResult> {
   let created = 0;
   let skipped = 0;
@@ -70,7 +71,7 @@ export async function applyImport(
             ? appDayRange(row.expiresOn).endExclusive
             : null,
         },
-        now,
+        operation,
       );
 
       if (!result.ok) {
@@ -203,7 +204,7 @@ function readCell(
 export function parseAndValidateCsvRows(
   csv: string,
   role: Role,
-  now: Date,
+  importedAt: Date,
 ): Result<BulkParseResult, BulkImportError> {
   if (csv.trim().length === 0) {
     return Err({ reason: "parse_error", message: "El archivo CSV está vacío" });
@@ -223,7 +224,7 @@ export function parseAndValidateCsvRows(
   const valid: BulkImportRow[] = [];
   const errors: BulkRowError[] = [];
   const minimumExpiresOn = addCalendarDays(
-    appCalendarDateAt(now),
+    appCalendarDateAt(importedAt),
     MIN_EXPIRY_DAYS,
   );
 

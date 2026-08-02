@@ -60,7 +60,7 @@ export async function storeGeneratedFile(
   );
   const storageKey = buildStorageKey({
     purpose: input.purpose,
-    now,
+    storedAt: now,
     extension: staticValidation.extension,
   });
   const stored = await deps.storage.putBytes(storageKey, input.bytes);
@@ -77,7 +77,7 @@ export async function storeGeneratedFile(
     signatureKind: metadata.signatureKind,
     scanStatus: "clean",
     createdByUserId: ctx.actor.userId,
-    now,
+    createdAt: now,
   });
 
   const fileAsset = await deps.repo.assets.findById(fileAssetId);

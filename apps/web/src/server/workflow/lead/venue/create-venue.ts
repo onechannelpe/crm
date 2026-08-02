@@ -50,7 +50,7 @@ export async function createVenueCommand(
       actor: input.actor,
       venueId,
       tradeName: input.tradeName,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!venueEvents.ok) {

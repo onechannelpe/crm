@@ -52,6 +52,7 @@ export async function registerLead(input: {
   posCount?: number;
 }): Promise<RegisterLeadResult> {
   const actor = input.actor ?? actorBy("execOne");
+  const ports = registerLeadPorts(input.runtime);
   const result = await workflowRegisterLead(
     {
       actor,
@@ -59,7 +60,8 @@ export async function registerLead(input: {
       ...withMerchantDefaults(input),
       lineOfBusiness: input.lineOfBusiness ?? "Retail",
     },
-    registerLeadPorts(input.runtime),
+    ports,
+    { identity: ports.identity },
   );
 
   if (!result.ok) {

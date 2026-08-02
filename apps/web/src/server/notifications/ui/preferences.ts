@@ -1,5 +1,6 @@
 import "server-only";
 import type { NotificationPreferencesView } from "~/contracts/notifications";
+import { application } from "~/server/composition/application";
 import {
   CATEGORY_META,
   EXTERNAL_CHANNELS,
@@ -7,7 +8,6 @@ import {
   NOTIFICATION_CATEGORIES,
 } from "~/server/notifications/categories";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 // Default-on: a row in notification_opt_outs means "this user silenced this

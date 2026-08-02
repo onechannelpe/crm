@@ -2,6 +2,7 @@ import type { LeadListView } from "~/contracts/workflow/views";
 import type { DomainError } from "~/domain/errors";
 import type { BranchId, UserId } from "~/domain/ids";
 import { appCalendarDateAt, appDayRange } from "~/domain/time/app-time";
+import type { OperationContext } from "~/server/platform/operation/context";
 import {
   requireCapability,
   resolveLeadListExecutiveScope,
@@ -34,8 +35,8 @@ export async function listLeads(
     actorRole: ListLeadsInput["actor"]["role"];
     actorBranchId: BranchId;
     filters: ListLeadsInput["filters"];
-    evaluatedAt: Date;
   },
+  operation: OperationContext,
 ): Promise<Result<LeadListView, DomainError>> {
   const canRead = requireCapability("view", { role: input.actorRole });
   if (!canRead.ok) {
@@ -52,7 +53,7 @@ export async function listLeads(
     input.filters.sortDirection ?? "desc";
 
   const updatedRange = input.filters.updatedToday
-    ? appDayRange(appCalendarDateAt(input.evaluatedAt))
+    ? appDayRange(appCalendarDateAt(operation.operationAt))
     : undefined;
   const filters: LeadListFilters = {
     actorUserId: input.actorUserId,

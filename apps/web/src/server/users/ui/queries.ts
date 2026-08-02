@@ -1,12 +1,12 @@
 import "server-only";
 import type { MemberDetail, MembersRoster } from "~/contracts/members";
 import { UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 
 export async function getMembersRoster(): Promise<MembersRoster> {
   return executeSessionServerFunction({

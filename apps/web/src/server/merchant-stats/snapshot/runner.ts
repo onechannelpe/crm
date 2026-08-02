@@ -1,5 +1,6 @@
 import type { GpvSnapshotJobId } from "~/domain/ids";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { JobContext } from "~/server/platform/operation/context";
 import { isErr } from "~/shared/result";
 
 import { parseReport } from "../intake/parse-report";
@@ -29,9 +30,9 @@ export function createGpvSnapshotRunner(deps: {
   return {
     async process(
       job: GpvSnapshotJobRow,
-      signal: AbortSignal,
-      now: Date,
+      context: JobContext,
     ): Promise<GpvSnapshotProcessResult> {
+      const { abortSignal, operationAt } = context;
       const snapshot = await deps.db
         .selectFrom("gpv_snapshots as snapshot")
         .innerJoin("file_assets as file", "file.id", "snapshot.file_asset_id")
@@ -58,7 +59,7 @@ export function createGpvSnapshotRunner(deps: {
         const activated = await activateGpvSnapshot(deps.db, {
           snapshotId: snapshot.id,
           activatedBy: snapshot.created_by_user_id,
-          now,
+          activatedAt: operationAt,
         });
 
         if (!activated.ok) {
@@ -74,7 +75,7 @@ export function createGpvSnapshotRunner(deps: {
         throw new Error("Cannot process a failed GPV snapshot");
       }
 
-      if (signal.aborted) {
+      if (abortSignal.aborted) {
         throw new Error("Job aborted");
       }
 
@@ -96,33 +97,33 @@ export function createGpvSnapshotRunner(deps: {
       if (isErr(parsed)) {
         throw new Error(`Unreadable GPV workbook: ${parsed.error.code}`);
       }
-      if (signal.aborted) {
+      if (abortSignal.aborted) {
         throw new Error("Job aborted");
       }
 
       const staged = await deps.db.transaction().execute(async (tx) => {
-        return stageGpvSnapshot(tx, snapshot.id, parsed.value, now);
+        return stageGpvSnapshot(tx, snapshot.id, parsed.value, operationAt);
       });
       await deps.reportProgress(job.id, staged);
 
-      if (signal.aborted) {
+      if (abortSignal.aborted) {
         throw new Error("Job aborted");
       }
 
       const finalized = await deps.db.transaction().execute(async (tx) => {
-        const issues = await validateGpvSnapshot(tx, snapshot.id, now);
+        const issues = await validateGpvSnapshot(tx, snapshot.id, operationAt);
 
         if (issues.blocking > 0) {
           return { issues, activationError: null };
         }
-        if (signal.aborted) {
+        if (abortSignal.aborted) {
           throw new Error("Job aborted");
         }
 
         const activated = await activateGpvSnapshot(tx, {
           snapshotId: snapshot.id,
           activatedBy: snapshot.created_by_user_id,
-          now,
+          activatedAt: operationAt,
         });
 
         return {

@@ -11,6 +11,7 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { isErr, Ok, type Result } from "~/shared/result";
 
 import { computeNeededAssignments } from "../domain/assignment-demand";
@@ -36,12 +37,12 @@ export type ContactAssignmentPlan = {
 export async function planContactAssignments(
   actorUserId: UserId,
   repos: AssignmentPlanRepos,
-  evaluatedAt: Date,
+  operation: OperationContext,
 ): Promise<Result<ContactAssignmentPlan, DomainError>> {
   const snapshotResult = await getLeadCapacitySnapshot(
     actorUserId,
     repos,
-    evaluatedAt,
+    operation,
   );
   if (isErr(snapshotResult)) {
     return snapshotResult;

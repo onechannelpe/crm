@@ -1,5 +1,6 @@
 import { fail, type DomainError } from "~/domain/errors";
 import type { BranchId, TeamId, UserId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { resolveLeadPolicy, type LeadPolicy } from "../domain/policy";
@@ -25,8 +26,6 @@ export interface SetLeadUserOverrideCommand {
   bufferTarget: number;
   dailyLimit: number;
   expiresAt: Date | null;
-  /** Operation instant: when the override takes effect and is recorded. */
-  at: Date;
 }
 
 interface PolicyRepos {
@@ -49,7 +48,7 @@ interface PolicyRepos {
   leadPolicyOverrides: {
     findActiveForUser(
       userId: UserId,
-      now: Date,
+      activeAsOf: Date,
     ): Promise<
       | {
           active_buffer_target: number;
@@ -89,7 +88,7 @@ interface LeadPolicyOverridesWriter {
 export async function getEffectiveLeadPolicy(
   userId: UserId,
   repos: PolicyRepos,
-  evaluatedAt: Date,
+  operation: OperationContext,
 ): Promise<Result<LeadPolicy, DomainError>> {
   const user = await repos.users.findById(userId);
   if (!user) {
@@ -98,7 +97,7 @@ export async function getEffectiveLeadPolicy(
 
   const userOverride = await repos.leadPolicyOverrides.findActiveForUser(
     userId,
-    evaluatedAt,
+    operation.operationAt,
   );
   const teamDefault = user.teamId
     ? await repos.leadPolicyDefaults.findForScope("team", user.teamId)
@@ -127,13 +126,14 @@ export async function setLeadScopeDefault(
 export async function setLeadUserOverride(
   command: SetLeadUserOverrideCommand,
   repos: LeadPolicyOverridesWriter,
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   await repos.leadPolicyOverrides.replaceForUser({
     user_id: command.targetUserId,
     active_buffer_target: command.bufferTarget,
     daily_refill_limit: command.dailyLimit,
-    effective_from: command.at,
-    created_at: command.at,
+    effective_from: operation.operationAt,
+    created_at: operation.operationAt,
     expires_at: command.expiresAt,
     set_by_user_id: command.actorUserId,
   });

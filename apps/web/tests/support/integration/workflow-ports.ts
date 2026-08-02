@@ -10,7 +10,7 @@ export function workflowRepos(runtime: TestRuntime) {
 export function workflowCommandPorts(runtime: TestRuntime) {
   return {
     executor: runtime.ctx.db,
-    now: runtime.now.get(),
+    operationAt: runtime.now.get(),
   };
 }
 

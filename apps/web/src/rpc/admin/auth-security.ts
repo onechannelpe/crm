@@ -1,10 +1,10 @@
 import { longName } from "~/domain/identity/display-name";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export interface UserLoginRetryReport {
@@ -41,10 +41,10 @@ export async function getUserLoginRetryReport(
         username: r.str("username").trim().toLowerCase(),
       })),
 
-    execute: async ({ operationAt: now }, input) => {
+    execute: async (ctx, input) => {
       const report = await application.auth.admin.loginRetries(
         input.username,
-        now,
+        ctx,
       );
       if (!report) {
         return Ok(null);

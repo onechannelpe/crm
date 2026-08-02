@@ -4,17 +4,20 @@ import {
   hashPasswordResetToken,
   isValidPasswordResetTokenFormat,
 } from "~/server/auth/password/reset-tokens";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import type { PasswordResetRequestContext } from "../infrastructure/password-reset-context";
 
-export async function resetPassword(input: {
-  token: string;
-  password: string;
-  confirmPassword: string;
-  deps: PasswordResetRequestContext;
-  resetAt: Date;
-}): Promise<Result<{ ok: true }, DomainError>> {
+export async function resetPassword(
+  input: {
+    token: string;
+    password: string;
+    confirmPassword: string;
+    deps: PasswordResetRequestContext;
+  },
+  operation: OperationContext,
+): Promise<Result<{ ok: true }, DomainError>> {
   if (!isValidPasswordResetTokenFormat(input.token)) {
     return Err(fail("invalid_token"));
   }
@@ -25,7 +28,7 @@ export async function resetPassword(input: {
     return Err(fail("password_mismatch"));
   }
 
-  const now = input.resetAt;
+  const now = operation.operationAt;
   const record = await input.deps.repos.passwordResetTokens.findValidByHash(
     hashPasswordResetToken(input.token),
     now,

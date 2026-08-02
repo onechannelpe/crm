@@ -8,6 +8,7 @@ import {
 } from "~/domain/time/clock";
 import { extensionConfig } from "~/server/platform/config/env";
 import type { AppUow } from "~/server/platform/database/uow";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 import {
@@ -35,9 +36,8 @@ import {
 
 const EXTENSION_HANDOFF_TTL_MS = 120_000;
 
-interface HandoffMethodContext {
+interface HandoffMethodContext extends OperationContext {
   repos: ExtensionRepos;
-  now: Date;
   uow: AppUow<ExtensionRepos>;
 }
 
@@ -51,7 +51,7 @@ export async function createHandoffToken(
     origin: string;
   },
 ): Promise<Result<CreateExtensionHandoffTokenResponse, DomainError>> {
-  const { repos, now } = context;
+  const { repos } = context;
 
   if (input.assignmentId.trim() === "") {
     return Err(
@@ -78,7 +78,7 @@ export async function createHandoffToken(
     const assignment = await repos.contactAssignments.findActiveByIdForUser(
       assignmentId,
       input.userId,
-      now,
+      context.operationAt,
     );
 
     if (!assignment) {
@@ -100,7 +100,7 @@ export async function createHandoffToken(
     const organization = await repos.organization.findOrganizationById(
       contact.organizationId,
     );
-    const issuedAt = now;
+    const issuedAt = context.operationAt;
     const handoffExpiresAt = addMilliseconds(
       issuedAt,
       EXTENSION_HANDOFF_TTL_MS,
@@ -167,7 +167,7 @@ export async function claimInstallationSession(
     installationId: string;
   },
 ): Promise<Result<ClaimExtensionSessionResponse, DomainError>> {
-  const { now, uow } = context;
+  const { uow } = context;
 
   const installationId = InstallationId.parse(input.installationId);
   if (isErr(installationId)) {
@@ -175,7 +175,7 @@ export async function claimInstallationSession(
   }
 
   try {
-    const claimedAt = now;
+    const claimedAt = context.operationAt;
     const handoffClaims = await verifyExtensionToken(
       input.handoffToken,
       isExtensionHandoffClaims,

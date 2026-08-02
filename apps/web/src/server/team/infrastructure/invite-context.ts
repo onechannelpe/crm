@@ -8,6 +8,7 @@ import {
   createInviteServiceForExecutor,
 } from "~/server/invites/infrastructure/invite-service-factory";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 
@@ -18,7 +19,10 @@ interface TeamInviteContext {
   inviteService: InviteService;
   delivery: InviteDelivery;
   publicOrigin: string;
-  enforceInviteCreateRateLimit(userId: UserId, now: Date): Promise<void>;
+  enforceInviteCreateRateLimit(
+    userId: UserId,
+    operation: OperationContext,
+  ): Promise<void>;
 }
 
 export function createTeamInviteContext(
@@ -38,7 +42,10 @@ export function createTeamInviteContext(
     inviteService,
     delivery,
     publicOrigin,
-    async enforceInviteCreateRateLimit(userId: UserId, now: Date) {
+    async enforceInviteCreateRateLimit(
+      userId: UserId,
+      operation: OperationContext,
+    ) {
       await checkActionRateLimit(
         "team.invite.create",
         userId,
@@ -46,7 +53,7 @@ export function createTeamInviteContext(
           actionRateLimits: createActionRateLimitsRepo(executor),
           events: repos.events,
         },
-        now,
+        operation,
       );
     },
   };

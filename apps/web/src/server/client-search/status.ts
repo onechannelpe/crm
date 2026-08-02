@@ -5,21 +5,21 @@ import type { EnrichmentStatus, Overlay } from "./model";
 import type { CompanyRegistryPort, RegistryRow } from "./ports";
 
 export interface EnrichmentQuery {
-  getStatus(document: Document, now: Date): Promise<EnrichmentStatus>;
+  getStatus(document: Document, freshAsOf: Date): Promise<EnrichmentStatus>;
 }
 
 export function createEnrichmentQuery(
   repo: CompanyRegistryPort,
 ): EnrichmentQuery {
   return {
-    async getStatus(document, now) {
+    async getStatus(document, freshAsOf) {
       const record = await repo.getRecord(document.kind, document.value);
 
       return {
         documentType: document.kind,
         documentValue: document.value,
         lifecycle: resolveLifecycle(record),
-        freshness: resolveFreshness(record, now),
+        freshness: resolveFreshness(record, freshAsOf),
         overlay: toOverlay(record),
         lastError: record?.error_message ?? null,
         requestedAt: record?.requested_at ?? null,
@@ -30,13 +30,13 @@ export function createEnrichmentQuery(
 
 function resolveFreshness(
   record: RegistryRow | null | undefined,
-  now: Date,
+  freshAsOf: Date,
 ): EnrichmentStatus["freshness"] {
   if (!record || record.expires_at === null) {
     return "none";
   }
 
-  return record.expires_at > now ? "fresh" : "stale";
+  return record.expires_at > freshAsOf ? "fresh" : "stale";
 }
 
 function resolveLifecycle(

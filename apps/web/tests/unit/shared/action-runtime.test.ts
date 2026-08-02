@@ -25,17 +25,15 @@ vi.mock("~/server/platform/action/session", () => ({
 }));
 
 vi.mock("~/server/platform/action/context", () => ({
-  createAppContext: vi.fn<(actor: AuthSession, now: () => Date) => AppContext>(
-    (actor, now) => ({
-      actor,
-      requestId: "req",
-      traceId: "trace",
-      ipAddress: "127.0.0.1",
-      userAgent: null,
-      publicOrigin: "http://localhost",
-      now,
-    }),
-  ),
+  createAppContext: vi.fn<(actor: AuthSession) => AppContext>((actor) => ({
+    actor,
+    requestId: "req",
+    traceId: "trace",
+    ipAddress: "127.0.0.1",
+    userAgent: null,
+    publicOrigin: "http://localhost",
+    operationAt: new Date(1_000),
+  })),
 }));
 
 const actor = makeAuthSession();
@@ -43,7 +41,7 @@ const actor = makeAuthSession();
 function ports() {
   const report = vi.fn<(error: unknown) => void>();
   const record = vi.fn<(row: unknown) => void>();
-  return { now: (): Date => new Date(1_000), report, record };
+  return { report, record };
 }
 
 const okExecute = () =>

@@ -11,17 +11,17 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
   return {
     async checkAndIncrement(
       keyHash: string,
-      now: Date,
+      attemptedAt: Date,
       windowMs: number,
     ): Promise<CounterSnapshot> {
-      const windowCutoff = new Date(now.getTime() - windowMs);
+      const windowCutoff = new Date(attemptedAt.getTime() - windowMs);
       const row = await db
         .insertInto("action_rate_limit_counters")
         .values({
           key_hash: keyHash,
-          window_started_at: now,
+          window_started_at: attemptedAt,
           request_count: 1,
-          updated_at: now,
+          updated_at: attemptedAt,
         })
         .onConflict((oc) =>
           oc.column("key_hash").doUpdateSet((eb) => ({
@@ -32,7 +32,7 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
                 "<=",
                 windowCutoff,
               )
-              .then(now)
+              .then(attemptedAt)
               .else(eb.ref("action_rate_limit_counters.window_started_at"))
               .end(),
             request_count: eb
@@ -45,7 +45,7 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
               .then(1)
               .else(eb("action_rate_limit_counters.request_count", "+", 1))
               .end(),
-            updated_at: now,
+            updated_at: attemptedAt,
           })),
         )
         .returning(["request_count", "window_started_at"])

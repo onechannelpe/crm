@@ -55,7 +55,7 @@ export function createLeadDraft(input: {
   executiveId: UserId;
   createdBy: UserId;
   commercialScope: LeadCommercialScope;
-  now: Date;
+  createdAt: Date;
 }): Result<LeadDraft, DomainError> {
   const ruc = parseRuc(input.ruc);
   if (!ruc.ok) return ruc;
@@ -73,8 +73,8 @@ export function createLeadDraft(input: {
     stage: "QUALIFYING",
     status: null,
     priority: null,
-    createdAt: input.now,
-    updatedAt: input.now,
+    createdAt: input.createdAt,
+    updatedAt: input.createdAt,
     reservationExpiresAt: null,
     ...input.commercialScope,
   });

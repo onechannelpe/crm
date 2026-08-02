@@ -1,11 +1,11 @@
 import type { SessionInfo } from "~/contracts/auth";
 import { UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function listUserSessions(rawUserId: unknown) {
@@ -37,7 +37,7 @@ export async function getActiveSessionsCount(): Promise<number> {
     stepUp: "recent_strong_auth",
 
     execute: async (ctx) =>
-      Ok(await application.auth.sessions.countActive(ctx.operationAt)),
+      Ok(await application.auth.sessions.countActive(ctx)),
   });
 }
 
@@ -49,7 +49,6 @@ export async function listAllActiveSessions(): Promise<SessionInfo[]> {
     access: { kind: "role", role: "admin" },
     stepUp: "recent_strong_auth",
 
-    execute: async (ctx) =>
-      Ok(await application.auth.sessions.listActive(ctx.operationAt)),
+    execute: async (ctx) => Ok(await application.auth.sessions.listActive(ctx)),
   });
 }

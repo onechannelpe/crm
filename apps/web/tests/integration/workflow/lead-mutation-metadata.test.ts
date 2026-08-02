@@ -110,6 +110,7 @@ describe("workflow lead mutation metadata", () => {
       actorUserId: previousActor.userId,
       actorRole: previousActor.role,
       leadId: lead.id,
+      evaluatedAt: runtime.now.get(),
     });
     expectErr(previousAccess);
 
@@ -117,6 +118,7 @@ describe("workflow lead mutation metadata", () => {
       actorUserId: newExecutive.userId,
       actorRole: newExecutive.role,
       leadId: lead.id,
+      evaluatedAt: runtime.now.get(),
     });
     expectOk(newAccess);
   });

@@ -24,7 +24,7 @@ export async function restartQuotationCommand(
 
     const transition = restartQuotation(state, {
       actor: input.actor,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

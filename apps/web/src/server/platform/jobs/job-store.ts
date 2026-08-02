@@ -25,7 +25,7 @@ type QueueControlDb = Record<JobTableName, QueueControlColumns>;
 export interface JobStore<TId extends string | number, TRow> {
   claim(
     workerId: string,
-    now: Date,
+    claimedAt: Date,
     limit: number,
     leaseMs: number,
   ): Promise<TRow[]>;
@@ -34,13 +34,13 @@ export interface JobStore<TId extends string | number, TRow> {
     id: TId,
     workerId: string,
     leaseMs: number,
-    now: Date,
+    renewedAt: Date,
   ): Promise<boolean>;
 
   markDone(
     id: TId,
     workerId: string,
-    now: Date,
+    completedAt: Date,
     patch?: DomainPatch,
   ): Promise<boolean>;
 
@@ -55,7 +55,7 @@ export interface JobStore<TId extends string | number, TRow> {
   markFailed(
     id: TId,
     workerId: string,
-    now: Date,
+    failedAt: Date,
     reason: string,
     patch?: DomainPatch,
   ): Promise<boolean>;
@@ -92,7 +92,7 @@ export function createJobStore<
   }
 
   return {
-    async claim(workerId, now, limit, leaseMs) {
+    async claim(workerId, claimedAt, limit, leaseMs) {
       const projection = selectColumns.map((column) =>
         column === "id" ? `${table}.id` : column,
       );
@@ -103,7 +103,7 @@ export function createJobStore<
             .selectFrom(table)
             .select("id")
             .where(CLAIMABLE_STATES)
-            .where("claimable_at", "<=", now)
+            .where("claimable_at", "<=", claimedAt)
             // Prevent a worker crash from reclaiming the same poison job forever.
             .whereRef("attempt_count", "<", "max_attempts")
             .orderBy("claimable_at", "asc")
@@ -116,7 +116,7 @@ export function createJobStore<
         .set((eb) => ({
           queue_state: "processing",
           lease_owner: workerId,
-          claimable_at: new Date(now.getTime() + leaseMs),
+          claimable_at: new Date(claimedAt.getTime() + leaseMs),
           attempt_count: eb("attempt_count", "+", 1),
           error_message: null,
         }))
@@ -129,10 +129,10 @@ export function createJobStore<
       return rows as TRow[];
     },
 
-    async extendLease(id, workerId, leaseMs, now) {
+    async extendLease(id, workerId, leaseMs, renewedAt) {
       const result = await db
         .updateTable(table)
-        .set({ claimable_at: new Date(now.getTime() + leaseMs) })
+        .set({ claimable_at: new Date(renewedAt.getTime() + leaseMs) })
         .where("id", "=", id)
         // A reclaimed job must not be extended by its previous owner.
         .where("lease_owner", "=", workerId)
@@ -142,11 +142,11 @@ export function createJobStore<
       return Number(result.numUpdatedRows ?? 0) > 0;
     },
 
-    markDone(id, workerId, now, patch) {
+    markDone(id, workerId, completedAt, patch) {
       return settle(id, workerId, {
         queue_state: "done",
         lease_owner: null,
-        completed_at: now,
+        completed_at: completedAt,
         error_message: null,
         ...patch,
       });
@@ -162,11 +162,11 @@ export function createJobStore<
       });
     },
 
-    markFailed(id, workerId, now, reason, patch) {
+    markFailed(id, workerId, failedAt, reason, patch) {
       return settle(id, workerId, {
         queue_state: "failed",
         lease_owner: null,
-        completed_at: now,
+        completed_at: failedAt,
         error_message: reason,
         ...patch,
       });

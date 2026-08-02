@@ -6,7 +6,6 @@ import { countActiveSessions } from "~/server/auth/application/queries/count-act
 import { getCurrentUser } from "~/server/auth/application/queries/get-current-user";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { listAllActiveSessions } from "~/server/auth/application/queries/list-all-active-sessions";
-import { listUserSessions } from "~/server/auth/application/queries/list-user-sessions";
 import {
   recordAuthAnalyticsEvent,
   type AuthAnalyticsRecorder,
@@ -43,9 +42,7 @@ import {
   createAuthSessionLogoutContext,
   createAuthSessionReadContext,
 } from "~/server/auth/infrastructure/session-context";
-import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
 import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
-import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
 import { loadOnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
@@ -65,7 +62,9 @@ import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { AppContext } from "~/server/platform/action/context";
-import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createUsersRepo } from "~/server/users/repos-users";
 import { Err, Ok } from "~/shared/result";
 
@@ -77,8 +76,8 @@ export function createAuthRuntime(
   analytics: AuthAnalyticsRecorder,
 ) {
   const sessionService = createSessionService({
-    sessions: createAuthSessionRepo(serverInfrastructure.db),
-    users: createAuthUsersRepo(serverInfrastructure.db),
+    sessions: createSessionRepository(serverInfrastructure.db),
+    users: createUsersRepo(serverInfrastructure.db),
     events: createEventsRepo(serverInfrastructure.db),
     logger: serverInfrastructure.logger,
   });
@@ -109,98 +108,103 @@ export function createAuthRuntime(
     executor: serverInfrastructure.db,
     messaging: notifications.messaging,
   });
-  const accountSecurity = {
-    async state(userId: UserId) {
-      const user = await setup.repos.users.findById(userId);
-      if (!user) return Err(fail("user_not_found"));
+  const loadAccountSecurityState = async (userId: UserId) => {
+    const user = await setup.repos.users.findById(userId);
+    if (!user) return Err(fail("user_not_found"));
 
-      return Ok({
-        user,
-        strongAuthStatus: await getStrongAuthStatus(userId, setup.repos),
-      });
-    },
-    async changePassword(
-      userId: UserId,
-      currentPassword: string,
-      newPassword: string,
-      changedAt: Date,
+    return Ok({
+      user,
+      strongAuthStatus: await getStrongAuthStatus(userId, setup.repos),
+    });
+  };
+
+  const changeAccountPassword = async (
+    userId: UserId,
+    currentPassword: string,
+    newPassword: string,
+    changedAt: Date,
+  ) => {
+    const state = await loadAccountSecurityState(userId);
+    if (!state.ok) return state;
+
+    const valid = await verifyPassword(
+      state.value.user.password_hash,
+      currentPassword,
+    );
+    if (!valid) return Err(fail("current_password_incorrect"));
+
+    await setup.repos.users.updatePassword(
+      userId,
+      await hashPassword(newPassword),
+    );
+    await setup.repos.events.append({
+      type: "password_changed",
+      entityType: "user",
+      entityId: auditEntityId("user", userId),
+      actorUserId: userId,
+      occurredAt: changedAt,
+    });
+    return Ok({ message: "Contraseña actualizada" });
+  };
+
+  const removeAccountPasskeys = async (userId: UserId, removedAt: Date) => {
+    const state = await loadAccountSecurityState(userId);
+    if (!state.ok) return state;
+
+    const { user, strongAuthStatus } = state.value;
+    if (
+      !canRemoveStrongAuthFactor({
+        role: user.role,
+        removingTotp: false,
+        removingPasskeys: true,
+        hasTotp: strongAuthStatus.hasTotp,
+        hasPasskey: strongAuthStatus.hasPasskey,
+      })
     ) {
-      const state = await accountSecurity.state(userId);
-      if (!state.ok) return state;
+      return Err(fail("strong_method_required"));
+    }
 
-      const valid = await verifyPassword(
-        state.value.user.password_hash,
-        currentPassword,
-      );
-      if (!valid) return Err(fail("current_password_incorrect"));
+    await setup.repos.passkeys.deleteAllByUser(userId);
+    if (!strongAuthStatus.hasTotp)
+      await setup.repos.userRecoveryCodes.deleteAllByUser(userId);
+    await setup.repos.events.append({
+      type: "passkeys_removed",
+      entityType: "user",
+      entityId: auditEntityId("user", userId),
+      actorUserId: userId,
+      occurredAt: removedAt,
+    });
+    return Ok({ message: "Claves de acceso eliminadas" });
+  };
 
-      await setup.repos.users.updatePassword(
-        userId,
-        await hashPassword(newPassword),
-      );
-      await setup.repos.events.append({
-        type: "password_changed",
-        entityType: "user",
-        entityId: auditEntityId("user", userId),
-        actorUserId: userId,
-        occurredAt: changedAt,
-      });
-      return Ok({ message: "Contraseña actualizada" });
-    },
-    async removePasskeys(userId: UserId, removedAt: Date) {
-      const state = await accountSecurity.state(userId);
-      if (!state.ok) return state;
-      const { user, strongAuthStatus } = state.value;
-      if (
-        !canRemoveStrongAuthFactor({
-          role: user.role,
-          removingTotp: false,
-          removingPasskeys: true,
-          hasTotp: strongAuthStatus.hasTotp,
-          hasPasskey: strongAuthStatus.hasPasskey,
-        })
-      ) {
-        return Err(fail("strong_method_required"));
-      }
-      await setup.repos.passkeys.deleteAllByUser(userId);
-      if (!strongAuthStatus.hasTotp)
-        await setup.repos.userRecoveryCodes.deleteAllByUser(userId);
-      await setup.repos.events.append({
-        type: "passkeys_removed",
-        entityType: "user",
-        entityId: auditEntityId("user", userId),
-        actorUserId: userId,
-        occurredAt: removedAt,
-      });
-      return Ok({ message: "Claves de acceso eliminadas" });
-    },
-    async disableTotp(userId: UserId, disabledAt: Date) {
-      const state = await accountSecurity.state(userId);
-      if (!state.ok) return state;
-      const { user, strongAuthStatus } = state.value;
-      if (
-        !canRemoveStrongAuthFactor({
-          role: user.role,
-          removingTotp: true,
-          removingPasskeys: false,
-          hasTotp: strongAuthStatus.hasTotp,
-          hasPasskey: strongAuthStatus.hasPasskey,
-        })
-      ) {
-        return Err(fail("strong_method_required"));
-      }
-      await setup.repos.userTotpFactors.disable(userId, disabledAt);
-      if (!strongAuthStatus.hasPasskey)
-        await setup.repos.userRecoveryCodes.deleteAllByUser(userId);
-      await setup.repos.events.append({
-        type: "totp_disabled",
-        entityType: "user",
-        entityId: auditEntityId("user", userId),
-        actorUserId: userId,
-        occurredAt: disabledAt,
-      });
-      return Ok({ message: "Aplicación de autenticación desactivada" });
-    },
+  const disableAccountTotp = async (userId: UserId, disabledAt: Date) => {
+    const state = await loadAccountSecurityState(userId);
+    if (!state.ok) return state;
+
+    const { user, strongAuthStatus } = state.value;
+    if (
+      !canRemoveStrongAuthFactor({
+        role: user.role,
+        removingTotp: true,
+        removingPasskeys: false,
+        hasTotp: strongAuthStatus.hasTotp,
+        hasPasskey: strongAuthStatus.hasPasskey,
+      })
+    ) {
+      return Err(fail("strong_method_required"));
+    }
+
+    await setup.repos.userTotpFactors.disable(userId, disabledAt);
+    if (!strongAuthStatus.hasPasskey)
+      await setup.repos.userRecoveryCodes.deleteAllByUser(userId);
+    await setup.repos.events.append({
+      type: "totp_disabled",
+      entityType: "user",
+      entityId: auditEntityId("user", userId),
+      actorUserId: userId,
+      occurredAt: disabledAt,
+    });
+    return Ok({ message: "Aplicación de autenticación desactivada" });
   };
 
   return {
@@ -208,86 +212,97 @@ export function createAuthRuntime(
       password: (
         input: Parameters<typeof submitPasswordLogin>[0],
         publicOrigin: string,
-        operationAt: Date,
+        operation: OperationContext,
       ) =>
         submitPasswordLogin(
           input,
           login,
           createPasskeyProviderForOrigin(login.repos, publicOrigin),
-          operationAt,
+          operation,
         ),
       startPasskey: (
         input: Parameters<typeof startPasskeyLogin>[0],
         publicOrigin: string,
-        operationAt: Date,
+        operation: OperationContext,
       ) =>
         startPasskeyLogin(
           input,
           login,
           createPasskeyProviderForOrigin(login.repos, publicOrigin),
-          operationAt,
+          operation,
         ),
-      verifyTotp: (input: Parameters<typeof verifyTotpLoginProof>[1]) =>
-        verifyTotpLoginProof(login, input),
-      verifyRecovery: (input: Parameters<typeof verifyRecoveryLoginProof>[1]) =>
-        verifyRecoveryLoginProof(login, input),
+      verifyTotp: (
+        input: Parameters<typeof verifyTotpLoginProof>[1],
+        operation: OperationContext,
+      ) => verifyTotpLoginProof(login, input, operation),
+      verifyRecovery: (
+        input: Parameters<typeof verifyRecoveryLoginProof>[1],
+        operation: OperationContext,
+      ) => verifyRecoveryLoginProof(login, input, operation),
       verifyPasskey: (
         input: Omit<
           Parameters<typeof verifyPasskeyLogin>[1],
           "webauthnProvider"
         >,
         publicOrigin: string,
+        operation: OperationContext,
       ) =>
-        verifyPasskeyLogin(login.repos, {
-          ...input,
-          webauthnProvider: createPasskeyProviderForOrigin(
-            login.repos,
-            publicOrigin,
-          ),
-        }),
-      complete: (input: Parameters<typeof completePendingLogin>[1]) =>
-        completePendingLogin(login, input),
+        verifyPasskeyLogin(
+          login.repos,
+          {
+            ...input,
+            webauthnProvider: createPasskeyProviderForOrigin(
+              login.repos,
+              publicOrigin,
+            ),
+          },
+          operation,
+        ),
+      complete: (
+        input: Parameters<typeof completePendingLogin>[1],
+        operation: OperationContext,
+      ) => completePendingLogin(login, input, operation),
       completeGoogleOAuth: (
         input: Parameters<typeof completeGoogleOAuthCallback>[0],
         publicOrigin: string,
-        operationAt: Date,
+        operation: OperationContext,
       ) =>
         completeGoogleOAuthCallback(
           input,
           login,
           createPasskeyProviderForOrigin(login.repos, publicOrigin),
-          operationAt,
+          operation,
         ),
       getFlow: (
         flowId: Parameters<typeof getLoginFlowState>[0],
         publicOrigin: string,
-        asOf: Date,
+        operation: OperationContext,
       ) =>
         getLoginFlowState(
           flowId,
           login.repos,
           createPasskeyProviderForOrigin(login.repos, publicOrigin),
-          asOf,
+          operation,
         ),
     },
     analytics: (
       event: Parameters<typeof recordAuthAnalyticsEvent>[0],
       context: Parameters<typeof recordAuthAnalyticsEvent>[1],
-      occurredAt: Date,
-    ) => recordAuthAnalyticsEvent(event, context, analytics, occurredAt),
+      operation: OperationContext,
+    ) => recordAuthAnalyticsEvent(event, context, analytics, operation),
     sessions: {
-      resolve: (token: string, now: Date) => sessionService.resolve(token, now),
+      resolve: (token: string, operation: OperationContext) =>
+        sessionService.resolve(token, operation),
       invalidateUser: (userId: UserId) =>
         sessionService.revokeAllForUser(userId),
       currentUser: (ctx: AppContext) => getCurrentUser(ctx, sessionRead),
       logout: (ctx: AppContext) => logoutUser(ctx, sessionLogout),
-      listForUser: (
-        ctx: AppContext,
-        input: Parameters<typeof listUserSessions>[2],
-      ) => listUserSessions(ctx, adminSessionsRead, input),
-      countActive: (asOf: Date) => countActiveSessions(adminSessionsRead, asOf),
-      listActive: (asOf: Date) =>
-        listAllActiveSessions(adminSessionsRead, asOf),
+      listForUser: (_ctx: AppContext, input: { userId: UserId }) =>
+        adminSessionsRead.repos.sessions.listForUser(input.userId),
+      countActive: (operation: OperationContext) =>
+        countActiveSessions(adminSessionsRead, operation),
+      listActive: (operation: OperationContext) =>
+        listAllActiveSessions(adminSessionsRead, operation),
       revoke: (
         ctx: AppContext,
         input: Parameters<typeof revokeUserSession>[2],
@@ -303,9 +318,9 @@ export function createAuthRuntime(
       stop: (ctx: AppContext) => stopImpersonation(ctx, impersonationDeps),
     },
     security: {
-      changePassword: accountSecurity.changePassword,
-      removePasskeys: accountSecurity.removePasskeys,
-      disableTotp: accountSecurity.disableTotp,
+      changePassword: changeAccountPassword,
+      removePasskeys: removeAccountPasskeys,
+      disableTotp: disableAccountTotp,
       startPasskeyEnrollment: (ctx: AppContext) =>
         startPasskeyEnrollment(setup, {
           userId: ctx.actor.userId,
@@ -359,24 +374,23 @@ export function createAuthRuntime(
         ctx: AppContext,
         phone: Parameters<typeof saveOnboardingProfile>[1]["phone"],
       ) =>
-        saveOnboardingProfile(setup, {
-          userId: ctx.actor.userId,
-          phone,
-          now: ctx.operationAt,
-        }),
+        saveOnboardingProfile(setup, { userId: ctx.actor.userId, phone }, ctx),
       changePassword: (
         ctx: AppContext,
         input: Omit<
           Parameters<typeof changeInstallationPassword>[1],
-          "userId" | "currentSessionId" | "now"
+          "userId" | "currentSessionId"
         >,
       ) =>
-        changeInstallationPassword(setup, {
-          ...input,
-          userId: ctx.actor.userId,
-          currentSessionId: ctx.actor.id,
-          now: ctx.operationAt,
-        }),
+        changeInstallationPassword(
+          setup,
+          {
+            ...input,
+            userId: ctx.actor.userId,
+            currentSessionId: ctx.actor.id,
+          },
+          ctx,
+        ),
       snapshot: (userId: UserId) => loadOnboardingSnapshot(setup.repos, userId),
       completeWithoutFactor: (ctx: AppContext) =>
         completeOnboarding(ctx, setup, { method: "none" }),
@@ -433,22 +447,18 @@ export function createAuthRuntime(
     passwordReset: {
       request: (
         input: Omit<Parameters<typeof requestPasswordReset>[0], "deps">,
-      ) =>
-        requestPasswordReset({
-          ...input,
-          deps: passwordReset,
-        }),
-      reset: (input: Omit<Parameters<typeof resetPassword>[0], "deps">) =>
-        resetPassword({
-          ...input,
-          deps: passwordReset,
-        }),
+        operation: OperationContext,
+      ) => requestPasswordReset({ ...input, deps: passwordReset }, operation),
+      reset: (
+        input: Omit<Parameters<typeof resetPassword>[0], "deps">,
+        operation: OperationContext,
+      ) => resetPassword({ ...input, deps: passwordReset }, operation),
     },
     invites: {
       acceptPassword: (
         input: Parameters<typeof submitInviteAcceptance>[2],
         request: Parameters<typeof submitInviteAcceptance>[1],
-        operationAt: Date,
+        operation: OperationContext,
       ) =>
         submitInviteAcceptance(
           {
@@ -461,17 +471,18 @@ export function createAuthRuntime(
           },
           request,
           input,
-          operationAt,
+          operation,
         ),
     },
     admin: {
-      loginRetries: async (username: string, asOf: Date) => {
+      loginRetries: async (username: string, operation: OperationContext) => {
         const { users, authEvents } = login.repos;
         const user = await users.findByUsername(username);
         if (!user) return null;
 
-        const fifteenMinutesAgo = new Date(asOf.getTime() - 15 * 60_000);
-        const twentyFourHoursAgo = new Date(asOf.getTime() - 24 * 60 * 60_000);
+        const since = operation.operationAt.getTime();
+        const fifteenMinutesAgo = new Date(since - 15 * 60_000);
+        const twentyFourHoursAgo = new Date(since - 24 * 60 * 60_000);
         const [retryCount15m, retryCount24h, recentRetries] = await Promise.all(
           [
             authEvents.countLoginRetriesSince(user.id, fifteenMinutesAgo),

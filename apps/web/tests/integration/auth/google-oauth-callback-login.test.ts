@@ -56,6 +56,7 @@ describe("google oauth callback login", () => {
       },
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
+      new Date(),
     );
 
     expect(isErr(result)).toBe(true);
@@ -79,6 +80,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
+      new Date(),
     );
 
     expect(isErr(result)).toBe(true);
@@ -106,6 +108,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
+      new Date(),
     );
 
     expect(isErr(result)).toBe(true);
@@ -134,6 +137,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
+      new Date(),
     );
 
     expect(isErr(result)).toBe(false);
@@ -168,6 +172,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
+      new Date(),
     );
 
     expect(isErr(result)).toBe(false);
@@ -192,6 +197,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
+      new Date(),
     );
 
     expect(isErr(result)).toBe(true);

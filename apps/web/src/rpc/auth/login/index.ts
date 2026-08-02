@@ -8,22 +8,23 @@ import {
   readLoginText,
   readPasskeyStartMode,
 } from "~/server/auth/ui/login-support";
+import { application } from "~/server/composition/application";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { application } from "~/server/platform/composition/application";
 import {
   getRequestClientMetadata,
   getRequestContext,
-  getRequestInstant,
+  getRequestOperation,
 } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { isErr } from "~/shared/result";
 
 function recordAuthAnalyticsEvent(
   event: Parameters<typeof application.auth.analytics>[0],
   context: Parameters<typeof application.auth.analytics>[1],
-  occurredAt: Date,
+  operation: OperationContext,
 ) {
-  return application.auth.analytics(event, context, occurredAt);
+  return application.auth.analytics(event, context, operation);
 }
 
 export async function passwordLogin(
@@ -35,7 +36,7 @@ export async function passwordLogin(
   const password = readLoginText(formData, "password", { trim: false });
   const request = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
-  const now = getRequestInstant();
+  const operation = getRequestOperation();
 
   const result = await application.auth.login.password(
     {
@@ -45,7 +46,7 @@ export async function passwordLogin(
       userAgent: request.userAgent,
     },
     getRequestContext().publicOrigin,
-    now,
+    operation,
   );
 
   if (isErr(result)) {
@@ -57,7 +58,7 @@ export async function passwordLogin(
         code: result.error.kind,
       },
       analyticsContext,
-      now,
+      operation,
     );
 
     throwDomain(fail(result.error.kind));
@@ -71,7 +72,7 @@ export async function passwordLogin(
         outcome: "totp_required",
       },
       analyticsContext,
-      now,
+      operation,
     );
 
     throw redirect(`/login/verify?flow=${result.value.flow.id}`);
@@ -85,7 +86,7 @@ export async function passwordLogin(
         outcome: "passkey_required",
       },
       analyticsContext,
-      now,
+      operation,
     );
 
     return {
@@ -101,7 +102,7 @@ export async function passwordLogin(
       outcome: "succeeded",
     },
     analyticsContext,
-    now,
+    operation,
   );
 
   return completeLoginAndRedirect(result.value.result);
@@ -120,7 +121,7 @@ export async function passkeyStart(
 
   const request = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
-  const now = getRequestInstant();
+  const operation = getRequestOperation();
 
   const command =
     mode === "identified"
@@ -137,7 +138,7 @@ export async function passkeyStart(
   const result = await application.auth.login.startPasskey(
     command,
     getRequestContext().publicOrigin,
-    now,
+    operation,
   );
 
   if (isErr(result)) {
@@ -149,7 +150,7 @@ export async function passkeyStart(
         code: "invalid_credentials",
       },
       analyticsContext,
-      now,
+      operation,
     );
 
     throwDomain(fail("invalid_credentials"));
@@ -162,7 +163,7 @@ export async function passkeyStart(
       outcome: "started",
     },
     analyticsContext,
-    now,
+    operation,
   );
 
   return { flow: result.value };
@@ -180,14 +181,11 @@ export async function totpLogin(formData: FormData): Promise<void> {
 
   const request = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
-  const now = getRequestInstant();
-  const verifiedAt = now;
-  const verified = await application.auth.login.verifyTotp({
-    flowId,
-    totpCode,
-    ipAddress: request.ipAddress,
-    occurredAt: verifiedAt,
-  });
+  const operation = getRequestOperation();
+  const verified = await application.auth.login.verifyTotp(
+    { flowId, totpCode, ipAddress: request.ipAddress },
+    operation,
+  );
 
   if (isErr(verified)) {
     if (verified.error.kind === "flow_expired") {
@@ -199,7 +197,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
           code: "flow_expired",
         },
         analyticsContext,
-        now,
+        operation,
       );
 
       throwDomain(fail("flow_expired"));
@@ -213,18 +211,20 @@ export async function totpLogin(formData: FormData): Promise<void> {
         code: "invalid_totp",
       },
       analyticsContext,
-      now,
+      operation,
     );
 
     throwDomain(fail("totp_code_invalid"));
   }
 
-  const completed = await application.auth.login.complete({
-    proof: verified.value,
-    occurredAt: verifiedAt,
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-  });
+  const completed = await application.auth.login.complete(
+    {
+      proof: verified.value,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+    },
+    operation,
+  );
   if (isErr(completed)) {
     throwDomain(
       fail(
@@ -242,7 +242,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
       outcome: "succeeded",
     },
     analyticsContext,
-    now,
+    operation,
   );
 
   return completeLoginAndRedirect(completed.value);
@@ -259,13 +259,11 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
   }
 
   const request = getRequestClientMetadata();
-  const verifiedAt = getRequestInstant();
-  const verified = await application.auth.login.verifyRecovery({
-    flowId,
-    recoveryCode,
-    ipAddress: request.ipAddress,
-    occurredAt: verifiedAt,
-  });
+  const operation = getRequestOperation();
+  const verified = await application.auth.login.verifyRecovery(
+    { flowId, recoveryCode, ipAddress: request.ipAddress },
+    operation,
+  );
 
   if (isErr(verified)) {
     throwDomain(
@@ -277,12 +275,14 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
     );
   }
 
-  const completed = await application.auth.login.complete({
-    proof: verified.value,
-    occurredAt: verifiedAt,
-    ipAddress: request.ipAddress,
-    userAgent: request.userAgent,
-  });
+  const completed = await application.auth.login.complete(
+    {
+      proof: verified.value,
+      ipAddress: request.ipAddress,
+      userAgent: request.userAgent,
+    },
+    operation,
+  );
   if (isErr(completed)) {
     throwDomain(
       fail(

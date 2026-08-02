@@ -7,10 +7,10 @@ import type { FilePurpose } from "../types";
 export function buildStorageKey(input: {
   purpose: FilePurpose;
   fileAssetId?: FileAssetId;
-  now: Date;
+  storedAt: Date;
   extension: string;
 }): string {
   const uniqueSuffix = randomUUID().replaceAll("-", "").slice(0, 20);
   const owner = input.fileAssetId ?? uniqueSuffix;
-  return `${input.purpose}/${input.now.getTime()}-${owner}.${input.extension}`;
+  return `${input.purpose}/${input.storedAt.getTime()}-${owner}.${input.extension}`;
 }

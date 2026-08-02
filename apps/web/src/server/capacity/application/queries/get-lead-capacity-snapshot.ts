@@ -10,6 +10,7 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Ok, type Result } from "~/shared/result";
 
 import type { ActorScope } from "../actor-scope";
@@ -36,17 +37,17 @@ interface SnapshotRepos {
 export async function getLeadCapacitySnapshot(
   userId: UserId,
   repos: SnapshotRepos,
-  evaluatedAt: Date,
+  operation: OperationContext,
 ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
-  const policyResult = await getEffectiveLeadPolicy(userId, repos, evaluatedAt);
+  const policyResult = await getEffectiveLeadPolicy(userId, repos, operation);
   if (!policyResult.ok) return policyResult;
 
-  const range = appDayRange(appCalendarDateAt(evaluatedAt));
+  const range = appDayRange(appCalendarDateAt(operation.operationAt));
   const [grants, reservations, commits, activeAssignments] = await Promise.all([
     repos.leadCapacityGrants.findByUserAndRange(userId, range),
     repos.leadUsageReservations.findByUserAndRange(userId, range),
     repos.leadUsageCommits.findByUserAndRange(userId, range),
-    repos.contactAssignments.countActiveByUser(userId, evaluatedAt),
+    repos.contactAssignments.countActiveByUser(userId, operation.operationAt),
   ]);
 
   return Ok(

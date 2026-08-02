@@ -2,8 +2,8 @@ import {
   isAuthFunnelScreen,
   type AuthFunnelClientEventPayload,
 } from "~/domain/observability/auth-funnel";
-import { application } from "~/server/platform/composition/application";
-import { getRequestInstant } from "~/server/platform/http/request-context";
+import { application } from "~/server/composition/application";
+import { getRequestOperation } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
 function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
@@ -39,6 +39,6 @@ export async function trackAuthClientEvent(
       ...event,
     },
     getActionRequestContext(),
-    getRequestInstant(),
+    getRequestOperation(),
   );
 }

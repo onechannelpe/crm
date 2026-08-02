@@ -77,6 +77,7 @@ describe("lead reservation expiry", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expect(detail.lead.stage).toBe("EXPIRED");

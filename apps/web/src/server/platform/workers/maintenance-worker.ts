@@ -1,4 +1,4 @@
-import { application } from "~/server/platform/composition/application";
+import { application } from "~/server/composition/application";
 import { dbUrl } from "~/server/platform/database/db";
 import {
   createPgListener,
@@ -6,6 +6,7 @@ import {
 } from "~/server/platform/database/notify";
 import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 import type { QueueRunner } from "~/server/platform/jobs/types";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
 const WORKER_ID = `bg-${process.pid}`;
@@ -53,16 +54,27 @@ function makeWaker(run: () => Promise<void>): () => void {
   };
 }
 
-function startScheduledTick<TTick extends string>(
-  tick: TTick,
+function startScheduledTick(
+  label: string,
   intervalMs: number,
-  run: (context: { operationAt: Date; tick: TTick }) => Promise<void>,
+  run: (context: OperationContext) => Promise<void>,
 ): () => void {
-  const execute = () => {
-    void run({ operationAt: new Date(), tick }); // clock-boundary: scheduled tick
+  const execute = async () => {
+    try {
+      // clock-boundary: scheduled tick. Each firing is its own inbound event,
+      // so every row this sweep touches carries the same instant.
+      await run({ operationAt: new Date() });
+    } catch (error: unknown) {
+      logger.error("scheduled_tick_failed", {
+        tick: label,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   };
 
-  return () => clearInterval(setInterval(execute, intervalMs));
+  const timer = setInterval(() => void execute(), intervalMs);
+
+  return () => clearInterval(timer);
 }
 
 export function startMaintenanceWorker(): { stop(): Promise<void> } {

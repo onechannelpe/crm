@@ -2,31 +2,36 @@ import { parseGpvSnapshotProgressMessage } from "~/contracts/merchant-stats/impo
 import { REALTIME_CHANNELS } from "~/contracts/realtime/channel";
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { GpvSnapshotJobId } from "~/domain/ids";
-import { application } from "~/server/platform/composition/application";
 import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 import { defineRealtimeChannel } from "~/server/realtime/channel";
 import { isErr } from "~/shared/result";
 
-export const gpvSnapshotChannel = defineRealtimeChannel({
-  name: REALTIME_CHANNELS.gpvSnapshot,
-  pgChannel: GPV_SNAPSHOT_PROGRESS_CHANNEL,
+import type { createMerchantStatsRuntime } from "../infrastructure/runtime";
 
-  parseId: (raw) => {
-    const parsed = GpvSnapshotJobId.parse(raw);
+export function createGpvSnapshotChannel(
+  merchantStats: Pick<ReturnType<typeof createMerchantStatsRuntime>, "imports">,
+) {
+  return defineRealtimeChannel({
+    name: REALTIME_CHANNELS.gpvSnapshot,
+    pgChannel: GPV_SNAPSHOT_PROGRESS_CHANNEL,
 
-    return isErr(parsed) ? null : parsed.value;
-  },
+    parseId: (raw) => {
+      const parsed = GpvSnapshotJobId.parse(raw);
 
-  open: async (session, jobId) => {
-    if (!hasPermission(session.role, "dashboards:read")) {
-      return null;
-    }
+      return isErr(parsed) ? null : parsed.value;
+    },
 
-    const progress = await application.merchantStats.imports.progress(jobId);
+    open: async (session, jobId) => {
+      if (!hasPermission(session.role, "dashboards:read")) {
+        return null;
+      }
 
-    return progress ? [{ data: JSON.stringify(progress) }] : null;
-  },
+      const progress = await merchantStats.imports.progress(jobId);
 
-  topicIdOfPayload: (payload) =>
-    parseGpvSnapshotProgressMessage(payload)?.jobId ?? null,
-});
+      return progress ? [{ data: JSON.stringify(progress) }] : null;
+    },
+
+    topicIdOfPayload: (payload) =>
+      parseGpvSnapshotProgressMessage(payload)?.jobId ?? null,
+  });
+}

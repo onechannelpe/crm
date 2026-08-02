@@ -10,6 +10,7 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Ok, type Result } from "~/shared/result";
 
 import type { ActorScope } from "../actor-scope";
@@ -33,16 +34,12 @@ interface SnapshotRepos {
 export async function getSearchCapacitySnapshot(
   userId: UserId,
   repos: SnapshotRepos,
-  evaluatedAt: Date,
+  operation: OperationContext,
 ): Promise<Result<SearchCapacitySnapshot, DomainError>> {
-  const policyResult = await getEffectiveSearchPolicy(
-    userId,
-    repos,
-    evaluatedAt,
-  );
+  const policyResult = await getEffectiveSearchPolicy(userId, repos, operation);
   if (!policyResult.ok) return policyResult;
 
-  const range = appMonthRange(evaluatedAt);
+  const range = appMonthRange(operation.operationAt);
   const [grants, reservations, commits] = await Promise.all([
     repos.searchCapacityGrants.findByUserAndRange(userId, range),
     repos.searchUsageReservations.findByUserAndRange(userId, range),

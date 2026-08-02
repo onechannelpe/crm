@@ -1,6 +1,7 @@
 import { canAssignRole } from "~/domain/auth/access/rbac";
 import { fail, type DomainError } from "~/domain/errors";
 import { generateUsername } from "~/domain/identity/generate-username";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import {
@@ -55,7 +56,7 @@ export async function createInvite(
   repos: InviteDeps,
   runtime: InviteRuntime,
   input: CreateInviteInput,
-  now: Date,
+  operation: OperationContext,
 ): Promise<Result<InviteIssueResult, DomainError>> {
   if (!canAssignRole(input.actorRole, input.role)) {
     return Err(fail("role_not_assignable"));
@@ -96,7 +97,7 @@ export async function createInvite(
         firstSurname: input.firstSurname,
         secondSurname: input.secondSurname,
         executiveCategory: input.executiveCategory ?? null,
-        createdAt: now,
+        createdAt: operation.operationAt,
       });
 
       // Reuse the user created by a concurrent invite for the same email.
@@ -139,7 +140,7 @@ export async function createInvite(
         role: input.role,
         expiresAt: input.expiresAt ?? null,
       },
-      now,
+      operation.operationAt,
     );
 
     return Ok(issued);

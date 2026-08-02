@@ -1,12 +1,12 @@
 import type { BookFilter } from "~/contracts/merchant-stats/views";
 import type { DomainError } from "~/domain/errors";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
   type Reader,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 
 function readFilter(reader: Reader<DomainError>): BookFilter {
   return {

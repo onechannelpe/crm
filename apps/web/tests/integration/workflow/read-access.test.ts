@@ -41,6 +41,7 @@ describe("workflow read access", () => {
       actorUserId: actor.userId,
       actorRole: actor.role,
       leadId: lead.id,
+      evaluatedAt: runtime.now.get(),
     });
 
     const value = expectOk(result);
@@ -63,6 +64,7 @@ describe("workflow read access", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       });
 
       const value = expectOk(result);
@@ -82,6 +84,7 @@ describe("workflow read access", () => {
       actorUserId: actor.userId,
       actorRole: actor.role,
       leadId: lead.id,
+      evaluatedAt: runtime.now.get(),
     });
 
     const error = expectErr(result);

@@ -17,7 +17,7 @@ export function createTokensRepo(db: DB) {
           requested_by_user_id: input.requestedByUserId,
           expires_at: input.expiresAt,
           used_at: null,
-          created_at: input.now,
+          created_at: input.createdAt,
         })
         .execute();
     },

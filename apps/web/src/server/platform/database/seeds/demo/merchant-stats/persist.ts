@@ -34,14 +34,14 @@ export async function persistDemoMerchantStats(
 
   await applySnapshot(db, {
     uploader: VALERIA,
-    now: daysBefore(context, 40),
+    uploadedAt: daysBefore(context, 40),
     cutAt: daysBefore(context, 51),
     merchants,
   });
 
   await applySnapshot(db, {
     uploader: VALERIA,
-    now: daysBefore(context, 1),
+    uploadedAt: daysBefore(context, 1),
     cutAt: daysBefore(context, 11),
     merchants,
   });
@@ -56,7 +56,7 @@ export async function persistDemoMerchantStats(
 
 interface SnapshotInput {
   uploader: UserId;
-  now: Date;
+  uploadedAt: Date;
   cutAt: Date;
   merchants: readonly MerchantSpec[];
 }
@@ -83,7 +83,7 @@ async function applySnapshot(
       signature_kind: "zip",
       scan_status: "clean",
       created_by_user_id: input.uploader,
-      created_at: input.now,
+      created_at: input.uploadedAt,
     })
     .returning("id")
     .executeTakeFirstOrThrow();
@@ -93,14 +93,18 @@ async function applySnapshot(
       file_asset_id: file.id,
       cut_at: input.cutAt,
       revision: 1,
-      uploaded_at: input.now,
+      uploaded_at: input.uploadedAt,
       state: "processing",
     })
     .returning("id")
     .executeTakeFirstOrThrow();
 
-  await stageGpvSnapshot(db, snapshotRow.id, parsed, input.now);
-  const issues = await validateGpvSnapshot(db, snapshotRow.id, input.now);
+  await stageGpvSnapshot(db, snapshotRow.id, parsed, input.uploadedAt);
+  const issues = await validateGpvSnapshot(
+    db,
+    snapshotRow.id,
+    input.uploadedAt,
+  );
   if (issues.blocking > 0) {
     throw new Error("demo_gpv_snapshot_requires_review");
   }
@@ -108,7 +112,7 @@ async function applySnapshot(
   const activated = await activateGpvSnapshot(db, {
     snapshotId: snapshotRow.id,
     activatedBy: input.uploader,
-    now: input.now,
+    activatedAt: input.uploadedAt,
   });
   if (!activated.ok) {
     throw new Error(activated.error.code ?? "gpv_snapshot_activation_failed");
@@ -139,7 +143,7 @@ async function persistTargets(
       effectiveFrom: merchant.saleMonth,
       projectedGpv: merchant.projectedGpv,
       setBy: VALERIA,
-      now: setAt,
+      operation: { operationAt: setAt },
     });
     if (!target.ok) {
       throw new Error(target.error.code ?? "merchant_target_seed_failed");

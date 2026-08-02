@@ -4,8 +4,8 @@ import {
 } from "~/server/notifications/expansion/plan-recipients";
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
+import { assembleNotificationPipeline } from "~/server/notifications/runtime";
 import type { NotificationIntent } from "~/server/notifications/types";
-import { assembleNotificationPipeline } from "~/server/notifications/ui/composition";
 import { createLogger } from "~/shared/observability/runtime-logger";
 import { isErr } from "~/shared/result";
 
@@ -21,9 +21,9 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
   const pipeline = assembleNotificationPipeline({
     db: runtime.ctx.db,
     messaging: messages.gateway,
-    now: () => runtime.now.get(),
     publicOrigin: "https://app.example.test",
     logger,
+    whatsappWebhookVerifyToken: "test-whatsapp-webhook-verify-token",
   });
 
   const queues = pipeline.createQueues("test-notifications");
@@ -74,9 +74,10 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
     messages,
     intents,
     deliveries,
-    appNotifications: pipeline.appNotifications,
-    enqueue: (intentsToEnqueue: NotificationIntent[], now?: Date) =>
-      pipeline.enqueue(intentsToEnqueue, now),
+    enqueue: (
+      intentsToEnqueue: NotificationIntent[],
+      now: Date = runtime.now.get(),
+    ) => pipeline.enqueue(intentsToEnqueue, now),
     planRecipients,
     planIntentRow,
     queues,

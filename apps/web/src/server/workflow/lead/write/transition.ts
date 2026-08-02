@@ -52,6 +52,12 @@ export function runLeadTransaction<O>(
     .transaction()
     .execute(async (tx): Promise<Result<O, DomainError>> => {
       const committed: CommittedLeadEvent[] = [];
+      // The transaction's own write context: same operation instant, executor
+      // swapped for the transaction handle.
+      const txScope: WorkflowWriteContext = {
+        executor: tx,
+        operationAt: scope.operationAt,
+      };
 
       const result = await body({
         tx,
@@ -65,7 +71,7 @@ export function runLeadTransaction<O>(
           return outcome;
         },
         appendFacts: async (events) => {
-          const outcome = await appendFacts(tx, events, scope.operationAt);
+          const outcome = await appendFacts(txScope, events);
           if (outcome.ok)
             committed.push(...zip(events, outcome.value.eventIds));
           return outcome;
@@ -75,7 +81,7 @@ export function runLeadTransaction<O>(
       if (isErr(result)) throw new LeadTransactionRollback(result.error);
 
       // Effects share the transaction with source events: no orphaned delivery.
-      await enqueueLeadEffects(tx, committed, scope.operationAt);
+      await enqueueLeadEffects(txScope, committed);
       return result;
     })
     .catch((error: unknown) => {

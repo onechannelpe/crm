@@ -1,11 +1,11 @@
 import "server-only";
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function getObservabilitySnapshot(

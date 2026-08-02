@@ -19,8 +19,8 @@ export interface ExtensionServiceDeps {
 export async function hasActiveAuthSession(
   repos: ExtensionRepos,
   authSessionId: string,
-  now: Date,
+  activeAsOf: Date,
 ): Promise<boolean> {
   const authSession = await repos.sessions.findById(authSessionId);
-  return authSession !== null && authSession.expires_at > now;
+  return authSession !== null && authSession.expires_at > activeAsOf;
 }

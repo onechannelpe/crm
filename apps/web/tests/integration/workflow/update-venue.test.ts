@@ -63,6 +63,7 @@ describe("update venue", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     const venueId = WorkflowVenueId.trust(seeded.venues[0].id);
@@ -89,6 +90,7 @@ describe("update venue", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expect(updated.venues[0]).toMatchObject({
@@ -112,6 +114,7 @@ describe("update venue", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expect(detail.lead.stage).toBe("LIVE");
@@ -142,6 +145,7 @@ describe("update venue", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expect(after.venues[0].tradeName).toBe(originalTradeName);

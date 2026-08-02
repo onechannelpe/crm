@@ -27,7 +27,7 @@ export function createAssetsRepo(db: DB) {
           scan_engine: null,
           scan_reference: null,
           created_by_user_id: input.createdByUserId,
-          created_at: input.now,
+          created_at: input.createdAt,
         })
         .returning("id")
         .executeTakeFirstOrThrow();

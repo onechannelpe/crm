@@ -1,9 +1,9 @@
 import { NotificationIntentId, type BranchId, type UserId } from "~/domain/ids";
 import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
 import type { NotificationIntent } from "~/server/notifications/types";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { LeadHistoryEventDraftFor } from "~/server/workflow/lead/domain/history";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 
 type CommittedStageChange = {
   event: LeadHistoryEventDraftFor<"workflow_stage_changed">;
@@ -75,10 +75,10 @@ export function deriveLeadStageNotifications(input: {
 // Reads the fresh lead row inside the same transaction, so the snapshot it
 // sees already reflects the transition that produced the event.
 export async function reactToStageChanges(
-  tx: DatabaseExecutor,
+  scope: WorkflowWriteContext,
   committed: CommittedLeadEvent[],
-  now: Date,
 ): Promise<void> {
+  const tx = scope.executor;
   const stageChanges = committed.filter(isCommittedStageChange);
   if (stageChanges.length === 0) return;
 
@@ -120,5 +120,5 @@ export async function reactToStageChanges(
     );
   }
 
-  await enqueueNotifications(tx, intents, now);
+  await enqueueNotifications(tx, intents, scope.operationAt);
 }

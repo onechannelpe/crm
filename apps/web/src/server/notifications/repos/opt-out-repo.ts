@@ -22,13 +22,13 @@ export interface NotificationOptOutRepo {
     category: NotificationCategory;
     channel: ExternalChannel;
     optedOut: boolean;
-    now: Date;
+    changedAt: Date;
   }): Promise<void>;
   muteChannel(input: {
     userId: UserId;
     channel: ExternalChannel;
     categories: readonly NotificationCategory[];
-    now: Date;
+    changedAt: Date;
   }): Promise<void>;
 }
 
@@ -62,7 +62,7 @@ export function createNotificationOptOutRepo(
       }));
     },
 
-    async setOptedOut({ userId, category, channel, optedOut, now }) {
+    async setOptedOut({ userId, category, channel, optedOut, changedAt }) {
       if (!optedOut) {
         await db
           .deleteFrom("notification_opt_outs")
@@ -75,14 +75,14 @@ export function createNotificationOptOutRepo(
 
       await db
         .insertInto("notification_opt_outs")
-        .values({ user_id: userId, category, channel, created_at: now })
+        .values({ user_id: userId, category, channel, created_at: changedAt })
         .onConflict((oc) =>
           oc.columns(["user_id", "category", "channel"]).doNothing(),
         )
         .execute();
     },
 
-    async muteChannel({ userId, channel, categories, now }) {
+    async muteChannel({ userId, channel, categories, changedAt }) {
       if (categories.length === 0) return;
 
       await db
@@ -92,7 +92,7 @@ export function createNotificationOptOutRepo(
             user_id: userId,
             category,
             channel,
-            created_at: now,
+            created_at: changedAt,
           })),
         )
         .onConflict((oc) =>

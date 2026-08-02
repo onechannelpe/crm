@@ -20,7 +20,7 @@ export async function deleteLeadCommand(
 
     const transition = deleteLead(state, {
       actor: input.actor,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
     if (!transition.ok) return transition;
 

@@ -4,10 +4,10 @@ import {
 } from "~/server/auth/google/google-oauth-cookies";
 import { getClientIp } from "~/server/auth/password/client-ip";
 import { appendSessionCookie } from "~/server/auth/session/cookies";
-import { application } from "~/server/platform/composition/application";
+import { application } from "~/server/composition/application";
 import {
   getRequestContext,
-  getRequestInstant,
+  getRequestOperation,
 } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
@@ -45,7 +45,7 @@ export async function GET(event: ApiRequestEvent): Promise<Response> {
       userAgent,
     },
     getRequestContext().publicOrigin,
-    getRequestInstant(),
+    getRequestOperation(),
   );
   if (isErr(result)) {
     if (result.error.kind === "bad_request") {

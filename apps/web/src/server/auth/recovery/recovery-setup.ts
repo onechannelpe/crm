@@ -29,16 +29,19 @@ export function regenerateRecoverySetup(
       user.id,
       regeneratedAt,
     );
-    const sessionToken = await replaceSession(repos, {
-      current: ctx.actor,
-      user,
-      sessionClass: "recovery_setup",
-      strongAuthMethod: ctx.actor.strongAuthMethod,
-      strongAuthAt: ctx.actor.strongAuthAt,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
-      issuedAt: regeneratedAt,
-    });
+    const sessionToken = await replaceSession(
+      repos,
+      {
+        current: ctx.actor,
+        user,
+        sessionClass: "recovery_setup",
+        strongAuthMethod: ctx.actor.strongAuthMethod,
+        strongAuthAt: ctx.actor.strongAuthAt,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      },
+      ctx,
+    );
 
     return Ok({
       recoveryCodes,
@@ -66,16 +69,19 @@ export async function acknowledgeRecoverySetup(
     );
     if (!acknowledged) return Err(fail("invalid_input"));
 
-    const sessionToken = await replaceSession(repos, {
-      current: ctx.actor,
-      user,
-      sessionClass: "app",
-      strongAuthMethod: ctx.actor.strongAuthMethod,
-      strongAuthAt: ctx.actor.strongAuthAt,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
-      issuedAt: acknowledgedAt,
-    });
+    const sessionToken = await replaceSession(
+      repos,
+      {
+        current: ctx.actor,
+        user,
+        sessionClass: "app",
+        strongAuthMethod: ctx.actor.strongAuthMethod,
+        strongAuthAt: ctx.actor.strongAuthAt,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      },
+      ctx,
+    );
 
     return Ok({
       redirectTo: getDefaultAppPath(user.role),

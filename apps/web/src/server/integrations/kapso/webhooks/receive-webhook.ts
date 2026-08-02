@@ -4,6 +4,7 @@ import { notify } from "~/server/platform/database/notify";
 import type { WhatsAppInboundEventsTable } from "~/server/platform/database/schema/modules/notifications.types";
 import type { Database } from "~/server/platform/database/types";
 import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import {
@@ -26,15 +27,15 @@ export type KapsoWebhookReceipt = "accepted" | "duplicate" | "ignored";
 function toEventRows(
   envelope: KapsoEnvelope,
   idempotencyKey: string,
-  now: Date,
+  receivedAt: Date,
 ): Insertable<WhatsAppInboundEventsTable>[] {
   const base = {
     delivery_key: idempotencyKey,
     attempt_count: 0,
     max_attempts: DEFAULT_MAX_ATTEMPTS,
-    claimable_at: now,
+    claimable_at: receivedAt,
     lease_owner: null,
-    received_at: now,
+    received_at: receivedAt,
   };
 
   const accepted = envelope.accepted.map((event) => ({
@@ -59,12 +60,12 @@ function toEventRows(
     phone_number_id: event.phoneNumberId,
     sender_address: event.senderAddress,
     body: event.body,
-    provider_timestamp: event.providerTimestamp ?? now,
+    provider_timestamp: event.providerTimestamp ?? receivedAt,
     payload_json: event.payloadJson,
     queue_state: "failed" as const,
     outcome: event.reason,
     error_message: event.reason,
-    completed_at: now,
+    completed_at: receivedAt,
   }));
 
   return [...accepted, ...quarantined];
@@ -77,8 +78,8 @@ export async function receiveKapsoWebhook(
     eventType: string | null;
     payloadVersion: string | null;
     rawBody: string;
-    now: Date;
   },
+  operation: OperationContext,
 ): Promise<Result<KapsoWebhookReceipt, ReceiptError>> {
   const idempotencyKey = input.idempotencyKey?.trim();
 
@@ -102,7 +103,11 @@ export async function receiveKapsoWebhook(
     return envelope;
   }
 
-  const rows = toEventRows(envelope.value, idempotencyKey, input.now);
+  const rows = toEventRows(
+    envelope.value,
+    idempotencyKey,
+    operation.operationAt,
+  );
 
   return db.transaction().execute(async (trx) => {
     const inserted = await trx
@@ -113,7 +118,7 @@ export async function receiveKapsoWebhook(
         payload_version: payloadVersion,
         is_batch: envelope.value.isBatch,
         payload_json: envelope.value.payloadJson,
-        received_at: input.now,
+        received_at: operation.operationAt,
       })
       .onConflict((oc) => oc.column("idempotency_key").doNothing())
       .returning("idempotency_key")

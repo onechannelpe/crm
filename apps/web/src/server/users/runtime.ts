@@ -6,9 +6,9 @@ import type { Phone } from "~/domain/phone/pe-mobile";
 import type { SessionService } from "~/server/auth/session/session.service";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { AppContext } from "~/server/platform/action/context";
-import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import type { UploadsConfig } from "~/server/platform/config/env";
 import { createBlobStore } from "~/server/platform/files/blob-store";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import type {
   ChangeMemberRoleCommand,
   MemberIdCommand,
@@ -91,7 +91,7 @@ export function createUsersRuntime(
     const claimResult = await userChannelAddressesRepo.claimWhatsAppAddress({
       userId,
       address: phone,
-      now: claimedAt,
+      claimedAt,
     });
 
     if (claimResult.kind === "already_claimed") {

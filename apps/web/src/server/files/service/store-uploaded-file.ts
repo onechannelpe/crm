@@ -33,7 +33,7 @@ export async function storeUploadedFile(
 
   const storageKey = buildStorageKey({
     purpose: input.purpose,
-    now,
+    storedAt: now,
     extension: staticValidation.extension,
   });
   const inspector = createUploadStreamInspector(
@@ -77,7 +77,7 @@ export async function storeUploadedFile(
       signatureKind: metadata.signatureKind,
       scanStatus: "clean",
       createdByUserId: ctx.actor.userId,
-      now,
+      createdAt: now,
     });
 
     const fileAsset = await deps.repo.assets.findById(fileAssetId);

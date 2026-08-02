@@ -1,6 +1,6 @@
 import "server-only";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function getHeaderNotifications() {

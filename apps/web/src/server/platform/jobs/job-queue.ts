@@ -17,7 +17,7 @@ function errorMessage(error: unknown): string {
 function resolve(
   job: QueueJobBase,
   settlement: Settlement,
-  now: Date,
+  settledAt: Date,
 ): SettleOutcome {
   if (settlement.kind !== "retry") {
     return settlement;
@@ -33,7 +33,7 @@ function resolve(
 
   return {
     kind: "retry",
-    claimableAt: nextClaimableAt(job.attempt_count, now),
+    claimableAt: nextClaimableAt(job.attempt_count, settledAt),
     reason: settlement.reason,
     patch: settlement.patch,
   };
@@ -53,10 +53,10 @@ export function createJobQueue<TJob extends QueueJobBase>(
   function settle(
     jobId: TJob["id"],
     outcome: SettleOutcome,
-    now: Date,
+    settledAt: Date,
   ): Promise<boolean> {
     if (outcome.kind === "done") {
-      return store.markDone(jobId, workerId, now, outcome.patch);
+      return store.markDone(jobId, workerId, settledAt, outcome.patch);
     }
 
     if (outcome.kind === "retry") {
@@ -72,7 +72,7 @@ export function createJobQueue<TJob extends QueueJobBase>(
     return store.markFailed(
       jobId,
       workerId,
-      now,
+      settledAt,
       outcome.reason,
       outcome.patch,
     );
@@ -110,7 +110,6 @@ export function createJobQueue<TJob extends QueueJobBase>(
     const context: JobContext = {
       operationAt,
       abortSignal: controller.signal,
-      workerId,
     };
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     const renewalInterval = setInterval(() => {

@@ -339,7 +339,7 @@ export function createLeadFilesService(deps: LeadFilesDeps) {
         leadId: input.leadId,
         fileAssetId: storedFile.value.id,
         uploadedByUserId: input.ctx.actor.userId,
-        now: createdAt,
+        createdAt,
       });
 
       return Ok(
@@ -419,7 +419,7 @@ export function createLeadFilesService(deps: LeadFilesDeps) {
         leadId: input.leadId,
         fileAssetId: storedFile.value.id,
         uploadedByUserId: input.ctx.actor.userId,
-        now: input.ctx.operationAt,
+        createdAt: input.ctx.operationAt,
       });
 
       return Ok(mapRateRevisionFile(stagedFile));

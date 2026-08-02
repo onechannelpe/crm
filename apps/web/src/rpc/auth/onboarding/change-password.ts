@@ -1,8 +1,8 @@
 import type { OnboardingSnapshot } from "~/contracts/auth";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { validationFail } from "~/server/platform/action/input-reader";
 import { parseObject } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 
 export async function changeOnboardingPassword(input: {
   password: unknown;

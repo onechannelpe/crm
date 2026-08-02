@@ -5,8 +5,8 @@ import type { PasskeyEnrollmentChallenge } from "~/domain/auth/passkey/types";
 import { fail, type DomainError } from "~/domain/errors";
 import { WebauthnChallengeId } from "~/domain/ids";
 import { setSessionCookie } from "~/server/auth/session/cookies";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export async function beginPasskeyEnrollment(): Promise<PasskeyEnrollmentChallenge> {

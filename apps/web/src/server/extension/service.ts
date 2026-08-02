@@ -1,3 +1,5 @@
+import type { OperationContext } from "~/server/platform/operation/context";
+
 import {
   ingestRuntimeEvent,
   listTeamExecutiveStatuses,
@@ -28,59 +30,65 @@ export function createExtensionService(
   const uow = deps.uow;
 
   return {
-    createHandoffToken: (input: CreateHandoffTokenInput, now: Date) =>
+    createHandoffToken: (
+      input: CreateHandoffTokenInput,
+      operation: OperationContext,
+    ) =>
       createHandoffToken(
         {
           repos,
-          now,
           uow,
+          operationAt: operation.operationAt,
         },
         input,
       ),
 
     claimInstallationSession: (
       input: ClaimInstallationSessionInput,
-      now: Date,
+      operation: OperationContext,
     ) =>
       claimInstallationSession(
         {
           repos,
-          now,
           uow,
+          operationAt: operation.operationAt,
         },
         input,
       ),
 
     refreshInstallationSession: (
       input: RefreshInstallationSessionInput,
-      now: Date,
+      operation: OperationContext,
     ) =>
       refreshInstallationSession(
         {
           repos,
-          now,
+          operationAt: operation.operationAt,
         },
         input,
       ),
 
-    ingestRuntimeEvent: (input: IngestRuntimeEventInput, now: Date) =>
+    ingestRuntimeEvent: (
+      input: IngestRuntimeEventInput,
+      operation: OperationContext,
+    ) =>
       ingestRuntimeEvent(
         {
           repos,
-          now,
           uow,
+          operationAt: operation.operationAt,
         },
         input,
       ),
 
     listTeamExecutiveStatuses: (
       input: ListTeamExecutiveStatusesInput,
-      now: Date,
+      operation: OperationContext,
     ) =>
       listTeamExecutiveStatuses(
         {
           repos,
-          now,
+          operationAt: operation.operationAt,
         },
         input,
       ),

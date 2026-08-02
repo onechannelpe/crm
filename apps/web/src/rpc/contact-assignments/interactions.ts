@@ -1,12 +1,12 @@
 import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignments/vocabulary";
 import { ContactAssignmentId, OrganizationPersonId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 
 export async function completeContactAssignmentCall(
   input: unknown,
@@ -30,14 +30,16 @@ export async function completeContactAssignmentCall(
       contactId,
     }),
 
-    execute: ({ actor, operationAt: now }, command) =>
-      application.contactAssignments.completeCall({
-        actorUserId: actor.userId,
-        assignmentId: command.assignmentId,
-        contactId: command.contactId,
-        outcome: command.outcome,
-        notes: command.notes,
-        at: now,
-      }),
+    execute: (ctx, command) =>
+      application.contactAssignments.completeCall(
+        {
+          actorUserId: ctx.actor.userId,
+          assignmentId: command.assignmentId,
+          contactId: command.contactId,
+          outcome: command.outcome,
+          notes: command.notes,
+        },
+        ctx,
+      ),
   });
 }

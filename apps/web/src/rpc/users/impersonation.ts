@@ -6,12 +6,12 @@ import {
   setImpersonatorCookie,
   setSessionCookie,
 } from "~/server/auth/session/cookies";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { isErr, Ok } from "~/shared/result";
 
 export async function startImpersonation(

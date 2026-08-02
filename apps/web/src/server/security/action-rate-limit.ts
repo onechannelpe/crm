@@ -7,6 +7,7 @@ import { getClientIp } from "~/server/auth/password/client-ip";
 import { hashAuthKey } from "~/server/auth/password/key-hash";
 import type { EventsRepo } from "~/server/event-logs/events-repo";
 import { throwDomain } from "~/server/platform/action/domain-error";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 
 interface ActionRateLimitPolicy {
@@ -59,7 +60,7 @@ async function blockWithAudit(params: {
   limit: number;
   windowMs: number;
   windowStartedAt: Date;
-  now: Date;
+  operation: OperationContext;
   deps: RateLimitDeps;
 }): Promise<never> {
   const {
@@ -69,10 +70,11 @@ async function blockWithAudit(params: {
     limit,
     windowMs,
     windowStartedAt,
-    now,
+    operation,
     deps,
   } = params;
-  const retryAfterMs = windowMs - (now.getTime() - windowStartedAt.getTime());
+  const retryAfterMs =
+    windowMs - (operation.operationAt.getTime() - windowStartedAt.getTime());
   const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
 
   // RFC 6585: a 429 must carry Retry-After when the reset is known.
@@ -87,7 +89,7 @@ async function blockWithAudit(params: {
     entityId: auditEntityId("user", userId),
     actorUserId: userId,
     payload: { actionName, scope, limit, windowMs, retryAfterMs },
-    occurredAt: now,
+    occurredAt: operation.operationAt,
   });
 
   throwDomain(
@@ -101,7 +103,7 @@ export async function checkActionRateLimit(
   actionName: RateLimitedAction,
   userId: UserId,
   deps: RateLimitDeps,
-  now: Date,
+  operation: OperationContext,
   ip: string = resolveRequestIp(),
 ): Promise<void> {
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
@@ -110,7 +112,7 @@ export async function checkActionRateLimit(
   // would consume IP budget shared with legitimate users behind the same NAT.
   const userSnapshot = await deps.actionRateLimits.checkAndIncrement(
     buildUserKey(actionName, userId),
-    now,
+    operation.operationAt,
     policy.windowMs,
   );
 
@@ -122,7 +124,7 @@ export async function checkActionRateLimit(
       limit: policy.userLimit,
       windowMs: policy.windowMs,
       windowStartedAt: userSnapshot.window_started_at,
-      now,
+      operation,
       deps,
     });
   }
@@ -130,7 +132,7 @@ export async function checkActionRateLimit(
   // IP counter runs only when the user is within their personal budget.
   const ipSnapshot = await deps.actionRateLimits.checkAndIncrement(
     buildIpKey(actionName, ip),
-    now,
+    operation.operationAt,
     policy.windowMs,
   );
 
@@ -142,7 +144,7 @@ export async function checkActionRateLimit(
       limit: policy.sourceIpLimit,
       windowMs: policy.windowMs,
       windowStartedAt: ipSnapshot.window_started_at,
-      now,
+      operation,
       deps,
     });
   }

@@ -1,8 +1,8 @@
 import { fail } from "~/domain/errors";
 import { setSessionCookie } from "~/server/auth/session/cookies";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
-import { Err, isErr, Ok } from "~/shared/result";
+import { Err, Ok } from "~/shared/result";
 
 export async function beginTotpEnrollment(): Promise<{
   otpauthUri: string;

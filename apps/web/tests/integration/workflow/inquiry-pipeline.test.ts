@@ -34,7 +34,7 @@ describe("inquiry pipeline", () => {
   function ports() {
     return {
       executor: runtime.ctx.db,
-      now: runtime.now.get(),
+      operationAt: runtime.now.get(),
     };
   }
 
@@ -101,6 +101,7 @@ describe("inquiry pipeline", () => {
     const inquiryId = await createPendingInquiry();
     await importAnswer();
 
+    const ports = registerLeadPorts(runtime);
     const registered = await registerLead(
       {
         actor: actorBy("execOne"),
@@ -115,7 +116,8 @@ describe("inquiry pipeline", () => {
         settlementBank: "BCP",
         posCount: 1,
       },
-      registerLeadPorts(runtime),
+      ports,
+      { identity: ports.identity },
     );
     if (!registered.ok) {
       throw new Error(`register failed: ${registered.error.code}`);
@@ -140,6 +142,7 @@ describe("inquiry pipeline", () => {
   it("blocks a new inquiry once the executive holds an active lead for the RUC", async () => {
     const inquiryId = await createPendingInquiry();
     await importAnswer();
+    const secondPorts = registerLeadPorts(runtime);
     await registerLead(
       {
         actor: actorBy("execOne"),
@@ -154,7 +157,8 @@ describe("inquiry pipeline", () => {
         settlementBank: "BCP",
         posCount: 1,
       },
-      registerLeadPorts(runtime),
+      secondPorts,
+      { identity: secondPorts.identity },
     );
 
     const blocked = await createInquiry(

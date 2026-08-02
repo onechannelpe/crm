@@ -1,11 +1,11 @@
 import "server-only";
 import type { CurrentUserView } from "~/contracts/auth";
 import { AuthLoginFlowId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 import {
   getRequestContext,
-  getRequestInstant,
+  getRequestOperation,
 } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
@@ -16,7 +16,7 @@ export async function getLoginFlow(flowId: string) {
   return application.auth.login.getFlow(
     parsedFlowId.value,
     getRequestContext().publicOrigin,
-    getRequestInstant(),
+    getRequestOperation(),
   );
 }
 

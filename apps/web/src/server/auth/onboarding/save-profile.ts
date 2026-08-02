@@ -3,13 +3,15 @@ import { fail, type DomainError } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
 import type { Phone } from "~/domain/phone/pe-mobile";
 import type { AuthSetupContext } from "~/server/auth/infrastructure/setup-context";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, type Result } from "~/shared/result";
 
 import { loadOnboardingSnapshot } from "./snapshot";
 
 export function saveOnboardingProfile(
   deps: AuthSetupContext,
-  input: { userId: UserId; phone: Phone; now: Date },
+  input: { userId: UserId; phone: Phone },
+  operation: OperationContext,
 ): Promise<Result<OnboardingSnapshot, DomainError>> {
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(input.userId);
@@ -19,7 +21,7 @@ export function saveOnboardingProfile(
     const claimed = await repos.userChannelAddresses.claimWhatsAppAddress({
       userId: input.userId,
       address: input.phone,
-      now: input.now,
+      claimedAt: operation.operationAt,
     });
     if (claimed.kind === "already_claimed") {
       return Err(fail("phone_in_use"));

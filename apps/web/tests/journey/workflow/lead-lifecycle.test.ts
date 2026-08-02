@@ -41,6 +41,7 @@ describe("lead lifecycle journey", () => {
   it("moves a registered lead through pricing and setup into fulfillment", async () => {
     const executive = actorBy("execOne");
     const backOffice = actorBy("backOne");
+    const ports = registerLeadPorts(runtime);
     const registered = expectOk(
       await registerLead(
         {
@@ -49,7 +50,8 @@ describe("lead lifecycle journey", () => {
           lineOfBusiness: "Retail",
           ...withMerchantDefaults(undefined),
         },
-        registerLeadPorts(runtime),
+        ports,
+        { identity: ports.identity },
       ),
     );
     const lead = {
@@ -129,6 +131,7 @@ describe("lead lifecycle journey", () => {
         actorUserId: executive.userId,
         actorRole: executive.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expectOk(
@@ -155,6 +158,7 @@ describe("lead lifecycle journey", () => {
         actorUserId: executive.userId,
         actorRole: executive.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expect(fulfillment.lead.stage).toBe("FULFILLMENT");

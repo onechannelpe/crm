@@ -6,6 +6,7 @@ import {
 } from "~/domain/time/calendar-date";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export interface SetTargetInput {
@@ -13,7 +14,7 @@ export interface SetTargetInput {
   effectiveFrom: CalendarMonth;
   projectedGpv: number | null;
   setBy: UserId;
-  now: Date;
+  operation: OperationContext;
 }
 
 // Targets are effective-dated. A later revision never changes an earlier month.
@@ -50,13 +51,13 @@ async function setTargetInTransaction(
       effective_from: calendarMonthStart(input.effectiveFrom),
       monthly_target_gpv: input.projectedGpv,
       set_by: input.setBy,
-      set_at: input.now,
+      set_at: input.operation.operationAt,
     })
     .onConflict((oc) =>
       oc.columns(["organization_id", "effective_from"]).doUpdateSet({
         monthly_target_gpv: input.projectedGpv,
         set_by: input.setBy,
-        set_at: input.now,
+        set_at: input.operation.operationAt,
       }),
     )
     .execute();
@@ -70,7 +71,7 @@ async function setTargetInTransaction(
       effectiveFrom: input.effectiveFrom,
       projectedGpv: input.projectedGpv,
     },
-    occurredAt: input.now,
+    occurredAt: input.operation.operationAt,
   });
 
   return Ok(undefined);

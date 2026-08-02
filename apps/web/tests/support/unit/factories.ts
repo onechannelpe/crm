@@ -31,7 +31,7 @@ export function makeAppContext(
     ipAddress: "127.0.0.1",
     userAgent: "vitest",
     publicOrigin: "http://localhost:3000",
-    now: () => new Date(1_700_000_000_000),
+    operationAt: new Date(1_700_000_000_000),
     ...overrides,
   };
 }

@@ -1,11 +1,11 @@
 import { fail } from "~/domain/errors";
 import { parsePhone } from "~/domain/phone/pe-mobile";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Err, isErr, Ok } from "~/shared/result";
 
 export async function updateUserProfile(

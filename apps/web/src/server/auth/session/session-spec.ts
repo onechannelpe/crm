@@ -77,7 +77,7 @@ export interface SessionUsersPort {
   ): Promise<
     { id: UserId; is_active: boolean; expires_at: Date | null } | undefined
   >;
-  deactivateIfExpired(userId: UserId, now: Date): Promise<boolean>;
+  deactivateIfExpired(userId: UserId, expiredAsOf: Date): Promise<boolean>;
 }
 
 export interface SessionEventPort {

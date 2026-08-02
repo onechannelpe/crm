@@ -1,12 +1,10 @@
 import "server-only";
-import { createCompanyRegistryRepo } from "~/server/client-search/repository";
-import { createEnrichmentCommand } from "~/server/client-search/request";
 import type { FileRepos } from "~/server/files/service/contracts";
 import type { FileStorage } from "~/server/files/storage";
-import type { EngineClient } from "~/server/integrations/engine/client";
-import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
-import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
+import type { OrganizationEnrichment } from "~/server/organization/enrichment";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { createInquiry } from "~/server/workflow/inquiry/create-inquiry";
 import { listInquiriesForExecutive } from "~/server/workflow/inquiry/inquiry-queries";
 import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
@@ -58,36 +56,18 @@ function bindWorkflowCommand<TInput, TOutput>(
   executor: ServerInfrastructure["db"],
   command: (input: TInput, scope: WorkflowWriteContext) => TOutput,
 ) {
-  return (input: TInput, operationAt: Date): TOutput =>
-    command(input, { executor, operationAt });
+  return (input: TInput, operation: OperationContext): TOutput =>
+    command(input, { executor, operationAt: operation.operationAt });
 }
 
 export function createWorkflowRuntime(
   serverInfrastructure: ServerInfrastructure,
-  engine: EngineClient,
   files: { repo: FileRepos; storage: FileStorage },
+  organizationEnrichment: OrganizationEnrichment,
+  enrichmentQueue: OrganizationEnrichmentQueue,
 ) {
-  const organizationEnrichment = createOrganizationEnrichment(engine);
   const repos = createWorkflowRepos(serverInfrastructure.db);
   const leadRepo = createLeadRepo(serverInfrastructure.db);
-
-  const enrichmentCommand = createEnrichmentCommand(
-    createCompanyRegistryRepo(serverInfrastructure.db),
-  );
-
-  const enrichmentQueue: OrganizationEnrichmentQueue = {
-    enqueueRucVerification: async (
-      ruc,
-      requestedByUserId,
-      now,
-    ): Promise<void> => {
-      await enrichmentCommand.enqueueRequest(
-        { kind: "ruc", value: ruc },
-        requestedByUserId,
-        now,
-      );
-    },
-  };
 
   const command = <TInput, TOutput>(
     handler: (input: TInput, scope: WorkflowWriteContext) => TOutput,
@@ -123,52 +103,49 @@ export function createWorkflowRuntime(
       registerFulfillmentSale: command(registerUnitSaleCommand),
       registerLead: (
         input: Parameters<typeof registerLead>[0],
-        operationAt: Date,
+        operation: OperationContext,
       ) =>
         registerLead(
           input,
-          { executor: serverInfrastructure.db, operationAt },
           {
-            identity: organizationEnrichment,
+            executor: serverInfrastructure.db,
+            operationAt: operation.operationAt,
           },
+          { identity: organizationEnrichment },
         ),
       rejectFulfillmentStep: command(rejectFulfillmentStepCommand),
       removeFromFavorites: command(removeFromFavoritesCommand),
       requestRateRevision: command(requestRateRevisionCommand),
       requestSunatRefresh: (
         input: Parameters<typeof requestSunatRefresh>[0],
-        operationAt: Date,
+        operation: OperationContext,
       ) =>
-        requestSunatRefresh(input, {
-          leads: repos.leads,
-          enrichmentQueue,
-          now: operationAt,
-        }),
+        requestSunatRefresh(
+          input,
+          { leads: repos.leads, enrichmentQueue },
+          operation,
+        ),
       restartQuotation: command(restartQuotationCommand),
       reviewLead: command(reviewLeadCommand),
       saveDigitalPolicy: command(saveDigitalPolicyCommand),
       updatePendingQuotationPolicy: (
         input: Parameters<typeof updatePendingQuotationPolicy>[0],
-        operationAt: Date,
+        operation: OperationContext,
       ) =>
         updatePendingQuotationPolicy(
           input,
           repos.pendingQuotationPolicies,
-          operationAt,
+          operation,
         ),
       updateRateProposalPolicy: (
         input: Parameters<typeof updateRateProposalPolicy>[0],
-        operationAt: Date,
+        operation: OperationContext,
       ) =>
-        updateRateProposalPolicy(
-          input,
-          repos.rateProposalPolicies,
-          operationAt,
-        ),
+        updateRateProposalPolicy(input, repos.rateProposalPolicies, operation),
       updateSourcingPolicy: (
         input: Parameters<typeof updateSourcingPolicy>[0],
-        operationAt: Date,
-      ) => updateSourcingPolicy(input, repos.sourcingPolicies, operationAt),
+        operation: OperationContext,
+      ) => updateSourcingPolicy(input, repos.sourcingPolicies, operation),
       updateVenue: command(updateVenueCommand),
       validateFulfillmentPayment: command(validateFulfillmentPaymentCommand),
     },
@@ -182,8 +159,10 @@ export function createWorkflowRuntime(
           organizationEnrichment,
           input,
         ),
-      getLeadDetail: (input: Parameters<typeof getLeadDetail>[1]) =>
-        getLeadDetail(repos, input),
+      getLeadDetail: (
+        input: Parameters<typeof getLeadDetail>[1],
+        operation: OperationContext,
+      ) => getLeadDetail(repos, input, operation),
       getPendingQuotationPolicy: (
         input: Parameters<typeof getPendingQuotationPolicy>[1],
       ) =>
@@ -209,8 +188,10 @@ export function createWorkflowRuntime(
       listInquiriesForExecutive: (
         userId: Parameters<typeof listInquiriesForExecutive>[1],
       ) => listInquiriesForExecutive(serverInfrastructure.db, userId),
-      listLeads: (input: Parameters<typeof listLeads>[1]) =>
-        listLeads({ leads: repos.leadQueries }, input),
+      listLeads: (
+        input: Parameters<typeof listLeads>[1],
+        operation: OperationContext,
+      ) => listLeads({ leads: repos.leadQueries }, input, operation),
       pendingQuotationCount: async (
         userId: Parameters<
           typeof repos.leads.countPendingQuotationDecisions
@@ -218,10 +199,13 @@ export function createWorkflowRuntime(
         branchId: Parameters<
           typeof repos.pendingQuotationPolicies.findByBranchId
         >[0],
-        evaluatedAt: Date,
+        operation: OperationContext,
       ) => {
         const [count, branchPolicy] = await Promise.all([
-          repos.leads.countPendingQuotationDecisions(userId, evaluatedAt),
+          repos.leads.countPendingQuotationDecisions(
+            userId,
+            operation.operationAt,
+          ),
           repos.pendingQuotationPolicies.findByBranchId(branchId),
         ]);
         const { limit } = resolvePendingQuotationPolicy({ branchPolicy });

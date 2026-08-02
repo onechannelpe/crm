@@ -12,15 +12,23 @@ export function createSecurityTestKit(ctx: TestDbContext) {
       actionName: keyof typeof ACTION_RATE_LIMIT_POLICY,
       userId: UserId,
       ipAddress: string,
+      now: Date = new Date(),
     ) {
       const { userLimit } = ACTION_RATE_LIMIT_POLICY[actionName];
       for (let index = 0; index < userLimit; index += 1) {
-        await checkActionRateLimit(actionName, userId, ctx.repos, ipAddress);
+        await checkActionRateLimit(
+          actionName,
+          userId,
+          ctx.repos,
+          now,
+          ipAddress,
+        );
       }
     },
     async consumeIpLimit(
       actionName: keyof typeof ACTION_RATE_LIMIT_POLICY,
       ipAddress: string,
+      now: Date = new Date(),
     ) {
       const { sourceIpLimit } = ACTION_RATE_LIMIT_POLICY[actionName];
       const userIds = [
@@ -35,6 +43,7 @@ export function createSecurityTestKit(ctx: TestDbContext) {
           actionName,
           userIds[index % userIds.length],
           ctx.repos,
+          now,
           ipAddress,
         );
       }

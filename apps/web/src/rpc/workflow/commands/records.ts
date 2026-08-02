@@ -6,12 +6,12 @@ import {
   LEAD_PRIORITIES,
 } from "~/contracts/workflow/vocabulary";
 import { UserId, WorkflowInquiryId, WorkflowLeadId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
 import { isErr, Ok } from "~/shared/result";
 
@@ -42,10 +42,10 @@ export async function requestLeadCreation(input: unknown) {
         posCount: r.posInt("posCount"),
       })),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.registerLead(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
@@ -72,10 +72,10 @@ export async function requestEditCommercialScope(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.editCommercialScope(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
@@ -100,10 +100,10 @@ export async function requestSaveDigitalPolicy(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.saveDigitalPolicy(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
@@ -128,10 +128,10 @@ export async function requestRecordRepLegal(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.recordRepLegal(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
@@ -153,10 +153,10 @@ export async function requestLeadReview(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.reviewLead(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
@@ -170,10 +170,10 @@ export async function requestQuotationRestart(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, { leadId }) =>
+    execute: (ctx, { leadId }) =>
       application.workflow.commands.restartQuotation(
-        { actor: workflowActor(actor), leadId },
-        now,
+        { actor: workflowActor(ctx.actor), leadId },
+        ctx,
       ),
   });
 }
@@ -193,14 +193,14 @@ export async function requestLeadReassignment(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.reassignLead(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           leadId: payload.leadId,
           toExecutiveId: payload.newExecutiveId,
         },
-        now,
+        ctx,
       ),
   });
 }
@@ -214,13 +214,13 @@ export async function requestAddLeadToFavorites(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: async ({ actor, operationAt: now }, { leadId }) => {
+    execute: async (ctx, { leadId }) => {
       const result = await application.workflow.commands.addToFavorites(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           leadId,
         },
-        now,
+        ctx,
       );
 
       if (isErr(result)) {
@@ -241,13 +241,13 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: async ({ actor, operationAt: now }, { leadId }) => {
+    execute: async (ctx, { leadId }) => {
       const result = await application.workflow.commands.removeFromFavorites(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           leadId,
         },
-        now,
+        ctx,
       );
 
       if (isErr(result)) {
@@ -268,13 +268,13 @@ export async function requestLeadDeletion(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, { leadId }) =>
+    execute: (ctx, { leadId }) =>
       application.workflow.commands.deleteLead(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           leadId,
         },
-        now,
+        ctx,
       ),
   });
 }
@@ -288,13 +288,13 @@ export async function requestLeadSunatRefresh(input: unknown) {
     parse: () => parseLeadRef(input),
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, { leadId }) =>
+    execute: (ctx, { leadId }) =>
       application.workflow.commands.requestSunatRefresh(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           leadId,
         },
-        now,
+        ctx,
       ),
   });
 }

@@ -44,7 +44,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
 
     async findLatestPendingByBranch(
       branchId: BranchId,
-      now: Date,
+      activeAsOf: Date,
     ): Promise<PendingInviteWithUser[]> {
       return db
         .selectFrom("user_invites")
@@ -69,7 +69,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         ])
         .where("user_invites.branch_id", "=", branchId)
         .where("user_invites.status", "=", "pending")
-        .where("user_invites.expires_at", ">", now)
+        .where("user_invites.expires_at", ">", activeAsOf)
         .orderBy("user_invites.created_at", "desc")
         .execute();
     },
@@ -82,7 +82,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    findPendingByToken(token: string, now: Date) {
+    findPendingByToken(token: string, activeAsOf: Date) {
       return db
         .selectFrom("user_invites")
         .innerJoin("users", "users.id", "user_invites.user_id")
@@ -105,7 +105,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         ])
         .where("user_invites.token", "=", token)
         .where("user_invites.status", "=", "pending")
-        .where("user_invites.expires_at", ">", now)
+        .where("user_invites.expires_at", ">", activeAsOf)
         .executeTakeFirst();
     },
 

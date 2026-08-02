@@ -67,6 +67,6 @@ export interface FileServiceApi {
   executeDownload: (
     tokenRaw: string,
     deps: ExecuteDownloadDeps,
-    now: Date,
+    activeAsOf: Date,
   ) => Promise<Result<DownloadReady, DomainError>>;
 }

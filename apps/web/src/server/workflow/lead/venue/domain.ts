@@ -19,7 +19,7 @@ export function createVenue(
     actor: Actor;
     venueId: WorkflowVenueId;
     tradeName: string;
-    now: Date;
+    occurredAt: Date;
   },
 ): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("create-venue", input.actor, state);
@@ -32,7 +32,7 @@ export function createVenue(
       eventType: "venue_added",
       actorUserId: input.actor.userId,
       payload: { venueId: input.venueId, tradeName: input.tradeName },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ]);
 }
@@ -43,7 +43,7 @@ export function updateVenue(
     actor: Actor;
     venueId: WorkflowVenueId;
     tradeName: string;
-    now: Date;
+    occurredAt: Date;
   },
 ): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("update-venue", input.actor, state);
@@ -56,7 +56,7 @@ export function updateVenue(
       eventType: "venue_updated",
       actorUserId: input.actor.userId,
       payload: { venueId: input.venueId, tradeName: input.tradeName },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ]);
 }

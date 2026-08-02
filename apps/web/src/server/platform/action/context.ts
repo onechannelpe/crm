@@ -3,12 +3,9 @@ import { getRequestContext } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import type { OperationContext } from "~/server/platform/operation/context";
 
+/** One server function call. Its `operationAt` is the request's instant. */
 export interface AppContext extends OperationContext {
   actor: AuthSession;
-  /**
-   * The instant this operation happened. See `~/domain/time/clock` for why
-   * everything one operation writes has to agree on it.
-   */
   traceId: string;
   requestId: string;
   ipAddress: string;

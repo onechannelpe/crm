@@ -1,4 +1,5 @@
 import { createJobQueue } from "~/server/platform/jobs/job-queue";
+import type { JobContext } from "~/server/platform/operation/context";
 import {
   buildRecordImportProgressEvent,
   publishRecordImportProgress,
@@ -14,7 +15,7 @@ import type {
 interface RecordImportRunner {
   process(
     job: IntegrationJobRow,
-    signal: AbortSignal,
+    context: JobContext,
   ): Promise<ImportJobProcessResult>;
 }
 
@@ -53,11 +54,7 @@ export function createRecordsImportQueue(
     store: runtime.jobs.store,
 
     handle: async (job, context) => {
-      const result = await runner.process(
-        job,
-        context.abortSignal,
-        context.operationAt,
-      );
+      const result = await runner.process(job, context);
 
       // The queue store writes queue_state and completed_at.
       return {

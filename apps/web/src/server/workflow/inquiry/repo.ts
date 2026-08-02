@@ -73,7 +73,7 @@ export function createInquiryRepo(db: DatabaseExecutor) {
     async insert(values: {
       ruc: string;
       executiveId: UserId;
-      now: Date;
+      createdAt: Date;
     }): Promise<{ id: WorkflowInquiryId } | undefined> {
       const row = await db
         .insertInto("workflow_inquiries")
@@ -81,8 +81,8 @@ export function createInquiryRepo(db: DatabaseExecutor) {
           ruc: values.ruc,
           executive_id: values.executiveId,
           state: "PENDING",
-          created_at: values.now,
-          updated_at: values.now,
+          created_at: values.createdAt,
+          updated_at: values.createdAt,
         })
         .onConflict((oc) =>
           oc
@@ -122,14 +122,14 @@ export function createInquiryRepo(db: DatabaseExecutor) {
     async markConverted(
       id: WorkflowInquiryId,
       leadId: WorkflowLeadId,
-      now: Date,
+      convertedAt: Date,
     ): Promise<void> {
       await db
         .updateTable("workflow_inquiries")
         .set({
           state: "CONVERTED",
           converted_lead_id: leadId,
-          updated_at: now,
+          updated_at: convertedAt,
         })
         .where("id", "=", id)
         .execute();
@@ -146,7 +146,7 @@ export function createInquiryRepo(db: DatabaseExecutor) {
       priority?: LeadPriority;
       answeredBy: UserId;
       answeredByJobId: IntegrationJobId;
-      now: Date;
+      answeredAt: Date;
     }): Promise<{ stamped: number; newlyAnswered: InquiryRow[] }> {
       const live = await db
         .selectFrom("workflow_inquiries")
@@ -169,10 +169,12 @@ export function createInquiryRepo(db: DatabaseExecutor) {
             status,
             priority,
             state: answered ? "ANSWERED" : "PENDING",
-            answered_at: answered ? (row.answered_at ?? input.now) : null,
+            answered_at: answered
+              ? (row.answered_at ?? input.answeredAt)
+              : null,
             answered_by: input.answeredBy,
             answered_by_job_id: input.answeredByJobId,
-            updated_at: input.now,
+            updated_at: input.answeredAt,
           })
           .where("id", "=", row.id)
           .execute();
@@ -184,7 +186,7 @@ export function createInquiryRepo(db: DatabaseExecutor) {
               status,
               priority,
               state: "ANSWERED",
-              answered_at: row.answered_at ?? input.now,
+              answered_at: row.answered_at ?? input.answeredAt,
               answered_by: input.answeredBy,
             }),
           );

@@ -1,10 +1,10 @@
 import { BranchId, TeamId, UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 
 const SCOPE_TYPES = ["branch", "team"] as const;
 

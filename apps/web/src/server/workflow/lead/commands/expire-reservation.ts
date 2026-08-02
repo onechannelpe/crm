@@ -14,41 +14,50 @@ import { runLeadTransaction } from "../write/transition";
 export async function expireLeadReservation(
   executor: DatabaseExecutor,
   leadId: WorkflowLeadId,
-  now: Date,
+  expiredAt: Date,
 ): Promise<Result<void, DomainError>> {
-  return runLeadTransaction({ executor, operationAt: now }, async (ctx) => {
-    const state = await ctx.repos.leads.findById(leadId);
-    if (!state) return Ok(undefined);
-    if (
-      state.stage !== "PRICING" ||
-      !isReservationLapsed(state, ctx.operationAt)
-    ) {
+  return runLeadTransaction(
+    { executor, operationAt: expiredAt },
+    async (ctx) => {
+      const state = await ctx.repos.leads.findById(leadId);
+      if (!state) return Ok(undefined);
+      if (
+        state.stage !== "PRICING" ||
+        !isReservationLapsed(state, ctx.operationAt)
+      ) {
+        return Ok(undefined);
+      }
+
+      const transition = expireReservation(state, {
+        occurredAt: ctx.operationAt,
+      });
+      if (!transition.ok) return transition;
+
+      const committed = await ctx.commitTransition(transition.value);
+      if (!committed.ok) return committed;
+
       return Ok(undefined);
-    }
-
-    const transition = expireReservation(state, { now: ctx.operationAt });
-    if (!transition.ok) return transition;
-
-    const committed = await ctx.commitTransition(transition.value);
-    if (!committed.ok) return committed;
-
-    return Ok(undefined);
-  });
+    },
+  );
 }
 
 // Each expiry is isolated: one stale row must not roll back the whole sweep.
 export async function expireLapsedReservations(
   deps: { executor: DatabaseExecutor },
-  now: Date,
+  lapsedAsOf: Date,
 ): Promise<number> {
   const lapsed = await createLeadRepo(deps.executor).findLapsedReservations(
-    now,
+    lapsedAsOf,
   );
 
   let expiredCount = 0;
   for (const leadId of lapsed) {
     // eslint-disable-next-line no-await-in-loop
-    const result = await expireLeadReservation(deps.executor, leadId, now);
+    const result = await expireLeadReservation(
+      deps.executor,
+      leadId,
+      lapsedAsOf,
+    );
     if (result.ok) expiredCount += 1;
   }
   return expiredCount;

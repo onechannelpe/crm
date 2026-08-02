@@ -1,8 +1,8 @@
+import { application } from "~/server/composition/application";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { application } from "~/server/platform/composition/application";
 import {
   getRequestContext,
-  getRequestInstant,
+  getRequestOperation,
 } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
@@ -16,11 +16,10 @@ export async function requestPasswordReset(
 
   const request = getRequestContext();
 
-  const result = await application.auth.passwordReset.request({
-    email,
-    origin: request.publicOrigin,
-    requestedAt: request.startedAt,
-  });
+  const result = await application.auth.passwordReset.request(
+    { email, origin: request.publicOrigin },
+    getRequestOperation(),
+  );
 
   if (isErr(result)) {
     throwDomain(result.error);
@@ -40,12 +39,10 @@ export async function resetPassword(formData: FormData): Promise<{ ok: true }> {
   const password = typeof rawPassword === "string" ? rawPassword : "";
   const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
 
-  const result = await application.auth.passwordReset.reset({
-    token,
-    password,
-    confirmPassword,
-    resetAt: getRequestInstant(),
-  });
+  const result = await application.auth.passwordReset.reset(
+    { token, password, confirmPassword },
+    getRequestOperation(),
+  );
 
   if (isErr(result)) {
     throwDomain(result.error);

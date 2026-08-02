@@ -124,6 +124,7 @@ export function createAuthScenario(
         },
         login,
         createTestPasskeyProvider(login.repos),
+        new Date(),
       );
     },
 
@@ -143,6 +144,7 @@ export function createAuthScenario(
         },
         login,
         createTestPasskeyProvider(login.repos),
+        new Date(),
       );
     },
 
@@ -152,7 +154,7 @@ export function createAuthScenario(
       meta: RequestMeta,
     ) {
       const login = createAuthLoginContext(ctx.db);
-      const occurredAt = login.now();
+      const occurredAt = new Date();
       const verified = await verifyTotpLoginProof(login, {
         flowId,
         totpCode,

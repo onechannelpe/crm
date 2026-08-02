@@ -8,6 +8,7 @@ import { recordAuthEvent } from "~/server/auth/security/auth-events";
 import { enqueueAlertOnNewLoginSource } from "~/server/auth/security/login-source-alert";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
 import { createSessionService } from "~/server/auth/session/session.service";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type {
@@ -128,8 +129,8 @@ export async function completePendingLogin(
   deps: AuthLoginContext,
   input: SessionRequestMetadata & {
     proof: VerifiedPendingLoginProof;
-    occurredAt: Date;
   },
+  operation: OperationContext,
 ): Promise<Result<LoginFlowLoginResult, CompletePendingLoginError>> {
   const completed = await deps.uow.run<
     LoginFlowLoginResult,
@@ -138,7 +139,7 @@ export async function completePendingLogin(
     const flow = await repos.loginFlows.findByIdForUpdate(input.proof.flowId);
     if (
       !flow ||
-      flow.expires_at < input.occurredAt ||
+      flow.expires_at < operation.operationAt ||
       !flowMatchesProof(flow, input.proof)
     ) {
       return Err({ kind: "flow_expired" });
@@ -146,14 +147,14 @@ export async function completePendingLogin(
 
     const user = await repos.users.findByIdForUpdate(input.proof.userId);
     const context = user
-      ? await loadActiveAuthContextForUser(user, repos, input.occurredAt)
+      ? await loadActiveAuthContextForUser(user, repos, operation)
       : null;
     if (!context) return Err({ kind: "flow_expired" });
 
     const consumed = await consumeVerifiedProof(
       repos,
       input.proof,
-      input.occurredAt,
+      operation.operationAt,
     );
     if (isErr(consumed)) return consumed;
 
@@ -161,14 +162,14 @@ export async function completePendingLogin(
       user: context.user,
       ipAddress: input.ipAddress,
       method: `${flow.primary_auth_method}+${input.proof.method}`,
-      occurredAt: input.occurredAt,
+      occurredAt: operation.operationAt,
       deps: repos,
     });
     await recordSuccessfulProof(
       repos,
       input.proof,
       input.ipAddress,
-      input.occurredAt,
+      operation.operationAt,
     );
 
     const sessionClass = resolveSessionClass({
@@ -188,11 +189,11 @@ export async function completePendingLogin(
         },
         primaryAuthMethod: flow.primary_auth_method,
         strongAuthMethod: input.proof.method,
-        strongAuthAt: input.occurredAt,
+        strongAuthAt: operation.operationAt,
         auditAction:
           flow.primary_auth_method === "passkey" ? "login_passkey" : "login",
       },
-      input.occurredAt,
+      operation,
     );
     await repos.loginFlows.delete(flow.id);
 
@@ -215,7 +216,11 @@ export async function completePendingLogin(
   const identifier = `user:${input.proof.userId}`;
   await createAuthThrottleService({
     authThrottle: deps.repos.authThrottle,
-  }).recordRecoveryVerifyFailure(identifier, input.ipAddress, input.occurredAt);
+  }).recordRecoveryVerifyFailure(
+    identifier,
+    input.ipAddress,
+    operation.operationAt,
+  );
   await recordAuthEvent(deps.repos, {
     userId: input.proof.userId,
     identifier,
@@ -224,7 +229,7 @@ export async function completePendingLogin(
     stage: "recovery",
     outcome: "failure",
     reason: "invalid_token",
-    occurredAt: input.occurredAt,
+    occurredAt: operation.operationAt,
   });
   return completed;
 }

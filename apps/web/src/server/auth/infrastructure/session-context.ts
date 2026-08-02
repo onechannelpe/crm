@@ -41,10 +41,10 @@ export function createAuthSessionLogoutContext(
     revokeSession(sessionId) {
       return deps.revokeSession(sessionId);
     },
-    async revokeInstallationSessionsByAuthSession(sessionId, now) {
+    async revokeInstallationSessionsByAuthSession(sessionId, revokedAt) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(
         sessionId,
-        now,
+        revokedAt,
       );
     },
     async updateExecutiveSyncHealth(input) {

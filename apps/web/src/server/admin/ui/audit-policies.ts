@@ -1,8 +1,8 @@
 import "server-only";
 import type { AuditPolicySnapshot } from "~/contracts/audit-reader/policy";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { getSession, hasRole } from "~/server/platform/action/session";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function getAuditPolicySnapshot(): Promise<AuditPolicySnapshot> {

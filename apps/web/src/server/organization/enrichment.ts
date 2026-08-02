@@ -15,7 +15,7 @@ export type OrganizationEnrichmentQueue = {
   enqueueRucVerification(
     ruc: Ruc,
     requestedByUserId: string,
-    now: Date,
+    requestedAt: Date,
   ): Promise<void>;
 };
 

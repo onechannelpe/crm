@@ -1,11 +1,11 @@
 import { UserId } from "~/domain/ids";
 import type { CalendarMonth } from "~/domain/time/calendar-date";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { isErr, Ok } from "~/shared/result";
 
 export async function adjustMonthCredit(raw: {
@@ -30,16 +30,16 @@ export async function adjustMonthCredit(raw: {
 
     audit: ({ ruc, month }) => ({ ruc, month }),
 
-    execute: async ({ actor, operationAt: now }, input) => {
+    execute: async (ctx, input) => {
       const resolved = await application.merchantStats.attribution.adjust(
         {
           ruc: input.ruc,
           month: input.month,
           sellerUserId: input.sellerUserId,
           reason: input.reason,
-          adjustedBy: actor.userId,
+          adjustedBy: ctx.actor.userId,
         },
-        now,
+        ctx,
       );
 
       if (isErr(resolved)) return resolved;
@@ -69,15 +69,15 @@ export async function setMerchantTarget(raw: {
 
     audit: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
 
-    execute: async ({ actor, operationAt: now }, input) => {
+    execute: async (ctx, input) => {
       const updated = await application.merchantStats.attribution.setTarget(
         {
           ruc: input.ruc,
           effectiveFrom: input.effectiveFrom,
           projectedGpv: input.projectedGpv,
-          setBy: actor.userId,
+          setBy: ctx.actor.userId,
         },
-        now,
+        ctx,
       );
 
       if (isErr(updated)) return updated;

@@ -56,7 +56,7 @@ export async function requestRateRevisionCommand(
     });
 
     const reservationExpiresAt = computeReservationExpiry({
-      now: ctx.operationAt,
+      reservedAt: ctx.operationAt,
       validityDays: policy.validityDays,
     });
 
@@ -98,7 +98,7 @@ export async function requestRateRevisionCommand(
       justification: input.justification,
       fileIds: input.fileIds,
       reservationExpiresAt,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

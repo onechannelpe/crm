@@ -125,6 +125,7 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
     await ctx.repos.organization.upsertOrganization({
       ruc: ruc(index),
       legalName: `Bench Org ${index}`,
+      at: BENCH_NOW,
     });
 
     await ctx.repos.leadCapacityGrants.insert({
@@ -132,6 +133,7 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
       amount: 5,
       reason: "bench_seed",
       actor_user_id: ACTOR_USER_ID,
+      created_at: BENCH_NOW,
     });
 
     unitIndexByUser.set(userId, index);

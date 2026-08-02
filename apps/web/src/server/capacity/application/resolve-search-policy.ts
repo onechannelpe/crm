@@ -1,5 +1,6 @@
 import { fail, type DomainError } from "~/domain/errors";
 import type { BranchId, TeamId, UserId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { resolveSearchPolicy, type SearchPolicy } from "../domain/policy";
@@ -14,8 +15,6 @@ export interface SetSearchUserOverrideCommand {
   targetUserId: UserId;
   monthlyLimit: number;
   expiresAt: Date | null;
-  /** Operation instant: when the override takes effect and is recorded. */
-  at: Date;
 }
 
 interface PolicyRepos {
@@ -31,7 +30,7 @@ interface PolicyRepos {
   searchPolicyOverrides: {
     findActiveForUser(
       userId: UserId,
-      now: Date,
+      activeAsOf: Date,
     ): Promise<{ search_limit: number } | undefined | null>;
   };
 }
@@ -63,7 +62,7 @@ interface SearchPolicyOverridesWriter {
 export async function getEffectiveSearchPolicy(
   userId: UserId,
   repos: PolicyRepos,
-  evaluatedAt: Date,
+  operation: OperationContext,
 ): Promise<Result<SearchPolicy, DomainError>> {
   const user = await repos.users.findById(userId);
   if (!user) {
@@ -72,7 +71,7 @@ export async function getEffectiveSearchPolicy(
 
   const userOverride = await repos.searchPolicyOverrides.findActiveForUser(
     userId,
-    evaluatedAt,
+    operation.operationAt,
   );
   const teamDefault = user.teamId
     ? await repos.searchPolicyDefaults.findForScope("team", user.teamId)
@@ -101,12 +100,13 @@ export async function setSearchScopeDefault(
 export async function setSearchUserOverride(
   command: SetSearchUserOverrideCommand,
   repos: SearchPolicyOverridesWriter,
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   await repos.searchPolicyOverrides.replaceForUser({
     user_id: command.targetUserId,
     search_limit: command.monthlyLimit,
-    effective_from: command.at,
-    created_at: command.at,
+    effective_from: operation.operationAt,
+    created_at: operation.operationAt,
     expires_at: command.expiresAt,
     set_by_user_id: command.actorUserId,
   });

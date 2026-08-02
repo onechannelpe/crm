@@ -6,6 +6,7 @@ import {
 } from "~/domain/time/calendar-date";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export interface AdjustMerchantMonthCreditInput {
@@ -14,7 +15,7 @@ export interface AdjustMerchantMonthCreditInput {
   sellerUserId: UserId | null;
   reason: string;
   adjustedBy: UserId;
-  now: Date;
+  operation: OperationContext;
 }
 
 export async function adjustMerchantMonthCredit(
@@ -96,7 +97,7 @@ async function adjustInTransaction(
         seller_user_id: input.sellerUserId,
         branch_id: seller.branch_id,
         first_snapshot_id: source.id,
-        credited_at: input.now,
+        credited_at: input.operation.operationAt,
       })
       .onConflict((oc) => oc.columns(["ruc", "month"]).doNothing())
       .execute();
@@ -111,7 +112,7 @@ async function adjustInTransaction(
       branch_id: seller?.branch_id ?? null,
       reason: input.reason,
       adjusted_by: input.adjustedBy,
-      adjusted_at: input.now,
+      adjusted_at: input.operation.operationAt,
     })
     .execute();
   await createEventsRepo(db).append({
@@ -124,7 +125,7 @@ async function adjustInTransaction(
       month: input.month,
       reason: input.reason,
     },
-    occurredAt: input.now,
+    occurredAt: input.operation.operationAt,
   });
 
   return Ok(undefined);

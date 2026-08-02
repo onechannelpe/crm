@@ -5,6 +5,7 @@ import { assignOrganizationOwner } from "~/server/organization/ownership";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { toLeadEventAppend } from "./lead-events";
@@ -17,7 +18,7 @@ export type LeadTransition = {
 export type LeadAssignment = {
   toExecutiveId: UserId;
   assignedBy: UserId;
-  at: Date;
+  assignedAt: Date;
 };
 
 export async function commitTransition(
@@ -52,7 +53,7 @@ export async function commitTransition(
       organizationId: next.organizationId,
       executiveId: assignment.toExecutiveId,
       assignedBy: assignment.assignedBy,
-      at: assignment.at,
+      assignedAt: assignment.assignedAt,
       reason: "workflow_reassignment",
     });
 
@@ -69,10 +70,10 @@ export async function commitTransition(
 }
 
 export async function appendFacts(
-  tx: DatabaseExecutor,
+  scope: WorkflowWriteContext,
   events: LeadHistoryEventDraft[],
-  now: Date,
 ): Promise<Result<{ eventIds: string[] }, DomainError>> {
+  const tx = scope.executor;
   const leadId = events[0]?.leadId;
 
   if (!leadId) {
@@ -82,7 +83,7 @@ export async function appendFacts(
   const updateResult = await tx
     .updateTable("workflow_leads")
     .set({
-      updated_at: now,
+      updated_at: scope.operationAt,
       updated_by: events[0].actorUserId,
     })
     .where("id", "=", leadId)

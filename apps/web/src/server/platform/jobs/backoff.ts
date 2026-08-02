@@ -1,7 +1,8 @@
-// Exponential backoff with equal jitter. `now` is injected so tests can control
-// the scheduled retry time.
-export function nextClaimableAt(attemptCount: number, now: Date): Date {
-  if (attemptCount <= 0) return now;
+// Exponential backoff with equal jitter, measured from the instant the attempt
+// settled rather than a fresh clock read, so the stored retry time and the
+// stored settlement time agree.
+export function nextClaimableAt(attemptCount: number, settledAt: Date): Date {
+  if (attemptCount <= 0) return settledAt;
 
   const INITIAL_DELAY_MS = 5_000;
   const MAX_DELAY_MS = 300_000;
@@ -12,5 +13,5 @@ export function nextClaimableAt(attemptCount: number, now: Date): Date {
   );
   const delayMs = base / 2 + Math.random() * (base / 2);
 
-  return new Date(now.getTime() + delayMs);
+  return new Date(settledAt.getTime() + delayMs);
 }

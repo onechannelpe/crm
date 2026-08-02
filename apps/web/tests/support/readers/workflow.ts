@@ -22,6 +22,7 @@ async function loadLead(
     actorUserId: actor.userId,
     actorRole: actor.role,
     leadId,
+    evaluatedAt: runtime.now.get(),
   });
   return expectOk(detail).lead;
 }

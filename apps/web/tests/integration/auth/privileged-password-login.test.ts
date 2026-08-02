@@ -94,6 +94,7 @@ describe("privileged password login", () => {
       AuthLoginFlowId.trust(result.value.flow.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
+      new Date(),
     );
     expect(flow?.state).toBe("passkey");
   });

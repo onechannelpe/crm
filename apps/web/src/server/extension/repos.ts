@@ -106,7 +106,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
     findActiveInstallationSession(
       auth_session_id: string,
       installation_id: InstallationId,
-      now: Date,
+      activeAsOf: Date,
     ) {
       return db
         .selectFrom("extension_installation_sessions")
@@ -114,24 +114,24 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .where("auth_session_id", "=", auth_session_id)
         .where("installation_id", "=", installation_id)
         .where("revoked_at", "is", null)
-        .where("expires_at", ">", now)
+        .where("expires_at", ">", activeAsOf)
         .executeTakeFirst();
     },
 
-    findValidInstallationSession(jti: string, now: Date) {
+    findValidInstallationSession(jti: string, activeAsOf: Date) {
       return db
         .selectFrom("extension_installation_sessions")
         .selectAll()
         .where("jti", "=", jti)
         .where("revoked_at", "is", null)
-        .where("expires_at", ">", now)
+        .where("expires_at", ">", activeAsOf)
         .executeTakeFirst();
     },
 
     findRefreshableInstallationSession(
       refresh_token_hash: string,
       installation_id: InstallationId,
-      now: Date,
+      activeAsOf: Date,
     ) {
       return db
         .selectFrom("extension_installation_sessions")
@@ -139,7 +139,7 @@ export function createExtensionRuntimeRepo(db: Kysely<Database>) {
         .where("refresh_token_hash", "=", refresh_token_hash)
         .where("installation_id", "=", installation_id)
         .where("revoked_at", "is", null)
-        .where("expires_at", ">", now)
+        .where("expires_at", ">", activeAsOf)
         .executeTakeFirst();
     },
 

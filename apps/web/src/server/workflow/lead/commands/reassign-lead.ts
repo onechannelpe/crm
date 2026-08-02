@@ -45,7 +45,7 @@ export async function reassignLeadCommand(
     const transition = reassignLead(state, {
       actor: input.actor,
       toExecutiveId: input.toExecutiveId,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -55,7 +55,7 @@ export async function reassignLeadCommand(
     const committed = await ctx.commitTransition(transition.value, {
       toExecutiveId: input.toExecutiveId,
       assignedBy: input.actor.userId,
-      at: ctx.operationAt,
+      assignedAt: ctx.operationAt,
     });
 
     if (!committed.ok) {

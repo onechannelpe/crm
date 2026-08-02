@@ -10,6 +10,7 @@ import {
   addCalendarDays,
   type CalendarDate,
 } from "~/domain/time/calendar-date";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import type { CreateTeamInviteCommand } from "../application/contracts";
@@ -33,7 +34,7 @@ const MIN_EXPIRY_DAYS = 7;
 
 export function validateTeamInviteInput(
   input: TeamInviteShape,
-  now: Date,
+  operation: OperationContext,
 ): Result<CreateTeamInviteCommand, DomainError> {
   if (!EMAIL_PATTERN.test(input.email)) {
     return Err(fail("invalid_email"));
@@ -52,7 +53,7 @@ export function validateTeamInviteInput(
     return Err(fail("invalid_team_id"));
   }
 
-  const expiresAt = validateExpiry(input.expiresOn, now);
+  const expiresAt = validateExpiry(input.expiresOn, operation.operationAt);
 
   if (!expiresAt.ok) {
     return expiresAt;
@@ -89,13 +90,16 @@ function resolveExecutiveCategory(
 
 function validateExpiry(
   expiresOn: CalendarDate | null,
-  now: Date,
+  requestedAt: Date,
 ): Result<Date | null, DomainError> {
   if (expiresOn === null) {
     return Ok(null);
   }
 
-  const minimum = addCalendarDays(appCalendarDateAt(now), MIN_EXPIRY_DAYS);
+  const minimum = addCalendarDays(
+    appCalendarDateAt(requestedAt),
+    MIN_EXPIRY_DAYS,
+  );
   if (expiresOn < minimum) {
     return Err(fail("expires_on_too_soon"));
   }

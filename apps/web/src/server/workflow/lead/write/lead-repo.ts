@@ -26,7 +26,7 @@ export type LeadRepository = {
   findByRucMany(rucs: string[]): Promise<LeadState[]>;
   countPendingQuotationDecisions(
     executiveId: UserId,
-    now: Date,
+    activeAsOf: Date,
   ): Promise<number>;
   updateCommercialSnapshot(
     leadId: WorkflowLeadId,
@@ -219,7 +219,7 @@ export function createLeadRepo(db: DatabaseExecutor) {
     // close-lead each move the proposal off "pending" or the lead off PRICING.
     async countPendingQuotationDecisions(
       executiveId: UserId,
-      now: Date,
+      activeAsOf: Date,
     ): Promise<number> {
       const row = await db
         .selectFrom("workflow_leads as lead")
@@ -238,18 +238,18 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .where("lead.stage", "=", "PRICING")
         .where("lead.deleted_at", "is", null)
         .where("lead.reservation_expires_at", "is not", null)
-        .where("lead.reservation_expires_at", ">", now)
+        .where("lead.reservation_expires_at", ">", activeAsOf)
         .executeTakeFirst();
 
       return row?.count ?? 0;
     },
 
-    async findLapsedReservations(now: Date): Promise<WorkflowLeadId[]> {
+    async findLapsedReservations(lapsedAsOf: Date): Promise<WorkflowLeadId[]> {
       const rows = await db
         .selectFrom("workflow_leads")
         .select("id")
         .where("reservation_expires_at", "is not", null)
-        .where("reservation_expires_at", "<=", now)
+        .where("reservation_expires_at", "<=", lapsedAsOf)
         .where("deleted_at", "is", null)
         .where("stage", "=", "PRICING")
         .execute();

@@ -6,6 +6,8 @@ import {
   type LoginPolicyInput,
 } from "~/server/auth/policy/engine";
 
+const NOW = new Date(1_700_000_000_000);
+
 function createInput(overrides?: {
   proof?: LoginPolicyInput["proof"];
   user?: LoginPolicyInput["context"]["user"];
@@ -31,6 +33,7 @@ function createInput(overrides?: {
       recoveryCodesAcknowledgementRequired:
         overrides?.recoveryCodesAcknowledgementRequired ?? false,
     },
+    now: NOW,
   };
 }
 
@@ -108,7 +111,7 @@ describe("login policy", () => {
       kind: "issue_session",
       sessionClass: "app",
       strongAuthMethod: "federated",
-      strongAuthAt: expect.any(Date),
+      strongAuthAt: NOW,
     });
   });
 

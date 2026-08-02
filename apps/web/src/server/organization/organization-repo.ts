@@ -56,7 +56,7 @@ export type OrganizationRepository = {
     district?: string | null;
     department?: string | null;
     /** Operation instant that stamps the row. */
-    at: Date;
+    upsertedAt: Date;
   }): Promise<OrganizationProfile>;
   updateCommercialProfile(input: {
     organizationId: OrganizationId;
@@ -75,7 +75,7 @@ export type OrganizationRepository = {
     phone: string | null;
     email: string | null;
     /** Operation instant that stamps the row. */
-    at: Date;
+    upsertedAt: Date;
   }): Promise<Membership>;
   findMembership(input: {
     organizationId: OrganizationId;
@@ -86,8 +86,8 @@ export type OrganizationRepository = {
     organizationId: OrganizationId;
     organizationPersonId: OrganizationPersonId;
     role: string;
-    /** Operation instant that stamps the row. */
-    at: Date;
+    /** Instant the new primary interval opens and the old one closes. */
+    effectiveAt: Date;
   }): Promise<void>;
   findPrimaryRepresentative(
     organizationId: OrganizationId,
@@ -180,7 +180,7 @@ export function createOrganizationRepo(
 
   async function upsertPerson(
     person: PersonIdentity,
-    now: Date,
+    upsertedAt: Date,
   ): Promise<PersonId> {
     await db
       .insertInto("people")
@@ -190,8 +190,8 @@ export function createOrganizationRepo(
         first_surname: person.firstSurname,
         second_surname: person.secondSurname,
         email: person.email,
-        created_at: now,
-        updated_at: now,
+        created_at: upsertedAt,
+        updated_at: upsertedAt,
       })
       // Preserve existing details when an incoming record only supplies a display name.
       .onConflict((oc) =>
@@ -209,7 +209,7 @@ export function createOrganizationRepo(
             eb.ref("excluded.email"),
             eb.ref("people.email"),
           ),
-          updated_at: now,
+          updated_at: upsertedAt,
         })),
       )
       .execute();
@@ -251,7 +251,7 @@ export function createOrganizationRepo(
           address: input.address ?? null,
           district: input.district ?? null,
           department: input.department ?? null,
-          created_at: input.at,
+          created_at: input.upsertedAt,
         })
         .onConflict((oc) => oc.column("ruc").doNothing())
         .execute();
@@ -293,8 +293,7 @@ export function createOrganizationRepo(
     },
 
     async upsertMembership(input) {
-      const now = input.at;
-      const personId = await upsertPerson(input.person, now);
+      const personId = await upsertPerson(input.person, input.upsertedAt);
 
       await db
         .insertInto("organization_people")
@@ -303,8 +302,8 @@ export function createOrganizationRepo(
           organization_id: input.organizationId,
           phone: input.phone,
           email: input.email,
-          created_at: now,
-          updated_at: now,
+          created_at: input.upsertedAt,
+          updated_at: input.upsertedAt,
         })
         .onConflict((oc) =>
           oc.columns(["organization_id", "person_id"]).doUpdateSet((eb) => ({
@@ -316,7 +315,7 @@ export function createOrganizationRepo(
               eb.ref("excluded.email"),
               eb.ref("organization_people.email"),
             ),
-            updated_at: now,
+            updated_at: input.upsertedAt,
           })),
         )
         .execute();
@@ -344,7 +343,6 @@ export function createOrganizationRepo(
     },
 
     async setPrimaryRole(input) {
-      const now = input.at;
       const memberIds = (
         await db
           .selectFrom("organization_people")
@@ -358,7 +356,7 @@ export function createOrganizationRepo(
       if (memberIds.length > 0) {
         await db
           .updateTable("organization_person_roles")
-          .set({ effective_to: now, is_primary: false })
+          .set({ effective_to: input.effectiveAt, is_primary: false })
           .where("role", "=", input.role)
           .where("is_primary", "=", true)
           .where("organization_person_id", "in", memberIds)
@@ -371,7 +369,7 @@ export function createOrganizationRepo(
           organization_person_id: input.organizationPersonId,
           role: input.role,
           is_primary: true,
-          effective_from: now,
+          effective_from: input.effectiveAt,
         })
         .onConflict((oc) =>
           oc

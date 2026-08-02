@@ -41,7 +41,7 @@ export async function acceptRateCommand(
     const transition = acceptRate(state, {
       actor: input.actor,
       proposalId: input.proposalId,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

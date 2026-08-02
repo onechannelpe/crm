@@ -49,12 +49,19 @@ describe("rate limit audit", () => {
         "leads.request",
         userId,
         ctx.repos,
+        new Date(),
         "198.51.100.1",
       );
     }
 
     await expect(
-      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx.repos,
+        new Date(),
+        "198.51.100.1",
+      ),
     ).rejects.toBeDefined();
 
     const now = new Date();
@@ -81,6 +88,7 @@ describe("rate limit audit", () => {
       "leads.request",
       userId,
       ctx.repos,
+      new Date(),
       "198.51.100.1",
     );
     const deleted = await ctx.repos.actionRateLimits.deleteUpdatedBefore(

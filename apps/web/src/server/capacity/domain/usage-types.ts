@@ -67,6 +67,4 @@ export interface GrantUsageCapacityCommand<K extends CapacityKind> {
   targetUserId: UserId;
   amount: number;
   reason: string;
-  /** Operation instant that stamps the grant row. */
-  at: Date;
 }

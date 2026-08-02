@@ -28,5 +28,4 @@ export type ListLeadsInput = {
     limit?: number;
     offset?: number;
   };
-  evaluatedAt: Date;
 };

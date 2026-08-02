@@ -1,12 +1,12 @@
 import { ROLES } from "~/domain/auth/access/rbac";
 import { TeamId, UserInviteId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
-import { getRequestInstant } from "~/server/platform/http/request-context";
+import { getRequestOperation } from "~/server/platform/http/request-context";
 import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
 import { isErr, Ok } from "~/shared/result";
 
@@ -42,7 +42,7 @@ export async function createTeamInvite(input: unknown): Promise<{
         return command;
       }
 
-      return validateTeamInviteInput(command.value, getRequestInstant());
+      return validateTeamInviteInput(command.value, getRequestOperation());
     },
 
     audit: ({ role, teamId }) => ({

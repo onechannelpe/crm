@@ -78,9 +78,10 @@ describe("action observations snapshot", () => {
       createdAt: nextTime,
     });
 
-    const snapshotResult = await audit.observability.getActionSnapshot({
-      windowMinutes: 60,
-    });
+    const snapshotResult = await audit.observability.getActionSnapshot(
+      { windowMinutes: 60 },
+      new Date(),
+    );
 
     expect(isErr(snapshotResult)).toBe(false);
     if (isErr(snapshotResult)) return;
@@ -137,11 +138,14 @@ describe("action observations snapshot", () => {
       createdAt: new Date(baseTimeMs + 1),
     });
 
-    const snapshotResult = await audit.observability.getActionSnapshot({
-      windowMinutes: 60,
-      actionName: "team.invite.create",
-      status: "error",
-    });
+    const snapshotResult = await audit.observability.getActionSnapshot(
+      {
+        windowMinutes: 60,
+        actionName: "team.invite.create",
+        status: "error",
+      },
+      new Date(),
+    );
 
     expect(isErr(snapshotResult)).toBe(false);
     if (isErr(snapshotResult)) return;
@@ -194,9 +198,10 @@ describe("action observations snapshot", () => {
     });
 
     // Anchor the snapshot window to the new row so both rows are visible.
-    const beforeSweep = await audit.observability.getActionSnapshot({
-      windowMinutes: 60,
-    });
+    const beforeSweep = await audit.observability.getActionSnapshot(
+      { windowMinutes: 60 },
+      new Date(),
+    );
     expect(isErr(beforeSweep)).toBe(false);
     if (isErr(beforeSweep)) throw new Error("Expected snapshot success");
     expect(beforeSweep.value.recent).toHaveLength(2);
@@ -205,9 +210,10 @@ describe("action observations snapshot", () => {
       await ctx.repos.actionObservations.deleteCreatedBefore(cutoff);
     expect(deleted).toBe(1);
 
-    const afterSweep = await audit.observability.getActionSnapshot({
-      windowMinutes: 60,
-    });
+    const afterSweep = await audit.observability.getActionSnapshot(
+      { windowMinutes: 60 },
+      new Date(),
+    );
     expect(isErr(afterSweep)).toBe(false);
     if (isErr(afterSweep)) return;
     expect(afterSweep.value.recent).toHaveLength(1);
@@ -259,11 +265,14 @@ describe("action observations snapshot", () => {
       createdAt: new Date(baseTimeMs + 2),
     });
 
-    const filteredResult = await audit.observability.getActionSnapshot({
-      windowMinutes: 60,
-      actionName: "team.invite.create",
-      status: "error",
-    });
+    const filteredResult = await audit.observability.getActionSnapshot(
+      {
+        windowMinutes: 60,
+        actionName: "team.invite.create",
+        status: "error",
+      },
+      new Date(),
+    );
 
     expect(isErr(filteredResult)).toBe(false);
     if (isErr(filteredResult)) return;

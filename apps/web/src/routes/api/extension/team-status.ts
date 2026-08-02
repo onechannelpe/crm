@@ -1,6 +1,6 @@
+import { application } from "~/server/composition/application";
 import { toWire } from "~/server/platform/action/domain-error";
-import { application } from "~/server/platform/composition/application";
-import { getRequestInstant } from "~/server/platform/http/request-context";
+import { getRequestOperation } from "~/server/platform/http/request-context";
 import { authorizeRoutePermission } from "~/server/platform/http/route-access";
 import { isErr } from "~/shared/result";
 
@@ -15,7 +15,7 @@ export async function GET(): Promise<Response> {
       userId: session.userId,
       branchId: session.branchId,
     },
-    getRequestInstant(),
+    getRequestOperation(),
   );
   if (isErr(result)) {
     return Response.json(

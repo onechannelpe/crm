@@ -34,17 +34,16 @@ import { createNotificationOptOutRepo } from "~/server/notifications/repos/opt-o
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createWhatsAppInboundQueue } from "~/server/notifications/whatsapp-inbound/queue";
-import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
-import {
-  appConfig,
-  notificationsConfig,
-  type AppConfig,
-  type NotificationsConfig,
+import type {
+  AppConfig,
+  NotificationsConfig,
 } from "~/server/platform/config/env";
 import { notify } from "~/server/platform/database/notify";
 import type { Database } from "~/server/platform/database/types";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 import type { QueueRunner } from "~/server/platform/jobs/types";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { Logger } from "~/shared/observability/logger";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
@@ -70,9 +69,9 @@ export interface NotificationPipeline {
   markRead(
     userId: UserId,
     notificationId: AppNotificationId,
-    readAt: Date,
+    operation: OperationContext,
   ): Promise<void>;
-  markAllRead(userId: UserId, readAt: Date): Promise<void>;
+  markAllRead(userId: UserId, operation: OperationContext): Promise<void>;
   listPreferences(userId: UserId): Promise<{
     optOuts: Awaited<
       ReturnType<ReturnType<typeof createNotificationOptOutRepo>["listForUser"]>
@@ -84,7 +83,7 @@ export interface NotificationPipeline {
     category: NotificationCategory;
     channel: ExternalChannel;
     optedOut: boolean;
-    now: Date;
+    operation: OperationContext;
   }): Promise<void>;
   createQueues(workerId: string): {
     expansion: QueueRunner;
@@ -92,7 +91,10 @@ export interface NotificationPipeline {
     whatsappInbound: QueueRunner;
     outboundWhatsApp: QueueRunner;
   };
-  enqueue(intents: NotificationIntent[], now: Date): Promise<void>;
+  enqueue(
+    intents: NotificationIntent[],
+    operation: OperationContext,
+  ): Promise<void>;
   webhooks: {
     verifyWhatsAppSubscription(input: {
       mode: string | null;
@@ -100,6 +102,7 @@ export interface NotificationPipeline {
     }): boolean;
     receiveKapso: (
       input: Parameters<typeof receiveKapsoWebhook>[1],
+      operation: OperationContext,
     ) => ReturnType<typeof receiveKapsoWebhook>;
   };
 }
@@ -134,11 +137,15 @@ export function assembleNotificationPipeline(
       ]);
       return { unreadCount, notifications };
     },
-    async markRead(userId, notificationId, readAt) {
-      await appNotifications.markRead(userId, notificationId, readAt);
+    async markRead(userId, notificationId, operation) {
+      await appNotifications.markRead(
+        userId,
+        notificationId,
+        operation.operationAt,
+      );
     },
-    async markAllRead(userId, readAt) {
-      await appNotifications.markAllRead(userId, readAt);
+    async markAllRead(userId, operation) {
+      await appNotifications.markAllRead(userId, operation.operationAt);
     },
     async listPreferences(userId) {
       const [optOuts, verifiedChannels] = await Promise.all([
@@ -147,8 +154,11 @@ export function assembleNotificationPipeline(
       ]);
       return { optOuts, verifiedChannels };
     },
-    async setPreference(input) {
-      await preferences.setOptedOut(input);
+    async setPreference({ operation, ...preference }) {
+      await preferences.setOptedOut({
+        ...preference,
+        changedAt: operation.operationAt,
+      });
     },
     createQueues(workerId) {
       return {
@@ -170,8 +180,12 @@ export function assembleNotificationPipeline(
         ),
       };
     },
-    enqueue(intentsToEnqueue, now) {
-      return enqueueNotifications(deps.db, intentsToEnqueue, now);
+    enqueue(intentsToEnqueue, operation) {
+      return enqueueNotifications(
+        deps.db,
+        intentsToEnqueue,
+        operation.operationAt,
+      );
     },
     webhooks: {
       verifyWhatsAppSubscription({ mode, token }) {
@@ -179,7 +193,8 @@ export function assembleNotificationPipeline(
           mode === "subscribe" && token === deps.whatsappWebhookVerifyToken
         );
       },
-      receiveKapso: (input) => receiveKapsoWebhook(deps.db, input),
+      receiveKapso: (input, operation) =>
+        receiveKapsoWebhook(deps.db, input, operation),
     },
   };
 }

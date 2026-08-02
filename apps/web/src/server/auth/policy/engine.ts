@@ -18,11 +18,11 @@ export interface LoginPolicyInput {
     };
     recoveryCodesAcknowledgementRequired: boolean;
   };
-  now: Date;
+  provedAt: Date;
 }
 
 export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
-  const { proof, context, now } = input;
+  const { proof, context, provedAt } = input;
   const onboardingCompleted = context.user.onboarding_completed_at !== null;
   const sessionClass = resolveSessionClass({
     onboardingCompleted,
@@ -35,7 +35,7 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
       kind: "issue_session",
       sessionClass,
       strongAuthMethod: "passkey",
-      strongAuthAt: now,
+      strongAuthAt: provedAt,
     };
   }
 
@@ -44,7 +44,7 @@ export function evaluateLoginPolicy(input: LoginPolicyInput): LoginDecision {
       kind: "issue_session",
       sessionClass,
       strongAuthMethod: "federated",
-      strongAuthAt: now,
+      strongAuthAt: provedAt,
     };
   }
 

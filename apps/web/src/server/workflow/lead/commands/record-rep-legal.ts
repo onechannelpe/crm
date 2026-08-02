@@ -31,7 +31,7 @@ export async function recordRepLegalCommand(
       dni: input.dni,
       telefono: input.telefono,
       email: input.email,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -49,13 +49,13 @@ export async function recordRepLegalCommand(
       },
       phone: input.telefono,
       email: input.email,
-      at: ctx.operationAt,
+      upsertedAt: ctx.operationAt,
     });
     await ctx.repos.organization.setPrimaryRole({
       organizationId: state.organizationId,
       organizationPersonId: membership.id,
       role: LEGAL_REPRESENTATIVE_ROLE,
-      at: ctx.operationAt,
+      effectiveAt: ctx.operationAt,
     });
 
     const committed = await ctx.commitTransition(transition.value);

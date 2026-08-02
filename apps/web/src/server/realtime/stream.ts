@@ -2,8 +2,6 @@ import { createEventStream, type H3Event } from "h3";
 
 import type { RealtimeMessage } from "~/contracts/realtime/channel";
 
-import type { RealtimeEntry } from "./channel";
-import { realtimeHub } from "./runtime";
 import type { RealtimePeer, TopicHub } from "./topic-hub";
 
 type EventStream = ReturnType<typeof createEventStream>;
@@ -15,12 +13,17 @@ export interface RealtimeSink {
   onClosed: (listener: () => void) => void;
 }
 
+interface StreamEntry {
+  topic: string;
+  open: (cursor: string | null) => Promise<RealtimeMessage[] | null>;
+}
+
 // Subscribe before reading the opening state so broadcasts received during the
 // read can be buffered and appended afterward.
 export async function attachRealtimeSubscription(
   hub: TopicHub,
   sink: RealtimeSink,
-  entry: RealtimeEntry,
+  entry: StreamEntry,
   cursor: string | null,
 ): Promise<boolean> {
   let pending: RealtimeMessage[] | null = [];
@@ -81,14 +84,15 @@ function streamSink(stream: EventStream): RealtimeSink {
 
 // Access denial leaves the response untouched for the caller.
 export async function openRealtimeStream(
+  hub: TopicHub,
   h3Event: H3Event,
-  entry: RealtimeEntry,
+  entry: StreamEntry,
   cursor: string | null,
 ): Promise<EventStream | null> {
   const stream = createEventStream(h3Event);
 
   const attached = await attachRealtimeSubscription(
-    realtimeHub,
+    hub,
     streamSink(stream),
     entry,
     cursor,

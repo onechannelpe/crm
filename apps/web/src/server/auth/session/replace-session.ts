@@ -1,4 +1,5 @@
 import type { AuthSession } from "~/domain/auth/access/session-types";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 import type {
   SessionServiceDeps,
@@ -22,8 +23,8 @@ export async function replaceSession(
     strongAuthAt: Date | null;
     ipAddress: string;
     userAgent: string | null;
-    issuedAt: Date;
   },
+  operation: OperationContext,
 ): Promise<string> {
   const sessionService = createSessionService({
     sessions: repos.sessions,
@@ -42,7 +43,7 @@ export async function replaceSession(
       strongAuthMethod: input.strongAuthMethod,
       strongAuthAt: input.strongAuthAt,
     },
-    input.issuedAt,
+    operation,
   );
 
   await sessionService.revoke(input.current.id);

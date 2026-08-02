@@ -1,6 +1,6 @@
 import { fail, type DomainError } from "~/domain/errors";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 import { toAvatarDomainError } from "~/server/users/avatar-error";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 

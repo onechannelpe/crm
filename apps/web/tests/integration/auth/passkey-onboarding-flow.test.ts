@@ -67,17 +67,21 @@ describe("passkey onboarding flow", () => {
       last_activity: now,
       expires_at: new Date(now.getTime() + 60_000),
     });
-    sessionCache.set(currentSession.id, {
-      userId,
-      branchId: user.branch_id,
-      role: user.role,
-      sessionClass: "pre_auth",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
-      impersonatorUserId: null,
-      expiresAt: new Date(now.getTime() + 60_000),
-    });
+    sessionCache.set(
+      currentSession.id,
+      {
+        userId,
+        branchId: user.branch_id,
+        role: user.role,
+        sessionClass: "pre_auth",
+        primaryAuthMethod: "password",
+        strongAuthMethod: null,
+        strongAuthAt: null,
+        impersonatorUserId: null,
+        expiresAt: new Date(now.getTime() + 60_000),
+      },
+      now,
+    );
     const profile = await saveOnboardingProfile(setup, {
       userId,
       phone: phone(),
@@ -98,7 +102,7 @@ describe("passkey onboarding flow", () => {
         ipAddress: "198.51.100.10",
         userAgent: "integration-test",
         publicOrigin: "https://crm.example.test",
-        now: () => now,
+        operationAt: now,
       },
       setup,
       {
@@ -124,7 +128,7 @@ describe("passkey onboarding flow", () => {
     const completedUser = await setup.repos.users.findById(userId);
     expect(completedUser?.onboarding_completed_at).toEqual(now);
     expect(await setup.repos.sessions.findById(currentSession.id)).toBeNull();
-    expect(sessionCache.get(currentSession.id)).toBeNull();
+    expect(sessionCache.get(currentSession.id, now)).toBeNull();
     expect(
       await setup.repos.sessions.findById(
         hashSessionToken(result.value.sessionToken),
@@ -167,7 +171,7 @@ describe("passkey onboarding flow", () => {
         ipAddress: "198.51.100.10",
         userAgent: "integration-test",
         publicOrigin: "https://crm.example.test",
-        now: () => now,
+        operationAt: now,
       },
       setup,
     );

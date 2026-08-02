@@ -17,12 +17,12 @@ import {
   LEAD_STATUSES,
 } from "~/contracts/workflow/vocabulary";
 import { UserId, WorkflowLeadId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
 import { isErr, Ok } from "~/shared/result";
 
@@ -54,16 +54,18 @@ export async function queryLeadList(
       status: status ?? null,
     }),
 
-    execute: ({ actor, operationAt: now }, parsedFilters) => {
-      const { userId, role, branchId } = workflowActor(actor);
+    execute: (ctx, parsedFilters) => {
+      const { userId, role, branchId } = workflowActor(ctx.actor);
 
-      return application.workflow.queries.listLeads({
-        actorUserId: userId,
-        actorRole: role,
-        actorBranchId: branchId,
-        filters: parsedFilters,
-        evaluatedAt: now,
-      });
+      return application.workflow.queries.listLeads(
+        {
+          actorUserId: userId,
+          actorRole: role,
+          actorBranchId: branchId,
+          filters: parsedFilters,
+        },
+        ctx,
+      );
     },
   });
 }
@@ -82,20 +84,22 @@ export async function queryLeadDetail(
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: async ({ actor, operationAt: now }, query) => {
-      const { userId, role } = workflowActor(actor);
+    execute: async (ctx, query) => {
+      const { userId, role } = workflowActor(ctx.actor);
 
-      const detail = await application.workflow.queries.getLeadDetail({
-        actorUserId: userId,
-        actorRole: role,
-        leadId: query.leadId,
-        evaluatedAt: now,
-      });
+      const detail = await application.workflow.queries.getLeadDetail(
+        {
+          actorUserId: userId,
+          actorRole: role,
+          leadId: query.leadId,
+        },
+        ctx,
+      );
       if (isErr(detail)) return detail;
 
       return Ok({
         ...detail.value,
-        evaluatedAt: now.getTime(),
+        evaluatedAt: ctx.operationAt.getTime(),
       });
     },
   });
@@ -108,8 +112,8 @@ export async function queryFulfillmentQueue(): Promise<
     name: "application.workflow.list_fulfillment_queue",
     access: { kind: "auth" },
 
-    execute: async ({ actor, operationAt: now }) => {
-      const { role, branchId } = workflowActor(actor);
+    execute: async (ctx) => {
+      const { role, branchId } = workflowActor(ctx.actor);
       const queue = await application.workflow.queries.listFulfillmentQueue({
         actorRole: role,
         actorBranchId: branchId,
@@ -118,7 +122,7 @@ export async function queryFulfillmentQueue(): Promise<
 
       return Ok({
         ...queue.value,
-        evaluatedAt: now.getTime(),
+        evaluatedAt: ctx.operationAt.getTime(),
       });
     },
   });
@@ -129,11 +133,11 @@ export async function queryPendingQuotationCount(): Promise<PendingQuotationCoun
     name: "application.workflow.pending_quotation_count",
     access: { kind: "auth" },
 
-    execute: ({ actor, operationAt: now }) => {
-      const { userId, branchId } = workflowActor(actor);
+    execute: (ctx) => {
+      const { userId, branchId } = workflowActor(ctx.actor);
 
       return application.workflow.queries
-        .pendingQuotationCount(userId, branchId, now)
+        .pendingQuotationCount(userId, branchId, ctx)
         .then(Ok);
     },
   });

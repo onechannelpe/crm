@@ -25,7 +25,7 @@ export async function stageGpvSnapshot(
   db: DatabaseExecutor,
   snapshotId: GpvSnapshotId,
   report: ParsedReport,
-  now: Date,
+  stagedAt: Date,
 ): Promise<StagedGpvSnapshot> {
   const snapshot = await db
     .selectFrom("gpv_snapshots")
@@ -49,7 +49,7 @@ export async function stageGpvSnapshot(
 
   const placementIdByKey = await insertPlacements(db, snapshotId, report.rows);
   await insertObservations(db, snapshotId, report.rows, placementIdByKey);
-  await insertParseIssues(db, snapshotId, report.rejections, now);
+  await insertParseIssues(db, snapshotId, report.rejections, stagedAt);
 
   return {
     rowsTotal: report.rows.length + report.rejections.length,
@@ -159,7 +159,7 @@ async function insertParseIssues(
   db: DatabaseExecutor,
   snapshotId: GpvSnapshotId,
   rejections: readonly Rejection[],
-  now: Date,
+  createdAt: Date,
 ): Promise<void> {
   const values = rejections.map((rejection) => ({
     snapshot_id: snapshotId,
@@ -170,7 +170,7 @@ async function insertParseIssues(
     detail: rejection.reason,
     previous_value: null,
     candidate_value: JSON.stringify(rejection.raw),
-    created_at: now,
+    created_at: createdAt,
   }));
 
   for (const chunk of chunks(values, ISSUE_CHUNK)) {

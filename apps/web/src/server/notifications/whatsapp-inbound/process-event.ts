@@ -40,7 +40,7 @@ async function enqueueReply(
   kind: "verification" | "opt-out",
   recipient: Phone,
   body: string,
-  now: Date,
+  enqueuedAt: Date,
 ): Promise<void> {
   await db
     .insertInto("outbound_whatsapp_messages")
@@ -51,13 +51,13 @@ async function enqueueReply(
       queue_state: "pending",
       attempt_count: 0,
       max_attempts: 5,
-      claimable_at: now,
+      claimable_at: enqueuedAt,
       lease_owner: null,
       provider: null,
       provider_message_id: null,
       error_code: null,
       error_message: null,
-      created_at: now,
+      created_at: enqueuedAt,
       completed_at: null,
     })
     .onConflict((oc) => oc.column("id").doNothing())
@@ -67,7 +67,7 @@ async function enqueueReply(
 export async function processInboundWhatsAppEvent(
   db: Kysely<Database>,
   event: WhatsAppInboundEventJob,
-  now: Date,
+  receivedAt: Date,
 ): Promise<InboundEventResult> {
   const sender = parsePhone(event.sender_address);
 
@@ -101,7 +101,7 @@ export async function processInboundWhatsAppEvent(
                   user_id: claim.user_id,
                   category,
                   channel: "whatsapp" as const,
-                  created_at: now,
+                  created_at: receivedAt,
                 })),
               )
               .onConflict((oc) =>
@@ -120,7 +120,7 @@ export async function processInboundWhatsAppEvent(
           "opt-out",
           sender,
           OPT_OUT_REPLY_BODY,
-          now,
+          receivedAt,
         );
       }
 
@@ -132,8 +132,8 @@ export async function processInboundWhatsAppEvent(
         .updateTable("user_channel_addresses")
         .set({
           is_verified: true,
-          verified_at: now,
-          updated_at: now,
+          verified_at: receivedAt,
+          updated_at: receivedAt,
         })
         .where("user_id", "=", claim.user_id)
         .where("channel", "=", "whatsapp")
@@ -151,7 +151,7 @@ export async function processInboundWhatsAppEvent(
           "verification",
           sender,
           VERIFY_REPLY_BODY,
-          now,
+          receivedAt,
         );
 
         return { outcome: "verified", enqueuedReply: true };

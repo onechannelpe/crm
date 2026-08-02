@@ -29,7 +29,6 @@ export async function listManagedExecutives(
     ctx.actor.role === "superuser"
       ? await deps.repos.users.findAllActive()
       : await deps.repos.users.findByBranch(ctx.actor.branchId);
-  const evaluatedAt = ctx.operationAt;
 
   const summaries = await Promise.all(
     users.map(async (user) => {
@@ -37,8 +36,8 @@ export async function listManagedExecutives(
       if (!managed.ok) return null;
 
       const [searchStatus, leadStatus] = await Promise.all([
-        getSearchCapacitySnapshot(user.id, deps.repos, evaluatedAt),
-        getLeadCapacitySnapshot(user.id, deps.repos, evaluatedAt),
+        getSearchCapacitySnapshot(user.id, deps.repos, ctx),
+        getLeadCapacitySnapshot(user.id, deps.repos, ctx),
       ]);
       if (isErr(searchStatus) || isErr(leadStatus)) return null;
 

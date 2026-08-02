@@ -8,6 +8,7 @@ import { epochMilliseconds } from "~/domain/time/clock";
 import type { InviteService } from "~/server/invites/application/types";
 import { inviteLink } from "~/server/invites/domain/invite-link";
 import type { AppContext } from "~/server/platform/action/context";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { createLogger } from "~/shared/observability/runtime-logger";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
@@ -40,7 +41,7 @@ async function deliverInviteEmail(
     inviteUrl: string;
     expiresAt: Date;
   },
-  now: Date,
+  operation: OperationContext,
 ): Promise<boolean> {
   const sent = await delivery.send({
     email: params.email,
@@ -59,7 +60,10 @@ async function deliverInviteEmail(
     return false;
   }
 
-  const marked = await inviteService.markInviteDelivered(params.inviteId, now);
+  const marked = await inviteService.markInviteDelivered(
+    params.inviteId,
+    operation,
+  );
 
   if (isErr(marked)) {
     logger.error("invite.mark_delivered_failed", {
@@ -75,11 +79,11 @@ async function deliverInviteEmail(
 export async function getInviteInfo(input: {
   token: string;
   repos: TeamInviteRepos;
-  asOf: Date;
+  operation: OperationContext;
 }): Promise<Result<InviteInfo | null, DomainError>> {
   const invite = await input.repos.userInvites.findPendingByToken(
     input.token,
-    input.asOf,
+    input.operation.operationAt,
   );
 
   if (!invite) {
@@ -100,7 +104,7 @@ export async function getInviteManagement(
 ): Promise<Result<InviteManagement, DomainError>> {
   const [teams, pendingInvites] = await Promise.all([
     port.listTeamsByBranch(ctx.actor.branchId),
-    port.listPendingInvites(ctx.actor.branchId, ctx.operationAt),
+    port.listPendingInvites(ctx.actor.branchId, ctx),
   ]);
 
   if (isErr(pendingInvites)) {
@@ -142,7 +146,7 @@ export async function createTeamInvite(
   deps: TeamInviteCreateContext,
   input: CreateTeamInviteCommand,
 ): Promise<Result<CreateTeamInviteResult, DomainError>> {
-  await deps.enforceInviteCreateRateLimit(ctx.actor.userId, ctx.operationAt);
+  await deps.enforceInviteCreateRateLimit(ctx.actor.userId, ctx);
 
   const created = await deps.inviteService.createInvite(
     {
@@ -158,7 +162,7 @@ export async function createTeamInvite(
       teamId: input.teamId,
       expiresAt: input.expiresAt,
     },
-    ctx.operationAt,
+    ctx,
   );
 
   if (isErr(created)) {
@@ -182,7 +186,7 @@ export async function createTeamInvite(
       inviteUrl,
       expiresAt: created.value.expiresAt,
     },
-    ctx.operationAt,
+    ctx,
   );
 
   return Ok({
@@ -205,7 +209,7 @@ export async function resendTeamInvite(
       branchId: ctx.actor.branchId,
       inviteId: input.inviteId,
     },
-    ctx.operationAt,
+    ctx,
   );
 
   if (isErr(redelivered)) {
@@ -233,7 +237,7 @@ export async function resendTeamInvite(
       inviteUrl: inviteLink(deps.publicOrigin, redelivered.value.token),
       expiresAt: redelivered.value.expiresAt,
     },
-    ctx.operationAt,
+    ctx,
   );
 
   return Ok({ delivered });
@@ -251,6 +255,6 @@ export async function revokeTeamInvite(
       branchId: ctx.actor.branchId,
       inviteId: input.inviteId,
     },
-    ctx.operationAt,
+    ctx,
   );
 }

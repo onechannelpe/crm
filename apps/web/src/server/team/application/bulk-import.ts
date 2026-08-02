@@ -7,6 +7,7 @@ import { invalid, type DomainError } from "~/domain/errors";
 import { shortName } from "~/domain/identity/display-name";
 import { inviteLink } from "~/server/invites/domain/invite-link";
 import type { AppContext } from "~/server/platform/action/context";
+import type { OperationContext } from "~/server/platform/operation/context";
 import {
   applyImport,
   parseAndValidateCsvRows,
@@ -18,9 +19,13 @@ import type { TeamBulkImportContext } from "../infrastructure/invite-context";
 export async function previewBulkImport(
   csvContent: string,
   role: Role,
-  now: Date,
+  operation: OperationContext,
 ): Promise<Result<BulkParseResult, DomainError>> {
-  const parsed = parseAndValidateCsvRows(csvContent, role, now);
+  const parsed = parseAndValidateCsvRows(
+    csvContent,
+    role,
+    operation.operationAt,
+  );
   if (!parsed.ok) {
     return Err(
       invalid({
@@ -40,11 +45,7 @@ export async function applyBulkImport(
     role: Role;
   },
 ): Promise<Result<BulkApplyResult, DomainError>> {
-  const parsed = await previewBulkImport(
-    input.csvContent,
-    input.role,
-    ctx.operationAt,
-  );
+  const parsed = await previewBulkImport(input.csvContent, input.role, ctx);
   if (!parsed.ok) {
     return parsed;
   }
@@ -84,9 +85,9 @@ export async function applyBulkImport(
             : (error.code ?? error.kind);
         throw new Error(message);
       }
-      await deps.inviteService.markInviteDelivered(inviteId, ctx.operationAt);
+      await deps.inviteService.markInviteDelivered(inviteId, ctx);
     },
-    ctx.operationAt,
+    ctx,
   );
 
   return Ok(result);

@@ -49,7 +49,7 @@ export async function startImpersonation(
       strongAuthAt: null,
       impersonatorUserId: ctx.actor.userId,
     },
-    ctx.operationAt,
+    ctx,
   );
 
   await deps.events.append({

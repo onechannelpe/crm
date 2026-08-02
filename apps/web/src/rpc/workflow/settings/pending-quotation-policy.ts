@@ -1,9 +1,9 @@
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
 
 export type SavePendingQuotationPolicyInput =
@@ -28,10 +28,10 @@ export async function savePendingQuotationPolicy(
       enabled: payload.enabled,
       limit: payload.enabled ? payload.limit : 0,
     }),
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.updatePendingQuotationPolicy(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }

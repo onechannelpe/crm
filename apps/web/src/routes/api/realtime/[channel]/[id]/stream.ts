@@ -1,32 +1,22 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import {
-  realtimeErrorResponse,
-  resolveRealtimeEntry,
-} from "~/server/realtime/access";
-import { ensureRealtimeStarted } from "~/server/realtime/runtime";
-import { openRealtimeStream } from "~/server/realtime/stream";
+import { application } from "~/server/composition/application";
 import { isErr } from "~/shared/result";
 
 export async function GET(
   event: Pick<APIEvent, "params" | "request" | "nativeEvent">,
 ) {
-  const entry = await resolveRealtimeEntry(
-    event.params.channel,
-    event.params.id,
-  );
+  const stream = await application.realtime.openStream(event.nativeEvent, {
+    channel: event.params.channel,
+    id: event.params.id,
+    cursor: event.request.headers.get("last-event-id"),
+  });
 
-  if (isErr(entry)) {
-    return realtimeErrorResponse(entry.error);
+  if (isErr(stream)) {
+    return new Response(null, {
+      status: stream.error === "unauthenticated" ? 401 : 404,
+    });
   }
 
-  await ensureRealtimeStarted();
-
-  const stream = await openRealtimeStream(
-    event.nativeEvent,
-    entry.value,
-    event.request.headers.get("last-event-id"),
-  );
-
-  return stream ?? realtimeErrorResponse("not_found");
+  return stream.value;
 }

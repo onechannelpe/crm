@@ -5,6 +5,7 @@ import { createAuthThrottleService } from "~/server/auth/application/throttle-se
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type { UsersTable } from "~/server/platform/database/types";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { createUsersRepo } from "~/server/users/repos-users";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -29,17 +30,17 @@ export interface PasswordCredentialInput {
 
 export async function verifyPasswordLoginCredentials(
   input: PasswordCredentialInput,
-  deps: { repos: Deps; now: Date },
+  repos: Deps,
+  operation: OperationContext,
 ): Promise<Result<UserRow, InvalidCredentialsError>> {
   const safeUsername = input.username.trim();
   const safePassword = input.password;
-  const occurredAt = deps.now;
+  const occurredAt = operation.operationAt;
   if (safeUsername.length === 0 || safePassword.length === 0) {
     return Err({ kind: "invalid_credentials" });
   }
-  const resolvedDeps = deps.repos;
   const throttleService = createAuthThrottleService({
-    authThrottle: resolvedDeps.authThrottle,
+    authThrottle: repos.authThrottle,
   });
   const throttle = await throttleService.checkLoginThrottle(
     safeUsername,
@@ -52,8 +53,8 @@ export async function verifyPasswordLoginCredentials(
     // attributable in per-user security analytics
     // (findRecentLoginRetriesByUser); the identifier hash alone cannot be
     // grouped by account.
-    const blockedUser = await resolvedDeps.users.findByUsername(safeUsername);
-    await recordAuthEvent(resolvedDeps, {
+    const blockedUser = await repos.users.findByUsername(safeUsername);
+    await recordAuthEvent(repos, {
       userId: blockedUser?.id ?? null,
       identifier: safeUsername,
       ipAddress: input.ipAddress,
@@ -66,7 +67,7 @@ export async function verifyPasswordLoginCredentials(
     return Err({ kind: "invalid_credentials" });
   }
 
-  const user = await resolvedDeps.users.findByUsername(safeUsername);
+  const user = await repos.users.findByUsername(safeUsername);
 
   if (!user || !user.is_active) {
     await verifyPassword(await DUMMY_HASH, safePassword);
@@ -75,7 +76,7 @@ export async function verifyPasswordLoginCredentials(
       input.ipAddress,
       occurredAt,
     );
-    await recordAuthEvent(resolvedDeps, {
+    await recordAuthEvent(repos, {
       userId: user?.id ?? null,
       identifier: safeUsername,
       ipAddress: input.ipAddress,
@@ -94,7 +95,7 @@ export async function verifyPasswordLoginCredentials(
       input.ipAddress,
       occurredAt,
     );
-    await recordAuthEvent(resolvedDeps, {
+    await recordAuthEvent(repos, {
       userId: user.id,
       identifier: safeUsername,
       ipAddress: input.ipAddress,

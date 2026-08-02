@@ -35,14 +35,14 @@ export function reassignRegisteredLead(input: {
     const transition = reassignLead(state, {
       actor: input.actor,
       toExecutiveId: input.actor.userId,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
     if (!transition.ok) return transition;
 
     const committed = await ctx.commitTransition(transition.value, {
       toExecutiveId: input.actor.userId,
       assignedBy: input.actor.userId,
-      at: ctx.operationAt,
+      assignedAt: ctx.operationAt,
     });
     if (!committed.ok) return committed;
 
@@ -98,7 +98,7 @@ export function createRegisteredLead(input: {
           legalName: input.enrichment?.legalName ?? null,
           lineOfBusiness: input.command.lineOfBusiness,
           address: input.enrichment?.address ?? null,
-          at: ctx.operationAt,
+          upsertedAt: ctx.operationAt,
         });
 
         const draft = createLeadDraft({
@@ -109,7 +109,7 @@ export function createRegisteredLead(input: {
           executiveId: input.actor.userId,
           createdBy: input.actor.userId,
           commercialScope: input.commercialScope,
-          now: ctx.operationAt,
+          createdAt: ctx.operationAt,
         });
         if (!draft.ok) return draft;
 
@@ -118,7 +118,7 @@ export function createRegisteredLead(input: {
           organizationId: organization.id,
           executiveId: input.actor.userId,
           assignedBy: input.actor.userId,
-          at: ctx.operationAt,
+          assignedAt: ctx.operationAt,
           reason: "lead_registration",
         });
         if (!assigned.ok) return assigned;

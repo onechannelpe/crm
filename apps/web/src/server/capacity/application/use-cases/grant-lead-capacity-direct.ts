@@ -32,9 +32,9 @@ export async function grantLeadCapacityDirect(
         targetUserId: input.targetUserId,
         amount: amount.value,
         reason: input.reason,
-        at: ctx.operationAt,
       },
       { grants: tx.leadCapacityGrants },
+      ctx,
     );
     if (isErr(result)) return result;
     return Ok({ success: true });

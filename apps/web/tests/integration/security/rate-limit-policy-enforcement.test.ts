@@ -52,6 +52,7 @@ describe("rate limit policy enforcement", () => {
           "leads.request",
           userId,
           ctx.repos,
+          new Date(),
           "198.51.100.1",
         ),
       ).resolves.toBeUndefined();
@@ -64,7 +65,13 @@ describe("rate limit policy enforcement", () => {
     await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     await expect(
-      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx.repos,
+        new Date(),
+        "198.51.100.1",
+      ),
     ).rejects.toBeInstanceOf(ActionError);
   });
 
@@ -82,6 +89,7 @@ describe("rate limit policy enforcement", () => {
         "team.invite.create",
         userId,
         ctx.repos,
+        new Date(),
         "198.51.100.1",
       ),
     ).rejects.toBeInstanceOf(ActionError);

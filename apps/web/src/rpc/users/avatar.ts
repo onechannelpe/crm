@@ -1,11 +1,11 @@
 import { fail, type DomainError } from "~/domain/errors";
 import { UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export async function uploadMemberAvatar(

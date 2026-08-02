@@ -54,7 +54,6 @@ describe("session service caching and validation", () => {
       sessions: createAuthSessionRepo(ctx.db),
       users: createAuthUsersRepo(ctx.db),
       events: createEventsRepo(ctx.db),
-      now: () => NOW,
       logger: { error() {} },
     });
   }
@@ -96,7 +95,7 @@ describe("session service caching and validation", () => {
     const sessionId = hashSessionToken(token);
     await seedSession(sessionId, { session_class: "pre_auth" });
 
-    const result = await makeService().resolve(token);
+    const result = await makeService().resolve(token, NOW);
 
     expect(result?.sessionClass).toBe("pre_auth");
     expect(result?.role).toBe(IDENTITY.role);
@@ -108,7 +107,7 @@ describe("session service caching and validation", () => {
     await seedSession(sessionId);
     const service = makeService();
 
-    const first = await service.resolve(token);
+    const first = await service.resolve(token, NOW);
     expect(first?.role).toBe(IDENTITY.role);
 
     // A changed second result would prove that resolve bypassed the cache.
@@ -118,7 +117,7 @@ describe("session service caching and validation", () => {
       .where("id", "=", sessionId)
       .execute();
 
-    const second = await service.resolve(token);
+    const second = await service.resolve(token, NOW);
     expect(second?.role).toBe(IDENTITY.role);
   });
 
@@ -128,11 +127,11 @@ describe("session service caching and validation", () => {
     await seedSession(sessionId);
     const service = makeService();
 
-    expect(await service.resolve(token)).not.toBeNull();
+    expect(await service.resolve(token, NOW)).not.toBeNull();
 
     await service.revokeAllForUser(IDENTITY.userId);
 
-    expect(await service.resolve(token)).toBeNull();
+    expect(await service.resolve(token, NOW)).toBeNull();
     expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
   });
 
@@ -142,7 +141,7 @@ describe("session service caching and validation", () => {
     await seedSession(sessionId);
     await corruptSessionRole(sessionId);
 
-    const result = await makeService().resolve(token);
+    const result = await makeService().resolve(token, NOW);
 
     expect(result).toBeNull();
     expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();

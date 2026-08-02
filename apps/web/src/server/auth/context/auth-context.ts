@@ -2,6 +2,7 @@ import type { Selectable } from "kysely";
 
 import type { AuthContextDeps } from "~/server/auth/types";
 import type { UsersTable } from "~/server/platform/database/types";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 import {
   getStrongAuthStatus,
@@ -33,13 +34,13 @@ export interface AuthContext {
 export async function loadActiveAuthContextForUser(
   user: UserRow,
   deps: AuthContextDeps,
-  now: Date,
+  operation: OperationContext,
 ): Promise<AuthContext | null> {
   if (!user.is_active) {
     return null;
   }
-  if (user.expires_at !== null && user.expires_at <= now) {
-    await deps.users.deactivateIfExpired(user.id, now);
+  if (user.expires_at !== null && user.expires_at <= operation.operationAt) {
+    await deps.users.deactivateIfExpired(user.id, operation.operationAt);
     return null;
   }
 

@@ -9,11 +9,11 @@ import { persistBranchesAndPolicies } from "./branches-policies";
 
 export async function persistInstallation(
   db: Kysely<Database>,
-  now: Date,
+  seededAt: Date,
 ): Promise<void> {
   const realPassword = resolveInstallationPassword();
   const realPasswordHash = await hashPassword(realPassword);
 
-  await persistBranchesAndPolicies(db, now);
-  await persistInstallationManifest(db, now, realPasswordHash);
+  await persistBranchesAndPolicies(db, seededAt);
+  await persistInstallationManifest(db, seededAt, realPasswordHash);
 }

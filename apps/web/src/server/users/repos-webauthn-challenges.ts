@@ -42,10 +42,10 @@ export function createWebauthnChallengesRepo(db: Kysely<Database>) {
       return deleted !== undefined;
     },
 
-    async deleteExpired(now: Date): Promise<number> {
+    async deleteExpired(expiredBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("webauthn_challenges")
-        .where("expires_at", "<", now)
+        .where("expires_at", "<", expiredBefore)
         .executeTakeFirst();
 
       return Number(result.numDeletedRows ?? 0);

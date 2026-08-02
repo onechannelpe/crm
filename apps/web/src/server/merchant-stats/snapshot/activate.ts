@@ -9,7 +9,7 @@ import { freezeUncreditedMerchantMonths } from "../credit/freeze";
 export interface ActivateGpvSnapshotInput {
   snapshotId: GpvSnapshotId;
   activatedBy: UserId;
-  now: Date;
+  activatedAt: Date;
 }
 
 export async function activateGpvSnapshot(
@@ -70,7 +70,7 @@ async function activateInTransaction(
   await freezeUncreditedMerchantMonths(tx, {
     snapshotId: snapshot.id,
     cutAt: snapshot.cut_at,
-    creditedAt: input.now,
+    creditedAt: input.activatedAt,
   });
   if (active) {
     await tx
@@ -81,7 +81,7 @@ async function activateInTransaction(
   }
   await tx
     .updateTable("merchant_gpv_dataset")
-    .set({ updated_at: input.now })
+    .set({ updated_at: input.activatedAt })
     .where("id", "=", "default")
     .execute();
   await tx
@@ -89,7 +89,7 @@ async function activateInTransaction(
     .set({
       state: "active",
       activated_by: input.activatedBy,
-      activated_at: input.now,
+      activated_at: input.activatedAt,
     })
     .where("id", "=", snapshot.id)
     .execute();
@@ -102,7 +102,7 @@ async function activateInTransaction(
       cutAt: snapshot.cut_at.toISOString(),
       revision: snapshot.revision,
     },
-    occurredAt: input.now,
+    occurredAt: input.activatedAt,
   });
 
   return Ok(undefined);

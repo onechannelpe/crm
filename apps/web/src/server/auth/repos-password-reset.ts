@@ -17,12 +17,12 @@ export function createPasswordResetTokensRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    findValidByHash(tokenHash: string, now: Date) {
+    findValidByHash(tokenHash: string, activeAsOf: Date) {
       return db
         .selectFrom("password_reset_tokens")
         .selectAll()
         .where("token_hash", "=", tokenHash)
-        .where("expires_at", ">", now)
+        .where("expires_at", ">", activeAsOf)
         .where("used_at", "is", null)
         .executeTakeFirst();
     },
@@ -45,10 +45,10 @@ export function createPasswordResetTokensRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    expireAllForUser(userId: UserId, now: Date) {
+    expireAllForUser(userId: UserId, expiredAt: Date) {
       return db
         .updateTable("password_reset_tokens")
-        .set({ used_at: now })
+        .set({ used_at: expiredAt })
         .where("user_id", "=", userId)
         .where("used_at", "is", null)
         .execute();

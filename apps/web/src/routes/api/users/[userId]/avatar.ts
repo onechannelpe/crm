@@ -2,8 +2,8 @@ import type { APIEvent } from "@solidjs/start/server";
 
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { getSession } from "~/server/platform/action/session";
-import { application } from "~/server/platform/composition/application";
 import type { AvatarDomainErrorCode } from "~/server/users/avatar-service";
 import { isErr } from "~/shared/result";
 

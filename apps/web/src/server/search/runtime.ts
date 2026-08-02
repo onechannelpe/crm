@@ -13,8 +13,9 @@ import {
 } from "~/server/capacity/infrastructure/usage-repo";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import type { EngineClient } from "~/server/integrations/engine/client";
-import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
@@ -36,11 +37,11 @@ export function createSearchUsageReservationPorts(
 ): UsageReservationPorts<"search"> {
   return {
     executor,
-    async checkRemaining(trx, actorUserId, evaluatedAt) {
+    async checkRemaining(trx, actorUserId, operation) {
       const snapshot = await getSearchCapacitySnapshot(
         actorUserId,
         buildSearchUsageRepos(trx),
-        evaluatedAt,
+        operation,
       );
       if (isErr(snapshot)) return snapshot;
       return Ok(snapshot.value.remaining);
@@ -66,12 +67,11 @@ export function createSearchRuntime(
   return {
     getAllowance: (
       userId: Parameters<typeof getSearchCapacitySnapshot>[0],
-      evaluatedAt: Date,
-    ) => getSearchCapacitySnapshot(userId, repos, evaluatedAt),
+      operation: OperationContext,
+    ) => getSearchCapacitySnapshot(userId, repos, operation),
     runDirect: async (
-      ctx: {
+      ctx: OperationContext & {
         actor: { userId: Parameters<typeof getSearchCapacitySnapshot>[0] };
-        operationAt: Date;
       },
       command: Parameters<typeof runDirectSearch>[0],
     ) => {
@@ -79,9 +79,9 @@ export function createSearchRuntime(
         "search.use",
         ctx.actor.userId,
         rateLimitDeps,
-        ctx.operationAt,
+        ctx,
       );
-      return runDirectSearch(command, usageReservationPorts, engine);
+      return runDirectSearch(command, usageReservationPorts, engine, ctx);
     },
   };
 }

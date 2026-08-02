@@ -3,6 +3,7 @@ import {
   persistPasskeyLoginFlow,
   preparePasskeyLogin,
 } from "~/server/auth/factors/passkey/service";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { isErr, Ok } from "~/shared/result";
 
 import type { AuthLoginContext } from "../infrastructure/login-context";
@@ -24,7 +25,7 @@ export async function startPasskeyLogin(
   input: StartPasskeyLoginInput,
   deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
-  occurredAt: Date,
+  operation: OperationContext,
 ) {
   const prepared = await preparePasskeyLogin(
     deps.repos,
@@ -35,14 +36,14 @@ export async function startPasskeyLogin(
           ipAddress: input.ipAddress,
           mode: input.mode,
           primaryAuthMethod: input.primaryAuthMethod,
-          occurredAt,
+          occurredAt: operation.operationAt,
           account: { kind: "lookup" },
         }
       : {
           ipAddress: input.ipAddress,
           mode: input.mode,
           primaryAuthMethod: input.primaryAuthMethod,
-          occurredAt,
+          occurredAt: operation.operationAt,
         },
   );
   if (isErr(prepared)) return prepared;

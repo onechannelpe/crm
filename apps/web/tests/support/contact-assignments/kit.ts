@@ -39,18 +39,24 @@ export function createContactAssignmentsTestKit(ctx: TestDbContext) {
 
     async activeContactIdsForUser(
       userId: UserId,
+      asOf: Date = new Date(),
     ): Promise<OrganizationPersonId[]> {
-      const rows = await ctx.repos.contactAssignments.findActiveByUser(userId);
+      const rows = await ctx.repos.contactAssignments.findActiveByUser(
+        userId,
+        asOf,
+      );
       return rows.map((row) => row.contact_id);
     },
 
     async hasActiveAssignment(
       userId: UserId,
       contactId: OrganizationPersonId,
+      asOf: Date = new Date(),
     ): Promise<boolean> {
       return ctx.repos.contactAssignments.hasActiveForContact(
         userId,
         contactId,
+        asOf,
       );
     },
   };

@@ -4,7 +4,7 @@ import type { UserId } from "~/domain/ids";
 import { SearchReservationId } from "~/domain/ids";
 import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
 import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
-import { createSearchUsageReservationPorts } from "~/server/search/ui/composition";
+import { createSearchUsageReservationPorts } from "~/server/search/runtime";
 import { Ok } from "~/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -40,6 +40,7 @@ describe("search capacity consume service benchmark", () => {
           requested: 1,
           reserveReason: "direct_search",
           brand: SearchReservationId.trust,
+          at: new Date(),
         },
         usageReservationPorts,
         async () => Ok({ value: undefined, consumed: 1 }),

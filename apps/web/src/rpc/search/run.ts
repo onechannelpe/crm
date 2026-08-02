@@ -1,11 +1,11 @@
 import type { SearchDirectResult } from "~/contracts/search/results";
 import { SEARCH_INTENTS } from "~/contracts/search/vocabulary";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 
 export async function searchDirect(
   input: unknown,
@@ -29,7 +29,6 @@ export async function searchDirect(
       application.search.runDirect(ctx, {
         ...command,
         actorUserId: ctx.actor.userId,
-        at: ctx.operationAt,
       }),
   });
 }

@@ -66,7 +66,7 @@ export async function editRateProposalCommand(
       proposalId: latestProposal.id,
       round: latestProposal.round,
       changes,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

@@ -7,6 +7,7 @@ import {
   type UsageReservationPorts,
 } from "~/server/capacity/application/usage/ledger";
 import type { EngineClient } from "~/server/integrations/engine/client";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { isErr, Ok, type Result } from "~/shared/result";
 
 export interface RunDirectSearchCommand {
@@ -14,14 +15,13 @@ export interface RunDirectSearchCommand {
   intent: SearchIntent;
   query: string;
   limit: number;
-  /** Operation instant that stamps the usage reservation and its settlement. */
-  at: Date;
 }
 
 export async function runDirectSearch(
   command: RunDirectSearchCommand,
   usageReservationPorts: UsageReservationPorts<"search">,
   engine: Pick<EngineClient, "search">,
+  operation: OperationContext,
 ): Promise<Result<SearchDirectResult, DomainError>> {
   return executeWithUsageReservation(
     {
@@ -30,9 +30,9 @@ export async function runDirectSearch(
       requested: 1,
       reserveReason: "direct_search",
       brand: SearchReservationId.trust,
-      at: command.at,
     },
     usageReservationPorts,
+    operation,
     async () => {
       const searchResult = await engine.search(
         command.intent,

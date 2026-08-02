@@ -1,5 +1,5 @@
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 
 import { reactToRegistration } from "./reactors/enrichment";
 import { reactToFulfillmentChanges } from "./reactors/fulfillment-notify";
@@ -9,13 +9,12 @@ import { reactToStageChanges } from "./reactors/notify";
 // the event that produced it. Single derivation for the interactive write path
 // and the CSV import path.
 export async function enqueueLeadEffects(
-  tx: DatabaseExecutor,
+  scope: WorkflowWriteContext,
   committed: CommittedLeadEvent[],
-  now: Date,
 ): Promise<void> {
   if (committed.length === 0) return;
 
-  await reactToStageChanges(tx, committed, now);
-  await reactToFulfillmentChanges(tx, committed, now);
-  await reactToRegistration(tx, committed);
+  await reactToStageChanges(scope, committed);
+  await reactToFulfillmentChanges(scope, committed);
+  await reactToRegistration(scope.executor, committed);
 }

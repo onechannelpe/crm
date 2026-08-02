@@ -5,6 +5,7 @@ import {
   type UsageReservationPorts,
 } from "~/server/capacity/application/usage/ledger";
 import type { EngineClient } from "~/server/integrations/engine/client";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { isErr, Ok, type Result } from "~/shared/result";
 
 import {
@@ -40,13 +41,14 @@ async function requestAssignableCandidates(input: {
 export async function assignContacts(
   command: AssignContactsCommand,
   deps: AssignContactsDeps,
+  operation: OperationContext,
 ): Promise<Result<AssignContactsResult, DomainError>> {
   const { repos, uow, engine, leadUsageReservationPorts } = deps;
 
   const plan = await planContactAssignments(
     command.actorUserId,
     repos,
-    command.at,
+    operation,
   );
   if (isErr(plan)) return plan;
 
@@ -59,9 +61,9 @@ export async function assignContacts(
       requested: plan.value.requested,
       reserveReason: "lead_refill",
       brand: LeadReservationId.trust,
-      at: command.at,
     },
     leadUsageReservationPorts,
+    operation,
     async () => {
       const candidatesResult = await requestAssignableCandidates({
         command,
@@ -75,7 +77,7 @@ export async function assignContacts(
       const assigned = await createContactAssignmentsFromCandidates({
         actorUserId: command.actorUserId,
         candidates: candidatesResult.value,
-        at: command.at,
+        operation,
         uow,
       });
       if (isErr(assigned)) {

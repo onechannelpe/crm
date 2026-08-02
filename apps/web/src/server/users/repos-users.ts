@@ -394,11 +394,11 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async expireActiveUsersBefore(now: Date): Promise<UserId[]> {
+    async expireActiveUsersBefore(expiredBefore: Date): Promise<UserId[]> {
       const rows = await db
         .updateTable("users")
         .set({ is_active: false })
-        .where("expires_at", "<=", now)
+        .where("expires_at", "<=", expiredBefore)
         .where("is_active", "=", true)
         .returning("id")
         .execute();
@@ -406,14 +406,17 @@ export function createUsersRepo(db: DatabaseExecutor) {
       return rows.map((row) => row.id);
     },
 
-    async deactivateIfExpired(userId: UserId, now: Date): Promise<boolean> {
+    async deactivateIfExpired(
+      userId: UserId,
+      expiredAsOf: Date,
+    ): Promise<boolean> {
       const result = await db
         .updateTable("users")
         .set({ is_active: false })
         .where("id", "=", userId)
         .where("is_active", "=", true)
         .where("expires_at", "is not", null)
-        .where("expires_at", "<=", now)
+        .where("expires_at", "<=", expiredAsOf)
         .executeTakeFirst();
 
       return Number(result.numUpdatedRows ?? 0) > 0;

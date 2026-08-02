@@ -39,15 +39,15 @@ export function createGpvSnapshotJobRepo(db: DatabaseExecutor) {
     async insert(input: {
       snapshotId: GpvSnapshotId;
       maxAttempts: number;
-      now: Date;
+      enqueuedAt: Date;
     }): Promise<GpvSnapshotJobId> {
       const row = await db
         .insertInto("gpv_snapshot_jobs")
         .values({
           snapshot_id: input.snapshotId,
           max_attempts: input.maxAttempts,
-          claimable_at: input.now,
-          created_at: input.now,
+          claimable_at: input.enqueuedAt,
+          created_at: input.enqueuedAt,
         })
         .returning("id")
         .executeTakeFirstOrThrow();

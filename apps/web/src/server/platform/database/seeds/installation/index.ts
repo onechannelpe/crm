@@ -5,9 +5,9 @@ import { persistInstallation } from "./persist/core";
 
 export async function provisionInstallation(
   db: Kysely<Database>,
-  now: Date,
+  seededAt: Date,
 ): Promise<void> {
-  await persistInstallation(db, now);
+  await persistInstallation(db, seededAt);
   await verifyInstallation(db);
 }
 

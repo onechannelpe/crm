@@ -1,6 +1,7 @@
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { fail, forbidden, type DomainError } from "~/domain/errors";
 import type { BranchId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { validatePendingQuotationLimit } from "~/server/workflow/lead/domain/pending-quotation";
 import { Err, Ok, type Result } from "~/shared/result";
@@ -12,7 +13,7 @@ export async function updatePendingQuotationPolicy(
     actor: WorkflowActor;
   } & ({ enabled: false } | { enabled: true; limit: number }),
   pendingQuotationPolicies: PendingQuotationPolicyRepository,
-  updatedAt: Date,
+  operation: OperationContext,
 ): Promise<Result<{ branchId: BranchId; clientLimit: number }, DomainError>> {
   if (!hasPermission(input.actor.role, "quotation:policy:manage")) {
     return Err(forbidden());
@@ -33,7 +34,7 @@ export async function updatePendingQuotationPolicy(
   await pendingQuotationPolicies.upsert({
     branchId: input.actor.branchId,
     clientLimit: validatedLimit.value,
-    updatedAt,
+    updatedAt: operation.operationAt,
     updatedByUserId: input.actor.userId,
   });
 

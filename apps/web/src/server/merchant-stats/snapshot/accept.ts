@@ -13,7 +13,7 @@ export interface AcceptGpvSnapshotInput {
   fileAssetId: FileAssetId;
   contentSha256: string;
   cutAt: Date;
-  now: Date;
+  uploadedAt: Date;
 }
 
 export type AcceptGpvSnapshotResult =
@@ -61,14 +61,14 @@ export async function acceptGpvSnapshot(
         file_asset_id: input.fileAssetId,
         cut_at: input.cutAt,
         revision: (latestRevision?.revision ?? 0) + 1,
-        uploaded_at: input.now,
+        uploaded_at: input.uploadedAt,
       })
       .returning("id")
       .executeTakeFirstOrThrow();
     const jobId = await createGpvSnapshotJobRepo(tx).insert({
       snapshotId: snapshot.id,
       maxAttempts: MAX_IMPORT_ATTEMPTS,
-      now: input.now,
+      enqueuedAt: input.uploadedAt,
     });
 
     return {

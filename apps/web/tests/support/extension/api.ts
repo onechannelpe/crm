@@ -43,7 +43,6 @@ export function createExtensionScenario(
 ) {
   const service = createExtensionService(ctx.repos, {
     uow: createTransactionRunner(ctx),
-    now,
   });
 
   return {
@@ -129,20 +128,26 @@ export function createExtensionScenario(
     async claim(installationId: string) {
       const authSessionId = await this.session();
       const assignmentId = await this.assignment();
-      const handoffResult = await service.createHandoffToken({
-        userId: TEST_FIXTURES.users.execOne.id,
-        authSessionId,
-        branchId: TEST_FIXTURES.branches.lima.id,
-        assignmentId,
-        origin: "http://localhost:3000",
-      });
+      const handoffResult = await service.createHandoffToken(
+        {
+          userId: TEST_FIXTURES.users.execOne.id,
+          authSessionId,
+          branchId: TEST_FIXTURES.branches.lima.id,
+          assignmentId,
+          origin: "http://localhost:3000",
+        },
+        now(),
+      );
       if (!handoffResult.ok) {
         throw new Error(handoffResult.error.code ?? handoffResult.error.kind);
       }
-      const claimResult = await service.claimInstallationSession({
-        handoffToken: handoffResult.value.handoffToken,
-        installationId,
-      });
+      const claimResult = await service.claimInstallationSession(
+        {
+          handoffToken: handoffResult.value.handoffToken,
+          installationId,
+        },
+        now(),
+      );
       if (!claimResult.ok) {
         throw new Error(claimResult.error.code ?? claimResult.error.kind);
       }

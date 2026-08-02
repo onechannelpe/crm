@@ -1,9 +1,9 @@
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
 
 export async function saveRateProposalPolicy(input: { validityDays: number }) {
@@ -17,13 +17,13 @@ export async function saveRateProposalPolicy(input: { validityDays: number }) {
         validityDays: reader.posInt("validityDays"),
       })),
     audit: ({ validityDays }) => ({ validityDays }),
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.updateRateProposalPolicy(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           validityDays: payload.validityDays,
         },
-        now,
+        ctx,
       ),
   });
 }

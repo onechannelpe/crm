@@ -1,7 +1,7 @@
 import "server-only";
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 import { getBulkImportSetup as getBulkImportSetupService } from "~/server/team/application/invites";
 import { isErr, Ok } from "~/shared/result";
 

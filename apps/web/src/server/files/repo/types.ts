@@ -20,7 +20,7 @@ export interface InsertFileAssetInput {
   signatureKind: string | null;
   scanStatus: ScanStatus;
   createdByUserId: UserId;
-  now: Date;
+  createdAt: Date;
 }
 
 export interface InsertDownloadTokenInput {
@@ -28,7 +28,7 @@ export interface InsertDownloadTokenInput {
   tokenHash: string;
   requestedByUserId: UserId;
   expiresAt: Date;
-  now: Date;
+  createdAt: Date;
 }
 
 export interface SaleProofFileRecord {

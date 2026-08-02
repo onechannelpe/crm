@@ -29,7 +29,7 @@ export async function closeLeadCommand(
       actor: input.actor,
       reason: input.reason,
       note: input.note,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

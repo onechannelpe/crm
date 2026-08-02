@@ -3,8 +3,8 @@ import { redirect } from "@solidjs/router";
 
 import type { OnboardingSnapshot } from "~/contracts/auth";
 import { getSessionPath } from "~/domain/auth/access/route-policy";
+import { application } from "~/server/composition/application";
 import { getSession } from "~/server/platform/action/session";
-import { application } from "~/server/platform/composition/application";
 import { isErr } from "~/shared/result";
 
 export async function getOnboardingSnapshot(): Promise<OnboardingSnapshot> {

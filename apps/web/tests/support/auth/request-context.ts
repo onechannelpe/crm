@@ -10,7 +10,8 @@ export function createRequestContext(
     requestId: "request-id",
     route: "/home",
     method: "GET",
-    startedAt: 1_700_000_000_000,
+    startedAt: new Date(1_700_000_000_000),
+    startedTicks: 0,
     nonce: "nonce",
     csrf: csrfToken
       ? { kind: "available", token: csrfToken }

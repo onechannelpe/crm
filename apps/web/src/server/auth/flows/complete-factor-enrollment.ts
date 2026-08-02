@@ -76,17 +76,20 @@ export async function completeFactorEnrollment(
       now,
     );
 
-    const sessionToken = await replaceSession(repos, {
-      current: ctx.actor,
-      user,
-      sessionClass:
-        recoveryCodes.length > 0 ? "recovery_setup" : ctx.actor.sessionClass,
-      strongAuthMethod: factor.method,
-      strongAuthAt: now,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
-      issuedAt: now,
-    });
+    const sessionToken = await replaceSession(
+      repos,
+      {
+        current: ctx.actor,
+        user,
+        sessionClass:
+          recoveryCodes.length > 0 ? "recovery_setup" : ctx.actor.sessionClass,
+        strongAuthMethod: factor.method,
+        strongAuthAt: now,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      },
+      ctx,
+    );
 
     return Ok({
       recoveryCodes,

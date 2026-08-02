@@ -5,6 +5,7 @@ import type { AuthProof } from "~/server/auth/policy/types";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type { UsersTable } from "~/server/platform/database/types";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { createUsersRepo } from "~/server/users/repos-users";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -12,7 +13,6 @@ type PasswordProviderDeps = {
   users: ReturnType<typeof createUsersRepo>;
   authThrottle: ReturnType<typeof createAuthThrottleRepo>;
   authEvents: ReturnType<typeof createAuthEventsRepo>;
-  now: Date;
 };
 
 interface AuthenticatedPassword {
@@ -27,6 +27,7 @@ export async function authenticatePassword(
     ipAddress: string;
   },
   deps: PasswordProviderDeps,
+  operation: OperationContext,
 ): Promise<Result<AuthenticatedPassword, { kind: "invalid_credentials" }>> {
   const user = await verifyPasswordLoginCredentials(
     {
@@ -34,7 +35,8 @@ export async function authenticatePassword(
       password: input.password,
       ipAddress: input.ipAddress,
     },
-    { repos: deps, now: deps.now },
+    deps,
+    operation,
   );
   if (!user.ok) {
     return Err({ kind: "invalid_credentials" });

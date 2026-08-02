@@ -65,7 +65,7 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
   const claimWhatsAppAddress = async (values: {
     userId: UserId;
     address: Phone;
-    now: Date;
+    claimedAt: Date;
   }): Promise<
     { kind: "claimed" } | { kind: "already_claimed"; ownerUserId: UserId }
   > => {
@@ -75,7 +75,7 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
         address: values.address,
         is_verified: false,
         verified_at: null,
-        updated_at: values.now,
+        updated_at: values.claimedAt,
       })
       .where("user_id", "=", values.userId)
       .where("channel", "=", "whatsapp")
@@ -106,8 +106,8 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
         address: values.address,
         is_verified: false,
         verified_at: null,
-        created_at: values.now,
-        updated_at: values.now,
+        created_at: values.claimedAt,
+        updated_at: values.claimedAt,
       })
       .onConflict((oc) => oc.doNothing())
       .execute();
@@ -138,14 +138,14 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
   const markWhatsAppVerified = async (values: {
     userId: UserId;
     address: string;
-    now: Date;
+    verifiedAt: Date;
   }): Promise<boolean> => {
     const result = await db
       .updateTable("user_channel_addresses")
       .set({
         is_verified: true,
-        verified_at: values.now,
-        updated_at: values.now,
+        verified_at: values.verifiedAt,
+        updated_at: values.verifiedAt,
       })
       .where("user_id", "=", values.userId)
       .where("channel", "=", "whatsapp")

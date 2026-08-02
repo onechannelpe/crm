@@ -1,3 +1,5 @@
+import { makeAppContext, makeAuthSession } from "@tests/support/unit/factories";
+
 import type { CapacityRequestId, UserId } from "~/domain/ids";
 import type {
   CapacityGrantTx,
@@ -51,26 +53,18 @@ export function makeApprovalContext(
     Pick<AppContext["actor"], "userId" | "role" | "branchId">
   > = {},
 ): AppContext {
-  return {
-    actor: {
+  return makeAppContext({
+    actor: makeAuthSession({
       id: "test-session",
       userId: overrides.userId ?? SUPERUSER_ID,
       role: overrides.role ?? "superuser",
       branchId:
         overrides.branchId ?? SEEDED_APPROVAL_USERS.superuserBranchTwo.branchId,
-      sessionClass: "app",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
-      impersonatorUserId: null,
-    },
+    }),
     requestId: "req-test",
     traceId: "trace-test",
-    ipAddress: "127.0.0.1",
     userAgent: null,
-    publicOrigin: "http://localhost:3000",
-    now: () => new Date(1_700_000_000_000),
-  };
+  });
 }
 
 export function makeApprovalDeps(

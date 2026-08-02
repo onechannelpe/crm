@@ -37,6 +37,7 @@ export async function seedQuotaUser(ctx: TestDbContext): Promise<UserId> {
     actor_user_id: ACTOR_USER_ID,
     amount: 2,
     reason: "bench_seed",
+    created_at: BENCH_NOW,
   });
 
   return id;

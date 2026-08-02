@@ -1,6 +1,7 @@
 import { fail, type DomainError } from "~/domain/errors";
 import { GpvSnapshotIssueId } from "~/domain/ids";
 import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
+import { application } from "~/server/composition/application";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import {
   cutAtFromFilename,
@@ -14,7 +15,6 @@ import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Err, Ok, type Result } from "~/shared/result";
 
 const SNAPSHOT_RESOLUTIONS = [
@@ -73,16 +73,18 @@ export async function uploadMerchantReport(formData: FormData) {
     }),
 
     execute: async (context, { file, cutAt }) => {
-      const submitted = await application.merchantStats.imports.submit({
-        file: {
-          name: file.name,
-          sizeBytes: file.size,
-          stream: file.stream(),
+      const submitted = await application.merchantStats.imports.submit(
+        {
+          file: {
+            name: file.name,
+            sizeBytes: file.size,
+            stream: file.stream(),
+          },
+          cutAt,
+          uploadedBy: context.actor.userId,
         },
-        cutAt,
-        uploadedBy: context.actor.userId,
-        now: context.operationAt,
-      });
+        context,
+      );
 
       if (!submitted.ok) {
         return submitted;
@@ -116,14 +118,14 @@ export async function resolveGpvImportIssue(input: {
 
     audit: ({ issueId, resolution }) => ({ issueId, resolution }),
 
-    execute: ({ actor, operationAt: now }, { issueId, resolution }) =>
+    execute: (ctx, { issueId, resolution }) =>
       application.merchantStats.imports.resolveIssue(
         {
           issueId,
           resolution,
-          resolvedBy: actor.userId,
+          resolvedBy: ctx.actor.userId,
         },
-        now,
+        ctx,
       ),
   });
 }

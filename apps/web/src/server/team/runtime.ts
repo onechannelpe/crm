@@ -1,6 +1,7 @@
 import "server-only";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
-import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { applyBulkImport } from "~/server/team/application/bulk-import";
 import {
   createTeamInvite,
@@ -46,8 +47,8 @@ export function createTeamRuntime(
         ctx: Parameters<typeof applyBulkImport>[0],
         input: Parameters<typeof applyBulkImport>[2],
       ) => applyBulkImport(ctx, invites, input),
-      getInfo: (token: string, asOf: Date) =>
-        getInviteInfo({ token, repos: invites.repos, asOf }),
+      getInfo: (token: string, operation: OperationContext) =>
+        getInviteInfo({ token, repos: invites.repos, operation }),
     },
     management: {
       get: (ctx: Parameters<typeof getInviteManagement>[0]) =>

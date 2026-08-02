@@ -56,7 +56,7 @@ export async function applyLeadMutation(input: {
   jobId: IntegrationJobId;
   actor: { userId: UserId; role: Role };
   row: ImportRowInput;
-  now: Date;
+  operationAt: Date;
 }): Promise<LeadMutationResult> {
   const repos = createWorkflowRepos(input.executor);
 
@@ -72,7 +72,7 @@ export async function applyLeadMutation(input: {
       input.row.type === "import_prioridad" ? input.row.priority : undefined,
     answeredBy: input.actor.userId,
     answeredByJobId: input.jobId,
-    now: input.now,
+    answeredAt: input.operationAt,
   });
 
   async function inquiryOnlyOrFailed(
@@ -85,7 +85,7 @@ export async function applyLeadMutation(input: {
         jobId: input.jobId,
         rowNumber: input.row.row,
         leadId,
-        changedAt: input.now,
+        changedAt: input.operationAt,
       });
       return {
         ok: true,
@@ -101,7 +101,7 @@ export async function applyLeadMutation(input: {
       rowNumber: input.row.row,
       reason,
       leadId,
-      changedAt: input.now,
+      changedAt: input.operationAt,
     });
     return {
       ok: false,
@@ -134,7 +134,7 @@ export async function applyLeadMutation(input: {
     status: nextStatus,
     priority: nextPrioridad,
     reason: IMPORT_REASON,
-    now: input.now,
+    occurredAt: input.operationAt,
   });
 
   if (!transition.ok) {
@@ -160,7 +160,7 @@ export async function applyLeadMutation(input: {
     jobId: input.jobId,
     rowNumber: input.row.row,
     leadId: lead.id,
-    changedAt: input.now,
+    changedAt: input.operationAt,
   });
 
   return {

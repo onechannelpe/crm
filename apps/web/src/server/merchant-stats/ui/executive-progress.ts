@@ -1,7 +1,7 @@
 import "server-only";
 import type { ExecutiveGpvProgressView } from "~/contracts/merchant-stats/views";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function getExecutiveGpvProgress(): Promise<ExecutiveGpvProgressView> {
@@ -9,7 +9,12 @@ export async function getExecutiveGpvProgress(): Promise<ExecutiveGpvProgressVie
     name: "merchantStats.executiveProgress.read",
     access: { kind: "permission", permission: "dashboards:read:own" },
 
-    execute: async ({ actor, operationAt: now }) =>
-      Ok(await application.merchantStats.executive.progress(actor.userId, now)),
+    execute: async (ctx) =>
+      Ok(
+        await application.merchantStats.executive.progress(
+          ctx.actor.userId,
+          ctx,
+        ),
+      ),
   });
 }

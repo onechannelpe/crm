@@ -23,14 +23,14 @@ export function createIntentExpander(deps: {
 }) {
   return async function expandIntent(
     job: IntentJob,
-    now: Date,
+    expandedAt: Date,
   ): Promise<ExpansionOutcome> {
     const planningInput = projectIntentForPlanning(job);
     if (isErr(planningInput)) {
       return { kind: "invalid", reason: planningInput.error };
     }
 
-    const plan = await deps.planRecipients(planningInput.value, now);
+    const plan = await deps.planRecipients(planningInput.value, expandedAt);
 
     // In-app delivery is a local idempotent insert with no provider or rate
     // limit: not queued as a dispatch job.
@@ -44,7 +44,7 @@ export function createIntentExpander(deps: {
         body_text: job.body_text,
         action_url: job.action_url,
         metadata_json: null,
-        created_at: now,
+        created_at: expandedAt,
         read_at: null,
       })),
     );
@@ -59,7 +59,7 @@ export function createIntentExpander(deps: {
         body_text: job.body_text,
         action_url: job.action_url,
       })),
-      now,
+      expandedAt,
     );
 
     deps.logger.info("intent_expanded", {

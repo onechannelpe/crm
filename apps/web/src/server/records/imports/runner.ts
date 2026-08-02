@@ -3,6 +3,7 @@ import { applyImportRows } from "~/server/integrations/application/import/apply-
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { JobContext } from "~/server/platform/operation/context";
 
 import type { RecordImportInvalidRow } from "./intake/row-mapper";
 import {
@@ -32,8 +33,7 @@ export function createRecordImportRunner(deps: {
   return {
     async process(
       job: IntegrationJobRow,
-      signal: AbortSignal,
-      startedAt: Date,
+      context: JobContext,
     ): Promise<{
       rowsTotal: number;
       rowsApplied: number;
@@ -56,7 +56,7 @@ export function createRecordImportRunner(deps: {
         rowsFailed: 0,
       });
 
-      if (signal.aborted) {
+      if (context.abortSignal.aborted) {
         throw new Error("Job aborted");
       }
 
@@ -75,7 +75,8 @@ export function createRecordImportRunner(deps: {
             });
           },
         },
-        { executor, now: startedAt },
+        { executor },
+        context,
       );
 
       await reportProgress(job.id, {

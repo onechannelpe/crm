@@ -3,6 +3,7 @@ import { loadActiveAuthContextForUser } from "~/server/auth/context/auth-context
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { authenticateGoogleAuthorizationCode } from "~/server/auth/google/google-oauth";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import { completePrimaryAuthProof } from "./primary-login";
@@ -30,7 +31,7 @@ export async function completeGoogleOAuthCallback(
   },
   deps: AuthLoginContext,
   webauthnProvider: WebauthnProvider,
-  now: Date,
+  operation: OperationContext,
 ): Promise<
   Result<CompleteGoogleOAuthCallbackSuccess, CompleteGoogleOAuthCallbackError>
 > {
@@ -68,7 +69,11 @@ export async function completeGoogleOAuthCallback(
     return Err({ kind: "redirect_to_login", error: "google_not_linked" });
   }
 
-  const context = await loadActiveAuthContextForUser(user, deps.repos, now);
+  const context = await loadActiveAuthContextForUser(
+    user,
+    deps.repos,
+    operation,
+  );
   if (!context) {
     return Err({ kind: "redirect_to_login", error: "google_not_linked" });
   }
@@ -86,7 +91,7 @@ export async function completeGoogleOAuthCallback(
     context,
     deps,
     webauthnProvider,
-    now,
+    operation,
   });
 
   if (isErr(loginResult)) {

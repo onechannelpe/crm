@@ -9,6 +9,7 @@ import {
   calendarMonthStart,
 } from "~/domain/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 import { dateFromStorage } from "../storage-month";
 import { getActiveGpvSnapshotCut } from "./latest-report";
@@ -21,11 +22,13 @@ interface MerchantContext {
 export async function loadExecutiveGpvProgress(
   db: DatabaseExecutor,
   executiveId: UserId,
-  now: Date,
+  operation: OperationContext,
 ): Promise<ExecutiveGpvProgressView> {
   const cutAt = await getActiveGpvSnapshotCut(db);
   const cutDate = cutAt ? appCalendarDateAt(cutAt) : null;
-  const month = calendarMonthFromDate(appCalendarDateAt(cutAt ?? now));
+  const month = calendarMonthFromDate(
+    appCalendarDateAt(cutAt ?? operation.operationAt),
+  );
   const monthStart = calendarMonthStart(month);
   const rows = await db
     .selectFrom("organizations as o")

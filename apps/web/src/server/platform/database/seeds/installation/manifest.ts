@@ -11,7 +11,7 @@ const JOSE_MENDOZA_ID = stableSeedId("installation-user:jose.mendoza");
 
 export async function persistInstallationManifest(
   db: Kysely<Database>,
-  now: Date,
+  seededAt: Date,
   realPasswordHash: string,
 ): Promise<void> {
   await db
@@ -21,13 +21,13 @@ export async function persistInstallationManifest(
         id: INFINITY_LIMA_TEAM_ID,
         branch_id: INFINITY_BRANCH_ID,
         name: "Infinity Lima",
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: INFINITY_CHICLAYO_TEAM_ID,
         branch_id: INFINITY_BRANCH_ID,
         name: "Infinity Chiclayo",
-        created_at: now,
+        created_at: seededAt,
       },
     ])
     .execute();
@@ -49,7 +49,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:karina.yalta"),
@@ -65,7 +65,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: LUIS_BETALLELUZ_ID,
@@ -81,7 +81,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "supervisor",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:sebastian.salazar"),
@@ -97,7 +97,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:giancarlo.aranguri"),
@@ -113,7 +113,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:paola.lozano"),
@@ -129,7 +129,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:veronica.banquez"),
@@ -145,7 +145,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:wendy.sarmiento"),
@@ -161,7 +161,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:victor.franco"),
@@ -177,7 +177,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "sales_manager",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: JOSE_MENDOZA_ID,
@@ -193,7 +193,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "back_office",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:renato.santacruz"),
@@ -209,7 +209,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:francisco.suyon"),
@@ -225,7 +225,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:franco.fernandez"),
@@ -241,7 +241,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:eber.montalvo"),
@@ -257,7 +257,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:pool.ortega"),
@@ -273,7 +273,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:jesus.avalos"),
@@ -289,7 +289,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:joyce.llanos"),
@@ -305,7 +305,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:junior.cardozo"),
@@ -321,7 +321,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:ricardo.nurena"),
@@ -337,7 +337,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:david.duran"),
@@ -353,7 +353,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "admin",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:luisa.ramirez"),
@@ -369,7 +369,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:erick.azucena"),
@@ -385,7 +385,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:christian.arango"),
@@ -401,7 +401,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:ray.castillo"),
@@ -417,7 +417,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:victor.tineo"),
@@ -433,7 +433,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
       {
         id: stableSeedId("installation-user:carlos.lazarte"),
@@ -449,7 +449,7 @@ export async function persistInstallationManifest(
         onboarding_completed_at: null,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: seededAt,
       },
     ])
     .execute();
@@ -460,7 +460,7 @@ export async function persistInstallationManifest(
       {
         branch_id: INFINITY_BRANCH_ID,
         user_id: LUIS_BETALLELUZ_ID,
-        created_at: now,
+        created_at: seededAt,
       },
     ])
     .execute();
@@ -471,12 +471,12 @@ export async function persistInstallationManifest(
       {
         back_office_user_id: JOSE_MENDOZA_ID,
         team_id: INFINITY_LIMA_TEAM_ID,
-        assigned_at: now,
+        assigned_at: seededAt,
       },
       {
         back_office_user_id: JOSE_MENDOZA_ID,
         team_id: INFINITY_CHICLAYO_TEAM_ID,
-        assigned_at: now,
+        assigned_at: seededAt,
       },
     ])
     .execute();

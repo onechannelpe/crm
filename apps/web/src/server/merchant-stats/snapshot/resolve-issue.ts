@@ -3,6 +3,7 @@ import type { GpvSnapshotId, GpvSnapshotIssueId, UserId } from "~/domain/ids";
 import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { activateGpvSnapshot } from "./activate";
@@ -12,7 +13,7 @@ export interface ResolveGpvSnapshotIssueInput {
   issueId: GpvSnapshotIssueId;
   resolution: GpvSnapshotIssueResolution;
   resolvedBy: UserId;
-  now: Date;
+  operation: OperationContext;
 }
 
 export async function resolveGpvSnapshotIssue(
@@ -59,7 +60,7 @@ export async function resolveGpvSnapshotIssue(
       const activated = await activateGpvSnapshot(tx, {
         snapshotId: issue.snapshot_id,
         activatedBy: input.resolvedBy,
-        now: input.now,
+        activatedAt: input.operation.operationAt,
       });
 
       return activated.ok ? Ok({ activated: true }) : activated;
@@ -105,7 +106,7 @@ export async function resolveGpvSnapshotIssue(
         status: "resolved",
         resolution: input.resolution,
         resolved_by: input.resolvedBy,
-        resolved_at: input.now,
+        resolved_at: input.operation.operationAt,
       })
       .where("id", "=", issue.id)
       .execute();
@@ -118,7 +119,7 @@ export async function resolveGpvSnapshotIssue(
         issueId: issue.id,
         resolution: input.resolution,
       },
-      occurredAt: input.now,
+      occurredAt: input.operation.operationAt,
     });
 
     if (input.resolution === "reject_snapshot") {
@@ -128,7 +129,7 @@ export async function resolveGpvSnapshotIssue(
     const validation = await validateGpvSnapshot(
       tx,
       issue.snapshot_id,
-      input.now,
+      input.operation.operationAt,
     );
 
     if (validation.blocking > 0) {
@@ -138,7 +139,7 @@ export async function resolveGpvSnapshotIssue(
     const activated = await activateGpvSnapshot(tx, {
       snapshotId: issue.snapshot_id,
       activatedBy: input.resolvedBy,
-      now: input.now,
+      activatedAt: input.operation.operationAt,
     });
 
     return activated.ok ? Ok({ activated: true }) : activated;

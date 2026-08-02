@@ -25,11 +25,11 @@ class SessionCache {
 
   // Entries expire lazily on read, so the caller's instant is enough and the
   // cache never needs a clock of its own.
-  get(sessionId: string, now: Date): CachedSession | null {
+  get(sessionId: string, readAt: Date): CachedSession | null {
     const cached = this.cache.get(sessionId);
     if (!cached) return null;
 
-    const at = now.getTime();
+    const at = readAt.getTime();
 
     if (cached.cachedUntil < at) {
       this.cache.delete(sessionId);
@@ -47,11 +47,11 @@ class SessionCache {
   set(
     sessionId: string,
     session: Omit<CachedSession, "cachedUntil">,
-    now: Date,
+    cachedAt: Date,
   ): void {
     this.cache.set(sessionId, {
       ...session,
-      cachedUntil: now.getTime() + this.cacheTTL,
+      cachedUntil: cachedAt.getTime() + this.cacheTTL,
     });
   }
 

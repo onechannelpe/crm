@@ -3,6 +3,7 @@ import { verifyRecoveryCode } from "~/server/auth/factors/recovery";
 import { verifyTotpStepUp } from "~/server/auth/factors/totp";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { deleteLoginFlow } from "~/server/auth/login-flow/shared";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 type PendingLogin = {
@@ -47,12 +48,16 @@ export async function verifyTotpLoginProof(
     flowId: AuthLoginFlowId;
     totpCode: string;
     ipAddress: string;
-    occurredAt: Date;
   },
+  operation: OperationContext,
 ): Promise<
   Result<VerifiedTotpLoginProof, { kind: "flow_expired" | "invalid_totp" }>
 > {
-  const pending = await loadPendingLogin(deps, input.flowId, input.occurredAt);
+  const pending = await loadPendingLogin(
+    deps,
+    input.flowId,
+    operation.operationAt,
+  );
   if (isErr(pending)) return pending;
   if (pending.value.flow.state !== "totp") {
     await deps.repos.loginFlows.delete(pending.value.flow.id);
@@ -64,7 +69,7 @@ export async function verifyTotpLoginProof(
     ipAddress: input.ipAddress,
     totpCode: input.totpCode,
     deps: deps.repos,
-    occurredAt: input.occurredAt,
+    occurredAt: operation.operationAt,
   });
   if (isErr(verified)) return verified;
 
@@ -89,15 +94,19 @@ export async function verifyRecoveryLoginProof(
     flowId: AuthLoginFlowId;
     recoveryCode: string;
     ipAddress: string;
-    occurredAt: Date;
   },
+  operation: OperationContext,
 ): Promise<
   Result<
     VerifiedRecoveryLoginProof,
     { kind: "flow_expired" | "invalid_recovery" }
   >
 > {
-  const pending = await loadPendingLogin(deps, input.flowId, input.occurredAt);
+  const pending = await loadPendingLogin(
+    deps,
+    input.flowId,
+    operation.operationAt,
+  );
   if (isErr(pending)) return pending;
 
   const verified = await verifyRecoveryCode({
@@ -105,7 +114,7 @@ export async function verifyRecoveryLoginProof(
     ipAddress: input.ipAddress,
     recoveryCode: input.recoveryCode,
     deps: deps.repos,
-    occurredAt: input.occurredAt,
+    occurredAt: operation.operationAt,
   });
   if (isErr(verified)) return verified;
 

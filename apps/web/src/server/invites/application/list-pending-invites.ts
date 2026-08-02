@@ -1,5 +1,6 @@
 import type { DomainError } from "~/domain/errors";
 import type { BranchId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Ok, type Result } from "~/shared/result";
 
 import type { InviteDeps, InviteRuntime, PendingBranchInvite } from "./types";
@@ -8,9 +9,12 @@ export async function listPendingInvites(
   repos: InviteDeps,
   runtime: InviteRuntime,
   branchId: BranchId,
-  now: Date,
+  operation: OperationContext,
 ): Promise<Result<PendingBranchInvite[], DomainError>> {
-  const rows = await repos.userInvites.findLatestPendingByBranch(branchId, now);
+  const rows = await repos.userInvites.findLatestPendingByBranch(
+    branchId,
+    operation.operationAt,
+  );
 
   return Ok(
     rows.map((row) => ({

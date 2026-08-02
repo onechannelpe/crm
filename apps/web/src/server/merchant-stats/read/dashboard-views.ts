@@ -4,6 +4,7 @@ import type {
   GpvPerformanceView,
 } from "~/contracts/merchant-stats/views";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 import { getAttainment } from "./attainment";
 import { getCohortRamp } from "./cohort";
@@ -15,7 +16,7 @@ import { getQualitySummary } from "./quality";
 export async function getGpvPerformanceView(
   db: DatabaseExecutor,
   filter: BookFilter,
-  now: Date,
+  operation: OperationContext,
 ): Promise<GpvPerformanceView> {
   const month = filter.month ?? (await getLatestGpvMonth(db));
   if (!month) {
@@ -25,7 +26,7 @@ export async function getGpvPerformanceView(
   const resolvedFilter = { ...filter, month };
   const [attainment, lifecycle, ramp, quality] = await Promise.all([
     getAttainment(db, resolvedFilter, month),
-    getLifecycle(db, resolvedFilter, now),
+    getLifecycle(db, resolvedFilter, operation),
     getCohortRamp(db, resolvedFilter),
     getQualitySummary(db),
   ]);

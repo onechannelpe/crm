@@ -2,11 +2,11 @@ import "server-only";
 import type { InviteActivationView } from "~/contracts/auth";
 import { readInviteToken } from "~/domain/auth/invite/activation-input";
 import { setSessionCookie } from "~/server/auth/session/cookies";
+import { application } from "~/server/composition/application";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { application } from "~/server/platform/composition/application";
 import {
   getRequestClientMetadata,
-  getRequestInstant,
+  getRequestOperation,
 } from "~/server/platform/http/request-context";
 import { isErr } from "~/shared/result";
 
@@ -19,7 +19,7 @@ export async function getInviteActivationView(
   }
   const result = await application.team.invites.getInfo(
     safeToken.value,
-    getRequestInstant(),
+    getRequestOperation(),
   );
   if (isErr(result)) {
     throwDomain(result.error);
@@ -40,7 +40,7 @@ export async function acceptInvitePasswordStep(input: {
       ipAddress: request.ipAddress,
       userAgent: request.userAgent,
     },
-    getRequestInstant(),
+    getRequestOperation(),
   );
 
   if (isErr(result)) {

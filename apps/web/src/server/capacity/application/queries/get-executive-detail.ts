@@ -34,10 +34,9 @@ export async function getExecutiveDetail(
     return Err(forbidden());
   }
 
-  const evaluatedAt = ctx.operationAt;
   const [searchStatus, leadStatus, requests] = await Promise.all([
-    getSearchCapacitySnapshot(input.userId, deps.repos, evaluatedAt),
-    getLeadCapacitySnapshot(input.userId, deps.repos, evaluatedAt),
+    getSearchCapacitySnapshot(input.userId, deps.repos, ctx),
+    getLeadCapacitySnapshot(input.userId, deps.repos, ctx),
     deps.repos.capacityRequests.listByUser(input.userId),
   ]);
 

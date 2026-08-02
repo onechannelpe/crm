@@ -32,9 +32,9 @@ export async function grantSearchCapacityDirect(
         targetUserId: input.targetUserId,
         amount: amount.value,
         reason: input.reason,
-        at: ctx.operationAt,
       },
       { grants: tx.searchCapacityGrants },
+      ctx,
     );
     if (isErr(result)) return result;
     return Ok({ success: true });

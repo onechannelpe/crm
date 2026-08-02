@@ -36,6 +36,7 @@ describe("audit policy service", () => {
         riskLevel: "medium",
         isActive: true,
         actorUserId: ACTOR_USER_ID,
+        updatedAt: new Date(),
       }),
     ).rejects.toThrow("protected policies cannot be downgraded");
   });
@@ -50,6 +51,7 @@ describe("audit policy service", () => {
       riskLevel: "medium",
       isActive: true,
       actorUserId: ACTOR_USER_ID,
+      updatedAt: new Date(),
     });
 
     const snapshot = await service.getSnapshot();

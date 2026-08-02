@@ -12,7 +12,7 @@ import { external, type DomainError } from "~/domain/errors";
 import { appMonthRange } from "~/domain/time/app-time";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { createSearchUsageReservationPorts } from "~/server/search/ui/composition";
+import { createSearchUsageReservationPorts } from "~/server/search/runtime";
 import { Err, Ok, type Result } from "~/shared/result";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;
@@ -83,7 +83,13 @@ describe("runDirectSearch", () => {
 
   it("commits the reservation when the engine returns a result", async () => {
     const result = await runDirectSearch(
-      { actorUserId: ACTOR_ID, intent: "people", query: "12345678", limit: 10 },
+      {
+        actorUserId: ACTOR_ID,
+        intent: "people",
+        query: "12345678",
+        limit: 10,
+        at: new Date(),
+      },
       ports(),
       engineReturning([foundResult]),
     );
@@ -102,7 +108,13 @@ describe("runDirectSearch", () => {
 
   it("cancels the reservation when the engine reports an error", async () => {
     const result = await runDirectSearch(
-      { actorUserId: ACTOR_ID, intent: "people", query: "12345678", limit: 10 },
+      {
+        actorUserId: ACTOR_ID,
+        intent: "people",
+        query: "12345678",
+        limit: 10,
+        at: new Date(),
+      },
       ports(),
       engineFailing(),
     );
@@ -125,24 +137,35 @@ describe("runDirectSearch", () => {
   });
 
   it("returns exhausted immediately without calling the engine once the monthly limit is committed", async () => {
+    const now = new Date();
     const reservation = await ctx.repos.searchUsageReservations.insert({
       user_id: ACTOR_ID,
       amount: MONTHLY_LIMIT,
       reason: "direct_search",
+      created_at: now,
+      updated_at: now,
     });
     await ctx.repos.searchUsageCommits.insert({
       reservation_id: reservation.id,
       amount: MONTHLY_LIMIT,
+      created_at: now,
     });
     await ctx.repos.searchUsageReservations.updateAmountAndStatus(
       reservation.id,
       MONTHLY_LIMIT,
       "committed",
+      now,
     );
 
     let engineCalled = false;
     const result = await runDirectSearch(
-      { actorUserId: ACTOR_ID, intent: "people", query: "12345678", limit: 10 },
+      {
+        actorUserId: ACTOR_ID,
+        intent: "people",
+        query: "12345678",
+        limit: 10,
+        at: new Date(),
+      },
       ports(),
       {
         search: async () => {

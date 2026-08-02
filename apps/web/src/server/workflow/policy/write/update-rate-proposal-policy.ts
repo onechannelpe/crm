@@ -1,6 +1,7 @@
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { forbidden, type DomainError } from "~/domain/errors";
 import type { BranchId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { validateRateProposalValidityDays } from "~/server/workflow/lead/domain/pricing";
 import { Err, Ok, type Result } from "~/shared/result";
@@ -13,7 +14,7 @@ export async function updateRateProposalPolicy(
     validityDays: number;
   },
   rateProposalPolicies: RateProposalPolicyRepository,
-  updatedAt: Date,
+  operation: OperationContext,
 ): Promise<Result<{ branchId: BranchId; validityDays: number }, DomainError>> {
   if (!hasPermission(input.actor.role, "quotation:policy:manage")) {
     return Err(forbidden());
@@ -30,7 +31,7 @@ export async function updateRateProposalPolicy(
   await rateProposalPolicies.upsert({
     branchId: input.actor.branchId,
     validityDays: parsedValidityDays.value,
-    updatedAt,
+    updatedAt: operation.operationAt,
     updatedByUserId: input.actor.userId,
   });
 

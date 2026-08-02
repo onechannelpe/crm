@@ -40,6 +40,7 @@ describe("auth throttle scope isolation", () => {
     const status = await svc.checkLoginThrottle(
       "exec1@test.local",
       "198.51.100.9",
+      new Date(now),
     );
     expect(status.allowed).toBe(false);
   });
@@ -63,6 +64,7 @@ describe("auth throttle scope isolation", () => {
     const status = await svc.checkLoginThrottle(
       "exec1@test.local",
       "198.51.100.12",
+      new Date(now),
     );
     expect(status.allowed).toBe(false);
   });
@@ -128,7 +130,11 @@ describe("auth throttle scope isolation", () => {
       }),
     ).not.toBeNull();
 
-    const status = await svc.checkLoginThrottle(identifier, ipAddress);
+    const status = await svc.checkLoginThrottle(
+      identifier,
+      ipAddress,
+      new Date(now),
+    );
     expect(status.allowed).toBe(false);
   });
 
@@ -150,17 +156,31 @@ describe("auth throttle scope isolation", () => {
       blockedUntil: new Date(now + 60_000),
     });
 
-    expect((await svc.checkLoginThrottle(identifier, ipAddress)).allowed).toBe(
-      false,
-    );
     expect(
-      (await svc.checkPasskeyChallengeThrottle(identifier, ipAddress)).allowed,
+      (await svc.checkLoginThrottle(identifier, ipAddress, new Date(now)))
+        .allowed,
+    ).toBe(false);
+    expect(
+      (
+        await svc.checkPasskeyChallengeThrottle(
+          identifier,
+          ipAddress,
+          new Date(now),
+        )
+      ).allowed,
     ).toBe(true);
     expect(
-      (await svc.checkPasskeyVerifyThrottle(identifier, ipAddress)).allowed,
+      (
+        await svc.checkPasskeyVerifyThrottle(
+          identifier,
+          ipAddress,
+          new Date(now),
+        )
+      ).allowed,
     ).toBe(true);
     expect(
-      (await svc.checkTotpVerifyThrottle(identifier, ipAddress)).allowed,
+      (await svc.checkTotpVerifyThrottle(identifier, ipAddress, new Date(now)))
+        .allowed,
     ).toBe(true);
   });
 });

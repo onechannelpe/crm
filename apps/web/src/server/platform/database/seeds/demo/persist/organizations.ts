@@ -11,7 +11,7 @@ export type OrganizationsByRuc = Map<string, OrganizationId>;
 export async function persistOrganizations(
   db: Kysely<Database>,
   leads: readonly CompiledLead[],
-  now: Date,
+  seededAt: Date,
 ): Promise<OrganizationsByRuc> {
   const rows = leads.map(({ spec }) => ({
     id: OrganizationId.trust(stableSeedId(`organization:${spec.key}`)),
@@ -22,7 +22,7 @@ export async function persistOrganizations(
     district: spec.org.district,
     province: spec.org.province,
     department: spec.org.department,
-    created_at: now,
+    created_at: seededAt,
   }));
 
   await db.insertInto("organizations").values(rows).execute();

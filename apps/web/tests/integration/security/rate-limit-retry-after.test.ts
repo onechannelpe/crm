@@ -54,6 +54,7 @@ describe("rate limit retry after", () => {
         "leads.request",
         userId,
         ctx.repos,
+        new Date(),
         "198.51.100.1",
       );
     } catch (error) {
@@ -82,6 +83,7 @@ describe("rate limit retry after", () => {
           "leads.request",
           userId,
           ctx.repos,
+          new Date(),
           "198.51.100.1",
         );
       } catch (error) {
@@ -108,7 +110,13 @@ describe("rate limit retry after", () => {
 
     vi.setSystemTime(Date.now() + windowMs + 1);
     await expect(
-      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx.repos,
+        new Date(),
+        "198.51.100.1",
+      ),
     ).resolves.toBeUndefined();
   });
 });

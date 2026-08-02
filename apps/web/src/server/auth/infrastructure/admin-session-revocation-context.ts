@@ -25,14 +25,17 @@ export function createAdminSessionRevocationContext(
     revokeUserSessions(userId) {
       return deps.revokeUserSessions(userId);
     },
-    async revokeInstallationSessionsByAuthSession(sessionId, now) {
+    async revokeInstallationSessionsByAuthSession(sessionId, revokedAt) {
       await extensionRuntime.revokeInstallationSessionsByAuthSession(
         sessionId,
-        now,
+        revokedAt,
       );
     },
-    async revokeInstallationSessionsByUser(userId, now) {
-      await extensionRuntime.revokeInstallationSessionsByUser(userId, now);
+    async revokeInstallationSessionsByUser(userId, revokedAt) {
+      await extensionRuntime.revokeInstallationSessionsByUser(
+        userId,
+        revokedAt,
+      );
     },
     async updateExecutiveSyncHealth(input) {
       await extensionRuntime.updateExecutiveSyncHealthByUser({

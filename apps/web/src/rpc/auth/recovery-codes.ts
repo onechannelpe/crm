@@ -2,8 +2,8 @@ import { query } from "@solidjs/router";
 
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { getRecoveryCodesStatus } from "~/server/auth/ui/recovery-codes";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 
 export async function regenerateRecoveryCodes(): Promise<{
   recoveryCodes: string[];

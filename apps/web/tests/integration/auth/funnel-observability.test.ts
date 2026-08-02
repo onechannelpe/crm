@@ -83,9 +83,10 @@ describe("auth funnel observability snapshot", () => {
       createdAt: new Date(baseTimeMs + 2),
     });
 
-    const snapshotResult = await service.getAuthFunnelSnapshot({
-      windowMinutes: 60,
-    });
+    const snapshotResult = await service.getAuthFunnelSnapshot(
+      { windowMinutes: 60 },
+      new Date(),
+    );
 
     expect(isErr(snapshotResult)).toBe(false);
     if (isErr(snapshotResult)) return;

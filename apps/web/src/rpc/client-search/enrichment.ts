@@ -1,7 +1,7 @@
 import { invalid } from "~/domain/errors";
 import { parseDocument } from "~/domain/identity/document";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 import { Err, Ok } from "~/shared/result";
 import { isPlainRecord } from "~/shared/type-guards";
 

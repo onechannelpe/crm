@@ -6,26 +6,35 @@ import { runSessionCleanupTick } from "~/server/auth/session/cleanup";
 import { createCapacityRuntime } from "~/server/capacity/runtime";
 import { createClientSearchRuntime } from "~/server/client-search/runtime";
 import { createContactAssignmentsRuntime } from "~/server/contact-assignments/runtime";
+import { createEventLogsChannel } from "~/server/event-logs/realtime";
 import { createEventLogsService } from "~/server/event-logs/service";
 import { createExtensionRuntime } from "~/server/extension/runtime";
 import { createFilesRuntime } from "~/server/files/runtime";
 import { createDefaultEngineClient } from "~/server/integrations/engine/client";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import { createMerchantStatsRuntime } from "~/server/merchant-stats/infrastructure/runtime";
+import { createGpvSnapshotChannel } from "~/server/merchant-stats/snapshot/realtime";
 import { createNotificationsRuntime } from "~/server/notifications/runtime";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import { createObservabilityService } from "~/server/observability/service";
-import {
-  serverInfrastructure,
-  type ServerInfrastructure,
-} from "~/server/platform/composition/infrastructure";
+import { createOrganizationEnrichmentProjection } from "~/server/organization/apply-enrichment";
+import { createOrganizationEnrichment } from "~/server/organization/enrichment";
+import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import {
   appConfig,
   engineConfig,
   notificationsConfig,
   uploadsConfig,
 } from "~/server/platform/config/env";
+import { dbUrl } from "~/server/platform/database/db";
+import {
+  serverInfrastructure,
+  type ServerInfrastructure,
+} from "~/server/platform/infrastructure";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { createRealtimeService } from "~/server/realtime/runtime";
+import { createRecordImportChannel } from "~/server/records/imports/realtime";
 import { createRecordImportsRuntime } from "~/server/records/imports/runtime";
 import { createSearchRuntime } from "~/server/search/runtime";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
@@ -48,6 +57,15 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     authFunnelEvents: createAuthFunnelEventsRepo(infrastructure.db),
   });
   const engine = createDefaultEngineClient(engineConfig());
+  const organizationEnrichment = createOrganizationEnrichment(engine);
+  const projectOrganization = createOrganizationEnrichmentProjection(
+    createOrganizationRepo(infrastructure.db),
+  );
+  const clientSearch = createClientSearchRuntime(infrastructure, {
+    fallbackOrganizationEnrichment: (ruc) =>
+      organizationEnrichment.enrichByRuc(ruc),
+    projectOrganization,
+  });
   const integrationRuntime = createIntegrationRuntime({
     executor: infrastructure.db,
   });
@@ -55,6 +73,11 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     integrationRuntime,
     files.storage,
   );
+  const eventLogs = createEventLogsService(infrastructure.db);
+  const merchantStats = createMerchantStatsRuntime({
+    db: infrastructure.db,
+    files,
+  });
   const auth = createAuthRuntime(infrastructure, notifications, observability);
   const users = createUsersRuntime(
     infrastructure,
@@ -70,6 +93,14 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     executor: infrastructure.db,
   });
   const requestSessions = createRequestSessionsRepo(infrastructure.db);
+  const realtime = createRealtimeService({
+    channels: [
+      createEventLogsChannel(eventLogs),
+      createGpvSnapshotChannel(merchantStats),
+      createRecordImportChannel(recordImports),
+    ],
+    databaseUrl: dbUrl,
+  });
 
   return {
     admin: createAuditPolicyService({
@@ -77,12 +108,12 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     }),
     auth,
     capacity: createCapacityRuntime(infrastructure),
-    clientSearch: createClientSearchRuntime(infrastructure, engine),
+    clientSearch,
     contactAssignments: createContactAssignmentsRuntime({
       executor: infrastructure.db,
       engine,
     }),
-    eventLogs: createEventLogsService(infrastructure.db),
+    eventLogs,
     extension: createExtensionRuntime(infrastructure),
     files: {
       download: files.download,
@@ -94,10 +125,10 @@ export function createApplication(infrastructure: ServerInfrastructure) {
       },
     },
     integration: { records: recordImports },
-    merchantStats: createMerchantStatsRuntime({ db: infrastructure.db, files }),
+    merchantStats,
     maintenance: {
       accountLifecycle,
-      cleanupSessions: (context: Parameters<typeof runSessionCleanupTick>[1]) =>
+      cleanupSessions: (context: OperationContext) =>
         runSessionCleanupTick(infrastructure.db, context),
       leadReservation,
       createRecordsImportQueue: recordImports.createQueue,
@@ -105,13 +136,27 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     notifications,
     observability,
     search: createSearchRuntime(infrastructure, engine),
+    realtime,
     team: createTeamRuntime(
       infrastructure,
       applicationConfig.publicOrigin,
       notifications.messaging,
     ),
     users,
-    workflow: createWorkflowRuntime(infrastructure, engine, files),
+    workflow: createWorkflowRuntime(
+      infrastructure,
+      files,
+      organizationEnrichment,
+      {
+        enqueueRucVerification: async (ruc, requestedByUserId, now) => {
+          await clientSearch.requestEnrichment(
+            { kind: "ruc", value: ruc },
+            requestedByUserId,
+            now,
+          );
+        },
+      },
+    ),
   };
 }
 

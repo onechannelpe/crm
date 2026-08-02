@@ -1,6 +1,7 @@
 import { auditEntityId } from "~/domain/audit/entity";
 import { canAssignRole } from "~/domain/auth/access/rbac";
 import { fail, type DomainError } from "~/domain/errors";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import type { InviteDeps, InviteRuntime, RevokeInviteInput } from "./types";
@@ -9,7 +10,7 @@ export async function revokeInvite(
   repos: InviteDeps,
   runtime: InviteRuntime,
   input: RevokeInviteInput,
-  now: Date,
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
     const invite = await transactionRepos.userInvites.findById(input.inviteId);
@@ -31,7 +32,7 @@ export async function revokeInvite(
       return Err(fail("role_not_assignable"));
     }
 
-    const revokedAt = now;
+    const revokedAt = operation.operationAt;
     await transactionRepos.userInvites.revokePendingByUser(
       invite.user_id,
       revokedAt,

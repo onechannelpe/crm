@@ -54,6 +54,7 @@ async function fillPendingQuotations(
 
 function registerFor(runtime: TestRuntime, ruc: string) {
   const exec = actorBy("execOne");
+  const ports = registerLeadPorts(runtime);
   return registerLead(
     {
       actor: {
@@ -65,7 +66,8 @@ function registerFor(runtime: TestRuntime, ruc: string) {
       lineOfBusiness: "Retail",
       ...withMerchantDefaults(undefined),
     },
-    registerLeadPorts(runtime),
+    ports,
+    { identity: ports.identity },
   );
 }
 

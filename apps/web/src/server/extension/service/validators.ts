@@ -10,8 +10,8 @@ import {
 } from "../contracts";
 import { ExtensionTokenVerificationError } from "../crypto";
 
-export function isTokenExpired(expSeconds: number, now: Date): boolean {
-  return expSeconds <= Math.floor(now.getTime() / 1000);
+export function isTokenExpired(expSeconds: number, expiredAsOf: Date): boolean {
+  return expSeconds <= Math.floor(expiredAsOf.getTime() / 1000);
 }
 
 export function parseSubjectUserId(subject: string): UserId | null {

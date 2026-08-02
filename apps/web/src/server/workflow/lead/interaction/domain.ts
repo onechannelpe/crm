@@ -13,7 +13,7 @@ type Actor = { userId: UserId; role: Role };
 
 export function recordNote(
   state: LeadState,
-  input: { actor: Actor; body: string; now: Date },
+  input: { actor: Actor; body: string; occurredAt: Date },
 ): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("add-note", input.actor, state);
   if (!authz.ok) return authz;
@@ -24,7 +24,7 @@ export function recordNote(
       eventType: "note_added",
       actorUserId: input.actor.userId,
       payload: { body: input.body },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ]);
 }

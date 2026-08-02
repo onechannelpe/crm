@@ -36,7 +36,7 @@ export async function proposeRateCommand(
     });
 
     const reservationExpiresAt = computeReservationExpiry({
-      now: ctx.operationAt,
+      reservedAt: ctx.operationAt,
       validityDays: proposalPolicy.validityDays,
     });
 
@@ -46,7 +46,7 @@ export async function proposeRateCommand(
       round,
       currency: input.currency,
       reservationExpiresAt,
-      now: ctx.operationAt,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

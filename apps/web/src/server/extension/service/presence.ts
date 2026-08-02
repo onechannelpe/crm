@@ -29,9 +29,9 @@ export function mapLifecycleStatus(
 
 export function withDerivedProjectionStatuses(
   statuses: Awaited<ReturnType<ExtensionRuntimeRepo["listBranchStatuses"]>>,
-  now: Date,
+  measuredAt: Date,
 ): TeamExecutiveStatusView[] {
-  const nowMs = now.getTime();
+  const nowMs = measuredAt.getTime();
 
   return statuses.map((status) => {
     const presenceUpdatedAt = status.presenceUpdatedAt

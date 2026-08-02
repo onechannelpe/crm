@@ -1,10 +1,10 @@
 import type { DomainError } from "~/domain/errors";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import type { Result } from "~/shared/result";
 
 function parseCapacityRequest(

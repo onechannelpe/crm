@@ -39,7 +39,7 @@ const DEFAULT_MAX_ATTEMPTS = 5;
 
 export interface DeliveryRepository {
   store: JobStore<NotificationDeliveryId, DeliveryJob>;
-  insertPlanned(rows: PlannedDeliveryRow[], now: Date): Promise<void>;
+  insertPlanned(rows: PlannedDeliveryRow[], plannedAt: Date): Promise<void>;
 }
 
 export function createDeliveryRepository(
@@ -65,7 +65,7 @@ export function createDeliveryRepository(
   return {
     store,
 
-    async insertPlanned(rows, now) {
+    async insertPlanned(rows, plannedAt) {
       if (rows.length === 0) {
         return;
       }
@@ -84,13 +84,13 @@ export function createDeliveryRepository(
             queue_state: "pending" as const,
             attempt_count: 0,
             max_attempts: DEFAULT_MAX_ATTEMPTS,
-            claimable_at: now,
+            claimable_at: plannedAt,
             lease_owner: null,
             provider: null,
             provider_message_id: null,
             error_code: null,
             error_message: null,
-            created_at: now,
+            created_at: plannedAt,
             completed_at: null,
           })),
         )

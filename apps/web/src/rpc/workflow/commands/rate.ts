@@ -5,12 +5,12 @@ import {
   WorkflowRateProposalId,
   WorkflowRateRevisionFileId,
 } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
 
 export async function requestRateProposal(input: unknown) {
@@ -33,10 +33,10 @@ export async function requestRateProposal(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.proposeRate(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
@@ -62,10 +62,10 @@ export async function requestRateProposalEdit(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.editRateProposal(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
@@ -85,10 +85,10 @@ export async function requestRateAcceptance(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.acceptRate(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
@@ -109,10 +109,10 @@ export async function requestLeadClosure(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.closeLead(
-        { actor: workflowActor(actor), ...payload },
-        now,
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
@@ -137,15 +137,15 @@ export async function requestRateRevision(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.requestRateRevision(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           leadId: payload.leadId,
           justification: payload.justification,
           fileIds: payload.fileIds,
         },
-        now,
+        ctx,
       ),
   });
 }

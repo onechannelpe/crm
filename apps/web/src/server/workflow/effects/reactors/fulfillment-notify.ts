@@ -10,12 +10,12 @@ import type {
   NotificationAudience,
   NotificationIntent,
 } from "~/server/notifications/types";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import {
   pendingOwnerForStep,
   type PendingOwner,
 } from "~/server/workflow/lead/fulfillment/steps";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
 
 type FulfillmentEvent = Extract<
   CommittedLeadEvent["event"],
@@ -235,10 +235,10 @@ export function deriveFulfillmentNotification(input: {
 
 // Runs in the write transaction, same as reactToStageChanges.
 export async function reactToFulfillmentChanges(
-  tx: DatabaseExecutor,
+  scope: WorkflowWriteContext,
   committed: CommittedLeadEvent[],
-  now: Date,
 ): Promise<void> {
+  const tx = scope.executor;
   const events = committed.filter(isFulfillmentEvent);
   if (events.length === 0) return;
 
@@ -319,5 +319,5 @@ export async function reactToFulfillmentChanges(
     );
   }
 
-  await enqueueNotifications(tx, intents, now);
+  await enqueueNotifications(tx, intents, scope.operationAt);
 }

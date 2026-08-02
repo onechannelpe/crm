@@ -13,7 +13,10 @@ export interface RecipientRepository {
     userIds: UserId[],
     channel: Exclude<NotificationChannel, "in_app">,
   ): Promise<Map<UserId, string>>;
-  findActiveWhatsAppUsers(userIds: UserId[], now: Date): Promise<Set<UserId>>;
+  findActiveWhatsAppUsers(
+    userIds: UserId[],
+    activeAsOf: Date,
+  ): Promise<Set<UserId>>;
 }
 
 export function createRecipientRepository(
@@ -36,7 +39,7 @@ export function createRecipientRepository(
       return new Map(rows.map((row) => [row.user_id, row.address]));
     },
 
-    findActiveWhatsAppUsers: (userIds, now) =>
-      filterUsersWithActiveSession(db, userIds, now),
+    findActiveWhatsAppUsers: (userIds, activeAsOf) =>
+      filterUsersWithActiveSession(db, userIds, activeAsOf),
   };
 }

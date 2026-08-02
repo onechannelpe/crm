@@ -30,7 +30,7 @@ async function finishPasskeyLogin(
     userAgent: string | null;
   },
 ) {
-  const occurredAt = login.now();
+  const occurredAt = new Date();
   const verified = await verifyPasskeyLogin(login.repos, {
     flowId: input.flowId,
     response: input.response,
@@ -72,6 +72,7 @@ describe("passkey authentication", () => {
       { identifier: "exec.one", ipAddress, mode: "identified" },
       login,
       createTestPasskeyProvider(login.repos),
+      new Date(),
     );
     const value = expectOk(result);
 
@@ -93,6 +94,7 @@ describe("passkey authentication", () => {
       { ipAddress, mode: "discoverable" },
       login,
       createTestPasskeyProvider(login.repos),
+      new Date(),
     );
     const value = expectOk(result);
 

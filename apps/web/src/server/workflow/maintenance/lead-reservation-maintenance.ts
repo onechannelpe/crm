@@ -1,10 +1,9 @@
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import type { TickContext } from "~/server/platform/operation/context";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { expireLapsedReservations } from "~/server/workflow/lead/commands/expire-reservation";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
 const logger = createLogger("lead-reservation-maintenance");
-const SWEEP_INTERVAL_MS = 60_000;
 
 interface LeadReservationMaintenanceDeps {
   executor: DatabaseExecutor;
@@ -12,7 +11,7 @@ interface LeadReservationMaintenanceDeps {
 
 export async function runReservationSweepTick(
   deps: LeadReservationMaintenanceDeps,
-  context: TickContext<"reservation-sweep">,
+  context: OperationContext,
 ) {
   const sweptAt = context.operationAt;
   try {
@@ -36,7 +35,7 @@ export function createLeadReservationMaintenance(
   deps: LeadReservationMaintenanceDeps,
 ) {
   return {
-    sweepReservations: (context: TickContext<"reservation-sweep">) =>
+    sweepReservations: (context: OperationContext) =>
       runReservationSweepTick(deps, context),
   };
 }

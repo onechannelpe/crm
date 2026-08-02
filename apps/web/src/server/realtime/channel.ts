@@ -23,19 +23,18 @@ export interface RealtimeChannelConfig<TId extends string> {
   cursorOf?: (payload: string) => string | undefined;
 }
 
-// The caller subscribes before opening so notifications published during the
-// initial read are not missed.
-export interface RealtimeEntry {
-  topic: string;
-  open: (cursor: string | null) => Promise<RealtimeMessage[] | null>;
-}
-
 export interface RealtimeChannel {
   readonly name: RealtimeChannelName;
   readonly pgChannel: string;
   topicOfPayload: (payload: string) => string | null;
   cursorOf: (payload: string) => string | undefined;
-  entry: (rawId: string, session: AuthSession) => RealtimeEntry | null;
+  entry: (
+    rawId: string,
+    session: AuthSession,
+  ) => {
+    topic: string;
+    open: (cursor: string | null) => Promise<RealtimeMessage[] | null>;
+  } | null;
 }
 
 function topicOf(name: string, id: string): string {

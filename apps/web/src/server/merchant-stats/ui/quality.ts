@@ -8,12 +8,12 @@ import {
   QUALITY_ISSUES,
   type QualityIssue,
 } from "~/contracts/merchant-stats/vocabulary";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 const DEFAULT_PAGE = 60;

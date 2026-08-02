@@ -23,8 +23,8 @@ export function createInviteManagementContext(
       const teams = await repos.teams.findByBranch(branchId);
       return teams.map((team) => ({ id: team.id, name: team.name }));
     },
-    listPendingInvites(branchId, now) {
-      return inviteService.listPendingInvites(branchId, now);
+    listPendingInvites(branchId, operation) {
+      return inviteService.listPendingInvites(branchId, operation);
     },
   };
 }

@@ -11,6 +11,7 @@ import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infras
 import type { ContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
 import type { OrganizationRepository } from "~/server/organization/organization-repo";
 import type { AppUow } from "~/server/platform/database/uow";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Ok, type Result } from "~/shared/result";
 
 export type AssignContactsTransactionRepos = {
@@ -28,7 +29,7 @@ export type AssignContactsUow = AppUow<AssignContactsTransactionRepos>;
 async function upsertOrganizationsByRuc(
   candidates: RecordCandidate[],
   organizations: AssignContactsTransactionRepos["organization"],
-  at: Date,
+  operation: OperationContext,
 ): Promise<Map<string, OrganizationId>> {
   const byRuc = new Map<string, RecordCandidate>();
   for (const candidate of candidates) {
@@ -40,7 +41,7 @@ async function upsertOrganizationsByRuc(
       const organization = await organizations.upsertOrganization({
         ruc,
         legalName: candidate.organization_name,
-        at,
+        upsertedAt: operation.operationAt,
       });
       return [ruc, organization.id] as const;
     }),
@@ -53,7 +54,7 @@ async function upsertMembershipsForCandidates(
   candidates: RecordCandidate[],
   organizationIdsByRuc: Map<string, OrganizationId>,
   organizations: AssignContactsTransactionRepos["organization"],
-  at: Date,
+  operation: OperationContext,
 ): Promise<OrganizationPersonId[]> {
   const byKey = new Map<
     string,
@@ -79,7 +80,7 @@ async function upsertMembershipsForCandidates(
         },
         phone: candidate.phone_primary,
         email: null,
-        at,
+        upsertedAt: operation.operationAt,
       });
       return membership.id;
     }),
@@ -90,19 +91,19 @@ export async function createContactAssignmentsFromCandidates(input: {
   actorUserId: UserId;
   candidates: RecordCandidate[];
   uow: AssignContactsUow;
-  at: Date;
+  operation: OperationContext;
 }): Promise<Result<number, DomainError>> {
   return input.uow.run(async (repos) => {
     const organizationIdsByRuc = await upsertOrganizationsByRuc(
       input.candidates,
       repos.organization,
-      input.at,
+      input.operation,
     );
     const membershipIds = await upsertMembershipsForCandidates(
       input.candidates,
       organizationIdsByRuc,
       repos.organization,
-      input.at,
+      input.operation,
     );
 
     const cadenceById = await repos.cadence.findMany(membershipIds);
@@ -110,10 +111,12 @@ export async function createContactAssignmentsFromCandidates(input: {
       .filter((id) =>
         canContactNow(
           { cooldown_until: cadenceById.get(id)?.cooldownUntil ?? null },
-          input.at,
+          input.operation.operationAt,
         ),
       )
-      .map((id) => createAssignment(input.actorUserId, id, input.at));
+      .map((id) =>
+        createAssignment(input.actorUserId, id, input.operation.operationAt),
+      );
 
     if (assignments.length > 0) {
       await repos.contactAssignments.createMany(assignments);

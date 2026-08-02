@@ -96,10 +96,10 @@ describe("session repository lifecycle", () => {
       expires_at: expiredAt,
     });
 
-    const countBefore = await scenario.ctx.repos.sessions.countActive();
+    const countBefore = await scenario.ctx.repos.sessions.countActive(now);
     expect(countBefore).toBe(1);
 
-    const deleted = await scenario.ctx.repos.sessions.deleteExpired();
+    const deleted = await scenario.ctx.repos.sessions.deleteExpired(now);
     expect(deleted).toBe(1);
 
     const expired = await scenario.ctx.repos.sessions.findById("expired-1");

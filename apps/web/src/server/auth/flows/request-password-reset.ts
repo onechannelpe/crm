@@ -3,6 +3,7 @@ import {
   generatePasswordResetToken,
   hashPasswordResetToken,
 } from "~/server/auth/password/reset-tokens";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import type { PasswordResetRequestContext } from "../infrastructure/password-reset-context";
@@ -10,18 +11,20 @@ import type { PasswordResetRequestContext } from "../infrastructure/password-res
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 const MAX_REQUESTS_PER_HOUR = 3;
 
-export async function requestPasswordReset(input: {
-  email: string;
-  origin: string;
-  deps: PasswordResetRequestContext;
-  requestedAt: Date;
-}): Promise<Result<{ ok: true }, DomainError>> {
+export async function requestPasswordReset(
+  input: {
+    email: string;
+    origin: string;
+    deps: PasswordResetRequestContext;
+  },
+  operation: OperationContext,
+): Promise<Result<{ ok: true }, DomainError>> {
   const email = input.email.trim().toLowerCase();
   if (!email) {
     return Err(fail("email_required"));
   }
 
-  const now = input.requestedAt;
+  const now = operation.operationAt;
   const user = await input.deps.repos.users.findByEmail(email);
   if (!user || !user.is_active) {
     return Ok({ ok: true });

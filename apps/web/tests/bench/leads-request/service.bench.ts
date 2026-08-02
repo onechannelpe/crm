@@ -1,8 +1,7 @@
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import type { BranchId, UserId } from "~/domain/ids";
-import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
-import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
+import { createContactAssignmentsRuntime } from "~/server/contact-assignments/runtime";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";
@@ -12,7 +11,7 @@ describe("lead refill service benchmark", () => {
   const db = createBenchDbFixture("bench-leads-request-service");
   let branchId: BranchId;
   let seedUnit: LeadsBench["seedUnit"];
-  let assignmentContext: ReturnType<typeof createContactAssignmentsContext>;
+  let assignmentRuntime: ReturnType<typeof createContactAssignmentsRuntime>;
   let userId: UserId;
 
   beforeAll(async () => {
@@ -20,7 +19,7 @@ describe("lead refill service benchmark", () => {
     const leads = createLeadsBench(ctx);
     branchId = leads.branchId;
     seedUnit = leads.seedUnit;
-    assignmentContext = createContactAssignmentsContext({
+    assignmentRuntime = createContactAssignmentsRuntime({
       executor: ctx.db,
       engine: leads.engine,
     });
@@ -37,16 +36,11 @@ describe("lead refill service benchmark", () => {
   bench(
     "service path: request lead refill for one user",
     async () => {
-      const result = await assignContacts(
-        { actorUserId: userId, branchId },
-        {
-          repos: assignmentContext.repos,
-          uow: assignmentContext.uow,
-          engine: assignmentContext.engine,
-          leadUsageReservationPorts:
-            assignmentContext.leadUsageReservationPorts,
-        },
-      );
+      const result = await assignmentRuntime.assign({
+        actorUserId: userId,
+        branchId,
+        at: new Date(),
+      });
 
       if (!result.ok) {
         throw new Error(

@@ -61,6 +61,7 @@ describe("lead detail setup pipeline", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expect(initialDetail.lead).toMatchObject({
@@ -103,6 +104,7 @@ describe("lead detail setup pipeline", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expect(afterPolicy.profile).toMatchObject({
@@ -165,6 +167,7 @@ describe("lead detail setup pipeline", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expect(withVenue.venues).toHaveLength(1);
@@ -200,6 +203,7 @@ describe("lead detail setup pipeline", () => {
         actorUserId: actor.userId,
         actorRole: actor.role,
         leadId: lead.id,
+        evaluatedAt: runtime.now.get(),
       }),
     );
     expect(completed.lead.stage).toBe("FULFILLMENT");

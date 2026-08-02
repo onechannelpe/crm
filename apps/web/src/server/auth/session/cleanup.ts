@@ -5,7 +5,7 @@ import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createActionObservationsRepo } from "~/server/observability/repos-action-observations";
 import { createAuthFunnelEventsRepo } from "~/server/observability/repos-auth-funnel-events";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import type { TickContext } from "~/server/platform/operation/context";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
@@ -128,7 +128,7 @@ async function cleanupStaleActionRateLimits(
 
 export async function runSessionCleanupTick(
   executor: DatabaseExecutor,
-  context: TickContext<"session-cleanup">,
+  context: OperationContext,
 ): Promise<void> {
   const sweptAt = context.operationAt;
 

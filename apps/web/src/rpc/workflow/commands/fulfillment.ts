@@ -12,12 +12,12 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import { fail, invalid, type DomainError } from "~/domain/errors";
 import { FileAssetId, WorkflowLeadId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { workflowActor } from "~/server/workflow/ui/actor";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -144,13 +144,13 @@ export async function chooseFulfillmentProduct(input: unknown) {
 
     audit: ({ leadId, productKind }) => ({ leadId, productKind }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.chooseFulfillmentProduct(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           ...payload,
         },
-        now,
+        ctx,
       ),
   });
 }
@@ -204,13 +204,13 @@ export async function recordFulfillmentSerial(input: unknown) {
 
     audit: ({ leadId, unitId }) => ({ leadId, unitId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.recordFulfillmentSerial(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           ...payload,
         },
-        now,
+        ctx,
       ),
   });
 }
@@ -239,13 +239,13 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
 
     audit: ({ leadId, unitId }) => ({ leadId, unitId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.registerFulfillmentPaymentLink(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           ...payload,
         },
-        now,
+        ctx,
       ),
   });
 }
@@ -289,13 +289,13 @@ export async function validateFulfillmentPayment(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, { leadId }) =>
+    execute: (ctx, { leadId }) =>
       application.workflow.commands.validateFulfillmentPayment(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           leadId,
         },
-        now,
+        ctx,
       ),
   });
 }
@@ -323,13 +323,13 @@ export async function rejectFulfillmentStep(input: unknown) {
 
     audit: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.rejectFulfillmentStep(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           ...payload,
         },
-        now,
+        ctx,
       ),
   });
 }
@@ -358,13 +358,13 @@ export async function registerFulfillmentSale(input: unknown) {
 
     audit: ({ leadId, unitId }) => ({ leadId, unitId }),
 
-    execute: ({ actor, operationAt: now }, payload) =>
+    execute: (ctx, payload) =>
       application.workflow.commands.registerFulfillmentSale(
         {
-          actor: workflowActor(actor),
+          actor: workflowActor(ctx.actor),
           ...payload,
         },
-        now,
+        ctx,
       ),
   });
 }

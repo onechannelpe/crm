@@ -12,16 +12,17 @@ import { seedPendingInvite } from "./fixtures";
 
 describe("team invite accept benchmark", () => {
   const db = createBenchDbFixture("bench-team-invite-accept-service");
-  let inviteAccept!: InviteService["acceptInvite"];
+  let inviteAccept!: (
+    input: Parameters<InviteService["acceptInvite"]>[0],
+  ) => ReturnType<InviteService["acceptInvite"]>;
   let token = "";
 
   beforeAll(async () => {
     const ctx = await db.setup();
     const inviteService = createInviteService(bindInviteRepos(ctx.db), {
       uow: createExecutorUow(ctx.db, bindInviteRepos),
-      now: () => BENCH_NOW,
     });
-    inviteAccept = (input) => inviteService.acceptInvite(input);
+    inviteAccept = (input) => inviteService.acceptInvite(input, BENCH_NOW);
   });
 
   beforeEach(async () => {

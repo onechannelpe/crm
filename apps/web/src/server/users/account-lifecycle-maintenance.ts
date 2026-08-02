@@ -4,7 +4,7 @@ import { formatAppLongDate } from "~/domain/time/app-time";
 import { addMilliseconds } from "~/domain/time/clock";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import type { TickContext } from "~/server/platform/operation/context";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { PLATFORM_NAME } from "~/shared/branding";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
@@ -22,7 +22,7 @@ interface AccountLifecycleDeps {
 
 export async function runAccountExpiryTick(
   deps: AccountLifecycleDeps,
-  context: TickContext<"account-expiry">,
+  context: OperationContext,
 ) {
   const sweptAt = context.operationAt;
   try {
@@ -43,7 +43,7 @@ export async function runAccountExpiryTick(
 export async function runExpiryNotificationTick(
   users: ReturnType<typeof createUsersRepo>,
   messaging: MessagingGateway,
-  context: TickContext<"expiry-notification">,
+  context: OperationContext,
 ) {
   const sweptAt = context.operationAt;
   const threshold = addMilliseconds(sweptAt, EXPIRY_NOTIFICATION_THRESHOLD_MS);
@@ -97,9 +97,9 @@ export function createAccountLifecycleMaintenance(deps: AccountLifecycleDeps) {
   const users = createUsersRepo(deps.executor);
 
   return {
-    expireAccounts: (context: TickContext<"account-expiry">) =>
+    expireAccounts: (context: OperationContext) =>
       runAccountExpiryTick(deps, context),
-    notifyExpiringAccounts: (context: TickContext<"expiry-notification">) =>
+    notifyExpiringAccounts: (context: OperationContext) =>
       runExpiryNotificationTick(users, deps.messaging, context),
   };
 }

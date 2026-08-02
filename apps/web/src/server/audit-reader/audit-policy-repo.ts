@@ -10,7 +10,7 @@ export interface UpsertAuditActionPolicyInput {
   is_active: boolean;
   is_protected: boolean;
   updated_by_user_id: UserId | null;
-  now: Date;
+  updatedAt: Date;
 }
 
 export function createAuditActionPoliciesRepo(db: Kysely<Database>) {
@@ -41,8 +41,8 @@ export function createAuditActionPoliciesRepo(db: Kysely<Database>) {
           is_active: input.is_active,
           is_protected: input.is_protected,
           updated_by_user_id: input.updated_by_user_id,
-          created_at: input.now,
-          updated_at: input.now,
+          created_at: input.updatedAt,
+          updated_at: input.updatedAt,
         })
         .onConflict((oc) =>
           oc.column("action").doUpdateSet({
@@ -50,7 +50,7 @@ export function createAuditActionPoliciesRepo(db: Kysely<Database>) {
             is_active: input.is_active,
             is_protected: input.is_protected,
             updated_by_user_id: input.updated_by_user_id,
-            updated_at: input.now,
+            updated_at: input.updatedAt,
           }),
         )
         .executeTakeFirstOrThrow();

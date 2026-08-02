@@ -1,5 +1,6 @@
 import { external, fail, invalid, type DomainError } from "~/domain/errors";
 import { InstallationId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 import type { RefreshExtensionSessionResponse } from "../contracts";
@@ -15,9 +16,8 @@ import {
   isInvalidExtensionToken,
 } from "./validators";
 
-interface SessionMethodContext {
+interface SessionMethodContext extends OperationContext {
   repos: ExtensionRepos;
-  now: Date;
 }
 
 export async function refreshInstallationSession(
@@ -27,7 +27,7 @@ export async function refreshInstallationSession(
     installationId: string;
   },
 ): Promise<Result<RefreshExtensionSessionResponse, DomainError>> {
-  const { repos, now } = context;
+  const { repos } = context;
 
   try {
     const installationId = InstallationId.parse(input.installationId);
@@ -35,7 +35,7 @@ export async function refreshInstallationSession(
       return Err(invalid({ code: "installation_invalid" }));
     }
 
-    const currentTime = now;
+    const currentTime = context.operationAt;
     const refreshTokenHash = await hashExtensionSecretToken(input.refreshToken);
     const session =
       await repos.extensionRuntime.findRefreshableInstallationSession(

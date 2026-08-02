@@ -56,19 +56,22 @@ export function createSearchPolicyDefaultsRepo(db: Kysely<Database>) {
 }
 
 export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
-  const findActiveForUser = (userId: UserId, now: Date) =>
+  const findActiveForUser = (userId: UserId, activeAsOf: Date) =>
     db
       .selectFrom("search_policy_overrides")
       .selectAll()
       .where("user_id", "=", userId)
-      .where("effective_from", "<=", now)
+      .where("effective_from", "<=", activeAsOf)
       .where((eb) =>
-        eb.or([eb("expires_at", "is", null), eb("expires_at", ">", now)]),
+        eb.or([
+          eb("expires_at", "is", null),
+          eb("expires_at", ">", activeAsOf),
+        ]),
       )
       .orderBy("created_at", "desc")
       .executeTakeFirst();
 
-  const listActiveForUsers = (userIds: UserId[], now: Date) => {
+  const listActiveForUsers = (userIds: UserId[], activeAsOf: Date) => {
     if (userIds.length === 0) {
       return Promise.resolve([]);
     }
@@ -77,9 +80,12 @@ export function createSearchPolicyOverridesRepo(db: Kysely<Database>) {
       .selectFrom("search_policy_overrides")
       .selectAll()
       .where("user_id", "in", userIds)
-      .where("effective_from", "<=", now)
+      .where("effective_from", "<=", activeAsOf)
       .where((eb) =>
-        eb.or([eb("expires_at", "is", null), eb("expires_at", ">", now)]),
+        eb.or([
+          eb("expires_at", "is", null),
+          eb("expires_at", ">", activeAsOf),
+        ]),
       )
       .orderBy("user_id", "asc")
       .orderBy("created_at", "desc")
@@ -164,19 +170,22 @@ export function createLeadPolicyDefaultsRepo(db: Kysely<Database>) {
 }
 
 export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
-  const findActiveForUser = (userId: UserId, now: Date) =>
+  const findActiveForUser = (userId: UserId, activeAsOf: Date) =>
     db
       .selectFrom("lead_policy_overrides")
       .selectAll()
       .where("user_id", "=", userId)
-      .where("effective_from", "<=", now)
+      .where("effective_from", "<=", activeAsOf)
       .where((eb) =>
-        eb.or([eb("expires_at", "is", null), eb("expires_at", ">", now)]),
+        eb.or([
+          eb("expires_at", "is", null),
+          eb("expires_at", ">", activeAsOf),
+        ]),
       )
       .orderBy("created_at", "desc")
       .executeTakeFirst();
 
-  const listActiveForUsers = (userIds: UserId[], now: Date) => {
+  const listActiveForUsers = (userIds: UserId[], activeAsOf: Date) => {
     if (userIds.length === 0) {
       return Promise.resolve([]);
     }
@@ -185,9 +194,12 @@ export function createLeadPolicyOverridesRepo(db: Kysely<Database>) {
       .selectFrom("lead_policy_overrides")
       .selectAll()
       .where("user_id", "in", userIds)
-      .where("effective_from", "<=", now)
+      .where("effective_from", "<=", activeAsOf)
       .where((eb) =>
-        eb.or([eb("expires_at", "is", null), eb("expires_at", ">", now)]),
+        eb.or([
+          eb("expires_at", "is", null),
+          eb("expires_at", ">", activeAsOf),
+        ]),
       )
       .orderBy("user_id", "asc")
       .orderBy("created_at", "desc")

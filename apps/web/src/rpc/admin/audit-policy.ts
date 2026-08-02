@@ -1,10 +1,10 @@
 import type { UpsertAuditPolicyInput } from "~/server/audit-reader/policy-service";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 export async function upsertAuditPolicy(input: unknown): Promise<void> {
@@ -23,14 +23,16 @@ export async function upsertAuditPolicy(input: unknown): Promise<void> {
 
     audit: ({ action, isActive }) => ({ action, isActive }),
 
-    execute: async ({ actor, operationAt: now }, fields) => {
-      await application.admin.upsertPolicy({
-        action: fields.action,
-        riskLevel: fields.riskLevel,
-        isActive: fields.isActive,
-        actorUserId: actor.userId,
-        updatedAt: now,
-      } satisfies UpsertAuditPolicyInput);
+    execute: async (ctx, fields) => {
+      await application.admin.upsertPolicy(
+        {
+          action: fields.action,
+          riskLevel: fields.riskLevel,
+          isActive: fields.isActive,
+          actorUserId: ctx.actor.userId,
+        } satisfies UpsertAuditPolicyInput,
+        ctx,
+      );
 
       return Ok(undefined);
     },

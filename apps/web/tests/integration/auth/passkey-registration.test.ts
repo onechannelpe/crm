@@ -64,6 +64,7 @@ describe("passkey registration", () => {
       await throttleSvc.recordPasskeyChallengeFailure(
         `user:${execOne.userId}`,
         ipAddress,
+        new Date(),
       );
     }
 

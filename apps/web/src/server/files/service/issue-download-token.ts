@@ -24,7 +24,7 @@ export async function issueDownloadToken(
     tokenHash,
     requestedByUserId: ctx.actor.userId,
     expiresAt,
-    now,
+    createdAt: now,
   });
 
   return Ok({ token: rawToken });

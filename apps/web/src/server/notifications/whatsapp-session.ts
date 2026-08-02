@@ -29,7 +29,7 @@ export async function openSession(
 export async function filterUsersWithActiveSession(
   db: DatabaseExecutor,
   userIds: UserId[],
-  now: Date,
+  activeAsOf: Date,
 ): Promise<Set<UserId>> {
   if (userIds.length === 0) return new Set();
 
@@ -37,7 +37,7 @@ export async function filterUsersWithActiveSession(
     .selectFrom("whatsapp_sessions")
     .select("user_id")
     .where("user_id", "in", userIds)
-    .where("expires_at", ">", now)
+    .where("expires_at", ">", activeAsOf)
     .execute();
 
   return new Set(rows.map((r) => r.user_id));

@@ -115,7 +115,6 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
       sessions: createAuthSessionRepo(ctx.db),
       users: createAuthUsersRepo(ctx.db),
       events: createEventsRepo(ctx.db),
-      now: now.get,
       logger,
     }),
   };
@@ -123,7 +122,6 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   const engine = createFakeEngine();
   const integrations = createIntegrationRuntime({
     executor: ctx.db,
-    now: now.get,
   });
 
   return {

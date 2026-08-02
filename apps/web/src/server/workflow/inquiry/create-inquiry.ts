@@ -33,7 +33,7 @@ export async function createInquiry(
   const inserted = await createInquiryRepo(scope.executor).insert({
     ruc: ruc.value,
     executiveId: input.actor.userId,
-    now: scope.operationAt,
+    createdAt: scope.operationAt,
   });
   if (!inserted) {
     return Err(fail("inquiry_exists"));

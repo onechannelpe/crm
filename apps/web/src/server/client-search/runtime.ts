@@ -4,25 +4,30 @@ import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentCommand } from "~/server/client-search/request";
 import { createEnrichmentQuery } from "~/server/client-search/status";
 import { createEnrichmentQueue } from "~/server/client-search/worker";
-import type { EngineClient } from "~/server/integrations/engine/client";
-import { createOrganizationEnrichmentProjection } from "~/server/organization/apply-enrichment";
-import { createOrganizationEnrichment } from "~/server/organization/enrichment";
-import { createOrganizationRepo } from "~/server/organization/organization-repo";
-import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
+
+export interface ClientSearchRuntimeDeps {
+  fallbackOrganizationEnrichment(ruc: string): Promise<{
+    legalName: string | null;
+    address: string | null;
+  } | null>;
+  projectOrganization(input: {
+    ruc: string;
+    legalName: string | null;
+    address: string | null;
+    district: string | null;
+    department: string | null;
+  }): Promise<void>;
+}
 
 export function createClientSearchRuntime(
   serverInfrastructure: ServerInfrastructure,
-  engine: EngineClient,
+  deps: ClientSearchRuntimeDeps,
 ) {
   const registry = createCompanyRegistryRepo(serverInfrastructure.db);
   const scraper = createSunatScraperClient();
   const enrichmentCommand = createEnrichmentCommand(registry);
   const enrichmentQuery = createEnrichmentQuery(registry);
-
-  const engineFallback = createOrganizationEnrichment(engine);
-  const projectOrganization = createOrganizationEnrichmentProjection(
-    createOrganizationRepo(serverInfrastructure.db),
-  );
 
   return {
     requestEnrichment: (
@@ -43,8 +48,8 @@ export function createClientSearchRuntime(
       createEnrichmentQueue(workerId, {
         registry,
         scraper,
-        engineFallback: (ruc) => engineFallback.enrichByRuc(ruc),
-        projectOrganization,
+        engineFallback: deps.fallbackOrganizationEnrichment,
+        projectOrganization: deps.projectOrganization,
       }),
   };
 }

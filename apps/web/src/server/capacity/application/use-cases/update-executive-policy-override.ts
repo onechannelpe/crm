@@ -45,9 +45,9 @@ export async function updateExecutivePolicyOverride(
         targetUserId: input.userId,
         monthlyLimit: monthlyLimit.value,
         expiresAt: expiresAt.value,
-        at: ctx.operationAt,
       },
       tx,
+      ctx,
     );
     if (isErr(searchWrite)) return searchWrite;
 
@@ -58,9 +58,9 @@ export async function updateExecutivePolicyOverride(
         bufferTarget: leadValues.value.bufferTarget,
         dailyLimit: leadValues.value.dailyLimit,
         expiresAt: expiresAt.value,
-        at: ctx.operationAt,
       },
       tx,
+      ctx,
     );
     if (isErr(leadWrite)) return leadWrite;
 

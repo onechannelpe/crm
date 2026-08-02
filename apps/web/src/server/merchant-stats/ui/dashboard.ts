@@ -9,13 +9,13 @@ import type {
   PublishedPage,
 } from "~/contracts/merchant-stats/views";
 import type { DomainError } from "~/domain/errors";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
   type Reader,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { Ok } from "~/shared/result";
 
 const DEFAULT_PAGE_SIZE = 60;
@@ -61,7 +61,7 @@ export async function getGpvPerformance(raw: {
       Ok(
         await application.merchantStats.dashboard.performance(
           input.filter,
-          ctx.operationAt,
+          ctx,
         ),
       ),
   });

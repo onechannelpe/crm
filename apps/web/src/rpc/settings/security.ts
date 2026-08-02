@@ -1,9 +1,9 @@
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 
 export async function changePassword(
   currentPassword: unknown,
@@ -21,12 +21,12 @@ export async function changePassword(
         newPassword: r.str("newPassword"),
       })),
 
-    execute: ({ actor, operationAt }, input) =>
+    execute: (ctx, input) =>
       application.auth.security.changePassword(
-        actor.userId,
+        ctx.actor.userId,
         input.currentPassword,
         input.newPassword,
-        operationAt,
+        ctx.operationAt,
       ),
   });
 }
@@ -38,8 +38,11 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
     name: "settings.security.remove_passkeys",
     access: { kind: "session" },
 
-    execute: ({ actor, operationAt }) =>
-      application.auth.security.removePasskeys(actor.userId, operationAt),
+    execute: (ctx) =>
+      application.auth.security.removePasskeys(
+        ctx.actor.userId,
+        ctx.operationAt,
+      ),
   });
 }
 
@@ -50,7 +53,7 @@ export async function disableTotp(): Promise<{ message: string }> {
     name: "settings.security.disable_totp",
     access: { kind: "session" },
 
-    execute: ({ actor, operationAt }) =>
-      application.auth.security.disableTotp(actor.userId, operationAt),
+    execute: (ctx) =>
+      application.auth.security.disableTotp(ctx.actor.userId, ctx.operationAt),
   });
 }

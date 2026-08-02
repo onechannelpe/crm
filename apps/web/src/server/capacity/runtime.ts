@@ -29,9 +29,9 @@ import {
 } from "~/server/capacity/infrastructure/usage-repo";
 import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
-import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createExecutorUow } from "~/server/platform/database/uow";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 

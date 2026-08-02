@@ -2,6 +2,7 @@ import type { LeadDetailView } from "~/contracts/workflow/views";
 import type { Role } from "~/domain/auth/access/rbac";
 import type { DomainError } from "~/domain/errors";
 import type { UserId, WorkflowLeadId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import {
   authorizeLeadAction,
   canRevealFullTimeline,
@@ -22,13 +23,13 @@ export async function getLeadDetail(
     actorUserId: UserId;
     actorRole: Role;
     leadId: WorkflowLeadId;
-    evaluatedAt: Date;
   },
+  operation: OperationContext,
 ): Promise<Result<LeadDetailView, DomainError>> {
   const loaded = await loadLeadDetailSections(deps, {
     leadId: input.leadId,
     actorUserId: input.actorUserId,
-    evaluatedAt: input.evaluatedAt,
+    evaluatedAt: operation.operationAt,
   });
   if (!loaded.ok) {
     return loaded;
@@ -50,7 +51,7 @@ export async function getLeadDetail(
     : null;
 
   const latestProposal = loaded.value.rateProposals.at(-1);
-  const now = input.evaluatedAt;
+  const now = operation.operationAt;
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
   const availableActions = resolveAvailableActions(
     { userId: input.actorUserId, role: input.actorRole },

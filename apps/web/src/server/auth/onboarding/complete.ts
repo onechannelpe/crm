@@ -152,22 +152,25 @@ export async function completeOnboarding(
       occurredAt: completedAt,
     });
 
-    const sessionToken = await replaceSession(repos, {
-      current: ctx.actor,
-      user: {
-        ...user,
-        onboarding_completed_at: completedAt,
+    const sessionToken = await replaceSession(
+      repos,
+      {
+        current: ctx.actor,
+        user: {
+          ...user,
+          onboarding_completed_at: completedAt,
+        },
+        sessionClass: resolveSessionClass({
+          onboardingCompleted: true,
+          recoveryCodesAcknowledgementRequired: recoveryCodes.length > 0,
+        }),
+        strongAuthMethod,
+        strongAuthAt,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
       },
-      sessionClass: resolveSessionClass({
-        onboardingCompleted: true,
-        recoveryCodesAcknowledgementRequired: recoveryCodes.length > 0,
-      }),
-      strongAuthMethod,
-      strongAuthAt,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
-      issuedAt: completedAt,
-    });
+      ctx,
+    );
 
     return Ok({
       redirectTo: getDefaultAppPath(user.role),

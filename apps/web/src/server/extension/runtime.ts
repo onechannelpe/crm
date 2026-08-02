@@ -12,8 +12,8 @@ import {
   createOrganizationRepo,
   type OrganizationRepository,
 } from "~/server/organization/organization-repo";
-import type { ServerInfrastructure } from "~/server/platform/composition/infrastructure";
 import { createExecutorUow } from "~/server/platform/database/uow";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import {
   createSessionRepository,
   type SessionRepository,

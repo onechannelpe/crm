@@ -3,6 +3,7 @@ import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { createPasskeyLoginStateService } from "~/server/auth/factors/passkey/service/login-state";
 import type { AuthLoginRepos } from "~/server/auth/flows/login-deps";
 import { deleteLoginFlow } from "~/server/auth/login-flow/shared";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 import type { LoginFlowState } from "../login-contracts";
 
@@ -13,7 +14,7 @@ export async function getLoginFlowState(
     "events" | "loginFlows" | "passkeys" | "webauthnChallenges"
   >,
   webauthnProvider: WebauthnProvider,
-  asOf: Date,
+  operation: OperationContext,
 ): Promise<LoginFlowState | null> {
   const flow = await deps.loginFlows.findById(flowId);
 
@@ -21,7 +22,7 @@ export async function getLoginFlowState(
     return null;
   }
 
-  if (flow.expires_at < asOf) {
+  if (flow.expires_at < operation.operationAt) {
     await deleteLoginFlow(flow, deps);
     return null;
   }
@@ -37,7 +38,7 @@ export async function getLoginFlowState(
     case "passkey":
       return createPasskeyLoginStateService(deps, {
         webauthnProvider,
-      }).hydrateLoginFlow(flow, asOf);
+      }).hydrateLoginFlow(flow, operation.operationAt);
 
     default:
       await deleteLoginFlow(flow, deps);

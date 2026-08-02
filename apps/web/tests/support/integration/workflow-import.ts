@@ -65,7 +65,7 @@ export function createWorkflowImporter(input: {
         },
         {
           executor: runtime.integrations.executor,
-          now: runtime.integrations.now(),
+          now: runtime.now.get(),
         },
       );
     },
@@ -84,7 +84,7 @@ export function createWorkflowImporter(input: {
         },
         {
           executor: runtime.integrations.executor,
-          now: runtime.integrations.now(),
+          now: runtime.now.get(),
         },
       );
     },

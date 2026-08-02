@@ -3,12 +3,12 @@ import { isAuthenticationResponse } from "~/domain/auth/passkey/credential-respo
 import { fail } from "~/domain/errors";
 import { AuthLoginFlowId } from "~/domain/ids";
 import { setSessionCookie } from "~/server/auth/session/cookies";
+import { application } from "~/server/composition/application";
 import { throwDomain } from "~/server/platform/action/domain-error";
-import { application } from "~/server/platform/composition/application";
 import {
   getRequestClientMetadata,
   getRequestContext,
-  getRequestInstant,
+  getRequestOperation,
 } from "~/server/platform/http/request-context";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
@@ -17,7 +17,7 @@ function recordAuthAnalyticsEvent(
   event: Parameters<typeof application.auth.analytics>[0],
   context: Parameters<typeof application.auth.analytics>[1],
 ) {
-  return application.auth.analytics(event, context, getRequestInstant());
+  return application.auth.analytics(event, context, getRequestOperation());
 }
 
 export async function finishPasskeyLogin(
@@ -35,15 +35,15 @@ export async function finishPasskeyLogin(
     throwDomain(fail("invalid_credentials"));
   }
 
-  const verifiedAt = getRequestInstant();
+  const operation = getRequestOperation();
   const verified = await application.auth.login.verifyPasskey(
     {
       flowId: parsedFlowId.value,
       response,
       ipAddress: clientMetadata.ipAddress,
-      occurredAt: verifiedAt,
     },
     getRequestContext().publicOrigin,
+    operation,
   );
 
   if (isErr(verified)) {
@@ -60,12 +60,14 @@ export async function finishPasskeyLogin(
     throwDomain(fail(verified.error.kind));
   }
 
-  const completed = await application.auth.login.complete({
-    proof: verified.value,
-    occurredAt: verifiedAt,
-    ipAddress: clientMetadata.ipAddress,
-    userAgent: clientMetadata.userAgent,
-  });
+  const completed = await application.auth.login.complete(
+    {
+      proof: verified.value,
+      ipAddress: clientMetadata.ipAddress,
+      userAgent: clientMetadata.userAgent,
+    },
+    operation,
+  );
   if (isErr(completed)) {
     throwDomain(
       fail(

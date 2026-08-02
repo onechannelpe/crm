@@ -3,12 +3,12 @@ import type {
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
 import { ROLES } from "~/domain/auth/access/rbac";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 import { previewBulkImport as previewBulkImportService } from "~/server/team/application/bulk-import";
 
 export async function previewBulkCsv(
@@ -30,7 +30,7 @@ export async function previewBulkCsv(
     audit: (input) => ({ role: input.role }),
 
     execute: (ctx, input) =>
-      previewBulkImportService(input.csvContent, input.role, ctx.operationAt),
+      previewBulkImportService(input.csvContent, input.role, ctx),
   });
 
   return { parsed };

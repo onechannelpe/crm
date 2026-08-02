@@ -20,10 +20,18 @@ export function createInviteTestKit(
 ): {
   service: InviteService;
   commands: {
-    create: InviteService["createInvite"];
-    accept: InviteService["acceptInvite"];
-    redeliver: InviteService["redeliverInvite"];
-    revoke: InviteService["revokeInvite"];
+    create: (
+      input: Parameters<InviteService["createInvite"]>[0],
+    ) => ReturnType<InviteService["createInvite"]>;
+    accept: (
+      input: Parameters<InviteService["acceptInvite"]>[0],
+    ) => ReturnType<InviteService["acceptInvite"]>;
+    redeliver: (
+      input: Parameters<InviteService["redeliverInvite"]>[0],
+    ) => ReturnType<InviteService["redeliverInvite"]>;
+    revoke: (
+      input: Parameters<InviteService["revokeInvite"]>[0],
+    ) => ReturnType<InviteService["revokeInvite"]>;
   };
   expect: {
     inviteStatus(
@@ -38,6 +46,7 @@ export function createInviteTestKit(
 } {
   const createRepos = options.createRepos ?? createTestRepositories;
   const baseRepos = createRepos(ctx.db);
+  const resolveNow = options.now ?? (() => new Date());
 
   const service = createInviteService(baseRepos, {
     uow: {
@@ -53,7 +62,6 @@ export function createInviteTestKit(
         );
       },
     },
-    now: options.now ?? (() => new Date()),
     hashPassword: options.hashPassword,
   });
 
@@ -61,10 +69,10 @@ export function createInviteTestKit(
     service,
 
     commands: {
-      create: (input) => service.createInvite(input),
-      accept: (input) => service.acceptInvite(input),
-      redeliver: (input) => service.redeliverInvite(input),
-      revoke: (input) => service.revokeInvite(input),
+      create: (input) => service.createInvite(input, resolveNow()),
+      accept: (input) => service.acceptInvite(input, resolveNow()),
+      redeliver: (input) => service.redeliverInvite(input, resolveNow()),
+      revoke: (input) => service.revokeInvite(input, resolveNow()),
     },
 
     expect: {

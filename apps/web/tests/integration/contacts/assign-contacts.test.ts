@@ -10,8 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { RecordCandidate } from "~/contracts/engine/record-api.generated";
 import { external, type DomainError } from "~/domain/errors";
 import { appCalendarDateAt, appDayRange } from "~/domain/time/app-time";
-import { assignContacts } from "~/server/contact-assignments/application/assign-contacts";
-import { createContactAssignmentsContext } from "~/server/contact-assignments/infrastructure/context";
+import { createContactAssignmentsRuntime } from "~/server/contact-assignments/runtime";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -80,19 +79,15 @@ describe("assignContacts", () => {
   });
 
   async function runAssign(engine: Pick<EngineClient, "requestCandidates">) {
-    const context = createContactAssignmentsContext({
+    const runtime = createContactAssignmentsRuntime({
       executor: ctx.db,
       engine,
     });
-    return assignContacts(
-      { actorUserId: ACTOR_ID, branchId: BRANCH_ID },
-      {
-        repos: context.repos,
-        uow: context.uow,
-        engine: context.engine,
-        leadUsageReservationPorts: context.leadUsageReservationPorts,
-      },
-    );
+    return runtime.assign({
+      actorUserId: ACTOR_ID,
+      branchId: BRANCH_ID,
+      at: new Date(),
+    });
   }
 
   it("stops requesting candidates once the buffer is full", async () => {
@@ -131,6 +126,7 @@ describe("assignContacts", () => {
     const organization = await ctx.repos.organization.upsertOrganization({
       ruc: onCooldown.ruc,
       legalName: onCooldown.organization_name,
+      at: new Date(),
     });
     const membership = await ctx.repos.organization.upsertMembership({
       organizationId: organization.id,
@@ -143,6 +139,7 @@ describe("assignContacts", () => {
       },
       phone: onCooldown.phone_primary,
       email: null,
+      at: new Date(),
     });
     await ctx.repos.cadence.touch({
       organizationPersonId: membership.id,
@@ -159,8 +156,10 @@ describe("assignContacts", () => {
     // requested is the buffer shortfall, not the candidate count.
     expect(result.value).toEqual({ requested: BUFFER_TARGET, assigned: 2 });
 
-    const activeCount =
-      await ctx.repos.contactAssignments.countActiveByUser(ACTOR_ID);
+    const activeCount = await ctx.repos.contactAssignments.countActiveByUser(
+      ACTOR_ID,
+      new Date(),
+    );
     expect(activeCount).toBe(2);
 
     const range = appDayRange(appCalendarDateAt(new Date()));

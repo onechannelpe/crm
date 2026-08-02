@@ -2,6 +2,7 @@ import { auditEntityId } from "~/domain/audit/entity";
 import { fail, type DomainError } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
 import { hashPassword, verifyPassword } from "~/server/auth/password/password";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { AuthSetupContext } from "../infrastructure/setup-context";
@@ -14,8 +15,8 @@ export async function changeInstallationPassword(
     currentSessionId: string;
     password: string;
     confirmPassword: string;
-    now: Date;
   },
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   if (input.password.length < 8) {
     return Err(fail("password_too_short"));
@@ -49,7 +50,7 @@ export async function changeInstallationPassword(
       entityType: "user",
       entityId: auditEntityId("user", user.id),
       actorUserId: user.id,
-      occurredAt: input.now,
+      occurredAt: operation.operationAt,
     });
     return Ok(undefined);
   });

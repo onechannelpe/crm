@@ -1,6 +1,6 @@
 import { deleteSessionCookie } from "~/server/auth/session/cookies";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { application } from "~/server/platform/composition/application";
 
 export async function logout(): Promise<void> {
   "use server";

@@ -1,5 +1,6 @@
 import { auditEntityId } from "~/domain/audit/entity";
 import { fail, type DomainError } from "~/domain/errors";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { mapAcceptedInviteResult } from "./runtime";
@@ -14,10 +15,10 @@ export async function acceptInvite(
   repos: InviteDeps,
   runtime: InviteRuntime,
   input: AcceptInviteInput,
-  now: Date,
+  operation: OperationContext,
 ): Promise<Result<InviteAcceptedResult, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
-    const currentTime = now;
+    const currentTime = operation.operationAt;
 
     const invite = await transactionRepos.userInvites.findPendingByToken(
       input.token,

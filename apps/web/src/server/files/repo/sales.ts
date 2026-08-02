@@ -22,7 +22,7 @@ export function createSalesRepo(db: Kysely<Database>) {
       leadId: WorkflowLeadId;
       fileAssetId: FileAssetId;
       uploadedByUserId: UserId;
-      now: Date;
+      createdAt: Date;
     }) {
       const { id } = await db
         .insertInto("workflow_sale_proof_files")
@@ -30,7 +30,7 @@ export function createSalesRepo(db: Kysely<Database>) {
           lead_id: input.leadId,
           file_asset_id: input.fileAssetId,
           uploaded_by_user_id: input.uploadedByUserId,
-          created_at: input.now,
+          created_at: input.createdAt,
         })
         .returning("id")
         .executeTakeFirstOrThrow();

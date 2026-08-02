@@ -17,6 +17,7 @@ import {
   hashSessionToken,
   isValidTokenFormat,
 } from "~/server/auth/session/tokens";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 import type {
   AuthSession,
@@ -45,11 +46,17 @@ export function createSessionService(deps: SessionServiceDeps) {
   };
 
   return {
-    async establish(spec: SessionSpec, now: Date): Promise<IssuedSession> {
+    async establish(
+      spec: SessionSpec,
+      operation: OperationContext,
+    ): Promise<IssuedSession> {
       const identity = mapUserToSessionIdentity(spec.user);
       const token = generateSessionToken();
       const sessionId = hashSessionToken(token);
-      const expiresAt = addMilliseconds(now, SESSION_DURATION);
+      const expiresAt = addMilliseconds(
+        operation.operationAt,
+        SESSION_DURATION,
+      );
 
       await deps.sessions.create({
         id: sessionId,
@@ -63,8 +70,8 @@ export function createSessionService(deps: SessionServiceDeps) {
         impersonator_user_id: spec.impersonatorUserId ?? null,
         ip_address: spec.request.ipAddress,
         user_agent: spec.request.userAgent,
-        created_at: now,
-        last_activity: now,
+        created_at: operation.operationAt,
+        last_activity: operation.operationAt,
         expires_at: expiresAt,
       });
 
@@ -74,7 +81,7 @@ export function createSessionService(deps: SessionServiceDeps) {
           entityType: "user",
           entityId: auditEntityId("user", spec.user.id),
           actorUserId: spec.user.id,
-          occurredAt: now,
+          occurredAt: operation.operationAt,
         });
       }
 
@@ -89,14 +96,17 @@ export function createSessionService(deps: SessionServiceDeps) {
       };
     },
 
-    async resolve(token: string, now: Date): Promise<AuthSession | null> {
+    async resolve(
+      token: string,
+      operation: OperationContext,
+    ): Promise<AuthSession | null> {
       if (!isValidTokenFormat(token)) {
         return null;
       }
 
       const sessionId = hashSessionToken(token);
 
-      const cached = sessionCache.get(sessionId, now);
+      const cached = sessionCache.get(sessionId, operation.operationAt);
       if (cached) {
         return {
           id: sessionId,
@@ -135,7 +145,7 @@ export function createSessionService(deps: SessionServiceDeps) {
         await revokeSession(sessionId);
         return null;
       }
-      if (dbSession.expires_at < now) {
+      if (dbSession.expires_at < operation.operationAt) {
         await revokeSession(sessionId);
         return null;
       }
@@ -145,26 +155,34 @@ export function createSessionService(deps: SessionServiceDeps) {
         await revokeSession(sessionId);
         return null;
       }
-      if (user.expires_at !== null && user.expires_at <= now) {
-        await deps.users.deactivateIfExpired(user.id, now);
+      if (
+        user.expires_at !== null &&
+        user.expires_at <= operation.operationAt
+      ) {
+        await deps.users.deactivateIfExpired(user.id, operation.operationAt);
         await revokeUserSessions(user.id);
         return null;
       }
 
       if (
-        now.getTime() - dbSession.last_activity.getTime() >
+        operation.operationAt.getTime() - dbSession.last_activity.getTime() >
         ACTIVITY_UPDATE_THRESHOLD
       ) {
-        deps.sessions.updateActivity(sessionId, now).catch((error: unknown) => {
-          logger.error("update_activity_failed", { sessionId, error });
-        });
+        deps.sessions
+          .updateActivity(sessionId, operation.operationAt)
+          .catch((error: unknown) => {
+            logger.error("update_activity_failed", { sessionId, error });
+          });
       }
 
       if (
-        dbSession.expires_at.getTime() - now.getTime() <
+        dbSession.expires_at.getTime() - operation.operationAt.getTime() <
         EXTENSION_THRESHOLD
       ) {
-        const newExpiry = addMilliseconds(now, SESSION_DURATION);
+        const newExpiry = addMilliseconds(
+          operation.operationAt,
+          SESSION_DURATION,
+        );
         deps.sessions
           .extendExpiry(sessionId, newExpiry)
           .catch((error: unknown) => {
@@ -188,7 +206,7 @@ export function createSessionService(deps: SessionServiceDeps) {
           impersonatorUserId: authSession.impersonatorUserId,
           expiresAt: dbSession.expires_at,
         },
-        now,
+        operation.operationAt,
       );
 
       return authSession;

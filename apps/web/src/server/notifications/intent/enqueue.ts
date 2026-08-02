@@ -10,7 +10,7 @@ const DEFAULT_MAX_ATTEMPTS = 5;
 export async function enqueueNotifications(
   db: DatabaseExecutor,
   intents: readonly unknown[],
-  now: Date,
+  enqueuedAt: Date,
 ): Promise<void> {
   if (intents.length === 0) return;
 
@@ -34,10 +34,10 @@ export async function enqueueNotifications(
         queue_state: "pending" as const,
         attempt_count: 0,
         max_attempts: DEFAULT_MAX_ATTEMPTS,
-        claimable_at: now,
+        claimable_at: enqueuedAt,
         lease_owner: null,
         error_message: null,
-        created_at: now,
+        created_at: enqueuedAt,
         completed_at: null,
       })),
     )

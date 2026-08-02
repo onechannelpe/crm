@@ -1,6 +1,6 @@
 import type { ApiRequestEvent } from "~/routes/api/request-event";
-import { application } from "~/server/platform/composition/application";
-import { getRequestInstant } from "~/server/platform/http/request-context";
+import { application } from "~/server/composition/application";
+import { getRequestOperation } from "~/server/platform/http/request-context";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
 const logger = createLogger("whatsapp-webhook");
@@ -28,13 +28,15 @@ export function GET(event: ApiRequestEvent): Response {
 
 export async function POST(event: ApiRequestEvent): Promise<Response> {
   try {
-    const result = await application.notifications.webhooks.receiveKapso({
-      idempotencyKey: event.request.headers.get("x-idempotency-key"),
-      eventType: event.request.headers.get("x-webhook-event"),
-      payloadVersion: event.request.headers.get("x-webhook-payload-version"),
-      rawBody: await event.request.text(),
-      now: getRequestInstant(),
-    });
+    const result = await application.notifications.webhooks.receiveKapso(
+      {
+        idempotencyKey: event.request.headers.get("x-idempotency-key"),
+        eventType: event.request.headers.get("x-webhook-event"),
+        payloadVersion: event.request.headers.get("x-webhook-payload-version"),
+        rawBody: await event.request.text(),
+      },
+      getRequestOperation(),
+    );
 
     if (!result.ok) {
       logger.warn("whatsapp_webhook_rejected", { reason: result.error });

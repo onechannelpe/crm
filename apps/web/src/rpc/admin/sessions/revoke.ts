@@ -1,11 +1,11 @@
 import type { ActionSuccess } from "~/contracts/common";
 import { UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
 } from "~/server/platform/action/input-reader";
-import { application } from "~/server/platform/composition/application";
 
 export async function revokeUserSession(
   rawSessionId: unknown,

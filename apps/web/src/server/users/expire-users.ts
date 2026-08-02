@@ -9,11 +9,11 @@ interface ExpireUsersDeps {
 }
 
 export async function expireUsersAndInvalidateSessions(
-  now: Date,
+  expiredBefore: Date,
   deps: ExpireUsersDeps,
 ): Promise<number> {
   const users = createUsersRepo(deps.executor);
-  const expiredUserIds = await users.expireActiveUsersBefore(now);
+  const expiredUserIds = await users.expireActiveUsersBefore(expiredBefore);
 
   for (const userId of expiredUserIds) {
     // Sequential: each session invalidation writes its own auth_event row,
