@@ -54,10 +54,10 @@ export function createActionRateLimitsRepo(db: Kysely<Database>) {
       return row;
     },
 
-    async deleteUpdatedBefore(timestamp: Date): Promise<number> {
+    async deleteUpdatedBefore(updatedBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("action_rate_limit_counters")
-        .where("updated_at", "<", timestamp)
+        .where("updated_at", "<", updatedBefore)
         .executeTakeFirst();
       return Number(result.numDeletedRows ?? 0);
     },

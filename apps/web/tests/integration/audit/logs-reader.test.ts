@@ -70,7 +70,7 @@ describe("audit logs reader repository", () => {
       is_active: true,
       is_protected: false,
       updated_by_user_id: EXEC_USER_ID,
-      now: new Date(baseTimeMs + 3),
+      updatedAt: new Date(baseTimeMs + 3),
     });
 
     const highRiskAfterPolicy = await ctx.repos.events.listRecent({

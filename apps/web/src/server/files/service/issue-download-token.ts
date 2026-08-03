@@ -14,17 +14,20 @@ export async function issueDownloadToken(
   fileAssetId: FileAssetId,
   deps: DownloadTokenDeps,
 ): Promise<Result<{ token: string }, DomainError>> {
-  const now = ctx.operationAt;
   const rawToken = generateDownloadToken();
   const tokenHash = hashToken(rawToken);
-  const expiresAt = new Date(now.getTime() + DOWNLOAD_TOKEN_TTL_MS);
+
+  // The TTL runs from the stored creation stamp, so the two columns always
+  // agree on when the window opened.
+  const createdAt = ctx.operationAt;
+  const expiresAt = new Date(createdAt.getTime() + DOWNLOAD_TOKEN_TTL_MS);
 
   await deps.repo.tokens.insert({
     fileAssetId,
     tokenHash,
     requestedByUserId: ctx.actor.userId,
     expiresAt,
-    createdAt: now,
+    createdAt,
   });
 
   return Ok({ token: rawToken });

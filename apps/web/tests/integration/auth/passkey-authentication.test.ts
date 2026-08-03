@@ -1,6 +1,7 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { getSeededIdentity } from "@tests/support/identities/api";
+import { operationAt } from "@tests/support/operation";
 import {
   buildAssertionResponse,
   createAuthFlow,
@@ -30,22 +31,28 @@ async function finishPasskeyLogin(
     userAgent: string | null;
   },
 ) {
-  const occurredAt = new Date();
-  const verified = await verifyPasskeyLogin(login.repos, {
-    flowId: input.flowId,
-    response: input.response,
-    ipAddress: input.ipAddress,
-    occurredAt,
-    webauthnProvider: input.webauthnProvider,
-  });
+  const operation = operationAt(new Date());
+  const verified = await verifyPasskeyLogin(
+    login.repos,
+    {
+      flowId: input.flowId,
+      response: input.response,
+      ipAddress: input.ipAddress,
+      webauthnProvider: input.webauthnProvider,
+    },
+    operation,
+  );
   if (isErr(verified)) return verified;
 
-  return completePendingLogin(login, {
-    proof: verified.value,
-    occurredAt,
-    ipAddress: input.ipAddress,
-    userAgent: input.userAgent,
-  });
+  return completePendingLogin(
+    login,
+    {
+      proof: verified.value,
+      ipAddress: input.ipAddress,
+      userAgent: input.userAgent,
+    },
+    operation,
+  );
 }
 
 describe("passkey authentication", () => {
@@ -72,7 +79,7 @@ describe("passkey authentication", () => {
       { identifier: "exec.one", ipAddress, mode: "identified" },
       login,
       createTestPasskeyProvider(login.repos),
-      new Date(),
+      operationAt(new Date()),
     );
     const value = expectOk(result);
 
@@ -94,7 +101,7 @@ describe("passkey authentication", () => {
       { ipAddress, mode: "discoverable" },
       login,
       createTestPasskeyProvider(login.repos),
-      new Date(),
+      operationAt(new Date()),
     );
     const value = expectOk(result);
 

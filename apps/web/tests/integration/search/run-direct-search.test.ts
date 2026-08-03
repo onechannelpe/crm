@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -88,10 +89,10 @@ describe("runDirectSearch", () => {
         intent: "people",
         query: "12345678",
         limit: 10,
-        at: new Date(),
       },
       ports(),
       engineReturning([foundResult]),
+      operationAt(new Date()),
     );
 
     expect(result.ok).toBe(true);
@@ -113,10 +114,10 @@ describe("runDirectSearch", () => {
         intent: "people",
         query: "12345678",
         limit: 10,
-        at: new Date(),
       },
       ports(),
       engineFailing(),
+      operationAt(new Date()),
     );
 
     expect(result.ok).toBe(false);
@@ -164,7 +165,6 @@ describe("runDirectSearch", () => {
         intent: "people",
         query: "12345678",
         limit: 10,
-        at: new Date(),
       },
       ports(),
       {
@@ -173,6 +173,7 @@ describe("runDirectSearch", () => {
           return Ok([]);
         },
       },
+      operationAt(new Date()),
     );
 
     expect(result.ok).toBe(false);

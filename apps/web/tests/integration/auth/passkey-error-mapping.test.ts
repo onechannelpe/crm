@@ -1,6 +1,7 @@
 import { expectErr } from "@tests/support/_core/assertions";
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { getSeededIdentity } from "@tests/support/identities/api";
+import { operationAt } from "@tests/support/operation";
 import {
   buildAssertionResponse,
   createAuthFlow,
@@ -41,7 +42,7 @@ describe("passkey error mapping", () => {
       { identifier: "   ", ipAddress, mode: "identified" },
       login,
       createTestPasskeyProvider(login.repos),
-      new Date(),
+      operationAt(new Date()),
     );
 
     const error = expectErr(result);
@@ -95,22 +96,28 @@ describe("passkey error mapping", () => {
     });
 
     const login = createAuthLoginContext(scenario.ctx.db);
-    const occurredAt = new Date();
-    const verified = await verifyPasskeyLogin(login.repos, {
-      flowId,
-      response: buildAssertionResponse("missing-passkey"),
-      ipAddress,
-      occurredAt,
-      webauthnProvider: createTestPasskeyProvider(login.repos),
-    });
+    const operation = operationAt(new Date());
+    const verified = await verifyPasskeyLogin(
+      login.repos,
+      {
+        flowId,
+        response: buildAssertionResponse("missing-passkey"),
+        ipAddress,
+        webauthnProvider: createTestPasskeyProvider(login.repos),
+      },
+      operation,
+    );
     const result = isErr(verified)
       ? verified
-      : await completePendingLogin(login, {
-          proof: verified.value,
-          occurredAt,
-          ipAddress,
-          userAgent: "vitest-agent",
-        });
+      : await completePendingLogin(
+          login,
+          {
+            proof: verified.value,
+            ipAddress,
+            userAgent: "vitest-agent",
+          },
+          operation,
+        );
 
     const error = expectErr(result);
     expect(error.kind).toBe("invalid_credentials");

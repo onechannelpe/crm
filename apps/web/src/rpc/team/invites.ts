@@ -7,7 +7,10 @@ import {
   validationFail,
 } from "~/server/platform/action/input-reader";
 import { getRequestOperation } from "~/server/platform/http/request-context";
-import { validateTeamInviteInput } from "~/server/team/domain/invite-input";
+import {
+  validateTeamInviteInput,
+  validateTeamInviteShape,
+} from "~/server/team/domain/invite-input";
 import { isErr, Ok } from "~/shared/result";
 
 export async function createTeamInvite(input: unknown): Promise<{
@@ -41,6 +44,9 @@ export async function createTeamInvite(input: unknown): Promise<{
       if (isErr(command)) {
         return command;
       }
+
+      const shape = validateTeamInviteShape(command.value);
+      if (isErr(shape)) return shape;
 
       return validateTeamInviteInput(command.value, getRequestOperation());
     },

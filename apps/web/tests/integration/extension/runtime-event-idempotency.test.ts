@@ -1,6 +1,7 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
 import { createExtensionFixture } from "@tests/support/extension/fixture";
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   resetTestDb,
@@ -45,11 +46,11 @@ describe("extension runtime event idempotency", () => {
 
     const first = await scenario.service.ingestRuntimeEvent(
       { sessionToken, event },
-      new Date(),
+      operationAt(new Date()),
     );
     const second = await scenario.service.ingestRuntimeEvent(
       { sessionToken, event },
-      new Date(),
+      operationAt(new Date()),
     );
 
     expectOk(first);
@@ -78,7 +79,7 @@ describe("extension runtime event idempotency", () => {
         assignmentId,
         origin: "http://localhost:3000",
       },
-      new Date(),
+      operationAt(new Date()),
     );
     const firstHandoffValue = expectOk(firstHandoff);
 
@@ -87,7 +88,7 @@ describe("extension runtime event idempotency", () => {
         handoffToken: firstHandoffValue.handoffToken,
         installationId: "11111111-1111-4111-8111-111111111111",
       },
-      new Date(),
+      operationAt(new Date()),
     );
     const firstClaimValue = expectOk(firstClaim);
 
@@ -99,7 +100,7 @@ describe("extension runtime event idempotency", () => {
         assignmentId,
         origin: "http://localhost:3000",
       },
-      new Date(),
+      operationAt(new Date()),
     );
     const secondHandoffValue = expectOk(secondHandoff);
 
@@ -108,7 +109,7 @@ describe("extension runtime event idempotency", () => {
         handoffToken: secondHandoffValue.handoffToken,
         installationId: "22222222-2222-4222-8222-222222222222",
       },
-      new Date(),
+      operationAt(new Date()),
     );
     const secondClaimValue = expectOk(secondClaim);
 
@@ -123,7 +124,7 @@ describe("extension runtime event idempotency", () => {
           payload: { occurredAt: 20_000 },
         },
       },
-      new Date(),
+      operationAt(new Date()),
     );
     const newSessionResult = await scenario.service.ingestRuntimeEvent(
       {
@@ -136,7 +137,7 @@ describe("extension runtime event idempotency", () => {
           payload: { occurredAt: 21_000 },
         },
       },
-      new Date(),
+      operationAt(new Date()),
     );
 
     const oldSessionError = expectErr(oldSessionResult);

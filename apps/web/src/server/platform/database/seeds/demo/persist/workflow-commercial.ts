@@ -9,21 +9,21 @@ import type { OrganizationsByRuc } from "./organizations";
 
 export async function persistWorkflowCommercialData(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   orgIdByRuc: OrganizationsByRuc,
   leads: readonly CompiledLead[],
 ): Promise<void> {
-  await insertRateProposals(db, now, day, leads);
-  await insertRateRevisions(db, now, day, leads);
-  await insertVenues(db, now, day, leads);
-  await insertDigitalPolicies(db, now, day, leads);
-  await insertLegalReps(db, now, day, orgIdByRuc, leads);
+  await insertRateProposals(db, anchorMs, day, leads);
+  await insertRateRevisions(db, anchorMs, day, leads);
+  await insertVenues(db, anchorMs, day, leads);
+  await insertDigitalPolicies(db, anchorMs, day, leads);
+  await insertLegalReps(db, anchorMs, day, orgIdByRuc, leads);
 }
 
 async function insertRateRevisions(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   leads: readonly CompiledLead[],
 ): Promise<void> {
@@ -43,7 +43,7 @@ async function insertRateRevisions(
           round: proposal.round,
           justification: "El comercio solicita una tarifa más competitiva",
           requested_by: lead.spec.executiveId,
-          requested_at: new Date(now - proposal.decidedOffsetDays * day),
+          requested_at: new Date(anchorMs - proposal.decidedOffsetDays * day),
         },
       ];
     }),
@@ -54,7 +54,7 @@ async function insertRateRevisions(
 
 async function insertRateProposals(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   leads: readonly CompiledLead[],
 ): Promise<void> {
@@ -70,12 +70,12 @@ async function insertRateProposals(
       fee: proposal.fee,
       currency: proposal.currency,
       proposed_by: proposal.proposedBy,
-      proposed_at: new Date(now - proposal.proposedOffsetDays * day),
+      proposed_at: new Date(anchorMs - proposal.proposedOffsetDays * day),
       outcome: proposal.outcome,
       decided_at:
         proposal.decidedOffsetDays === undefined
           ? null
-          : new Date(now - proposal.decidedOffsetDays * day),
+          : new Date(anchorMs - proposal.decidedOffsetDays * day),
     })),
   );
   if (rows.length === 0) return;
@@ -84,7 +84,7 @@ async function insertRateProposals(
 
 async function insertVenues(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   leads: readonly CompiledLead[],
 ): Promise<void> {
@@ -109,7 +109,7 @@ async function insertVenues(
         district: lead.spec.org.district,
         province: lead.spec.org.province,
         department: lead.spec.org.department,
-        created_at: new Date(now - venue.createdOffsetDays * day),
+        created_at: new Date(anchorMs - venue.createdOffsetDays * day),
         created_by: venue.createdBy,
       },
     ];
@@ -151,7 +151,7 @@ async function insertVenues(
 
 async function insertDigitalPolicies(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   leads: readonly CompiledLead[],
 ): Promise<void> {
@@ -166,7 +166,7 @@ async function insertDigitalPolicies(
         online_scope: policy.onlineScope,
         online_url: policy.onlineUrl,
         online_collection_mode: policy.onlineCollectionMode,
-        updated_at: new Date(now - policy.updatedOffsetDays * day),
+        updated_at: new Date(anchorMs - policy.updatedOffsetDays * day),
         updated_by: policy.updatedBy,
       },
     ];
@@ -179,7 +179,7 @@ async function insertDigitalPolicies(
 // is inserted in sequence rather than batched.
 async function insertLegalReps(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   orgIdByRuc: OrganizationsByRuc,
   leads: readonly CompiledLead[],
@@ -191,18 +191,18 @@ async function insertLegalReps(
       throw new Error(`missing_seed_organization_id:${lead.spec.org.ruc}`);
     }
     // eslint-disable-next-line no-await-in-loop
-    await insertLegalRep(db, now, day, organizationId, lead.spec.legalRep);
+    await insertLegalRep(db, anchorMs, day, organizationId, lead.spec.legalRep);
   }
 }
 
 async function insertLegalRep(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   organizationId: OrganizationId,
   rep: LegalRepSpec,
 ): Promise<void> {
-  const at = new Date(now - rep.offsetDays * day);
+  const registeredAt = new Date(anchorMs - rep.offsetDays * day);
 
   const person = await db
     .insertInto("people")
@@ -212,8 +212,8 @@ async function insertLegalRep(
       first_surname: rep.firstSurname,
       second_surname: rep.secondSurname,
       email: rep.email,
-      created_at: at,
-      updated_at: at,
+      created_at: registeredAt,
+      updated_at: registeredAt,
     })
     .returning("id")
     .executeTakeFirstOrThrow();
@@ -225,8 +225,8 @@ async function insertLegalRep(
       organization_id: organizationId,
       phone: rep.phone,
       email: rep.email,
-      created_at: at,
-      updated_at: at,
+      created_at: registeredAt,
+      updated_at: registeredAt,
     })
     .returning("id")
     .executeTakeFirstOrThrow();
@@ -237,7 +237,7 @@ async function insertLegalRep(
       organization_person_id: orgPerson.id,
       role: "LEGAL_REPRESENTATIVE",
       is_primary: true,
-      effective_from: at,
+      effective_from: registeredAt,
       effective_to: null,
     })
     .execute();

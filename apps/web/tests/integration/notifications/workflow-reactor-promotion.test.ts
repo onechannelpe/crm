@@ -53,7 +53,10 @@ describe("workflow notification pipeline", () => {
       created_at: NOW,
       updated_at: NOW,
     });
-    await openSession(runtime.ctx.db, actorBy("execOne").userId, NOW);
+    // Queue expansion is a later job event, so its actual claim instant, not
+    // the historic workflow event, determines whether the WhatsApp session is
+    // still active.
+    await openSession(runtime.ctx.db, actorBy("execOne").userId, new Date());
 
     const committed: CommittedLeadEvent[] = [
       {
@@ -70,7 +73,10 @@ describe("workflow notification pipeline", () => {
       },
     ];
 
-    await reactToStageChanges(runtime.ctx.db, committed, NOW);
+    await reactToStageChanges(
+      { executor: runtime.ctx.db, operationAt: NOW },
+      committed,
+    );
 
     const reader = createNotificationReader(runtime);
     const [entry] = await reader.intents();
@@ -106,7 +112,7 @@ describe("workflow notification pipeline", () => {
       queue_state: "done",
       provider: "whatsapp_cloud",
       provider_message_id: "test-whatsapp",
-      completed_at: NOW,
+      completed_at: expect.any(Date),
     });
   });
 
@@ -135,7 +141,7 @@ describe("workflow notification pipeline", () => {
       .execute();
 
     await reactToFulfillmentChanges(
-      runtime.ctx.db,
+      { executor: runtime.ctx.db, operationAt: NOW },
       [
         {
           id: EventId.trust("event-payment-ready"),
@@ -155,7 +161,6 @@ describe("workflow notification pipeline", () => {
           },
         },
       ],
-      NOW,
     );
 
     const [entry] = await createNotificationReader(runtime).intents();

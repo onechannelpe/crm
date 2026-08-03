@@ -40,16 +40,16 @@ export async function persistDemoIdentities(
   db: Kysely<Database>,
   context: SeedContext,
 ): Promise<void> {
-  const nowMs = context.anchorDate.getTime();
-  const now = new Date(nowMs);
+  const anchorMs = context.anchorDate.getTime();
+  const anchoredAt = new Date(anchorMs);
   const passwordHash = await hashPassword(resolveInstallationPassword());
 
   await db
     .insertInto("branches")
     .values([
-      { id: DEMO_BRANCH_1, name: "Lima Centro", created_at: now },
-      { id: DEMO_BRANCH_2, name: "Lima Norte", created_at: now },
-      { id: DEMO_BRANCH_3, name: "Chiclayo", created_at: now },
+      { id: DEMO_BRANCH_1, name: "Lima Centro", created_at: anchoredAt },
+      { id: DEMO_BRANCH_2, name: "Lima Norte", created_at: anchoredAt },
+      { id: DEMO_BRANCH_3, name: "Chiclayo", created_at: anchoredAt },
     ])
     .execute();
 
@@ -68,7 +68,7 @@ export async function persistDemoIdentities(
         onboarding_completed_at: null,
         role: "admin",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: DIEGO,
@@ -79,10 +79,10 @@ export async function persistDemoIdentities(
         names: "Diego",
         first_surname: "Ramirez",
         second_surname: "Flores",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "supervisor",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: CAMILA,
@@ -93,10 +93,10 @@ export async function persistDemoIdentities(
         names: "Camila",
         first_surname: "Rojas",
         second_surname: "Torres",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: JOSEFINA,
@@ -107,10 +107,10 @@ export async function persistDemoIdentities(
         names: "Josefina",
         first_surname: "Salazar",
         second_surname: "Vega",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "back_office",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: MATIAS,
@@ -121,10 +121,10 @@ export async function persistDemoIdentities(
         names: "Matias",
         first_surname: "Castillo",
         second_surname: "Perez",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: LUCIA,
@@ -135,10 +135,10 @@ export async function persistDemoIdentities(
         names: "Lucia",
         first_surname: "Mendoza",
         second_surname: "Soto",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: ANDRES,
@@ -149,10 +149,10 @@ export async function persistDemoIdentities(
         names: "Andres",
         first_surname: "Huaman",
         second_surname: "Diaz",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: NICOLAS,
@@ -163,10 +163,10 @@ export async function persistDemoIdentities(
         names: "Nicolas",
         first_surname: "Torres",
         second_surname: "Luna",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "supervisor",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: SOFIA,
@@ -177,10 +177,10 @@ export async function persistDemoIdentities(
         names: "Sofia",
         first_surname: "Espinoza",
         second_surname: "Blanco",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: GABRIEL,
@@ -191,10 +191,10 @@ export async function persistDemoIdentities(
         names: "Gabriel",
         first_surname: "Vargas",
         second_surname: "Riva",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "back_office",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: ELENA,
@@ -205,10 +205,10 @@ export async function persistDemoIdentities(
         names: "Elena",
         first_surname: "Gomez",
         second_surname: "Cantu",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: ROBERTO,
@@ -219,10 +219,10 @@ export async function persistDemoIdentities(
         names: "Roberto",
         first_surname: "Quispe",
         second_surname: "Mani",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "admin",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: ISABELLA,
@@ -233,10 +233,10 @@ export async function persistDemoIdentities(
         names: "Isabella",
         first_surname: "Silva",
         second_surname: "Rios",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: MANUEL,
@@ -247,10 +247,10 @@ export async function persistDemoIdentities(
         names: "Manuel",
         first_surname: "Suarez",
         second_surname: "Leon",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: FERNANDA,
@@ -261,10 +261,10 @@ export async function persistDemoIdentities(
         names: "Fernanda",
         first_surname: "Ruiz",
         second_surname: "Lara",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: CLAUDIA,
@@ -275,10 +275,10 @@ export async function persistDemoIdentities(
         names: "Claudia",
         first_surname: "Vasquez",
         second_surname: "Peña",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: PABLO,
@@ -289,10 +289,10 @@ export async function persistDemoIdentities(
         names: "Pablo",
         first_surname: "Flores",
         second_surname: "Villa",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: MARINA,
@@ -303,10 +303,10 @@ export async function persistDemoIdentities(
         names: "Marina",
         first_surname: "Guillen",
         second_surname: "Paz",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: MARIANA,
@@ -317,10 +317,10 @@ export async function persistDemoIdentities(
         names: "Mariana",
         first_surname: "Velasquez",
         second_surname: "Ortiz",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "supervisor",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: JOSE,
@@ -331,10 +331,10 @@ export async function persistDemoIdentities(
         names: "Jose",
         first_surname: "Torres",
         second_surname: "Cueva",
-        onboarding_completed_at: now,
+        onboarding_completed_at: anchoredAt,
         role: "executive",
         is_active: true,
-        created_at: now,
+        created_at: anchoredAt,
       },
     ])
     .execute();
@@ -346,25 +346,25 @@ export async function persistDemoIdentities(
         id: DEMO_TEAM_ALPHA,
         branch_id: DEMO_BRANCH_1,
         name: "Team Alpha",
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: DEMO_TEAM_BRAVO,
         branch_id: DEMO_BRANCH_1,
         name: "Team Bravo",
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: DEMO_TEAM_NORTE,
         branch_id: DEMO_BRANCH_2,
         name: "Team Norte",
-        created_at: now,
+        created_at: anchoredAt,
       },
       {
         id: DEMO_TEAM_NORTE_B,
         branch_id: DEMO_BRANCH_2,
         name: "Team Norte B",
-        created_at: now,
+        created_at: anchoredAt,
       },
     ])
     .execute();
@@ -372,9 +372,9 @@ export async function persistDemoIdentities(
   await db
     .insertInto("branch_supervisors")
     .values([
-      { branch_id: DEMO_BRANCH_1, user_id: DIEGO, created_at: now },
-      { branch_id: DEMO_BRANCH_2, user_id: NICOLAS, created_at: now },
-      { branch_id: DEMO_BRANCH_2, user_id: MARIANA, created_at: now },
+      { branch_id: DEMO_BRANCH_1, user_id: DIEGO, created_at: anchoredAt },
+      { branch_id: DEMO_BRANCH_2, user_id: NICOLAS, created_at: anchoredAt },
+      { branch_id: DEMO_BRANCH_2, user_id: MARIANA, created_at: anchoredAt },
     ])
     .execute();
 
@@ -384,22 +384,22 @@ export async function persistDemoIdentities(
       {
         back_office_user_id: JOSEFINA,
         team_id: DEMO_TEAM_ALPHA,
-        assigned_at: now,
+        assigned_at: anchoredAt,
       },
       {
         back_office_user_id: JOSEFINA,
         team_id: DEMO_TEAM_BRAVO,
-        assigned_at: now,
+        assigned_at: anchoredAt,
       },
       {
         back_office_user_id: GABRIEL,
         team_id: DEMO_TEAM_NORTE,
-        assigned_at: now,
+        assigned_at: anchoredAt,
       },
       {
         back_office_user_id: GABRIEL,
         team_id: DEMO_TEAM_NORTE_B,
-        assigned_at: now,
+        assigned_at: anchoredAt,
       },
     ])
     .execute();
@@ -433,21 +433,21 @@ export async function persistDemoIdentities(
         status: "available",
         latitude: -12.046374,
         longitude: -77.042793,
-        started_at: new Date(nowMs - 3 * oneHour),
+        started_at: new Date(anchorMs - 3 * oneHour),
       },
       {
         user_id: MATIAS,
         status: "available",
         latitude: -12.046374,
         longitude: -77.042793,
-        started_at: new Date(nowMs - 2 * oneHour),
+        started_at: new Date(anchorMs - 2 * oneHour),
       },
       {
         user_id: LUCIA,
         status: "break",
         latitude: -12.046374,
         longitude: -77.042793,
-        started_at: new Date(nowMs - 30 * oneMinute),
+        started_at: new Date(anchorMs - 30 * oneMinute),
       },
     ])
     .execute();
@@ -462,7 +462,7 @@ export async function persistDemoIdentities(
         outcome: "success",
         identifier_hash: "seed_identifier_hash",
         ip_hash: "seed_ip_hash",
-        created_at: new Date(nowMs - oneDay),
+        created_at: new Date(anchorMs - oneDay),
       },
       {
         user_id: DIEGO,
@@ -471,7 +471,7 @@ export async function persistDemoIdentities(
         outcome: "success",
         identifier_hash: "seed_identifier_hash",
         ip_hash: "seed_ip_hash",
-        created_at: new Date(nowMs - oneHour),
+        created_at: new Date(anchorMs - oneHour),
       },
     ])
     .execute();
@@ -483,9 +483,9 @@ export async function persistDemoIdentities(
         user_id: ROBERTO,
         secret_encrypted: "seed_dummy_secret",
         is_enabled: true,
-        enabled_at: now,
-        created_at: now,
-        updated_at: now,
+        enabled_at: anchoredAt,
+        created_at: anchoredAt,
+        updated_at: anchoredAt,
       },
     ])
     .execute();
@@ -499,9 +499,9 @@ export async function persistDemoIdentities(
         channel: "email",
         address: "valeria.paredes@onechannel.pe",
         is_verified: true,
-        verified_at: new Date(nowMs - oneDay * 10),
-        created_at: new Date(nowMs - oneDay * 10),
-        updated_at: new Date(nowMs - oneDay),
+        verified_at: new Date(anchorMs - oneDay * 10),
+        created_at: new Date(anchorMs - oneDay * 10),
+        updated_at: new Date(anchorMs - oneDay),
       },
       {
         id: stableSeedId("channel-address:valeria:whatsapp"),
@@ -509,9 +509,9 @@ export async function persistDemoIdentities(
         channel: "whatsapp",
         address: "911000001",
         is_verified: true,
-        verified_at: new Date(nowMs - oneDay * 10),
-        created_at: new Date(nowMs - oneDay * 10),
-        updated_at: new Date(nowMs - oneDay),
+        verified_at: new Date(anchorMs - oneDay * 10),
+        created_at: new Date(anchorMs - oneDay * 10),
+        updated_at: new Date(anchorMs - oneDay),
       },
       {
         id: stableSeedId("channel-address:roberto:email"),
@@ -519,9 +519,9 @@ export async function persistDemoIdentities(
         channel: "email",
         address: "roberto.quispe@onechannel.pe",
         is_verified: true,
-        verified_at: new Date(nowMs - oneDay * 8),
-        created_at: new Date(nowMs - oneDay * 8),
-        updated_at: new Date(nowMs - oneDay),
+        verified_at: new Date(anchorMs - oneDay * 8),
+        created_at: new Date(anchorMs - oneDay * 8),
+        updated_at: new Date(anchorMs - oneDay),
       },
       {
         id: stableSeedId("channel-address:roberto:whatsapp"),
@@ -529,9 +529,9 @@ export async function persistDemoIdentities(
         channel: "whatsapp",
         address: "911000012",
         is_verified: true,
-        verified_at: new Date(nowMs - oneDay * 8),
-        created_at: new Date(nowMs - oneDay * 8),
-        updated_at: new Date(nowMs - oneDay),
+        verified_at: new Date(anchorMs - oneDay * 8),
+        created_at: new Date(anchorMs - oneDay * 8),
+        updated_at: new Date(anchorMs - oneDay),
       },
     ])
     .execute();
@@ -544,7 +544,7 @@ export async function persistDemoIdentities(
         user_id: ROBERTO,
         category: "broadcasts",
         channel: "whatsapp",
-        created_at: new Date(nowMs - oneDay * 6),
+        created_at: new Date(anchorMs - oneDay * 6),
       },
     ])
     .execute();
@@ -552,8 +552,8 @@ export async function persistDemoIdentities(
   await db
     .insertInto("whatsapp_sessions")
     .values([
-      { user_id: VALERIA, expires_at: new Date(nowMs + oneDay) },
-      { user_id: ROBERTO, expires_at: new Date(nowMs + oneDay) },
+      { user_id: VALERIA, expires_at: new Date(anchorMs + oneDay) },
+      { user_id: ROBERTO, expires_at: new Date(anchorMs + oneDay) },
     ])
     .execute();
 }

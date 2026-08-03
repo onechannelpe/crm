@@ -8,6 +8,7 @@ import {
   authorizePermission,
   authorizeRole,
 } from "~/server/platform/action/session";
+import type { OperationContext } from "~/server/platform/operation/context";
 import { isErr, Ok, type Result } from "~/shared/result";
 
 export type ActionAccess =
@@ -49,13 +50,13 @@ export function authorizeAccess(
   actor: AuthSession,
   access: ActionAccess,
   stepUp: ActionStepUpRequirement["stepUp"],
-  asOf: Date,
+  operation: OperationContext,
 ): Result<AuthSession, DomainError> {
   const authorized = authorizeFor(actor, access);
   if (isErr(authorized)) return authorized;
 
   if (stepUp === "recent_strong_auth") {
-    const strong = checkRecentStrongAuth(actor, asOf);
+    const strong = checkRecentStrongAuth(actor, operation.operationAt);
     if (isErr(strong)) return strong;
   }
 

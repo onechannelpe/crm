@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import type { TestDbContext } from "@tests/support/runtime/db";
 
 import type { UserId } from "~/domain/ids";
@@ -20,7 +21,7 @@ export function createSecurityTestKit(ctx: TestDbContext) {
           actionName,
           userId,
           ctx.repos,
-          now,
+          operationAt(now),
           ipAddress,
         );
       }
@@ -43,7 +44,7 @@ export function createSecurityTestKit(ctx: TestDbContext) {
           actionName,
           userIds[index % userIds.length],
           ctx.repos,
-          now,
+          operationAt(now),
           ipAddress,
         );
       }

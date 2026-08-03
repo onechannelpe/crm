@@ -5,7 +5,7 @@ import type { CompiledLead } from "../compiler";
 
 export async function persistCompanyRegistryRecords(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   overlayTtl: number,
   leads: readonly CompiledLead[],
@@ -14,7 +14,7 @@ export async function persistCompanyRegistryRecords(
     .insertInto("company_registry_record")
     .values(
       leads.map(({ spec }) => {
-        const fetchedAt = new Date(now - spec.org.registryAgeDays * day);
+        const fetchedAt = new Date(anchorMs - spec.org.registryAgeDays * day);
         return {
           document_type: "ruc" as const,
           document_value: spec.org.ruc,
@@ -35,7 +35,7 @@ export async function persistCompanyRegistryRecords(
           source: "sunat" as const,
           fetched_at: fetchedAt,
           expires_at: new Date(
-            now - spec.org.registryAgeDays * day + overlayTtl,
+            anchorMs - spec.org.registryAgeDays * day + overlayTtl,
           ),
           queue_state: "done" as const,
           claimable_at: fetchedAt,

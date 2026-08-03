@@ -114,7 +114,7 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
       identity.value,
       def.access,
       def.stepUp,
-      ctx.operationAt,
+      ctx,
     );
     if (isErr(authorized)) {
       const wire = projectFault(authorized.error, ports);

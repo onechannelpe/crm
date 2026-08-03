@@ -1,4 +1,5 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { operationAt } from "@tests/support/operation";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -90,7 +91,7 @@ describe("login flow service", () => {
       },
       login,
       createTestPasskeyProvider(login.repos),
-      new Date(),
+      operationAt(new Date()),
     );
 
     expect(isErr(result)).toBe(false);
@@ -100,7 +101,7 @@ describe("login flow service", () => {
       AuthLoginFlowId.trust(result.value.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
-      new Date(),
+      operationAt(new Date()),
     );
     expect(flow?.state).toBe("passkey");
     if (!flow || flow.state !== "passkey")

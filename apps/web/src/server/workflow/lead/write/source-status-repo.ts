@@ -9,7 +9,7 @@ import type {
 } from "~/server/workflow/lead/domain/rows";
 
 export type SourceStatusRepository = {
-  findByRuc(ruc: Ruc, asOf: Date): Promise<LeadSourceStatus>;
+  findByRuc(ruc: Ruc, freshAsOf: Date): Promise<LeadSourceStatus>;
 };
 
 function toPipelineSunatStatus(input: {
@@ -70,10 +70,10 @@ export function createSourceStatusRepo(
   const enrichmentQuery = createEnrichmentQuery(enrichmentRepo);
 
   return {
-    async findByRuc(ruc, asOf) {
+    async findByRuc(ruc, freshAsOf) {
       const enrichmentStatus = await enrichmentQuery.getStatus(
         { kind: "ruc", value: ruc },
-        asOf,
+        freshAsOf,
       );
       const overlay = toPipelineOverlay(enrichmentStatus.overlay);
 

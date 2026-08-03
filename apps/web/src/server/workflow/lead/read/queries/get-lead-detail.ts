@@ -26,11 +26,11 @@ export async function getLeadDetail(
   },
   operation: OperationContext,
 ): Promise<Result<LeadDetailView, DomainError>> {
-  const loaded = await loadLeadDetailSections(deps, {
-    leadId: input.leadId,
-    actorUserId: input.actorUserId,
-    evaluatedAt: operation.operationAt,
-  });
+  const loaded = await loadLeadDetailSections(
+    deps,
+    { leadId: input.leadId, actorUserId: input.actorUserId },
+    operation,
+  );
   if (!loaded.ok) {
     return loaded;
   }
@@ -51,14 +51,14 @@ export async function getLeadDetail(
     : null;
 
   const latestProposal = loaded.value.rateProposals.at(-1);
-  const now = operation.operationAt;
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
   const availableActions = resolveAvailableActions(
     { userId: input.actorUserId, role: input.actorRole },
     lead,
     {
       hasActivePendingProposal:
-        latestProposal?.outcome === "pending" && isReservationActive(lead, now),
+        latestProposal?.outcome === "pending" &&
+        isReservationActive(lead, operation.operationAt),
       rateRevisionCount: loaded.value.rateRevisionRows.length,
       fulfillmentStep: loaded.value.fulfillment?.order.currentStep ?? null,
     },

@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
@@ -21,7 +22,8 @@ describe("team invite create benchmark", () => {
   beforeAll(async () => {
     const ctx = await db.setup();
     const inviteService = createInviteServiceForExecutor(ctx.db);
-    inviteCreate = (input) => inviteService.createInvite(input, new Date());
+    inviteCreate = (input) =>
+      inviteService.createInvite(input, operationAt(new Date()));
   });
 
   beforeEach(() => {

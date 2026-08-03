@@ -1,4 +1,5 @@
 import type { Document } from "~/domain/identity/document";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 import type { CompanyRegistryPort } from "./ports";
 
@@ -6,7 +7,7 @@ export interface EnrichmentCommand {
   enqueueRequest(
     document: Document,
     requestedByUserId: string | null,
-    requestedAt: Date,
+    operation: OperationContext,
   ): Promise<string>;
 }
 
@@ -14,12 +15,12 @@ export function createEnrichmentCommand(
   repo: CompanyRegistryPort,
 ): EnrichmentCommand {
   return {
-    enqueueRequest(document, requestedByUserId, requestedAt) {
+    enqueueRequest(document, requestedByUserId, operation) {
       return repo.upsertRequest({
         documentType: document.kind,
         documentValue: document.value,
         requestedByUserId,
-        requestedAt,
+        requestedAt: operation.operationAt,
         maxAttempts: 5,
       });
     },

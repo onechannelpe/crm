@@ -1,5 +1,6 @@
 import { expectOk } from "@tests/support/_core/assertions";
 import { createInviteTestKit } from "@tests/support/invite/api";
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -89,7 +90,7 @@ describe("invite activation", () => {
         },
         REQUEST,
         { token: tokenInput ?? invite.token, password, confirmPassword },
-        new Date(),
+        operationAt(new Date()),
       );
 
       expect(isErr(result)).toBe(true);
@@ -121,7 +122,7 @@ describe("invite activation", () => {
       },
       REQUEST,
       { token: invite.token, password: "Password1" },
-      new Date(),
+      operationAt(new Date()),
     );
     expect(isErr(rejected)).toBe(true);
 
@@ -137,7 +138,7 @@ describe("invite activation", () => {
         },
         REQUEST,
         { token: invite.token, password: "StrongPassword123" },
-        new Date(),
+        operationAt(new Date()),
       ),
     );
 
@@ -158,7 +159,7 @@ describe("invite activation", () => {
         },
         REQUEST,
         { token: invite.token, password: "StrongPassword123" },
-        new Date(),
+        operationAt(new Date()),
       ),
     );
 

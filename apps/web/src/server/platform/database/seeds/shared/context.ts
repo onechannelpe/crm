@@ -3,6 +3,10 @@ export interface SeedContext {
   randomSeed: number;
 }
 
+// Every seeded row is offset from `anchorDate`, never from a fresh clock read,
+// so one run produces one internally consistent dataset. Callers may pass a
+// fixed anchor to make a run reproducible.
+// clock-boundary: seed run start
 export function createSeedContext(anchorDate = new Date()): SeedContext {
   return {
     anchorDate,

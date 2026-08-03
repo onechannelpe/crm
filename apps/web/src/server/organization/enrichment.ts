@@ -1,5 +1,6 @@
 import type { Ruc } from "~/domain/identity/document";
 import type { EngineClient } from "~/server/integrations/engine/client";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 // Resolves legal name and address from the external registry by RUC. One port
 // shared by lead registration and the bootstrap preview.
@@ -15,7 +16,7 @@ export type OrganizationEnrichmentQueue = {
   enqueueRucVerification(
     ruc: Ruc,
     requestedByUserId: string,
-    requestedAt: Date,
+    operation: OperationContext,
   ): Promise<void>;
 };
 

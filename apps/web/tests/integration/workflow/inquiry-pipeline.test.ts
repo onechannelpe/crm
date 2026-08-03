@@ -2,7 +2,7 @@ import { expectErr } from "@tests/support/_core/assertions";
 import { actorBy } from "@tests/support/database/workflow-fixtures";
 import { seedImportJob } from "@tests/support/database/workflow-seed";
 import { createWorkflowImporter } from "@tests/support/integration/workflow-import";
-import { registerLeadPorts } from "@tests/support/integration/workflow-ports";
+import { operationAt } from "@tests/support/operation";
 import { createNotificationReader } from "@tests/support/readers/notifications";
 import {
   createTestRuntime,
@@ -11,8 +11,6 @@ import {
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { WorkflowInquiryId } from "~/domain/ids";
-import { createInquiry } from "~/server/workflow/inquiry/create-inquiry";
-import { registerLead } from "~/server/workflow/lead/commands/register-lead";
 
 const RUC = "20909090901";
 
@@ -31,13 +29,6 @@ describe("inquiry pipeline", () => {
     await runtime.reset();
   });
 
-  function ports() {
-    return {
-      executor: runtime.ctx.db,
-      operationAt: runtime.now.get(),
-    };
-  }
-
   async function inquiryRow(id: string) {
     return runtime.ctx.db
       .selectFrom("workflow_inquiries")
@@ -47,9 +38,9 @@ describe("inquiry pipeline", () => {
   }
 
   async function createPendingInquiry() {
-    const created = await createInquiry(
+    const created = await runtime.workflow.commands.createInquiry(
       { ruc: RUC, actor: actorBy("execOne") },
-      ports(),
+      operationAt(runtime.now.get()),
     );
     if (!created.ok) throw new Error(`inquiry failed: ${created.error.code}`);
     return created.value.inquiryId;
@@ -70,9 +61,9 @@ describe("inquiry pipeline", () => {
   it("rejects a duplicate live inquiry for the same executive and RUC", async () => {
     await createPendingInquiry();
 
-    const duplicate = await createInquiry(
+    const duplicate = await runtime.workflow.commands.createInquiry(
       { ruc: RUC, actor: actorBy("execOne") },
-      ports(),
+      operationAt(runtime.now.get()),
     );
 
     expect(expectErr(duplicate).code).toBe("inquiry_exists");
@@ -101,8 +92,7 @@ describe("inquiry pipeline", () => {
     const inquiryId = await createPendingInquiry();
     await importAnswer();
 
-    const ports = registerLeadPorts(runtime);
-    const registered = await registerLead(
+    const registered = await runtime.workflow.commands.registerLead(
       {
         actor: actorBy("execOne"),
         ruc: RUC,
@@ -116,8 +106,7 @@ describe("inquiry pipeline", () => {
         settlementBank: "BCP",
         posCount: 1,
       },
-      ports,
-      { identity: ports.identity },
+      operationAt(runtime.now.get()),
     );
     if (!registered.ok) {
       throw new Error(`register failed: ${registered.error.code}`);
@@ -142,8 +131,7 @@ describe("inquiry pipeline", () => {
   it("blocks a new inquiry once the executive holds an active lead for the RUC", async () => {
     const inquiryId = await createPendingInquiry();
     await importAnswer();
-    const secondPorts = registerLeadPorts(runtime);
-    await registerLead(
+    await runtime.workflow.commands.registerLead(
       {
         actor: actorBy("execOne"),
         ruc: RUC,
@@ -157,13 +145,12 @@ describe("inquiry pipeline", () => {
         settlementBank: "BCP",
         posCount: 1,
       },
-      secondPorts,
-      { identity: secondPorts.identity },
+      operationAt(runtime.now.get()),
     );
 
-    const blocked = await createInquiry(
+    const blocked = await runtime.workflow.commands.createInquiry(
       { ruc: RUC, actor: actorBy("execOne") },
-      ports(),
+      operationAt(runtime.now.get()),
     );
 
     expect(expectErr(blocked).code).toBe("inquiry_lead_registered");

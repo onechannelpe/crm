@@ -73,8 +73,7 @@ export async function ingestRuntimeEvent(
       input.sessionToken,
       isExtensionInstallationSessionClaims,
     );
-    const currentTime = context.operationAt;
-    if (isTokenExpired(sessionClaims.exp, currentTime)) {
+    if (isTokenExpired(sessionClaims.exp, context.operationAt)) {
       return Err(fail("extension_session_invalid"));
     }
 
@@ -101,7 +100,7 @@ export async function ingestRuntimeEvent(
       const session =
         await txRepos.extensionRuntime.findValidInstallationSession(
           sessionClaims.jti,
-          currentTime,
+          context.operationAt,
         );
       if (
         !session ||
@@ -117,24 +116,24 @@ export async function ingestRuntimeEvent(
       const authSessionActive = await hasActiveAuthSession(
         txRepos,
         session.auth_session_id,
-        currentTime,
+        context.operationAt,
       );
       if (!authSessionActive) {
         await txRepos.extensionRuntime.revokeInstallationSession(
           session.jti,
-          currentTime,
+          context.operationAt,
         );
         await txRepos.extensionRuntime.updateExecutiveSyncHealthByUser({
           user_id: session.user_id,
           sync_health: "reauth_required",
-          sync_updated_at: currentTime,
+          sync_updated_at: context.operationAt,
         });
         return Err(fail("extension_session_invalid"));
       }
 
       await txRepos.extensionRuntime.touchInstallationSession(
         session.jti,
-        currentTime,
+        context.operationAt,
       );
 
       const inserted =
@@ -149,14 +148,14 @@ export async function ingestRuntimeEvent(
           type: input.event.type,
           payload_json: payloadText,
           created_at: eventCreatedAt,
-          received_at: currentTime,
+          received_at: context.operationAt,
         });
 
       await upsertSyncHealth(txRepos.extensionRuntime, {
         userId: session.user_id,
         branchId: session.branch_id,
         syncHealth: "ok",
-        updatedAt: currentTime,
+        updatedAt: context.operationAt,
       });
 
       if (!inserted) {

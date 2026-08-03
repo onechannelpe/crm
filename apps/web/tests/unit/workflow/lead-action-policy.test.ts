@@ -120,7 +120,7 @@ describe("lead action policy", () => {
           justification: "Need better rate",
           fileIds: [WorkflowRateRevisionFileId.trust("file-1")],
           reservationExpiresAt: new Date(200),
-          now: new Date(100),
+          occurredAt: new Date(100),
         }),
       ).code,
     ).toBe("max_rate_revision_rounds_reached");
@@ -134,7 +134,7 @@ describe("lead action policy", () => {
           justification: "Need better rate",
           fileIds: [],
           reservationExpiresAt: new Date(200),
-          now: new Date(100),
+          occurredAt: new Date(100),
         }),
       ).code,
     ).toBe("rate_revision_files_required");
@@ -151,7 +151,7 @@ describe("lead action policy", () => {
             (_, index) => WorkflowRateRevisionFileId.trust(`file-${index}`),
           ),
           reservationExpiresAt: new Date(200),
-          now: new Date(100),
+          occurredAt: new Date(100),
         }),
       ).code,
     ).toBe("max_rate_revision_files_exceeded");
@@ -168,7 +168,7 @@ describe("lead action policy", () => {
             WorkflowRateRevisionFileId.trust("file-1"),
           ],
           reservationExpiresAt: new Date(200),
-          now: new Date(100),
+          occurredAt: new Date(100),
         }),
       ).code,
     ).toBe("duplicate_rate_revision_file");
@@ -205,7 +205,7 @@ describe("lead action policy", () => {
       actor: { userId: UserId.trust("1"), role: "executive" },
       reason: "RATE",
       note: "Cliente no acepta la tasa",
-      now: new Date(200),
+      occurredAt: new Date(200),
     });
 
     expect(result.ok).toBe(true);
@@ -223,7 +223,7 @@ describe("lead action policy", () => {
           actor: { userId: UserId.trust("1"), role: "executive" },
           reason: "RATE",
           note: null,
-          now: new Date(200),
+          occurredAt: new Date(200),
         }),
       ).code,
     ).toBe("invalid_stage");
@@ -233,7 +233,7 @@ describe("lead action policy", () => {
         actor: { userId: UserId.trust("2"), role: "back_office" },
         reason: "RATE",
         note: null,
-        now: new Date(200),
+        occurredAt: new Date(200),
       }).ok,
     ).toBe(false);
   });
@@ -272,7 +272,7 @@ describe("lead action policy", () => {
       status: "DISPONIBLE",
       priority: "P1",
       reason: "Disponible para cotizar",
-      now: new Date(200),
+      occurredAt: new Date(200),
     });
 
     expect(result.ok).toBe(true);
@@ -294,7 +294,7 @@ describe("lead action policy", () => {
       status: "CARTERIZADO",
       priority: "P2",
       reason: "Ya carterizado por otro canal",
-      now: new Date(200),
+      occurredAt: new Date(200),
     });
 
     expect(result.ok).toBe(true);
@@ -310,7 +310,7 @@ describe("lead action policy", () => {
           status: "DISPONIBLE",
           priority: "P1",
           reason: "Ya no aplica",
-          now: new Date(200),
+          occurredAt: new Date(200),
         }),
       ).code,
     ).toBe("invalid_stage");
@@ -319,7 +319,7 @@ describe("lead action policy", () => {
   it("restarts an expired quotation back into pricing for owner and back office", () => {
     const owner = restartQuotation(makeLeadState({ stage: "EXPIRED" }), {
       actor: { userId: UserId.trust("1"), role: "executive" },
-      now: new Date(200),
+      occurredAt: new Date(200),
     });
     expect(owner.ok).toBe(true);
     if (!owner.ok) return;
@@ -329,7 +329,7 @@ describe("lead action policy", () => {
     expect(
       restartQuotation(makeLeadState({ stage: "EXPIRED" }), {
         actor: { userId: UserId.trust("2"), role: "back_office" },
-        now: new Date(200),
+        occurredAt: new Date(200),
       }).ok,
     ).toBe(true);
 
@@ -338,7 +338,7 @@ describe("lead action policy", () => {
       expectErr(
         restartQuotation(makeLeadState({ stage: "PRICING" }), {
           actor: { userId: UserId.trust("1"), role: "executive" },
-          now: new Date(200),
+          occurredAt: new Date(200),
         }),
       ).code,
     ).toBe("invalid_stage");

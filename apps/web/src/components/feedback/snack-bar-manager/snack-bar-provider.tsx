@@ -72,7 +72,7 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
     }
 
     counter += 1;
-    const id = `snack-bar-${Date.now()}-${counter}`;
+    const id = `snack-bar-${counter}`;
 
     const item: SnackBarItem = {
       id,

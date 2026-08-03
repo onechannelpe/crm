@@ -26,7 +26,7 @@ export type AssignmentPlanRepos = {
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
   contactAssignments: {
-    countActiveByUser(userId: UserId, asOf: Date): Promise<number>;
+    countActiveByUser(userId: UserId, activeAsOf: Date): Promise<number>;
   };
 };
 

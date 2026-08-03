@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupFreshDb,
   createFreshDb,
@@ -67,13 +68,16 @@ describe("seed invariants", () => {
         expires_at: expiresAt,
       });
     }
-    const passwordChanged = await changeInstallationPassword(setup, {
-      userId: installationAdmin.id,
-      currentSessionId: "current-installation-session",
-      password: "new-installation-password",
-      confirmPassword: "new-installation-password",
-      now: new Date(),
-    });
+    const passwordChanged = await changeInstallationPassword(
+      setup,
+      {
+        userId: installationAdmin.id,
+        currentSessionId: "current-installation-session",
+        password: "new-installation-password",
+        confirmPassword: "new-installation-password",
+      },
+      operationAt(new Date()),
+    );
     if (isErr(passwordChanged))
       throw new Error(passwordChanged.error.code ?? "");
 

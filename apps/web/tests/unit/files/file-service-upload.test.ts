@@ -95,7 +95,7 @@ describe("storeUploadedFile", () => {
       originalFilename: "import.csv",
       sizeBytes: CSV_BYTES.length,
       createdByUserId: UserId.trust("user-10"),
-      now: NOW,
+      createdAt: NOW,
     });
   });
 

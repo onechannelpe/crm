@@ -1,4 +1,5 @@
 import { getSeededIdentity } from "@tests/support/identities/api";
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -16,8 +17,6 @@ import {
   it,
 } from "vitest";
 
-import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
-import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { sessionCache } from "~/server/auth/session/session-cache";
 import { createSessionService } from "~/server/auth/session/session.service";
 import {
@@ -25,6 +24,8 @@ import {
   hashSessionToken,
 } from "~/server/auth/session/tokens";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
+import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import { createUsersRepo } from "~/server/users/repos-users";
 
 const IDENTITY = getSeededIdentity("execOne");
 const NOW = new Date("2026-07-15T12:00:00.000Z");
@@ -51,8 +52,8 @@ describe("session service caching and validation", () => {
 
   function makeService() {
     return createSessionService({
-      sessions: createAuthSessionRepo(ctx.db),
-      users: createAuthUsersRepo(ctx.db),
+      sessions: createSessionRepository(ctx.db),
+      users: createUsersRepo(ctx.db),
       events: createEventsRepo(ctx.db),
       logger: { error() {} },
     });
@@ -95,7 +96,7 @@ describe("session service caching and validation", () => {
     const sessionId = hashSessionToken(token);
     await seedSession(sessionId, { session_class: "pre_auth" });
 
-    const result = await makeService().resolve(token, NOW);
+    const result = await makeService().resolve(token, operationAt(NOW));
 
     expect(result?.sessionClass).toBe("pre_auth");
     expect(result?.role).toBe(IDENTITY.role);
@@ -107,7 +108,7 @@ describe("session service caching and validation", () => {
     await seedSession(sessionId);
     const service = makeService();
 
-    const first = await service.resolve(token, NOW);
+    const first = await service.resolve(token, operationAt(NOW));
     expect(first?.role).toBe(IDENTITY.role);
 
     // A changed second result would prove that resolve bypassed the cache.
@@ -117,7 +118,7 @@ describe("session service caching and validation", () => {
       .where("id", "=", sessionId)
       .execute();
 
-    const second = await service.resolve(token, NOW);
+    const second = await service.resolve(token, operationAt(NOW));
     expect(second?.role).toBe(IDENTITY.role);
   });
 
@@ -127,11 +128,11 @@ describe("session service caching and validation", () => {
     await seedSession(sessionId);
     const service = makeService();
 
-    expect(await service.resolve(token, NOW)).not.toBeNull();
+    expect(await service.resolve(token, operationAt(NOW))).not.toBeNull();
 
     await service.revokeAllForUser(IDENTITY.userId);
 
-    expect(await service.resolve(token, NOW)).toBeNull();
+    expect(await service.resolve(token, operationAt(NOW))).toBeNull();
     expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
   });
 
@@ -141,7 +142,7 @@ describe("session service caching and validation", () => {
     await seedSession(sessionId);
     await corruptSessionRole(sessionId);
 
-    const result = await makeService().resolve(token, NOW);
+    const result = await makeService().resolve(token, operationAt(NOW));
 
     expect(result).toBeNull();
     expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();

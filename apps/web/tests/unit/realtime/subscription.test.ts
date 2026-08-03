@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { RealtimeMessage } from "~/contracts/realtime/channel";
-import type { RealtimeEntry } from "~/server/realtime/channel";
 import {
   attachRealtimeSubscription,
   type RealtimeSink,
@@ -35,9 +34,12 @@ function createFakeSink(): FakeSink {
   return sink;
 }
 
-function entryReading(
-  read: (cursor: string | null) => Promise<RealtimeMessage[] | null>,
-): RealtimeEntry {
+type StreamEntry = {
+  topic: string;
+  open: (cursor: string | null) => Promise<RealtimeMessage[] | null>;
+};
+
+function entryReading(read: StreamEntry["open"]): StreamEntry {
   return { topic: TOPIC, open: read };
 }
 
@@ -60,7 +62,7 @@ describe("attachRealtimeSubscription", () => {
   it("passes the cursor to the opening read and forwards event ids", async () => {
     const hub = new TopicHub();
     const sink = createFakeSink();
-    const read = vi.fn<RealtimeEntry["open"]>(async (cursor) => [
+    const read = vi.fn<StreamEntry["open"]>(async (cursor) => [
       { data: `from:${cursor ?? "start"}`, id: "cursor-2" },
     ]);
 

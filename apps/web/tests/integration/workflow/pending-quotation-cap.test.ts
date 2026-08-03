@@ -4,11 +4,7 @@ import {
   createLeadFixtureWriter,
 } from "@tests/support/database/workflow-fixtures";
 import { withMerchantDefaults } from "@tests/support/database/workflow-seed";
-import {
-  registerLeadPorts,
-  workflowCommandPorts,
-  workflowRepos,
-} from "@tests/support/integration/workflow-ports";
+import { operationAt } from "@tests/support/operation";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -16,8 +12,6 @@ import {
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { BranchId, WorkflowLeadId } from "~/domain/ids";
-import { closeLeadCommand } from "~/server/workflow/lead/commands/close-lead";
-import { registerLead } from "~/server/workflow/lead/commands/register-lead";
 
 // The cap is disabled by default; each test that expects blocking sets it first.
 const BRANCH_CAP = 3;
@@ -27,12 +21,15 @@ async function setBranchCap(
   branchId: BranchId,
   clientLimit: number,
 ): Promise<void> {
-  await workflowRepos(runtime).pendingQuotationPolicies.upsert({
-    branchId,
-    clientLimit,
-    updatedAt: runtime.now.get(),
-    updatedByUserId: actorBy("execOne").userId,
-  });
+  const result = await runtime.workflow.commands.updatePendingQuotationPolicy(
+    {
+      actor: { ...actorBy("superuser"), branchId },
+      enabled: true,
+      limit: clientLimit,
+    },
+    operationAt(runtime.now.get()),
+  );
+  if (!result.ok) throw new Error("pending_quotation_policy_update_failed");
 }
 
 async function fillPendingQuotations(
@@ -54,8 +51,7 @@ async function fillPendingQuotations(
 
 function registerFor(runtime: TestRuntime, ruc: string) {
   const exec = actorBy("execOne");
-  const ports = registerLeadPorts(runtime);
-  return registerLead(
+  return runtime.workflow.commands.registerLead(
     {
       actor: {
         userId: exec.userId,
@@ -66,8 +62,7 @@ function registerFor(runtime: TestRuntime, ruc: string) {
       lineOfBusiness: "Retail",
       ...withMerchantDefaults(undefined),
     },
-    ports,
-    { identity: ports.identity },
+    operationAt(runtime.now.get()),
   );
 }
 
@@ -112,9 +107,9 @@ describe("pending quotation registration cap", () => {
     const leadIds = await fillPendingQuotations(runtime, BRANCH_CAP);
 
     // Closing one quotation as lost moves it out of PRICING, freeing a slot.
-    const closed = await closeLeadCommand(
+    const closed = await runtime.workflow.commands.closeLead(
       { actor: exec, leadId: leadIds[0], reason: "RATE", note: null },
-      workflowCommandPorts(runtime),
+      operationAt(runtime.now.get()),
     );
     expect(closed.ok).toBe(true);
 

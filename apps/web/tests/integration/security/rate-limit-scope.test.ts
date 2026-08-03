@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -56,7 +57,7 @@ describe("rate limit scope isolation", () => {
         "leads.request",
         ctx.fixtures.users.backOne.id,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.1",
       ),
     ).resolves.toBeUndefined();
@@ -72,7 +73,7 @@ describe("rate limit scope isolation", () => {
         "leads.request",
         userId,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.2",
       ),
     ).rejects.toBeInstanceOf(ActionError);
@@ -87,7 +88,7 @@ describe("rate limit scope isolation", () => {
         "leads.request",
         ctx.fixtures.users.execOne.id,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.99",
       ),
     ).rejects.toBeInstanceOf(ActionError);
@@ -101,7 +102,7 @@ describe("rate limit scope isolation", () => {
         "leads.request",
         userId,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.1",
       );
     }
@@ -111,7 +112,7 @@ describe("rate limit scope isolation", () => {
         "team.invite.create",
         userId,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.1",
       ),
     ).resolves.toBeUndefined();

@@ -1,15 +1,14 @@
 import type { WorkflowLeadId, WorkflowRateProposalId } from "~/domain/ids";
-import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
 
 import type { TestActor } from "../database/workflow-fixtures";
+import { operationAt } from "../operation";
 import type { TestRuntime } from "../runtime/app";
-import { workflowCommandPorts } from "./workflow-ports";
 
 export async function proposePendingRate(
   runtime: TestRuntime,
   input: { leadId: WorkflowLeadId; backOffice: TestActor },
 ): Promise<{ proposalId: WorkflowRateProposalId }> {
-  const result = await proposeRateCommand(
+  const result = await runtime.workflow.commands.proposeRate(
     {
       actor: input.backOffice,
       leadId: input.leadId,
@@ -20,7 +19,7 @@ export async function proposePendingRate(
       paybackPricing: 11,
       currency: "PEN",
     },
-    workflowCommandPorts(runtime),
+    operationAt(runtime.now.get()),
   );
   if (!result.ok) {
     throw new Error(`proposePendingRate failed (${result.error.code})`);

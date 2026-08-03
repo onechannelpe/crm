@@ -102,10 +102,10 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
       return query.groupBy("action_name").orderBy("count", "desc").execute();
     },
 
-    async deleteCreatedBefore(cutoff: Date): Promise<number> {
+    async deleteCreatedBefore(createdBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("action_observations")
-        .where("created_at", "<", cutoff)
+        .where("created_at", "<", createdBefore)
         .executeTakeFirst();
       return Number(result.numDeletedRows ?? 0);
     },

@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -54,7 +55,7 @@ describe("rate limit retry after", () => {
         "leads.request",
         userId,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.1",
       );
     } catch (error) {
@@ -83,7 +84,7 @@ describe("rate limit retry after", () => {
           "leads.request",
           userId,
           ctx.repos,
-          new Date(),
+          operationAt(new Date()),
           "198.51.100.1",
         );
       } catch (error) {
@@ -114,7 +115,7 @@ describe("rate limit retry after", () => {
         "leads.request",
         userId,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.1",
       ),
     ).resolves.toBeUndefined();

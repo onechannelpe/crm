@@ -11,7 +11,9 @@ export function createPollingController(
 ): PollingController {
   const [state, setState] = createSignal<PollingState>("idle");
 
-  let startedAt: number | null = null;
+  // Monotonic reading from `performance.now()`. The timeout measures elapsed
+  // time, so a wall-clock adjustment mid-poll must not shorten or extend it.
+  let startedTicks: number | null = null;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let runToken = 0;
 
@@ -25,7 +27,7 @@ export function createPollingController(
   function stop() {
     runToken += 1;
     clearScheduledTick();
-    startedAt = null;
+    startedTicks = null;
     setState("stopped");
   }
 
@@ -36,14 +38,14 @@ export function createPollingController(
       return;
     }
 
-    if (startedAt === null) {
-      startedAt = Date.now();
+    if (startedTicks === null) {
+      startedTicks = performance.now();
     }
 
-    if (Date.now() - startedAt >= options.timeoutMs) {
+    if (performance.now() - startedTicks >= options.timeoutMs) {
       runToken += 1;
       clearScheduledTick();
-      startedAt = null;
+      startedTicks = null;
       setState("timed_out");
       options.onTimeout?.();
       return;
@@ -72,7 +74,7 @@ export function createPollingController(
     runToken += 1;
     const currentRunToken = runToken;
     clearScheduledTick();
-    startedAt = Date.now();
+    startedTicks = performance.now();
     setState("running");
 
     timeoutId = setTimeout(() => {

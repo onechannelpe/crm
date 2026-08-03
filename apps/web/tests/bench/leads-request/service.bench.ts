@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import type { BranchId, UserId } from "~/domain/ids";
@@ -36,11 +37,10 @@ describe("lead refill service benchmark", () => {
   bench(
     "service path: request lead refill for one user",
     async () => {
-      const result = await assignmentRuntime.assign({
-        actorUserId: userId,
-        branchId,
-        at: new Date(),
-      });
+      const result = await assignmentRuntime.assign(
+        { actorUserId: userId, branchId },
+        operationAt(new Date()),
+      );
 
       if (!result.ok) {
         throw new Error(

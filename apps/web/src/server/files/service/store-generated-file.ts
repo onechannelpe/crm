@@ -52,7 +52,6 @@ export async function storeGeneratedFile(
     );
   }
 
-  const now = ctx.operationAt;
   const metadata = buildUploadMetadata(
     staticValidation.safeDisplayFilename,
     staticValidation.extension,
@@ -60,7 +59,7 @@ export async function storeGeneratedFile(
   );
   const storageKey = buildStorageKey({
     purpose: input.purpose,
-    storedAt: now,
+    storedAt: ctx.operationAt,
     extension: staticValidation.extension,
   });
   const stored = await deps.storage.putBytes(storageKey, input.bytes);
@@ -77,7 +76,7 @@ export async function storeGeneratedFile(
     signatureKind: metadata.signatureKind,
     scanStatus: "clean",
     createdByUserId: ctx.actor.userId,
-    createdAt: now,
+    createdAt: ctx.operationAt,
   });
 
   const fileAsset = await deps.repo.assets.findById(fileAssetId);

@@ -30,5 +30,5 @@ export type RateRevisionReader = {
 };
 
 export type SourceStatusReader = {
-  findByRuc(ruc: Ruc, asOf: Date): Promise<LeadSourceStatus>;
+  findByRuc(ruc: Ruc, freshAsOf: Date): Promise<LeadSourceStatus>;
 };

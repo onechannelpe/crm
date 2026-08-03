@@ -58,10 +58,10 @@ export function createAuthThrottleRepo(db: Kysely<Database>) {
       return Number(result.numDeletedRows ?? 0);
     },
 
-    async deleteUpdatedBefore(timestamp: Date): Promise<number> {
+    async deleteUpdatedBefore(updatedBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("auth_throttle_counters")
-        .where("updated_at", "<", timestamp)
+        .where("updated_at", "<", updatedBefore)
         .executeTakeFirst();
 
       return Number(result.numDeletedRows ?? 0);

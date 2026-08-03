@@ -148,11 +148,11 @@ export function createApplication(infrastructure: ServerInfrastructure) {
       files,
       organizationEnrichment,
       {
-        enqueueRucVerification: async (ruc, requestedByUserId, now) => {
+        enqueueRucVerification: async (ruc, requestedByUserId, operation) => {
           await clientSearch.requestEnrichment(
             { kind: "ruc", value: ruc },
             requestedByUserId,
-            now,
+            operation,
           );
         },
       },

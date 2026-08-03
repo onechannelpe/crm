@@ -1,14 +1,19 @@
 import type { Group } from "./group";
 import { groupEventsByMonth } from "./group";
 
+// The draft has no persisted timeline yet, so these two entries stand in for it.
+// `openedAt` comes from the caller rather than a clock read here: this runs
+// inside a memo, and a fresh read would make the placeholder timestamps drift
+// on every recompute.
 export function buildCreateGroups(props: {
   ruc?: string;
   engineStatus?: string;
+  openedAt: number;
 }): Group[] {
   return groupEventsByMonth([
     {
       id: "create-open",
-      createdAt: Date.now(),
+      createdAt: props.openedAt,
       name: "lead.created",
       author: "Tú",
       action: "abrió el borrador del cliente",
@@ -20,7 +25,8 @@ export function buildCreateGroups(props: {
     },
     {
       id: "create-ruc-state",
-      createdAt: Date.now() - 1_000,
+      // Ordered just before the open event, which the list sorts on.
+      createdAt: props.openedAt - 1_000,
       name: "lead.updated",
       author: "Sistema",
       action: "preparó las validaciones de registro",

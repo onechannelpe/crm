@@ -25,7 +25,7 @@ export async function requestSearchEnrichment(input: unknown) {
       const jobId = await application.clientSearch.requestEnrichment(
         document,
         ctx.actor.userId,
-        ctx.operationAt,
+        ctx,
       );
       return Ok(jobId);
     },
@@ -47,7 +47,7 @@ export async function getSearchEnrichmentStatus(
     execute: async (ctx, document) => {
       const status = await application.clientSearch.getEnrichmentStatus(
         document,
-        ctx.operationAt,
+        ctx,
       );
       return Ok(status);
     },

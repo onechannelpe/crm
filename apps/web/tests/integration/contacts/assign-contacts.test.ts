@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -83,11 +84,13 @@ describe("assignContacts", () => {
       executor: ctx.db,
       engine,
     });
-    return runtime.assign({
-      actorUserId: ACTOR_ID,
-      branchId: BRANCH_ID,
-      at: new Date(),
-    });
+    return runtime.assign(
+      {
+        actorUserId: ACTOR_ID,
+        branchId: BRANCH_ID,
+      },
+      operationAt(new Date()),
+    );
   }
 
   it("stops requesting candidates once the buffer is full", async () => {
@@ -126,7 +129,7 @@ describe("assignContacts", () => {
     const organization = await ctx.repos.organization.upsertOrganization({
       ruc: onCooldown.ruc,
       legalName: onCooldown.organization_name,
-      at: new Date(),
+      upsertedAt: new Date(),
     });
     const membership = await ctx.repos.organization.upsertMembership({
       organizationId: organization.id,
@@ -139,7 +142,7 @@ describe("assignContacts", () => {
       },
       phone: onCooldown.phone_primary,
       email: null,
-      at: new Date(),
+      upsertedAt: new Date(),
     });
     await ctx.repos.cadence.touch({
       organizationPersonId: membership.id,

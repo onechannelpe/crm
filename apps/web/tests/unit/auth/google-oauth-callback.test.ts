@@ -16,7 +16,9 @@ vi.mock("~/server/auth/infrastructure/request-passkey-provider", () => ({
 
 vi.mock("~/server/platform/http/request-context", () => ({
   getRequestContext: () => ({ publicOrigin: "http://localhost" }),
-  getRequestInstant: () => new Date("2026-07-15T12:00:00.000Z"),
+  getRequestOperation: () => ({
+    operationAt: new Date("2026-07-15T12:00:00.000Z"),
+  }),
 }));
 
 import { GET } from "~/routes/api/auth/google/callback";

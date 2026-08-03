@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { createInviteService } from "~/server/invites/application/invite-service";
@@ -23,7 +24,8 @@ describe("team invite accept command benchmark", () => {
       uow: createExecutorUow(ctx.db, bindInviteRepos),
       hashPassword: async () => "bench-password-hash",
     });
-    inviteAccept = (input) => inviteService.acceptInvite(input, BENCH_NOW);
+    inviteAccept = (input) =>
+      inviteService.acceptInvite(input, operationAt(BENCH_NOW));
   });
 
   beforeEach(async () => {

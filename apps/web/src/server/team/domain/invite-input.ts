@@ -36,6 +36,31 @@ export function validateTeamInviteInput(
   input: TeamInviteShape,
   operation: OperationContext,
 ): Result<CreateTeamInviteCommand, DomainError> {
+  const shape = validateTeamInviteShape(input);
+  if (!shape.ok) return shape;
+
+  const expiresAt = validateExpiry(input.expiresOn, operation.operationAt);
+
+  if (!expiresAt.ok) {
+    return expiresAt;
+  }
+
+  return Ok({
+    names: input.names,
+    firstSurname: input.firstSurname,
+    secondSurname: input.secondSurname,
+    email: input.email,
+    role: input.role,
+    executiveCategory: shape.value,
+    teamId: input.teamId,
+    expiresAt: expiresAt.value,
+  });
+}
+
+/** Validates an invite independently of the request instant. */
+export function validateTeamInviteShape(
+  input: TeamInviteShape,
+): Result<ExecutiveCategory | null, DomainError> {
   if (!EMAIL_PATTERN.test(input.email)) {
     return Err(fail("invalid_email"));
   }
@@ -53,22 +78,7 @@ export function validateTeamInviteInput(
     return Err(fail("invalid_team_id"));
   }
 
-  const expiresAt = validateExpiry(input.expiresOn, operation.operationAt);
-
-  if (!expiresAt.ok) {
-    return expiresAt;
-  }
-
-  return Ok({
-    names: input.names,
-    firstSurname: input.firstSurname,
-    secondSurname: input.secondSurname,
-    email: input.email,
-    role: input.role,
-    executiveCategory: category.value,
-    teamId: input.teamId,
-    expiresAt: expiresAt.value,
-  });
+  return Ok(category.value);
 }
 
 // Category applies only to executives; for other roles it is dropped so a

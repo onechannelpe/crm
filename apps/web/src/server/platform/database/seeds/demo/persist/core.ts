@@ -13,16 +13,22 @@ export async function persistWorkflowSample(
   db: Kysely<Database>,
   compiled: CompiledWorkflowScenario,
 ): Promise<void> {
-  const now = compiled.generatedAtMs;
+  const anchorMs = compiled.generatedAtMs;
   const day = compiled.dayMs;
   const overlayTtl = compiled.overlayTtlMs;
   const { leads } = compiled;
 
-  const orgIdByRuc = await persistOrganizations(db, leads, new Date(now));
-  await persistWorkflowLeadsAndAssignments(db, now, day, orgIdByRuc, leads);
-  await persistCompanyRegistryRecords(db, now, day, overlayTtl, leads);
-  await persistWorkflowCommercialData(db, now, day, orgIdByRuc, leads);
+  const orgIdByRuc = await persistOrganizations(db, leads, new Date(anchorMs));
+  await persistWorkflowLeadsAndAssignments(
+    db,
+    anchorMs,
+    day,
+    orgIdByRuc,
+    leads,
+  );
+  await persistCompanyRegistryRecords(db, anchorMs, day, overlayTtl, leads);
+  await persistWorkflowCommercialData(db, anchorMs, day, orgIdByRuc, leads);
   // Needs the venues created above (units reference them).
-  await persistWorkflowFulfillment(db, now, day, leads);
-  await persistWorkflowHistoryEvents(db, now, day, leads);
+  await persistWorkflowFulfillment(db, anchorMs, day, leads);
+  await persistWorkflowHistoryEvents(db, anchorMs, day, leads);
 }

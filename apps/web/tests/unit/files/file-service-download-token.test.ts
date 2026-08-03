@@ -46,7 +46,6 @@ describe("issueDownloadToken", () => {
       fileAssetId,
       requestedByUserId: UserId.trust("user-10"),
       expiresAt: new Date(NOW_MS + DOWNLOAD_TOKEN_TTL_MS),
-      now: new Date(NOW_MS),
     });
     expect(inserted[0]?.tokenHash).toBe(hashToken(result.value.token));
   });

@@ -34,13 +34,13 @@ interface OrderPlan {
 // drift from the rules the app itself enforces.
 export async function persistWorkflowFulfillment(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   leads: readonly CompiledLead[],
 ): Promise<void> {
   const plans = leads
     .filter((lead) => lead.spec.fulfillment)
-    .map((lead) => buildOrderPlan(lead, now, day));
+    .map((lead) => buildOrderPlan(lead, anchorMs, day));
   if (plans.length === 0) return;
 
   await db
@@ -71,7 +71,7 @@ export async function persistWorkflowFulfillment(
 
 function buildOrderPlan(
   lead: CompiledLead,
-  now: number,
+  anchorMs: number,
   day: number,
 ): OrderPlan {
   const { spec } = lead;
@@ -82,7 +82,7 @@ function buildOrderPlan(
   }
 
   const enteredOffsetDays = fulfillmentEnteredOffsetDays(spec);
-  const createdAt = new Date(now - enteredOffsetDays * day);
+  const createdAt = new Date(anchorMs - enteredOffsetDays * day);
 
   const order: OrderRow = {
     id: orderId,
@@ -113,12 +113,12 @@ function buildOrderPlan(
     throw new Error(`missing_seed_fulfillment_chosen_offset:${spec.key}`);
   }
 
-  const chosenAtMs = now - fulfillment.chosenOffsetDays * day;
+  const chosenAtMs = anchorMs - fulfillment.chosenOffsetDays * day;
   // Spread the steps strictly between CHOOSE_PRODUCT and targetStep evenly
-  // across [chosenAtMs, now) so later steps land at later timestamps without
+  // across [chosenAtMs, anchorMs) so later steps land at later timestamps without
   // needing a per-step offset authored on every touched lead.
   const stepGapMs =
-    targetIndex > 0 ? (now - chosenAtMs) / (targetIndex + 1) : 0;
+    targetIndex > 0 ? (anchorMs - chosenAtMs) / (targetIndex + 1) : 0;
   const stepAtMs = (index: number) => chosenAtMs + index * stepGapMs;
 
   order.updated_at = new Date(

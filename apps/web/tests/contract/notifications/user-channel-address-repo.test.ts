@@ -41,7 +41,7 @@ describe("user channel address repo", () => {
     const result = await ctx.repos.userChannelAddresses.claimWhatsAppAddress({
       userId: USER_ID,
       address: phone("911111111"),
-      now: CLAIM_AT,
+      claimedAt: CLAIM_AT,
     });
 
     expect(result).toEqual({ kind: "claimed" });
@@ -73,7 +73,7 @@ describe("user channel address repo", () => {
     const result = await ctx.repos.userChannelAddresses.claimWhatsAppAddress({
       userId: USER_ID,
       address: phone("922222222"),
-      now: CLAIM_AT,
+      claimedAt: CLAIM_AT,
     });
 
     expect(result).toEqual({ kind: "claimed" });

@@ -6,14 +6,14 @@ import type { OrganizationsByRuc } from "./organizations";
 
 export async function persistWorkflowLeadsAndAssignments(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   orgIdByRuc: OrganizationsByRuc,
   leads: readonly CompiledLead[],
 ): Promise<void> {
   await db
     .insertInto("workflow_leads")
-    .values(leads.map((lead) => leadRow(lead, now, day, orgIdByRuc)))
+    .values(leads.map((lead) => leadRow(lead, anchorMs, day, orgIdByRuc)))
     .execute();
 
   await db
@@ -24,10 +24,10 @@ export async function persistWorkflowLeadsAndAssignments(
         organization_id: organizationIdFor(orgIdByRuc, lead.spec.org.ruc),
         executive_id: lead.spec.executiveId,
         assigned_by: lead.spec.createdBy,
-        valid_from: new Date(now - lead.spec.createdOffsetDays * day),
+        valid_from: new Date(anchorMs - lead.spec.createdOffsetDays * day),
         valid_until: null,
         reason: "demo_seed",
-        created_at: new Date(now - lead.spec.createdOffsetDays * day),
+        created_at: new Date(anchorMs - lead.spec.createdOffsetDays * day),
       })),
     )
     .execute();
@@ -35,7 +35,7 @@ export async function persistWorkflowLeadsAndAssignments(
 
 function leadRow(
   lead: CompiledLead,
-  now: number,
+  anchorMs: number,
   day: number,
   orgIdByRuc: OrganizationsByRuc,
 ) {
@@ -49,12 +49,12 @@ function leadRow(
     priority: lead.projection.priority,
     created_by: spec.createdBy,
     updated_by: spec.updatedBy,
-    created_at: new Date(now - spec.createdOffsetDays * day),
-    updated_at: new Date(now - lead.projection.updatedOffsetDays * day),
+    created_at: new Date(anchorMs - spec.createdOffsetDays * day),
+    updated_at: new Date(anchorMs - lead.projection.updatedOffsetDays * day),
     reservation_expires_at:
       spec.reservationOffsetDays === undefined
         ? null
-        : new Date(now + spec.reservationOffsetDays * day),
+        : new Date(anchorMs + spec.reservationOffsetDays * day),
     current_provider: spec.current.provider,
     current_debit_rate: spec.current.debitRate,
     current_credit_rate: spec.current.creditRate,

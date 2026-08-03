@@ -1,10 +1,14 @@
 import type { SearchResult } from "~/contracts/search/engine-results.generated";
-import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
-import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
 import { createSessionService } from "~/server/auth/session/session.service";
 import { createEventsRepo } from "~/server/event-logs/events-repo";
+import { createFilesRuntime } from "~/server/files/runtime";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
+import { createOrganizationEnrichment } from "~/server/organization/enrichment";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
+import { createSessionRepository } from "~/server/sessions/repos-sessions";
+import { createUsersRepo } from "~/server/users/repos-users";
+import { createWorkflowRuntime } from "~/server/workflow/runtime";
 
 import {
   cleanupTestDb,
@@ -74,6 +78,8 @@ function companyResult(ruc: string, overlay: CompanyOverlay): SearchResult {
 
 export interface TestRuntime {
   ctx: TestDbContext;
+  // Transitional test data needed by fixtures that model time passing. New
+  // operation calls receive an explicit OperationContext instead.
   now: {
     get(): Date;
     set(value: Date): void;
@@ -82,20 +88,20 @@ export interface TestRuntime {
     sessionService: ReturnType<typeof createSessionService>;
   };
   integrations: ReturnType<typeof createIntegrationRuntime>;
+  workflow: ReturnType<typeof createWorkflowRuntime>;
   engine: {
     client: EngineClient;
     company(ruc: string, overlay: CompanyOverlay): void;
   };
-  // Restores the shared database to its seeded baseline and resets the clock
-  // to a fresh `new Date()`. Call this in `beforeEach`; the runtime itself is
-  // built once per file in `beforeAll`.
+  // Restores the shared database to its seeded baseline and resets fixture
+  // time. Call this in `beforeEach`; the runtime itself is built once per
+  // file in `beforeAll`.
   reset(): Promise<void>;
   dispose(): Promise<void>;
 }
 
 export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   const ctx = await createIsolatedTestDb(prefix);
-
   let currentNow = new Date();
 
   const now = {
@@ -112,14 +118,27 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
 
   const auth = {
     sessionService: createSessionService({
-      sessions: createAuthSessionRepo(ctx.db),
-      users: createAuthUsersRepo(ctx.db),
+      sessions: createSessionRepository(ctx.db),
+      users: createUsersRepo(ctx.db),
       events: createEventsRepo(ctx.db),
       logger,
     }),
   };
 
   const engine = createFakeEngine();
+  const infrastructure: ServerInfrastructure = {
+    db: ctx.db,
+    logger,
+  };
+  const files = createFilesRuntime(infrastructure, {
+    storageRoot: ctx.storageRoot,
+  });
+  const workflow = createWorkflowRuntime(
+    infrastructure,
+    files,
+    createOrganizationEnrichment(engine.client),
+    { enqueueRucVerification: async () => {} },
+  );
   const integrations = createIntegrationRuntime({
     executor: ctx.db,
   });
@@ -129,6 +148,7 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     now,
     auth,
     integrations,
+    workflow,
     engine: {
       client: engine.client,
       company: (ruc, overlay) => engine.company(ruc, overlay),

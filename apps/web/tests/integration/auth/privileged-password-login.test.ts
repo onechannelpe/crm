@@ -1,4 +1,5 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { operationAt } from "@tests/support/operation";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -94,7 +95,7 @@ describe("privileged password login", () => {
       AuthLoginFlowId.trust(result.value.flow.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
-      new Date(),
+      operationAt(new Date()),
     );
     expect(flow?.state).toBe("passkey");
   });

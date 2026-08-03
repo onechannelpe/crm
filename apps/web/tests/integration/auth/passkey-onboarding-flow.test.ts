@@ -1,5 +1,6 @@
 import { phone } from "@tests/support/_core/phone";
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { operationAt } from "@tests/support/operation";
 import { createRegistrationChallenge } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -82,11 +83,14 @@ describe("passkey onboarding flow", () => {
       },
       now,
     );
-    const profile = await saveOnboardingProfile(setup, {
-      userId,
-      phone: phone(),
-      now,
-    });
+    const profile = await saveOnboardingProfile(
+      setup,
+      {
+        userId,
+        phone: phone(),
+      },
+      operationAt(now),
+    );
     if (isErr(profile)) throw new Error("expected saved profile");
 
     const challengeId = await createRegistrationChallenge({

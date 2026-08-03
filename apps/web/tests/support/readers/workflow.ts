@@ -1,29 +1,26 @@
 import { expectOk } from "@tests/support/_core/assertions";
 import type { TestActor } from "@tests/support/database/workflow-fixtures";
-import { workflowRepos } from "@tests/support/integration/workflow-ports";
+import { operationAt } from "@tests/support/operation";
 import type { TestRuntime } from "@tests/support/runtime/app";
 
 import type { LeadStatus } from "~/contracts/workflow/vocabulary";
 import type { UserId, WorkflowLeadId } from "~/domain/ids";
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
-
-// Lead invariants are asserted through getLeadDetail, the same read model production
-// consumers use, rather than by reading raw workflow_leads columns. Every field these
-// helpers check (updatedBy, updatedAt, executiveId, status) is exposed on LeadDetailLeadView.
-// The caller passes the actor that can see the lead (after a reassign, only the new
-// executive or a review role can).
+// Lead invariants are asserted through the workflow runtime's public read model,
+// rather than by reading raw workflow_leads columns.
 
 async function loadLead(
   runtime: TestRuntime,
   actor: TestActor,
   leadId: WorkflowLeadId,
 ) {
-  const detail = await getLeadDetail(workflowRepos(runtime), {
-    actorUserId: actor.userId,
-    actorRole: actor.role,
-    leadId,
-    evaluatedAt: runtime.now.get(),
-  });
+  const detail = await runtime.workflow.queries.getLeadDetail(
+    {
+      actorUserId: actor.userId,
+      actorRole: actor.role,
+      leadId,
+    },
+    operationAt(runtime.now.get()),
+  );
   return expectOk(detail).lead;
 }
 

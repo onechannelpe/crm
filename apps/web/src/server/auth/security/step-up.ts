@@ -8,7 +8,7 @@ const DEFAULT_MAX_AGE_MS = AUTH_STRONG_AUTH_MAX_AGE_MS;
 
 export function checkRecentStrongAuth(
   session: AuthSession,
-  asOf: Date,
+  checkedAt: Date,
   maxAgeMs = DEFAULT_MAX_AGE_MS,
 ): Result<void, DomainError> {
   if (!requiresStrongAuthRole(session.role)) {
@@ -19,7 +19,7 @@ export function checkRecentStrongAuth(
     return Err(fail("strong_auth_required"));
   }
 
-  if (asOf.getTime() - session.strongAuthAt.getTime() > maxAgeMs) {
+  if (checkedAt.getTime() - session.strongAuthAt.getTime() > maxAgeMs) {
     return Err(fail("strong_auth_expired"));
   }
 

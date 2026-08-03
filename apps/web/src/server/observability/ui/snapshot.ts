@@ -28,7 +28,7 @@ export async function getObservabilitySnapshot(
       }));
     },
 
-    execute: ({ operationAt: now }, input) =>
-      application.observability.getActionSnapshot(input, now),
+    execute: (ctx, input) =>
+      application.observability.getActionSnapshot(input, ctx.operationAt),
   });
 }

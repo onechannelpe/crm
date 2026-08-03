@@ -15,7 +15,7 @@ import {
 function exportLeadAsJson(lead: LeadDetailLeadView) {
   const payload = {
     empresa: lead,
-    exportadoEn: new Date().toISOString(),
+    exportadoEn: new Date().toISOString(), // clock-boundary: export requested
   };
 
   const json = JSON.stringify(payload, null, 2);

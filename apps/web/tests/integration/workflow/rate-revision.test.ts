@@ -4,10 +4,7 @@ import {
   createLeadFixtureWriter,
 } from "@tests/support/database/workflow-fixtures";
 import { proposePendingRate } from "@tests/support/integration/pricing";
-import {
-  workflowCommandPorts,
-  workflowRepos,
-} from "@tests/support/integration/workflow-ports";
+import { operationAt } from "@tests/support/operation";
 import {
   createTestRuntime,
   type TestRuntime,
@@ -20,8 +17,6 @@ import {
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
 } from "~/domain/ids";
-import { requestRateRevisionCommand } from "~/server/workflow/lead/commands/request-rate-revision";
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 async function seedRateRevisionFile(
   runtime: TestRuntime,
@@ -90,12 +85,10 @@ describe("request rate revision command", () => {
     const actor = actorBy("execOne");
 
     return expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId,
-        evaluatedAt: runtime.now.get(),
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        { actorUserId: actor.userId, actorRole: actor.role, leadId },
+        operationAt(runtime.now.get()),
+      ),
     );
   }
 
@@ -115,14 +108,14 @@ describe("request rate revision command", () => {
       uploadedByUserId: actor.userId,
     });
 
-    const result = await requestRateRevisionCommand(
+    const result = await runtime.workflow.commands.requestRateRevision(
       {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
         fileIds: [fileId],
       },
-      workflowCommandPorts(runtime),
+      operationAt(runtime.now.get()),
     );
 
     expect(expectErr(result).code).toBe("rate_proposal_not_found");
@@ -149,14 +142,14 @@ describe("request rate revision command", () => {
       uploadedByUserId: actor.userId,
     });
 
-    const result = await requestRateRevisionCommand(
+    const result = await runtime.workflow.commands.requestRateRevision(
       {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
         fileIds: [fileId],
       },
-      workflowCommandPorts(runtime),
+      operationAt(runtime.now.get()),
     );
 
     expectOk(result);
@@ -197,14 +190,14 @@ describe("request rate revision command", () => {
       uploadedByUserId: actor.userId,
     });
 
-    const result = await requestRateRevisionCommand(
+    const result = await runtime.workflow.commands.requestRateRevision(
       {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
         fileIds: [fileId, fileId],
       },
-      workflowCommandPorts(runtime),
+      operationAt(runtime.now.get()),
     );
 
     expect(expectErr(result).code).toBe("duplicate_rate_revision_file");
@@ -256,14 +249,14 @@ describe("request rate revision command", () => {
         });
       }
 
-      const result = await requestRateRevisionCommand(
+      const result = await runtime.workflow.commands.requestRateRevision(
         {
           actor,
           leadId: lead.id,
           justification: "Need better rate",
           fileIds: [fileId],
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       );
 
       expect(expectErr(result).code).toBe(
@@ -312,14 +305,14 @@ describe("request rate revision command", () => {
       linkedRevisionId: revisionId,
     });
 
-    const result = await requestRateRevisionCommand(
+    const result = await runtime.workflow.commands.requestRateRevision(
       {
         actor,
         leadId: lead.id,
         justification: "Need better rate",
         fileIds: [fileId],
       },
-      workflowCommandPorts(runtime),
+      operationAt(runtime.now.get()),
     );
 
     expect(expectErr(result).code).toBe("rate_revision_file_not_submit_ready");

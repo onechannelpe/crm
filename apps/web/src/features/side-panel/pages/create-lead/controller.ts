@@ -69,6 +69,11 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
 
     const user = input.currentUser();
 
+    // clock-boundary: form submission. The provisional row is stamped once here
+    // and replaced by the server's row on commit, so `apply` must not re-read
+    // the clock when the transaction store replays it.
+    const submittedAt = Date.now();
+
     const txId = optimisticTransactions.begin({
       apply: () =>
         addOptimisticLead(
@@ -81,6 +86,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
             executiveName: shortName(user),
             createdBy: user.id,
             createdByName: shortName(user),
+            createdAt: submittedAt,
           }),
         ),
     });

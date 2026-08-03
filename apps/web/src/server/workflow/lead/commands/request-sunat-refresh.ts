@@ -27,7 +27,7 @@ export async function requestSunatRefresh(
   await ports.enrichmentQueue.enqueueRucVerification(
     lead.ruc,
     input.actor.userId,
-    operation.operationAt,
+    operation,
   );
 
   return Ok(void 0);

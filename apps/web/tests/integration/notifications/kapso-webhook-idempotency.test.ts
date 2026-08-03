@@ -1,54 +1,21 @@
+import { createTestNotificationRuntime } from "@tests/support/integration/notification-runtime";
+import { operationAt } from "@tests/support/operation";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
-
-const state = vi.hoisted(() => ({
-  runtime: undefined as
-    | undefined
-    | {
-        ctx: { db: unknown };
-        now: { get: () => Date };
-      },
-}));
-
-vi.mock("~/server/platform/composition/infrastructure", () => ({
-  serverInfrastructure: {
-    get db() {
-      if (!state.runtime) throw new Error("test runtime not installed");
-      return state.runtime.ctx.db;
-    },
-    now: () => {
-      if (!state.runtime) throw new Error("test runtime not installed");
-      return state.runtime.now.get();
-    },
-  },
-}));
-
-import { POST } from "~/routes/api/webhooks/whatsapp";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 const NOW = new Date("2026-01-02T03:04:05.000Z");
 const INBOUND_EVENT = "whatsapp.message.received";
 const PAYLOAD_VERSION = "v2";
 
-function kapsoRequest(idempotencyKey: string, messageId: string): Request {
-  return new Request("http://localhost/api/webhooks/whatsapp", {
-    method: "POST",
-    headers: {
-      "x-idempotency-key": idempotencyKey,
-      "x-webhook-event": INBOUND_EVENT,
-      "x-webhook-payload-version": PAYLOAD_VERSION,
-    },
-    body: JSON.stringify({
+function kapsoWebhook(idempotencyKey: string, messageId: string) {
+  return {
+    idempotencyKey,
+    eventType: INBOUND_EVENT,
+    payloadVersion: PAYLOAD_VERSION,
+    rawBody: JSON.stringify({
       phone_number_id: "phone-number-1",
       conversation: {
         id: "conversation-1",
@@ -64,11 +31,7 @@ function kapsoRequest(idempotencyKey: string, messageId: string): Request {
         },
       },
     }),
-  });
-}
-
-async function postWebhook(idempotencyKey: string, messageId: string) {
-  return POST({ request: kapsoRequest(idempotencyKey, messageId) });
+  };
 }
 
 describe("kapso webhook idempotency", () => {
@@ -76,11 +39,9 @@ describe("kapso webhook idempotency", () => {
 
   beforeAll(async () => {
     runtime = await createTestRuntime("kapso-webhook-idempotency");
-    state.runtime = runtime;
   });
 
   afterAll(async () => {
-    state.runtime = undefined;
     await runtime.dispose();
   });
 
@@ -91,10 +52,26 @@ describe("kapso webhook idempotency", () => {
 
   it("deduplicates provider retries and batch fallback redelivery", async () => {
     const messageId = "wamid.same-message";
+    const notifications = createTestNotificationRuntime(runtime);
 
-    expect((await postWebhook("delivery-1", messageId)).status).toBe(200);
-    expect((await postWebhook("delivery-1", messageId)).status).toBe(200);
-    expect((await postWebhook("delivery-2", messageId)).status).toBe(200);
+    expect(
+      await notifications.webhooks.receiveKapso(
+        kapsoWebhook("delivery-1", messageId),
+        operationAt(NOW),
+      ),
+    ).toMatchObject({ ok: true });
+    expect(
+      await notifications.webhooks.receiveKapso(
+        kapsoWebhook("delivery-1", messageId),
+        operationAt(NOW),
+      ),
+    ).toMatchObject({ ok: true });
+    expect(
+      await notifications.webhooks.receiveKapso(
+        kapsoWebhook("delivery-2", messageId),
+        operationAt(NOW),
+      ),
+    ).toMatchObject({ ok: true });
 
     const deliveries = await runtime.ctx.db
       .selectFrom("kapso_webhook_deliveries")

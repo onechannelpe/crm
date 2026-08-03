@@ -5,6 +5,7 @@ import type { ImportRowInput } from "~/server/integrations/application/import/ty
 import type { TestActorKey } from "../database/workflow-fixtures";
 import { actorBy } from "../database/workflow-fixtures";
 import { seedImportJob } from "../database/workflow-seed";
+import { operationAt } from "../operation";
 import type { TestRuntime } from "../runtime/app";
 
 type ImportLeadRef = {
@@ -65,8 +66,8 @@ export function createWorkflowImporter(input: {
         },
         {
           executor: runtime.integrations.executor,
-          now: runtime.now.get(),
         },
+        operationAt(runtime.now.get()),
       );
     },
 
@@ -84,8 +85,8 @@ export function createWorkflowImporter(input: {
         },
         {
           executor: runtime.integrations.executor,
-          now: runtime.now.get(),
         },
+        operationAt(runtime.now.get()),
       );
     },
   };

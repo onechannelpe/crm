@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -52,7 +53,7 @@ describe("rate limit policy enforcement", () => {
           "leads.request",
           userId,
           ctx.repos,
-          new Date(),
+          operationAt(new Date()),
           "198.51.100.1",
         ),
       ).resolves.toBeUndefined();
@@ -69,7 +70,7 @@ describe("rate limit policy enforcement", () => {
         "leads.request",
         userId,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.1",
       ),
     ).rejects.toBeInstanceOf(ActionError);
@@ -89,7 +90,7 @@ describe("rate limit policy enforcement", () => {
         "team.invite.create",
         userId,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.1",
       ),
     ).rejects.toBeInstanceOf(ActionError);

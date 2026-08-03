@@ -33,7 +33,7 @@ function createInput(overrides?: {
       recoveryCodesAcknowledgementRequired:
         overrides?.recoveryCodesAcknowledgementRequired ?? false,
     },
-    now: NOW,
+    provedAt: NOW,
   };
 }
 

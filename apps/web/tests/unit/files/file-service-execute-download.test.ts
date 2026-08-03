@@ -4,6 +4,8 @@ import { FileAssetId, FileDownloadTokenId, UserId } from "~/domain/ids";
 import { executeDownload } from "~/server/files/service/execute-download";
 import type { FileAsset } from "~/server/files/types";
 
+import { operationAt } from "../../support/operation";
+
 const fileAsset: FileAsset = {
   id: FileAssetId.trust("file-20"),
   storageKey: "records_export/2026/07/export.csv",
@@ -52,7 +54,7 @@ describe("executeDownload", () => {
           delete: async () => {},
         },
       },
-      new Date(1_700_000_000_000),
+      operationAt(1_700_000_000_000),
     );
 
     expect(result.ok).toBe(false);

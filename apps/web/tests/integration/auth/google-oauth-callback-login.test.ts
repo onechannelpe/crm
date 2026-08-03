@@ -1,4 +1,5 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { operationAt } from "@tests/support/operation";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import {
   afterAll,
@@ -56,7 +57,7 @@ describe("google oauth callback login", () => {
       },
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
-      new Date(),
+      operationAt(new Date()),
     );
 
     expect(isErr(result)).toBe(true);
@@ -80,7 +81,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
-      new Date(),
+      operationAt(new Date()),
     );
 
     expect(isErr(result)).toBe(true);
@@ -108,7 +109,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
-      new Date(),
+      operationAt(new Date()),
     );
 
     expect(isErr(result)).toBe(true);
@@ -137,7 +138,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
-      new Date(),
+      operationAt(new Date()),
     );
 
     expect(isErr(result)).toBe(false);
@@ -172,7 +173,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
-      new Date(),
+      operationAt(new Date()),
     );
 
     expect(isErr(result)).toBe(false);
@@ -197,7 +198,7 @@ describe("google oauth callback login", () => {
       request,
       createAuthLoginContext(scenario.ctx.db),
       createTestPasskeyProvider(scenario.ctx.repos),
-      new Date(),
+      operationAt(new Date()),
     );
 
     expect(isErr(result)).toBe(true);

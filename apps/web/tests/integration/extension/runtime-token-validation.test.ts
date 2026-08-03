@@ -1,6 +1,7 @@
 import { expectErr } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
 import { createExtensionFixture } from "@tests/support/extension/fixture";
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   resetTestDb,
@@ -31,7 +32,7 @@ describe("extension runtime token validation", () => {
         handoffToken: "not-a-jwt",
         installationId: "11111111-1111-4111-8111-111111111111",
       },
-      new Date(),
+      operationAt(new Date()),
     );
 
     const error = expectErr(result);
@@ -57,7 +58,7 @@ describe("extension runtime token validation", () => {
         assignmentId,
         origin: "http://localhost:3000",
       },
-      new Date(),
+      operationAt(new Date()),
     );
 
     const error = expectErr(result);
@@ -85,7 +86,7 @@ describe("extension runtime token validation", () => {
           payload: { occurredAt: 10_000 },
         },
       },
-      new Date(),
+      operationAt(new Date()),
     );
 
     const error = expectErr(result);

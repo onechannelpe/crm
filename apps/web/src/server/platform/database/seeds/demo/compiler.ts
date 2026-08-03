@@ -41,7 +41,7 @@ export interface CompiledWorkflowScenario {
 }
 
 export function compileWorkflowScenario(
-  nowMs: number,
+  anchorMs: number,
 ): CompiledWorkflowScenario {
   const keys = new Set<string>();
   const rucs = new Set<string>();
@@ -60,7 +60,7 @@ export function compileWorkflowScenario(
 
   return {
     leads,
-    generatedAtMs: nowMs,
+    generatedAtMs: anchorMs,
     dayMs: 86_400_000,
     overlayTtlMs: 7 * 86_400_000,
   };

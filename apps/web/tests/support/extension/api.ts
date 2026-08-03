@@ -1,3 +1,5 @@
+import { operationAt } from "@tests/support/operation";
+
 import type { BranchId, OrganizationPersonId, UserId } from "~/domain/ids";
 import { ContactAssignmentId } from "~/domain/ids";
 import { createExtensionService } from "~/server/extension/service";
@@ -136,7 +138,7 @@ export function createExtensionScenario(
           assignmentId,
           origin: "http://localhost:3000",
         },
-        now(),
+        operationAt(now()),
       );
       if (!handoffResult.ok) {
         throw new Error(handoffResult.error.code ?? handoffResult.error.kind);
@@ -146,7 +148,7 @@ export function createExtensionScenario(
           handoffToken: handoffResult.value.handoffToken,
           installationId,
         },
-        now(),
+        operationAt(now()),
       );
       if (!claimResult.ok) {
         throw new Error(claimResult.error.code ?? claimResult.error.kind);

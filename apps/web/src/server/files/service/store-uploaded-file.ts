@@ -25,7 +25,6 @@ export async function storeUploadedFile(
   input: StoreUploadInput,
   deps: StoreFileDeps,
 ): Promise<Result<FileAsset, DomainError>> {
-  const now = ctx.operationAt;
   const staticValidation = validateUploadMetadata(input.purpose, input.name);
   if (!staticValidation.ok) {
     return Err(invalid({ code: staticValidation.reason }));
@@ -33,7 +32,7 @@ export async function storeUploadedFile(
 
   const storageKey = buildStorageKey({
     purpose: input.purpose,
-    storedAt: now,
+    storedAt: ctx.operationAt,
     extension: staticValidation.extension,
   });
   const inspector = createUploadStreamInspector(
@@ -77,7 +76,7 @@ export async function storeUploadedFile(
       signatureKind: metadata.signatureKind,
       scanStatus: "clean",
       createdByUserId: ctx.actor.userId,
-      createdAt: now,
+      createdAt: ctx.operationAt,
     });
 
     const fileAsset = await deps.repo.assets.findById(fileAssetId);

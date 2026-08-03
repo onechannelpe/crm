@@ -1,6 +1,7 @@
 import { expectOk } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
 import { createExtensionFixture } from "@tests/support/extension/fixture";
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   resetTestDb,
@@ -130,7 +131,7 @@ describe("extension runtime projection ordering", () => {
         userId: backOne.id,
         branchId: lima.id,
       },
-      fixedNow,
+      operationAt(fixedNow),
     );
 
     const value = expectOk(result);
@@ -167,7 +168,7 @@ describe("extension runtime projection ordering", () => {
         userId: backOne.id,
         branchId: lima.id,
       },
-      fixedNow,
+      operationAt(fixedNow),
     );
 
     const value = expectOk(result);

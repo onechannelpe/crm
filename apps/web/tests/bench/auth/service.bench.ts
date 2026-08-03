@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
@@ -44,7 +45,7 @@ describe("auth login service benchmark", () => {
         },
         createAuthLoginContext(ctx.db),
         createTestPasskeyProvider(ctx.repos),
-        new Date(),
+        operationAt(new Date()),
       );
 
       if (

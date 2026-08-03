@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -31,13 +32,15 @@ describe("audit policy service", () => {
     });
 
     await expect(
-      service.upsertPolicy({
-        action: "all_sessions_revoked",
-        riskLevel: "medium",
-        isActive: true,
-        actorUserId: ACTOR_USER_ID,
-        updatedAt: new Date(),
-      }),
+      service.upsertPolicy(
+        {
+          action: "all_sessions_revoked",
+          riskLevel: "medium",
+          isActive: true,
+          actorUserId: ACTOR_USER_ID,
+        },
+        operationAt(new Date()),
+      ),
     ).rejects.toThrow("protected policies cannot be downgraded");
   });
 
@@ -46,13 +49,15 @@ describe("audit policy service", () => {
       auditActionPolicies: ctx.repos.auditActionPolicies,
     });
 
-    await service.upsertPolicy({
-      action: "leads_requested",
-      riskLevel: "medium",
-      isActive: true,
-      actorUserId: ACTOR_USER_ID,
-      updatedAt: new Date(),
-    });
+    await service.upsertPolicy(
+      {
+        action: "leads_requested",
+        riskLevel: "medium",
+        isActive: true,
+        actorUserId: ACTOR_USER_ID,
+      },
+      operationAt(new Date()),
+    );
 
     const snapshot = await service.getSnapshot();
     const leadsPolicy = snapshot.items.find(

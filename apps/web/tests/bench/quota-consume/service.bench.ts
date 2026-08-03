@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import type { UserId } from "~/domain/ids";
@@ -40,9 +41,9 @@ describe("search capacity consume service benchmark", () => {
           requested: 1,
           reserveReason: "direct_search",
           brand: SearchReservationId.trust,
-          at: new Date(),
         },
         usageReservationPorts,
+        operationAt(new Date()),
         async () => Ok({ value: undefined, consumed: 1 }),
       );
       if (!result.ok) {

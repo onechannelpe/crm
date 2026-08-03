@@ -33,6 +33,10 @@ export function HeaderNotificationsPanel() {
   });
 
   const handleMarkRead = async (notificationId: string) => {
+    // clock-boundary: user interaction. Provisional stamp only; the server's
+    // value replaces it when the feed revalidates.
+    const readAt = Date.now();
+
     try {
       await updateFeed({
         optimistic: (prev) => ({
@@ -46,7 +50,7 @@ export function HeaderNotificationsPanel() {
                 : 0),
           ),
           notifications: prev.notifications.map((item) =>
-            item.id === notificationId ? { ...item, readAt: Date.now() } : item,
+            item.id === notificationId ? { ...item, readAt } : item,
           ),
         }),
         commit: async () => {
@@ -59,13 +63,17 @@ export function HeaderNotificationsPanel() {
   };
 
   const handleMarkAllRead = async () => {
+    // clock-boundary: user interaction. One stamp for the whole batch, so the
+    // rows this click marks all read at the same instant.
+    const readAt = Date.now();
+
     try {
       await updateFeed({
         optimistic: (prev) => ({
           unreadCount: 0,
           notifications: prev.notifications.map((item) => ({
             ...item,
-            readAt: item.readAt ?? Date.now(),
+            readAt: item.readAt ?? readAt,
           })),
         }),
         commit: async () => {

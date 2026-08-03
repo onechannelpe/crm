@@ -34,14 +34,12 @@ export async function refreshInstallationSession(
     if (isErr(installationId)) {
       return Err(invalid({ code: "installation_invalid" }));
     }
-
-    const currentTime = context.operationAt;
     const refreshTokenHash = await hashExtensionSecretToken(input.refreshToken);
     const session =
       await repos.extensionRuntime.findRefreshableInstallationSession(
         refreshTokenHash,
         installationId.value,
-        currentTime,
+        context.operationAt,
       );
     if (!session) {
       return Err(fail("extension_session_invalid"));
@@ -50,33 +48,36 @@ export async function refreshInstallationSession(
     const authSessionActive = await hasActiveAuthSession(
       repos,
       session.auth_session_id,
-      currentTime,
+      context.operationAt,
     );
     if (!authSessionActive) {
       await repos.extensionRuntime.revokeInstallationSession(
         session.jti,
-        currentTime,
+        context.operationAt,
       );
       await repos.extensionRuntime.updateExecutiveSyncHealthByUser({
         user_id: session.user_id,
         sync_health: "reauth_required",
-        sync_updated_at: currentTime,
+        sync_updated_at: context.operationAt,
       });
       return Err(fail("extension_session_invalid"));
     }
 
-    const credentials = await issueSessionCredentials(session, currentTime);
+    const credentials = await issueSessionCredentials(
+      session,
+      context.operationAt,
+    );
     await repos.extensionRuntime.rotateInstallationSessionRefreshToken({
       jti: session.jti,
       refresh_token_hash: credentials.refreshTokenHash,
-      refreshed_at: currentTime,
-      expires_at: installationSessionExpiresAt(currentTime),
+      refreshed_at: context.operationAt,
+      expires_at: installationSessionExpiresAt(context.operationAt),
     });
     await upsertSyncHealth(repos.extensionRuntime, {
       userId: session.user_id,
       branchId: session.branch_id,
       syncHealth: "ok",
-      updatedAt: currentTime,
+      updatedAt: context.operationAt,
     });
     return Ok(credentials);
   } catch (error: unknown) {

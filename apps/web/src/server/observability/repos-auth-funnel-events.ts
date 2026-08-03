@@ -101,10 +101,10 @@ export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteCreatedBefore(cutoff: Date): Promise<number> {
+    async deleteCreatedBefore(createdBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("auth_funnel_events")
-        .where("created_at", "<", cutoff)
+        .where("created_at", "<", createdBefore)
         .executeTakeFirst();
       return Number(result.numDeletedRows ?? 0);
     },

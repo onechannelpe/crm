@@ -39,6 +39,8 @@ export function DatePicker(props: DatePickerProps) {
   const selectedDate = createMemo(() => parseCalendarDate(props.value));
   const minDate = createMemo(() => parseCalendarDate(props.min ?? ""));
   const initialViewDate = createMemo(
+    // clock-boundary: today, the calendar's fallback view when nothing is
+    // selected and no minimum constrains it.
     () => selectedDate() ?? minDate() ?? appCalendarDateAt(Date.now()),
   );
   const [viewMonth, setViewMonth] = createSignal(

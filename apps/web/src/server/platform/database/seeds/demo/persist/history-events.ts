@@ -24,11 +24,11 @@ interface EventDraft {
 
 export async function persistWorkflowHistoryEvents(
   db: Kysely<Database>,
-  now: number,
+  anchorMs: number,
   day: number,
   leads: readonly CompiledLead[],
 ): Promise<void> {
-  const drafts = leads.flatMap((lead) => buildLeadEvents(lead, now, day));
+  const drafts = leads.flatMap((lead) => buildLeadEvents(lead, anchorMs, day));
   if (drafts.length === 0) return;
 
   await db
@@ -53,12 +53,12 @@ export async function persistWorkflowHistoryEvents(
 
 function buildLeadEvents(
   lead: CompiledLead,
-  now: number,
+  anchorMs: number,
   day: number,
 ): EventDraft[] {
   const { spec } = lead;
   const at = (offsetDays: number, nudgeMs = 0) =>
-    now - offsetDays * day + nudgeMs;
+    anchorMs - offsetDays * day + nudgeMs;
   const events: EventDraft[] = [];
   const push = (
     type: string,
@@ -277,9 +277,9 @@ function pushFulfillmentEvents(
   const sequence = stepsForProduct(fulfillment.productKind);
   const targetIndex = sequence.indexOf(fulfillment.targetStep);
   const chosenAtMs = at(fulfillment.chosenOffsetDays);
-  const nowMs = at(0);
+  const anchorMs = at(0);
   const stepGapMs =
-    targetIndex > 0 ? (nowMs - chosenAtMs) / (targetIndex + 1) : 0;
+    targetIndex > 0 ? (anchorMs - chosenAtMs) / (targetIndex + 1) : 0;
   const stepAtMs = (index: number) => chosenAtMs + index * stepGapMs;
 
   push(

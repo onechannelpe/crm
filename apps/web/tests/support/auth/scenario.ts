@@ -6,6 +6,7 @@ import {
   setIdentityPassword,
   type SeededIdentityName,
 } from "@tests/support/identities/api";
+import { operationAt } from "@tests/support/operation";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import {
   cleanupTestDb,
@@ -124,7 +125,7 @@ export function createAuthScenario(
         },
         login,
         createTestPasskeyProvider(login.repos),
-        new Date(),
+        operationAt(new Date()),
       );
     },
 
@@ -144,7 +145,7 @@ export function createAuthScenario(
         },
         login,
         createTestPasskeyProvider(login.repos),
-        new Date(),
+        operationAt(new Date()),
       );
     },
 
@@ -154,21 +155,27 @@ export function createAuthScenario(
       meta: RequestMeta,
     ) {
       const login = createAuthLoginContext(ctx.db);
-      const occurredAt = new Date();
-      const verified = await verifyTotpLoginProof(login, {
-        flowId,
-        totpCode,
-        ipAddress: meta.ipAddress,
-        occurredAt,
-      });
+      const operation = operationAt(new Date());
+      const verified = await verifyTotpLoginProof(
+        login,
+        {
+          flowId,
+          totpCode,
+          ipAddress: meta.ipAddress,
+        },
+        operation,
+      );
       if (isErr(verified)) return verified;
 
-      const completed = await completePendingLogin(login, {
-        proof: verified.value,
-        occurredAt,
-        ipAddress: meta.ipAddress,
-        userAgent: meta.userAgent,
-      });
+      const completed = await completePendingLogin(
+        login,
+        {
+          proof: verified.value,
+          ipAddress: meta.ipAddress,
+          userAgent: meta.userAgent,
+        },
+        operation,
+      );
       return isErr(completed)
         ? Err({ kind: "flow_expired" } as const)
         : Ok(completed.value);

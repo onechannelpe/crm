@@ -10,7 +10,16 @@ import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import type { UserId } from "~/domain/ids";
 import { NotificationIntentId } from "~/domain/ids";
@@ -32,8 +41,14 @@ describe("notification delivery dispatch", () => {
   });
 
   beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(NOW);
     await runtime.reset();
     runtime.now.set(NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   async function giveAddresses(userId: UserId, withSession: boolean) {
@@ -185,7 +200,7 @@ describe("notification delivery dispatch", () => {
     );
     expect(afterRetry?.claimable_at?.getTime()).toBeLessThan(NOW_MS + 5_000);
 
-    notifications.advanceClock(5_001);
+    vi.setSystemTime(NOW_MS + 5_001);
     await notifications.expandThenDispatch();
 
     const [afterRecovery] = await reader.deliveries();

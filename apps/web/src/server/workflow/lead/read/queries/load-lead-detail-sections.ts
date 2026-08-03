@@ -7,6 +7,7 @@ import type {
   WorkflowRateRevisionId,
 } from "~/domain/ids";
 import type { OrganizationRepository } from "~/server/organization/organization-repo";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { DigitalPolicyRepository } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import type {
@@ -113,7 +114,8 @@ export type LeadDetailLoadedSections = {
 
 export async function loadLeadDetailSections(
   deps: LeadDetailQueryDeps,
-  input: { leadId: WorkflowLeadId; actorUserId: UserId; evaluatedAt: Date },
+  input: { leadId: WorkflowLeadId; actorUserId: UserId },
+  operation: OperationContext,
 ): Promise<Result<LeadDetailLoadedSections, DomainError>> {
   const lead = await deps.leads.findById(input.leadId);
   if (!lead) {
@@ -147,7 +149,7 @@ export async function loadLeadDetailSections(
     deps.leadVenues.listByLeadId(input.leadId),
     deps.rateRevisions.listByLeadId(input.leadId),
     deps.leadHistory.listByLeadId(input.leadId),
-    deps.sourceStatuses.findByRuc(lead.ruc, input.evaluatedAt),
+    deps.sourceStatuses.findByRuc(lead.ruc, operation.operationAt),
     deps.users.findByIds([
       lead.executiveId,
       lead.createdBy,

@@ -1,3 +1,4 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
@@ -49,7 +50,7 @@ describe("rate limit audit", () => {
         "leads.request",
         userId,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.1",
       );
     }
@@ -59,7 +60,7 @@ describe("rate limit audit", () => {
         "leads.request",
         userId,
         ctx.repos,
-        new Date(),
+        operationAt(new Date()),
         "198.51.100.1",
       ),
     ).rejects.toBeDefined();
@@ -88,7 +89,7 @@ describe("rate limit audit", () => {
       "leads.request",
       userId,
       ctx.repos,
-      new Date(),
+      operationAt(new Date()),
       "198.51.100.1",
     );
     const deleted = await ctx.repos.actionRateLimits.deleteUpdatedBefore(

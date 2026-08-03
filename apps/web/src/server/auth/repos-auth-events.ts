@@ -66,10 +66,10 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    deleteCreatedBefore(timestamp: Date) {
+    deleteCreatedBefore(createdBefore: Date) {
       return db
         .deleteFrom("auth_events")
-        .where("created_at", "<", timestamp)
+        .where("created_at", "<", createdBefore)
         .executeTakeFirst()
         .then((result) => Number(result.numDeletedRows ?? 0));
     },

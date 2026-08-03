@@ -1,3 +1,5 @@
+import { operationAt } from "@tests/support/operation";
+
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type {
   InviteDeps,
@@ -69,10 +71,11 @@ export function createInviteTestKit(
     service,
 
     commands: {
-      create: (input) => service.createInvite(input, resolveNow()),
-      accept: (input) => service.acceptInvite(input, resolveNow()),
-      redeliver: (input) => service.redeliverInvite(input, resolveNow()),
-      revoke: (input) => service.revokeInvite(input, resolveNow()),
+      create: (input) => service.createInvite(input, operationAt(resolveNow())),
+      accept: (input) => service.acceptInvite(input, operationAt(resolveNow())),
+      redeliver: (input) =>
+        service.redeliverInvite(input, operationAt(resolveNow())),
+      revoke: (input) => service.revokeInvite(input, operationAt(resolveNow())),
     },
 
     expect: {
