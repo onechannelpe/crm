@@ -25,11 +25,6 @@
     "stats.html",
     "content/**"
   ],
-  "typeAware": {
-    "enabled": true,
-    "projects": ["tsconfig.json"],
-    "require": "best-effort"
-  },
   "ignoreExports": [
     {
       "file": "src/domain/ids/registry.ts",
@@ -38,6 +33,10 @@
     {
       "file": "src/features/updates/components/index.ts",
       "exports": ["Collapsible", "UpdateLabel"]
+    },
+    {
+      "file": "src/server/platform/runtime/realtime-lifecycle.ts",
+      "exports": ["default"]
     }
   ],
   "ignoreUnresolvedImports": [
@@ -45,6 +44,9 @@
     "@tests/*",
     "virtual:*",
     "@solidjs/start/*"
+  ],
+  "dynamicallyLoaded": [
+    "src/server/platform/runtime/realtime-lifecycle.ts"
   ],
   "ignoreDependencies": [
     "@crm/contracts",
@@ -73,10 +75,6 @@
       {
         "name": "server",
         "autoDiscover": ["src/server"]
-      },
-      {
-        "name": "composition",
-        "patterns": ["src/server/composition/**"]
       },
       {
         "name": "rpc",
@@ -117,7 +115,7 @@
         "allow": ["contracts", "domain", "server/platform", "shared"]
       },
       {
-        "from": "composition",
+        "from": "server/composition",
         "allow": ["contracts", "domain", "server", "shared"]
       },
       {
