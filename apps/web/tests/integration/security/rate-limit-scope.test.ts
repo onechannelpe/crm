@@ -5,7 +5,11 @@ import {
   resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { createSecurityTestKit } from "@tests/support/security/kit";
+import {
+  ACTION_RATE_LIMIT_POLICY,
+  checkActionRateLimit,
+  createSecurityTestKit,
+} from "@tests/support/security/kit";
 import {
   afterAll,
   afterEach,
@@ -18,10 +22,6 @@ import {
 } from "vitest";
 
 import { ActionError } from "~/contracts/errors";
-import {
-  ACTION_RATE_LIMIT_POLICY,
-  checkActionRateLimit,
-} from "~/server/security/action-rate-limit";
 
 describe("rate limit scope isolation", () => {
   let ctx: TestDbContext;
@@ -56,7 +56,7 @@ describe("rate limit scope isolation", () => {
       checkActionRateLimit(
         "leads.request",
         ctx.fixtures.users.backOne.id,
-        ctx.repos,
+        ctx,
         operationAt(new Date()),
         "198.51.100.1",
       ),
@@ -72,7 +72,7 @@ describe("rate limit scope isolation", () => {
       checkActionRateLimit(
         "leads.request",
         userId,
-        ctx.repos,
+        ctx,
         operationAt(new Date()),
         "198.51.100.2",
       ),
@@ -87,7 +87,7 @@ describe("rate limit scope isolation", () => {
       checkActionRateLimit(
         "leads.request",
         ctx.fixtures.users.execOne.id,
-        ctx.repos,
+        ctx,
         operationAt(new Date()),
         "198.51.100.99",
       ),
@@ -101,7 +101,7 @@ describe("rate limit scope isolation", () => {
       await checkActionRateLimit(
         "leads.request",
         userId,
-        ctx.repos,
+        ctx,
         operationAt(new Date()),
         "198.51.100.1",
       );
@@ -111,7 +111,7 @@ describe("rate limit scope isolation", () => {
       checkActionRateLimit(
         "team.invite.create",
         userId,
-        ctx.repos,
+        ctx,
         operationAt(new Date()),
         "198.51.100.1",
       ),

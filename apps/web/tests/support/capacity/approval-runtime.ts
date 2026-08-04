@@ -16,6 +16,7 @@ import {
 import type { AppContext } from "~/server/platform/action/context";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import { createExecutorUow } from "~/server/platform/database/uow";
+import { createActionRateLimiter } from "~/server/security/action-rate-limit";
 
 import { TEST_FIXTURES, type TestDbContext } from "../runtime/db";
 
@@ -72,10 +73,7 @@ export function makeApprovalDeps(
   options: { failGrantInsert?: boolean } = {},
 ): CapacityApprovalDeps {
   return {
-    rateLimitDeps: {
-      actionRateLimits: ctx.repos.actionRateLimits,
-      events: ctx.repos.events,
-    },
+    rateLimiter: createActionRateLimiter(ctx.db),
     uow: createExecutorUow<ApprovalTx>(ctx.db, (txDb): ApprovalTx => {
       const repos = bindApprovalRepos(txDb);
       if (!options.failGrantInsert) {

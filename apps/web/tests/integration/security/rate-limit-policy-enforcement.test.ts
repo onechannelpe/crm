@@ -5,7 +5,11 @@ import {
   resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { createSecurityTestKit } from "@tests/support/security/kit";
+import {
+  ACTION_RATE_LIMIT_POLICY,
+  checkActionRateLimit,
+  createSecurityTestKit,
+} from "@tests/support/security/kit";
 import {
   afterAll,
   afterEach,
@@ -18,10 +22,6 @@ import {
 } from "vitest";
 
 import { ActionError } from "~/contracts/errors";
-import {
-  ACTION_RATE_LIMIT_POLICY,
-  checkActionRateLimit,
-} from "~/server/security/action-rate-limit";
 
 describe("rate limit policy enforcement", () => {
   let ctx: TestDbContext;
@@ -52,7 +52,7 @@ describe("rate limit policy enforcement", () => {
         checkActionRateLimit(
           "leads.request",
           userId,
-          ctx.repos,
+          ctx,
           operationAt(new Date()),
           "198.51.100.1",
         ),
@@ -69,7 +69,7 @@ describe("rate limit policy enforcement", () => {
       checkActionRateLimit(
         "leads.request",
         userId,
-        ctx.repos,
+        ctx,
         operationAt(new Date()),
         "198.51.100.1",
       ),
@@ -89,7 +89,7 @@ describe("rate limit policy enforcement", () => {
       checkActionRateLimit(
         "team.invite.create",
         userId,
-        ctx.repos,
+        ctx,
         operationAt(new Date()),
         "198.51.100.1",
       ),

@@ -1,54 +1,14 @@
 import "server-only";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
-import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
-import { createCapacityUsersRepo } from "~/server/capacity/infrastructure/capacity-users-repo";
-import {
-  createSearchPolicyDefaultsRepo,
-  createSearchPolicyOverridesRepo,
-} from "~/server/capacity/infrastructure/policy-repos";
-import {
-  createSearchCapacityGrantsRepo,
-  createSearchUsageCommitsRepo,
-  createSearchUsageReservationsRepo,
-} from "~/server/capacity/infrastructure/usage-repo";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { createActionRateLimiter } from "~/server/security/action-rate-limit";
-import { isErr, Ok } from "~/shared/result";
 
-function buildSearchUsageRepos(executor: DatabaseExecutor) {
-  return {
-    users: createCapacityUsersRepo(executor),
-    searchPolicyDefaults: createSearchPolicyDefaultsRepo(executor),
-    searchPolicyOverrides: createSearchPolicyOverridesRepo(executor),
-    searchCapacityGrants: createSearchCapacityGrantsRepo(executor),
-    searchUsageReservations: createSearchUsageReservationsRepo(executor),
-    searchUsageCommits: createSearchUsageCommitsRepo(executor),
-  };
-}
-
-function createSearchUsageReservationPorts(
-  executor: DatabaseExecutor,
-): UsageReservationPorts<"search"> {
-  return {
-    executor,
-    async checkRemaining(trx, actorUserId, operation) {
-      const snapshot = await getSearchCapacitySnapshot(
-        actorUserId,
-        buildSearchUsageRepos(trx),
-        operation,
-      );
-      if (isErr(snapshot)) return snapshot;
-      return Ok(snapshot.value.remaining);
-    },
-    reservations: createSearchUsageReservationsRepo,
-    commits: createSearchUsageCommitsRepo,
-  };
-}
+import { buildSearchUsageRepos } from "./infrastructure/search-usage-repos";
+import { createSearchUsageReservationPorts } from "./infrastructure/search-usage-reservation-ports";
 
 export function createSearchRuntime(
   serverInfrastructure: ServerInfrastructure,

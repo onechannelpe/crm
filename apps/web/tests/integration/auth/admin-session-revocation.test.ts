@@ -6,26 +6,13 @@ import {
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { makeAppContext, makeAuthSession } from "@tests/support/unit/factories";
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { InstallationId } from "~/domain/ids";
 import { revokeAllUserSessions } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession } from "~/server/auth/flows/revoke-user-session";
-import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
-import { sessionCache } from "~/server/auth/session/session-cache";
-import { createSessionService } from "~/server/auth/session/session.service";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
+import { createAccessSecurityContext } from "~/server/auth/infrastructure/session-revocation-context";
 import type { AppContext } from "~/server/platform/action/context";
-import { createSessionRepository } from "~/server/sessions/repos-sessions";
-import { createUsersRepo } from "~/server/users/repos-users";
 
 const ADMIN = getSeededIdentity("superuser");
 const TARGET = getSeededIdentity("execOne");
@@ -61,25 +48,10 @@ describe("admin session revocation", () => {
 
   beforeEach(async () => {
     await resetTestDb(ctx);
-    sessionCache.clear();
-  });
-
-  afterEach(() => {
-    sessionCache.clear();
   });
 
   function makePort() {
-    const sessionService = createSessionService({
-      sessions: createSessionRepository(ctx.db),
-      users: createUsersRepo(ctx.db),
-      events: createEventsRepo(ctx.db),
-      logger: { error() {} },
-    });
-    return createAdminSessionRevocationContext({
-      executor: ctx.db,
-      revokeSession: (id) => sessionService.revoke(id),
-      revokeUserSessions: (userId) => sessionService.revokeAllForUser(userId),
-    });
+    return createAccessSecurityContext(ctx.db);
   }
 
   async function seedSession(sessionId: string) {

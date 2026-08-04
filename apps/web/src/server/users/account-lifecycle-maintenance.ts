@@ -1,5 +1,4 @@
 import { shortName } from "~/domain/identity/display-name";
-import type { UserId } from "~/domain/ids";
 import { formatAppLongDate } from "~/domain/time/app-time";
 import { addMilliseconds } from "~/domain/time/clock";
 import type { AccessSecurityDeps } from "~/server/auth/application/ports";

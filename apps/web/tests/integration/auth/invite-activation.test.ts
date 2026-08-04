@@ -85,7 +85,6 @@ describe("invite activation", () => {
           repos: {
             users: ctx.repos.users,
             sessions: ctx.repos.sessions,
-            events: ctx.repos.events,
           },
         },
         REQUEST,
@@ -117,7 +116,6 @@ describe("invite activation", () => {
         repos: {
           users: ctx.repos.users,
           sessions: ctx.repos.sessions,
-          events: ctx.repos.events,
         },
       },
       REQUEST,
@@ -133,7 +131,6 @@ describe("invite activation", () => {
           repos: {
             users: ctx.repos.users,
             sessions: ctx.repos.sessions,
-            events: ctx.repos.events,
           },
         },
         REQUEST,
@@ -154,7 +151,6 @@ describe("invite activation", () => {
           repos: {
             users: ctx.repos.users,
             sessions: ctx.repos.sessions,
-            events: ctx.repos.events,
           },
         },
         REQUEST,

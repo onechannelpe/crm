@@ -9,7 +9,6 @@ import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-conte
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
 import { acknowledgeRecoverySetup } from "~/server/auth/recovery/recovery-setup";
-import { sessionCache } from "~/server/auth/session/session-cache";
 import { hashSessionToken } from "~/server/auth/session/tokens";
 import { isErr } from "~/shared/result";
 
@@ -68,21 +67,6 @@ describe("passkey onboarding flow", () => {
       last_activity: now,
       expires_at: new Date(now.getTime() + 60_000),
     });
-    sessionCache.set(
-      currentSession.id,
-      {
-        userId,
-        branchId: user.branch_id,
-        role: user.role,
-        sessionClass: "pre_auth",
-        primaryAuthMethod: "password",
-        strongAuthMethod: null,
-        strongAuthAt: null,
-        impersonatorUserId: null,
-        expiresAt: new Date(now.getTime() + 60_000),
-      },
-      now,
-    );
     const profile = await saveOnboardingProfile(
       setup,
       {
@@ -132,7 +116,6 @@ describe("passkey onboarding flow", () => {
     const completedUser = await setup.repos.users.findById(userId);
     expect(completedUser?.onboarding_completed_at).toEqual(now);
     expect(await setup.repos.sessions.findById(currentSession.id)).toBeNull();
-    expect(sessionCache.get(currentSession.id, now)).toBeNull();
     expect(
       await setup.repos.sessions.findById(
         hashSessionToken(result.value.sessionToken),

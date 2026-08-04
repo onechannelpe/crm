@@ -6,7 +6,6 @@ import {
   isStrongAuthMethod,
 } from "~/domain/auth/core/session-contract";
 import type { DomainError } from "~/domain/errors";
-import type { UserId } from "~/domain/ids";
 import { addMilliseconds } from "~/domain/time/clock";
 import {
   mapUserSessionRowToAuthSession,

@@ -194,7 +194,7 @@ describe("action runtime", () => {
     const result = await executeResult({
       name: "test.ok",
       access: { kind: "auth" },
-      audit: () => ({ leadId: "L1" }),
+      telemetry: () => ({ leadId: "L1" }),
       execute: async () => Ok({ done: true }),
     });
 

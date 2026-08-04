@@ -13,7 +13,7 @@ import { external, type DomainError } from "~/domain/errors";
 import { appMonthRange } from "~/domain/time/app-time";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { createSearchUsageReservationPorts } from "~/server/search/runtime";
+import { createSearchUsageReservationPorts } from "~/server/search/infrastructure/search-usage-reservation-ports";
 import { Err, Ok, type Result } from "~/shared/result";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;

@@ -1,20 +1,17 @@
 import { operationAt } from "@tests/support/operation";
 
+import { createEventsWriter } from "~/server/event-logs/events-repo";
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type {
   InviteService,
-  InviteTransactionRepos,
+  InviteBaseRepos,
 } from "~/server/invites/application/types";
-import { runResultTransaction } from "~/server/platform/database/uow";
+import { createExecutorUow } from "~/server/platform/database/uow";
 
 import type { TestDbContext } from "../runtime/db";
 import { createTestRepositories } from "../runtime/repos";
 
-// Used both as the service's base repos and as the uow's transaction repos,
-// so it must satisfy the transaction shape (events required).
-type InviteTestRepoFactory = (
-  db: TestDbContext["db"],
-) => InviteTransactionRepos;
+type InviteTestRepoFactory = (db: TestDbContext["db"]) => InviteBaseRepos;
 
 export function createInviteTestKit(
   ctx: TestDbContext,
@@ -55,19 +52,10 @@ export function createInviteTestKit(
   const resolveNow = options.now ?? (() => new Date());
 
   const service = createInviteService(baseRepos, {
-    uow: {
-      run(work) {
-        return runResultTransaction(
-          (operation) =>
-            ctx.db
-              .transaction()
-              .execute((transactionDb) =>
-                operation(createRepos(transactionDb)),
-              ),
-          work,
-        );
-      },
-    },
+    uow: createExecutorUow(ctx.db, (tx) => ({
+      ...createRepos(tx),
+      events: createEventsWriter(tx),
+    })),
     hashPassword: options.hashPassword,
   });
 

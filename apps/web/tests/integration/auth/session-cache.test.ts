@@ -7,30 +7,20 @@ import {
   type TestDbContext,
 } from "@tests/support/runtime/db";
 import { sql } from "kysely";
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { sessionCache } from "~/server/auth/session/session-cache";
-import { createSessionService } from "~/server/auth/session/session.service";
+import { createSessionAuthenticator } from "~/server/auth/session/session.service";
 import {
   generateSessionToken,
   hashSessionToken,
 } from "~/server/auth/session/tokens";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
 import { createUsersRepo } from "~/server/users/repos-users";
 
 const IDENTITY = getSeededIdentity("execOne");
 const NOW = new Date("2026-07-15T12:00:00.000Z");
 
-describe("session service caching and validation", () => {
+describe("session authentication", () => {
   let ctx: TestDbContext;
 
   beforeAll(async () => {
@@ -43,18 +33,12 @@ describe("session service caching and validation", () => {
 
   beforeEach(async () => {
     await resetTestDb(ctx);
-    sessionCache.clear();
   });
 
-  afterEach(() => {
-    sessionCache.clear();
-  });
-
-  function makeService() {
-    return createSessionService({
+  function makeAuthenticator() {
+    return createSessionAuthenticator({
       sessions: createSessionRepository(ctx.db),
       users: createUsersRepo(ctx.db),
-      events: createEventsRepo(ctx.db),
       logger: { error() {} },
     });
   }
@@ -96,44 +80,10 @@ describe("session service caching and validation", () => {
     const sessionId = hashSessionToken(token);
     await seedSession(sessionId, { session_class: "pre_auth" });
 
-    const result = await makeService().resolve(token, operationAt(NOW));
+    const result = await makeAuthenticator().resolve(token, operationAt(NOW));
 
     expect(result?.sessionClass).toBe("pre_auth");
     expect(result?.role).toBe(IDENTITY.role);
-  });
-
-  it("keeps returning the cached session after the underlying row changes", async () => {
-    const token = generateSessionToken();
-    const sessionId = hashSessionToken(token);
-    await seedSession(sessionId);
-    const service = makeService();
-
-    const first = await service.resolve(token, operationAt(NOW));
-    expect(first?.role).toBe(IDENTITY.role);
-
-    // A changed second result would prove that resolve bypassed the cache.
-    await ctx.db
-      .updateTable("user_sessions")
-      .set({ role: "supervisor" })
-      .where("id", "=", sessionId)
-      .execute();
-
-    const second = await service.resolve(token, operationAt(NOW));
-    expect(second?.role).toBe(IDENTITY.role);
-  });
-
-  it("clears the cache and deletes every session when revoking all sessions for a user", async () => {
-    const token = generateSessionToken();
-    const sessionId = hashSessionToken(token);
-    await seedSession(sessionId);
-    const service = makeService();
-
-    expect(await service.resolve(token, operationAt(NOW))).not.toBeNull();
-
-    await service.revokeAllForUser(IDENTITY.userId);
-
-    expect(await service.resolve(token, operationAt(NOW))).toBeNull();
-    expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
   });
 
   it("deletes the session when the persisted role is no longer a valid role", async () => {
@@ -142,7 +92,7 @@ describe("session service caching and validation", () => {
     await seedSession(sessionId);
     await corruptSessionRole(sessionId);
 
-    const result = await makeService().resolve(token, operationAt(NOW));
+    const result = await makeAuthenticator().resolve(token, operationAt(NOW));
 
     expect(result).toBeNull();
     expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();

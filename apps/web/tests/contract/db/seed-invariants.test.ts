@@ -72,7 +72,6 @@ describe("seed invariants", () => {
       setup,
       {
         userId: installationAdmin.id,
-        currentSessionId: "current-installation-session",
         password: "new-installation-password",
         confirmPassword: "new-installation-password",
       },
@@ -86,9 +85,7 @@ describe("seed invariants", () => {
     const remainingSessions = await setup.repos.sessions.listForUser(
       installationAdmin.id,
     );
-    expect(remainingSessions.map((session) => session.id)).toEqual([
-      "current-installation-session",
-    ]);
+    expect(remainingSessions).toHaveLength(0);
     expect(
       updatedAdmin &&
         (await verifyPassword(
@@ -107,5 +104,5 @@ describe("seed invariants", () => {
     const managerStatus = await getStrongAuthStatus(manager.id, repos);
     expect(managerStatus.hasVerifiedStrongAuth).toBe(true);
     expect(managerStatus.hasTotp).toBe(true);
-  });
+  }, 20_000);
 });

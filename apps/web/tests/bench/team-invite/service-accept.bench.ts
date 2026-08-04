@@ -1,13 +1,8 @@
 import { operationAt } from "@tests/support/operation";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
-import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
-import {
-  bindInviteBaseRepos,
-  bindInviteTransactionRepos,
-} from "~/server/invites/infrastructure/invite-service-factory";
-import { createExecutorUow } from "~/server/platform/database/uow";
+import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 
 import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -23,9 +18,7 @@ describe("team invite accept benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const inviteService = createInviteService(bindInviteBaseRepos(ctx.db), {
-      uow: createExecutorUow(ctx.db, bindInviteTransactionRepos),
-    });
+    const inviteService = createInviteServiceForExecutor(ctx.db);
     inviteAccept = (input) =>
       inviteService.acceptInvite(input, operationAt(BENCH_NOW));
   });

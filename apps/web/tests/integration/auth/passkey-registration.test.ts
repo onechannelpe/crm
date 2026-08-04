@@ -14,10 +14,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { WebauthnChallengeId } from "~/domain/ids";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import {
-  persistPasskeyEnrollmentChallenge,
   preparePasskeyEnrollment,
   verifyPasskeyEnrollment,
 } from "~/server/auth/factors/passkey/service";
+import { startPasskeyEnrollment } from "~/server/auth/flows/start-passkey-enrollment";
+import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 
 describe("passkey registration", () => {
   const scenario = createAuthScenario("passkey-registration");
@@ -38,14 +39,14 @@ describe("passkey registration", () => {
   });
 
   it("begin enrollment creates registration challenge", async () => {
-    const prepared = await preparePasskeyEnrollment(
-      scenario.ctx.repos,
-      createTestPasskeyProvider(scenario.ctx.repos),
-      { userId: execOne.userId, ipAddress, occurredAt: new Date() },
-    );
-    const result = await persistPasskeyEnrollmentChallenge(
-      scenario.ctx.repos,
-      expectOk(prepared),
+    const result = await startPasskeyEnrollment(
+      createAuthSetupContext(scenario.ctx.db),
+      {
+        userId: execOne.userId,
+        ipAddress,
+        occurredAt: new Date(),
+        webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
+      },
     );
     const value = expectOk(result);
 

@@ -3,9 +3,35 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 
 import type { UserId } from "~/domain/ids";
 import {
-  ACTION_RATE_LIMIT_POLICY,
-  checkActionRateLimit,
+  createActionRateLimiter,
+  type RateLimitedAction,
 } from "~/server/security/action-rate-limit";
+
+export const ACTION_RATE_LIMIT_POLICY = {
+  "leads.request": { userLimit: 10, sourceIpLimit: 50, windowMs: 60_000 },
+  "team.invite.create": {
+    userLimit: 10,
+    sourceIpLimit: 30,
+    windowMs: 60 * 60_000,
+  },
+} as const;
+
+export function checkActionRateLimit(
+  actionName: RateLimitedAction,
+  userId: UserId,
+  context: Pick<TestDbContext, "db">,
+  operation: Parameters<
+    ReturnType<typeof createActionRateLimiter>["enforce"]
+  >[2],
+  ipAddress: string,
+) {
+  return createActionRateLimiter(context.db).enforce(
+    actionName,
+    userId,
+    operation,
+    ipAddress,
+  );
+}
 
 export function createSecurityTestKit(ctx: TestDbContext) {
   return {
@@ -20,7 +46,7 @@ export function createSecurityTestKit(ctx: TestDbContext) {
         await checkActionRateLimit(
           actionName,
           userId,
-          ctx.repos,
+          ctx,
           operationAt(now),
           ipAddress,
         );
@@ -43,7 +69,7 @@ export function createSecurityTestKit(ctx: TestDbContext) {
         await checkActionRateLimit(
           actionName,
           userIds[index % userIds.length],
-          ctx.repos,
+          ctx,
           operationAt(now),
           ipAddress,
         );

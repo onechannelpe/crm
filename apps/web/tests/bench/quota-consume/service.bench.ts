@@ -5,7 +5,7 @@ import type { UserId } from "~/domain/ids";
 import { SearchReservationId } from "~/domain/ids";
 import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
 import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
-import { createSearchUsageReservationPorts } from "~/server/search/runtime";
+import { createSearchUsageReservationPorts } from "~/server/search/infrastructure/search-usage-reservation-ports";
 import { Ok } from "~/shared/result";
 
 import { createBenchDbFixture } from "../_shared/fixture";

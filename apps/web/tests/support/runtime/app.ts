@@ -1,13 +1,9 @@
 import type { SearchResult } from "~/contracts/search/engine-results.generated";
-import { createSessionService } from "~/server/auth/session/session.service";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createFilesRuntime } from "~/server/files/runtime";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
-import { createSessionRepository } from "~/server/sessions/repos-sessions";
-import { createUsersRepo } from "~/server/users/repos-users";
 import { createWorkflowRuntime } from "~/server/workflow/runtime";
 
 import {
@@ -84,9 +80,6 @@ export interface TestRuntime {
     get(): Date;
     set(value: Date): void;
   };
-  auth: {
-    sessionService: ReturnType<typeof createSessionService>;
-  };
   integrations: ReturnType<typeof createIntegrationRuntime>;
   workflow: ReturnType<typeof createWorkflowRuntime>;
   engine: {
@@ -116,15 +109,6 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     error() {},
   };
 
-  const auth = {
-    sessionService: createSessionService({
-      sessions: createSessionRepository(ctx.db),
-      users: createUsersRepo(ctx.db),
-      events: createEventsRepo(ctx.db),
-      logger,
-    }),
-  };
-
   const engine = createFakeEngine();
   const infrastructure: ServerInfrastructure = {
     db: ctx.db,
@@ -146,7 +130,6 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   return {
     ctx,
     now,
-    auth,
     integrations,
     workflow,
     engine: {
