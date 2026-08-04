@@ -53,7 +53,7 @@ describe("createIntentExpander", () => {
 
     const outcome = await expandIntent(intentJob(), NOW);
 
-    expect(outcome).toEqual({ kind: "expanded", deliveriesPlanned: 1 });
+    expect(outcome).toEqual({ kind: "expanded" });
     expect(createMany).toHaveBeenCalledWith([
       expect.objectContaining({
         user_id: UserId.trust("1"),
@@ -92,7 +92,7 @@ describe("createIntentExpander", () => {
       NOW,
     );
 
-    expect(outcome).toEqual({ kind: "expanded", deliveriesPlanned: 0 });
+    expect(outcome).toEqual({ kind: "expanded" });
     expect(createMany).toHaveBeenCalledOnce();
     expect(insertPlanned).toHaveBeenCalledWith([], NOW);
   });
