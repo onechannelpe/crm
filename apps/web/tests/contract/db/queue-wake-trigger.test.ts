@@ -75,7 +75,8 @@ describe("notification intent queue wake trigger", () => {
 
   it("wakes only when work becomes pending", async () => {
     ctx = await createFreshDb("notification-intent-queue-wake");
-    await migrateToLatest(ctx.db);
+    const db = ctx.db;
+    await migrateToLatest(db);
 
     listener = new Client({
       connectionString: databaseUrl(ctx.dbName),
@@ -84,12 +85,12 @@ describe("notification intent queue wake trigger", () => {
     await listener.connect();
     await listener.query(`LISTEN "${CHANNEL}"`);
 
-    const repository = createIntentRepository(ctx.db);
+    const repository = createIntentRepository(db);
     const id = notificationIntentId("intent-1");
 
     const inserted = waitForNotification(listener);
 
-    await ctx.db
+    await db
       .insertInto("notification_intents")
       .values(anIntentRow({ id: "intent-1", now: NOW }))
       .execute();
@@ -110,7 +111,7 @@ describe("notification intent queue wake trigger", () => {
     const unrelatedUpdateNotifications = await collectNotifications(
       listener,
       async () => {
-        await ctx!.db
+        await db
           .updateTable("notification_intents")
           .set({ error_message: "irrelevant progress update" })
           .where("id", "=", id)
