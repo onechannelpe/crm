@@ -3,6 +3,7 @@ import { afterAll, beforeAll, bench, describe } from "vitest";
 import type { UserId } from "~/domain/ids";
 import { appMonthRange } from "~/domain/time/app-time";
 
+import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
 import { seedQuotaUser } from "./fixtures";
 
@@ -20,7 +21,7 @@ describe("search capacity grant repository benchmark", () => {
   });
 
   bench("repository path: load search capacity grants by user and period", async () => {
-    const range = appMonthRange(new Date());
+    const range = appMonthRange(BENCH_NOW);
     const grants = await db
       .ctx()
       .repos.searchCapacityGrants.findByUserAndRange(userId, range);
