@@ -24,13 +24,11 @@ function pointAt(row: CohortSaleRow, offset: number): GpvPoint | null {
   return row.months.find((month) => month.offset === offset) ?? null;
 }
 
-function formatGpvAt(row: CohortSaleRow, offset: number): string {
-  const point = pointAt(row, offset);
+function formatGpv(point: GpvPoint | null): string {
   return point ? formatSolesCompact(point.gpv) : "—";
 }
 
-function formatPointAt(row: CohortSaleRow, offset: number): string {
-  const point = pointAt(row, offset);
+function formatGpvAndTrx(point: GpvPoint | null): string {
   return point
     ? `${formatSolesCompact(point.gpv)} · ${formatInteger(point.trx)}`
     : "—";
@@ -72,7 +70,7 @@ const COLUMNS = [
     label: "M0",
     icon: ChartColumn,
     width: 110,
-    renderCell: (row) => formatGpvAt(row, 0),
+    renderCell: (row) => formatGpv(pointAt(row, 0)),
   },
   // M0+15D includes M0 through day 15 of M1.
   {
@@ -80,29 +78,28 @@ const COLUMNS = [
     label: "M0+15D",
     icon: ChartColumn,
     width: 110,
-    renderCell: (row) =>
-      row.m0Plus15d ? formatSolesCompact(row.m0Plus15d.gpv) : "—",
+    renderCell: (row) => formatGpv(row.m0Plus15d),
   },
   {
     key: "m1",
     label: "M1",
     icon: ChartColumn,
     width: 110,
-    renderCell: (row) => formatGpvAt(row, 1),
+    renderCell: (row) => formatGpv(pointAt(row, 1)),
   },
   {
     key: "m2",
     label: "M2",
     icon: ChartColumn,
     width: 110,
-    renderCell: (row) => formatGpvAt(row, 2),
+    renderCell: (row) => formatGpv(pointAt(row, 2)),
   },
   {
     key: "m3",
     label: "M3",
     icon: ChartColumn,
     width: 110,
-    renderCell: (row) => formatGpvAt(row, 3),
+    renderCell: (row) => formatGpv(pointAt(row, 3)),
   },
   {
     key: "projected",
@@ -139,15 +136,11 @@ export function CohortGrid(props: { view: GpvView }) {
         },
         ...COHORT_OFFSETS.map((offset) => ({
           label: `M${offset} (GPV / TRX)`,
-          value: formatPointAt(row, offset),
+          value: formatGpvAndTrx(pointAt(row, offset)),
         })),
         {
           label: "M0+15D (GPV / TRX)",
-          value: row.m0Plus15d
-            ? `${formatSolesCompact(row.m0Plus15d.gpv)} · ${formatInteger(
-                row.m0Plus15d.trx,
-              )}`
-            : "—",
+          value: formatGpvAndTrx(row.m0Plus15d),
         },
       ],
     }),
@@ -173,6 +166,7 @@ export function CohortGrid(props: { view: GpvView }) {
   return (
     <div class={styles.surface}>
       <GpvFilterBar view={props.view} />
+
       <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
         <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
           {renderGrid({ status: "ready", rows: grid.rows() })}

@@ -33,19 +33,19 @@ export interface DatePickerProps {
 }
 
 export function DatePicker(props: DatePickerProps) {
-  const inputId = props.id || createUniqueId();
+  const inputId = props.id ?? createUniqueId();
   const messageId = `${inputId}-message`;
+
   const [isOpen, setIsOpen] = createSignal(false);
   const selectedDate = createMemo(() => parseCalendarDate(props.value));
   const minDate = createMemo(() => parseCalendarDate(props.min ?? ""));
-  const initialViewDate = createMemo(
-    // clock-boundary: today, the calendar's fallback view when nothing is
-    // selected and no minimum constrains it.
+  const referenceDate = createMemo(
     () => selectedDate() ?? minDate() ?? appCalendarDateAt(Date.now()),
   );
   const [viewMonth, setViewMonth] = createSignal(
-    getVisibleMonth(initialViewDate()),
+    getVisibleMonth(referenceDate()),
   );
+
   let fieldRef: HTMLDivElement | undefined;
   let controlRef: HTMLDivElement | undefined;
   let popoverRef: HTMLDialogElement | undefined;
@@ -54,17 +54,39 @@ export function DatePicker(props: DatePickerProps) {
     setIsOpen(false);
   };
 
+  const syncViewMonth = () => {
+    setViewMonth(getVisibleMonth(referenceDate()));
+  };
+
+  const openPicker = () => {
+    syncViewMonth();
+    setIsOpen(true);
+  };
+
+  const describedBy = () =>
+    props.description || props.error ? messageId : undefined;
+
   onMount(() => {
     const handlePointerDown = (event: PointerEvent) => {
-      if (!isOpen()) return;
+      if (!isOpen()) {
+        return;
+      }
+
       const target = event.target;
-      if (!(target instanceof Node)) return;
-      if (fieldRef?.contains(target)) return;
-      if (popoverRef?.contains(target)) return;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (fieldRef?.contains(target) || popoverRef?.contains(target)) {
+        return;
+      }
+
       closePicker();
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
+
     onCleanup(() => {
       document.removeEventListener("pointerdown", handlePointerDown);
     });
@@ -75,23 +97,10 @@ export function DatePicker(props: DatePickerProps) {
     allowInInputs: true,
   });
 
-  const describedBy = () => {
-    if (!props.description && !props.error) return undefined;
-    return messageId;
-  };
-
-  const syncViewMonth = () => {
-    setViewMonth(getVisibleMonth(initialViewDate()));
-  };
-
-  const openPicker = () => {
-    syncViewMonth();
-    setIsOpen(true);
-  };
-
   createEffect(() => {
-    if (isOpen()) return;
-    syncViewMonth();
+    if (!isOpen()) {
+      syncViewMonth();
+    }
   });
 
   return (
@@ -111,6 +120,7 @@ export function DatePicker(props: DatePickerProps) {
           )}
         </label>
       )}
+
       <div
         class={clsx(
           styles.controlShell,
@@ -137,11 +147,13 @@ export function DatePicker(props: DatePickerProps) {
           onFocus={openPicker}
           onInput={(event) => {
             props.onInput(event.currentTarget.value);
+
             if (!isOpen()) {
               openPicker();
             }
           }}
         />
+
         <button
           type="button"
           class={styles.iconButton}
@@ -154,12 +166,14 @@ export function DatePicker(props: DatePickerProps) {
               closePicker();
               return;
             }
+
             openPicker();
           }}
         >
           <CalendarDays size={16} />
         </button>
       </div>
+
       {(props.error || props.description) && (
         <p
           id={messageId}
@@ -168,6 +182,7 @@ export function DatePicker(props: DatePickerProps) {
           {props.error ?? props.description}
         </p>
       )}
+
       <DatePickerPopover
         isOpen={isOpen}
         anchor={() => controlRef ?? fieldRef}

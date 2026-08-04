@@ -34,8 +34,9 @@ const UNASSIGNED = "Sin asignar";
 export function AttributionGrid(props: { view: GpvView }) {
   const options = createAsync(() => merchantFilterOptionsQuery());
   const sellers = () => options()?.sellers ?? [];
-  const adjustCredit = useAction(adjustMonthCreditMutation);
-  const saveTarget = useAction(setMerchantTargetMutation);
+
+  const adjustMonthCredit = useAction(adjustMonthCreditMutation);
+  const setMerchantTarget = useAction(setMerchantTargetMutation);
 
   const grid = useDashboardGrid<CohortSaleRow>({
     pageSize: GPV_GRID_PAGE_SIZE,
@@ -73,17 +74,17 @@ export function AttributionGrid(props: { view: GpvView }) {
             ariaLabel="Vendedor real"
             options={[UNASSIGNED, ...sellers().map((seller) => seller.name)]}
             selected={editor.row.sellerName ?? UNASSIGNED}
-            onSubmit={(name) => {
+            onSubmit={async (sellerName) => {
               const seller = sellers().find(
-                (candidate) => candidate.name === name,
+                (candidate) => candidate.name === sellerName,
               );
 
-              return adjustCredit({
+              await adjustMonthCredit({
                 ruc: editor.row.ruc,
                 month: editor.row.saleMonth,
                 sellerUserId: seller?.userId ?? null,
                 reason: "Corrección manual desde análisis de GPV",
-              }).then(() => undefined);
+              });
             }}
             onClose={editor.close}
           />
@@ -125,7 +126,7 @@ export function AttributionGrid(props: { view: GpvView }) {
             type="number"
             min="0"
             initialValue={editor.row.projectedGpv?.toString() ?? ""}
-            onSubmit={(value) => {
+            onSubmit={async (value) => {
               const trimmed = value.trim();
               const projectedGpv = trimmed === "" ? null : Number(trimmed);
 
@@ -133,11 +134,11 @@ export function AttributionGrid(props: { view: GpvView }) {
                 throw new Error("Ingresa un proyectado numérico válido");
               }
 
-              return saveTarget({
+              await setMerchantTarget({
                 ruc: editor.row.ruc,
                 effectiveFrom: editor.row.saleMonth,
                 projectedGpv,
-              }).then(() => undefined);
+              });
             }}
             onClose={editor.close}
           />
@@ -164,6 +165,7 @@ export function AttributionGrid(props: { view: GpvView }) {
   return (
     <div class={styles.surface}>
       <GpvFilterBar view={props.view} />
+
       <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
         <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
           {renderGrid({ status: "ready", rows: grid.rows() })}
