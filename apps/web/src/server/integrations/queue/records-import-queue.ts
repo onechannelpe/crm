@@ -6,6 +6,7 @@ import {
 } from "~/server/records/imports/progress-events";
 import { createRecordImportRunner } from "~/server/records/imports/runner";
 
+import { createIntegrationJobRepo } from "../infrastructure/integration-job-repo";
 import type {
   ImportJobProcessResult,
   IntegrationJobRow,
@@ -38,12 +39,17 @@ export function createRecordsImportQueue(
       executor: runtime.executor,
       readFile: deps.readFile,
       reportProgress: async (jobId, progress) => {
-        const persisted = await runtime.jobs.updateProgress(jobId, progress);
-
-        publishRecordImportProgress(
-          runtime.executor,
-          buildRecordImportProgressEvent(persisted),
-        );
+        await runtime.executor.transaction().execute(async (trx) => {
+          const transactionRepo = createIntegrationJobRepo(trx);
+          const persisted = await transactionRepo.updateProgress(
+            jobId,
+            progress,
+          );
+          await publishRecordImportProgress(
+            trx,
+            buildRecordImportProgressEvent(persisted),
+          );
+        });
       },
     });
 
@@ -75,7 +81,7 @@ export function createRecordsImportQueue(
         return;
       }
 
-      publishRecordImportProgress(
+      await publishRecordImportProgress(
         runtime.executor,
         buildRecordImportProgressEvent(settled),
       );

@@ -25,11 +25,14 @@ export function createGpvSnapshotQueue(
       db: deps.db,
       readFile: deps.readFile,
       reportProgress: async (id, progress) => {
-        const persisted = await repo.updateProgress(id, progress);
-        publishGpvSnapshotProgress(
-          deps.db,
-          buildGpvSnapshotProgressEvent(persisted),
-        );
+        await deps.db.transaction().execute(async (trx) => {
+          const transactionRepo = createGpvSnapshotJobRepo(trx);
+          const persisted = await transactionRepo.updateProgress(id, progress);
+          await publishGpvSnapshotProgress(
+            trx,
+            buildGpvSnapshotProgressEvent(persisted),
+          );
+        });
       },
     });
 
@@ -66,7 +69,7 @@ export function createGpvSnapshotQueue(
           .execute();
       }
 
-      publishGpvSnapshotProgress(
+      await publishGpvSnapshotProgress(
         deps.db,
         buildGpvSnapshotProgressEvent(settled),
       );

@@ -10,7 +10,7 @@ import {
   EVENT_LOGS_STREAM_CHANNEL,
   serializeEventLogStreamPayload,
 } from "~/server/event-logs/stream-contract";
-import { notify } from "~/server/platform/database/notify";
+import { notify } from "~/server/platform/database/notifications/publish";
 import type { Database } from "~/server/platform/database/types";
 
 type NewAuthFunnelEventRow = Insertable<Database["auth_funnel_events"]>;
@@ -35,18 +35,20 @@ export interface AuthFunnelSummaryFilter {
 export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
   return {
     async create(values: NewAuthFunnelEventRow) {
-      const row = await db
-        .insertInto("auth_funnel_events")
-        .values(values)
-        .returningAll()
-        .executeTakeFirstOrThrow();
+      return db.transaction().execute(async (trx) => {
+        const row = await trx
+          .insertInto("auth_funnel_events")
+          .values(values)
+          .returningAll()
+          .executeTakeFirstOrThrow();
 
-      const payload = serializeEventLogStreamPayload(
-        mapAuthFunnelEventRow(row),
-      );
-      if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+        const payload = serializeEventLogStreamPayload(
+          mapAuthFunnelEventRow(row),
+        );
+        if (payload) await notify(trx, EVENT_LOGS_STREAM_CHANNEL, payload);
 
-      return row;
+        return row;
+      });
     },
 
     async findRecent(filter: AuthFunnelEventFilter) {

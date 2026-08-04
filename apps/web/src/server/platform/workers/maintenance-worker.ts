@@ -3,7 +3,7 @@ import { dbUrl } from "~/server/platform/database/db";
 import {
   createPgListener,
   type PgListenerHandler,
-} from "~/server/platform/database/notify";
+} from "~/server/platform/database/notifications/listener";
 import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 import type { QueueRunner } from "~/server/platform/jobs/types";
 import type { OperationContext } from "~/server/platform/operation/context";
@@ -20,37 +20,57 @@ const SESSION_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
-function makeWaker(run: () => Promise<void>): () => void {
+interface QueueWaker {
+  wake(): void;
+  stop(): Promise<void>;
+}
+
+interface ScheduledTask {
+  stop(): Promise<void>;
+}
+
+function makeWaker(run: () => Promise<void>): QueueWaker {
+  let stopped = false;
   let running = false;
   let pending = false;
+  let active: Promise<void> | null = null;
 
-  const tick = async (): Promise<void> => {
-    if (running) {
-      pending = true;
-      return;
-    }
-
+  const drain = async (): Promise<void> => {
     running = true;
 
     try {
-      await run();
+      do {
+        pending = false;
+        await run();
+      } while (pending && !stopped);
     } catch (error: unknown) {
       logger.error("queue_run_failed", {
         error: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       running = false;
-
-      // Multiple wakes during a drain trigger one additional drain.
-      if (pending) {
-        pending = false;
-        void tick();
-      }
+      active = null;
     }
   };
 
-  return () => {
-    void tick();
+  return {
+    wake() {
+      if (stopped) {
+        return;
+      }
+
+      if (running) {
+        pending = true;
+        return;
+      }
+
+      active = drain();
+    },
+    async stop() {
+      stopped = true;
+      pending = false;
+      await active;
+    },
   };
 }
 
@@ -58,8 +78,18 @@ function startScheduledTick(
   label: string,
   intervalMs: number,
   run: (context: OperationContext) => Promise<void>,
-): () => void {
-  const execute = async () => {
+): ScheduledTask {
+  let stopped = false;
+  let running = false;
+  let active: Promise<void> | null = null;
+
+  const execute = async (): Promise<void> => {
+    if (stopped || running) {
+      return;
+    }
+
+    running = true;
+
     try {
       // clock-boundary: scheduled tick. Each firing is its own inbound event,
       // so every row this sweep touches carries the same instant.
@@ -69,12 +99,30 @@ function startScheduledTick(
         tick: label,
         error: error instanceof Error ? error.message : "Unknown error",
       });
+    } finally {
+      running = false;
+      active = null;
     }
   };
 
-  const timer = setInterval(() => void execute(), intervalMs);
+  const trigger = () => {
+    if (stopped || running) {
+      return;
+    }
 
-  return () => clearInterval(timer);
+    active = execute();
+  };
+
+  trigger();
+  const timer = setInterval(trigger, intervalMs);
+
+  return {
+    async stop() {
+      stopped = true;
+      clearInterval(timer);
+      await active;
+    },
+  };
 }
 
 export function startMaintenanceWorker(): { stop(): Promise<void> } {
@@ -104,7 +152,7 @@ export function startMaintenanceWorker(): { stop(): Promise<void> } {
     ],
   };
 
-  const wakers = new Map<string, () => void>();
+  const wakers = new Map<string, QueueWaker>();
   const channels: Record<string, PgListenerHandler[]> = {};
 
   for (const [channel, queues] of Object.entries(queuesByChannel)) {
@@ -113,12 +161,12 @@ export function startMaintenanceWorker(): { stop(): Promise<void> } {
     });
 
     wakers.set(channel, wake);
-    channels[channel] = [wake];
+    channels[channel] = [wake.wake];
   }
 
   const wakeAll = () => {
     for (const wake of wakers.values()) {
-      wake();
+      wake.wake();
     }
   };
 
@@ -151,14 +199,43 @@ export function startMaintenanceWorker(): { stop(): Promise<void> } {
 
   wakeAll();
 
-  return {
-    async stop() {
+  let stopPromise: Promise<void> | null = null;
+
+  async function stop(): Promise<void> {
+    if (stopPromise) {
+      return stopPromise;
+    }
+
+    stopPromise = (async () => {
       clearInterval(pollTimer);
-      stopAccountExpiry();
-      stopExpiryNotification();
-      stopReservationSweep();
-      stopSessionCleanup();
+      const queueStops = [
+        recordsImportQueue.stop(),
+        gpvSnapshotQueue.stop(),
+        enrichmentQueue.stop(),
+        notificationQueues.expansion.stop(),
+        notificationQueues.dispatch.stop(),
+        notificationQueues.whatsappInbound.stop(),
+        notificationQueues.outboundWhatsApp.stop(),
+      ];
+      const scheduledTaskStops = [
+        stopAccountExpiry.stop(),
+        stopExpiryNotification.stop(),
+        stopReservationSweep.stop(),
+        stopSessionCleanup.stop(),
+      ];
+
       await listener.stop();
-    },
+      await Promise.all([
+        ...queueStops,
+        ...scheduledTaskStops,
+        ...[...wakers.values()].map((waker) => waker.stop()),
+      ]);
+    })();
+
+    return stopPromise;
+  }
+
+  return {
+    stop,
   };
 }

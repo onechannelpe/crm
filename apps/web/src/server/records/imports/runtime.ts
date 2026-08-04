@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { RecordImportType } from "~/contracts/records/imports";
 import type { UserId } from "~/domain/ids";
 import type { FileStorage } from "~/server/files/storage";
+import { createIntegrationJobRepo } from "~/server/integrations/infrastructure/integration-job-repo";
 import { createRecordsImportQueue } from "~/server/integrations/queue/records-import-queue";
 import type { IntegrationRuntime } from "~/server/integrations/types";
 
@@ -27,19 +28,22 @@ export function createRecordImportsRuntime(
       const storageKey = `imports/${randomUUID()}.json`;
       await storage.putBytes(storageKey, input.payload);
 
-      const job = await integration.jobs.insert({
-        type: input.type,
-        requested_by_user_id: input.requestedByUserId,
-        file_path: storageKey,
-        rows_total: input.rowsTotal,
-        max_attempts: 3,
-        created_at: input.createdAt,
+      return integration.executor.transaction().execute(async (trx) => {
+        const jobs = createIntegrationJobRepo(trx);
+        const job = await jobs.insert({
+          type: input.type,
+          requested_by_user_id: input.requestedByUserId,
+          file_path: storageKey,
+          rows_total: input.rowsTotal,
+          max_attempts: 3,
+          created_at: input.createdAt,
+        });
+        await publishRecordImportProgress(
+          trx,
+          buildRecordImportProgressEvent(job),
+        );
+        return job;
       });
-      publishRecordImportProgress(
-        integration.executor,
-        buildRecordImportProgressEvent(job),
-      );
-      return job;
     },
     find: (jobId: Parameters<typeof integration.jobs.findById>[0]) =>
       integration.jobs.findById(jobId),

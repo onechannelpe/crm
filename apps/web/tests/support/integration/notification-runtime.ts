@@ -1,3 +1,5 @@
+import { operationAt } from "@tests/support/operation";
+
 import {
   createRecipientPlanner,
   projectIntentForPlanning,
@@ -77,10 +79,11 @@ export function createTestNotificationRuntime(runtime: TestRuntime) {
     enqueue: (
       intentsToEnqueue: NotificationIntent[],
       now: Date = runtime.now.get(),
-    ) => pipeline.enqueue(intentsToEnqueue, now),
+    ) => pipeline.enqueue(intentsToEnqueue, operationAt(now)),
     planRecipients,
     planIntentRow,
     queues,
+    webhooks: pipeline.webhooks,
     expandThenDispatch,
     drain,
     advanceClock,

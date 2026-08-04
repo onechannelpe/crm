@@ -8,6 +8,7 @@ import * as files from "./modules/files";
 import * as fulfillment from "./modules/fulfillment";
 import * as identity from "./modules/identity";
 import * as integrations from "./modules/integrations";
+import * as jobQueues from "./modules/job-queues";
 import * as merchantStats from "./modules/merchant-stats";
 import * as notifications from "./modules/notifications";
 import * as observability from "./modules/observability";
@@ -37,4 +38,5 @@ export const SCHEMA_MODULES: readonly SchemaModule[] = [
   sales,
   fulfillment,
   merchantStats,
+  jobQueues,
 ];

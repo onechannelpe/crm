@@ -1,9 +1,10 @@
 import type { GpvSnapshotProgressEvent } from "~/contracts/merchant-stats/imports";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import { notify } from "~/server/platform/database/notify";
-import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
+import { notify } from "~/server/platform/database/notifications/publish";
 
 import type { GpvSnapshotJobRow } from "./repo";
+
+export const GPV_SNAPSHOT_PROGRESS_CHANNEL = "gpv-snapshot-progress";
 
 export function buildGpvSnapshotProgressEvent(
   job: Pick<
@@ -30,6 +31,6 @@ export function buildGpvSnapshotProgressEvent(
 export function publishGpvSnapshotProgress(
   db: DatabaseExecutor,
   event: GpvSnapshotProgressEvent,
-): void {
-  notify(db, GPV_SNAPSHOT_PROGRESS_CHANNEL, JSON.stringify(event));
+): Promise<void> {
+  return notify(db, GPV_SNAPSHOT_PROGRESS_CHANNEL, JSON.stringify(event));
 }

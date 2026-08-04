@@ -67,6 +67,7 @@ export default defineConfig({
       alias: {
         "~": resolve(process.cwd(), "src"),
       },
+      plugins: ["./src/server/platform/runtime/realtime-lifecycle.ts"],
       rollupConfig: {
         external: [/^@node-rs\/argon2/],
       },

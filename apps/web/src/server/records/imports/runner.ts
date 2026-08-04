@@ -6,10 +6,6 @@ import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { JobContext } from "~/server/platform/operation/context";
 
 import type { RecordImportInvalidRow } from "./intake/row-mapper";
-import {
-  buildRecordImportProgressEvent,
-  publishRecordImportProgress,
-} from "./progress-events";
 
 interface StoredRows {
   validRows: ImportRowInput[];
@@ -66,14 +62,6 @@ export function createRecordImportRunner(deps: {
           actorId: job.requested_by_user_id,
           validRows,
           invalidRows,
-
-          // Stream in-flight counts; only the initial and final counts are persisted.
-          onProgress: (progress) => {
-            publishRecordImportProgress(executor, {
-              ...buildRecordImportProgressEvent(job),
-              ...progress,
-            });
-          },
         },
         { executor },
         context,

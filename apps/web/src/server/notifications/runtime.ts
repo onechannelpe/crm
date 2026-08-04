@@ -38,10 +38,8 @@ import type {
   AppConfig,
   NotificationsConfig,
 } from "~/server/platform/config/env";
-import { notify } from "~/server/platform/database/notify";
 import type { Database } from "~/server/platform/database/types";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
-import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 import type { QueueRunner } from "~/server/platform/jobs/types";
 import type { OperationContext } from "~/server/platform/operation/context";
 import type { Logger } from "~/shared/observability/logger";
@@ -165,8 +163,6 @@ export function assembleNotificationPipeline(
         expansion: createIntentExpansionQueue(workerId, {
           intents,
           expand,
-          onExpanded: () =>
-            notify(deps.db, JOB_TABLE_CHANNELS.notification_deliveries),
         }),
         dispatch: createDeliveryDispatchQueue(workerId, {
           deliveries,

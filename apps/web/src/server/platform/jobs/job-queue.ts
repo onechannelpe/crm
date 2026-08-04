@@ -47,6 +47,8 @@ export function createJobQueue<TJob extends QueueJobBase>(
   const timeoutMs = config.timeoutMs ?? 120_000;
 
   let runningCount = 0;
+  let stopping = false;
+  const activeDrains = new Set<Promise<void>>();
 
   const logger = createLogger(`queue:${name}`);
 
@@ -189,9 +191,13 @@ export function createJobQueue<TJob extends QueueJobBase>(
 
   // Wait for each batch to settle before claiming more jobs.
   /* eslint-disable no-await-in-loop */
-  async function drain(): Promise<void> {
+  async function drainUntilIdle(): Promise<void> {
     try {
       for (;;) {
+        if (stopping) {
+          return;
+        }
+
         const availableSlots = maxConcurrency - runningCount;
 
         if (availableSlots <= 0) {
@@ -216,6 +222,10 @@ export function createJobQueue<TJob extends QueueJobBase>(
 
         await Promise.all(jobs.map((job) => processJob(job, claimedAt)));
 
+        if (stopping) {
+          return;
+        }
+
         if (jobs.length < availableSlots) {
           return;
         }
@@ -228,5 +238,21 @@ export function createJobQueue<TJob extends QueueJobBase>(
   }
   /* eslint-enable no-await-in-loop */
 
-  return { name, drain };
+  function drain(): Promise<void> {
+    if (stopping) {
+      return Promise.resolve();
+    }
+
+    const work = drainUntilIdle();
+    activeDrains.add(work);
+    void work.finally(() => activeDrains.delete(work));
+    return work;
+  }
+
+  async function stop(): Promise<void> {
+    stopping = true;
+    await Promise.all(activeDrains);
+  }
+
+  return { name, drain, stop };
 }

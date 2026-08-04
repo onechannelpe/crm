@@ -47,4 +47,7 @@ export interface QueueRunner {
 
   // Wait until the queue has no claimable jobs.
   drain(): Promise<void>;
+
+  // Stop claiming new jobs and wait for claimed jobs to settle.
+  stop(): Promise<void>;
 }

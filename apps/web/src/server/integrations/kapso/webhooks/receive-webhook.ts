@@ -1,9 +1,7 @@
 import type { Insertable, Kysely } from "kysely";
 
-import { notify } from "~/server/platform/database/notify";
 import type { WhatsAppInboundEventsTable } from "~/server/platform/database/schema/modules/notifications.types";
 import type { Database } from "~/server/platform/database/types";
-import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -135,10 +133,6 @@ export async function receiveKapsoWebhook(
         .values(rows)
         .onConflict((oc) => oc.column("id").doNothing())
         .execute();
-    }
-
-    if (envelope.value.accepted.length > 0) {
-      notify(trx, JOB_TABLE_CHANNELS.whatsapp_inbound_events);
     }
 
     return Ok("accepted");

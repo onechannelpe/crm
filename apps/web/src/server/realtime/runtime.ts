@@ -4,7 +4,7 @@ import { getSession } from "~/server/platform/action/session";
 import {
   createPgListener,
   type PgListenerHandler,
-} from "~/server/platform/database/notify";
+} from "~/server/platform/database/notifications/listener";
 import { createLogger } from "~/shared/observability/runtime-logger";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -20,7 +20,7 @@ const MAX_STREAM_AGE_MS = 15 * 60_000;
 
 const logger = createLogger("realtime");
 
-export type RealtimeOpenError = "unauthenticated" | "not_found";
+export type RealtimeOpenError = "unauthenticated" | "not_found" | "unavailable";
 
 export interface RealtimeOpenRequest {
   channel: string;
@@ -33,6 +33,8 @@ type RealtimeStream = NonNullable<
 >;
 
 export interface RealtimeService {
+  start(): void;
+  stop(): Promise<void>;
   openStream(
     h3Event: H3Event,
     request: RealtimeOpenRequest,
@@ -44,7 +46,7 @@ export function createRealtimeService(input: {
   databaseUrl: string;
 }): RealtimeService {
   const hub = new TopicHub();
-  let startPromise: Promise<void> | null = null;
+  let sweepTimer: ReturnType<typeof setInterval> | null = null;
 
   function broadcastPayload(channel: RealtimeChannel, payload: string): void {
     const topic = channel.topicOfPayload(payload);
@@ -74,22 +76,38 @@ export function createRealtimeService(input: {
   }
 
   const listener = createPgListener(input.databaseUrl, listenerHandlers(), {
-    // Notifications may be missed while disconnected. Closing the streams makes
-    // clients reconnect and read their current state again.
+    // A reconnect can miss notifications. Every stream then reconnects and
+    // reads its current state again.
     onConnected: () => hub.closeAll(),
+    onDisconnected: () => hub.closeAll(),
   });
 
-  async function start(): Promise<void> {
-    await listener.start();
+  function start(): void {
+    listener.start();
 
-    setInterval(
+    if (sweepTimer !== null) {
+      return;
+    }
+
+    sweepTimer = setInterval(
       () => hub.sweep(performance.now(), MAX_STREAM_AGE_MS),
       PING_INTERVAL_MS,
-    ).unref();
+    );
+    sweepTimer.unref();
 
-    logger.info("realtime_started", {
+    logger.info("realtime_starting", {
       channels: input.channels.map((channel) => channel.name),
     });
+  }
+
+  async function stop(): Promise<void> {
+    if (sweepTimer !== null) {
+      clearInterval(sweepTimer);
+      sweepTimer = null;
+    }
+
+    hub.closeAll();
+    await listener.stop();
   }
 
   async function openStream(
@@ -114,10 +132,9 @@ export function createRealtimeService(input: {
       return Err("not_found");
     }
 
-    // Start before subscribing so every opened stream is backed by the shared
-    // listener and hub. The channel's opening read establishes its own state.
-    startPromise ??= start();
-    await startPromise;
+    if (!listener.isConnected()) {
+      return Err("unavailable");
+    }
 
     const stream = await openRealtimeStream(
       hub,
@@ -130,6 +147,8 @@ export function createRealtimeService(input: {
   }
 
   return {
+    start,
+    stop,
     openStream,
   };
 }

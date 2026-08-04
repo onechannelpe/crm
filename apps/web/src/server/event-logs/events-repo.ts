@@ -12,7 +12,7 @@ import {
   serializeEventLogStreamPayload,
 } from "~/server/event-logs/stream-contract";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import { notify } from "~/server/platform/database/notify";
+import { notify } from "~/server/platform/database/notifications/publish";
 
 export interface AuditReaderQueryFilter {
   fromInclusive: Date;
@@ -55,14 +55,22 @@ export function createEventsRepo(db: DatabaseExecutor) {
         occurred_at: event.occurredAt,
       }));
 
-      await db.insertInto("events").values(rows).execute();
+      return db.transaction().execute(async (trx) => {
+        await trx.insertInto("events").values(rows).execute();
 
-      for (const row of rows) {
-        const payload = serializeEventLogStreamPayload(mapDomainEventRow(row));
-        if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
-      }
+        for (const row of rows) {
+          const payload = serializeEventLogStreamPayload(
+            mapDomainEventRow(row),
+          );
+          if (payload) {
+            // A transaction has one connection, so publish in order.
+            // eslint-disable-next-line no-await-in-loop
+            await notify(trx, EVENT_LOGS_STREAM_CHANNEL, payload);
+          }
+        }
 
-      return rows.map((row) => EventId.trust(row.id));
+        return rows.map((row) => EventId.trust(row.id));
+      });
     },
 
     async listRecent(filter: AuditReaderQueryFilter) {

@@ -12,7 +12,7 @@ import {
 // This function only resolves expand vs terminally invalid. Throws bubble to
 // the queue, which decides retry vs fail.
 export type ExpansionOutcome =
-  | { kind: "expanded"; deliveriesPlanned: number }
+  | { kind: "expanded" }
   | { kind: "invalid"; reason: string };
 
 export function createIntentExpander(deps: {
@@ -69,10 +69,7 @@ export function createIntentExpander(deps: {
       external: plan.externalDeliveries.length,
     });
 
-    return {
-      kind: "expanded",
-      deliveriesPlanned: plan.externalDeliveries.length,
-    };
+    return { kind: "expanded" };
   };
 }
 

@@ -2,11 +2,11 @@ import { parseGpvSnapshotProgressMessage } from "~/contracts/merchant-stats/impo
 import { REALTIME_CHANNELS } from "~/contracts/realtime/channel";
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { GpvSnapshotJobId } from "~/domain/ids";
-import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 import { defineRealtimeChannel } from "~/server/realtime/channel";
 import { isErr } from "~/shared/result";
 
 import type { createMerchantStatsRuntime } from "../infrastructure/runtime";
+import { GPV_SNAPSHOT_PROGRESS_CHANNEL } from "./progress";
 
 export function createGpvSnapshotChannel(
   merchantStats: Pick<ReturnType<typeof createMerchantStatsRuntime>, "imports">,

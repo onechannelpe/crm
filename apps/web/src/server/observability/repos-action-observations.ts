@@ -6,7 +6,7 @@ import {
   EVENT_LOGS_STREAM_CHANNEL,
   serializeEventLogStreamPayload,
 } from "~/server/event-logs/stream-contract";
-import { notify } from "~/server/platform/database/notify";
+import { notify } from "~/server/platform/database/notifications/publish";
 import type {
   ActionObservationsTable,
   Database,
@@ -36,18 +36,20 @@ export interface ActionObservationSummaryFilter {
 export function createActionObservationsRepo(db: Kysely<Database>) {
   return {
     async create(values: NewActionObservationRow) {
-      const row = await db
-        .insertInto("action_observations")
-        .values(values)
-        .returningAll()
-        .executeTakeFirstOrThrow();
+      return db.transaction().execute(async (trx) => {
+        const row = await trx
+          .insertInto("action_observations")
+          .values(values)
+          .returningAll()
+          .executeTakeFirstOrThrow();
 
-      const payload = serializeEventLogStreamPayload(
-        mapActionObservationRow(row),
-      );
-      if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+        const payload = serializeEventLogStreamPayload(
+          mapActionObservationRow(row),
+        );
+        if (payload) await notify(trx, EVENT_LOGS_STREAM_CHANNEL, payload);
 
-      return row;
+        return row;
+      });
     },
 
     async findRecent(filter: ActionObservationFilter) {

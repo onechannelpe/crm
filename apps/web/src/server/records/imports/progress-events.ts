@@ -1,8 +1,9 @@
 import type { RecordImportProgressEvent } from "~/contracts/records/imports";
 import type { IntegrationJobRow } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import { notify } from "~/server/platform/database/notify";
-import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
+import { notify } from "~/server/platform/database/notifications/publish";
+
+export const RECORDS_IMPORT_PROGRESS_CHANNEL = "records-import-progress";
 
 export function buildRecordImportProgressEvent(
   job: Pick<
@@ -31,6 +32,6 @@ export function buildRecordImportProgressEvent(
 export function publishRecordImportProgress(
   db: DatabaseExecutor,
   event: RecordImportProgressEvent,
-): void {
-  notify(db, RECORDS_IMPORT_PROGRESS_CHANNEL, JSON.stringify(event));
+): Promise<void> {
+  return notify(db, RECORDS_IMPORT_PROGRESS_CHANNEL, JSON.stringify(event));
 }

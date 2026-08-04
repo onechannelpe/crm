@@ -5,9 +5,7 @@ import type {
   NewIntegrationJob,
 } from "~/server/integrations/types";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import { notify } from "~/server/platform/database/notify";
 import { createJobStore } from "~/server/platform/jobs/job-store";
-import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 
 const JOB_COLUMNS = [
   "id",
@@ -41,7 +39,7 @@ export function createIntegrationJobRepo(
     store,
 
     async insert(values: NewIntegrationJob): Promise<IntegrationJobRow> {
-      const row = await db
+      return db
         .insertInto("workflow_integration_jobs")
         .values({
           ...values,
@@ -50,10 +48,6 @@ export function createIntegrationJobRepo(
         })
         .returning(JOB_COLUMNS)
         .executeTakeFirstOrThrow();
-
-      notify(db, JOB_TABLE_CHANNELS.workflow_integration_jobs);
-
-      return row;
     },
 
     findById(id: IntegrationJobId) {

@@ -2,10 +2,8 @@ import type { Selectable } from "kysely";
 
 import type { GpvSnapshotId, GpvSnapshotJobId } from "~/domain/ids";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import { notify } from "~/server/platform/database/notify";
 import type { GpvSnapshotJobsTable } from "~/server/platform/database/schema/modules/merchant-stats.types";
 import { createJobStore } from "~/server/platform/jobs/job-store";
-import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 
 export type GpvSnapshotJobRow = Selectable<GpvSnapshotJobsTable>;
 
@@ -51,8 +49,6 @@ export function createGpvSnapshotJobRepo(db: DatabaseExecutor) {
         })
         .returning("id")
         .executeTakeFirstOrThrow();
-
-      notify(db, JOB_TABLE_CHANNELS.gpv_snapshot_jobs);
 
       return row.id;
     },

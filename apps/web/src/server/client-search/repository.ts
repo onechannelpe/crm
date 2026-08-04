@@ -1,7 +1,5 @@
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
-import { notify } from "~/server/platform/database/notify";
 import { createJobStore } from "~/server/platform/jobs/job-store";
-import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 
 import type {
   CompanyRegistryPort,
@@ -77,8 +75,6 @@ export function createCompanyRegistryRepo(
         .returning("id")
         .executeTakeFirstOrThrow();
 
-      notify(db, JOB_TABLE_CHANNELS.company_registry_record);
-
       return result.id;
     },
 
@@ -109,8 +105,6 @@ export function createCompanyRegistryRepo(
           })),
         )
         .execute();
-
-      notify(db, JOB_TABLE_CHANNELS.company_registry_record);
     },
 
     async getRecord(documentType, documentValue) {

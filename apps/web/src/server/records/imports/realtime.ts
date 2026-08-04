@@ -2,10 +2,10 @@ import { REALTIME_CHANNELS } from "~/contracts/realtime/channel";
 import { parseRecordImportProgressMessage } from "~/contracts/records/imports";
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { IntegrationJobId } from "~/domain/ids";
-import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/server/platform/jobs/registry";
 import { defineRealtimeChannel } from "~/server/realtime/channel";
 import { isErr } from "~/shared/result";
 
+import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "./progress-events";
 import { buildRecordImportProgressEvent } from "./progress-events";
 import type { createRecordImportsRuntime } from "./runtime";
 

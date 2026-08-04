@@ -15,7 +15,3 @@ export type JobChannel = (typeof JOB_TABLE_CHANNELS)[JobTableName];
 
 // Postgres does not allow parameters in index predicates.
 export const CLAIMABLE_STATES = sql<SqlBool>`queue_state in ('pending', 'processing')`;
-
-// Progress updates use a browser channel, not a job queue.
-export const RECORDS_IMPORT_PROGRESS_CHANNEL = "records-import-progress";
-export const GPV_SNAPSHOT_PROGRESS_CHANNEL = "gpv-snapshot-progress";
