@@ -37,7 +37,7 @@ export async function getQualityRows(raw: {
         })),
       })),
 
-    audit: (input) => ({ issue: input.issue }),
+    telemetry: (input) => ({ issue: input.issue }),
 
     execute: async (_ctx, input) =>
       Ok(await application.merchantStats.quality.rows(input.issue, input.page)),

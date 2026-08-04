@@ -35,12 +35,11 @@ import {
   verifyRecoveryLoginProof,
   verifyTotpLoginProof,
 } from "~/server/auth/flows/verify-pending-login";
-import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createPasswordResetContext } from "~/server/auth/infrastructure/password-reset-context";
 import { createPasskeyProviderForOrigin } from "~/server/auth/infrastructure/request-passkey-provider";
 import { createAuthSessionReadContext } from "~/server/auth/infrastructure/session-context";
-import { createSessionRevocationContext } from "~/server/auth/infrastructure/session-revocation-context";
+import { createAccessSecurityContext } from "~/server/auth/infrastructure/session-revocation-context";
 import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
@@ -56,6 +55,7 @@ import {
   startImpersonation,
   stopImpersonation,
 } from "~/server/auth/session/impersonation";
+import { revokeUserAccess } from "~/server/auth/session/revoke-user-access";
 import {
   createSessionAuthenticator,
   createSessionIssuer,
@@ -65,6 +65,7 @@ import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { AppContext } from "~/server/platform/action/context";
 import type { Database } from "~/server/platform/database/types";
+import { createExecutorUow } from "~/server/platform/database/uow";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
@@ -100,13 +101,15 @@ export function createAuthRuntime(
     events: createEventsWriter(tx),
   });
   const login = createAuthLoginContext(serverInfrastructure.db);
+  const impersonationUow = createExecutorUow(
+    serverInfrastructure.db,
+    createImpersonationDeps,
+  );
   const sessionRead = createAuthSessionReadContext(serverInfrastructure.db);
-  const sessionRevocation = createSessionRevocationContext(
+  const sessionRevocation = createAccessSecurityContext(
     serverInfrastructure.db,
   );
-  const adminSessionsRead = createAdminSessionsReadContext(
-    serverInfrastructure.db,
-  );
+  const adminSessions = createSessionRepository(serverInfrastructure.db);
   const passwordReset = createPasswordResetContext({
     executor: serverInfrastructure.db,
     messaging: notifications.messaging,
@@ -138,11 +141,13 @@ export function createAuthRuntime(
 
     return setup.uow.run(async (repos) => {
       await repos.users.updatePassword(userId, await hashPassword(newPassword));
+      await revokeUserAccess(repos, userId, changedAt);
       await repos.events.append({
         type: "password_changed",
         entityType: "user",
         entityId: auditEntityId("user", userId),
         actorUserId: userId,
+        subjectUserId: userId,
         occurredAt: changedAt,
       });
       return Ok({ message: "Contraseña actualizada" });
@@ -299,16 +304,14 @@ export function createAuthRuntime(
     sessions: {
       resolve: (token: string, operation: OperationContext) =>
         sessionAuthenticator.resolve(token, operation),
-      invalidateUser: (userId: UserId) =>
-        sessionAuthenticator.revokeAllForUser(userId),
       currentUser: (ctx: AppContext) => getCurrentUser(ctx, sessionRead),
       logout: (ctx: AppContext) => logoutUser(ctx, sessionRevocation),
       listForUser: (_ctx: AppContext, input: { userId: UserId }) =>
-        adminSessionsRead.repos.sessions.listForUser(input.userId),
+        adminSessions.listForUser(input.userId),
       countActive: (operation: OperationContext) =>
-        countActiveSessions(adminSessionsRead, operation),
+        countActiveSessions(adminSessions, operation),
       listActive: (operation: OperationContext) =>
-        listAllActiveSessions(adminSessionsRead, operation),
+        listAllActiveSessions(adminSessions, operation),
       revoke: (
         ctx: AppContext,
         input: Parameters<typeof revokeUserSession>[2],
@@ -320,15 +323,9 @@ export function createAuthRuntime(
     },
     impersonation: {
       start: (ctx: AppContext, command: { userId: UserId }) =>
-        serverInfrastructure.db
-          .transaction()
-          .execute((tx) =>
-            startImpersonation(ctx, createImpersonationDeps(tx), command),
-          ),
+        impersonationUow.run((tx) => startImpersonation(ctx, tx, command)),
       stop: (ctx: AppContext) =>
-        serverInfrastructure.db
-          .transaction()
-          .execute((tx) => stopImpersonation(ctx, createImpersonationDeps(tx))),
+        impersonationUow.run((tx) => stopImpersonation(ctx, tx)),
     },
     security: {
       changePassword: changeAccountPassword,
@@ -390,17 +387,13 @@ export function createAuthRuntime(
         saveOnboardingProfile(setup, { userId: ctx.actor.userId, phone }, ctx),
       changePassword: (
         ctx: AppContext,
-        input: Omit<
-          Parameters<typeof changeInstallationPassword>[1],
-          "userId" | "currentSessionId"
-        >,
+        input: Omit<Parameters<typeof changeInstallationPassword>[1], "userId">,
       ) =>
         changeInstallationPassword(
           setup,
           {
             ...input,
             userId: ctx.actor.userId,
-            currentSessionId: ctx.actor.id,
           },
           ctx,
         ),

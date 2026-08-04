@@ -2,6 +2,7 @@ import { shortName } from "~/domain/identity/display-name";
 import type { UserId } from "~/domain/ids";
 import { formatAppLongDate } from "~/domain/time/app-time";
 import { addMilliseconds } from "~/domain/time/clock";
+import type { AccessSecurityDeps } from "~/server/auth/application/ports";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { OperationContext } from "~/server/platform/operation/context";
@@ -17,18 +18,17 @@ const EXPIRY_NOTIFICATION_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
 interface AccountLifecycleDeps {
   executor: DatabaseExecutor;
   messaging: MessagingGateway;
-  invalidateUserSessions: (userId: UserId) => Promise<void>;
+  accessSecurity: AccessSecurityDeps;
 }
 
-export async function runAccountExpiryTick(
+async function runAccountExpiryTick(
   deps: AccountLifecycleDeps,
   context: OperationContext,
 ) {
   const sweptAt = context.operationAt;
   try {
     const expiredCount = await expireUsersAndInvalidateSessions(sweptAt, {
-      executor: deps.executor,
-      invalidateUserSessions: deps.invalidateUserSessions,
+      accessSecurity: deps.accessSecurity,
     });
     if (expiredCount > 0) {
       logger.info("accounts_expired", { count: expiredCount });
@@ -40,7 +40,7 @@ export async function runAccountExpiryTick(
   }
 }
 
-export async function runExpiryNotificationTick(
+async function runExpiryNotificationTick(
   users: ReturnType<typeof createUsersRepo>,
   messaging: MessagingGateway,
   context: OperationContext,

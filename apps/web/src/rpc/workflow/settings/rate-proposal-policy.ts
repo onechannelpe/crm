@@ -16,7 +16,7 @@ export async function saveRateProposalPolicy(input: { validityDays: number }) {
       parseObject(input, validationFail, (reader) => ({
         validityDays: reader.posInt("validityDays"),
       })),
-    audit: ({ validityDays }) => ({ validityDays }),
+    telemetry: ({ validityDays }) => ({ validityDays }),
     execute: (ctx, payload) =>
       application.workflow.commands.updateRateProposalPolicy(
         {

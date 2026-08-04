@@ -51,7 +51,7 @@ export async function createTeamInvite(input: unknown): Promise<{
       return validateTeamInviteInput(command.value, getRequestOperation());
     },
 
-    audit: ({ role, teamId }) => ({
+    telemetry: ({ role, teamId }) => ({
       role,
       hasTeamId: teamId !== null,
     }),
@@ -85,7 +85,7 @@ export async function resendTeamInvite(
         inviteId: r.id("inviteId", UserInviteId),
       })),
 
-    audit: (command) => ({ inviteId: command.inviteId }),
+    telemetry: (command) => ({ inviteId: command.inviteId }),
 
     execute: async (ctx, command) => {
       const result = await application.team.invites.resend(ctx, command);
@@ -116,7 +116,7 @@ export async function revokeTeamInvite(
         inviteId: r.id("inviteId", UserInviteId),
       })),
 
-    audit: (command) => ({ inviteId: command.inviteId }),
+    telemetry: (command) => ({ inviteId: command.inviteId }),
 
     execute: async (ctx, command) => {
       const result = await application.team.invites.revoke(ctx, command);

@@ -21,7 +21,7 @@ export async function upsertAuditPolicy(input: unknown): Promise<void> {
         isActive: reader.bool("isActive"),
       })),
 
-    audit: ({ action, isActive }) => ({ action, isActive }),
+    telemetry: ({ action, isActive }) => ({ action, isActive }),
 
     execute: async (ctx, fields) => {
       await application.admin.upsertPolicy(

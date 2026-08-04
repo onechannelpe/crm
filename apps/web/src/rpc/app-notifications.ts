@@ -19,7 +19,7 @@ export async function markNotificationRead(
       parseObject({ notificationId }, validationFail, (reader) => ({
         notificationId: reader.id("notificationId", AppNotificationId),
       })),
-    audit: (command) => ({ notificationId: command.notificationId }),
+    telemetry: (command) => ({ notificationId: command.notificationId }),
     execute: async (ctx, command) => {
       await application.notifications.markRead(
         ctx.actor.userId,

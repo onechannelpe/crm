@@ -13,7 +13,7 @@ import { type AppContext, createAppContext } from "./context";
 import { toWire } from "./domain-error";
 import { type ServerFunctionPorts } from "./ports";
 import {
-  type AuditFields,
+  type TelemetryFields,
   errorRow,
   successRow,
   type TelemetryContext,
@@ -26,13 +26,13 @@ type ActionCommon = {
 
 type ParsedActionDef<TIn, TOut, E extends DomainError> = ActionCommon & {
   parse: () => Result<TIn, DomainError>;
-  audit?: (input: TIn) => AuditFields;
+  telemetry?: (input: TIn) => TelemetryFields;
   execute: (ctx: AppContext, input: TIn) => Promise<Result<TOut, E>>;
 };
 
 type EmptyActionDef<TOut, E extends DomainError> = ActionCommon & {
   parse?: undefined;
-  audit?: () => AuditFields;
+  telemetry?: () => TelemetryFields;
   execute: (ctx: AppContext) => Promise<Result<TOut, E>>;
 };
 
@@ -94,7 +94,7 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
   async function runAuthenticated<TOut>(
     def: ActionCommon,
     startedTicks: number,
-    audit: AuditFields,
+    telemetry: TelemetryFields,
     executeAction: (ctx: AppContext) => Promise<Result<TOut, WireError>>,
   ): Promise<Result<TOut, WireError>> {
     const identity: Result<AuthSession, DomainError> = await authenticateAccess(
@@ -107,7 +107,7 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
       actionName: def.name,
       ctx,
       startedTicks,
-      audit,
+      telemetry,
     };
 
     const authorized = authorizeAccess(
@@ -143,14 +143,14 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
     if (def.parse) {
       const parsed = runParse(def.parse, ports);
       if (isErr(parsed)) return parsed;
-      const audit = def.audit?.(parsed.value) ?? {};
-      return runAuthenticated(def, startedTicks, audit, (ctx) =>
+      const telemetry = def.telemetry?.(parsed.value) ?? {};
+      return runAuthenticated(def, startedTicks, telemetry, (ctx) =>
         runExecute(ctx, parsed.value, def.execute, ports),
       );
     }
 
-    const audit = def.audit?.() ?? {};
-    return runAuthenticated(def, startedTicks, audit, (ctx) =>
+    const telemetry = def.telemetry?.() ?? {};
+    return runAuthenticated(def, startedTicks, telemetry, (ctx) =>
       runExecuteEmpty(ctx, def.execute, ports),
     );
   }

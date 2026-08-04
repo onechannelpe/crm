@@ -394,16 +394,13 @@ export function createUsersRepo(db: DatabaseExecutor) {
         .execute();
     },
 
-    async expireActiveUsersBefore(expiredBefore: Date): Promise<UserId[]> {
-      const rows = await db
-        .updateTable("users")
-        .set({ is_active: false })
+    findActiveIdsExpiringBefore(expiredBefore: Date) {
+      return db
+        .selectFrom("users")
+        .select("id")
         .where("expires_at", "<=", expiredBefore)
         .where("is_active", "=", true)
-        .returning("id")
         .execute();
-
-      return rows.map((row) => row.id);
     },
 
     async deactivateIfExpired(

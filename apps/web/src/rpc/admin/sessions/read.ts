@@ -21,7 +21,7 @@ export async function listUserSessions(rawUserId: unknown) {
         userId: r.id("userId", UserId),
       })),
 
-    audit: (query) => ({ userId: query.userId }),
+    telemetry: (query) => ({ userId: query.userId }),
 
     execute: async (ctx, parsed) =>
       Ok(await application.auth.sessions.listForUser(ctx, parsed)),

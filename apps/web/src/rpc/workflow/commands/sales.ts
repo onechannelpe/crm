@@ -67,7 +67,7 @@ export async function requestVenueCreation(input: unknown) {
 
     parse: () => parseObject(input, validationFail, venueFields),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.createVenue(
@@ -99,7 +99,7 @@ export async function requestVenueUpdate(input: unknown) {
         }),
       ),
 
-    audit: ({ leadId, venueId }) => ({ leadId, venueId }),
+    telemetry: ({ leadId, venueId }) => ({ leadId, venueId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.updateVenue(
@@ -135,7 +135,7 @@ export async function requestVenueAccountsAddition(input: unknown) {
         }),
       ),
 
-    audit: ({ leadId, venueId }) => ({ leadId, venueId }),
+    telemetry: ({ leadId, venueId }) => ({ leadId, venueId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.addVenueAccounts(

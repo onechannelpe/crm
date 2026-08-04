@@ -31,7 +31,7 @@ export async function requestMoreSearches(
     name: "capacity.request_search",
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(rawAmount, rawReason),
-    audit: (request) => ({ amount: request.amount }),
+    telemetry: (request) => ({ amount: request.amount }),
 
     execute: (ctx, request) =>
       application.capacity.requestCapacity(ctx, {
@@ -52,7 +52,7 @@ export async function requestMoreLeadRefill(
     name: "capacity.request_lead_refill",
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(rawAmount, rawReason),
-    audit: (request) => ({ amount: request.amount }),
+    telemetry: (request) => ({ amount: request.amount }),
 
     execute: (ctx, request) =>
       application.capacity.requestCapacity(ctx, {

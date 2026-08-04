@@ -36,6 +36,10 @@ export function createExecutorUow<TTx>(
   executor: Kysely<Database>,
   bindTx: (txDb: Transaction<Database>) => TTx,
 ): AppUow<TTx> {
+  if (executor.isTransaction) {
+    throw new Error("executor_uow_requires_root_database");
+  }
+
   return {
     run(work) {
       return runResultTransaction(

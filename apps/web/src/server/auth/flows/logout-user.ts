@@ -1,6 +1,6 @@
 import { auditEntityId } from "~/domain/audit/entity";
 import type { DomainError } from "~/domain/errors";
-import type { SessionRevocationDeps } from "~/server/auth/application/ports";
+import type { AccessSecurityDeps } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/platform/action/context";
 import { Ok, type Result } from "~/shared/result";
 
@@ -12,7 +12,7 @@ import { Ok, type Result } from "~/shared/result";
  */
 export async function logoutUser(
   ctx: AppContext,
-  deps: SessionRevocationDeps,
+  deps: AccessSecurityDeps,
 ): Promise<Result<void, DomainError>> {
   const { id, userId } = ctx.actor;
   const now = ctx.operationAt;

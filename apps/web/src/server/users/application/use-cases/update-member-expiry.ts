@@ -1,3 +1,4 @@
+import { auditEntityId } from "~/domain/audit/entity";
 import { type DomainError } from "~/domain/errors";
 import { appDayRange } from "~/domain/time/app-time";
 import type { AppContext } from "~/server/platform/action/context";
@@ -14,17 +15,27 @@ export async function updateMemberExpiry(
   deps: MemberWriteDeps,
   command: UpdateMemberExpiryCommand,
 ): Promise<Result<void, DomainError>> {
-  const target = await authorizeMemberManagement(
-    ctx,
-    deps.users,
-    command.userId,
-  );
-  if (isErr(target)) return target;
+  return deps.lifecycle.run(async (tx) => {
+    const target = await authorizeMemberManagement(
+      ctx,
+      tx.users,
+      command.userId,
+    );
+    if (isErr(target)) return target;
 
-  const expiresAt = command.expiresOn
-    ? appDayRange(command.expiresOn).endExclusive
-    : null;
-  await deps.users.updateExpiry(command.userId, expiresAt);
-
-  return Ok(undefined);
+    const expiresAt = command.expiresOn
+      ? appDayRange(command.expiresOn).endExclusive
+      : null;
+    await tx.users.updateExpiry(command.userId, expiresAt);
+    await tx.events.append({
+      type: "member_expiry_updated",
+      entityType: "user",
+      entityId: auditEntityId("user", command.userId),
+      actorUserId: ctx.actor.userId,
+      subjectUserId: command.userId,
+      payload: { expiresAt: expiresAt?.toISOString() ?? null },
+      occurredAt: ctx.operationAt,
+    });
+    return Ok(undefined);
+  });
 }

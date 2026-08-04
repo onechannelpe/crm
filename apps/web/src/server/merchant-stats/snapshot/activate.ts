@@ -2,8 +2,11 @@ import type { Transaction } from "kysely";
 
 import { fail, type DomainError } from "~/domain/errors";
 import type { GpvSnapshotId, UserId } from "~/domain/ids";
-import { appendEvents } from "~/server/event-logs/events-repo";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createEventsWriter } from "~/server/event-logs/events-repo";
+import {
+  isTransactionExecutor,
+  type DatabaseExecutor,
+} from "~/server/platform/database/executor";
 import type { Database } from "~/server/platform/database/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -19,8 +22,8 @@ export async function activateGpvSnapshot(
   db: DatabaseExecutor,
   input: ActivateGpvSnapshotInput,
 ): Promise<Result<void, DomainError>> {
-  if (db.isTransaction) {
-    return activateGpvSnapshotInTransaction(db as Transaction<Database>, input);
+  if (isTransactionExecutor(db)) {
+    return activateGpvSnapshotInTransaction(db, input);
   }
 
   return db
@@ -98,7 +101,7 @@ export async function activateGpvSnapshotInTransaction(
     })
     .where("id", "=", snapshot.id)
     .execute();
-  await appendEvents(tx, {
+  await createEventsWriter(tx).append({
     entityType: "gpv_snapshot",
     entityId: snapshot.id,
     type: "gpv_snapshot_activated",

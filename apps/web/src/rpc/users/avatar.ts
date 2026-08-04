@@ -32,7 +32,7 @@ export async function uploadMemberAvatar(
       return Ok({ userId: parsedId.value.userId, file });
     },
 
-    audit: (command) => ({ userId: command.userId }),
+    telemetry: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
       const result = await application.users.members.uploadAvatar(ctx, command);
@@ -56,7 +56,7 @@ export async function removeMemberAvatar(
         userId: r.id("userId", UserId),
       })),
 
-    audit: (command) => ({ userId: command.userId }),
+    telemetry: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
       const result = await application.users.members.removeAvatar(ctx, command);

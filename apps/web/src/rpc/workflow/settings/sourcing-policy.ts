@@ -19,7 +19,7 @@ export async function querySourcingPolicy(rawBranchId: string) {
         branchId: r.id("branchId", BranchId),
       })),
 
-    audit: ({ branchId }) => ({ branchId }),
+    telemetry: ({ branchId }) => ({ branchId }),
 
     execute: ({ actor }, query) =>
       application.workflow.queries.getSourcingPolicy({
@@ -45,7 +45,7 @@ export async function saveSourcingPolicy(input: {
         engineAssignmentEnabled: r.bool("engineAssignmentEnabled"),
       })),
 
-    audit: ({ branchId }) => ({ branchId }),
+    telemetry: ({ branchId }) => ({ branchId }),
 
     execute: (ctx, command) =>
       application.workflow.commands.updateSourcingPolicy(

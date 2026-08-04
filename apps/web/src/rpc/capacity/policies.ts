@@ -24,7 +24,7 @@ export async function updateExecutivePolicyOverride(input: unknown) {
         expiresAt: r.optNum("expiresAt"),
       })),
 
-    audit: ({ userId }) => ({ userId }),
+    telemetry: ({ userId }) => ({ userId }),
 
     execute: (ctx, override) =>
       application.capacity.updateExecutivePolicyOverride(ctx, override),
@@ -51,7 +51,7 @@ export async function updateScopePolicy(input: unknown) {
         dailyLimit: r.posInt("dailyRefillLimit"),
       })),
 
-    audit: ({ scope }) => ({
+    telemetry: ({ scope }) => ({
       scopeKind: scope.kind,
       scopeId: scope.scopeId,
     }),

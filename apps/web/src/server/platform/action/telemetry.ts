@@ -5,7 +5,7 @@ import type { AppContext } from "./context";
 
 // Scalar identifiers only (lead ids, venue ids, counts, flags). Raw request
 // payloads (which may carry PII or bank data) cannot be assigned here.
-export type AuditFields = Record<string, string | number | boolean | null>;
+export type TelemetryFields = Record<string, string | number | boolean | null>;
 
 export type TelemetryRow = RecordActionObservationInput;
 
@@ -14,7 +14,7 @@ export type TelemetryContext = {
   ctx: AppContext;
   /** Monotonic reading from `performance.now()`, taken when the action began. */
   startedTicks: number;
-  audit: AuditFields;
+  telemetry: TelemetryFields;
 };
 
 function baseRow(
@@ -33,7 +33,7 @@ function baseRow(
     // with the operation instant, which keeps every row from one request
     // correlated on a single timestamp.
     durationMs: Math.round(performance.now() - t.startedTicks),
-    input: t.audit,
+    input: t.telemetry,
     createdAt: t.ctx.operationAt,
   };
 }

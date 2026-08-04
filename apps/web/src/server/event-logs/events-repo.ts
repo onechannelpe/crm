@@ -46,7 +46,7 @@ function toNewEventRows(input: EventToAppend | EventToAppend[]): NewEventRow[] {
 // Requires an already-open transaction: the insert and its pg_notify calls
 // share one connection, so the notify is only released when this transaction
 // commits (see notify() in platform/database/notifications/publish.ts).
-export async function appendEvents(
+async function appendEvents(
   tx: Transaction<Database>,
   input: EventToAppend | EventToAppend[],
 ): Promise<EventId[]> {

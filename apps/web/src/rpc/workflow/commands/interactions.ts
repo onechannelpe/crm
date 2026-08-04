@@ -20,7 +20,7 @@ export async function addLeadNote(input: unknown) {
         body: r.str("body"),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.addLeadNote(

@@ -26,7 +26,7 @@ export async function startImpersonation(
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.id("userId", UserId),
       })),
-    audit: (command) => ({ userId: command.userId }),
+    telemetry: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
       // Read the administrator's own cookie before the swap so exiting
       // impersonation can restore it.

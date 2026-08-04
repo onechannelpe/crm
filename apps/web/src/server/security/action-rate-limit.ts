@@ -1,10 +1,8 @@
 import type { Kysely } from "kysely";
-import { getRequestEvent } from "solid-js/web";
 
 import { auditEntityId } from "~/domain/audit/entity";
 import { rateLimited } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
-import { getClientIp } from "~/server/auth/password/client-ip";
 import { hashAuthKey } from "~/server/auth/password/key-hash";
 import {
   createEventsWriter,
@@ -17,6 +15,9 @@ import {
   createActionRateLimitsRepo,
   type ActionRateLimitsRepo,
 } from "~/server/security/repos-action-rate-limits";
+import { createLogger } from "~/shared/observability/runtime-logger";
+
+const logger = createLogger("action-rate-limit");
 
 interface ActionRateLimitPolicy {
   userLimit: number;
@@ -29,6 +30,7 @@ const ACTION_RATE_LIMIT_POLICY = {
   "search.use": { userLimit: 120, sourceIpLimit: 300, windowMs: 60_000 },
   "capacity.request": { userLimit: 20, sourceIpLimit: 60, windowMs: 60_000 },
   "capacity.approve": { userLimit: 60, sourceIpLimit: 180, windowMs: 60_000 },
+  "capacity.reject": { userLimit: 60, sourceIpLimit: 180, windowMs: 60_000 },
   "team.invite.create": {
     userLimit: 10,
     sourceIpLimit: 30,
@@ -47,18 +49,8 @@ export interface ActionRateLimiter {
     actionName: RateLimitedAction,
     userId: UserId,
     operation: OperationContext,
-    ip?: string,
+    ip: string,
   ): Promise<void>;
-}
-
-function resolveRequestIp(): string {
-  const event = getRequestEvent();
-  if (!event?.request) {
-    throw new Error(
-      "[RateLimit] checkActionRateLimit called outside a request context; pass ip explicitly",
-    );
-  }
-  return getClientIp(event.request.headers);
 }
 
 function buildUserKey(actionName: string, userId: UserId): string {
@@ -93,20 +85,23 @@ async function blockWithAudit(params: {
     windowMs - (operation.operationAt.getTime() - windowStartedAt.getTime());
   const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
 
-  // RFC 6585: a 429 must carry Retry-After when the reset is known.
-  getRequestEvent()?.response.headers.set(
-    "Retry-After",
-    String(retryAfterSeconds),
-  );
-
-  await events.append({
-    type: "rate_limit_exceeded",
-    entityType: "user",
-    entityId: auditEntityId("user", userId),
-    actorUserId: userId,
-    payload: { actionName, scope, limit, windowMs, retryAfterMs },
-    occurredAt: operation.operationAt,
-  });
+  try {
+    await events.append({
+      type: "rate_limit_exceeded",
+      entityType: "user",
+      entityId: auditEntityId("user", userId),
+      actorUserId: userId,
+      payload: { actionName, scope, limit, windowMs, retryAfterMs },
+      occurredAt: operation.operationAt,
+    });
+  } catch (error: unknown) {
+    logger.error("rate_limit_audit_failed", {
+      actionName,
+      scope,
+      userId,
+      error,
+    });
+  }
 
   throwDomain(
     rateLimited(retryAfterSeconds, {
@@ -121,7 +116,7 @@ async function checkActionRateLimit(
   deps: RateLimitDeps,
   operation: OperationContext,
   events: Pick<EventsWriter, "append">,
-  ip: string = resolveRequestIp(),
+  ip: string,
 ): Promise<void> {
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
 

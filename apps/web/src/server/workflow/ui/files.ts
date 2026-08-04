@@ -15,7 +15,7 @@ export async function listLeadSaleProofFiles(leadId: string) {
       parseObject({ leadId }, validationFail, (reader) => ({
         leadId: reader.id("leadId", WorkflowLeadId),
       })),
-    audit: (input) => ({ leadId: input.leadId }),
+    telemetry: (input) => ({ leadId: input.leadId }),
     execute: (context, input) =>
       application.workflow.files.listSaleProofFiles({
         ctx: context,

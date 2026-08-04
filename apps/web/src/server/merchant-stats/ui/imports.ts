@@ -18,7 +18,7 @@ export async function getGpvSnapshot(
       parseObject({ snapshotId: rawSnapshotId }, validationFail, (r) => ({
         snapshotId: r.id("snapshotId", GpvSnapshotId),
       })),
-    audit: ({ snapshotId }) => ({ snapshotId }),
+    telemetry: ({ snapshotId }) => ({ snapshotId }),
     execute: async (_ctx, { snapshotId }) =>
       application.merchantStats.imports.snapshot(snapshotId),
   });

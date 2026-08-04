@@ -40,7 +40,6 @@ export async function loadActiveAuthContextForUser(
     return null;
   }
   if (user.expires_at !== null && user.expires_at <= operation.operationAt) {
-    await deps.users.deactivateIfExpired(user.id, operation.operationAt);
     return null;
   }
 

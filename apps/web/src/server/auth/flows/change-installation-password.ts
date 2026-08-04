@@ -6,13 +6,12 @@ import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { AuthSetupContext } from "../infrastructure/setup-context";
-import { createSessionAuthenticator } from "../session/session.service";
+import { revokeUserAccess } from "../session/revoke-user-access";
 
 export async function changeInstallationPassword(
   deps: AuthSetupContext,
   input: {
     userId: UserId;
-    currentSessionId: string;
     password: string;
     confirmPassword: string;
   },
@@ -40,10 +39,7 @@ export async function changeInstallationPassword(
 
   const changed = await deps.uow.run(async (repos) => {
     await repos.users.replaceInstallationPassword(user.id, passwordHash);
-    await createSessionAuthenticator({
-      sessions: repos.sessions,
-      users: repos.users,
-    }).revokeOtherForUser(user.id, input.currentSessionId);
+    await revokeUserAccess(repos, user.id, operation.operationAt);
     await repos.events.append({
       type: "password_changed",
       entityType: "user",

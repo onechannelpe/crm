@@ -71,7 +71,6 @@ export interface SessionRepositoryPort {
   extendExpiry(id: string, expiresAt: Date): Promise<void>;
   delete(id: string): Promise<void>;
   deleteAllForUser(userId: UserId): Promise<void>;
-  deleteOtherForUser(userId: UserId, retainedSessionId: string): Promise<void>;
 }
 
 export interface SessionUsersPort {
@@ -80,7 +79,6 @@ export interface SessionUsersPort {
   ): Promise<
     { id: UserId; is_active: boolean; expires_at: Date | null } | undefined
   >;
-  deactivateIfExpired(userId: UserId, expiredAsOf: Date): Promise<boolean>;
 }
 
 export interface SessionEventPort {

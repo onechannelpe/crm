@@ -59,7 +59,7 @@ export async function approveCapacity(
     name: "capacity.approve",
     access: { kind: "permission", permission: "capacity:approve" },
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
-    audit: (decision) => ({ requestId: decision.requestId }),
+    telemetry: (decision) => ({ requestId: decision.requestId }),
     execute: (ctx, decision) =>
       application.capacity.approveCapacityRequest(ctx, decision),
   });
@@ -72,7 +72,7 @@ export async function rejectCapacity(rawRequestId: unknown, rawNote: unknown) {
     name: "capacity.reject",
     access: { kind: "permission", permission: "capacity:approve" },
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
-    audit: (decision) => ({ requestId: decision.requestId }),
+    telemetry: (decision) => ({ requestId: decision.requestId }),
     execute: (ctx, decision) =>
       application.capacity.rejectCapacityRequest(ctx, decision),
   });
@@ -89,7 +89,7 @@ export async function grantMoreSearches(
     name: "capacity.grant_search",
     access: { kind: "permission", permission: "capacity:manage" },
     parse: () => parseCapacityGrant(rawUserId, rawAmount, rawReason),
-    audit: (grant) => ({
+    telemetry: (grant) => ({
       targetUserId: grant.targetUserId,
       amount: grant.amount,
     }),
@@ -113,7 +113,7 @@ export async function grantMoreLeadRefill(
     name: "capacity.grant_lead",
     access: { kind: "permission", permission: "capacity:manage" },
     parse: () => parseCapacityGrant(rawUserId, rawAmount, rawReason),
-    audit: (grant) => ({
+    telemetry: (grant) => ({
       targetUserId: grant.targetUserId,
       amount: grant.amount,
     }),

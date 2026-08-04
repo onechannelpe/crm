@@ -1,10 +1,9 @@
 import type { OperationContext } from "~/server/platform/operation/context";
-
-import type { AdminSessionsReadContext } from "../../infrastructure/admin-sessions-read-context";
+import type { SessionRepository } from "~/server/sessions/repos-sessions";
 
 export async function countActiveSessions(
-  deps: AdminSessionsReadContext,
+  sessions: Pick<SessionRepository, "countActive">,
   operation: OperationContext,
 ): Promise<number> {
-  return deps.repos.sessions.countActive(operation.operationAt);
+  return sessions.countActive(operation.operationAt);
 }

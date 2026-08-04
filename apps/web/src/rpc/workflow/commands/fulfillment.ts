@@ -142,7 +142,7 @@ export async function chooseFulfillmentProduct(input: unknown) {
         }),
       ),
 
-    audit: ({ leadId, productKind }) => ({ leadId, productKind }),
+    telemetry: ({ leadId, productKind }) => ({ leadId, productKind }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.chooseFulfillmentProduct(
@@ -163,7 +163,7 @@ export async function uploadFulfillmentDocument(formData: FormData) {
     access: { kind: "auth" },
     parse: () => parseFulfillmentDocumentUpload(formData),
 
-    audit: ({ leadId, action, file }) => ({
+    telemetry: ({ leadId, action, file }) => ({
       leadId,
       action,
       fileName: file.name,
@@ -202,7 +202,7 @@ export async function recordFulfillmentSerial(input: unknown) {
         }),
       ),
 
-    audit: ({ leadId, unitId }) => ({ leadId, unitId }),
+    telemetry: ({ leadId, unitId }) => ({ leadId, unitId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.recordFulfillmentSerial(
@@ -237,7 +237,7 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
         }),
       ),
 
-    audit: ({ leadId, unitId }) => ({ leadId, unitId }),
+    telemetry: ({ leadId, unitId }) => ({ leadId, unitId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.registerFulfillmentPaymentLink(
@@ -258,7 +258,7 @@ export async function uploadFulfillmentPaymentProof(formData: FormData) {
     access: { kind: "auth" },
     parse: () => parseFulfillmentPaymentProofUpload(formData),
 
-    audit: ({ leadId, unitId, file }) => ({
+    telemetry: ({ leadId, unitId, file }) => ({
       leadId,
       unitId,
       fileName: file.name,
@@ -287,7 +287,7 @@ export async function validateFulfillmentPayment(input: unknown) {
         leadId: r.id("leadId", WorkflowLeadId),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, { leadId }) =>
       application.workflow.commands.validateFulfillmentPayment(
@@ -321,7 +321,7 @@ export async function rejectFulfillmentStep(input: unknown) {
         }),
       ),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.rejectFulfillmentStep(
@@ -356,7 +356,7 @@ export async function registerFulfillmentSale(input: unknown) {
         }),
       ),
 
-    audit: ({ leadId, unitId }) => ({ leadId, unitId }),
+    telemetry: ({ leadId, unitId }) => ({ leadId, unitId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.registerFulfillmentSale(
@@ -385,7 +385,7 @@ export async function requestFulfillmentDownloadToken(input: {
         fileAssetId: r.id("fileId", FileAssetId),
       })),
 
-    audit: ({ leadId, fileAssetId }) => ({
+    telemetry: ({ leadId, fileAssetId }) => ({
       leadId,
       fileAssetId,
     }),

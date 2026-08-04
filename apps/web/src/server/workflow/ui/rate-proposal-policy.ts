@@ -7,7 +7,7 @@ export async function queryRateProposalPolicy() {
     name: "application.workflow.get_rate_proposal_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
 
-    audit: () => ({}),
+    telemetry: () => ({}),
 
     execute: ({ actor }) =>
       application.workflow.queries.getRateProposalPolicy({

@@ -43,9 +43,6 @@ export function createSessionAuthenticator(deps: SessionAuthenticatorDeps) {
   const revokeSession = async (sessionId: string): Promise<void> => {
     await deps.sessions.delete(sessionId);
   };
-  const revokeUserSessions = async (userId: UserId): Promise<void> => {
-    await deps.sessions.deleteAllForUser(userId);
-  };
 
   return {
     async resolve(
@@ -96,8 +93,6 @@ export function createSessionAuthenticator(deps: SessionAuthenticatorDeps) {
         user.expires_at !== null &&
         user.expires_at <= operation.operationAt
       ) {
-        await deps.users.deactivateIfExpired(user.id, operation.operationAt);
-        await revokeUserSessions(user.id);
         return null;
       }
 
@@ -135,17 +130,6 @@ export function createSessionAuthenticator(deps: SessionAuthenticatorDeps) {
 
     async revoke(sessionId: string): Promise<void> {
       await revokeSession(sessionId);
-    },
-
-    async revokeAllForUser(userId: UserId): Promise<void> {
-      await revokeUserSessions(userId);
-    },
-
-    async revokeOtherForUser(
-      userId: UserId,
-      retainedSessionId: string,
-    ): Promise<void> {
-      await deps.sessions.deleteOtherForUser(userId, retainedSessionId);
     },
   };
 }

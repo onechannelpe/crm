@@ -1,5 +1,7 @@
+import { auditEntityId } from "~/domain/audit/entity";
 import { canDeleteMember } from "~/domain/auth/access/member-management";
 import { fail, type DomainError } from "~/domain/errors";
+import { revokeUserAccess } from "~/server/auth/session/revoke-user-access";
 import type { AppContext } from "~/server/platform/action/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
@@ -15,24 +17,32 @@ export async function deleteMember(
   deps: MemberWriteDeps,
   command: MemberIdCommand,
 ): Promise<Result<void, DomainError>> {
-  const target = await authorizeMemberManagement(
-    ctx,
-    deps.users,
-    command.userId,
-  );
-  if (isErr(target)) return target;
+  return deps.lifecycle.run(async (tx) => {
+    const target = await authorizeMemberManagement(
+      ctx,
+      tx.users,
+      command.userId,
+    );
+    if (isErr(target)) return target;
 
-  if (!canDeleteMember(ctx.actor.role, target.value.role)) {
-    return Err(fail("cannot_manage_member"));
-  }
+    if ((await tx.workload.countActiveLeads(command.userId)) > 0) {
+      return Err(fail("member_has_active_leads"));
+    }
 
-  const activeLeads = await deps.workload.countActiveLeads(command.userId);
-  if (activeLeads > 0) {
-    return Err(fail("member_has_active_leads"));
-  }
+    if (!canDeleteMember(ctx.actor.role, target.value.role)) {
+      return Err(fail("cannot_manage_member"));
+    }
 
-  await deps.sessions.revokeAllForUser(command.userId);
-  await deps.users.deleteById(command.userId);
-
-  return Ok(undefined);
+    await revokeUserAccess(tx, command.userId, ctx.operationAt);
+    await tx.events.append({
+      type: "member_deleted",
+      entityType: "user",
+      entityId: auditEntityId("user", command.userId),
+      actorUserId: ctx.actor.userId,
+      subjectUserId: command.userId,
+      occurredAt: ctx.operationAt,
+    });
+    await tx.users.deleteById(command.userId);
+    return Ok(undefined);
+  });
 }

@@ -24,7 +24,7 @@ export async function savePendingQuotationPolicy(
           ? { enabled: true as const, limit: reader.posInt("limit") }
           : { enabled: false as const },
       ),
-    audit: (payload) => ({
+    telemetry: (payload) => ({
       enabled: payload.enabled,
       limit: payload.enabled ? payload.limit : 0,
     }),

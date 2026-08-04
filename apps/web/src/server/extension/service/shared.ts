@@ -2,6 +2,7 @@ import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infras
 import type { OrganizationRepository } from "~/server/organization/organization-repo";
 import type { AppUow } from "~/server/platform/database/uow";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
+import type { UsersRepo } from "~/server/users/repos-users";
 
 import type { ExtensionRuntimeRepo } from "../repos";
 
@@ -10,6 +11,7 @@ export type ExtensionRepos = {
   extensionRuntime: ExtensionRuntimeRepo;
   organization: OrganizationRepository;
   sessions: SessionRepository;
+  users: UsersRepo;
 };
 
 export interface ExtensionServiceDeps {
@@ -22,5 +24,12 @@ export async function hasActiveAuthSession(
   activeAsOf: Date,
 ): Promise<boolean> {
   const authSession = await repos.sessions.findById(authSessionId);
-  return authSession !== null && authSession.expires_at > activeAsOf;
+  if (!authSession || authSession.expires_at <= activeAsOf) return false;
+
+  const user = await repos.users.findById(authSession.user_id);
+  return (
+    user != null &&
+    user.is_active &&
+    (user.expires_at === null || user.expires_at > activeAsOf)
+  );
 }

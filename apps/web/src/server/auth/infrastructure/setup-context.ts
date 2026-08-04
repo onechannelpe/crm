@@ -4,6 +4,7 @@ import { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createEventsWriter } from "~/server/event-logs/events-repo";
+import { createExtensionRuntimeRepo } from "~/server/extension/repos";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { Database } from "~/server/platform/database/types";
@@ -19,6 +20,7 @@ function createAuthSetupBaseRepos(executor: DatabaseExecutor) {
   return {
     users: createUsersRepo(executor),
     sessions: createSessionRepository(executor),
+    extensionRuntime: createExtensionRuntimeRepo(executor),
     passkeys: createPasskeysRepo(executor),
     webauthnChallenges: createWebauthnChallengesRepo(executor),
     authThrottle: createAuthThrottleRepo(executor),

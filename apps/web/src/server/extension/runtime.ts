@@ -18,12 +18,14 @@ import {
   createSessionRepository,
   type SessionRepository,
 } from "~/server/sessions/repos-sessions";
+import { createUsersRepo, type UsersRepo } from "~/server/users/repos-users";
 
-export type ExtensionRuntimeRepos = {
+type ExtensionRuntimeRepos = {
   contactAssignments: ContactAssignmentsRepo;
   extensionRuntime: ExtensionRuntimeRepo;
   organization: OrganizationRepository;
   sessions: SessionRepository;
+  users: UsersRepo;
 };
 
 function buildRepos(db: ServerInfrastructure["db"]): ExtensionRuntimeRepos {
@@ -32,6 +34,7 @@ function buildRepos(db: ServerInfrastructure["db"]): ExtensionRuntimeRepos {
     extensionRuntime: createExtensionRuntimeRepo(db),
     organization: createOrganizationRepo(db),
     sessions: createSessionRepository(db),
+    users: createUsersRepo(db),
   };
 }
 

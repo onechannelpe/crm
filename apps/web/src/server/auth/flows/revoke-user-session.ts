@@ -1,13 +1,13 @@
 import { auditEntityId } from "~/domain/audit/entity";
 import type { DomainError } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
-import type { SessionRevocationDeps } from "~/server/auth/application/ports";
+import type { AccessSecurityDeps } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/platform/action/context";
 import { Ok, type Result } from "~/shared/result";
 
 export async function revokeUserSession(
   ctx: AppContext,
-  deps: SessionRevocationDeps,
+  deps: AccessSecurityDeps,
   input: { sessionId: string; targetUserId: UserId },
 ): Promise<Result<{ success: true }, DomainError>> {
   const now = ctx.operationAt;

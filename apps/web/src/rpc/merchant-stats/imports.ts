@@ -66,7 +66,7 @@ export async function uploadMerchantReport(formData: FormData) {
 
     parse: () => parseUpload(formData),
 
-    audit: ({ file, cutAt }) => ({
+    telemetry: ({ file, cutAt }) => ({
       fileName: file.name,
       fileSize: file.size,
       cutAt: cutAt.toISOString(),
@@ -116,7 +116,7 @@ export async function resolveGpvImportIssue(input: {
         resolution: reader.enum("resolution", SNAPSHOT_RESOLUTIONS),
       })),
 
-    audit: ({ issueId, resolution }) => ({ issueId, resolution }),
+    telemetry: ({ issueId, resolution }) => ({ issueId, resolution }),
 
     execute: (ctx, { issueId, resolution }) =>
       application.merchantStats.imports.resolveIssue(

@@ -35,7 +35,7 @@ export async function updateMemberProfile(
           r.optEnum("executiveCategory", EXECUTIVE_CATEGORIES) ?? null,
       })),
 
-    audit: (command) => ({ userId: command.userId }),
+    telemetry: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
       const result = await application.users.members.updateProfile(
@@ -75,7 +75,7 @@ export async function changeMemberRole(
       return command;
     },
 
-    audit: (command) => ({ userId: command.userId, role: command.role }),
+    telemetry: (command) => ({ userId: command.userId, role: command.role }),
 
     execute: async (ctx, command) => {
       const result = await application.users.members.changeRole(ctx, command);
@@ -97,7 +97,7 @@ export async function deactivateMember(
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.id("userId", UserId),
       })),
-    audit: (command) => ({ userId: command.userId }),
+    telemetry: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
       const result = await application.users.members.deactivate(ctx, command);
       if (isErr(result)) return result;
@@ -118,7 +118,7 @@ export async function reactivateMember(
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.id("userId", UserId),
       })),
-    audit: (command) => ({ userId: command.userId }),
+    telemetry: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
       const result = await application.users.members.reactivate(ctx, command);
       if (isErr(result)) return result;
@@ -142,7 +142,7 @@ export async function updateMemberExpiry(
         expiresOn: r.optCalendarDate("expiresOn"),
       })),
 
-    audit: (command) => ({ userId: command.userId }),
+    telemetry: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
       const result = await application.users.members.updateExpiry(ctx, command);
@@ -164,7 +164,7 @@ export async function deleteMember(
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.id("userId", UserId),
       })),
-    audit: (command) => ({ userId: command.userId }),
+    telemetry: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
       const result = await application.users.members.remove(ctx, command);
       if (isErr(result)) return result;

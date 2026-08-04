@@ -28,7 +28,7 @@ export async function setNotificationPreference(
         channel: reader.enum("channel", EXTERNAL_CHANNELS),
         enabled: reader.bool("enabled"),
       })),
-    audit: (command) => ({
+    telemetry: (command) => ({
       category: command.category,
       channel: command.channel,
       enabled: command.enabled,

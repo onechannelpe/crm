@@ -2,7 +2,7 @@ import type { Transaction } from "kysely";
 
 import { fail, type DomainError } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
-import { appendEvents } from "~/server/event-logs/events-repo";
+import { createEventsWriter } from "~/server/event-logs/events-repo";
 import { assignOrganizationOwnerInTransaction } from "~/server/organization/ownership";
 import type { Database } from "~/server/platform/database/types";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
@@ -63,7 +63,9 @@ export async function commitTransition(
     }
   }
 
-  const eventIds = await appendEvents(tx, events.map(toLeadEventAppend));
+  const eventIds = await createEventsWriter(tx).append(
+    events.map(toLeadEventAppend),
+  );
 
   return Ok({ eventIds });
 }
@@ -93,7 +95,9 @@ export async function appendFacts(
     return Err(fail("lead_not_found"));
   }
 
-  const eventIds = await appendEvents(tx, events.map(toLeadEventAppend));
+  const eventIds = await createEventsWriter(tx).append(
+    events.map(toLeadEventAppend),
+  );
 
   return Ok({ eventIds });
 }

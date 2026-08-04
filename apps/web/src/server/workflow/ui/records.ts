@@ -49,7 +49,7 @@ export async function queryLeadList(
         offset: r.optNum("offset") ?? undefined,
       })),
 
-    audit: ({ stage, status }) => ({
+    telemetry: ({ stage, status }) => ({
       stage: stage ?? null,
       status: status ?? null,
     }),
@@ -82,7 +82,7 @@ export async function queryLeadDetail(
         leadId: r.id("leadId", WorkflowLeadId),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: async (ctx, query) => {
       const { userId, role } = workflowActor(ctx.actor);
@@ -155,7 +155,7 @@ export async function queryLeadBootstrapPreview(
         ruc: r.str("ruc"),
       })),
 
-    audit: ({ ruc }) => ({ ruc }),
+    telemetry: ({ ruc }) => ({ ruc }),
 
     execute: (_ctx, query) =>
       application.workflow.queries.getLeadBootstrapPreview(query),
@@ -176,7 +176,7 @@ export async function queryAssignableExecutives(
         limit: r.optNum("limit") ?? undefined,
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: ({ actor }, query) => {
       const { userId, role, branchId } = workflowActor(actor);

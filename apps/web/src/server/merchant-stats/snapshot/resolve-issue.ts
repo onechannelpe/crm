@@ -1,7 +1,7 @@
 import { fail, type DomainError } from "~/domain/errors";
 import type { GpvSnapshotId, GpvSnapshotIssueId, UserId } from "~/domain/ids";
 import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
-import { appendEvents } from "~/server/event-logs/events-repo";
+import { createEventsWriter } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
@@ -110,7 +110,7 @@ export async function resolveGpvSnapshotIssue(
       })
       .where("id", "=", issue.id)
       .execute();
-    await appendEvents(tx, {
+    await createEventsWriter(tx).append({
       entityType: "gpv_snapshot",
       entityId: issue.snapshot_id,
       type: "gpv_snapshot_issue_resolved",

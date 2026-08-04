@@ -3,10 +3,11 @@ import { join } from "node:path";
 
 import type { UserId } from "~/domain/ids";
 import type { Phone } from "~/domain/phone/pe-mobile";
-import type { SessionAuthenticator } from "~/server/auth/session/session.service";
+import { createAccessSecurityTx } from "~/server/auth/infrastructure/session-revocation-context";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { AppContext } from "~/server/platform/action/context";
 import type { UploadsConfig } from "~/server/platform/config/env";
+import { createExecutorUow } from "~/server/platform/database/uow";
 import { createBlobStore } from "~/server/platform/files/blob-store";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import type {
@@ -34,7 +35,6 @@ import { Err, Ok, type Result } from "~/shared/result";
 
 export function createUsersRuntime(
   serverInfrastructure: ServerInfrastructure,
-  sessionService: Pick<SessionAuthenticator, "revokeAllForUser">,
   uploads: UploadsConfig,
 ) {
   const usersRepo = createUsersRepo(serverInfrastructure.db);
@@ -53,8 +53,10 @@ export function createUsersRuntime(
   };
   const writeDeps = {
     users: usersRepo,
-    sessions: sessionService,
-    workload: createMemberWorkloadRepo(serverInfrastructure.db),
+    lifecycle: createExecutorUow(serverInfrastructure.db, (tx) => ({
+      ...createAccessSecurityTx(tx),
+      workload: createMemberWorkloadRepo(tx),
+    })),
   };
   const avatarDeps = {
     users: usersRepo,

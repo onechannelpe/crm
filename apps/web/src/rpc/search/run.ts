@@ -23,7 +23,7 @@ export async function searchDirect(
         limit: r.optIntRange("limit", { min: 1, max: 100 }) ?? 20,
       })),
 
-    audit: (command) => ({ intent: command.intent }),
+    telemetry: (command) => ({ intent: command.intent }),
 
     execute: (ctx, command) =>
       application.search.runDirect(ctx, {

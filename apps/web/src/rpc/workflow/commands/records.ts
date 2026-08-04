@@ -70,7 +70,7 @@ export async function requestEditCommercialScope(input: unknown) {
         posCount: r.posInt("posCount"),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.editCommercialScope(
@@ -98,7 +98,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
           r.optEnum("onlineCollectionMode", COLLECTION_MODES) ?? null,
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.saveDigitalPolicy(
@@ -126,7 +126,7 @@ export async function requestRecordRepLegal(input: unknown) {
         email: r.str("email"),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.recordRepLegal(
@@ -151,7 +151,7 @@ export async function requestLeadReview(input: unknown) {
         reason: r.str("reason"),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.reviewLead(
@@ -168,7 +168,7 @@ export async function requestQuotationRestart(input: unknown) {
     name: "application.workflow.restart_quotation",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, { leadId }) =>
       application.workflow.commands.restartQuotation(
@@ -191,7 +191,7 @@ export async function requestLeadReassignment(input: unknown) {
         newExecutiveId: r.id("newExecutiveId", UserId),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.reassignLead(
@@ -212,7 +212,7 @@ export async function requestAddLeadToFavorites(input: unknown) {
     name: "application.workflow.add_lead_to_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: async (ctx, { leadId }) => {
       const result = await application.workflow.commands.addToFavorites(
@@ -239,7 +239,7 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
     name: "application.workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: async (ctx, { leadId }) => {
       const result = await application.workflow.commands.removeFromFavorites(
@@ -266,7 +266,7 @@ export async function requestLeadDeletion(input: unknown) {
     name: "application.workflow.delete_lead",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, { leadId }) =>
       application.workflow.commands.deleteLead(
@@ -286,7 +286,7 @@ export async function requestLeadSunatRefresh(input: unknown) {
     name: "application.workflow.request_sunat_refresh",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, { leadId }) =>
       application.workflow.commands.requestSunatRefresh(

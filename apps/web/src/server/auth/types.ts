@@ -1,12 +1,6 @@
-import type { Insertable, Selectable } from "kysely";
+import type { Selectable } from "kysely";
 
-import type { Role } from "~/domain/auth/access/rbac";
-import type {
-  PrimaryAuthMethod,
-  SessionClass,
-  StrongAuthMethod,
-} from "~/domain/auth/core/session-contract";
-import type { BranchId, UserId } from "~/domain/ids";
+import type { UserId } from "~/domain/ids";
 import type { Database, UsersTable } from "~/server/platform/database/types";
 
 import type {
@@ -14,12 +8,10 @@ import type {
   StrongAuthTotpFactorsPort,
 } from "./security/strong-auth-status";
 
-export type NewUserSessionRow = Insertable<Database["user_sessions"]>;
 export type UserSessionRow = Selectable<Database["user_sessions"]>;
 
 export interface AuthContextUsersPort {
   findById(userId: UserId): Promise<Selectable<UsersTable> | undefined>;
-  deactivateIfExpired(userId: UserId, expiredAsOf: Date): Promise<boolean>;
 }
 
 export interface AuthContextDeps {
@@ -31,39 +23,4 @@ export interface AuthContextDeps {
       userId: UserId,
     ): Promise<{ acknowledgedAt: Date | null } | null>;
   };
-}
-
-export interface SessionRepositoryPort {
-  create(session: NewUserSessionRow): Promise<void>;
-  findById(id: string): Promise<UserSessionRow | null | undefined>;
-  updateActivity(id: string, lastActivity: Date): Promise<void>;
-  extendExpiry(id: string, expiresAt: Date): Promise<void>;
-  delete(id: string): Promise<void>;
-  deleteAllForUser(userId: UserId): Promise<void>;
-}
-
-export interface SessionUsersPort {
-  findById(
-    userId: UserId,
-  ): Promise<
-    { id: UserId; is_active: boolean; expires_at: Date | null } | undefined
-  >;
-  deactivateIfExpired(userId: UserId, expiredAsOf: Date): Promise<boolean>;
-}
-
-export interface SessionDeps {
-  sessions?: SessionRepositoryPort;
-  users?: SessionUsersPort;
-}
-
-export interface CreateSessionParams {
-  userId: UserId;
-  branchId: BranchId;
-  role: Role;
-  sessionClass: SessionClass;
-  ipAddress: string | null;
-  userAgent: string | null;
-  primaryAuthMethod: PrimaryAuthMethod;
-  strongAuthMethod: StrongAuthMethod | null;
-  strongAuthAt: Date | null;
 }

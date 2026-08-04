@@ -28,7 +28,7 @@ export async function adjustMonthCredit(raw: {
         reason: r.optStr("reason") ?? "Corrección manual",
       })),
 
-    audit: ({ ruc, month }) => ({ ruc, month }),
+    telemetry: ({ ruc, month }) => ({ ruc, month }),
 
     execute: async (ctx, input) => {
       const resolved = await application.merchantStats.attribution.adjust(
@@ -67,7 +67,7 @@ export async function setMerchantTarget(raw: {
         projectedGpv: r.optNum("projectedGpv"),
       })),
 
-    audit: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
+    telemetry: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
 
     execute: async (ctx, input) => {
       const updated = await application.merchantStats.attribution.setTarget(

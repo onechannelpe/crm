@@ -37,7 +37,7 @@ export async function getExecutiveDetail(
         return { userId: parsedUserId };
       }),
 
-    audit: (params) => ({ userId: params.userId }),
+    telemetry: (params) => ({ userId: params.userId }),
 
     execute: (ctx, params) =>
       application.capacity.getExecutiveDetail(ctx, params),

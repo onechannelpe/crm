@@ -57,7 +57,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
 
     parse: () => parseImportUpload(formData),
 
-    audit: ({ file }) => ({
+    telemetry: ({ file }) => ({
       fileName: file.name,
       fileSize: file.size,
     }),

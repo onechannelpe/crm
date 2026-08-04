@@ -6,8 +6,11 @@ import {
   calendarMonthStart,
   type CalendarMonth,
 } from "~/domain/time/calendar-date";
-import { appendEvents } from "~/server/event-logs/events-repo";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createEventsWriter } from "~/server/event-logs/events-repo";
+import {
+  isTransactionExecutor,
+  type DatabaseExecutor,
+} from "~/server/platform/database/executor";
 import type { Database } from "~/server/platform/database/types";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
@@ -25,8 +28,8 @@ export async function setTarget(
   db: DatabaseExecutor,
   input: SetTargetInput,
 ): Promise<Result<void, DomainError>> {
-  if (db.isTransaction) {
-    return setTargetInTransaction(db as Transaction<Database>, input);
+  if (isTransactionExecutor(db)) {
+    return setTargetInTransaction(db, input);
   }
 
   return db.transaction().execute((tx) => setTargetInTransaction(tx, input));
@@ -65,7 +68,7 @@ export async function setTargetInTransaction(
     )
     .execute();
 
-  await appendEvents(tx, {
+  await createEventsWriter(tx).append({
     entityType: "merchant_ruc",
     entityId: ruc,
     type: "merchant_target_set",

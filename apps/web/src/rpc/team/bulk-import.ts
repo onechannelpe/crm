@@ -27,7 +27,7 @@ export async function previewBulkCsv(
         role: r.enum("role", ROLES),
       })),
 
-    audit: (input) => ({ role: input.role }),
+    telemetry: (input) => ({ role: input.role }),
 
     execute: (ctx, input) =>
       previewBulkImportService(input.csvContent, input.role, ctx),
@@ -52,7 +52,7 @@ export async function applyBulkImport(
         role: r.enum("role", ROLES),
       })),
 
-    audit: (input) => ({ role: input.role }),
+    telemetry: (input) => ({ role: input.role }),
 
     execute: (ctx, input) =>
       application.team.invites.applyBulkImport(ctx, {

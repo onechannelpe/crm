@@ -29,7 +29,7 @@ export async function requestMerchantGpvExportDownloadToken(
       parseObject({ filter }, validationFail, (reader) => ({
         filter: reader.obj("filter", readFilter),
       })),
-    audit: (input) => ({
+    telemetry: (input) => ({
       branchId: input.filter.branchId ?? null,
       sellerUserId: input.filter.sellerUserId ?? null,
       month: input.filter.month ?? null,

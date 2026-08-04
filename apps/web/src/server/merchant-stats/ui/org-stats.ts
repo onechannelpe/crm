@@ -20,7 +20,7 @@ export async function getMerchantStatsForRuc(
       return Ok({ ruc: rawRuc });
     },
 
-    audit: ({ ruc }) => ({ ruc }),
+    telemetry: ({ ruc }) => ({ ruc }),
 
     execute: ({ actor }, { ruc }) =>
       application.merchantStats.executive.rucStats({

@@ -6,7 +6,7 @@ import {
   calendarMonthStart,
   type CalendarMonth,
 } from "~/domain/time/calendar-date";
-import { appendEvents } from "~/server/event-logs/events-repo";
+import { createEventsWriter } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { Database } from "~/server/platform/database/types";
 import type { OperationContext } from "~/server/platform/operation/context";
@@ -116,7 +116,7 @@ async function adjustMerchantMonthCreditInTransaction(
       adjusted_at: input.operation.operationAt,
     })
     .execute();
-  await appendEvents(tx, {
+  await createEventsWriter(tx).append({
     entityType: "merchant_ruc",
     entityId: ruc,
     type: "merchant_attribution_resolved",

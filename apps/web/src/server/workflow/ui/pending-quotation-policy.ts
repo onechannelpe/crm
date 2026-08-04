@@ -7,7 +7,7 @@ export async function queryPendingQuotationPolicy() {
     name: "application.workflow.get_pending_quotation_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
 
-    audit: () => ({}),
+    telemetry: () => ({}),
 
     execute: ({ actor }) =>
       application.workflow.queries.getPendingQuotationPolicy({

@@ -80,7 +80,7 @@ export async function sendBroadcastNotification(
       });
     },
 
-    audit: ({ audience }) => ({ audienceKind: audience.kind }),
+    telemetry: ({ audience }) => ({ audienceKind: audience.kind }),
 
     execute: async (ctx, input) => {
       const notifications = application.notifications;

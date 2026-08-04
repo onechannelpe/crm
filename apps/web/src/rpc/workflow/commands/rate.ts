@@ -31,7 +31,7 @@ export async function requestRateProposal(input: unknown) {
         currency: r.enum("currency", CURRENCIES),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.proposeRate(
@@ -60,7 +60,7 @@ export async function requestRateProposalEdit(input: unknown) {
         currency: r.enum("currency", CURRENCIES),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.editRateProposal(
@@ -83,7 +83,7 @@ export async function requestRateAcceptance(input: unknown) {
         proposalId: r.id("proposalId", WorkflowRateProposalId),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.acceptRate(
@@ -107,7 +107,7 @@ export async function requestLeadClosure(input: unknown) {
         note: r.optStr("note"),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.closeLead(
@@ -135,7 +135,7 @@ export async function requestRateRevision(input: unknown) {
         }),
       })),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.requestRateRevision(

@@ -13,7 +13,7 @@ export async function rejectCapacityRequest(
   input: { requestId: CapacityRequestId; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
   await deps.rateLimiter.enforce(
-    "capacity.approve",
+    "capacity.reject",
     ctx.actor.userId,
     ctx,
     ctx.ipAddress,

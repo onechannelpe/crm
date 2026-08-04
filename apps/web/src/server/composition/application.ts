@@ -1,6 +1,7 @@
 import "server-only";
 import { createAuditActionPoliciesRepo } from "~/server/audit-reader/audit-policy-repo";
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
+import { createAccessSecurityContext } from "~/server/auth/infrastructure/session-revocation-context";
 import { createAuthRuntime } from "~/server/auth/runtime";
 import { runSessionCleanupTick } from "~/server/auth/session/cleanup";
 import { createCapacityRuntime } from "~/server/capacity/runtime";
@@ -44,7 +45,7 @@ import { createUsersRuntime } from "~/server/users/runtime";
 import { createLeadReservationMaintenance } from "~/server/workflow/maintenance/lead-reservation-maintenance";
 import { createWorkflowRuntime } from "~/server/workflow/runtime";
 
-export function createApplication(infrastructure: ServerInfrastructure) {
+function createApplication(infrastructure: ServerInfrastructure) {
   const applicationConfig = appConfig();
   const files = createFilesRuntime(infrastructure, uploadsConfig());
   const notifications = createNotificationsRuntime(
@@ -79,15 +80,11 @@ export function createApplication(infrastructure: ServerInfrastructure) {
     files,
   });
   const auth = createAuthRuntime(infrastructure, notifications, observability);
-  const users = createUsersRuntime(
-    infrastructure,
-    { revokeAllForUser: auth.sessions.invalidateUser },
-    uploadsConfig(),
-  );
+  const users = createUsersRuntime(infrastructure, uploadsConfig());
   const accountLifecycle = createAccountLifecycleMaintenance({
     executor: infrastructure.db,
     messaging: notifications.messaging,
-    invalidateUserSessions: (userId) => auth.sessions.invalidateUser(userId),
+    accessSecurity: createAccessSecurityContext(infrastructure.db),
   });
   const leadReservation = createLeadReservationMaintenance({
     executor: infrastructure.db,

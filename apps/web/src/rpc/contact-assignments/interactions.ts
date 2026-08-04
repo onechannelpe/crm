@@ -25,7 +25,7 @@ export async function completeContactAssignmentCall(
         notes: r.optStr("notes") ?? null,
       })),
 
-    audit: ({ assignmentId, contactId }) => ({
+    telemetry: ({ assignmentId, contactId }) => ({
       assignmentId,
       contactId,
     }),
