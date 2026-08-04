@@ -3,18 +3,12 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 
 import type { UserId } from "~/domain/ids";
 import {
+  ACTION_RATE_LIMIT_POLICY,
   createActionRateLimiter,
   type RateLimitedAction,
 } from "~/server/security/action-rate-limit";
 
-export const ACTION_RATE_LIMIT_POLICY = {
-  "leads.request": { userLimit: 10, sourceIpLimit: 50, windowMs: 60_000 },
-  "team.invite.create": {
-    userLimit: 10,
-    sourceIpLimit: 30,
-    windowMs: 60 * 60_000,
-  },
-} as const;
+export { ACTION_RATE_LIMIT_POLICY };
 
 export function checkActionRateLimit(
   actionName: RateLimitedAction,
@@ -36,7 +30,7 @@ export function checkActionRateLimit(
 export function createSecurityTestKit(ctx: TestDbContext) {
   return {
     async consumeUserLimit(
-      actionName: keyof typeof ACTION_RATE_LIMIT_POLICY,
+      actionName: RateLimitedAction,
       userId: UserId,
       ipAddress: string,
       now: Date = new Date(),
@@ -53,7 +47,7 @@ export function createSecurityTestKit(ctx: TestDbContext) {
       }
     },
     async consumeIpLimit(
-      actionName: keyof typeof ACTION_RATE_LIMIT_POLICY,
+      actionName: RateLimitedAction,
       ipAddress: string,
       now: Date = new Date(),
     ) {

@@ -1,8 +1,11 @@
+"use server";
+
 import {
   createAsync,
   revalidate,
   type RouteDefinition,
   useAction,
+  useNavigate,
   useSubmission,
 } from "@solidjs/router";
 import { Show, Suspense, createSignal } from "solid-js";
@@ -104,6 +107,7 @@ function TotpEnrollmentPanel(props: {
               disabled={props.totp.loading()}
               onValueChange={props.totp.setCode}
             />
+
             <Button
               type="button"
               size="sm"
@@ -123,6 +127,7 @@ function TotpEnrollmentPanel(props: {
 export default function SecurityPage() {
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
   const { currentUser, refreshCurrentUser } = useAuthenticatedSession();
+  const navigate = useNavigate();
 
   const [currentPassword, setCurrentPassword] = createSignal("");
   const [newPassword, setNewPassword] = createSignal("");
@@ -133,22 +138,27 @@ export default function SecurityPage() {
   const regenerateRecoveryDialog = useConfirmDialog();
 
   const recoveryStatus = createAsync(() => recoveryCodesStatusQuery());
+
   const removePasskeys = useAction(removeAllPasskeysMutation);
   const removePasskeysSubmission = useSubmission(removeAllPasskeysMutation);
+
   const disableAuthenticator = useAction(disableTotpMutation);
   const disableTotpSubmission = useSubmission(disableTotpMutation);
+
   const regenerateRecovery = useAction(regenerateRecoveryCodesMutation);
   const regenerateRecoverySubmission = useSubmission(
     regenerateRecoveryCodesMutation,
   );
+
   const acknowledgeRecovery = useAction(acknowledgeRecoveryCodesMutation);
   const acknowledgeRecoverySubmission = useSubmission(
     acknowledgeRecoveryCodesMutation,
   );
+
   const savePassword = useAction(changePasswordMutation);
   const changePasswordSubmission = useSubmission(changePasswordMutation);
 
-  // Recovery codes are returned once, so keep them in memory until confirmed.
+  // Recovery codes are shown once, so retain them until acknowledged.
   const [freshRecoveryCodes, setFreshRecoveryCodes] = createSignal<string[]>(
     [],
   );
@@ -175,9 +185,10 @@ export default function SecurityPage() {
   async function handleRemovePasskeys(): Promise<void> {
     try {
       const { message } = await removePasskeys();
+
       enqueueSuccessSnackBar(message);
-    } catch (caught: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } catch (error) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       removePasskeysDialog.close();
     }
@@ -189,24 +200,26 @@ export default function SecurityPage() {
 
       totpEnrollment.reset();
       enqueueSuccessSnackBar(message);
-    } catch (caught: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } catch (error) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       disableTotpDialog.close();
     }
   }
 
-  async function handleCopySetupKey(setupKey: string) {
+  async function handleCopySetupKey(setupKey: string): Promise<void> {
     await navigator.clipboard.writeText(setupKey);
+
     enqueueSuccessSnackBar("Clave de configuración copiada");
   }
 
   async function handleRegenerateRecovery(): Promise<void> {
     try {
       const { recoveryCodes } = await regenerateRecovery();
+
       showFreshRecoveryCodes(recoveryCodes);
-    } catch (caught: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } catch (error) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
       regenerateRecoveryDialog.close();
     }
@@ -216,12 +229,12 @@ export default function SecurityPage() {
     try {
       await acknowledgeRecovery();
       setFreshRecoveryCodes([]);
-    } catch (caught: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } catch (error) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
     }
   }
 
-  async function handleChangePassword(event: Event): Promise<void> {
+  async function handleChangePassword(event: SubmitEvent): Promise<void> {
     event.preventDefault();
 
     if (newPassword() !== confirmPassword()) {
@@ -230,14 +243,16 @@ export default function SecurityPage() {
     }
 
     try {
-      const { message } = await savePassword(currentPassword(), newPassword());
+      await savePassword(currentPassword(), newPassword());
 
-      enqueueSuccessSnackBar(message);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (caught: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(caught));
+      // Changing the password revokes the current session.
+      enqueueSuccessSnackBar(
+        "Contraseña actualizada. Inicia sesión nuevamente.",
+      );
+
+      navigate("/login", { replace: true });
+    } catch (error) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
     }
   }
 
@@ -299,6 +314,7 @@ export default function SecurityPage() {
               onInput={(event) => setCurrentPassword(event.currentTarget.value)}
               required
             />
+
             <Input
               type="password"
               label="Nueva contraseña"
@@ -306,6 +322,7 @@ export default function SecurityPage() {
               onInput={(event) => setNewPassword(event.currentTarget.value)}
               required
             />
+
             <Input
               type="password"
               label="Confirmar nueva contraseña"
@@ -372,6 +389,7 @@ export default function SecurityPage() {
                 <p class={styles.sectionDescription}>
                   Puedes volver a configurarla cuando lo necesites.
                 </p>
+
                 <Button
                   type="button"
                   size="sm"
@@ -418,6 +436,7 @@ export default function SecurityPage() {
                       {recoveryStatus()?.total ?? 0} códigos. Úsalos para entrar
                       si pierdes tu método de autenticación.
                     </p>
+
                     <Button
                       type="button"
                       size="sm"

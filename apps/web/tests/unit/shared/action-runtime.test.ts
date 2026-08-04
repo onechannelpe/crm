@@ -41,7 +41,8 @@ const actor = makeAuthSession();
 function ports() {
   const report = vi.fn<(error: unknown) => void>();
   const record = vi.fn<(row: unknown) => void>();
-  return { report, record };
+  const setRetryAfterHeader = vi.fn<(retryAfterSeconds: number) => void>();
+  return { report, record, setRetryAfterHeader };
 }
 
 const okExecute = () =>

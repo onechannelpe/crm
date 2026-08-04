@@ -1,5 +1,6 @@
 import "server-only";
 import { captureException } from "@sentry/bun";
+import { getRequestEvent } from "solid-js/web";
 
 import type { WireError } from "~/contracts/errors";
 import type { DomainError } from "~/domain/errors";
@@ -16,9 +17,18 @@ const serverFunctionExecutor = createServerFunctionExecutor({
   record: (row) => {
     void recordActionObservation(row).catch(() => {});
   },
+
   report: (error) => {
     logger.error("action_fault", faultMeta(error));
     captureException(error);
+  },
+
+  // Keep HTTP response handling at the transport boundary.
+  setRetryAfterHeader: (retryAfterSeconds) => {
+    getRequestEvent()?.response.headers.set(
+      "Retry-After",
+      String(retryAfterSeconds),
+    );
   },
 });
 

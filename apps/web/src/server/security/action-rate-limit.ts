@@ -25,7 +25,8 @@ interface ActionRateLimitPolicy {
   windowMs: number;
 }
 
-const ACTION_RATE_LIMIT_POLICY = {
+// Exported so tests use the same limits as production.
+export const ACTION_RATE_LIMIT_POLICY = Object.freeze({
   "leads.request": { userLimit: 10, sourceIpLimit: 50, windowMs: 60_000 },
   "search.use": { userLimit: 120, sourceIpLimit: 300, windowMs: 60_000 },
   "capacity.request": { userLimit: 20, sourceIpLimit: 60, windowMs: 60_000 },
@@ -36,13 +37,9 @@ const ACTION_RATE_LIMIT_POLICY = {
     sourceIpLimit: 30,
     windowMs: 60 * 60_000,
   },
-} satisfies Record<string, ActionRateLimitPolicy>;
+} satisfies Record<string, ActionRateLimitPolicy>);
 
 export type RateLimitedAction = keyof typeof ACTION_RATE_LIMIT_POLICY;
-
-type RateLimitDeps = {
-  actionRateLimits: ActionRateLimitsRepo;
-};
 
 export interface ActionRateLimiter {
   enforce(
@@ -81,8 +78,10 @@ async function blockWithAudit(params: {
     operation,
     events,
   } = params;
+
   const retryAfterMs =
     windowMs - (operation.operationAt.getTime() - windowStartedAt.getTime());
+
   const retryAfterSeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
 
   try {
@@ -91,7 +90,13 @@ async function blockWithAudit(params: {
       entityType: "user",
       entityId: auditEntityId("user", userId),
       actorUserId: userId,
-      payload: { actionName, scope, limit, windowMs, retryAfterMs },
+      payload: {
+        actionName,
+        scope,
+        limit,
+        windowMs,
+        retryAfterMs,
+      },
       occurredAt: operation.operationAt,
     });
   } catch (error: unknown) {
@@ -113,16 +118,15 @@ async function blockWithAudit(params: {
 async function checkActionRateLimit(
   actionName: RateLimitedAction,
   userId: UserId,
-  deps: RateLimitDeps,
+  rateLimits: ActionRateLimitsRepo,
   operation: OperationContext,
   events: Pick<EventsWriter, "append">,
   ip: string,
 ): Promise<void> {
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
 
-  // Skip the IP counter when the user is over their limit; incrementing it
-  // would consume IP budget shared with legitimate users behind the same NAT.
-  const userSnapshot = await deps.actionRateLimits.checkAndIncrement(
+  // Do not consume shared IP budget after the user has exceeded their own limit.
+  const userSnapshot = await rateLimits.checkAndIncrement(
     buildUserKey(actionName, userId),
     operation.operationAt,
     policy.windowMs,
@@ -141,8 +145,7 @@ async function checkActionRateLimit(
     });
   }
 
-  // IP counter runs only when the user is within their personal budget.
-  const ipSnapshot = await deps.actionRateLimits.checkAndIncrement(
+  const ipSnapshot = await rateLimits.checkAndIncrement(
     buildIpKey(actionName, ip),
     operation.operationAt,
     policy.windowMs,
@@ -169,7 +172,7 @@ export function createActionRateLimiter(
     throw new Error("action_rate_limiter_requires_root_database");
   }
 
-  const deps = { actionRateLimits: createActionRateLimitsRepo(db) };
+  const rateLimits = createActionRateLimitsRepo(db);
   const events = {
     append: (input: Parameters<EventsWriter["append"]>[0]) =>
       db.transaction().execute((tx) => createEventsWriter(tx).append(input)),
@@ -180,7 +183,7 @@ export function createActionRateLimiter(
       return checkActionRateLimit(
         actionName,
         userId,
-        deps,
+        rateLimits,
         operation,
         events,
         ip,

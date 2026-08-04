@@ -55,6 +55,9 @@ function projectFault(
   if (error.kind === "internal" || error.kind === "external") {
     ports.report(error);
   }
+  if (error.kind === "rate_limit") {
+    ports.setRetryAfterHeader(error.retryAfterSeconds);
+  }
   return toWire(error);
 }
 

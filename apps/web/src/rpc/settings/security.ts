@@ -1,3 +1,4 @@
+import { deleteSessionCookie } from "~/server/auth/session/cookies";
 import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
@@ -11,7 +12,7 @@ export async function changePassword(
 ): Promise<{ message: string }> {
   "use server";
 
-  return executeSessionServerFunction({
+  const result = await executeSessionServerFunction({
     name: "settings.security.change_password",
     access: { kind: "auth" },
 
@@ -21,14 +22,19 @@ export async function changePassword(
         newPassword: r.str("newPassword"),
       })),
 
-    execute: (ctx, input) =>
+    execute: ({ actor, operationAt }, input) =>
       application.auth.security.changePassword(
-        ctx.actor.userId,
+        actor.userId,
         input.currentPassword,
         input.newPassword,
-        ctx.operationAt,
+        operationAt,
       ),
   });
+
+  // changePassword revokes the current session, so clear the now-invalid cookie.
+  deleteSessionCookie();
+
+  return result;
 }
 
 export async function removeAllPasskeys(): Promise<{ message: string }> {
@@ -38,11 +44,8 @@ export async function removeAllPasskeys(): Promise<{ message: string }> {
     name: "settings.security.remove_passkeys",
     access: { kind: "session" },
 
-    execute: (ctx) =>
-      application.auth.security.removePasskeys(
-        ctx.actor.userId,
-        ctx.operationAt,
-      ),
+    execute: ({ actor, operationAt }) =>
+      application.auth.security.removePasskeys(actor.userId, operationAt),
   });
 }
 
@@ -53,7 +56,7 @@ export async function disableTotp(): Promise<{ message: string }> {
     name: "settings.security.disable_totp",
     access: { kind: "session" },
 
-    execute: (ctx) =>
-      application.auth.security.disableTotp(ctx.actor.userId, ctx.operationAt),
+    execute: ({ actor, operationAt }) =>
+      application.auth.security.disableTotp(actor.userId, operationAt),
   });
 }

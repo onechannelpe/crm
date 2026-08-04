@@ -52,26 +52,32 @@ export const route = {
 function parseRequestedStep(
   raw: string | string[] | undefined,
 ): RequestedSecurityStep {
-  if (Array.isArray(raw)) return null;
+  if (Array.isArray(raw)) {
+    return null;
+  }
+
   return raw === "passkey" || raw === "totp" ? raw : null;
 }
 
 function OnboardingContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
+
   const loadedSnapshot = createAsync(() => onboardingSnapshotQuery(), {
     deferStream: true,
   });
   const [localSnapshot, setLocalSnapshot] = createSignal<OnboardingSnapshot>();
   const snapshot = () => localSnapshot() ?? loadedSnapshot();
-  const { enqueueErrorSnackBar } = useSnackBar();
 
   const [phone, setPhone] = createSignal("");
   const [password, setPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
   const [submitting, setSubmitting] = createSignal(false);
+
   const [passkeySupported, setPasskeySupported] = createSignal(false);
   const [passkeyPhase, setPasskeyPhase] = createSignal<PasskeyPhase>("idle");
+
   const [totpLoading, setTotpLoading] = createSignal(false);
   const [totpEnrollment, setTotpEnrollment] = createSignal<{
     otpauthUri: string;
@@ -79,21 +85,31 @@ function OnboardingContent() {
   } | null>(null);
   const [totpStartAttempted, setTotpStartAttempted] = createSignal(false);
   const [totpCode, setTotpCode] = createSignal("");
+
   const [recoveryCodes, setRecoveryCodes] = createSignal<string[]>([]);
 
   let initializedPhone = false;
+
   createEffect(() => {
     const value = snapshot()?.user.phone;
-    if (initializedPhone || value === undefined) return;
+
+    if (initializedPhone || value === undefined) {
+      return;
+    }
+
     initializedPhone = true;
     setPhone(value ?? "");
   });
 
-  onMount(() => setPasskeySupported(isPasskeyRegistrationSupported()));
+  onMount(() => {
+    setPasskeySupported(isPasskeyRegistrationSupported());
+  });
 
   const requestedStep = createMemo(() => parseRequestedStep(searchParams.step));
+
   const step = createMemo(() => {
     const current = snapshot();
+
     return current
       ? resolveOnboardingStep(current, requestedStep())
       : undefined;
@@ -105,28 +121,50 @@ function OnboardingContent() {
       setTotpStartAttempted(false);
       return;
     }
-    if (totpEnrollment() || totpLoading() || totpStartAttempted()) return;
+
+    if (totpEnrollment() || totpLoading() || totpStartAttempted()) {
+      return;
+    }
 
     setTotpStartAttempted(true);
     setTotpLoading(true);
+
     void beginTotpEnrollment()
       .then(setTotpEnrollment)
-      .catch((error: unknown) =>
-        enqueueErrorSnackBar(actionErrorMessage(error)),
-      )
-      .finally(() => setTotpLoading(false));
+      .catch((error: unknown) => {
+        enqueueErrorSnackBar(actionErrorMessage(error));
+      })
+      .finally(() => {
+        setTotpLoading(false);
+      });
   });
+
+  function applyCompletion(
+    result: Awaited<ReturnType<typeof completeOnboardingAction>>,
+  ) {
+    if (result.recoveryCodes.length === 0) {
+      navigate(result.redirectTo);
+      return;
+    }
+
+    setRecoveryCodes(result.recoveryCodes);
+  }
 
   async function handlePasswordSubmit() {
     setSubmitting(true);
+
     try {
-      const updated = await changeOnboardingPassword({
+      await changeOnboardingPassword({
         password: password(),
         confirmPassword: confirmPassword(),
       });
-      setPassword("");
-      setConfirmPassword("");
-      setLocalSnapshot(updated);
+
+      // Changing the password revokes this session. Signing in again resumes
+      // onboarding from the persisted user state.
+      enqueueSuccessSnackBar(
+        "Contraseña actualizada. Inicia sesión nuevamente para continuar.",
+      );
+      navigate("/login", { replace: true });
     } catch (error: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(error));
     } finally {
@@ -136,10 +174,15 @@ function OnboardingContent() {
 
   async function handleProfileSubmit() {
     const normalizedPhone = normalizePhoneInput(phone());
+
     setPhone(normalizedPhone);
-    if (!isValidPhone(normalizedPhone)) return;
+
+    if (!isValidPhone(normalizedPhone)) {
+      return;
+    }
 
     setSubmitting(true);
+
     try {
       setLocalSnapshot(
         await submitOnboardingProfile({ phone: normalizedPhone }),
@@ -153,6 +196,7 @@ function OnboardingContent() {
 
   async function handleCompleteWithoutFactor() {
     setSubmitting(true);
+
     try {
       const result = await completeOnboardingAction({ method: "none" });
       navigate(result.redirectTo);
@@ -172,15 +216,19 @@ function OnboardingContent() {
     }
 
     setPasskeyPhase("device");
+
     try {
       const { challengeId, options } = await beginPasskeyEnrollment();
       const response = await createRegistrationResponse(options);
+
       setPasskeyPhase("server");
+
       const result = await completeOnboardingAction({
         method: "passkey",
         challengeId,
         response,
       });
+
       applyCompletion(result);
     } catch (error: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(error));
@@ -190,14 +238,18 @@ function OnboardingContent() {
   }
 
   async function handleTotpVerify() {
-    if (!/^\d{6}$/.test(totpCode())) return;
+    if (!/^\d{6}$/.test(totpCode())) {
+      return;
+    }
 
     setTotpLoading(true);
+
     try {
       const result = await completeOnboardingAction({
         method: "totp",
         code: totpCode(),
       });
+
       applyCompletion(result);
     } catch (error: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(error));
@@ -206,19 +258,9 @@ function OnboardingContent() {
     }
   }
 
-  function applyCompletion(
-    result: Awaited<ReturnType<typeof completeOnboardingAction>>,
-  ) {
-    if (result.recoveryCodes.length === 0) {
-      navigate(result.redirectTo);
-      return;
-    }
-
-    setRecoveryCodes(result.recoveryCodes);
-  }
-
   async function handleRecoveryCodesComplete() {
     setSubmitting(true);
+
     try {
       const result = await acknowledgeRecoveryCodes();
       navigate(result.redirectTo);

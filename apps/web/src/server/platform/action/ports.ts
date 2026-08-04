@@ -5,4 +5,5 @@ import type { TelemetryRow } from "./telemetry";
 export type ServerFunctionPorts = {
   record: (row: TelemetryRow) => void;
   report: (error: DomainError) => void;
+  setRetryAfterHeader: (retryAfterSeconds: number) => void;
 };
