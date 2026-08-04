@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UserId } from "~/domain/ids";
 import { respondToAvatarRequest } from "~/server/users/avatar-http";
+import type { AvatarService } from "~/server/users/avatar-service";
 
-const getMock = vi.fn();
+const getMock = vi.fn<AvatarService["get"]>();
 const session = makeAuthSession({ userId: UserId.trust("7") });
 
 function requestAvatar(

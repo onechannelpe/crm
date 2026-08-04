@@ -21,8 +21,8 @@ const SESSION_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 const logger = createLogger("background-jobs", { workerId: WORKER_ID });
 
 interface QueueWaker {
-  wake(): void;
-  stop(): Promise<void>;
+  readonly wake: () => void;
+  readonly stop: () => Promise<void>;
 }
 
 interface ScheduledTask {
@@ -31,44 +31,42 @@ interface ScheduledTask {
 
 function makeWaker(run: () => Promise<void>): QueueWaker {
   let stopped = false;
-  let running = false;
-  let pending = false;
   let active: Promise<void> | null = null;
+  let followUpRequested = false;
 
-  const drain = async (): Promise<void> => {
-    running = true;
-
-    try {
-      do {
-        pending = false;
-        await run();
-      } while (pending && !stopped);
-    } catch (error: unknown) {
-      logger.error("queue_run_failed", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    } finally {
-      running = false;
-      active = null;
+  const schedule = (): void => {
+    if (stopped || active) {
+      return;
     }
+
+    followUpRequested = false;
+    active = run()
+      .catch((error: unknown) => {
+        logger.error("queue_run_failed", {
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      })
+      .finally(() => {
+        active = null;
+
+        if (followUpRequested) {
+          schedule();
+        }
+      });
   };
 
   return {
-    wake() {
+    wake: () => {
       if (stopped) {
         return;
       }
 
-      if (running) {
-        pending = true;
-        return;
-      }
-
-      active = drain();
+      followUpRequested = true;
+      schedule();
     },
-    async stop() {
+    stop: async () => {
       stopped = true;
-      pending = false;
+      followUpRequested = false;
       await active;
     },
   };
@@ -195,7 +193,7 @@ export function startMaintenanceWorker(): { stop(): Promise<void> } {
 
   const listener = createPgListener(dbUrl, channels);
 
-  void listener.start();
+  listener.start();
 
   wakeAll();
 
