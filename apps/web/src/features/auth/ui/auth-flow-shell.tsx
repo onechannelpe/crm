@@ -1,7 +1,8 @@
 import { ResponsiveImage } from "@crm/images";
 import { type JSX } from "solid-js";
 
-import { PLATFORM_LOGO, PLATFORM_NAME } from "~/shared/branding";
+import { PLATFORM_NAME } from "~/shared/branding";
+import { PLATFORM_LOGO } from "~/shared/branding-logo";
 
 import styles from "./auth-flow-shell.module.css";
 
