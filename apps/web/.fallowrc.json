@@ -35,7 +35,7 @@
       "exports": ["Collapsible", "UpdateLabel"]
     },
     {
-      "file": "src/server/platform/runtime/realtime-lifecycle.ts",
+      "file": "src/server/entrypoints/nitro/realtime-lifecycle.ts",
       "exports": ["default"]
     }
   ],
@@ -45,7 +45,7 @@
     "virtual:*",
     "@solidjs/start/*"
   ],
-  "dynamicallyLoaded": ["src/server/platform/runtime/realtime-lifecycle.ts"],
+  "dynamicallyLoaded": ["src/server/entrypoints/nitro/realtime-lifecycle.ts"],
   "ignoreDependencies": [
     "@crm/contracts",
     "@crm/email-composer",
@@ -115,6 +115,10 @@
       {
         "from": "server/composition",
         "allow": ["contracts", "domain", "server", "shared"]
+      },
+      {
+        "from": "server/entrypoints",
+        "allow": ["server/composition", "server/platform", "shared"]
       },
       {
         "from": "server/auth",

@@ -4,7 +4,7 @@
  * Time enters the system at three inbound edges and nowhere else: an HTTP
  * request arriving (`middleware.ts`), a job batch being claimed
  * (`jobs/job-queue.ts`), and a scheduled tick firing
- * (`platform/workers/maintenance-worker.ts`). Each edge reads the clock once,
+ * (`entrypoints/worker/maintenance-worker.ts`). Each edge reads the clock once,
  * and everything that operation writes agrees on that instant, so a single
  * operation can never record two different times.
  *

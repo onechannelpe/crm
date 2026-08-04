@@ -1,4 +1,4 @@
-import { startMaintenanceWorker } from "~/server/platform/workers/maintenance-worker";
+import { startMaintenanceWorker } from "~/server/entrypoints/worker/maintenance-worker";
 
 const worker = startMaintenanceWorker();
 let shutdown: Promise<void> | null = null;
