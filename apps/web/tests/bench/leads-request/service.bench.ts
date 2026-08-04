@@ -4,6 +4,7 @@ import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 import type { BranchId, UserId } from "~/domain/ids";
 import { createContactAssignmentsRuntime } from "~/server/contact-assignments/runtime";
 
+import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";
 import { createLeadsBench, type LeadsBench } from "./fixtures";
@@ -39,7 +40,7 @@ describe("lead refill service benchmark", () => {
     async () => {
       const result = await assignmentRuntime.assign(
         { actorUserId: userId, branchId },
-        operationAt(new Date()),
+        operationAt(BENCH_NOW),
       );
 
       if (!result.ok) {

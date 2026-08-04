@@ -8,6 +8,7 @@ import type { UsageReservationPorts } from "~/server/capacity/application/usage/
 import { createSearchUsageReservationPorts } from "~/server/search/infrastructure/search-usage-reservation-ports";
 import { Ok } from "~/shared/result";
 
+import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";
 import { resetQuotaUsage, seedQuotaUser } from "./fixtures";
@@ -43,7 +44,7 @@ describe("search capacity consume service benchmark", () => {
           brand: SearchReservationId.trust,
         },
         usageReservationPorts,
-        operationAt(new Date()),
+        operationAt(BENCH_NOW),
         async () => Ok({ value: undefined, consumed: 1 }),
       );
       if (!result.ok) {

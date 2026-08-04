@@ -6,6 +6,7 @@ import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { isErr } from "~/shared/result";
 
+import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";
 import {
@@ -45,7 +46,7 @@ describe("auth login service benchmark", () => {
         },
         createAuthLoginContext(ctx.db),
         createTestPasskeyProvider(ctx.repos),
-        operationAt(new Date()),
+        operationAt(BENCH_NOW),
       );
 
       if (
