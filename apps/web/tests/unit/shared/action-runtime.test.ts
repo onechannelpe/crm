@@ -1,5 +1,5 @@
 import { makeAuthSession } from "@tests/support/unit/factories";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AuthSession } from "~/domain/auth/access/session-types";
 import {
@@ -38,20 +38,32 @@ vi.mock("~/server/platform/action/context", () => ({
 
 const actor = makeAuthSession();
 
-function ports() {
+function createPorts() {
   const report = vi.fn<(error: unknown) => void>();
   const record = vi.fn<(row: unknown) => void>();
   const setRetryAfterHeader = vi.fn<(retryAfterSeconds: number) => void>();
-  return { report, record, setRetryAfterHeader };
+
+  return {
+    report,
+    record,
+    setRetryAfterHeader,
+  };
 }
 
-const okExecute = () =>
-  vi.fn<() => Promise<ReturnType<typeof Ok<string>>>>(async () => Ok("x"));
+function createOkExecute() {
+  return vi.fn<() => Promise<ReturnType<typeof Ok<string>>>>(async () =>
+    Ok("x"),
+  );
+}
 
 describe("action runtime", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("returns a validation wire error from parse before auth, with no telemetry row", async () => {
-    const p = ports();
-    const { executeResult } = createServerFunctionExecutor(p);
+    const ports = createPorts();
+    const { executeResult } = createServerFunctionExecutor(ports);
 
     const result = await executeResult({
       name: "test.parse.validation",
@@ -61,22 +73,26 @@ describe("action runtime", () => {
     });
 
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) return;
+
+    if (!isErr(result)) {
+      return;
+    }
+
     expect(result.error).toEqual({
       kind: "validation",
       code: "bad_input",
       message: "Revisa los datos ingresados.",
     });
     expect(authenticate).not.toHaveBeenCalled();
-    expect(p.record).not.toHaveBeenCalled();
-    expect(p.report).not.toHaveBeenCalled();
+    expect(ports.record).not.toHaveBeenCalled();
+    expect(ports.report).not.toHaveBeenCalled();
   });
 
   it("propagates an unexpected parse throw without recording telemetry", async () => {
-    const p = ports();
-    const { executeResult } = createServerFunctionExecutor(p);
+    const ports = createPorts();
+    const { executeResult } = createServerFunctionExecutor(ports);
     const parserError = new Error("raw parser detail");
-    const execute = okExecute();
+    const execute = createOkExecute();
 
     await expect(
       executeResult({
@@ -90,14 +106,15 @@ describe("action runtime", () => {
     ).rejects.toBe(parserError);
 
     expect(execute).not.toHaveBeenCalled();
-    expect(p.report).not.toHaveBeenCalled();
-    expect(p.record).not.toHaveBeenCalled();
+    expect(ports.report).not.toHaveBeenCalled();
+    expect(ports.record).not.toHaveBeenCalled();
   });
 
-  it("distinguishes unauthenticated from forbidden", async () => {
+  it("returns unauthenticated without recording telemetry", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Err(unauthenticated()));
-    const p = ports();
-    const { executeResult } = createServerFunctionExecutor(p);
+
+    const ports = createPorts();
+    const { executeResult } = createServerFunctionExecutor(ports);
 
     const result = await executeResult({
       name: "test.unauthenticated",
@@ -106,17 +123,22 @@ describe("action runtime", () => {
     });
 
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) return;
+
+    if (!isErr(result)) {
+      return;
+    }
+
     expect(result.error.kind).toBe("unauthenticated");
-    expect(p.record).not.toHaveBeenCalled();
+    expect(ports.record).not.toHaveBeenCalled();
   });
 
-  it("records a telemetry row for a forbidden attempt by an authenticated actor", async () => {
+  it("records a forbidden attempt by an authenticated actor", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
     vi.mocked(authorizePermission).mockReturnValueOnce(Err(forbidden()));
-    const p = ports();
-    const { executeResult } = createServerFunctionExecutor(p);
-    const execute = okExecute();
+
+    const ports = createPorts();
+    const { executeResult } = createServerFunctionExecutor(ports);
+    const execute = createOkExecute();
 
     const result = await executeResult({
       name: "test.forbidden",
@@ -126,18 +148,26 @@ describe("action runtime", () => {
 
     expect(execute).not.toHaveBeenCalled();
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) return;
+
+    if (!isErr(result)) {
+      return;
+    }
+
     expect(result.error.kind).toBe("forbidden");
-    expect(p.record).toHaveBeenCalledTimes(1);
-    expect(p.record).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "error", errorCode: "forbidden" }),
+    expect(ports.record).toHaveBeenCalledTimes(1);
+    expect(ports.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "error",
+        errorCode: "forbidden",
+      }),
     );
   });
 
-  it("hides an external fault behind a generic internal wire error and reports it", async () => {
+  it("hides and reports an external fault", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
-    const p = ports();
-    const { executeResult } = createServerFunctionExecutor(p);
+
+    const ports = createPorts();
+    const { executeResult } = createServerFunctionExecutor(ports);
     const fault = external("Stripe 500", {
       code: "provider_down",
       details: { secret: "leak" },
@@ -150,23 +180,31 @@ describe("action runtime", () => {
     });
 
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) return;
+
+    if (!isErr(result)) {
+      return;
+    }
+
     expect(result.error).toEqual({
       kind: "internal",
       code: "provider_down",
       message: "Ocurrió un error inesperado.",
     });
     expect(result.error).not.toHaveProperty("details");
-    expect(p.report).toHaveBeenCalledWith(fault);
-    expect(p.record).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "error", errorCode: "internal" }),
+    expect(ports.report).toHaveBeenCalledWith(fault);
+    expect(ports.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "error",
+        errorCode: "internal",
+      }),
     );
   });
 
-  it("carries retryAfterSeconds through a rate-limited failure and records a row", async () => {
+  it("returns retry metadata and records a rate-limited failure", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
-    const p = ports();
-    const { executeResult } = createServerFunctionExecutor(p);
+
+    const ports = createPorts();
+    const { executeResult } = createServerFunctionExecutor(ports);
 
     const result = await executeResult({
       name: "test.rate_limited",
@@ -175,22 +213,31 @@ describe("action runtime", () => {
     });
 
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) return;
+
+    if (!isErr(result)) {
+      return;
+    }
+
     expect(result.error).toEqual({
       kind: "rate_limit",
       code: null,
       message: "Demasiados intentos. Inténtalo de nuevo en unos momentos.",
       retryAfterSeconds: 42,
     });
-    expect(p.record).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "error", errorCode: "rate_limit" }),
+    expect(ports.setRetryAfterHeader).toHaveBeenCalledWith(42);
+    expect(ports.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "error",
+        errorCode: "rate_limit",
+      }),
     );
   });
 
-  it("records a success row and returns the value", async () => {
+  it("returns the value and records a successful execution", async () => {
     vi.mocked(authenticate).mockResolvedValueOnce(Ok(actor));
-    const p = ports();
-    const { executeResult } = createServerFunctionExecutor(p);
+
+    const ports = createPorts();
+    const { executeResult } = createServerFunctionExecutor(ports);
 
     const result = await executeResult({
       name: "test.ok",
@@ -200,9 +247,13 @@ describe("action runtime", () => {
     });
 
     expect(isErr(result)).toBe(false);
-    if (isErr(result)) return;
+
+    if (isErr(result)) {
+      return;
+    }
+
     expect(result.value).toEqual({ done: true });
-    expect(p.record).toHaveBeenCalledWith(
+    expect(ports.record).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "ok",
         errorCode: null,
