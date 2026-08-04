@@ -10,6 +10,7 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 
+import { nitroPrerenderAssetsPlugin } from "./nitro-prerender-assets";
 import { createRequestTracePlugin, resolveRequestTraceConfig } from "./tracer";
 
 const requestTraceConfig = resolveRequestTraceConfig(process.env);
@@ -70,6 +71,7 @@ export default defineConfig({
       plugins: ["./src/server/entrypoints/nitro/realtime-lifecycle.ts"],
       rollupConfig: {
         external: [/^@node-rs\/argon2/],
+        plugins: [nitroPrerenderAssetsPlugin()],
       },
       prerender: {
         autoSubfolderIndex: true,
