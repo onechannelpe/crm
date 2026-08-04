@@ -1,5 +1,7 @@
+import type { Transaction } from "kysely";
+
 import { type DomainError } from "~/domain/errors";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 import {
@@ -19,7 +21,7 @@ import {
 export type CommittedLeadEvent = { event: LeadHistoryEventDraft; id: string };
 
 export type LeadTransaction = {
-  tx: DatabaseExecutor;
+  tx: Transaction<Database>;
   repos: WorkflowRepos;
   operationAt: Date;
   commitTransition(
@@ -71,7 +73,7 @@ export function runLeadTransaction<O>(
           return outcome;
         },
         appendFacts: async (events) => {
-          const outcome = await appendFacts(txScope, events);
+          const outcome = await appendFacts(tx, scope.operationAt, events);
           if (outcome.ok)
             committed.push(...zip(events, outcome.value.eventIds));
           return outcome;

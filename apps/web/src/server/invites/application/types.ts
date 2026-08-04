@@ -2,7 +2,7 @@ import type { Role } from "~/domain/auth/access/rbac";
 import type { DomainError } from "~/domain/errors";
 import type { ExecutiveCategory } from "~/domain/identity/executive-category";
 import type { BranchId, TeamId, UserId, UserInviteId } from "~/domain/ids";
-import type { EventsRepo } from "~/server/event-logs/events-repo";
+import type { EventsWriter } from "~/server/event-logs/events-repo";
 import type { AppUow } from "~/server/platform/database/uow";
 import type { OperationContext } from "~/server/platform/operation/context";
 import type { TeamsRepo } from "~/server/users/repos-teams";
@@ -10,7 +10,7 @@ import type { UserInvitesRepo } from "~/server/users/repos-user-invites";
 import type { UsersRepo } from "~/server/users/repos-users";
 import type { Result } from "~/shared/result";
 
-export interface InviteDeps {
+export interface InviteBaseRepos {
   users: Pick<
     UsersRepo,
     | "findById"
@@ -32,18 +32,21 @@ export interface InviteDeps {
     | "markAccepted"
     | "markDelivered"
   >;
-  events: Pick<EventsRepo, "append">;
+}
+
+export interface InviteTransactionRepos extends InviteBaseRepos {
+  events: EventsWriter;
 }
 
 export interface InviteServiceDeps {
   inviteTtlMs?: number;
-  uow: AppUow<InviteDeps>;
+  uow: AppUow<InviteTransactionRepos>;
   hashPassword?: (password: string) => Promise<string>;
 }
 
 export interface InviteRuntime {
   inviteTtlMs: number;
-  uow: AppUow<InviteDeps>;
+  uow: AppUow<InviteTransactionRepos>;
   hashPassword: (password: string) => Promise<string>;
 }
 

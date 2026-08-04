@@ -9,7 +9,7 @@ import type {
 } from "~/domain/auth/core/session-contract";
 import type { BranchId, UserId } from "~/domain/ids";
 import type { UserSessionRow } from "~/server/auth/types";
-import type { EventsRepo } from "~/server/event-logs/events-repo";
+import type { EventsWriter } from "~/server/event-logs/events-repo";
 import type { UsersTable } from "~/server/platform/database/types";
 import type { Logger } from "~/shared/observability/logger";
 
@@ -33,7 +33,10 @@ export interface SessionSpec {
   strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: Date | null;
   impersonatorUserId?: UserId | null;
-  auditAction?: "login" | "login_passkey";
+}
+
+export interface AuditedSessionSpec extends SessionSpec {
+  auditAction: "login" | "login_passkey";
 }
 
 export interface IssuedSession {
@@ -83,14 +86,21 @@ export interface SessionUsersPort {
 export interface SessionEventPort {
   // Service does not read the return; adapters can return void, an id, or an
   // event count without breaking the contract.
-  append(event: Parameters<EventsRepo["append"]>[0]): Promise<unknown>;
+  append(event: Parameters<EventsWriter["append"]>[0]): Promise<unknown>;
 }
 
-export interface SessionServiceDeps {
+export interface SessionAuthenticatorDeps {
   sessions: SessionRepositoryPort;
   users: SessionUsersPort;
-  events: SessionEventPort;
   logger?: Pick<Logger, "error">;
+}
+
+export interface SessionIssuerDeps {
+  sessions: Pick<SessionRepositoryPort, "create">;
+}
+
+export interface AuditedSessionIssuerDeps extends SessionIssuerDeps {
+  events: SessionEventPort;
 }
 
 export type { AuthSession };

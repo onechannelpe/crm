@@ -6,7 +6,7 @@ import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { AuthSetupContext } from "../infrastructure/setup-context";
-import { createSessionService } from "../session/session.service";
+import { createSessionAuthenticator } from "../session/session.service";
 
 export async function changeInstallationPassword(
   deps: AuthSetupContext,
@@ -40,10 +40,9 @@ export async function changeInstallationPassword(
 
   const changed = await deps.uow.run(async (repos) => {
     await repos.users.replaceInstallationPassword(user.id, passwordHash);
-    await createSessionService({
+    await createSessionAuthenticator({
       sessions: repos.sessions,
       users: repos.users,
-      events: repos.events,
     }).revokeOtherForUser(user.id, input.currentSessionId);
     await repos.events.append({
       type: "password_changed",

@@ -3,14 +3,14 @@ import { generateInviteToken } from "~/domain/auth/invite/tokens";
 import { addMilliseconds, epochMilliseconds } from "~/domain/time/clock";
 
 import type {
-  InviteDeps,
   InviteIssueResult,
   InviteRuntime,
+  InviteTransactionRepos,
   IssueInviteInput,
 } from "./types";
 
 export async function issueInvite(
-  repos: InviteDeps,
+  repos: Pick<InviteTransactionRepos, "userInvites" | "events">,
   runtime: InviteRuntime,
   input: IssueInviteInput,
   issuedAt: Date,

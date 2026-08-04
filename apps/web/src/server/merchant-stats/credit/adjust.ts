@@ -1,11 +1,14 @@
+import type { Transaction } from "kysely";
+
 import { fail, type DomainError } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
 import {
   calendarMonthStart,
   type CalendarMonth,
 } from "~/domain/time/calendar-date";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
+import { appendEvents } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -22,21 +25,19 @@ export async function adjustMerchantMonthCredit(
   db: DatabaseExecutor,
   input: AdjustMerchantMonthCreditInput,
 ): Promise<Result<void, DomainError>> {
-  if (db.isTransaction) {
-    return adjustInTransaction(db, input);
-  }
-
-  return db.transaction().execute((tx) => adjustInTransaction(tx, input));
+  return db
+    .transaction()
+    .execute((tx) => adjustMerchantMonthCreditInTransaction(tx, input));
 }
 
-async function adjustInTransaction(
-  db: DatabaseExecutor,
+async function adjustMerchantMonthCreditInTransaction(
+  tx: Transaction<Database>,
   input: AdjustMerchantMonthCreditInput,
 ): Promise<Result<void, DomainError>> {
   const month = calendarMonthStart(input.month);
   const ruc = input.ruc.trim();
   const seller = input.sellerUserId
-    ? await db
+    ? await tx
         .selectFrom("users")
         .select("branch_id")
         .where("id", "=", input.sellerUserId)
@@ -47,7 +48,7 @@ async function adjustInTransaction(
     return Err(fail("invalid_executive"));
   }
 
-  const credit = await db
+  const credit = await tx
     .selectFrom("merchant_month_credits")
     .select("ruc")
     .where("ruc", "=", ruc)
@@ -59,7 +60,7 @@ async function adjustInTransaction(
       return Err(fail("merchant_attribution_not_found"));
     }
 
-    const source = await db
+    const source = await tx
       .selectFrom("organizations as organization")
       .innerJoin(
         "gpv_snapshot_placements as placement",
@@ -88,7 +89,7 @@ async function adjustInTransaction(
       return Err(fail("merchant_credit_source_not_found"));
     }
 
-    await db
+    await tx
       .insertInto("merchant_month_credits")
       .values({
         ruc,
@@ -103,7 +104,7 @@ async function adjustInTransaction(
       .execute();
   }
 
-  await db
+  await tx
     .insertInto("merchant_month_credit_adjustments")
     .values({
       ruc,
@@ -115,7 +116,7 @@ async function adjustInTransaction(
       adjusted_at: input.operation.operationAt,
     })
     .execute();
-  await createEventsRepo(db).append({
+  await appendEvents(tx, {
     entityType: "merchant_ruc",
     entityId: ruc,
     type: "merchant_attribution_resolved",

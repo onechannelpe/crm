@@ -1,4 +1,6 @@
 import "server-only";
+import type { Transaction } from "kysely";
+
 import { getExecutiveDetail } from "~/server/capacity/application/queries/get-executive-detail";
 import { getPolicyDefaults } from "~/server/capacity/application/queries/get-policy-defaults";
 import { listManagedExecutives } from "~/server/capacity/application/queries/list-managed-executives";
@@ -28,19 +30,18 @@ import {
   createSearchUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
 import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import { createExecutorUow } from "~/server/platform/database/uow";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
-import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { createActionRateLimiter } from "~/server/security/action-rate-limit";
 import { createBranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 
-function createCapacityRepos(executor: DatabaseExecutor) {
+function createCapacityBaseRepos(executor: DatabaseExecutor) {
   return {
     users: createCapacityUsersRepo(executor),
     teams: createCapacityTeamsRepo(executor),
     branchSupervisors: createBranchSupervisorsRepo(executor),
-    events: createEventsRepo(executor),
     capacityRequests: createCapacityRequestsRepo(executor),
     searchPolicyDefaults: createSearchPolicyDefaultsRepo(executor),
     searchPolicyOverrides: createSearchPolicyOverridesRepo(executor),
@@ -56,31 +57,34 @@ function createCapacityRepos(executor: DatabaseExecutor) {
   };
 }
 
+function createCapacityTransactionRepos(executor: Transaction<Database>) {
+  return {
+    ...createCapacityBaseRepos(executor),
+  };
+}
+
 export function createCapacityRuntime(
   serverInfrastructure: ServerInfrastructure,
 ) {
-  const readRepos = createCapacityRepos(serverInfrastructure.db);
+  const readRepos = createCapacityBaseRepos(serverInfrastructure.db);
   const uow = createExecutorUow(serverInfrastructure.db, (txDb) =>
-    createCapacityRepos(txDb),
+    createCapacityTransactionRepos(txDb),
   );
-  const rateLimitDeps = {
-    actionRateLimits: createActionRateLimitsRepo(serverInfrastructure.db),
-    events: readRepos.events,
-  };
+  const rateLimiter = createActionRateLimiter(serverInfrastructure.db);
 
   return {
     requestCapacity: (
       ctx: Parameters<typeof requestCapacity>[0],
       input: Parameters<typeof requestCapacity>[2],
-    ) => requestCapacity(ctx, { rateLimitDeps, uow }, input),
+    ) => requestCapacity(ctx, { uow, rateLimiter }, input),
     approveCapacityRequest: (
       ctx: Parameters<typeof approveCapacityRequest>[0],
       input: Parameters<typeof approveCapacityRequest>[2],
-    ) => approveCapacityRequest(ctx, { rateLimitDeps, uow }, input),
+    ) => approveCapacityRequest(ctx, { uow, rateLimiter }, input),
     rejectCapacityRequest: (
       ctx: Parameters<typeof rejectCapacityRequest>[0],
       input: Parameters<typeof rejectCapacityRequest>[2],
-    ) => rejectCapacityRequest(ctx, { rateLimitDeps, uow }, input),
+    ) => rejectCapacityRequest(ctx, { uow, rateLimiter }, input),
     grantSearchCapacityDirect: (
       ctx: Parameters<typeof grantSearchCapacityDirect>[0],
       input: Parameters<typeof grantSearchCapacityDirect>[2],

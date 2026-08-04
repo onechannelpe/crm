@@ -1,16 +1,17 @@
+import type { Kysely } from "kysely";
+
 import type { UserId } from "~/domain/ids";
 import type {
   InviteService,
   TeamInviteReadRepos,
 } from "~/server/invites/application/types";
 import {
-  bindInviteRepos,
+  bindInviteBaseRepos,
   createInviteServiceForExecutor,
 } from "~/server/invites/infrastructure/invite-service-factory";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import type { OperationContext } from "~/server/platform/operation/context";
-import { checkActionRateLimit } from "~/server/security/action-rate-limit";
-import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { createActionRateLimiter } from "~/server/security/action-rate-limit";
 
 import type { InviteDelivery } from "../application/ports";
 
@@ -26,19 +27,15 @@ interface TeamInviteContext {
 }
 
 export function createTeamInviteContext(
-  executor: DatabaseExecutor,
+  executor: Kysely<Database>,
   publicOrigin: string,
   delivery: InviteDelivery,
 ): TeamInviteContext {
-  const repos = bindInviteRepos(executor);
   const inviteService = createInviteServiceForExecutor(executor);
+  const rateLimiter = createActionRateLimiter(executor);
 
   return {
-    repos: {
-      teams: repos.teams,
-      userInvites: repos.userInvites,
-      users: repos.users,
-    },
+    repos: bindInviteBaseRepos(executor),
     inviteService,
     delivery,
     publicOrigin,
@@ -46,15 +43,7 @@ export function createTeamInviteContext(
       userId: UserId,
       operation: OperationContext,
     ) {
-      await checkActionRateLimit(
-        "team.invite.create",
-        userId,
-        {
-          actionRateLimits: createActionRateLimitsRepo(executor),
-          events: repos.events,
-        },
-        operation,
-      );
+      await rateLimiter.enforce("team.invite.create", userId, operation);
     },
   };
 }

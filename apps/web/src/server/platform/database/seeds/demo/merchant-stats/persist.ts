@@ -1,18 +1,18 @@
-import type { Kysely } from "kysely";
+import type { Transaction } from "kysely";
 
 import type { UserId } from "~/domain/ids";
 import {
   calendarDateFromParts,
   type CalendarDate,
 } from "~/domain/time/calendar-date";
-import { setTarget } from "~/server/merchant-stats/commands/set-target";
+import { setTargetInTransaction } from "~/server/merchant-stats/commands/set-target";
 import type {
   ParsedReport,
   SourceRow,
 } from "~/server/merchant-stats/intake/types";
-import { activateGpvSnapshot } from "~/server/merchant-stats/snapshot/activate";
+import { activateGpvSnapshotInTransaction } from "~/server/merchant-stats/snapshot/activate";
 import { stageGpvSnapshot } from "~/server/merchant-stats/snapshot/stage";
-import { validateGpvSnapshot } from "~/server/merchant-stats/snapshot/validate";
+import { validateGpvSnapshotInTransaction } from "~/server/merchant-stats/snapshot/validate";
 import type { Database } from "~/server/platform/database/types";
 
 import { daysBefore, type SeedContext } from "../../shared/context";
@@ -22,7 +22,7 @@ import { generateMerchants, toSourceRow, type MerchantSpec } from "./generator";
 import { CULQI_MERCHANT_REPORT_PROFILE as PROFILE } from "./profile";
 
 export async function persistDemoMerchantStats(
-  db: Kysely<Database>,
+  db: Transaction<Database>,
   context: SeedContext,
 ): Promise<void> {
   const linkedOrganizations = linkableOrganizations();
@@ -62,7 +62,7 @@ interface SnapshotInput {
 }
 
 async function applySnapshot(
-  db: Kysely<Database>,
+  db: Transaction<Database>,
   input: SnapshotInput,
 ): Promise<void> {
   const cutDate = isoDate(input.cutAt);
@@ -100,7 +100,7 @@ async function applySnapshot(
     .executeTakeFirstOrThrow();
 
   await stageGpvSnapshot(db, snapshotRow.id, parsed, input.uploadedAt);
-  const issues = await validateGpvSnapshot(
+  const issues = await validateGpvSnapshotInTransaction(
     db,
     snapshotRow.id,
     input.uploadedAt,
@@ -109,7 +109,7 @@ async function applySnapshot(
     throw new Error("demo_gpv_snapshot_requires_review");
   }
 
-  const activated = await activateGpvSnapshot(db, {
+  const activated = await activateGpvSnapshotInTransaction(db, {
     snapshotId: snapshotRow.id,
     activatedBy: input.uploader,
     activatedAt: input.uploadedAt,
@@ -120,7 +120,7 @@ async function applySnapshot(
 }
 
 async function persistTargets(
-  db: Kysely<Database>,
+  db: Transaction<Database>,
   merchants: readonly MerchantSpec[],
   targetableRucs: ReadonlySet<string>,
   context: SeedContext,
@@ -138,7 +138,7 @@ async function persistTargets(
   for (const merchant of byRuc.values()) {
     // Start at the sale month so ramping months are not marked as no_target.
     // eslint-disable-next-line no-await-in-loop
-    const target = await setTarget(db, {
+    const target = await setTargetInTransaction(db, {
       ruc: merchant.ruc,
       effectiveFrom: merchant.saleMonth,
       projectedGpv: merchant.projectedGpv,

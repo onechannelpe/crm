@@ -12,7 +12,7 @@ import type {
   SearchCapacityGrantsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
 import type { AppUow } from "~/server/platform/database/uow";
-import type { RateLimitDeps } from "~/server/security/action-rate-limit";
+import type { ActionRateLimiter } from "~/server/security/action-rate-limit";
 import type { BranchSupervisorsRepo } from "~/server/users/repos-branch-supervisors";
 
 export type CapacityRequestTx = {
@@ -51,8 +51,8 @@ export type CapacityPolicyTx = {
 };
 
 export type CapacityApprovalDeps = {
-  rateLimitDeps: RateLimitDeps;
   uow: AppUow<CapacityRequestTx & CapacityManageTx & CapacityGrantTx>;
+  rateLimiter: ActionRateLimiter;
 };
 
 export type CapacityGrantDeps = {
@@ -64,6 +64,6 @@ export type CapacityPolicyDeps = {
 };
 
 export type CapacityRequestDeps = {
-  rateLimitDeps: RateLimitDeps;
   uow: AppUow<CapacityRequestCreateTx>;
+  rateLimiter: ActionRateLimiter;
 };

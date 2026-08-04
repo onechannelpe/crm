@@ -2,15 +2,19 @@ import { operationAt } from "@tests/support/operation";
 
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type {
-  InviteDeps,
   InviteService,
+  InviteTransactionRepos,
 } from "~/server/invites/application/types";
 import { runResultTransaction } from "~/server/platform/database/uow";
 
 import type { TestDbContext } from "../runtime/db";
 import { createTestRepositories } from "../runtime/repos";
 
-type InviteTestRepoFactory = (db: TestDbContext["db"]) => InviteDeps;
+// Used both as the service's base repos and as the uow's transaction repos,
+// so it must satisfy the transaction shape (events required).
+type InviteTestRepoFactory = (
+  db: TestDbContext["db"],
+) => InviteTransactionRepos;
 
 export function createInviteTestKit(
   ctx: TestDbContext,

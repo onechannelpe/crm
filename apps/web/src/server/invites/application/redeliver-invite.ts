@@ -7,14 +7,12 @@ import { Err, Ok, type Result } from "~/shared/result";
 
 import type {
   InviteIssueResult,
-  InviteDeps,
   InviteRuntime,
   RedeliverInviteInput,
 } from "./types";
 
 // Reuses the existing token. Only revoke-and-reissue rotates it.
 export async function redeliverInvite(
-  repos: InviteDeps,
   runtime: InviteRuntime,
   input: RedeliverInviteInput,
   operation: OperationContext,

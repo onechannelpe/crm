@@ -1,3 +1,4 @@
+import type { Kysely } from "kysely";
 import { getRequestEvent } from "solid-js/web";
 
 import { auditEntityId } from "~/domain/audit/entity";
@@ -5,10 +6,17 @@ import { rateLimited } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
 import { getClientIp } from "~/server/auth/password/client-ip";
 import { hashAuthKey } from "~/server/auth/password/key-hash";
-import type { EventsRepo } from "~/server/event-logs/events-repo";
+import {
+  createEventsWriter,
+  type EventsWriter,
+} from "~/server/event-logs/events-repo";
 import { throwDomain } from "~/server/platform/action/domain-error";
+import type { Database } from "~/server/platform/database/types";
 import type { OperationContext } from "~/server/platform/operation/context";
-import type { ActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import {
+  createActionRateLimitsRepo,
+  type ActionRateLimitsRepo,
+} from "~/server/security/repos-action-rate-limits";
 
 interface ActionRateLimitPolicy {
   userLimit: number;
@@ -16,7 +24,7 @@ interface ActionRateLimitPolicy {
   windowMs: number;
 }
 
-export const ACTION_RATE_LIMIT_POLICY = {
+const ACTION_RATE_LIMIT_POLICY = {
   "leads.request": { userLimit: 10, sourceIpLimit: 50, windowMs: 60_000 },
   "search.use": { userLimit: 120, sourceIpLimit: 300, windowMs: 60_000 },
   "capacity.request": { userLimit: 20, sourceIpLimit: 60, windowMs: 60_000 },
@@ -30,10 +38,18 @@ export const ACTION_RATE_LIMIT_POLICY = {
 
 export type RateLimitedAction = keyof typeof ACTION_RATE_LIMIT_POLICY;
 
-export type RateLimitDeps = {
+type RateLimitDeps = {
   actionRateLimits: ActionRateLimitsRepo;
-  events: Pick<EventsRepo, "append">;
 };
+
+export interface ActionRateLimiter {
+  enforce(
+    actionName: RateLimitedAction,
+    userId: UserId,
+    operation: OperationContext,
+    ip?: string,
+  ): Promise<void>;
+}
 
 function resolveRequestIp(): string {
   const event = getRequestEvent();
@@ -61,7 +77,7 @@ async function blockWithAudit(params: {
   windowMs: number;
   windowStartedAt: Date;
   operation: OperationContext;
-  deps: RateLimitDeps;
+  events: Pick<EventsWriter, "append">;
 }): Promise<never> {
   const {
     actionName,
@@ -71,7 +87,7 @@ async function blockWithAudit(params: {
     windowMs,
     windowStartedAt,
     operation,
-    deps,
+    events,
   } = params;
   const retryAfterMs =
     windowMs - (operation.operationAt.getTime() - windowStartedAt.getTime());
@@ -83,7 +99,7 @@ async function blockWithAudit(params: {
     String(retryAfterSeconds),
   );
 
-  await deps.events.append({
+  await events.append({
     type: "rate_limit_exceeded",
     entityType: "user",
     entityId: auditEntityId("user", userId),
@@ -99,11 +115,12 @@ async function blockWithAudit(params: {
   );
 }
 
-export async function checkActionRateLimit(
+async function checkActionRateLimit(
   actionName: RateLimitedAction,
   userId: UserId,
   deps: RateLimitDeps,
   operation: OperationContext,
+  events: Pick<EventsWriter, "append">,
   ip: string = resolveRequestIp(),
 ): Promise<void> {
   const policy = ACTION_RATE_LIMIT_POLICY[actionName];
@@ -125,7 +142,7 @@ export async function checkActionRateLimit(
       windowMs: policy.windowMs,
       windowStartedAt: userSnapshot.window_started_at,
       operation,
-      deps,
+      events,
     });
   }
 
@@ -145,7 +162,34 @@ export async function checkActionRateLimit(
       windowMs: policy.windowMs,
       windowStartedAt: ipSnapshot.window_started_at,
       operation,
-      deps,
+      events,
     });
   }
+}
+
+export function createActionRateLimiter(
+  db: Kysely<Database>,
+): ActionRateLimiter {
+  if (db.isTransaction) {
+    throw new Error("action_rate_limiter_requires_root_database");
+  }
+
+  const deps = { actionRateLimits: createActionRateLimitsRepo(db) };
+  const events = {
+    append: (input: Parameters<EventsWriter["append"]>[0]) =>
+      db.transaction().execute((tx) => createEventsWriter(tx).append(input)),
+  };
+
+  return {
+    enforce(actionName, userId, operation, ip) {
+      return checkActionRateLimit(
+        actionName,
+        userId,
+        deps,
+        operation,
+        events,
+        ip,
+      );
+    },
+  };
 }

@@ -9,10 +9,7 @@ import type { LoginFlowState } from "../login-contracts";
 
 export async function getLoginFlowState(
   flowId: AuthLoginFlowId,
-  deps: Pick<
-    AuthLoginRepos,
-    "events" | "loginFlows" | "passkeys" | "webauthnChallenges"
-  >,
+  deps: Pick<AuthLoginRepos, "loginFlows" | "passkeys" | "webauthnChallenges">,
   webauthnProvider: WebauthnProvider,
   operation: OperationContext,
 ): Promise<LoginFlowState | null> {

@@ -1,6 +1,8 @@
+import type { Transaction } from "kysely";
+
 import { fail, type DomainError } from "~/domain/errors";
 import type { OrganizationId, UserId } from "~/domain/ids";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export interface AssignOrganizationOwnerInput {
@@ -11,19 +13,8 @@ export interface AssignOrganizationOwnerInput {
   reason?: string | null;
 }
 
-export async function assignOrganizationOwner(
-  db: DatabaseExecutor,
-  input: AssignOrganizationOwnerInput,
-): Promise<Result<void, DomainError>> {
-  if (db.isTransaction) {
-    return assignInTransaction(db, input);
-  }
-
-  return db.transaction().execute((trx) => assignInTransaction(trx, input));
-}
-
-async function assignInTransaction(
-  tx: DatabaseExecutor,
+export async function assignOrganizationOwnerInTransaction(
+  tx: Transaction<Database>,
   input: AssignOrganizationOwnerInput,
 ): Promise<Result<void, DomainError>> {
   const organization = await tx

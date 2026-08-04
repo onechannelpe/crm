@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely";
+import type { Kysely, Transaction } from "kysely";
 
 import type { Database } from "../../types";
 import type { SeedContext } from "../shared/context";
@@ -23,7 +23,7 @@ export async function runDemoWorkflowSeedStage(
 }
 
 export async function runDemoMerchantStatsSeedStage(
-  db: Kysely<Database>,
+  db: Transaction<Database>,
   context: SeedContext,
 ): Promise<void> {
   await persistDemoMerchantStats(db, context);

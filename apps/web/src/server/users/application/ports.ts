@@ -1,4 +1,4 @@
-import type { SessionService } from "~/server/auth/session/session.service";
+import type { SessionAuthenticator } from "~/server/auth/session/session.service";
 import type { AvatarService } from "~/server/users/avatar-service";
 import type { BranchesRepo } from "~/server/users/repos-branches";
 import type { MemberWorkloadRepo } from "~/server/users/repos-member-workload";
@@ -13,7 +13,7 @@ export interface MemberReadDeps {
 
 export interface MemberWriteDeps {
   users: UsersRepo;
-  sessions: Pick<SessionService, "revokeAllForUser">;
+  sessions: Pick<SessionAuthenticator, "revokeAllForUser">;
   workload: MemberWorkloadRepo;
 }
 

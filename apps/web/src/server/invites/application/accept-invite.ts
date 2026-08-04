@@ -7,12 +7,10 @@ import { mapAcceptedInviteResult } from "./runtime";
 import type {
   AcceptInviteInput,
   InviteAcceptedResult,
-  InviteDeps,
   InviteRuntime,
 } from "./types";
 
 export async function acceptInvite(
-  repos: InviteDeps,
   runtime: InviteRuntime,
   input: AcceptInviteInput,
   operation: OperationContext,

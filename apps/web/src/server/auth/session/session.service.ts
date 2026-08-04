@@ -5,9 +5,9 @@ import {
   isSessionClass,
   isStrongAuthMethod,
 } from "~/domain/auth/core/session-contract";
+import type { DomainError } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
 import { addMilliseconds } from "~/domain/time/clock";
-import { sessionCache } from "~/server/auth/session/session-cache";
 import {
   mapUserSessionRowToAuthSession,
   mapUserToSessionIdentity,
@@ -18,11 +18,15 @@ import {
   isValidTokenFormat,
 } from "~/server/auth/session/tokens";
 import type { OperationContext } from "~/server/platform/operation/context";
+import { Ok, type Result } from "~/shared/result";
 
 import type {
   AuthSession,
+  AuditedSessionIssuerDeps,
+  AuditedSessionSpec,
   IssuedSession,
-  SessionServiceDeps,
+  SessionAuthenticatorDeps,
+  SessionIssuerDeps,
   SessionSpec,
 } from "./session-spec";
 
@@ -34,68 +38,16 @@ const noopLogger = {
   error() {},
 };
 
-export function createSessionService(deps: SessionServiceDeps) {
+export function createSessionAuthenticator(deps: SessionAuthenticatorDeps) {
   const logger = deps.logger ?? noopLogger;
   const revokeSession = async (sessionId: string): Promise<void> => {
     await deps.sessions.delete(sessionId);
-    sessionCache.delete(sessionId);
   };
   const revokeUserSessions = async (userId: UserId): Promise<void> => {
     await deps.sessions.deleteAllForUser(userId);
-    sessionCache.deleteByUserId(userId);
   };
 
   return {
-    async establish(
-      spec: SessionSpec,
-      operation: OperationContext,
-    ): Promise<IssuedSession> {
-      const identity = mapUserToSessionIdentity(spec.user);
-      const token = generateSessionToken();
-      const sessionId = hashSessionToken(token);
-      const expiresAt = addMilliseconds(
-        operation.operationAt,
-        SESSION_DURATION,
-      );
-
-      await deps.sessions.create({
-        id: sessionId,
-        user_id: identity.userId,
-        branch_id: identity.branchId,
-        role: identity.role,
-        session_class: spec.sessionClass,
-        primary_auth_method: spec.primaryAuthMethod,
-        strong_auth_method: spec.strongAuthMethod,
-        strong_auth_at: spec.strongAuthAt,
-        impersonator_user_id: spec.impersonatorUserId ?? null,
-        ip_address: spec.request.ipAddress,
-        user_agent: spec.request.userAgent,
-        created_at: operation.operationAt,
-        last_activity: operation.operationAt,
-        expires_at: expiresAt,
-      });
-
-      if (spec.auditAction) {
-        await deps.events.append({
-          type: spec.auditAction,
-          entityType: "user",
-          entityId: auditEntityId("user", spec.user.id),
-          actorUserId: spec.user.id,
-          occurredAt: operation.operationAt,
-        });
-      }
-
-      return {
-        userId: identity.userId,
-        role: identity.role,
-        sessionClass: spec.sessionClass,
-        primaryAuthMethod: spec.primaryAuthMethod,
-        strongAuthMethod: spec.strongAuthMethod,
-        strongAuthAt: spec.strongAuthAt,
-        token,
-      };
-    },
-
     async resolve(
       token: string,
       operation: OperationContext,
@@ -105,21 +57,6 @@ export function createSessionService(deps: SessionServiceDeps) {
       }
 
       const sessionId = hashSessionToken(token);
-
-      const cached = sessionCache.get(sessionId, operation.operationAt);
-      if (cached) {
-        return {
-          id: sessionId,
-          userId: cached.userId,
-          branchId: cached.branchId,
-          role: cached.role,
-          sessionClass: cached.sessionClass,
-          primaryAuthMethod: cached.primaryAuthMethod,
-          strongAuthMethod: cached.strongAuthMethod,
-          strongAuthAt: cached.strongAuthAt,
-          impersonatorUserId: cached.impersonatorUserId,
-        };
-      }
 
       const dbSession = await deps.sessions.findById(sessionId);
       if (!dbSession) {
@@ -193,22 +130,6 @@ export function createSessionService(deps: SessionServiceDeps) {
 
       const authSession = mapUserSessionRowToAuthSession(sessionId, dbSession);
 
-      sessionCache.set(
-        sessionId,
-        {
-          userId: authSession.userId,
-          branchId: authSession.branchId,
-          role: authSession.role,
-          sessionClass: authSession.sessionClass,
-          primaryAuthMethod: authSession.primaryAuthMethod,
-          strongAuthMethod: authSession.strongAuthMethod,
-          strongAuthAt: authSession.strongAuthAt,
-          impersonatorUserId: authSession.impersonatorUserId,
-          expiresAt: dbSession.expires_at,
-        },
-        operation.operationAt,
-      );
-
       return authSession;
     },
 
@@ -225,9 +146,80 @@ export function createSessionService(deps: SessionServiceDeps) {
       retainedSessionId: string,
     ): Promise<void> {
       await deps.sessions.deleteOtherForUser(userId, retainedSessionId);
-      sessionCache.deleteByUserIdExcept(userId, retainedSessionId);
     },
   };
 }
 
-export type SessionService = ReturnType<typeof createSessionService>;
+export type SessionAuthenticator = ReturnType<
+  typeof createSessionAuthenticator
+>;
+
+export function createSessionIssuer(deps: SessionIssuerDeps) {
+  return {
+    async establish(
+      spec: SessionSpec,
+      operation: OperationContext,
+    ): Promise<Result<IssuedSession, DomainError>> {
+      const identity = mapUserToSessionIdentity(spec.user);
+      const token = generateSessionToken();
+      const sessionId = hashSessionToken(token);
+      const expiresAt = addMilliseconds(
+        operation.operationAt,
+        SESSION_DURATION,
+      );
+
+      await deps.sessions.create({
+        id: sessionId,
+        user_id: identity.userId,
+        branch_id: identity.branchId,
+        role: identity.role,
+        session_class: spec.sessionClass,
+        primary_auth_method: spec.primaryAuthMethod,
+        strong_auth_method: spec.strongAuthMethod,
+        strong_auth_at: spec.strongAuthAt,
+        impersonator_user_id: spec.impersonatorUserId ?? null,
+        ip_address: spec.request.ipAddress,
+        user_agent: spec.request.userAgent,
+        created_at: operation.operationAt,
+        last_activity: operation.operationAt,
+        expires_at: expiresAt,
+      });
+
+      return Ok({
+        userId: identity.userId,
+        role: identity.role,
+        sessionClass: spec.sessionClass,
+        primaryAuthMethod: spec.primaryAuthMethod,
+        strongAuthMethod: spec.strongAuthMethod,
+        strongAuthAt: spec.strongAuthAt,
+        token,
+      });
+    },
+  };
+}
+
+export type SessionIssuer = ReturnType<typeof createSessionIssuer>;
+
+export function createAuditedSessionIssuer(deps: AuditedSessionIssuerDeps) {
+  const issuer = createSessionIssuer(deps);
+
+  return {
+    async establish(
+      spec: AuditedSessionSpec,
+      operation: OperationContext,
+    ): Promise<Result<IssuedSession, DomainError>> {
+      const issued = await issuer.establish(spec, operation);
+      if (!issued.ok) return issued;
+
+      await deps.events.append({
+        type: spec.auditAction,
+        entityType: "user",
+        entityId: auditEntityId("user", spec.user.id),
+        actorUserId: spec.user.id,
+        occurredAt: operation.operationAt,
+      });
+
+      return issued;
+    },
+  };
+}

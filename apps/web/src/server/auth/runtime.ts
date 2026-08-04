@@ -1,4 +1,6 @@
 import "server-only";
+import type { Transaction } from "kysely";
+
 import { auditEntityId } from "~/domain/audit/entity";
 import { fail } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
@@ -33,15 +35,12 @@ import {
   verifyRecoveryLoginProof,
   verifyTotpLoginProof,
 } from "~/server/auth/flows/verify-pending-login";
-import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
 import { createAdminSessionsReadContext } from "~/server/auth/infrastructure/admin-sessions-read-context";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { createPasswordResetContext } from "~/server/auth/infrastructure/password-reset-context";
 import { createPasskeyProviderForOrigin } from "~/server/auth/infrastructure/request-passkey-provider";
-import {
-  createAuthSessionLogoutContext,
-  createAuthSessionReadContext,
-} from "~/server/auth/infrastructure/session-context";
+import { createAuthSessionReadContext } from "~/server/auth/infrastructure/session-context";
+import { createSessionRevocationContext } from "~/server/auth/infrastructure/session-revocation-context";
 import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { completeOnboarding } from "~/server/auth/onboarding/complete";
 import { saveOnboardingProfile } from "~/server/auth/onboarding/save-profile";
@@ -57,11 +56,15 @@ import {
   startImpersonation,
   stopImpersonation,
 } from "~/server/auth/session/impersonation";
-import { createSessionService } from "~/server/auth/session/session.service";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
+import {
+  createSessionAuthenticator,
+  createSessionIssuer,
+} from "~/server/auth/session/session.service";
+import { createEventsWriter } from "~/server/event-logs/events-repo";
 import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { AppContext } from "~/server/platform/action/context";
+import type { Database } from "~/server/platform/database/types";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { createSessionRepository } from "~/server/sessions/repos-sessions";
@@ -75,35 +78,35 @@ export function createAuthRuntime(
   },
   analytics: AuthAnalyticsRecorder,
 ) {
-  const sessionService = createSessionService({
+  const sessionAuthenticator = createSessionAuthenticator({
     sessions: createSessionRepository(serverInfrastructure.db),
     users: createUsersRepo(serverInfrastructure.db),
-    events: createEventsRepo(serverInfrastructure.db),
     logger: serverInfrastructure.logger,
   });
 
   const setup = createAuthSetupContext(serverInfrastructure.db);
   const inviteService = createInviteServiceForExecutor(serverInfrastructure.db);
 
-  const impersonationDeps = {
-    sessions: sessionService,
-    users: createUsersRepo(serverInfrastructure.db),
-    events: createEventsRepo(serverInfrastructure.db),
-  };
+  const createImpersonationDeps = (tx: Transaction<Database>) => ({
+    sessionIssuer: createSessionIssuer({
+      sessions: createSessionRepository(tx),
+    }),
+    sessionAuthenticator: createSessionAuthenticator({
+      sessions: createSessionRepository(tx),
+      users: createUsersRepo(tx),
+      logger: serverInfrastructure.logger,
+    }),
+    users: createUsersRepo(tx),
+    events: createEventsWriter(tx),
+  });
   const login = createAuthLoginContext(serverInfrastructure.db);
   const sessionRead = createAuthSessionReadContext(serverInfrastructure.db);
-  const sessionLogout = createAuthSessionLogoutContext({
-    executor: serverInfrastructure.db,
-    revokeSession: (id) => sessionService.revoke(id),
-  });
+  const sessionRevocation = createSessionRevocationContext(
+    serverInfrastructure.db,
+  );
   const adminSessionsRead = createAdminSessionsReadContext(
     serverInfrastructure.db,
   );
-  const adminSessionRevocation = createAdminSessionRevocationContext({
-    executor: serverInfrastructure.db,
-    revokeSession: (id) => sessionService.revoke(id),
-    revokeUserSessions: (userId) => sessionService.revokeAllForUser(userId),
-  });
   const passwordReset = createPasswordResetContext({
     executor: serverInfrastructure.db,
     messaging: notifications.messaging,
@@ -133,18 +136,17 @@ export function createAuthRuntime(
     );
     if (!valid) return Err(fail("current_password_incorrect"));
 
-    await setup.repos.users.updatePassword(
-      userId,
-      await hashPassword(newPassword),
-    );
-    await setup.repos.events.append({
-      type: "password_changed",
-      entityType: "user",
-      entityId: auditEntityId("user", userId),
-      actorUserId: userId,
-      occurredAt: changedAt,
+    return setup.uow.run(async (repos) => {
+      await repos.users.updatePassword(userId, await hashPassword(newPassword));
+      await repos.events.append({
+        type: "password_changed",
+        entityType: "user",
+        entityId: auditEntityId("user", userId),
+        actorUserId: userId,
+        occurredAt: changedAt,
+      });
+      return Ok({ message: "Contraseña actualizada" });
     });
-    return Ok({ message: "Contraseña actualizada" });
   };
 
   const removeAccountPasskeys = async (userId: UserId, removedAt: Date) => {
@@ -164,17 +166,19 @@ export function createAuthRuntime(
       return Err(fail("strong_method_required"));
     }
 
-    await setup.repos.passkeys.deleteAllByUser(userId);
-    if (!strongAuthStatus.hasTotp)
-      await setup.repos.userRecoveryCodes.deleteAllByUser(userId);
-    await setup.repos.events.append({
-      type: "passkeys_removed",
-      entityType: "user",
-      entityId: auditEntityId("user", userId),
-      actorUserId: userId,
-      occurredAt: removedAt,
+    return setup.uow.run(async (repos) => {
+      await repos.passkeys.deleteAllByUser(userId);
+      if (!strongAuthStatus.hasTotp)
+        await repos.userRecoveryCodes.deleteAllByUser(userId);
+      await repos.events.append({
+        type: "passkeys_removed",
+        entityType: "user",
+        entityId: auditEntityId("user", userId),
+        actorUserId: userId,
+        occurredAt: removedAt,
+      });
+      return Ok({ message: "Claves de acceso eliminadas" });
     });
-    return Ok({ message: "Claves de acceso eliminadas" });
   };
 
   const disableAccountTotp = async (userId: UserId, disabledAt: Date) => {
@@ -194,17 +198,19 @@ export function createAuthRuntime(
       return Err(fail("strong_method_required"));
     }
 
-    await setup.repos.userTotpFactors.disable(userId, disabledAt);
-    if (!strongAuthStatus.hasPasskey)
-      await setup.repos.userRecoveryCodes.deleteAllByUser(userId);
-    await setup.repos.events.append({
-      type: "totp_disabled",
-      entityType: "user",
-      entityId: auditEntityId("user", userId),
-      actorUserId: userId,
-      occurredAt: disabledAt,
+    return setup.uow.run(async (repos) => {
+      await repos.userTotpFactors.disable(userId, disabledAt);
+      if (!strongAuthStatus.hasPasskey)
+        await repos.userRecoveryCodes.deleteAllByUser(userId);
+      await repos.events.append({
+        type: "totp_disabled",
+        entityType: "user",
+        entityId: auditEntityId("user", userId),
+        actorUserId: userId,
+        occurredAt: disabledAt,
+      });
+      return Ok({ message: "Aplicación de autenticación desactivada" });
     });
-    return Ok({ message: "Aplicación de autenticación desactivada" });
   };
 
   return {
@@ -292,11 +298,11 @@ export function createAuthRuntime(
     ) => recordAuthAnalyticsEvent(event, context, analytics, operation),
     sessions: {
       resolve: (token: string, operation: OperationContext) =>
-        sessionService.resolve(token, operation),
+        sessionAuthenticator.resolve(token, operation),
       invalidateUser: (userId: UserId) =>
-        sessionService.revokeAllForUser(userId),
+        sessionAuthenticator.revokeAllForUser(userId),
       currentUser: (ctx: AppContext) => getCurrentUser(ctx, sessionRead),
-      logout: (ctx: AppContext) => logoutUser(ctx, sessionLogout),
+      logout: (ctx: AppContext) => logoutUser(ctx, sessionRevocation),
       listForUser: (_ctx: AppContext, input: { userId: UserId }) =>
         adminSessionsRead.repos.sessions.listForUser(input.userId),
       countActive: (operation: OperationContext) =>
@@ -306,16 +312,23 @@ export function createAuthRuntime(
       revoke: (
         ctx: AppContext,
         input: Parameters<typeof revokeUserSession>[2],
-      ) => revokeUserSession(ctx, adminSessionRevocation, input),
+      ) => revokeUserSession(ctx, sessionRevocation, input),
       revokeAll: (
         ctx: AppContext,
         input: Parameters<typeof revokeAllUserSessions>[2],
-      ) => revokeAllUserSessions(ctx, adminSessionRevocation, input),
+      ) => revokeAllUserSessions(ctx, sessionRevocation, input),
     },
     impersonation: {
       start: (ctx: AppContext, command: { userId: UserId }) =>
-        startImpersonation(ctx, impersonationDeps, command),
-      stop: (ctx: AppContext) => stopImpersonation(ctx, impersonationDeps),
+        serverInfrastructure.db
+          .transaction()
+          .execute((tx) =>
+            startImpersonation(ctx, createImpersonationDeps(tx), command),
+          ),
+      stop: (ctx: AppContext) =>
+        serverInfrastructure.db
+          .transaction()
+          .execute((tx) => stopImpersonation(ctx, createImpersonationDeps(tx))),
     },
     security: {
       changePassword: changeAccountPassword,
@@ -466,7 +479,6 @@ export function createAuthRuntime(
             repos: {
               users: setup.repos.users,
               sessions: setup.repos.sessions,
-              events: setup.repos.events,
             },
           },
           request,

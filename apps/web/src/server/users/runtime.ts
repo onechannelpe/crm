@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import type { UserId } from "~/domain/ids";
 import type { Phone } from "~/domain/phone/pe-mobile";
-import type { SessionService } from "~/server/auth/session/session.service";
+import type { SessionAuthenticator } from "~/server/auth/session/session.service";
 import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { AppContext } from "~/server/platform/action/context";
 import type { UploadsConfig } from "~/server/platform/config/env";
@@ -34,7 +34,7 @@ import { Err, Ok, type Result } from "~/shared/result";
 
 export function createUsersRuntime(
   serverInfrastructure: ServerInfrastructure,
-  sessionService: Pick<SessionService, "revokeAllForUser">,
+  sessionService: Pick<SessionAuthenticator, "revokeAllForUser">,
   uploads: UploadsConfig,
 ) {
   const usersRepo = createUsersRepo(serverInfrastructure.db);

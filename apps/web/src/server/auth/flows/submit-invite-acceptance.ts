@@ -3,8 +3,7 @@ import {
   type InviteAcceptanceInput,
 } from "~/domain/auth/invite/activation-input";
 import type { DomainError } from "~/domain/errors";
-import { createSessionService } from "~/server/auth/session/session.service";
-import type { EventsRepo } from "~/server/event-logs/events-repo";
+import { createSessionIssuer } from "~/server/auth/session/session.service";
 import type { InviteService } from "~/server/invites/application/types";
 import type { OperationContext } from "~/server/platform/operation/context";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
@@ -17,7 +16,6 @@ export async function submitInviteAcceptance(
     repos: {
       users: UsersRepo;
       sessions: SessionRepository;
-      events: EventsRepo;
     };
   },
   request: {
@@ -45,7 +43,9 @@ export async function submitInviteAcceptance(
     throw new Error("No se pudo activar la cuenta");
   }
 
-  const issued = await createSessionService(deps.repos).establish(
+  const issued = await createSessionIssuer({
+    sessions: deps.repos.sessions,
+  }).establish(
     {
       user,
       sessionClass: "pre_auth",
@@ -56,9 +56,12 @@ export async function submitInviteAcceptance(
     },
     operation,
   );
+  if (isErr(issued)) {
+    return issued;
+  }
 
   return Ok({
-    sessionToken: issued.token,
+    sessionToken: issued.value.token,
     redirectTo: "/onboarding",
   });
 }

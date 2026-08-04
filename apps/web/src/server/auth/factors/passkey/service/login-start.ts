@@ -14,7 +14,7 @@ import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
 import { recordAuthEvent } from "~/server/auth/security/auth-events";
 import { Err, Ok, type Result } from "~/shared/result";
 
-import type { PasskeyAuthRepos } from "./shared";
+import type { PasskeyAuthReadRepos } from "./shared";
 
 const DISCOVERABLE_PASSKEY_IDENTIFIER = "discoverable";
 
@@ -49,7 +49,7 @@ export type PreparedPasskeyLogin = {
 };
 
 async function prepareDiscoverableLogin(
-  repos: PasskeyAuthRepos,
+  repos: PasskeyAuthReadRepos,
   webauthnProvider: WebauthnProvider,
   input: Extract<PreparePasskeyLoginInput, { mode: "discoverable" }>,
 ): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
@@ -87,7 +87,7 @@ async function prepareDiscoverableLogin(
 }
 
 async function prepareIdentifiedLogin(
-  repos: PasskeyAuthRepos,
+  repos: PasskeyAuthReadRepos,
   webauthnProvider: WebauthnProvider,
   input: Extract<PreparePasskeyLoginInput, { mode: "identified" }>,
 ): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
@@ -153,7 +153,7 @@ async function prepareIdentifiedLogin(
 }
 
 export function preparePasskeyLogin(
-  repos: PasskeyAuthRepos,
+  repos: PasskeyAuthReadRepos,
   webauthnProvider: WebauthnProvider,
   input: PreparePasskeyLoginInput,
 ): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
@@ -163,7 +163,7 @@ export function preparePasskeyLogin(
 }
 
 export async function persistPasskeyLoginFlow(
-  repos: PasskeyAuthRepos,
+  repos: PasskeyAuthReadRepos,
   prepared: PreparedPasskeyLogin,
 ): Promise<PasskeyLoginFlowState> {
   const challengeId = await repos.webauthnChallenges.create({

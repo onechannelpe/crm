@@ -13,12 +13,18 @@ import {
 } from "~/server/auth/factors/passkey-provider";
 import { Err, Ok, type Result } from "~/shared/result";
 
-import type { PasskeyAuthRepos } from "./shared";
+import type { PasskeyAuthRepos, PasskeyAuthReadRepos } from "./shared";
 
-type PasskeyEnrollmentRepos = Pick<
-  PasskeyAuthRepos,
-  "authThrottle" | "events" | "passkeys" | "webauthnChallenges"
+type PasskeyEnrollmentReadRepos = Pick<
+  PasskeyAuthReadRepos,
+  "authThrottle" | "passkeys" | "webauthnChallenges"
 >;
+
+type PasskeyEnrollmentRepos = PasskeyEnrollmentReadRepos &
+  Pick<
+    PasskeyAuthRepos,
+    "authThrottle" | "events" | "passkeys" | "webauthnChallenges"
+  >;
 
 interface EnrollmentActor {
   userId: UserId;
@@ -48,7 +54,7 @@ interface PreparedPasskeyEnrollment extends EnrollmentActor {
 }
 
 async function recordVerificationFailure(
-  repos: PasskeyEnrollmentRepos,
+  repos: PasskeyEnrollmentReadRepos,
   input: EnrollmentActor,
   occurredAt: Date,
 ) {
@@ -96,7 +102,7 @@ export async function persistVerifiedPasskeyEnrollment(
 }
 
 export async function preparePasskeyEnrollment(
-  repos: PasskeyEnrollmentRepos,
+  repos: PasskeyEnrollmentReadRepos,
   webauthnProvider: Pick<WebauthnProvider, "getRegistrationOptions">,
   input: BeginPasskeyEnrollmentInput,
 ): Promise<Result<PreparedPasskeyEnrollment, DomainError>> {
@@ -140,7 +146,7 @@ export async function persistPasskeyEnrollmentChallenge(
 }
 
 export async function verifyPasskeyEnrollment(
-  repos: PasskeyEnrollmentRepos,
+  repos: PasskeyEnrollmentReadRepos,
   webauthnProvider: Pick<WebauthnProvider, "verifyRegistration">,
   input: FinishPasskeyEnrollmentInput,
 ): Promise<Result<VerifiedPasskeyEnrollment, DomainError>> {

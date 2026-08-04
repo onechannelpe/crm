@@ -1,11 +1,14 @@
+import type { Transaction } from "kysely";
+
 import { fail, type DomainError } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
 import {
   calendarMonthStart,
   type CalendarMonth,
 } from "~/domain/time/calendar-date";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
+import { appendEvents } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -23,14 +26,14 @@ export async function setTarget(
   input: SetTargetInput,
 ): Promise<Result<void, DomainError>> {
   if (db.isTransaction) {
-    return setTargetInTransaction(db, input);
+    return setTargetInTransaction(db as Transaction<Database>, input);
   }
 
   return db.transaction().execute((tx) => setTargetInTransaction(tx, input));
 }
 
-async function setTargetInTransaction(
-  tx: DatabaseExecutor,
+export async function setTargetInTransaction(
+  tx: Transaction<Database>,
   input: SetTargetInput,
 ): Promise<Result<void, DomainError>> {
   const ruc = input.ruc.trim();
@@ -62,7 +65,7 @@ async function setTargetInTransaction(
     )
     .execute();
 
-  await createEventsRepo(tx).append({
+  await appendEvents(tx, {
     entityType: "merchant_ruc",
     entityId: ruc,
     type: "merchant_target_set",

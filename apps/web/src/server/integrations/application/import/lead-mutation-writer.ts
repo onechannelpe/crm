@@ -1,6 +1,9 @@
+import type { Transaction } from "kysely";
+
 import type { Role } from "~/domain/auth/access/rbac";
 import type { IntegrationJobId, UserId, WorkflowLeadId } from "~/domain/ids";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import { createInquiryRepo } from "~/server/workflow/inquiry/repo";
 import { reviewLead } from "~/server/workflow/lead/domain/decide";
 import { commitTransition } from "~/server/workflow/lead/write/commit";
@@ -52,7 +55,7 @@ async function markImportRowApplied(input: {
 }
 
 export async function applyLeadMutation(input: {
-  executor: DatabaseExecutor;
+  executor: Transaction<Database>;
   jobId: IntegrationJobId;
   actor: { userId: UserId; role: Role };
   row: ImportRowInput;

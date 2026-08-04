@@ -7,7 +7,7 @@ import type { AuthLoginContext } from "~/server/auth/infrastructure/login-contex
 import { recordAuthEvent } from "~/server/auth/security/auth-events";
 import { enqueueAlertOnNewLoginSource } from "~/server/auth/security/login-source-alert";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
-import { createSessionService } from "~/server/auth/session/session.service";
+import { createAuditedSessionIssuer } from "~/server/auth/session/session.service";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
@@ -177,8 +177,9 @@ export async function completePendingLogin(
       recoveryCodesAcknowledgementRequired:
         context.recoveryCodesAcknowledgementRequired,
     });
-    const session = await createSessionService({
-      ...repos,
+    const session = await createAuditedSessionIssuer({
+      sessions: repos.sessions,
+      events: repos.events,
     }).establish(
       {
         user: context.user,
@@ -195,13 +196,17 @@ export async function completePendingLogin(
       },
       operation,
     );
+    // repos always carries a real events writer, so establish() cannot fail here.
+    if (isErr(session)) {
+      throw new Error(session.error.code ?? "session_establish_failed");
+    }
     await repos.loginFlows.delete(flow.id);
 
     return Ok({
-      userId: session.userId,
-      role: session.role,
-      sessionClass: session.sessionClass,
-      token: session.token,
+      userId: session.value.userId,
+      role: session.value.role,
+      sessionClass: session.value.sessionClass,
+      token: session.value.token,
     });
   });
 

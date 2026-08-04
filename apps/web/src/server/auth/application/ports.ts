@@ -1,48 +1,14 @@
-import type { UserId } from "~/domain/ids";
+import type { EventsWriter } from "~/server/event-logs/events-repo";
+import type { createExtensionRuntimeRepo } from "~/server/extension/repos";
+import type { AppUow } from "~/server/platform/database/uow";
+import type { createSessionRepository } from "~/server/sessions/repos-sessions";
 
-export interface AdminSessionRevocationPort {
-  revokeSession(sessionId: string): Promise<void>;
-  revokeUserSessions(userId: UserId): Promise<void>;
-  revokeInstallationSessionsByAuthSession(
-    sessionId: string,
-    revokedAt: Date,
-  ): Promise<void>;
-  revokeInstallationSessionsByUser(
-    userId: UserId,
-    revokedAt: Date,
-  ): Promise<void>;
-  updateExecutiveSyncHealth(input: {
-    userId: UserId;
-    syncHealth: "ok" | "stale" | "reauth_required";
-    syncUpdatedAt: Date;
-  }): Promise<void>;
-  appendEvent(input: {
-    type: string;
-    entityType: string;
-    entityId: string;
-    actorUserId: UserId;
-    payload?: unknown;
-    occurredAt: Date;
-  }): Promise<void>;
-}
+export type SessionRevocationTx = {
+  sessions: ReturnType<typeof createSessionRepository>;
+  extensionRuntime: ReturnType<typeof createExtensionRuntimeRepo>;
+  events: EventsWriter;
+};
 
-export interface AuthSessionLogoutPort {
-  revokeSession(sessionId: string): Promise<void>;
-  revokeInstallationSessionsByAuthSession(
-    sessionId: string,
-    revokedAt: Date,
-  ): Promise<void>;
-  updateExecutiveSyncHealth(input: {
-    userId: UserId;
-    syncHealth: "ok" | "stale" | "reauth_required";
-    syncUpdatedAt: Date;
-  }): Promise<void>;
-  appendEvent(input: {
-    type: string;
-    entityType: string;
-    entityId: string;
-    actorUserId: UserId;
-    payload?: unknown;
-    occurredAt: Date;
-  }): Promise<void>;
-}
+export type SessionRevocationDeps = {
+  uow: AppUow<SessionRevocationTx>;
+};

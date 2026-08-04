@@ -1,7 +1,6 @@
 import { fail, forbidden, type DomainError } from "~/domain/errors";
 import type { CapacityRequestId } from "~/domain/ids";
 import type { AppContext } from "~/server/platform/action/context";
-import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { normalizeDecisionNote } from "../../domain/request-policy";
@@ -13,19 +12,19 @@ export async function rejectCapacityRequest(
   deps: CapacityApprovalDeps,
   input: { requestId: CapacityRequestId; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
-  await checkActionRateLimit(
+  await deps.rateLimiter.enforce(
     "capacity.approve",
     ctx.actor.userId,
-    deps.rateLimitDeps,
     ctx,
     ctx.ipAddress,
   );
-  const note = normalizeDecisionNote(input.note);
-  if (!note) {
-    return Err(fail("decision_note_required"));
-  }
 
   return deps.uow.run(async (tx) => {
+    const note = normalizeDecisionNote(input.note);
+    if (!note) {
+      return Err(fail("decision_note_required"));
+    }
+
     const request = await tx.capacityRequests.findById(input.requestId);
     if (!request) {
       return Err(fail("request_not_found"));

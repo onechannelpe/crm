@@ -1,7 +1,7 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
 import { fail, type DomainError } from "~/domain/errors";
 import type { WorkflowLeadId } from "~/domain/ids";
-import { assignOrganizationOwner } from "~/server/organization/ownership";
+import { assignOrganizationOwnerInTransaction } from "~/server/organization/ownership";
 import { withAdvisoryLock } from "~/server/platform/database/advisory-lock";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { convertInquiryOnRegistration } from "~/server/workflow/inquiry/convert";
@@ -114,7 +114,7 @@ export function createRegisteredLead(input: {
         if (!draft.ok) return draft;
 
         const leadId = await ctx.repos.leads.insert(draft.value);
-        const assigned = await assignOrganizationOwner(ctx.tx, {
+        const assigned = await assignOrganizationOwnerInTransaction(ctx.tx, {
           organizationId: organization.id,
           executiveId: input.actor.userId,
           assignedBy: input.actor.userId,

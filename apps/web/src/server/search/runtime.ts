@@ -11,14 +11,12 @@ import {
   createSearchUsageCommitsRepo,
   createSearchUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
-import { checkActionRateLimit } from "~/server/security/action-rate-limit";
-import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
+import { createActionRateLimiter } from "~/server/security/action-rate-limit";
 import { isErr, Ok } from "~/shared/result";
 
 function buildSearchUsageRepos(executor: DatabaseExecutor) {
@@ -32,7 +30,7 @@ function buildSearchUsageRepos(executor: DatabaseExecutor) {
   };
 }
 
-export function createSearchUsageReservationPorts(
+function createSearchUsageReservationPorts(
   executor: DatabaseExecutor,
 ): UsageReservationPorts<"search"> {
   return {
@@ -59,10 +57,7 @@ export function createSearchRuntime(
   const usageReservationPorts = createSearchUsageReservationPorts(
     serverInfrastructure.db,
   );
-  const rateLimitDeps = {
-    actionRateLimits: createActionRateLimitsRepo(serverInfrastructure.db),
-    events: createEventsRepo(serverInfrastructure.db),
-  };
+  const rateLimiter = createActionRateLimiter(serverInfrastructure.db);
 
   return {
     getAllowance: (
@@ -75,12 +70,7 @@ export function createSearchRuntime(
       },
       command: Parameters<typeof runDirectSearch>[0],
     ) => {
-      await checkActionRateLimit(
-        "search.use",
-        ctx.actor.userId,
-        rateLimitDeps,
-        ctx,
-      );
+      await rateLimiter.enforce("search.use", ctx.actor.userId, ctx);
       return runDirectSearch(command, usageReservationPorts, engine, ctx);
     },
   };

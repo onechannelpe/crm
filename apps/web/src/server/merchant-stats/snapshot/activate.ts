@@ -1,7 +1,10 @@
+import type { Transaction } from "kysely";
+
 import { fail, type DomainError } from "~/domain/errors";
 import type { GpvSnapshotId, UserId } from "~/domain/ids";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
+import { appendEvents } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { freezeUncreditedMerchantMonths } from "../credit/freeze";
@@ -17,14 +20,16 @@ export async function activateGpvSnapshot(
   input: ActivateGpvSnapshotInput,
 ): Promise<Result<void, DomainError>> {
   if (db.isTransaction) {
-    return activateInTransaction(db, input);
+    return activateGpvSnapshotInTransaction(db as Transaction<Database>, input);
   }
 
-  return db.transaction().execute((tx) => activateInTransaction(tx, input));
+  return db
+    .transaction()
+    .execute((tx) => activateGpvSnapshotInTransaction(tx, input));
 }
 
-async function activateInTransaction(
-  tx: DatabaseExecutor,
+export async function activateGpvSnapshotInTransaction(
+  tx: Transaction<Database>,
   input: ActivateGpvSnapshotInput,
 ): Promise<Result<void, DomainError>> {
   await tx
@@ -93,7 +98,7 @@ async function activateInTransaction(
     })
     .where("id", "=", snapshot.id)
     .execute();
-  await createEventsRepo(tx).append({
+  await appendEvents(tx, {
     entityType: "gpv_snapshot",
     entityId: snapshot.id,
     type: "gpv_snapshot_activated",

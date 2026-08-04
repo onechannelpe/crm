@@ -1,13 +1,13 @@
 import { fail, type DomainError } from "~/domain/errors";
 import type { GpvSnapshotId, GpvSnapshotIssueId, UserId } from "~/domain/ids";
 import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
+import { appendEvents } from "~/server/event-logs/events-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
-import { activateGpvSnapshot } from "./activate";
-import { validateGpvSnapshot } from "./validate";
+import { activateGpvSnapshotInTransaction } from "./activate";
+import { validateGpvSnapshotInTransaction } from "./validate";
 
 export interface ResolveGpvSnapshotIssueInput {
   issueId: GpvSnapshotIssueId;
@@ -57,7 +57,7 @@ export async function resolveGpvSnapshotIssue(
         });
       }
 
-      const activated = await activateGpvSnapshot(tx, {
+      const activated = await activateGpvSnapshotInTransaction(tx, {
         snapshotId: issue.snapshot_id,
         activatedBy: input.resolvedBy,
         activatedAt: input.operation.operationAt,
@@ -110,7 +110,7 @@ export async function resolveGpvSnapshotIssue(
       })
       .where("id", "=", issue.id)
       .execute();
-    await createEventsRepo(tx).append({
+    await appendEvents(tx, {
       entityType: "gpv_snapshot",
       entityId: issue.snapshot_id,
       type: "gpv_snapshot_issue_resolved",
@@ -126,7 +126,7 @@ export async function resolveGpvSnapshotIssue(
       return Ok({ activated: false });
     }
 
-    const validation = await validateGpvSnapshot(
+    const validation = await validateGpvSnapshotInTransaction(
       tx,
       issue.snapshot_id,
       input.operation.operationAt,
@@ -136,7 +136,7 @@ export async function resolveGpvSnapshotIssue(
       return Ok({ activated: false });
     }
 
-    const activated = await activateGpvSnapshot(tx, {
+    const activated = await activateGpvSnapshotInTransaction(tx, {
       snapshotId: issue.snapshot_id,
       activatedBy: input.resolvedBy,
       activatedAt: input.operation.operationAt,

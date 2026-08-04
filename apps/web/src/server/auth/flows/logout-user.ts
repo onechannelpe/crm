@@ -1,6 +1,6 @@
 import { auditEntityId } from "~/domain/audit/entity";
 import type { DomainError } from "~/domain/errors";
-import type { AuthSessionLogoutPort } from "~/server/auth/application/ports";
+import type { SessionRevocationDeps } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/platform/action/context";
 import { Ok, type Result } from "~/shared/result";
 
@@ -12,25 +12,26 @@ import { Ok, type Result } from "~/shared/result";
  */
 export async function logoutUser(
   ctx: AppContext,
-  port: AuthSessionLogoutPort,
+  deps: SessionRevocationDeps,
 ): Promise<Result<void, DomainError>> {
   const { id, userId } = ctx.actor;
   const now = ctx.operationAt;
 
-  await port.revokeSession(id);
-  await port.revokeInstallationSessionsByAuthSession(id, now);
-  await port.updateExecutiveSyncHealth({
-    userId,
-    syncHealth: "reauth_required",
-    syncUpdatedAt: now,
+  return deps.uow.run(async (tx) => {
+    await tx.sessions.delete(id);
+    await tx.extensionRuntime.revokeInstallationSessionsByAuthSession(id, now);
+    await tx.extensionRuntime.updateExecutiveSyncHealthByUser({
+      user_id: userId,
+      sync_health: "reauth_required",
+      sync_updated_at: now,
+    });
+    await tx.events.append({
+      type: "logout",
+      entityType: "user",
+      entityId: auditEntityId("user", userId),
+      actorUserId: userId,
+      occurredAt: now,
+    });
+    return Ok(undefined);
   });
-  await port.appendEvent({
-    type: "logout",
-    entityType: "user",
-    entityId: auditEntityId("user", userId),
-    actorUserId: userId,
-    occurredAt: now,
-  });
-
-  return Ok(undefined);
 }

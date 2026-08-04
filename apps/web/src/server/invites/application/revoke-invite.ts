@@ -4,10 +4,9 @@ import { fail, type DomainError } from "~/domain/errors";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, Ok, type Result } from "~/shared/result";
 
-import type { InviteDeps, InviteRuntime, RevokeInviteInput } from "./types";
+import type { InviteRuntime, RevokeInviteInput } from "./types";
 
 export async function revokeInvite(
-  repos: InviteDeps,
   runtime: InviteRuntime,
   input: RevokeInviteInput,
   operation: OperationContext,

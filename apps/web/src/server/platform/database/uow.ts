@@ -1,4 +1,6 @@
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Kysely, Transaction } from "kysely";
+
+import type { Database } from "~/server/platform/database/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export type AppUow<TTx> = {
@@ -7,7 +9,7 @@ export type AppUow<TTx> = {
 
 const RESULT_ROLLBACK = Symbol("result_rollback");
 
-export async function runResultTransaction<TTx, T, E>(
+async function runResultTransaction<TTx, T, E>(
   run: (work: (tx: TTx) => Promise<T>) => Promise<T>,
   work: (tx: TTx) => Promise<Result<T, E>>,
 ): Promise<Result<T, E>> {
@@ -31,8 +33,8 @@ export async function runResultTransaction<TTx, T, E>(
 }
 
 export function createExecutorUow<TTx>(
-  executor: DatabaseExecutor,
-  bindTx: (txDb: DatabaseExecutor) => TTx,
+  executor: Kysely<Database>,
+  bindTx: (txDb: Transaction<Database>) => TTx,
 ): AppUow<TTx> {
   return {
     run(work) {

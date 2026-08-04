@@ -3,7 +3,10 @@ import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
-import { bindInviteRepos } from "~/server/invites/infrastructure/invite-service-factory";
+import {
+  bindInviteBaseRepos,
+  bindInviteTransactionRepos,
+} from "~/server/invites/infrastructure/invite-service-factory";
 import { createExecutorUow } from "~/server/platform/database/uow";
 
 import { BENCH_NOW } from "../_shared/constants";
@@ -20,8 +23,8 @@ describe("team invite accept command benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const inviteService = createInviteService(bindInviteRepos(ctx.db), {
-      uow: createExecutorUow(ctx.db, bindInviteRepos),
+    const inviteService = createInviteService(bindInviteBaseRepos(ctx.db), {
+      uow: createExecutorUow(ctx.db, bindInviteTransactionRepos),
       hashPassword: async () => "bench-password-hash",
     });
     inviteAccept = (input) =>

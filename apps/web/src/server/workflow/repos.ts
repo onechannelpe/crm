@@ -1,4 +1,3 @@
-import { createEventsRepo } from "~/server/event-logs/events-repo";
 import { createRateRevisionFilesRepo } from "~/server/files/repo/rate-revision";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
@@ -25,7 +24,6 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     leadFavorites: createLeadFavoriteRepo(executor),
     digitalPolicies: createDigitalPolicyRepo(executor),
     leadHistory: createHistoryRepo(executor),
-    events: createEventsRepo(executor),
     rateProposals: createRateProposalRepo(executor),
     rateProposalPolicies: createRateProposalPolicyRepo(executor),
     pendingQuotationPolicies: createPendingQuotationPolicyRepo(executor),

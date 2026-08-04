@@ -3,11 +3,10 @@ import type { BranchId } from "~/domain/ids";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Ok, type Result } from "~/shared/result";
 
-import type { InviteDeps, InviteRuntime, PendingBranchInvite } from "./types";
+import type { InviteBaseRepos, PendingBranchInvite } from "./types";
 
 export async function listPendingInvites(
-  repos: InviteDeps,
-  runtime: InviteRuntime,
+  repos: InviteBaseRepos,
   branchId: BranchId,
   operation: OperationContext,
 ): Promise<Result<PendingBranchInvite[], DomainError>> {

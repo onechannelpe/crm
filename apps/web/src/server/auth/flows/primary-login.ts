@@ -20,7 +20,7 @@ import type { AuthProof } from "~/server/auth/policy/types";
 import { recordAuthEvent } from "~/server/auth/security/auth-events";
 import { enqueueAlertOnNewLoginSource } from "~/server/auth/security/login-source-alert";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
-import { createSessionService } from "~/server/auth/session/session.service";
+import { createAuditedSessionIssuer } from "~/server/auth/session/session.service";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
@@ -132,8 +132,9 @@ export async function completePrimaryAuthProof(params: {
         deps: repos,
       });
 
-      const issued = await createSessionService({
-        ...repos,
+      const issued = await createAuditedSessionIssuer({
+        sessions: repos.sessions,
+        events: repos.events,
       }).establish(
         {
           user: params.context.user,
@@ -147,14 +148,18 @@ export async function completePrimaryAuthProof(params: {
         },
         params.operation,
       );
+      // repos always carries a real events writer, so establish() cannot fail here.
+      if (isErr(issued)) {
+        throw new Error(issued.error.code ?? "session_establish_failed");
+      }
 
       return Ok({
         kind: "complete",
         result: {
-          userId: issued.userId,
-          role: issued.role,
-          sessionClass: issued.sessionClass,
-          token: issued.token,
+          userId: issued.value.userId,
+          role: issued.value.role,
+          sessionClass: issued.value.sessionClass,
+          token: issued.value.token,
         },
       });
     },

@@ -8,7 +8,10 @@ import { Err, Ok, type Result } from "~/shared/result";
 import type { AuthSetupRepos } from "../infrastructure/setup-context";
 
 export async function loadOnboardingSnapshot(
-  repos: AuthSetupRepos,
+  repos: Pick<
+    AuthSetupRepos,
+    "users" | "userChannelAddresses" | "passkeys" | "userTotpFactors"
+  >,
   userId: UserId,
 ): Promise<Result<OnboardingSnapshot, DomainError>> {
   const [user, phoneAddress, strongAuth] = await Promise.all([

@@ -1,6 +1,5 @@
 import type { DomainError } from "~/domain/errors";
 import type { AppContext } from "~/server/platform/action/context";
-import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 import { Ok, type Result } from "~/shared/result";
 
 import { validateRequestAmount } from "../../domain/limits";
@@ -13,15 +12,16 @@ export async function requestCapacity(
   deps: CapacityRequestDeps,
   input: { kind: CapacityRequestKind; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
+  await deps.rateLimiter.enforce(
+    "capacity.request",
+    ctx.actor.userId,
+    ctx,
+    ctx.ipAddress,
+  );
+
   const amount = validateRequestAmount(input.amount);
   if (!amount.ok) return amount;
 
-  await checkActionRateLimit(
-    "capacity.request",
-    ctx.actor.userId,
-    deps.rateLimitDeps,
-    ctx,
-  );
   return deps.uow.run(async (tx) => {
     await tx.capacityRequests.create({
       user_id: ctx.actor.userId,

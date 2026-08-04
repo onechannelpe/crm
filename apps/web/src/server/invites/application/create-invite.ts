@@ -11,7 +11,7 @@ import {
 import { issueInvite } from "./issue-invite";
 import type {
   CreateInviteInput,
-  InviteDeps,
+  InviteBaseRepos,
   InviteIssueResult,
   InviteRuntime,
 } from "./types";
@@ -19,7 +19,7 @@ import type {
 const USERNAME_ALLOCATION_ATTEMPTS = 3;
 
 async function insertPendingUser(
-  repos: InviteDeps,
+  repos: Pick<InviteBaseRepos, "users">,
   draft: Omit<Parameters<typeof buildPendingIdentity>[0], "username">,
 ) {
   for (let attempt = 0; attempt < USERNAME_ALLOCATION_ATTEMPTS; attempt += 1) {
@@ -53,7 +53,6 @@ async function insertPendingUser(
 }
 
 export async function createInvite(
-  repos: InviteDeps,
   runtime: InviteRuntime,
   input: CreateInviteInput,
   operation: OperationContext,

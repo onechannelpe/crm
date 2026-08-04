@@ -4,7 +4,7 @@ import type { LoginFlowsRepo } from "~/server/auth/repos-login-flows";
 import type { OAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
 import { type UserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
 import { type UserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import type { EventsRepo } from "~/server/event-logs/events-repo";
+import type { EventsWriter } from "~/server/event-logs/events-repo";
 import type { NotificationIntent } from "~/server/notifications/types";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
 import type { PasskeysRepo } from "~/server/users/repos-passkeys";
@@ -16,7 +16,7 @@ export type AuthLoginRepos = {
   loginFlows: LoginFlowsRepo;
   users: UsersRepo;
   sessions: SessionRepository;
-  events: EventsRepo;
+  events: EventsWriter;
   authThrottle: AuthThrottleRepo;
   authEvents: AuthEventsRepo;
   userTotpFactors: UserTotpFactorsRepo;

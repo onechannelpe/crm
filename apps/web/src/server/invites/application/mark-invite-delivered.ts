@@ -3,10 +3,9 @@ import type { UserInviteId } from "~/domain/ids";
 import type { OperationContext } from "~/server/platform/operation/context";
 import { Ok, type Result } from "~/shared/result";
 
-import type { InviteDeps, InviteRuntime } from "./types";
+import type { InviteRuntime } from "./types";
 
 export async function markInviteDelivered(
-  repos: InviteDeps,
   runtime: InviteRuntime,
   inviteId: UserInviteId,
   operation: OperationContext,

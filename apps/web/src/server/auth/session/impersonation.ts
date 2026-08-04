@@ -2,17 +2,18 @@ import { auditEntityId } from "~/domain/audit/entity";
 import { canImpersonateMember } from "~/domain/auth/access/member-management";
 import { fail, type DomainError } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
-import type { EventsRepo } from "~/server/event-logs/events-repo";
+import type { EventsWriter } from "~/server/event-logs/events-repo";
 import type { AppContext } from "~/server/platform/action/context";
 import type { UsersRepo } from "~/server/users/repos-users";
-import { Err, Ok, type Result } from "~/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
-import type { SessionService } from "./session.service";
+import type { SessionAuthenticator, SessionIssuer } from "./session.service";
 
 export interface ImpersonationDeps {
-  sessions: Pick<SessionService, "establish" | "revoke">;
+  sessionIssuer: Pick<SessionIssuer, "establish">;
+  sessionAuthenticator: Pick<SessionAuthenticator, "revoke">;
   users: UsersRepo;
-  events: Pick<EventsRepo, "append">;
+  events: EventsWriter;
 }
 
 // Impersonation mints a fresh session that acts as the target while recording
@@ -34,7 +35,7 @@ export async function startImpersonation(
     return Err(fail("cannot_impersonate"));
   }
 
-  const issued = await deps.sessions.establish(
+  const issued = await deps.sessionIssuer.establish(
     {
       user: {
         id: target.id,
@@ -51,6 +52,9 @@ export async function startImpersonation(
     },
     ctx,
   );
+  if (isErr(issued)) {
+    return issued;
+  }
 
   await deps.events.append({
     type: "user.impersonation_started",
@@ -61,7 +65,7 @@ export async function startImpersonation(
     occurredAt: ctx.operationAt,
   });
 
-  return Ok({ token: issued.token });
+  return Ok({ token: issued.value.token });
 }
 
 export async function stopImpersonation(
@@ -73,7 +77,7 @@ export async function stopImpersonation(
     return Err(fail("not_impersonating"));
   }
 
-  await deps.sessions.revoke(ctx.actor.id);
+  await deps.sessionAuthenticator.revoke(ctx.actor.id);
 
   await deps.events.append({
     type: "user.impersonation_stopped",

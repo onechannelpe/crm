@@ -4,10 +4,13 @@ import type { JobContext } from "~/server/platform/operation/context";
 import { isErr } from "~/shared/result";
 
 import { parseReport } from "../intake/parse-report";
-import { activateGpvSnapshot } from "./activate";
+import {
+  activateGpvSnapshot,
+  activateGpvSnapshotInTransaction,
+} from "./activate";
 import type { GpvSnapshotJobRow } from "./repo";
 import { stageGpvSnapshot } from "./stage";
-import { validateGpvSnapshot } from "./validate";
+import { validateGpvSnapshotInTransaction } from "./validate";
 
 export interface GpvSnapshotProgress {
   rowsTotal: number;
@@ -111,7 +114,11 @@ export function createGpvSnapshotRunner(deps: {
       }
 
       const finalized = await deps.db.transaction().execute(async (tx) => {
-        const issues = await validateGpvSnapshot(tx, snapshot.id, operationAt);
+        const issues = await validateGpvSnapshotInTransaction(
+          tx,
+          snapshot.id,
+          operationAt,
+        );
 
         if (issues.blocking > 0) {
           return { issues, activationError: null };
@@ -120,7 +127,7 @@ export function createGpvSnapshotRunner(deps: {
           throw new Error("Job aborted");
         }
 
-        const activated = await activateGpvSnapshot(tx, {
+        const activated = await activateGpvSnapshotInTransaction(tx, {
           snapshotId: snapshot.id,
           activatedBy: snapshot.created_by_user_id,
           activatedAt: operationAt,

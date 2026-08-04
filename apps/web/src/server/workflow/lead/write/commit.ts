@@ -1,11 +1,12 @@
+import type { Transaction } from "kysely";
+
 import { fail, type DomainError } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
-import { createEventsRepo } from "~/server/event-logs/events-repo";
-import { assignOrganizationOwner } from "~/server/organization/ownership";
-import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { appendEvents } from "~/server/event-logs/events-repo";
+import { assignOrganizationOwnerInTransaction } from "~/server/organization/ownership";
+import type { Database } from "~/server/platform/database/types";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
-import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { toLeadEventAppend } from "./lead-events";
@@ -22,7 +23,7 @@ export type LeadAssignment = {
 };
 
 export async function commitTransition(
-  tx: DatabaseExecutor,
+  tx: Transaction<Database>,
   transition: LeadTransition,
   assignment?: LeadAssignment,
 ): Promise<Result<{ eventIds: string[] }, DomainError>> {
@@ -49,7 +50,7 @@ export async function commitTransition(
   }
 
   if (assignment) {
-    const assigned = await assignOrganizationOwner(tx, {
+    const assigned = await assignOrganizationOwnerInTransaction(tx, {
       organizationId: next.organizationId,
       executiveId: assignment.toExecutiveId,
       assignedBy: assignment.assignedBy,
@@ -62,18 +63,16 @@ export async function commitTransition(
     }
   }
 
-  const eventIds = await createEventsRepo(tx).append(
-    events.map(toLeadEventAppend),
-  );
+  const eventIds = await appendEvents(tx, events.map(toLeadEventAppend));
 
   return Ok({ eventIds });
 }
 
 export async function appendFacts(
-  scope: WorkflowWriteContext,
+  tx: Transaction<Database>,
+  operationAt: Date,
   events: LeadHistoryEventDraft[],
 ): Promise<Result<{ eventIds: string[] }, DomainError>> {
-  const tx = scope.executor;
   const leadId = events[0]?.leadId;
 
   if (!leadId) {
@@ -83,7 +82,7 @@ export async function appendFacts(
   const updateResult = await tx
     .updateTable("workflow_leads")
     .set({
-      updated_at: scope.operationAt,
+      updated_at: operationAt,
       updated_by: events[0].actorUserId,
     })
     .where("id", "=", leadId)
@@ -94,9 +93,7 @@ export async function appendFacts(
     return Err(fail("lead_not_found"));
   }
 
-  const eventIds = await createEventsRepo(tx).append(
-    events.map(toLeadEventAppend),
-  );
+  const eventIds = await appendEvents(tx, events.map(toLeadEventAppend));
 
   return Ok({ eventIds });
 }

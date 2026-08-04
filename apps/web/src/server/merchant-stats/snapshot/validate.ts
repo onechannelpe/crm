@@ -1,4 +1,4 @@
-import type { Insertable } from "kysely";
+import type { Insertable, Transaction } from "kysely";
 
 import type { GpvSnapshotId } from "~/domain/ids";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
@@ -9,22 +9,8 @@ import { chunks } from "../chunks";
 const ISSUE_CHUNK = 750;
 type IssueInsert = Insertable<Database["gpv_snapshot_issues"]>;
 
-export async function validateGpvSnapshot(
-  db: DatabaseExecutor,
-  snapshotId: GpvSnapshotId,
-  validatedAt: Date,
-): Promise<{ blocking: number; warnings: number }> {
-  if (db.isTransaction) {
-    return validateInTransaction(db, snapshotId, validatedAt);
-  }
-
-  return db
-    .transaction()
-    .execute((tx) => validateInTransaction(tx, snapshotId, validatedAt));
-}
-
-async function validateInTransaction(
-  db: DatabaseExecutor,
+export async function validateGpvSnapshotInTransaction(
+  db: Transaction<Database>,
   snapshotId: GpvSnapshotId,
   validatedAt: Date,
 ): Promise<{ blocking: number; warnings: number }> {

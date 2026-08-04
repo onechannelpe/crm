@@ -2,7 +2,6 @@ import { fail, forbidden, type DomainError } from "~/domain/errors";
 import type { CapacityRequestId } from "~/domain/ids";
 import { grantUsageCapacity } from "~/server/capacity/application/usage/ledger";
 import type { AppContext } from "~/server/platform/action/context";
-import { checkActionRateLimit } from "~/server/security/action-rate-limit";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import { normalizeDecisionNote } from "../../domain/request-policy";
@@ -14,13 +13,13 @@ export async function approveCapacityRequest(
   deps: CapacityApprovalDeps,
   input: { requestId: CapacityRequestId; note: string | null },
 ): Promise<Result<{ success: true }, DomainError>> {
-  await checkActionRateLimit(
+  await deps.rateLimiter.enforce(
     "capacity.approve",
     ctx.actor.userId,
-    deps.rateLimitDeps,
     ctx,
     ctx.ipAddress,
   );
+
   return deps.uow.run(async (tx) => {
     const request = await tx.capacityRequests.findById(input.requestId);
     if (!request) {
