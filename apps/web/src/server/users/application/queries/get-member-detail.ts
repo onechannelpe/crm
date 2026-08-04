@@ -18,9 +18,9 @@ import type { MemberReadDeps } from "../ports";
 export async function getMemberDetail(
   ctx: AppContext,
   deps: MemberReadDeps,
-  input: { userId: UserId },
+  userId: UserId,
 ): Promise<Result<MemberDetail, DomainError>> {
-  const user = await deps.users.findById(input.userId);
+  const user = await deps.users.findById(userId);
   if (!user || user.branch_id !== ctx.actor.branchId) {
     return Err(fail("user_not_found"));
   }

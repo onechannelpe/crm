@@ -59,7 +59,10 @@ export async function removeMemberAvatar(
     telemetry: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await application.users.members.removeAvatar(ctx, command);
+      const result = await application.users.members.removeAvatar(
+        ctx,
+        command.userId,
+      );
       if (isErr(result)) return result;
       return Ok({ message: "Foto de perfil eliminada" });
     },

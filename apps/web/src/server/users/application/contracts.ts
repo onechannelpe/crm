@@ -22,7 +22,3 @@ export interface UpdateMemberExpiryCommand {
   userId: UserId;
   expiresOn: CalendarDate | null;
 }
-
-export interface MemberIdCommand {
-  userId: UserId;
-}

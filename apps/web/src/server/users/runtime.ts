@@ -12,7 +12,6 @@ import { createBlobStore } from "~/server/platform/files/blob-store";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import type {
   ChangeMemberRoleCommand,
-  MemberIdCommand,
   UpdateMemberExpiryCommand,
   UpdateMemberProfileCommand,
 } from "~/server/users/application/contracts";
@@ -65,24 +64,24 @@ export function createUsersRuntime(
 
   const members = {
     listRoster: (ctx: AppContext) => listBranchMembers(ctx, readDeps),
-    getDetail: (ctx: AppContext, input: { userId: UserId }) =>
-      getMemberDetail(ctx, readDeps, input),
+    getDetail: (ctx: AppContext, userId: UserId) =>
+      getMemberDetail(ctx, readDeps, userId),
     updateProfile: (ctx: AppContext, command: UpdateMemberProfileCommand) =>
       updateMemberProfile(ctx, writeDeps, command),
     changeRole: (ctx: AppContext, command: ChangeMemberRoleCommand) =>
       changeMemberRole(ctx, writeDeps, command),
-    deactivate: (ctx: AppContext, command: MemberIdCommand) =>
-      deactivateMember(ctx, writeDeps, command),
-    reactivate: (ctx: AppContext, command: MemberIdCommand) =>
-      reactivateMember(ctx, writeDeps, command),
+    deactivate: (ctx: AppContext, userId: UserId) =>
+      deactivateMember(ctx, writeDeps, userId),
+    reactivate: (ctx: AppContext, userId: UserId) =>
+      reactivateMember(ctx, writeDeps, userId),
     updateExpiry: (ctx: AppContext, command: UpdateMemberExpiryCommand) =>
       updateMemberExpiry(ctx, writeDeps, command),
-    remove: (ctx: AppContext, command: MemberIdCommand) =>
-      deleteMember(ctx, writeDeps, command),
+    remove: (ctx: AppContext, userId: UserId) =>
+      deleteMember(ctx, writeDeps, userId),
     uploadAvatar: (ctx: AppContext, command: { userId: UserId; file: File }) =>
       updateMemberAvatar(ctx, avatarDeps, command),
-    removeAvatar: (ctx: AppContext, command: MemberIdCommand) =>
-      removeMemberAvatar(ctx, avatarDeps, command),
+    removeAvatar: (ctx: AppContext, userId: UserId) =>
+      removeMemberAvatar(ctx, avatarDeps, userId),
   };
 
   async function updatePhone(

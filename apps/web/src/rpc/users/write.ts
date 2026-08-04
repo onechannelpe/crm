@@ -99,7 +99,10 @@ export async function deactivateMember(
       })),
     telemetry: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
-      const result = await application.users.members.deactivate(ctx, command);
+      const result = await application.users.members.deactivate(
+        ctx,
+        command.userId,
+      );
       if (isErr(result)) return result;
       return Ok({ message: "Usuario desactivado" });
     },
@@ -120,7 +123,10 @@ export async function reactivateMember(
       })),
     telemetry: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
-      const result = await application.users.members.reactivate(ctx, command);
+      const result = await application.users.members.reactivate(
+        ctx,
+        command.userId,
+      );
       if (isErr(result)) return result;
       return Ok({ message: "Usuario reactivado" });
     },
@@ -166,7 +172,10 @@ export async function deleteMember(
       })),
     telemetry: (command) => ({ userId: command.userId }),
     execute: async (ctx, command) => {
-      const result = await application.users.members.remove(ctx, command);
+      const result = await application.users.members.remove(
+        ctx,
+        command.userId,
+      );
       if (isErr(result)) return result;
       return Ok({ message: "Usuario eliminado" });
     },

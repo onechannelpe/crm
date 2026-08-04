@@ -27,6 +27,6 @@ export async function getMemberDetail(
         userId: r.id("userId", UserId),
       })),
     execute: (ctx, command) =>
-      application.users.members.getDetail(ctx, command),
+      application.users.members.getDetail(ctx, command.userId),
   });
 }

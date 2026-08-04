@@ -3,6 +3,7 @@
 import { auditEntityId } from "~/domain/audit/entity";
 import { canDeleteMember } from "~/domain/auth/access/member-management";
 import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import { revokeUserAccess } from "~/server/auth/session/revoke-user-access";
 import type { AppContext } from "~/server/platform/action/context";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
@@ -13,7 +14,7 @@ import { authorizeMemberManagement } from "./authorize-member-management";
 export async function deleteMember(
   ctx: AppContext,
   deps: MemberWriteDeps,
-  userId: string,
+  userId: UserId,
 ): Promise<Result<void, DomainError>> {
   return deps.lifecycle.run(async (tx) => {
     const target = await authorizeMemberManagement(ctx, tx.users, userId);
