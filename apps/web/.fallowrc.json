@@ -45,9 +45,7 @@
     "virtual:*",
     "@solidjs/start/*"
   ],
-  "dynamicallyLoaded": [
-    "src/server/platform/runtime/realtime-lifecycle.ts"
-  ],
+  "dynamicallyLoaded": ["src/server/platform/runtime/realtime-lifecycle.ts"],
   "ignoreDependencies": [
     "@crm/contracts",
     "@crm/email-composer",
