@@ -24,10 +24,11 @@ export async function generateUsername(
 
   for (const candidate of candidates) {
     // eslint-disable-next-line no-await-in-loop
-    if (!(await exists(candidate))) return candidate;
+    if (!(await exists(candidate))) {
+      return candidate;
+    }
   }
 
-  // 100 sequential names are taken, so the first.last namespace is exhausted.
-  // This is an identifier suffix, not an event timestamp.
+  // Fall back once the sequential namespace is exhausted.
   return `${first}.${fs}.${crypto.randomUUID().replaceAll("-", "")}`;
 }

@@ -22,7 +22,6 @@ export type DataGridProps<T> = {
   actionRow?: DataGridActionRowConfig;
   ariaLabel: string;
   columns: readonly DataGridColumn<T>[];
-  /** Pass an element when the empty state needs richer content. */
   emptyState: JSX.Element;
   errorState?: JSX.Element;
   loadMore?: DataGridLoadMore;
