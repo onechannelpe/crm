@@ -1,4 +1,3 @@
-import "server-only";
 import {
   EVENT_LOG_TABLES,
   type EventLogStatus,

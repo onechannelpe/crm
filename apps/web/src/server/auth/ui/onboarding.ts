@@ -1,4 +1,3 @@
-import "server-only";
 import { redirect } from "@solidjs/router";
 
 import type { OnboardingSnapshot } from "~/contracts/auth";

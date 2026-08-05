@@ -1,4 +1,3 @@
-import "server-only";
 import type { MemberDetail, MembersRoster } from "~/contracts/members";
 import { UserId } from "~/domain/ids";
 import { application } from "~/server/composition/application";

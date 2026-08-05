@@ -1,4 +1,3 @@
-import "server-only";
 import { captureException } from "@sentry/bun";
 import { getRequestEvent } from "solid-js/web";
 

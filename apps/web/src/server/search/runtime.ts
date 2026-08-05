@@ -1,4 +1,3 @@
-import "server-only";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import type { AppContext } from "~/server/platform/action/context";

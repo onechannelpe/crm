@@ -1,4 +1,3 @@
-import "server-only";
 import type { CurrentUserView } from "~/contracts/auth";
 import { AuthLoginFlowId } from "~/domain/ids";
 import { application } from "~/server/composition/application";

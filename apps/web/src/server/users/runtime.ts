@@ -1,4 +1,3 @@
-import "server-only";
 import { join } from "node:path";
 
 import type { UserId } from "~/domain/ids";

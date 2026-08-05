@@ -1,4 +1,3 @@
-import "server-only";
 import { getRequestEvent } from "solid-js/web";
 
 import type { AuthSession } from "~/domain/auth/access/session-types";

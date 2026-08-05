@@ -1,4 +1,3 @@
-import "server-only";
 import type { Transaction } from "kysely";
 
 import { auditEntityId } from "~/domain/audit/entity";

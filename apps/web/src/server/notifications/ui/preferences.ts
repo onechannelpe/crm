@@ -1,4 +1,3 @@
-import "server-only";
 import type { NotificationPreferencesView } from "~/contracts/notifications";
 import { application } from "~/server/composition/application";
 import {

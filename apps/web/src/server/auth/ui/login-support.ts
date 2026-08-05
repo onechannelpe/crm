@@ -1,4 +1,3 @@
-import "server-only";
 import { redirect } from "@solidjs/router";
 
 import type { Role } from "~/domain/auth/access/rbac";

@@ -1,4 +1,3 @@
-import "server-only";
 import type { LeadCapacitySnapshot } from "~/contracts/capacity";
 import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";

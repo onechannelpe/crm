@@ -24,7 +24,6 @@ export default defineConfig({
       "~": path.resolve(__dirname, "./src"),
       "@tests": path.resolve(__dirname, "./tests"),
       bun: path.resolve(__dirname, "./tests/mocks/bun.ts"),
-      "server-only": path.resolve(__dirname, "./tests/mocks/server-only.ts"),
     },
   },
 });

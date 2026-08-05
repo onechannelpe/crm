@@ -1,4 +1,3 @@
-import "server-only";
 import type { Transaction } from "kysely";
 
 import { getExecutiveDetail } from "~/server/capacity/application/queries/get-executive-detail";

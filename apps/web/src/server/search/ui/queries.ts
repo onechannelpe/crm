@@ -1,4 +1,3 @@
-import "server-only";
 import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 

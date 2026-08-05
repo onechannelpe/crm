@@ -1,4 +1,3 @@
-import "server-only";
 import type { InviteActivationView } from "~/contracts/auth";
 import { readInviteToken } from "~/domain/auth/invite/activation-input";
 import { setSessionCookie } from "~/server/auth/session/cookies";

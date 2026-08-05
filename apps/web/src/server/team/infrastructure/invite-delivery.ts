@@ -1,4 +1,3 @@
-import "server-only";
 import type { Role } from "~/domain/auth/access/rbac";
 import { external, type DomainError } from "~/domain/errors";
 import { formatAppLongDate } from "~/domain/time/app-time";

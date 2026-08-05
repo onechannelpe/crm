@@ -1,4 +1,3 @@
-import "server-only";
 import { createAuditActionPoliciesRepo } from "~/server/audit-reader/audit-policy-repo";
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
 import { createAccessSecurityContext } from "~/server/auth/infrastructure/session-revocation-context";

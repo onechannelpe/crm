@@ -1,4 +1,3 @@
-import "server-only";
 import {
   type ListAssignableExecutivesInput,
   type ListLeadsFiltersInput,

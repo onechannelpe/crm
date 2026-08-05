@@ -1,4 +1,3 @@
-import "server-only";
 import {
   createContactAssignmentsRepo,
   type ContactAssignmentsRepo,

@@ -1,4 +1,3 @@
-import "server-only";
 import type { Document } from "~/domain/identity/document";
 import { createSunatScraperClient } from "~/server/client-search/enrichment/sunat/client";
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";

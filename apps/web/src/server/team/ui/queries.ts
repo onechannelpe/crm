@@ -1,4 +1,3 @@
-import "server-only";
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
 import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";

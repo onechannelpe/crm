@@ -1,4 +1,3 @@
-import "server-only";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import type { OperationContext } from "~/server/platform/operation/context";

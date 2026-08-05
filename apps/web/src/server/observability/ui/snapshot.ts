@@ -1,4 +1,3 @@
-import "server-only";
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
 import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
