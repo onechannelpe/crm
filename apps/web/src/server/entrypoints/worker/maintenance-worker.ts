@@ -1,9 +1,10 @@
-import { application } from "~/server/composition/application";
+import { createMaintenanceRuntime } from "~/server/composition/maintenance-runtime";
 import { dbUrl } from "~/server/platform/database/db";
 import {
   createPgListener,
   type PgListenerHandler,
 } from "~/server/platform/database/notifications/listener";
+import { serverInfrastructure } from "~/server/platform/infrastructure";
 import { JOB_TABLE_CHANNELS } from "~/server/platform/jobs/registry";
 import type { QueueRunner } from "~/server/platform/jobs/types";
 import type { OperationContext } from "~/server/platform/operation/context";
@@ -126,15 +127,15 @@ function startScheduledTick(
 export function startMaintenanceWorker(): { stop(): Promise<void> } {
   logger.info("background_jobs_initializing", { workerId: WORKER_ID });
 
+  const runtime = createMaintenanceRuntime(serverInfrastructure);
+
   const recordsImportQueue =
-    application.maintenance.createRecordsImportQueue(WORKER_ID);
+    runtime.maintenance.createRecordsImportQueue(WORKER_ID);
 
-  const gpvSnapshotQueue =
-    application.merchantStats.imports.createQueue(WORKER_ID);
+  const gpvSnapshotQueue = runtime.merchantStats.imports.createQueue(WORKER_ID);
 
-  const enrichmentQueue =
-    application.clientSearch.createEnrichmentQueue(WORKER_ID);
-  const notificationQueues = application.notifications.createQueues(WORKER_ID);
+  const enrichmentQueue = runtime.clientSearch.createEnrichmentQueue(WORKER_ID);
+  const notificationQueues = runtime.notifications.createQueues(WORKER_ID);
 
   const queuesByChannel: Record<string, QueueRunner[]> = {
     [JOB_TABLE_CHANNELS.workflow_integration_jobs]: [recordsImportQueue],
@@ -171,22 +172,22 @@ export function startMaintenanceWorker(): { stop(): Promise<void> } {
   const stopAccountExpiry = startScheduledTick(
     "account-expiry",
     ACCOUNT_EXPIRY_INTERVAL_MS,
-    application.maintenance.accountLifecycle.expireAccounts,
+    runtime.maintenance.accountLifecycle.expireAccounts,
   );
   const stopExpiryNotification = startScheduledTick(
     "expiry-notification",
     EXPIRY_NOTIFICATION_INTERVAL_MS,
-    application.maintenance.accountLifecycle.notifyExpiringAccounts,
+    runtime.maintenance.accountLifecycle.notifyExpiringAccounts,
   );
   const stopReservationSweep = startScheduledTick(
     "reservation-sweep",
     RESERVATION_SWEEP_INTERVAL_MS,
-    application.maintenance.leadReservation.sweepReservations,
+    runtime.maintenance.leadReservation.sweepReservations,
   );
   const stopSessionCleanup = startScheduledTick(
     "session-cleanup",
     SESSION_CLEANUP_INTERVAL_MS,
-    application.maintenance.cleanupSessions,
+    runtime.maintenance.cleanupSessions,
   );
 
   const pollTimer = setInterval(wakeAll, POLL_FLOOR_MS);
