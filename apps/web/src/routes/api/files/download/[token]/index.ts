@@ -3,7 +3,7 @@ import type { APIEvent } from "@solidjs/start/server";
 import { application } from "~/server/composition/application";
 import { buildFileDownloadHeaders } from "~/server/files/headers";
 import { toWire } from "~/server/platform/action/domain-error";
-import { getRequestOperation } from "~/server/platform/http/request-context";
+import { getRequestOperation } from "~/server/platform/http/request-context-storage";
 import { isErr } from "~/shared/result";
 
 export async function GET(

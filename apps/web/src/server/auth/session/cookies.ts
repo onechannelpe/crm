@@ -3,7 +3,9 @@ import { serializeCookie } from "cookie-es";
 
 import { isProduction } from "~/shared/observability/runtime-env";
 
-const COOKIE_NAME = "session";
+import { SESSION_COOKIE_NAME } from "./cookie-name";
+
+const COOKIE_NAME = SESSION_COOKIE_NAME;
 // Parks the administrator's own session token while they impersonate another
 // user, so exiting impersonation can restore it.
 const IMPERSONATOR_COOKIE_NAME = "impersonator_session";

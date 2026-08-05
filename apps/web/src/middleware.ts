@@ -9,7 +9,7 @@ import { enforceAuthRequest } from "./server/platform/http/request-auth";
 import {
   buildAnonymousRequestContext,
   buildRequestContext,
-} from "./server/platform/http/request-context";
+} from "./server/platform/http/request-context-builder";
 import { generateRequestId, generateTraceId } from "./shared/observability/ids";
 import { isProduction } from "./shared/observability/runtime-env";
 

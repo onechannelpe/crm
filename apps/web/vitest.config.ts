@@ -9,6 +9,7 @@ import {
 const alias = {
   "~": path.resolve(__dirname, "./src"),
   "@tests": path.resolve(__dirname, "./tests"),
+  "server-only": path.resolve(__dirname, "./tests/mocks/server-only.ts"),
 };
 
 function databaseProject(namespace: string) {

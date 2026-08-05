@@ -10,7 +10,7 @@ import {
   unauthenticated,
   type DomainError,
 } from "~/domain/errors";
-import { getRequestContext } from "~/server/platform/http/request-context";
+import { getRequestContext } from "~/server/platform/http/request-context-storage";
 import { Err, Ok, type Result } from "~/shared/result";
 
 export async function getSession(): Promise<AuthSession | null> {

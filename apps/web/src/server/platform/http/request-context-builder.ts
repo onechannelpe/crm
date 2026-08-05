@@ -1,5 +1,3 @@
-import { getRequestEvent } from "solid-js/web";
-
 import type { AuthSession } from "~/domain/auth/access/session-types";
 import { getClientIp } from "~/server/auth/password/client-ip";
 import { getSessionCookie } from "~/server/auth/session/cookies";
@@ -12,41 +10,9 @@ import {
 } from "~/server/platform/security/request-session";
 
 import { resolvePublicOrigin } from "./public-origin";
+import type { RequestContext } from "./request-context-storage";
 
 const REQUEST_SESSION_ACTIVITY_UPDATE_MS = 5 * 60 * 1000;
-
-export type AuthPrincipal = AuthSession;
-
-export type CsrfState =
-  | { kind: "not_applicable" }
-  | { kind: "missing" }
-  | { kind: "available"; token: string };
-
-export interface RequestContext {
-  traceId: string;
-  requestId: string;
-  route: string;
-  method: string;
-  /**
-   * The instant this request entered the system, read once by the identify
-   * middleware. Everything the request goes on to do inherits it, including
-   * server functions, so one request cannot stamp two different times.
-   */
-  startedAt: Date;
-  /**
-   * Monotonic origin for measuring how long the request took. Separate from
-   * `startedAt` on purpose: a stamp must be wall clock so it can be written and
-   * compared, an elapsed measurement must not be, or a clock adjustment
-   * mid-request turns into a negative duration.
-   */
-  startedTicks: number;
-  nonce: string;
-  csrf: CsrfState;
-  principal: AuthPrincipal | null;
-  publicOrigin: string;
-  clientIp: string;
-  userAgent: string | null;
-}
 
 interface RequestSessionStore {
   findById(id: string): Promise<{
@@ -82,18 +48,17 @@ export interface RequestContextDeps {
   requestSessions: RequestSessionStore;
 }
 
+// Middleware owns cookie access.
 export async function buildRequestContext(
   request: Request,
   identity: RequestIdentity,
   deps: RequestContextDeps,
   trustedProxy: boolean,
 ): Promise<RequestContext> {
-  // Session expiry, activity refresh and request-session bootstrap all judge
-  // against the instant the request arrived, not against a second reading taken
-  // however long authentication happened to take.
   const requestedAt = identity.startedAt;
+
   const [principal, requestSession] = await Promise.all([
-    loadRequestSession(deps.resolveAuthSession, { operationAt: requestedAt }),
+    loadAuthSession(deps.resolveAuthSession, { operationAt: requestedAt }),
     loadRequestSessionState(
       request,
       shouldBootstrapRequestSession(request),
@@ -101,6 +66,7 @@ export async function buildRequestContext(
       requestedAt,
     ),
   ]);
+
   const url = new URL(request.url);
 
   return {
@@ -111,9 +77,7 @@ export async function buildRequestContext(
       ? { kind: "available", token: requestSession.csrfToken }
       : { kind: "missing" },
     principal,
-    publicOrigin: resolvePublicOrigin(request, {
-      trustedProxy,
-    }),
+    publicOrigin: resolvePublicOrigin(request, { trustedProxy }),
     clientIp: getClientIp(request.headers, trustedProxy),
     userAgent: request.headers.get("user-agent") ?? null,
   };
@@ -138,41 +102,12 @@ export function buildAnonymousRequestContext(
   };
 }
 
-export function getRequestContext(): RequestContext {
-  const event = getRequestEvent();
-  const context = event?.locals?.requestContext;
-  if (!context) {
-    throw new Error("Missing request context");
-  }
-  return context;
-}
-
-/**
- * The current request as an operation. Route handlers and unauthenticated
- * server functions use this instead of `new Date()`, so everything one request
- * writes agrees on when it happened. Authenticated server functions get the
- * same instant through `AppContext`, which inherits it from here.
- */
-export function getRequestOperation(): OperationContext {
-  return { operationAt: getRequestContext().startedAt };
-}
-
-export function getRequestClientMetadata(): {
-  ipAddress: string;
-  userAgent: string | null;
-} {
-  const context = getRequestContext();
-  return {
-    ipAddress: context.clientIp,
-    userAgent: context.userAgent,
-  };
-}
-
-async function loadRequestSession(
+async function loadAuthSession(
   resolveAuthSession: RequestContextDeps["resolveAuthSession"],
   operation: OperationContext,
 ): Promise<AuthSession | null> {
   const token = getSessionCookie();
+
   if (!token) {
     return null;
   }
@@ -187,19 +122,27 @@ async function loadRequestSessionState(
   requestedAt: Date,
 ): Promise<{ id: string; csrfToken: string } | null> {
   const existingId = getRequestSessionCookie();
+
   if (existingId) {
     const existing = await requestSessions.findById(existingId);
+
     if (existing && existing.expires_at >= requestedAt) {
-      if (
+      const shouldRefreshActivity =
         requestedAt.getTime() - existing.last_activity.getTime() >
-        REQUEST_SESSION_ACTIVITY_UPDATE_MS
-      ) {
+        REQUEST_SESSION_ACTIVITY_UPDATE_MS;
+
+      if (shouldRefreshActivity) {
         void requestSessions
           .updateActivity(existing.id, requestedAt)
           .catch(() => {});
       }
-      return { id: existing.id, csrfToken: existing.csrf_token };
+
+      return {
+        id: existing.id,
+        csrfToken: existing.csrf_token,
+      };
     }
+
     deleteRequestSessionCookie();
   }
 
@@ -208,7 +151,7 @@ async function loadRequestSessionState(
   }
 
   const id = crypto.randomUUID();
-  const csrfToken = crypto.randomUUID().replace(/-/g, "");
+  const csrfToken = crypto.randomUUID().replaceAll("-", "");
   const expiresAt = new Date(
     requestedAt.getTime() + getRequestSessionMaxAgeSeconds() * 1000,
   );
@@ -220,6 +163,7 @@ async function loadRequestSessionState(
     last_activity: requestedAt,
     expires_at: expiresAt,
   });
+
   setRequestSessionCookie(id);
 
   return { id, csrfToken };
@@ -231,10 +175,12 @@ function shouldBootstrapRequestSession(request: Request): boolean {
   }
 
   const url = new URL(request.url);
+
   if (url.pathname.includes(".") || url.pathname.startsWith("/_")) {
     return false;
   }
 
   const accept = request.headers.get("accept") ?? "";
+
   return accept.includes("text/html");
 }

@@ -3,7 +3,7 @@ import {
   type AuthFunnelClientEventPayload,
 } from "~/domain/observability/auth-funnel";
 import { application } from "~/server/composition/application";
-import { getRequestOperation } from "~/server/platform/http/request-context";
+import { getRequestOperation } from "~/server/platform/http/request-context-storage";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
 function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {

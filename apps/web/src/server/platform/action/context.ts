@@ -1,5 +1,5 @@
 import type { AuthSession } from "~/domain/auth/access/session-types";
-import { getRequestContext } from "~/server/platform/http/request-context";
+import { getRequestContext } from "~/server/platform/http/request-context-storage";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import type { OperationContext } from "~/server/platform/operation/context";
 

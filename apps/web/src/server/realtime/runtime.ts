@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { getSession } from "~/server/platform/action/session";
+import type { AuthSession } from "~/domain/auth/access/session-types";
 import {
   createPgListener,
   type PgListenerHandler,
@@ -44,6 +44,7 @@ export interface RealtimeService {
 export function createRealtimeService(input: {
   channels: readonly RealtimeChannel[];
   databaseUrl: string;
+  resolveSession: (h3Event: H3Event) => Promise<AuthSession | null>;
 }): RealtimeService {
   const hub = new TopicHub();
   let sweepTimer: ReturnType<typeof setInterval> | null = null;
@@ -114,7 +115,7 @@ export function createRealtimeService(input: {
     h3Event: H3Event,
     request: RealtimeOpenRequest,
   ): Promise<Result<RealtimeStream, RealtimeOpenError>> {
-    const session = await getSession();
+    const session = await input.resolveSession(h3Event);
 
     if (!session || session.sessionClass !== "app") {
       return Err("unauthenticated");

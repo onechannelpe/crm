@@ -1,7 +1,7 @@
 import { application } from "~/server/composition/application";
 import { isClaimExtensionSessionRequest } from "~/server/extension/contracts";
 import { toWire } from "~/server/platform/action/domain-error";
-import { getRequestOperation } from "~/server/platform/http/request-context";
+import { getRequestOperation } from "~/server/platform/http/request-context-storage";
 import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";

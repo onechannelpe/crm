@@ -8,7 +8,7 @@ import { application } from "~/server/composition/application";
 import {
   getRequestContext,
   getRequestOperation,
-} from "~/server/platform/http/request-context";
+} from "~/server/platform/http/request-context-storage";
 import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";

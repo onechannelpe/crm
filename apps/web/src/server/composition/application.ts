@@ -1,8 +1,8 @@
 import { createAuditActionPoliciesRepo } from "~/server/audit-reader/audit-policy-repo";
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
 import { createAuthRuntime } from "~/server/auth/runtime";
+import { resolveSessionFromEvent } from "~/server/auth/session/resolve-from-event";
 import { createCapacityRuntime } from "~/server/capacity/runtime";
-import { createDeferredRealtimeService } from "~/server/composition/deferred-realtime";
 import { createSharedRuntime } from "~/server/composition/shared-runtime";
 import { createContactAssignmentsRuntime } from "~/server/contact-assignments/runtime";
 import { createEventLogsChannel } from "~/server/event-logs/realtime";
@@ -18,6 +18,7 @@ import {
   serverInfrastructure,
   type ServerInfrastructure,
 } from "~/server/platform/infrastructure";
+import { createRealtimeService } from "~/server/realtime/runtime";
 import { createRecordImportChannel } from "~/server/records/imports/realtime";
 import { createSearchRuntime } from "~/server/search/runtime";
 import { createRequestSessionsRepo } from "~/server/security/repos-request-sessions";
@@ -45,13 +46,15 @@ function createApplication(infrastructure: ServerInfrastructure) {
   const users = createUsersRuntime(infrastructure, uploadsConfig());
   const requestSessions = createRequestSessionsRepo(db);
 
-  const realtime = createDeferredRealtimeService({
+  const realtime = createRealtimeService({
     channels: [
       createEventLogsChannel(eventLogs),
       createGpvSnapshotChannel(shared.merchantStats),
       createRecordImportChannel(shared.recordImports),
     ],
     databaseUrl: dbUrl,
+    resolveSession: (h3Event) =>
+      resolveSessionFromEvent(h3Event, auth.sessions.resolve),
   });
 
   return {

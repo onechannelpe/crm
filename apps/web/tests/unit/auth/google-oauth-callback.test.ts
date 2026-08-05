@@ -14,7 +14,7 @@ vi.mock("~/server/auth/infrastructure/request-passkey-provider", () => ({
   createPasskeyProviderForOrigin: () => ({}),
 }));
 
-vi.mock("~/server/platform/http/request-context", () => ({
+vi.mock("~/server/platform/http/request-context-storage", () => ({
   getRequestContext: () => ({ publicOrigin: "http://localhost" }),
   getRequestOperation: () => ({
     operationAt: new Date("2026-07-15T12:00:00.000Z"),

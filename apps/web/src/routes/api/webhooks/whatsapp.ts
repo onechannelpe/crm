@@ -1,6 +1,6 @@
 import type { ApiRequestEvent } from "~/routes/api/request-event";
 import { application } from "~/server/composition/application";
-import { getRequestOperation } from "~/server/platform/http/request-context";
+import { getRequestOperation } from "~/server/platform/http/request-context-storage";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
 const logger = createLogger("whatsapp-webhook");
