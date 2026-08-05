@@ -1,4 +1,6 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
+
+import { FieldEmptyValue } from "~/features/widgets/field-table";
 
 import { SidePanelPage } from "../../components/page";
 import { useSidePanelPageState } from "../../router/page-state";
@@ -27,7 +29,12 @@ export function DataGridDetailPage() {
                   "word-break": "break-word",
                 }}
               >
-                {item.value}
+                <Show
+                  when={item.value}
+                  fallback={<FieldEmptyValue>{item.label}</FieldEmptyValue>}
+                >
+                  {(value) => value()}
+                </Show>
               </div>
             </section>
           )}

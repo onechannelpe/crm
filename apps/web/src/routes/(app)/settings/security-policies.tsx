@@ -129,7 +129,7 @@ export default function SecurityPoliciesPage() {
                     <TableCell>{item.isActive ? "Sí" : "No"}</TableCell>
                     <TableCell>{item.isProtected ? "Sí" : "No"}</TableCell>
                     <TableCell ellipsis>
-                      {item.updatedByUserId ? `#${item.updatedByUserId}` : "—"}
+                      {item.updatedByUserId ? `#${item.updatedByUserId}` : null}
                     </TableCell>
                   </TableRow>
                 )}

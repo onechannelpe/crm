@@ -160,9 +160,7 @@ export function ResultTable(props: ResultTableProps) {
                       secondary={group.ruc ?? "No RUC"}
                       shape="square"
                     />
-                    <TableCell class={styles.codeCell}>
-                      {group.ruc ?? "—"}
-                    </TableCell>
+                    <TableCell class={styles.codeCell}>{group.ruc}</TableCell>
                     <TableCell class={styles.dataCell}>
                       <RecordChipList items={group.phones} shape="square" />
                     </TableCell>

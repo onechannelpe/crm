@@ -24,14 +24,14 @@ function pointAt(row: CohortSaleRow, offset: number): GpvPoint | null {
   return row.months.find((month) => month.offset === offset) ?? null;
 }
 
-function formatGpv(point: GpvPoint | null): string {
-  return point ? formatSolesCompact(point.gpv) : "—";
+function formatGpv(point: GpvPoint | null): string | null {
+  return point ? formatSolesCompact(point.gpv) : null;
 }
 
-function formatGpvAndTrx(point: GpvPoint | null): string {
+function formatGpvAndTrx(point: GpvPoint | null): string | null {
   return point
     ? `${formatSolesCompact(point.gpv)} · ${formatInteger(point.trx)}`
-    : "—";
+    : null;
 }
 
 const COLUMNS = [
@@ -56,7 +56,7 @@ const COLUMNS = [
     label: "Vendedor",
     icon: User,
     width: 170,
-    renderCell: (row) => row.sellerName ?? "Sin asignar",
+    renderCell: (row) => row.sellerName,
   },
   {
     key: "saleMonth",
@@ -107,7 +107,7 @@ const COLUMNS = [
     icon: ChartColumn,
     width: 120,
     renderCell: (row) =>
-      row.projectedGpv != null ? formatSolesCompact(row.projectedGpv) : "—",
+      row.projectedGpv != null ? formatSolesCompact(row.projectedGpv) : null,
   },
 ] satisfies ReadonlyArray<DataGridColumn<CohortSaleRow>>;
 
@@ -123,16 +123,16 @@ export function CohortGrid(props: { view: GpvView }) {
       title: row.tradeName ?? row.ruc,
       subtitle: `${row.product} · ${row.ruc}`,
       items: [
-        { label: "Serie", value: row.serialNumber ?? "—" },
-        { label: "Vendedor", value: row.sellerName ?? "Sin asignar" },
-        { label: "Zonal", value: row.branchName ?? "—" },
+        { label: "Serie", value: row.serialNumber },
+        { label: "Vendedor", value: row.sellerName },
+        { label: "Zonal", value: row.branchName },
         { label: "Mes de venta", value: formatMonth(row.saleMonth) },
         {
           label: "Proyectado mensual",
           value:
             row.projectedGpv != null
               ? formatSolesCompact(row.projectedGpv)
-              : "—",
+              : null,
         },
         ...COHORT_OFFSETS.map((offset) => ({
           label: `M${offset} (GPV / TRX)`,

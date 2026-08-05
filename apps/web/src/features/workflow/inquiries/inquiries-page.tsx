@@ -88,7 +88,7 @@ export function InquiriesPage() {
       icon: Building2,
       minWidth: 220,
       grow: true,
-      renderCell: (row) => row.legalName ?? "—",
+      renderCell: (row) => row.legalName,
     },
     {
       key: "state",
@@ -109,9 +109,7 @@ export function InquiriesPage() {
       renderCell: (row) =>
         row.status ? (
           <Badge variant="outline">{capitalize(row.status)}</Badge>
-        ) : (
-          "—"
-        ),
+        ) : null,
     },
     {
       key: "priority",
@@ -121,9 +119,7 @@ export function InquiriesPage() {
       renderCell: (row) =>
         row.priority ? (
           <Badge variant="secondary">{capitalize(row.priority)}</Badge>
-        ) : (
-          "—"
-        ),
+        ) : null,
     },
     {
       key: "createdAt",
@@ -138,7 +134,7 @@ export function InquiriesPage() {
       icon: CalendarDays,
       width: 130,
       renderCell: (row) =>
-        row.answeredAt === null ? "—" : formatAppDate(row.answeredAt),
+        row.answeredAt === null ? null : formatAppDate(row.answeredAt),
     },
     {
       key: "actions",

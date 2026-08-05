@@ -95,7 +95,7 @@ export function FieldTextValue(props: ParentProps) {
   return <span class={styles.fieldTextValue}>{props.children}</span>;
 }
 
-function FieldEmptyValue(props: ParentProps) {
+export function FieldEmptyValue(props: ParentProps) {
   return <span class={styles.fieldEmptyValue}>{props.children}</span>;
 }
 

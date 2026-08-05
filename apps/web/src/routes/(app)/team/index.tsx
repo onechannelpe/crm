@@ -67,7 +67,7 @@ const TEAM_COLUMNS = [
     renderCell: (executive) =>
       executive.executiveCategory
         ? capitalize(executive.executiveCategory)
-        : "—",
+        : null,
   },
 ] satisfies ReadonlyArray<DataGridColumn<ManagedExecutiveView>>;
 

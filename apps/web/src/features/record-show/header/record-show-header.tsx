@@ -20,7 +20,7 @@ export function RecordShowHeader(props: RecordShowHeaderProps) {
   );
 
   const displayName = createMemo(
-    () => data()?.lead.legalName ?? data()?.lead.ruc ?? "—",
+    () => data()?.lead.legalName ?? data()?.lead.ruc ?? "Sin nombre",
   );
 
   const documentTitle = () => {

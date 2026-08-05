@@ -1,4 +1,5 @@
 import { createAsync } from "@solidjs/router";
+import { clsx } from "clsx";
 import { Show } from "solid-js";
 
 import { Avatar } from "~/components/ui/display/avatar";
@@ -22,14 +23,19 @@ export function RecordPageInfo() {
   const { pageState, leadId } = useLeadRecordPageState();
   const detail = createAsync(() => leadDetailQuery(leadId()));
 
+  const isNameEmpty = () => !pageState().title.trim();
+
   return (
     <PageInfoLayout
       icon={
         <Avatar
           imageUrl={null}
           fallback={initial(pageState().title)}
-          class={styles.avatar}
-          fallbackClass={styles.avatarFallback}
+          class={clsx(styles.avatar, isNameEmpty() && styles.avatarEmpty)}
+          fallbackClass={clsx(
+            styles.avatarFallback,
+            isNameEmpty() && styles.avatarFallbackEmpty,
+          )}
         />
       }
       title={pageState().title}

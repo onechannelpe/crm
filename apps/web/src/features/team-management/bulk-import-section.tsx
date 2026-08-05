@@ -196,11 +196,9 @@ export function BulkImportSection() {
                               <TableCell>
                                 {row.expiresOn
                                   ? formatCalendarDate(row.expiresOn)
-                                  : "—"}
+                                  : null}
                               </TableCell>
-                              <TableCell>
-                                {row.executiveCategory ?? "—"}
-                              </TableCell>
+                              <TableCell>{row.executiveCategory}</TableCell>
                             </TableRow>
                           )}
                         </For>

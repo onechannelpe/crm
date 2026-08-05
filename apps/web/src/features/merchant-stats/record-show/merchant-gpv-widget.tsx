@@ -65,7 +65,7 @@ export function MerchantGpvWidget(props: { ruc: string }) {
                     <span class={styles.deviceGpv}>
                       {device.m0Plus15dGpv != null
                         ? formatSolesCompact(device.m0Plus15dGpv)
-                        : "—"}
+                        : null}
                     </span>
                   </div>
                 )}

@@ -81,7 +81,7 @@ export function diffFields<T>(
 }
 
 function formatChangeValue(value: FieldChangeValue): string {
-  if (value === null || value === "") return "—";
+  if (value === null || value === "") return "Vacío";
   if (typeof value === "boolean") return value ? "Sí" : "No";
   return String(value);
 }

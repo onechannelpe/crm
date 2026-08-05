@@ -103,7 +103,7 @@ export function LoginRetriesCard() {
                       </TableCell>
                       <TableCell>{labelFor(event.stage)}</TableCell>
                       <TableCell>{event.outcome}</TableCell>
-                      <TableCell>{event.reason ?? "-"}</TableCell>
+                      <TableCell>{event.reason}</TableCell>
                     </TableRow>
                   )}
                 </For>

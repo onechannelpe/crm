@@ -11,3 +11,11 @@
   font-size: var(--font-size-tiny);
   font-weight: var(--font-weight-semibold);
 }
+
+.avatarEmpty {
+  background: var(--background-transparent-light);
+}
+
+.avatarFallbackEmpty {
+  color: var(--foreground-tertiary);
+}

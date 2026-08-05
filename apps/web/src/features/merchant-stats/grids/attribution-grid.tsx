@@ -5,8 +5,6 @@ import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import User from "~/components/icons/user";
-import { Present } from "~/components/ui/control-flow/present";
-import { Badge } from "~/components/ui/display/badge";
 import {
   InlineFieldEditor,
   InlineOptionsEditor,
@@ -66,7 +64,7 @@ export function AttributionGrid(props: { view: GpvView }) {
       label: "Vendedor real",
       icon: User,
       width: 190,
-      renderCell: (row) => row.sellerName ?? UNASSIGNED,
+      renderCell: (row) => row.sellerName,
       edit: {
         ariaLabel: "Editar vendedor",
         renderEditor: (editor) => (
@@ -96,28 +94,22 @@ export function AttributionGrid(props: { view: GpvView }) {
       label: "Usuario Culqi",
       icon: User,
       width: 170,
-      renderCell: (row) => row.culqiUserName ?? "—",
+      renderCell: (row) => row.culqiUserName,
     },
     {
       key: "branch",
       label: "Zonal",
       icon: Building2,
       width: 150,
-      renderCell: (row) => row.branchName ?? "—",
+      renderCell: (row) => row.branchName,
     },
     {
       key: "projected",
       label: "Proyectado",
       icon: ChartColumn,
       width: 170,
-      renderCell: (row) => (
-        <Present
-          when={row.projectedGpv}
-          fallback={<Badge variant="warning">Sin proyectado</Badge>}
-        >
-          {(projectedGpv) => formatSoles(projectedGpv())}
-        </Present>
-      ),
+      renderCell: (row) =>
+        row.projectedGpv != null ? formatSoles(row.projectedGpv) : null,
       edit: {
         ariaLabel: "Editar proyectado",
         renderEditor: (editor) => (

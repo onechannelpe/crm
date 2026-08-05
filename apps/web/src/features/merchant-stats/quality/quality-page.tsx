@@ -112,7 +112,7 @@ export function QualityPage() {
       label: "Usuario Culqi",
       icon: User,
       width: 170,
-      renderCell: (row) => row.culqiUserName ?? "—",
+      renderCell: (row) => row.culqiUserName,
     },
     {
       key: "detail",
