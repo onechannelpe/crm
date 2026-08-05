@@ -25,21 +25,24 @@ export function NavigationDrawerItemFrame(
   props: NavigationDrawerItemFrameProps,
 ) {
   const rightOptions = children(() => props.rightOptions);
+
   const isSoon = () => props.modifier === "soon";
   const isNew = () => props.modifier === "new";
   const showBreadcrumb = () => props.indentationLevel === 2;
+
   const hasRightOptions = () =>
     Boolean(rightOptions()) || Boolean(props.showChevron);
+
   const shouldShowRightOptions = () =>
     props.isMobile || Boolean(props.alwaysShowRightOptions);
 
-  const classProp = () =>
+  const className = () =>
     clsx(
       "navigation-drawer-item",
       styles.item,
       props.class,
       props.active && styles.itemActive,
-      props.indentationLevel === 2 && styles.itemIndented,
+      showBreadcrumb() && styles.itemIndented,
       props.variant === "tertiary" && styles.itemTertiary,
     );
 
@@ -68,6 +71,7 @@ export function NavigationDrawerItemFrame(
         )}
       >
         <span class={styles.itemLabel}>{props.label}</span>
+
         {props.secondaryLabel ? (
           <span class={styles.itemSecondaryLabel}>
             {` · ${props.secondaryLabel}`}
@@ -125,10 +129,11 @@ export function NavigationDrawerItemFrame(
       cursor: isSoon() ? "default" : "pointer",
       "pointer-events": isSoon() ? "none" : "auto",
     }) satisfies JSX.CSSProperties;
+
   const title = () => (props.collapsedMain ? props.label : undefined);
 
   return props.render({
-    class: classProp,
+    class: className,
     content,
     style,
     title,

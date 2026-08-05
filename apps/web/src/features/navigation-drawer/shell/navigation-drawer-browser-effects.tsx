@@ -7,19 +7,19 @@ import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 export function NavigationDrawerBrowserEffects() {
   const { setIsMobile, setExpanded } = useNavigationDrawerState();
-  const mobileBreakpointMatches = useIsMobile();
+  const isMobile = useIsMobile();
 
   onMount(() => {
-    if (
-      readNavigationDrawerExpandedFromCookie() === null &&
-      mobileBreakpointMatches()
-    ) {
+    const hasExpandedPreference =
+      readNavigationDrawerExpandedFromCookie() !== null;
+
+    if (!hasExpandedPreference && isMobile()) {
       setExpanded(false);
     }
+  });
 
-    createEffect(() => {
-      setIsMobile(mobileBreakpointMatches());
-    });
+  createEffect(() => {
+    setIsMobile(isMobile());
   });
 
   return null;

@@ -33,10 +33,7 @@ export function DataGridEditorLayer<T>(props: {
           ariaLabel={editor().edit.ariaLabel}
           onClose={focus.closeEditor}
         >
-          {editor().edit.renderEditor({
-            row: editor().row,
-            close: focus.closeEditor,
-          })}
+          {editor().edit.renderEditor(editor().row, focus.closeEditor)}
         </DataGridCellEditor>
       )}
     </Show>

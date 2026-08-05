@@ -10,12 +10,12 @@ import { ActivityTabEmptyState } from "~/features/side-panel/components/activity
 import styles from "~/features/record-show/tabs/timeline/styles.module.css";
 
 export function ActividadTab(props: { context: RecordContext }) {
-  // clock-boundary: draft opened. Component bodies run once, so the draft's
-  // placeholder timeline keeps one instant for as long as the tab is mounted.
+  // Keep the draft timestamp stable while the tab is mounted.
   const openedAt = Date.now();
 
   const groups = createMemo(() => {
     const context = props.context;
+
     if (context.kind === "draft") {
       return buildCreateGroups({
         ruc: context.ruc,
@@ -42,7 +42,7 @@ export function ActividadTab(props: { context: RecordContext }) {
         fallback={
           <ActivityTabEmptyState
             type="emptyTimeline"
-            title="Aun no hay actividad"
+            title="Aún no hay actividad"
             subtitle="No hay actividad asociada a este registro."
           />
         }

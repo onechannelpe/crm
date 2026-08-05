@@ -35,10 +35,12 @@ export function MobileNavigationBar() {
     if (isSettingsPage()) return "settings";
     if (expanded()) return currentMobileDrawer();
     if (location.pathname.startsWith("/records")) return "records";
+    if (location.pathname.startsWith("/search")) return "search";
+
     return "main";
   });
 
-  const items = createMemo<NavigationBarItemDef[]>(() => [
+  const items: NavigationBarItemDef[] = [
     {
       name: "main",
       label: "Abrir navegación",
@@ -86,11 +88,11 @@ export function MobileNavigationBar() {
         }
       },
     },
-  ]);
+  ];
 
   return (
     <Show when={isMobile()}>
-      <NavigationBar activeItemName={activeItemName()} items={items()} />
+      <NavigationBar activeItemName={activeItemName()} items={items} />
     </Show>
   );
 }

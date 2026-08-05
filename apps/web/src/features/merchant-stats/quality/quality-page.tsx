@@ -25,9 +25,9 @@ import { adjustMonthCreditMutation } from "../data/mutations";
 import { formatMonth, formatSoles } from "../format";
 import {
   GPV_GRID_PAGE_SIZE,
-  useDashboardGrid,
-} from "../grids/use-dashboard-grid";
-import { useMerchantFilterOptions } from "../use-merchant-filter-options";
+  usePaginatedRows,
+} from "../grids/use-paginated-rows";
+import { useFilterOptions } from "../use-filter-options";
 
 import styles from "./quality-page.module.css";
 
@@ -40,12 +40,12 @@ export function QualityPage() {
     isQualityIssue(params.issue) ? params.issue : null,
   );
 
-  const options = useMerchantFilterOptions();
+  const options = useFilterOptions();
   const sellers = () => options().sellers;
 
   const adjustCredit = useAction(adjustMonthCreditMutation);
 
-  const grid = useDashboardGrid<QualityRow>({
+  const grid = usePaginatedRows<QualityRow>({
     pageSize: GPV_GRID_PAGE_SIZE,
     resetKey: () => issue() ?? "invalid",
     load: (page) => {
@@ -89,27 +89,27 @@ export function QualityPage() {
       renderCell: (row) => row.sellerName ?? UNASSIGNED_SELLER,
       edit: {
         ariaLabel: "Resolver vendedor",
-        renderEditor: (editor) => (
+        renderEditor: (row, close) => (
           <InlineOptionsEditor
             ariaLabel="Vendedor real"
             options={[
               UNASSIGNED_SELLER,
               ...sellers().map((seller) => seller.name),
             ]}
-            selected={editor.row.sellerName ?? UNASSIGNED_SELLER}
+            selected={row.sellerName ?? UNASSIGNED_SELLER}
             onSubmit={async (name) => {
               const seller = sellers().find(
                 (candidate) => candidate.name === name,
               );
 
               await adjustCredit({
-                ruc: editor.row.ruc,
-                month: editor.row.month,
+                ruc: row.ruc,
+                month: row.month,
                 sellerUserId: seller?.userId ?? null,
                 reason: "Resolución de incidencia de atribución",
               });
             }}
-            onClose={editor.close}
+            onClose={close}
           />
         ),
       },

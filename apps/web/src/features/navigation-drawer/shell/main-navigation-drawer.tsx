@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "@solidjs/router";
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 
 import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import Settings from "~/components/icons/settings";
@@ -35,8 +35,8 @@ export function MainNavigationDrawer() {
     toggleSectionOpen,
     isFolderOpen,
     toggleFolderOpen,
-    setExpanded,
     expanded,
+    setExpanded,
     memorizeNavigationState,
     setCurrentMobileDrawer,
   } = useNavigationDrawerState();
@@ -44,18 +44,18 @@ export function MainNavigationDrawer() {
   const primaryEntries = () => getMainPrimaryEntries(currentUser().role);
   const secondaryGroups = () => getMainSecondaryGroups(currentUser().role);
 
-  const closeOnNavigate = () => {
+  function closeOnNavigate() {
     if (isMobile()) {
       setExpanded(false);
     }
-  };
+  }
 
-  const openSettings = () => {
+  function openSettings() {
     memorizeNavigationState(location.pathname + location.search, expanded());
     setExpanded(true);
     setCurrentMobileDrawer("settings");
     navigate("/settings/profile");
-  };
+  }
 
   return (
     <NavigationDrawer title="Navegación">
@@ -120,6 +120,7 @@ export function MainNavigationDrawer() {
                               hasChildren
                                 ? () => {
                                     const nextOpen = !childOpen();
+
                                     toggleFolderOpen(childSectionKey);
 
                                     if (nextOpen && item.children[0]) {
@@ -134,13 +135,13 @@ export function MainNavigationDrawer() {
                             preventCollapseOnMobile={hasChildren}
                           />
 
-                          {hasChildren ? (
+                          <Show when={hasChildren}>
                             <AnimatedExpandableContainer
                               isExpanded={sectionOpen() && childOpen()}
                               duration={300}
                             >
                               <For each={item.children}>
-                                {(child, subIndex) => (
+                                {(child, index) => (
                                   <NavigationDrawerSubItem
                                     label={child.label}
                                     to={child.href}
@@ -150,7 +151,7 @@ export function MainNavigationDrawer() {
                                     )}
                                     subItemState={getNavigationSubItemLeftAdornment(
                                       {
-                                        index: subIndex(),
+                                        index: index(),
                                         arrayLength: item.children.length,
                                         selectedIndex: selectedChildIndex(),
                                       },
@@ -160,7 +161,7 @@ export function MainNavigationDrawer() {
                                 )}
                               </For>
                             </AnimatedExpandableContainer>
-                          ) : null}
+                          </Show>
                         </NavigationDrawerItemGroup>
                       );
                     }}
@@ -175,6 +176,7 @@ export function MainNavigationDrawer() {
           <NavigationDrawerAnimatedCollapseWrapper>
             <NavigationDrawerSectionTitle label="Otros" />
           </NavigationDrawerAnimatedCollapseWrapper>
+
           <NavigationDrawerItemsCollapsableContainer>
             <NavigationDrawerItem
               label="Ajustes"

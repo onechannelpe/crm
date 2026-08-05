@@ -9,27 +9,36 @@ import { leadListQuery } from "~/rpc/workflow/lead-list";
 
 import styles from "./record-show-header.module.css";
 
-type RecordShowHeaderProps = ParentProps<{ leadId: string }>;
-
 const LEAD_NAVIGATION_LIMIT = 200;
 
-export function RecordShowHeader(props: RecordShowHeaderProps) {
+export function RecordShowHeader(
+  props: ParentProps<{
+    leadId: string;
+  }>,
+) {
   const data = createAsync(() => leadDetailQuery(props.leadId));
   const leadList = createAsync(() =>
-    leadListQuery({ limit: LEAD_NAVIGATION_LIMIT, offset: 0 }),
+    leadListQuery({
+      limit: LEAD_NAVIGATION_LIMIT,
+      offset: 0,
+    }),
   );
+
+  const lead = createMemo(() => data()?.lead);
 
   const displayName = createMemo(
-    () => data()?.lead.legalName ?? data()?.lead.ruc ?? "Sin nombre",
+    () => lead()?.legalName ?? lead()?.ruc ?? "Sin nombre",
   );
 
-  const documentTitle = () => {
-    const name = data()?.lead.legalName ?? data()?.lead.ruc;
+  const documentTitle = createMemo(() => {
+    const name = lead()?.legalName ?? lead()?.ruc;
+
     return name ? `${name} - Registro` : "Registro";
-  };
+  });
 
   const currentIndex = createMemo(() => {
     const rows = leadList()?.rows;
+
     if (!rows) {
       return -1;
     }
@@ -40,6 +49,7 @@ export function RecordShowHeader(props: RecordShowHeaderProps) {
   const paginationLabel = createMemo(() => {
     const totalCount = leadList()?.totalCount;
     const index = currentIndex();
+
     if (!totalCount || index < 0) {
       return null;
     }
@@ -50,6 +60,7 @@ export function RecordShowHeader(props: RecordShowHeaderProps) {
   return (
     <>
       <Title>{documentTitle()}</Title>
+
       <PageCardHeader
         breadcrumb={
           <span class={styles.breadcrumb}>
@@ -61,10 +72,13 @@ export function RecordShowHeader(props: RecordShowHeaderProps) {
                 <span>Registros</span>
               </span>
             </A>
+
             <span class={styles.breadcrumbSep}>/</span>
+
             <span class={styles.breadcrumbCurrent} title={displayName()}>
               {displayName()}
             </span>
+
             <Show when={paginationLabel()}>
               {(label) => <span class={styles.paginationInfo}>{label()}</span>}
             </Show>

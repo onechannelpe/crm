@@ -19,9 +19,8 @@ import {
   setMerchantTargetMutation,
 } from "../data/mutations";
 import { formatMonth, formatSoles } from "../format";
-import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";
-import { useMerchantFilterOptions } from "../use-merchant-filter-options";
+import { useFilterOptions } from "../use-filter-options";
 import { useCohortRowsGrid } from "./use-cohort-rows-grid";
 
 import styles from "./grid-surface.module.css";
@@ -29,7 +28,7 @@ import styles from "./grid-surface.module.css";
 const UNASSIGNED = "Sin asignar";
 
 export function AttributionGrid(props: { view: GpvView }) {
-  const filterOptions = useMerchantFilterOptions();
+  const filterOptions = useFilterOptions();
   const sellers = () => filterOptions().sellers;
   const sellerNames = () => [
     UNASSIGNED,
@@ -66,24 +65,24 @@ export function AttributionGrid(props: { view: GpvView }) {
       renderCell: (row) => row.sellerName,
       edit: {
         ariaLabel: "Editar vendedor",
-        renderEditor: (editor) => (
+        renderEditor: (row, close) => (
           <InlineOptionsEditor
             ariaLabel="Vendedor real"
             options={sellerNames()}
-            selected={editor.row.sellerName ?? UNASSIGNED}
+            selected={row.sellerName ?? UNASSIGNED}
             onSubmit={async (sellerName) => {
               const seller = sellers().find(
                 (candidate) => candidate.name === sellerName,
               );
 
               await adjustMonthCredit({
-                ruc: editor.row.ruc,
-                month: editor.row.saleMonth,
+                ruc: row.ruc,
+                month: row.saleMonth,
                 sellerUserId: seller?.userId ?? null,
                 reason: "Corrección manual desde análisis de GPV",
               });
             }}
-            onClose={editor.close}
+            onClose={close}
           />
         ),
       },
@@ -111,12 +110,12 @@ export function AttributionGrid(props: { view: GpvView }) {
         row.projectedGpv != null ? formatSoles(row.projectedGpv) : null,
       edit: {
         ariaLabel: "Editar proyectado",
-        renderEditor: (editor) => (
+        renderEditor: (row, close) => (
           <InlineFieldEditor
-            ariaLabel={`Proyectado desde ${formatMonth(editor.row.saleMonth)}`}
+            ariaLabel={`Proyectado desde ${formatMonth(row.saleMonth)}`}
             type="number"
             min="0"
-            initialValue={editor.row.projectedGpv?.toString() ?? ""}
+            initialValue={row.projectedGpv?.toString() ?? ""}
             onSubmit={async (value) => {
               const trimmed = value.trim();
               const projectedGpv = trimmed === "" ? null : Number(trimmed);
@@ -129,12 +128,12 @@ export function AttributionGrid(props: { view: GpvView }) {
               }
 
               await setMerchantTarget({
-                ruc: editor.row.ruc,
-                effectiveFrom: editor.row.saleMonth,
+                ruc: row.ruc,
+                effectiveFrom: row.saleMonth,
                 projectedGpv,
               });
             }}
-            onClose={editor.close}
+            onClose={close}
           />
         ),
       },
@@ -158,8 +157,6 @@ export function AttributionGrid(props: { view: GpvView }) {
 
   return (
     <div class={styles.surface}>
-      <GpvFilterBar view={props.view} />
-
       <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
         <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
           {renderGrid({

@@ -6,13 +6,13 @@ import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 import styles from "./navigation-drawer-section.module.css";
 
-interface NavigationDrawerSectionProps extends ParentProps {
-  class?: string;
-}
-
-export function NavigationDrawerSection(props: NavigationDrawerSectionProps) {
+export function NavigationDrawerSection(
+  props: ParentProps<{ class?: string }>,
+) {
   const { isMobile } = useNavigationDrawerState();
   const isSettingsDrawer = useIsSettingsDrawer();
+
+  const fullWidth = () => isMobile() || isSettingsDrawer();
 
   return (
     <section
@@ -25,10 +25,7 @@ export function NavigationDrawerSection(props: NavigationDrawerSectionProps) {
       <div
         class={styles.sectionInner}
         style={{
-          width:
-            isMobile() || isSettingsDrawer()
-              ? "100%"
-              : "calc(100% - var(--spacing-2))",
+          width: fullWidth() ? "100%" : "calc(100% - var(--spacing-2))",
         }}
       >
         {props.children}

@@ -1,7 +1,7 @@
 import { type RouteDefinition } from "@solidjs/router";
 
 import { isQualityIssue } from "~/contracts/merchant-stats/vocabulary";
-import { GPV_GRID_PAGE_SIZE } from "~/features/merchant-stats/grids/use-dashboard-grid";
+import { GPV_GRID_PAGE_SIZE } from "~/features/merchant-stats/grids/use-paginated-rows";
 import { QualityPage } from "~/features/merchant-stats/quality/quality-page";
 import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options";
 import { qualityRowsQuery } from "~/rpc/merchant-stats/quality-rows";

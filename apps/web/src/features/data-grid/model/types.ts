@@ -6,7 +6,7 @@ export type DataGridIcon = Component<{ size?: number | string }>;
 // tracks the open cell.
 export type DataGridColumnEdit<T> = {
   ariaLabel: string;
-  renderEditor: (args: { row: T; close: () => void }) => JSX.Element;
+  renderEditor: (row: T, close: () => void) => JSX.Element;
 };
 
 export type DataGridColumn<T> = {

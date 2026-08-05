@@ -13,7 +13,6 @@ import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
 
 import { formatInteger, formatMonth, formatSolesCompact } from "../format";
-import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";
 import { useCohortRowsGrid } from "./use-cohort-rows-grid";
 
@@ -160,8 +159,6 @@ export function CohortGrid(props: { view: GpvView }) {
 
   return (
     <div class={styles.surface}>
-      <GpvFilterBar view={props.view} />
-
       <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
         <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
           {renderGrid({

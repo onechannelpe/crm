@@ -1,20 +1,44 @@
+import { Show } from "solid-js";
+
 import ChevronRight from "~/components/icons/chevron-right";
 
 import styles from "./navigation-drawer-section.module.css";
 
-interface NavigationDrawerSectionTitleProps {
+interface Props {
   label: string;
   onClick?: () => void;
   isOpen?: boolean;
 }
 
-export function NavigationDrawerSectionTitle(
-  props: NavigationDrawerSectionTitleProps,
-) {
-  const content = (
+export function NavigationDrawerSectionTitle(props: Props) {
+  return (
+    <Show
+      when={props.onClick}
+      fallback={
+        <div class={styles.sectionTitle}>
+          <SectionTitleContent label={props.label} isOpen={props.isOpen} />
+        </div>
+      }
+    >
+      {(onClick) => (
+        <button
+          type="button"
+          class={styles.sectionTitle}
+          onClick={onClick()}
+          aria-expanded={props.isOpen}
+        >
+          <SectionTitleContent label={props.label} isOpen={props.isOpen} />
+        </button>
+      )}
+    </Show>
+  );
+}
+
+function SectionTitleContent(props: { label: string; isOpen?: boolean }) {
+  return (
     <span class={styles.sectionTitleLabelContainer}>
       <span class={styles.sectionTitleLabel}>{props.label}</span>
-      {props.isOpen !== undefined ? (
+      <Show when={props.isOpen !== undefined}>
         <span class={styles.sectionTitleChevron}>
           <ChevronRight
             size={12}
@@ -23,26 +47,7 @@ export function NavigationDrawerSectionTitle(
             }}
           />
         </span>
-      ) : null}
+      </Show>
     </span>
-  );
-
-  return (
-    <>
-      {props.onClick ? (
-        <button
-          type="button"
-          class={styles.sectionTitle}
-          onClick={() => {
-            props.onClick?.();
-          }}
-          aria-expanded={props.isOpen}
-        >
-          {content}
-        </button>
-      ) : (
-        <div class={styles.sectionTitle}>{content}</div>
-      )}
-    </>
   );
 }

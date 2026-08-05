@@ -13,6 +13,7 @@ import {
 
 import { CulqiView } from "./culqi/culqi-view";
 import { requestMerchantGpvExportMutation } from "./data/mutations";
+import { GpvFilterBar } from "./gpv-filter-bar";
 import { type GpvTabId, useGpvView } from "./gpv-view";
 import { AttributionGrid } from "./grids/attribution-grid";
 import { CohortGrid } from "./grids/cohort-grid";
@@ -35,14 +36,23 @@ export function MerchantGpvDashboard() {
   const exportSubmission = useSubmission(requestMerchantGpvExportMutation);
   const { enqueueErrorSnackBar } = useSnackBar();
 
-  const exportReport = async () => {
+  async function exportReport() {
     try {
       const { token } = await requestExport(view.filter());
+
       downloadWithToken(token);
-    } catch (caught: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } catch (error) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
     }
-  };
+  }
+
+  async function refreshData() {
+    try {
+      await refreshPublishedGpvData();
+    } catch (error) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
+    }
+  }
 
   return (
     <AppPage>
@@ -59,32 +69,36 @@ export function MerchantGpvDashboard() {
             >
               Exportar resultado
             </Button>
+
             <Button
               variant="secondary"
               onClick={() => navigate("/dashboards/merchant-gpv/imports/new")}
             >
               Importar reporte
             </Button>
-            <Button
-              variant="secondary"
-              onClick={() => void refreshPublishedGpvData()}
-            >
+
+            <Button variant="secondary" onClick={() => void refreshData()}>
               Recargar
             </Button>
           </div>
         }
       />
 
+      <GpvFilterBar view={view} />
+
       <Switch>
         <Match when={view.tab() === "rendimiento"}>
           <PerformanceTab view={view} />
         </Match>
+
         <Match when={view.tab() === "cohortes"}>
           <CohortGrid view={view} />
         </Match>
+
         <Match when={view.tab() === "atribucion"}>
           <AttributionGrid view={view} />
         </Match>
+
         <Match when={view.tab() === "culqi"}>
           <CulqiView view={view} />
         </Match>

@@ -138,12 +138,12 @@ function executiveColumn(
     edit: canReassign
       ? {
           ariaLabel: "Reasignar ejecutivo",
-          renderEditor: (editor) => (
+          renderEditor: (row, close) => (
             <ExecutivePicker
-              leadId={editor.row.id}
-              currentUserId={editor.row.executiveId}
-              onSelect={editor.close}
-              onClose={editor.close}
+              leadId={row.id}
+              currentUserId={row.executiveId}
+              onSelect={close}
+              onClose={close}
             />
           ),
         }

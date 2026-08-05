@@ -9,7 +9,6 @@ import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 import { gpvCulqiViewQuery } from "~/rpc/merchant-stats/gpv-culqi-view";
 
 import { formatMonth, formatSolesCompact } from "../format";
-import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";
 import { BarTile } from "../tiles";
 
@@ -25,53 +24,50 @@ export function CulqiView(props: { view: GpvView }) {
   };
 
   return (
-    <>
-      <GpvFilterBar view={props.view} />
-      <ErrorBoundary fallback={<CulqiError />}>
-        <Suspense fallback={<CulqiSkeleton />}>
-          <Show
-            when={ready()}
-            fallback={
-              <EmptyState
-                title="Sin datos de GPV"
-                description="Importa un reporte para comparar la vista de Culqi."
-              />
-            }
-          >
-            {(view) => (
-              <div class={styles.scrollArea}>
-                <ScrollWrapper>
-                  <WidgetGrid>
-                    <WidgetGridItem span="full">
-                      <p class={styles.note}>
-                        El <strong>usuario de Culqi</strong> solo se usa para
-                        comparar con el reporte de Culqi. La atribución real
-                        está en la pestaña Rendimiento.
-                      </p>
-                    </WidgetGridItem>
-                    <BarTile
-                      title={`GPV ${formatMonth(
-                        view().month,
-                      )} por usuario de Culqi · ${formatSolesCompact(
-                        view().rows.reduce((sum, row) => sum + row.gpv, 0),
-                      )}`}
-                      span="full"
-                      rows={view().rows.map((row) => ({
-                        key: row.culqiUserName ?? "sin-usuario",
-                        label: row.culqiUserName ?? "Sin usuario",
-                        sublabel: `${row.deviceCount} dispositivos`,
-                        value: row.gpv,
-                        target: null,
-                      }))}
-                    />
-                  </WidgetGrid>
-                </ScrollWrapper>
-              </div>
-            )}
-          </Show>
-        </Suspense>
-      </ErrorBoundary>
-    </>
+    <ErrorBoundary fallback={<CulqiError />}>
+      <Suspense fallback={<CulqiSkeleton />}>
+        <Show
+          when={ready()}
+          fallback={
+            <EmptyState
+              title="Sin datos de GPV"
+              description="Importa un reporte para comparar la vista de Culqi."
+            />
+          }
+        >
+          {(view) => (
+            <div class={styles.scrollArea}>
+              <ScrollWrapper>
+                <WidgetGrid>
+                  <WidgetGridItem span="full">
+                    <p class={styles.note}>
+                      El <strong>usuario de Culqi</strong> solo se usa para
+                      comparar con el reporte de Culqi. La atribución real está
+                      en la pestaña Rendimiento.
+                    </p>
+                  </WidgetGridItem>
+                  <BarTile
+                    title={`GPV ${formatMonth(
+                      view().month,
+                    )} por usuario de Culqi · ${formatSolesCompact(
+                      view().rows.reduce((sum, row) => sum + row.gpv, 0),
+                    )}`}
+                    span="full"
+                    rows={view().rows.map((row) => ({
+                      key: row.culqiUserName ?? "sin-usuario",
+                      label: row.culqiUserName ?? "Sin usuario",
+                      sublabel: `${row.deviceCount} dispositivos`,
+                      value: row.gpv,
+                      target: null,
+                    }))}
+                  />
+                </WidgetGrid>
+              </ScrollWrapper>
+            </div>
+          )}
+        </Show>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

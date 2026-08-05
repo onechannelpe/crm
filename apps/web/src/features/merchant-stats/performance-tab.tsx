@@ -20,7 +20,6 @@ import {
   formatRatio,
   formatSolesCompact,
 } from "./format";
-import { GpvFilterBar } from "./gpv-filter-bar";
 import type { GpvView } from "./gpv-view";
 import { QualityPanel } from "./quality/quality-panel";
 import { AggregateTile, BarTile, RampTile } from "./tiles";
@@ -28,31 +27,39 @@ import { AggregateTile, BarTile, RampTile } from "./tiles";
 import styles from "./merchant-gpv-dashboard.module.css";
 
 const MAX_RAMP_SERIES = 5;
-const STAT_SPANS: WidgetSpan[] = [
+
+const STAT_SPANS = [
   "quarter",
   "quarter",
   "quarter",
   "quarter",
   "quarter",
-];
-const CHART_SPANS: WidgetSpan[] = ["half", "half", "half", "half"];
+] satisfies readonly WidgetSpan[];
+
+const CHART_SPANS = [
+  "half",
+  "half",
+  "half",
+  "half",
+] satisfies readonly WidgetSpan[];
 
 export function PerformanceTab(props: { view: GpvView }) {
   const performance = createAsync(() =>
     gpvPerformanceViewQuery({ filter: props.view.filter() }),
   );
-  const ready = () => {
+
+  const readyView = () => {
     const view = performance();
+
     return view?.kind === "ready" ? view : null;
   };
 
   return (
     <div class={styles.surface}>
-      <GpvFilterBar view={props.view} />
       <ErrorBoundary fallback={<TabError />}>
         <Suspense fallback={<TabSkeleton />}>
           <Show
-            when={ready()}
+            when={readyView()}
             fallback={
               <EmptyState
                 title="Sin datos de GPV"
@@ -71,15 +78,17 @@ export function PerformanceTab(props: { view: GpvView }) {
 function PerformanceContent(props: {
   view: Extract<GpvPerformanceView, { kind: "ready" }>;
 }) {
-  const label = () => formatMonth(props.view.month);
-  const target = () =>
+  const monthLabel = () => formatMonth(props.view.month);
+
+  const totalTarget = () =>
     props.view.attainment.sellers.reduce(
-      (sum, row) => sum + (row.projectedGpv ?? 0),
+      (sum, seller) => sum + (seller.projectedGpv ?? 0),
       0,
     );
-  const devices = () =>
+
+  const activeDevices = () =>
     props.view.attainment.sellers.reduce(
-      (sum, row) => sum + row.deviceCount,
+      (sum, seller) => sum + seller.deviceCount,
       0,
     );
 
@@ -88,13 +97,14 @@ function PerformanceContent(props: {
       <ScrollWrapper>
         <WidgetStatGrid>
           <AggregateTile
-            title={`GPV ${label()}`}
+            title={`GPV ${monthLabel()}`}
             span="quarter"
             value={formatSolesCompact(props.view.attainment.coverage.totalGpv)}
-            caption={`${formatInteger(devices())} dispositivos activos`}
+            caption={`${formatInteger(activeDevices())} dispositivos activos`}
           />
+
           <AggregateTile
-            title={`Atribución ${label()}`}
+            title={`Atribución ${monthLabel()}`}
             span="quarter"
             value={formatRatio(
               props.view.attainment.coverage.attributedGpv,
@@ -105,15 +115,17 @@ function PerformanceContent(props: {
                 props.view.attainment.coverage.attributedGpv,
             )} sin asignar`}
           />
+
           <AggregateTile
-            title={`Cumplimiento ${label()}`}
+            title={`Cumplimiento ${monthLabel()}`}
             span="quarter"
             value={formatRatio(
               props.view.attainment.coverage.attributedGpv,
-              target(),
+              totalTarget(),
             )}
-            caption={`Objetivo ${formatSolesCompact(target())}`}
+            caption={`Objetivo ${formatSolesCompact(totalTarget())}`}
           />
+
           <AggregateTile
             title="Tasa de activación"
             span="quarter"
@@ -127,8 +139,9 @@ function PerformanceContent(props: {
                 : `Mediana ${props.view.lifecycle.medianDaysToActivate} días hasta activar`
             }
           />
+
           <AggregateTile
-            title="Comercios sin transaccionar"
+            title="Comercios sin transacciones"
             span="quarter"
             value={formatInteger(props.view.lifecycle.dormantCount)}
             caption={`Inactivos hace ${props.view.lifecycle.dormantThresholdDays}+ días`}
@@ -149,30 +162,33 @@ function PerformanceContent(props: {
             }))}
             target={props.view.ramp.at(-1)?.projectedGpv ?? null}
           />
+
           <BarTile
-            title={`Cumplimiento ${label()} por vendedor`}
+            title={`Cumplimiento ${monthLabel()} por vendedor`}
             span="half"
-            rows={props.view.attainment.sellers.slice(0, 10).map((row) => ({
-              key: row.id ?? "unassigned",
-              label: row.label,
-              sublabel: row.sublabel ?? undefined,
-              value: row.gpv,
-              target: row.projectedGpv,
-              href: row.id
-                ? `/settings/members/${row.id}?tab=capacity`
+            rows={props.view.attainment.sellers.slice(0, 10).map((seller) => ({
+              key: seller.id ?? "unassigned",
+              label: seller.label,
+              sublabel: seller.sublabel ?? undefined,
+              value: seller.gpv,
+              target: seller.projectedGpv,
+              href: seller.id
+                ? `/settings/members/${seller.id}?tab=capacity`
                 : undefined,
             }))}
           />
+
           <BarTile
-            title={`Cumplimiento ${label()} por zonal`}
+            title={`Cumplimiento ${monthLabel()} por zonal`}
             span="half"
-            rows={props.view.attainment.branches.map((row) => ({
-              key: row.id ?? "unassigned",
-              label: row.label,
-              value: row.gpv,
-              target: row.projectedGpv,
+            rows={props.view.attainment.branches.map((branch) => ({
+              key: branch.id ?? "unassigned",
+              label: branch.label,
+              value: branch.gpv,
+              target: branch.projectedGpv,
             }))}
           />
+
           <WidgetGridItem span="half">
             <WidgetCardShell title="Calidad de datos">
               <QualityPanel summary={props.view.quality} />
@@ -207,6 +223,7 @@ function TabSkeleton() {
             )}
           </Index>
         </WidgetStatGrid>
+
         <WidgetGrid>
           <Index each={CHART_SPANS}>
             {(span) => (

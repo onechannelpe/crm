@@ -5,7 +5,7 @@ import type { Page, PublishedPage } from "~/contracts/merchant-stats/views";
 
 export const GPV_GRID_PAGE_SIZE = 60;
 
-interface DashboardGridConfig<Row> {
+interface PaginatedRowsConfig<Row> {
   pageSize: number;
   resetKey: Accessor<string>;
   load: (page: Page) => Promise<PublishedPage<Row>>;
@@ -17,16 +17,16 @@ interface LoadedPage<Row> {
   rows: ReadonlyArray<Row>;
 }
 
-interface DashboardGrid<Row> {
+interface PaginatedRows<Row> {
   rows: Accessor<ReadonlyArray<Row>>;
   loading: Accessor<boolean>;
   hasMore: Accessor<boolean>;
   onLoadMore: () => void;
 }
 
-export function useDashboardGrid<Row>(
-  config: DashboardGridConfig<Row>,
-): DashboardGrid<Row> {
+export function usePaginatedRows<Row>(
+  config: PaginatedRowsConfig<Row>,
+): PaginatedRows<Row> {
   const isRouting = useIsRouting();
   const [extraPages, setExtraPages] = createSignal<LoadedPage<Row>[]>([]);
   const [loadingKey, setLoadingKey] = createSignal<string | null>(null);

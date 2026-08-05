@@ -23,13 +23,11 @@ import { NavigationDrawerWidthEffect } from "./navigation-drawer-width-effect";
 
 import styles from "./navigation-drawer-shell.module.css";
 
-interface NavigationDrawerProps {
+export function NavigationDrawer(props: {
   title: string;
   className?: string;
   children: JSX.Element;
-}
-
-export function NavigationDrawer(props: NavigationDrawerProps) {
+}) {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser } = useAuthenticatedSession();
@@ -46,7 +44,6 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
   } = useNavigationDrawerState();
   const isSettingsDrawer = useIsSettingsDrawer();
   const logout = useAction(logoutMutation);
-
   const [resizing, setResizing] = createSignal(false);
 
   const onPointerDown = useResizablePanel({
@@ -61,14 +58,15 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
     dragThresholdPx: 4,
   });
 
-  const memorizeNavigation = () =>
+  function memorizeNavigation() {
     memorizeNavigationState(location.pathname + location.search, expanded());
+  }
 
-  const closeSettings = () => {
+  function closeSettings() {
     navigate(memorizedPath(), { replace: true });
     setExpanded(memorizedExpanded());
     setHasMemorizedNavigation(false);
-  };
+  }
 
   return (
     <aside
@@ -76,6 +74,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
       data-click-outside-id={NAVIGATION_DRAWER_CLICK_OUTSIDE_ID}
     >
       <NavigationDrawerWidthEffect />
+
       <div
         class={clsx(
           styles.drawer,
@@ -114,6 +113,7 @@ export function NavigationDrawer(props: NavigationDrawerProps) {
                       aria-label="Buscar"
                     />
                   </Show>
+
                   <Show when={expanded()}>
                     <div class={styles.collapseButtonContainer}>
                       <LightIconButton

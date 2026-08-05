@@ -26,62 +26,57 @@ export function HeaderNotificationsPanel() {
   const markAllRead = useAction(markAllNotificationsReadMutation);
 
   let containerRef: HTMLDivElement | undefined;
+
   useDismissibleLayer({
     enabled: open,
     onDismiss: () => setOpen(false),
     getContainer: () => containerRef,
   });
 
-  const handleMarkRead = async (notificationId: string) => {
-    // clock-boundary: user interaction. Provisional stamp only; the server's
-    // value replaces it when the feed revalidates.
+  async function handleMarkRead(notificationId: string) {
     const readAt = Date.now();
 
     try {
       await updateFeed({
-        optimistic: (prev) => ({
+        optimistic: (previous) => ({
           unreadCount: Math.max(
             0,
-            prev.unreadCount -
-              (prev.notifications.some(
+            previous.unreadCount -
+              (previous.notifications.some(
                 (item) => item.id === notificationId && item.readAt === null,
               )
                 ? 1
                 : 0),
           ),
-          notifications: prev.notifications.map((item) =>
+          notifications: previous.notifications.map((item) =>
             item.id === notificationId ? { ...item, readAt } : item,
           ),
         }),
-        commit: async () => {
-          await markRead(notificationId);
-        },
+        commit: () => markRead(notificationId),
       });
     } catch {
-      // update() rolls back the optimistic value on failure.
+      // The optimistic update is rolled back automatically.
     }
-  };
+  }
 
-  const handleMarkAllRead = async () => {
-    // clock-boundary: user interaction. One stamp for the whole batch, so the
-    // rows this click marks all read at the same instant.
+  async function handleMarkAllRead() {
     const readAt = Date.now();
 
     try {
       await updateFeed({
-        optimistic: (prev) => ({
+        optimistic: (previous) => ({
           unreadCount: 0,
-          notifications: prev.notifications.map((item) => ({
+          notifications: previous.notifications.map((item) => ({
             ...item,
             readAt: item.readAt ?? readAt,
           })),
         }),
-        commit: async () => {
-          await markAllRead();
-        },
+        commit: () => markAllRead(),
       });
-    } catch {}
-  };
+    } catch {
+      // The optimistic update is rolled back automatically.
+    }
+  }
 
   return (
     <div
@@ -102,6 +97,7 @@ export function HeaderNotificationsPanel() {
             <span class={styles.icon}>
               <Bell size={14} />
             </span>
+
             <Show when={feed().unreadCount > 0}>
               <span class={styles.badge}>
                 {Math.min(feed().unreadCount, 99)}
@@ -115,6 +111,7 @@ export function HeaderNotificationsPanel() {
         <div class={styles.panel}>
           <div class={styles.panelHeader}>
             <p class={styles.panelTitle}>Notificaciones</p>
+
             <button
               type="button"
               class={styles.markAll}
@@ -140,17 +137,19 @@ export function HeaderNotificationsPanel() {
                   >
                     <p class={styles.title}>{item.title}</p>
                     <p class={styles.body}>{item.bodyText}</p>
+
                     <div class={styles.meta}>
                       <span class={styles.time}>
                         {formatAppDateTime(item.createdAt)}
                       </span>
+
                       <Show when={item.readAt === null}>
                         <button
                           type="button"
                           class={styles.readBtn}
                           onClick={() => void handleMarkRead(item.id)}
                         >
-                          Mark read
+                          Marcar como leída
                         </button>
                       </Show>
                     </div>

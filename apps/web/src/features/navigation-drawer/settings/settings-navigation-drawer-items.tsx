@@ -20,19 +20,19 @@ export function SettingsNavigationDrawerItems() {
   const { isMobile, setExpanded } = useNavigationDrawerState();
   const logout = useAction(logoutMutation);
 
-  const closeOnNavigate = () => {
+  function closeOnNavigate() {
     if (isMobile()) {
       setExpanded(false);
     }
-  };
+  }
 
-  const handleLogout = async () => {
+  async function handleLogout() {
     await logout();
     closeOnNavigate();
     window.location.href = "/login";
-  };
+  }
 
-  const settingsNavigationSections = createMemo(() =>
+  const sections = createMemo(() =>
     createSettingsNavigationSections({
       role: currentUser().role,
       onLogout: handleLogout,
@@ -40,25 +40,23 @@ export function SettingsNavigationDrawerItems() {
   );
 
   return (
-    <For each={settingsNavigationSections()}>
+    <For each={sections()}>
       {(section) => {
         const visibleItems = createMemo(() =>
           section.items.filter((item) => !item.isHidden),
         );
 
-        const allItemsHidden = createMemo(() => visibleItems().length === 0);
-
-        const sectionIsAdvanced = createMemo(
+        const isAdvanced = createMemo(
           () =>
             visibleItems().length > 0 &&
             visibleItems().every((item) => item.isAdvanced),
         );
 
         return (
-          <Show when={!allItemsHidden()}>
+          <Show when={visibleItems().length > 0}>
             <NavigationDrawerSection>
               <Show
-                when={sectionIsAdvanced()}
+                when={isAdvanced()}
                 fallback={
                   <NavigationDrawerSectionTitle label={section.label} />
                 }
@@ -68,17 +66,19 @@ export function SettingsNavigationDrawerItems() {
                 </AdvancedSettingsWrapper>
               </Show>
 
-              <For each={section.items}>
+              <For each={visibleItems()}>
                 {(item, index) => {
                   const subItems = item.subItems ?? [];
-                  const selectedSubItemIndex = subItems.findIndex((subItem) =>
-                    settingsItemMatchesPath(
-                      location.pathname,
-                      subItem.href,
-                      subItem.matchSubPages,
+
+                  const selectedSubItemIndex = createMemo(() =>
+                    subItems.findIndex((subItem) =>
+                      settingsItemMatchesPath(
+                        location.pathname,
+                        subItem.href,
+                        subItem.matchSubPages,
+                      ),
                     ),
                   );
-                  const hasActiveSubItem = selectedSubItemIndex >= 0;
 
                   return (
                     <Show
@@ -93,14 +93,14 @@ export function SettingsNavigationDrawerItems() {
                       <NavigationDrawerItemGroup>
                         <SettingsNavigationDrawerItem
                           item={item}
-                          hasActiveSubItem={hasActiveSubItem}
+                          hasActiveSubItem={selectedSubItemIndex() >= 0}
                           closeOnNavigate={closeOnNavigate}
                           subItemState={
                             item.indentationLevel === 2
                               ? getNavigationSubItemLeftAdornment({
-                                  arrayLength: section.items.length,
+                                  arrayLength: visibleItems().length,
                                   index: index(),
-                                  selectedIndex: selectedSubItemIndex,
+                                  selectedIndex: selectedSubItemIndex(),
                                 })
                               : undefined
                           }
@@ -116,7 +116,7 @@ export function SettingsNavigationDrawerItems() {
                                   ? getNavigationSubItemLeftAdornment({
                                       arrayLength: subItems.length,
                                       index: subIndex(),
-                                      selectedIndex: selectedSubItemIndex,
+                                      selectedIndex: selectedSubItemIndex(),
                                     })
                                   : undefined
                               }

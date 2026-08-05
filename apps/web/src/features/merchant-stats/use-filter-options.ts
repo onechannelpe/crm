@@ -11,7 +11,7 @@ const EMPTY_OPTIONS: FilterOptions = {
   products: [],
 };
 
-export function useMerchantFilterOptions(): Accessor<FilterOptions> {
+export function useFilterOptions(): Accessor<FilterOptions> {
   const options = createAsync(() => merchantFilterOptionsQuery());
   return () => options() ?? EMPTY_OPTIONS;
 }
