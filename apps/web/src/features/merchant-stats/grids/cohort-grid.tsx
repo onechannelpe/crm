@@ -11,12 +11,11 @@ import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { useSidePanelRowOpen } from "~/features/side-panel/hooks/use-side-panel-row-open";
 import { createDataGridDetailSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import { cohortRowsQuery } from "~/rpc/merchant-stats/cohort-rows";
 
 import { formatInteger, formatMonth, formatSolesCompact } from "../format";
 import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";
-import { GPV_GRID_PAGE_SIZE, useDashboardGrid } from "./use-dashboard-grid";
+import { useCohortRowsGrid } from "./use-cohort-rows-grid";
 
 import styles from "./grid-surface.module.css";
 
@@ -34,7 +33,7 @@ function formatGpvAndTrx(point: GpvPoint | null): string | null {
     : null;
 }
 
-const COLUMNS = [
+const COHORT_COLUMNS = [
   {
     key: "comercial",
     label: "Comercial",
@@ -72,7 +71,7 @@ const COLUMNS = [
     width: 110,
     renderCell: (row) => formatGpv(pointAt(row, 0)),
   },
-  // M0+15D includes M0 through day 15 of M1.
+  // Covers M0 and the first 15 days of M1.
   {
     key: "m0_plus_15d",
     label: "M0+15D",
@@ -107,16 +106,12 @@ const COLUMNS = [
     icon: ChartColumn,
     width: 120,
     renderCell: (row) =>
-      row.projectedGpv != null ? formatSolesCompact(row.projectedGpv) : null,
+      row.projectedGpv == null ? null : formatSolesCompact(row.projectedGpv),
   },
 ] satisfies ReadonlyArray<DataGridColumn<CohortSaleRow>>;
 
 export function CohortGrid(props: { view: GpvView }) {
-  const grid = useDashboardGrid<CohortSaleRow>({
-    pageSize: GPV_GRID_PAGE_SIZE,
-    resetKey: () => JSON.stringify(props.view.filter()),
-    load: (page) => cohortRowsQuery({ filter: props.view.filter(), page }),
-  });
+  const grid = useCohortRowsGrid(props.view);
 
   const rowOpen = useSidePanelRowOpen<CohortSaleRow>((row) =>
     createDataGridDetailSidePanelPage({
@@ -130,9 +125,9 @@ export function CohortGrid(props: { view: GpvView }) {
         {
           label: "Proyectado mensual",
           value:
-            row.projectedGpv != null
-              ? formatSolesCompact(row.projectedGpv)
-              : null,
+            row.projectedGpv == null
+              ? null
+              : formatSolesCompact(row.projectedGpv),
         },
         ...COHORT_OFFSETS.map((offset) => ({
           label: `M${offset} (GPV / TRX)`,
@@ -149,7 +144,7 @@ export function CohortGrid(props: { view: GpvView }) {
   const renderGrid = (source: DataGridSource<CohortSaleRow>) => (
     <DataGrid
       ariaLabel="Cohortes de ventas"
-      columns={COLUMNS}
+      columns={COHORT_COLUMNS}
       emptyState="No hay ventas para los filtros actuales."
       onRowOpen={rowOpen}
       rowId={(row) => row.saleId}
@@ -169,7 +164,10 @@ export function CohortGrid(props: { view: GpvView }) {
 
       <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
         <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
-          {renderGrid({ status: "ready", rows: grid.rows() })}
+          {renderGrid({
+            status: "ready",
+            rows: grid.rows(),
+          })}
         </Suspense>
       </ErrorBoundary>
     </div>

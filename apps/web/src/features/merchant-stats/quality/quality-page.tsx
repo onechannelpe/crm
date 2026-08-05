@@ -1,4 +1,4 @@
-import { createAsync, useAction, useParams } from "@solidjs/router";
+import { useAction, useParams } from "@solidjs/router";
 import { createMemo, ErrorBoundary, Suspense } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state/empty";
@@ -19,7 +19,6 @@ import { isQualityIssue } from "~/contracts/merchant-stats/vocabulary";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options";
 import { qualityRowsQuery } from "~/rpc/merchant-stats/quality-rows";
 
 import { adjustMonthCreditMutation } from "../data/mutations";
@@ -28,28 +27,32 @@ import {
   GPV_GRID_PAGE_SIZE,
   useDashboardGrid,
 } from "../grids/use-dashboard-grid";
+import { useMerchantFilterOptions } from "../use-merchant-filter-options";
 
 import styles from "./quality-page.module.css";
 
-const UNASSIGNED = "Sin asignar";
+const UNASSIGNED_SELLER = "Sin asignar";
 
 export function QualityPage() {
   const params = useParams<{ issue: string }>();
+
   const issue = createMemo(() =>
     isQualityIssue(params.issue) ? params.issue : null,
   );
 
-  const options = createAsync(() => merchantFilterOptionsQuery());
-  const sellers = () => options()?.sellers ?? [];
+  const options = useMerchantFilterOptions();
+  const sellers = () => options().sellers;
+
   const adjustCredit = useAction(adjustMonthCreditMutation);
 
   const grid = useDashboardGrid<QualityRow>({
     pageSize: GPV_GRID_PAGE_SIZE,
     resetKey: () => issue() ?? "invalid",
     load: (page) => {
-      const current = issue();
-      return current
-        ? qualityRowsQuery({ issue: current, page })
+      const currentIssue = issue();
+
+      return currentIssue
+        ? qualityRowsQuery({ issue: currentIssue, page })
         : Promise.resolve({ publicationId: null, rows: [] });
     },
   });
@@ -83,24 +86,28 @@ export function QualityPage() {
       label: "Vendedor",
       icon: User,
       width: 200,
-      renderCell: (row) => row.sellerName ?? UNASSIGNED,
+      renderCell: (row) => row.sellerName ?? UNASSIGNED_SELLER,
       edit: {
         ariaLabel: "Resolver vendedor",
         renderEditor: (editor) => (
           <InlineOptionsEditor
             ariaLabel="Vendedor real"
-            options={[UNASSIGNED, ...sellers().map((seller) => seller.name)]}
-            selected={editor.row.sellerName ?? UNASSIGNED}
-            onSubmit={(name) => {
+            options={[
+              UNASSIGNED_SELLER,
+              ...sellers().map((seller) => seller.name),
+            ]}
+            selected={editor.row.sellerName ?? UNASSIGNED_SELLER}
+            onSubmit={async (name) => {
               const seller = sellers().find(
                 (candidate) => candidate.name === name,
               );
-              return adjustCredit({
+
+              await adjustCredit({
                 ruc: editor.row.ruc,
                 month: editor.row.month,
                 sellerUserId: seller?.userId ?? null,
                 reason: "Resolución de incidencia de atribución",
-              }).then(() => undefined);
+              });
             }}
             onClose={editor.close}
           />
@@ -131,7 +138,10 @@ export function QualityPage() {
     },
   ];
 
-  const renderGrid = (label: string, source: DataGridSource<QualityRow>) => (
+  const renderDataGrid = (
+    label: string,
+    source: DataGridSource<QualityRow>,
+  ) => (
     <DataGrid
       ariaLabel={label}
       columns={columns}
@@ -157,21 +167,26 @@ export function QualityPage() {
           />
         }
       >
-        {(current) => {
-          const label = () => QUALITY_ISSUE_COPY[current()].label;
+        {(currentIssue) => {
+          const label = () => QUALITY_ISSUE_COPY[currentIssue()].label;
+
           return (
             <>
               <h1 class={styles.title}>{label()}</h1>
+
               <ErrorBoundary
-                fallback={renderGrid(label(), { status: "error", rows: [] })}
+                fallback={renderDataGrid(label(), {
+                  status: "error",
+                  rows: [],
+                })}
               >
                 <Suspense
-                  fallback={renderGrid(label(), {
+                  fallback={renderDataGrid(label(), {
                     status: "pending",
                     rows: [],
                   })}
                 >
-                  {renderGrid(label(), {
+                  {renderDataGrid(label(), {
                     status: "ready",
                     rows: grid.rows(),
                   })}

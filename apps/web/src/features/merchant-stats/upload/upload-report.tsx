@@ -15,32 +15,41 @@ import styles from "./upload-report.module.css";
 export function UploadReport() {
   const navigate = useNavigate();
   const upload = useAction(uploadMerchantReportMutation);
+  const { enqueueErrorSnackBar } = useSnackBar();
+
   const [cutAt, setCutAt] = createSignal("");
   const [isUploading, setIsUploading] = createSignal(false);
   const [errorMessage, setErrorMessage] = createSignal<string>();
-  const { enqueueErrorSnackBar } = useSnackBar();
 
-  async function importFile(file: File): Promise<void> {
-    if (isUploading()) return;
+  async function uploadFile(file: File): Promise<void> {
+    if (isUploading()) {
+      return;
+    }
 
+    const selectedCutAt = cutAt();
     const form = new FormData();
+
     form.append("file", file);
-    if (cutAt()) {
-      form.append("cutAt", cutAt());
+
+    if (selectedCutAt) {
+      form.append("cutAt", selectedCutAt);
     }
 
     setErrorMessage(undefined);
     setIsUploading(true);
+
     try {
       const result = await upload(form);
+
       if (!result.ok) {
         setErrorMessage(result.error.message);
         return;
       }
 
       navigate(`/dashboards/merchant-gpv/imports/${result.value.snapshotId}`);
-    } catch (caught: unknown) {
-      const message = actionErrorMessage(caught);
+    } catch (error: unknown) {
+      const message = actionErrorMessage(error);
+
       setErrorMessage(message);
       enqueueErrorSnackBar(message);
     } finally {
@@ -55,8 +64,9 @@ export function UploadReport() {
         disabled={isUploading()}
         onFiles={(files) => {
           const file = files[0];
+
           if (file) {
-            void importFile(file);
+            void uploadFile(file);
           }
         }}
       >
@@ -92,6 +102,7 @@ export function UploadReport() {
       <Show when={isUploading()}>
         <p class={styles.status}>Subiendo archivo…</p>
       </Show>
+
       <Show when={errorMessage()}>
         {(message) => (
           <p class={styles.statusError} role="alert">

@@ -47,8 +47,10 @@ export function DatePicker(props: DatePickerProps) {
   );
 
   let fieldRef: HTMLDivElement | undefined;
-  let controlRef: HTMLDivElement | undefined;
+  let anchorRef: HTMLDivElement | undefined;
   let popoverRef: HTMLDialogElement | undefined;
+
+  const hasMessage = () => Boolean(props.error || props.description);
 
   const closePicker = () => {
     setIsOpen(false);
@@ -62,9 +64,6 @@ export function DatePicker(props: DatePickerProps) {
     syncViewMonth();
     setIsOpen(true);
   };
-
-  const describedBy = () =>
-    props.description || props.error ? messageId : undefined;
 
   onMount(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -128,7 +127,7 @@ export function DatePicker(props: DatePickerProps) {
           isOpen() ? styles.openShell : undefined,
         )}
         ref={(element) => {
-          controlRef = element;
+          anchorRef = element;
         }}
       >
         <input
@@ -141,7 +140,7 @@ export function DatePicker(props: DatePickerProps) {
           spellcheck={false}
           placeholder={props.placeholder ?? "AAAA-MM-DD"}
           value={props.value}
-          aria-describedby={describedBy()}
+          aria-describedby={hasMessage() ? messageId : undefined}
           aria-invalid={props.error ? "true" : undefined}
           disabled={props.disabled}
           onFocus={openPicker}
@@ -174,7 +173,7 @@ export function DatePicker(props: DatePickerProps) {
         </button>
       </div>
 
-      {(props.error || props.description) && (
+      {hasMessage() && (
         <p
           id={messageId}
           class={props.error ? styles.errorText : styles.descriptionText}
@@ -185,7 +184,7 @@ export function DatePicker(props: DatePickerProps) {
 
       <DatePickerPopover
         isOpen={isOpen}
-        anchor={() => controlRef ?? fieldRef}
+        anchor={() => anchorRef ?? fieldRef}
         selectedDate={selectedDate()}
         minDate={minDate()}
         visibleMonth={viewMonth()}

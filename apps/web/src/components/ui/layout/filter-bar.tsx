@@ -4,7 +4,7 @@ import type { JSX } from "solid-js";
 import styles from "./filter-bar.module.css";
 
 interface FilterBarProps {
-  children: JSX.Element;
+  children?: JSX.Element;
   class?: string;
 }
 

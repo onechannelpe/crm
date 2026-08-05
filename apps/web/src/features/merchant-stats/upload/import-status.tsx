@@ -39,15 +39,15 @@ export function ImportStatus(props: { snapshotId: string }) {
   const resolution = useSubmission(resolveGpvImportIssueMutation);
   let refreshedActiveSnapshotId: string | null = null;
 
-  // Finished jobs don't publish progress.
+  // Terminal jobs no longer publish progress.
   const jobId = () => {
     const job = snapshot()?.job;
 
     return !job || isTerminalJob(job.queueState) ? null : job.jobId;
   };
 
-  // Refresh the snapshot instead of applying progress updates locally.
-  const importProgress = createTopicState({
+  // Progress invalidates the snapshot; the query remains the source of truth.
+  const progress = createTopicState({
     channel: REALTIME_CHANNELS.gpvSnapshot,
     id: jobId,
     parse: parseGpvSnapshotProgressMessage,
@@ -55,7 +55,7 @@ export function ImportStatus(props: { snapshotId: string }) {
   });
 
   createEffect(
-    on(importProgress.value, (event) => {
+    on(progress.value, (event) => {
       if (!event) {
         return;
       }
@@ -89,7 +89,7 @@ export function ImportStatus(props: { snapshotId: string }) {
     try {
       await resolveIssue({ issueId, resolution: choice });
     } catch {
-      // useSubmission exposes the action error in the status card.
+      // useSubmission renders the action error.
     }
   }
 
@@ -129,10 +129,11 @@ export function ImportStatus(props: { snapshotId: string }) {
                   >
                     <ImportProgress job={view().job} />
 
-                    <Show when={importProgress.connection() === "offline"}>
+                    <Show when={progress.connection() === "offline"}>
                       <p class={styles.status}>Sin conexión. Reintentando...</p>
                     </Show>
-                    <Show when={importProgress.connection() === "denied"}>
+
+                    <Show when={progress.connection() === "denied"}>
                       <p class={styles.statusError}>
                         Se perdió la conexión. Recarga la página.
                       </p>
@@ -255,7 +256,7 @@ function ImportProgress(props: { job: GpvSnapshotProgressEvent | null }) {
           ? "Leyendo el archivo…"
           : `Procesando ${formatInteger(completed())} de ${formatInteger(
               total(),
-            )} filas...`}
+            )} filas…`}
       </p>
 
       <div class={styles.bar}>

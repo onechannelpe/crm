@@ -49,15 +49,17 @@ function PortfolioContent(props: {
   portfolio: Accessor<ExecutiveGpvProgressView>;
 }) {
   const navigate = useNavigate();
-  const data = () => props.portfolio();
-  const columns = createMemo(() => merchantColumns(data().cutDate));
+
+  const portfolio = () => props.portfolio();
+
+  const columns = createMemo(() => merchantColumns(portfolio().cutDate));
 
   return (
     <WidgetCardShell
       title="Mis comercios"
       action={
         <Show
-          when={data().cutDate}
+          when={portfolio().cutDate}
           fallback={
             <span class={styles.updated}>GPV pendiente de actualización</span>
           }
@@ -71,25 +73,32 @@ function PortfolioContent(props: {
       }
     >
       <div class={styles.content}>
-        <Show when={data().merchants.length > 0} fallback={<PortfolioEmpty />}>
+        <Show
+          when={portfolio().merchants.length > 0}
+          fallback={<PortfolioEmpty />}
+        >
           <p class={styles.summary}>
-            {merchantCountLabel(data().merchants.length)}
+            {merchantCountLabel(portfolio().merchants.length)}
           </p>
+
           <div class={styles.grid}>
             <DataGrid
               ariaLabel="Mis comercios"
               columns={columns()}
               emptyState=""
-              onRowOpen={(merchant) => {
+              rowId={(merchant) => merchant.ruc}
+              rowOpenIndicator="route"
+              source={{
+                status: "ready",
+                rows: portfolio().merchants,
+              }}
+              onRowOpen={(merchant) =>
                 navigate(
                   merchant.leadId
                     ? `/records/${merchant.leadId}`
                     : `/records?query=${encodeURIComponent(merchant.ruc)}`,
-                );
-              }}
-              rowId={(merchant) => merchant.ruc}
-              rowOpenIndicator="route"
-              source={{ status: "ready", rows: data().merchants }}
+                )
+              }
             />
           </div>
         </Show>
@@ -147,6 +156,7 @@ function merchantColumns(
       renderCell: (merchant) => (
         <div class={styles.progress}>
           <span>{formatSoles(merchant.gpv)}</span>
+
           <Show
             when={merchant.projectedGpv !== null}
             fallback={<span class={styles.muted}>Sin objetivo</span>}
@@ -173,17 +183,19 @@ function merchantColumns(
 }
 
 function lastTransactionLabel(
-  value: CalendarDate | null,
+  lastTransaction: CalendarDate | null,
   cutDate: CalendarDate | null,
 ): string {
-  if (!value) {
+  if (!lastTransaction) {
     return "Sin transacciones";
   }
+
   if (!cutDate) {
-    return formatCalendarDate(value);
+    return formatCalendarDate(lastTransaction);
   }
 
-  const days = daysBetween(value, cutDate);
+  const days = daysBetween(lastTransaction, cutDate);
+
   if (days === 0) return "Hoy";
   if (days === 1) return "Hace 1 día";
 
@@ -193,6 +205,7 @@ function lastTransactionLabel(
 function daysBetween(from: CalendarDate, to: CalendarDate): number {
   const fromParts = calendarDateParts(from);
   const toParts = calendarDateParts(to);
+
   const fromTime = Date.UTC(fromParts.year, fromParts.month - 1, fromParts.day);
   const toTime = Date.UTC(toParts.year, toParts.month - 1, toParts.day);
 

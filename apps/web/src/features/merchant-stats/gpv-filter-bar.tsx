@@ -1,32 +1,33 @@
-import { createAsync } from "@solidjs/router";
+"use client";
+
 import { For, type JSX, Suspense } from "solid-js";
 
 import { Select } from "~/components/ui/input/select";
 import { FilterBar } from "~/components/ui/layout/filter-bar";
-import type { FilterOptions } from "~/contracts/merchant-stats/views";
 import { parseCalendarMonth } from "~/domain/time/calendar-date";
-import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options";
 
 import { formatMonth } from "./format";
 import type { GpvView } from "./gpv-view";
+import { useMerchantFilterOptions } from "./use-merchant-filter-options";
 
 import styles from "./gpv-filter-bar.module.css";
 
 const ALL = "";
 
+function optional(value: string): string | undefined {
+  return value === ALL ? undefined : value;
+}
+
 export function GpvFilterBar(props: { view: GpvView; children?: JSX.Element }) {
   return (
-    <Suspense fallback={<FilterBar class={styles.bar}> </FilterBar>}>
+    <Suspense fallback={<FilterBar class={styles.bar} />}>
       <Fields view={props.view}>{props.children}</Fields>
     </Suspense>
   );
 }
 
 function Fields(props: { view: GpvView; children?: JSX.Element }) {
-  const options = createAsync(() => merchantFilterOptionsQuery());
-  const pick = (raw: string) => (raw === ALL ? undefined : raw);
-  const opts = (): FilterOptions =>
-    options() ?? { branches: [], sellers: [], months: [], products: [] };
+  const options = useMerchantFilterOptions();
 
   return (
     <FilterBar class={styles.bar}>
@@ -36,12 +37,12 @@ function Fields(props: { view: GpvView; children?: JSX.Element }) {
           value={props.view.filter().branchId ?? ALL}
           onChange={(event) =>
             props.view.setFilter({
-              branchId: pick(event.currentTarget.value),
+              branchId: optional(event.currentTarget.value),
             })
           }
         >
           <option value={ALL}>Todos los zonales</option>
-          <For each={opts().branches}>
+          <For each={options().branches}>
             {(branch) => <option value={branch.id}>{branch.name}</option>}
           </For>
         </Select>
@@ -53,12 +54,12 @@ function Fields(props: { view: GpvView; children?: JSX.Element }) {
           value={props.view.filter().sellerUserId ?? ALL}
           onChange={(event) =>
             props.view.setFilter({
-              sellerUserId: pick(event.currentTarget.value),
+              sellerUserId: optional(event.currentTarget.value),
             })
           }
         >
           <option value={ALL}>Todos los vendedores</option>
-          <For each={opts().sellers}>
+          <For each={options().sellers}>
             {(seller) => <option value={seller.userId}>{seller.name}</option>}
           </For>
         </Select>
@@ -75,7 +76,7 @@ function Fields(props: { view: GpvView; children?: JSX.Element }) {
           }
         >
           <option value={ALL}>Todos los meses</option>
-          <For each={opts().months}>
+          <For each={options().months}>
             {(month) => <option value={month}>{formatMonth(month)}</option>}
           </For>
         </Select>
@@ -87,12 +88,12 @@ function Fields(props: { view: GpvView; children?: JSX.Element }) {
           value={props.view.filter().product ?? ALL}
           onChange={(event) =>
             props.view.setFilter({
-              product: pick(event.currentTarget.value),
+              product: optional(event.currentTarget.value),
             })
           }
         >
           <option value={ALL}>Todos los productos</option>
-          <For each={opts().products}>
+          <For each={options().products}>
             {(product) => <option value={product}>{product}</option>}
           </For>
         </Select>

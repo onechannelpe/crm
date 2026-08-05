@@ -1,4 +1,4 @@
-import { createAsync, useAction } from "@solidjs/router";
+import { useAction } from "@solidjs/router";
 import { ErrorBoundary, Suspense } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
@@ -13,8 +13,6 @@ import type { CohortSaleRow } from "~/contracts/merchant-stats/views";
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
-import { cohortRowsQuery } from "~/rpc/merchant-stats/cohort-rows";
-import { merchantFilterOptionsQuery } from "~/rpc/merchant-stats/merchant-filter-options";
 
 import {
   adjustMonthCreditMutation,
@@ -23,24 +21,25 @@ import {
 import { formatMonth, formatSoles } from "../format";
 import { GpvFilterBar } from "../gpv-filter-bar";
 import type { GpvView } from "../gpv-view";
-import { GPV_GRID_PAGE_SIZE, useDashboardGrid } from "./use-dashboard-grid";
+import { useMerchantFilterOptions } from "../use-merchant-filter-options";
+import { useCohortRowsGrid } from "./use-cohort-rows-grid";
 
 import styles from "./grid-surface.module.css";
 
 const UNASSIGNED = "Sin asignar";
 
 export function AttributionGrid(props: { view: GpvView }) {
-  const options = createAsync(() => merchantFilterOptionsQuery());
-  const sellers = () => options()?.sellers ?? [];
+  const filterOptions = useMerchantFilterOptions();
+  const sellers = () => filterOptions().sellers;
+  const sellerNames = () => [
+    UNASSIGNED,
+    ...sellers().map((seller) => seller.name),
+  ];
 
   const adjustMonthCredit = useAction(adjustMonthCreditMutation);
   const setMerchantTarget = useAction(setMerchantTargetMutation);
 
-  const grid = useDashboardGrid<CohortSaleRow>({
-    pageSize: GPV_GRID_PAGE_SIZE,
-    resetKey: () => JSON.stringify(props.view.filter()),
-    load: (page) => cohortRowsQuery({ filter: props.view.filter(), page }),
-  });
+  const grid = useCohortRowsGrid(props.view);
 
   const columns: ReadonlyArray<DataGridColumn<CohortSaleRow>> = [
     {
@@ -70,7 +69,7 @@ export function AttributionGrid(props: { view: GpvView }) {
         renderEditor: (editor) => (
           <InlineOptionsEditor
             ariaLabel="Vendedor real"
-            options={[UNASSIGNED, ...sellers().map((seller) => seller.name)]}
+            options={sellerNames()}
             selected={editor.row.sellerName ?? UNASSIGNED}
             onSubmit={async (sellerName) => {
               const seller = sellers().find(
@@ -122,7 +121,10 @@ export function AttributionGrid(props: { view: GpvView }) {
               const trimmed = value.trim();
               const projectedGpv = trimmed === "" ? null : Number(trimmed);
 
-              if (projectedGpv !== null && !Number.isFinite(projectedGpv)) {
+              if (
+                projectedGpv !== null &&
+                (!Number.isFinite(projectedGpv) || projectedGpv < 0)
+              ) {
                 throw new Error("Ingresa un proyectado numérico válido");
               }
 
@@ -160,7 +162,10 @@ export function AttributionGrid(props: { view: GpvView }) {
 
       <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
         <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
-          {renderGrid({ status: "ready", rows: grid.rows() })}
+          {renderGrid({
+            status: "ready",
+            rows: grid.rows(),
+          })}
         </Suspense>
       </ErrorBoundary>
     </div>
