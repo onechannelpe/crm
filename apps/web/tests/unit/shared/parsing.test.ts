@@ -68,6 +68,27 @@ describe("parseObject", () => {
     expect(result.value.amount).toBe(1);
   });
 
+  it.each([999, 0, -1, Number.NaN])(
+    "reports %s as below the numAtLeast floor",
+    (gpv) => {
+      const result = parseObject({ gpv }, validationFail, (r) => ({
+        gpv: r.numAtLeast("gpv", 1000),
+      }));
+
+      expectErrCode(result, "invalid_gpv");
+    },
+  );
+
+  it("accepts a number at or above the numAtLeast floor", () => {
+    const result = parseObject({ gpv: 1000 }, validationFail, (r) => ({
+      gpv: r.numAtLeast("gpv", 1000),
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.value.gpv).toBe(1000);
+  });
+
   it("reports a present wrong-typed field as invalid", () => {
     const result = parseObject({ reason: 42 }, validationFail, (r) => ({
       reason: r.str("reason"),

@@ -11,6 +11,7 @@ import {
 } from "~/components/ui/input/inline-field-editor";
 import { actionErrorMessage } from "~/contracts/errors";
 import type { CommercialScope } from "~/contracts/workflow/inputs";
+import { MIN_GPV } from "~/contracts/workflow/limits";
 import type { LeadDetailView } from "~/contracts/workflow/views";
 import { SETTLEMENT_BANKS } from "~/contracts/workflow/vocabulary";
 import {
@@ -62,6 +63,7 @@ export function CommercialFields(props: { data: LeadDetailView }) {
     current: number,
     toPatch: (value: number) => Partial<CommercialScope>,
     step: string,
+    min = "0",
   ): InlineEdit | undefined {
     if (!canEdit()) return undefined;
     return {
@@ -72,7 +74,7 @@ export function CommercialFields(props: { data: LeadDetailView }) {
           ariaLabel={label}
           type="number"
           step={step}
-          min="0"
+          min={min}
           onSubmit={(value) => submitField(toPatch(Number(value)))}
           onClose={onClose}
         />
@@ -168,6 +170,7 @@ export function CommercialFields(props: { data: LeadDetailView }) {
           profile().gpv,
           (value) => ({ gpv: value }),
           "0.01",
+          String(MIN_GPV),
         )}
       >
         <FieldTextValue>{formatAmount(profile().gpv)}</FieldTextValue>

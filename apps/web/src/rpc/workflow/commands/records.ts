@@ -1,3 +1,4 @@
+import { MIN_GPV } from "~/contracts/workflow/limits";
 import {
   SETTLEMENT_BANKS,
   COLLECTION_MODES,
@@ -35,7 +36,7 @@ export async function requestLeadCreation(input: unknown) {
         currentProvider: r.str("currentProvider"),
         currentDebitRate: r.num("currentDebitRate"),
         currentCreditRate: r.num("currentCreditRate"),
-        gpv: r.num("gpv"),
+        gpv: r.numAtLeast("gpv", MIN_GPV),
         ticket: r.num("ticket"),
         lineOfBusiness: r.str("lineOfBusiness"),
         settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),
@@ -63,7 +64,7 @@ export async function requestEditCommercialScope(input: unknown) {
         currentProvider: r.str("currentProvider"),
         currentDebitRate: r.num("currentDebitRate"),
         currentCreditRate: r.num("currentCreditRate"),
-        gpv: r.num("gpv"),
+        gpv: r.numAtLeast("gpv", MIN_GPV),
         ticket: r.num("ticket"),
         lineOfBusiness: r.str("lineOfBusiness"),
         settlementBank: r.enum("settlementBank", SETTLEMENT_BANKS),

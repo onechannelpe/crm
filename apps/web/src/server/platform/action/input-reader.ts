@@ -28,6 +28,7 @@ export interface Reader<E> {
   ): Id[];
   num(field: string): number;
   posInt(field: string): number;
+  numAtLeast(field: string, min: number): number;
   bool(field: string): boolean;
   enum<T extends string>(field: string, options: readonly T[]): T;
   strList(field: string, opts?: StrListConstraints): string[];
@@ -105,6 +106,14 @@ class RecordReader<E> implements Reader<E> {
   posInt(field: string): number {
     const value = this.present(field);
     if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
+      this.reject(field, "invalid");
+    }
+    return value;
+  }
+
+  numAtLeast(field: string, min: number): number {
+    const value = this.present(field);
+    if (typeof value !== "number" || !Number.isFinite(value) || value < min) {
       this.reject(field, "invalid");
     }
     return value;

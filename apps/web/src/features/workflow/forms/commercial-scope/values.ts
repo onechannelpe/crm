@@ -1,4 +1,5 @@
 import type { CommercialScope } from "~/contracts/workflow/inputs";
+import { MIN_GPV } from "~/contracts/workflow/limits";
 import {
   SETTLEMENT_BANKS,
   type SettlementBank,
@@ -34,9 +35,9 @@ export const EMPTY_COMMERCIAL_SCOPE_VALUES: CommercialScopeFormValues = {
   posCount: "",
 };
 
-function isNonNegativeNumber(value: string): boolean {
+function isAtLeast(value: string, min: number): boolean {
   const parsed = Number(value);
-  return value.trim() !== "" && Number.isFinite(parsed) && parsed >= 0;
+  return value.trim() !== "" && Number.isFinite(parsed) && parsed >= min;
 }
 
 function isPositiveInteger(value: string): boolean {
@@ -48,12 +49,13 @@ function validateCommercialScope(
   values: CommercialScopeFormValues,
 ): string | null {
   if (!values.currentProvider.trim()) return "Proveedor actual es requerido";
-  if (!isNonNegativeNumber(values.currentDebitRate))
+  if (!isAtLeast(values.currentDebitRate, 0))
     return "Tasa débito actual es requerida";
-  if (!isNonNegativeNumber(values.currentCreditRate))
+  if (!isAtLeast(values.currentCreditRate, 0))
     return "Tasa crédito actual es requerida";
-  if (!isNonNegativeNumber(values.gpv)) return "GPV es requerido";
-  if (!isNonNegativeNumber(values.ticket)) return "Ticket es requerido";
+  if (!isAtLeast(values.gpv, MIN_GPV))
+    return `GPV debe ser al menos ${MIN_GPV}`;
+  if (!isAtLeast(values.ticket, 0)) return "Ticket es requerido";
   if (!values.lineOfBusiness.trim()) return "Giro de negocio es requerido";
   if (!values.settlementBank) return "Banco de abono es requerido";
   if (!isPositiveInteger(values.posCount))

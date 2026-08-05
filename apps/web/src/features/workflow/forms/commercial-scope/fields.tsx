@@ -5,6 +5,7 @@ import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
 import { TextInput } from "~/components/ui/input/text-input";
+import { MIN_GPV } from "~/contracts/workflow/limits";
 import { SETTLEMENT_BANKS } from "~/contracts/workflow/vocabulary";
 import { FieldInputValue, FieldRow } from "~/features/widgets/field-table";
 
@@ -64,7 +65,7 @@ export function CommercialScopeFields(props: {
             sizeVariant="sm"
             type="number"
             step="0.01"
-            min="0"
+            min={MIN_GPV}
             value={props.values.gpv}
             onChange={(value) => props.onChange("gpv", value)}
             required
