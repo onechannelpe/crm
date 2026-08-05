@@ -57,21 +57,19 @@ export async function listFulfillmentQueue(
     .execute();
 
   return Ok({
-    rows: rows.map(
-      (row): FulfillmentQueueRowView => ({
-        leadId: row.leadId,
-        ruc: row.ruc,
-        legalName: row.legalName,
-        executiveName: shortName({
-          names: row.names,
-          first_surname: row.firstSurname,
-          second_surname: row.secondSurname,
-        }),
-        productKind: row.productKind,
-        currentStep: row.currentStep,
-        pendingOwner: pendingOwnerForStep(row.currentStep),
-        waitingSince: row.waitingSince.getTime(),
+    rows: rows.map((row): FulfillmentQueueRowView => ({
+      leadId: row.leadId,
+      ruc: row.ruc,
+      legalName: row.legalName,
+      executiveName: shortName({
+        names: row.names,
+        first_surname: row.firstSurname,
+        second_surname: row.secondSurname,
       }),
-    ),
+      productKind: row.productKind,
+      currentStep: row.currentStep,
+      pendingOwner: pendingOwnerForStep(row.currentStep),
+      waitingSince: row.waitingSince.getTime(),
+    })),
   });
 }
