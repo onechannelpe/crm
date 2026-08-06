@@ -70,13 +70,7 @@
   --font-weight-semibold: 600;
 
   --line-height-md: 1.1;
-  --line-height-6: 1.2;
-  --line-height-7: 1.27;
-  --line-height-10: 1.25;
-  --line-height-11_5: 1.22;
-  --line-height-14: 1.17;
-  --line-height-16_5: 1.13;
-  --line-height-21_5: 1.08;
+  --line-height-lg: 1.5;
 
   --navigation-drawer-width: 220px;
   --nav-drawer-collapsed-width: 40px;

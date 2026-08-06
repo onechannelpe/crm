@@ -1,5 +1,6 @@
 .container {
   align-items: center;
+  animation: emptyPlaceholderFadeIn var(--motion-fast) var(--ease-standard);
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -8,6 +9,16 @@
   justify-content: center;
   text-align: center;
   width: 100%;
+}
+
+@keyframes emptyPlaceholderFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .textContainer {
@@ -29,8 +40,9 @@
 .subtitle {
   color: var(--foreground-tertiary);
   font-size: var(--font-size-sm);
-  line-height: 1.5;
-  max-height: 3em;
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-lg);
+  max-height: 2.8em;
   overflow: hidden;
   width: 50%;
 }
