@@ -6,12 +6,15 @@ import { application } from "~/server/composition/application";
 import { getRequestOperation } from "~/server/platform/http/request-context-storage";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
-function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
+function assertClientAuthAnalyticsEvent(
+  input: AuthFunnelClientEventPayload,
+): void {
   if (input.kind === "screen_viewed") {
     if (!isAuthFunnelScreen(input.screen)) {
       throw new Error("Invalid auth analytics screen");
     }
-    return input;
+
+    return;
   }
 
   if (
@@ -21,7 +24,7 @@ function readClientAuthAnalyticsEvent(input: AuthFunnelClientEventPayload) {
       input.code === "unsupported" ||
       input.code === "server_error")
   ) {
-    return input;
+    return;
   }
 
   throw new Error("Unsupported auth analytics event");
@@ -32,11 +35,12 @@ export async function trackAuthClientEvent(
 ): Promise<void> {
   "use server";
 
-  const event = readClientAuthAnalyticsEvent(input);
+  assertClientAuthAnalyticsEvent(input);
+
   await application.auth.analytics(
     {
       source: "client",
-      ...event,
+      ...input,
     },
     getActionRequestContext(),
     getRequestOperation(),

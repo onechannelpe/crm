@@ -31,13 +31,13 @@ export async function requestMoreSearches(
     name: "capacity.request_search",
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(rawAmount, rawReason),
-    telemetry: (request) => ({ amount: request.amount }),
+    telemetry: (input) => ({ amount: input.amount }),
 
-    execute: (ctx, request) =>
+    execute: (ctx, input) =>
       application.capacity.requestCapacity(ctx, {
         kind: "search_extra",
-        amount: request.amount,
-        reason: request.reason,
+        amount: input.amount,
+        reason: input.reason,
       }),
   });
 }
@@ -52,13 +52,13 @@ export async function requestMoreLeadRefill(
     name: "capacity.request_lead_refill",
     access: { kind: "permission", permission: "capacity:request:self" },
     parse: () => parseCapacityRequest(rawAmount, rawReason),
-    telemetry: (request) => ({ amount: request.amount }),
+    telemetry: (input) => ({ amount: input.amount }),
 
-    execute: (ctx, request) =>
+    execute: (ctx, input) =>
       application.capacity.requestCapacity(ctx, {
         kind: "lead_refill",
-        amount: request.amount,
-        reason: request.reason,
+        amount: input.amount,
+        reason: input.reason,
       }),
   });
 }

@@ -13,13 +13,6 @@ import {
 import { getActionRequestContext } from "~/server/platform/observability/context";
 import { isErr } from "~/shared/result";
 
-function recordAuthAnalyticsEvent(
-  event: Parameters<typeof application.auth.analytics>[0],
-  context: Parameters<typeof application.auth.analytics>[1],
-) {
-  return application.auth.analytics(event, context, getRequestOperation());
-}
-
 export async function finishPasskeyLogin(
   flowId: unknown,
   response: unknown,
@@ -28,16 +21,17 @@ export async function finishPasskeyLogin(
 
   const clientMetadata = getRequestClientMetadata();
   const requestContext = getActionRequestContext();
+  const operation = getRequestOperation();
 
   const parsedFlowId = AuthLoginFlowId.parse(flowId);
   if (isErr(parsedFlowId)) {
     throwDomain(parsedFlowId.error);
   }
+
   if (!isAuthenticationResponse(response)) {
     throwDomain(fail("invalid_credentials"));
   }
 
-  const operation = getRequestOperation();
   const verified = await application.auth.login.verifyPasskey(
     {
       flowId: parsedFlowId.value,
@@ -49,7 +43,7 @@ export async function finishPasskeyLogin(
   );
 
   if (isErr(verified)) {
-    await recordAuthAnalyticsEvent(
+    await application.auth.analytics(
       {
         source: "server",
         kind: "passkey_result",
@@ -57,6 +51,7 @@ export async function finishPasskeyLogin(
         code: verified.error.kind,
       },
       requestContext,
+      operation,
     );
 
     throwDomain(fail(verified.error.kind));
@@ -70,6 +65,7 @@ export async function finishPasskeyLogin(
     },
     operation,
   );
+
   if (isErr(completed)) {
     throwDomain(
       fail(
@@ -80,13 +76,14 @@ export async function finishPasskeyLogin(
     );
   }
 
-  await recordAuthAnalyticsEvent(
+  await application.auth.analytics(
     {
       source: "server",
       kind: "passkey_result",
       outcome: "succeeded",
     },
     requestContext,
+    operation,
   );
 
   setSessionCookie(completed.value.token);

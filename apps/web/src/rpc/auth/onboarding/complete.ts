@@ -18,11 +18,6 @@ type ParsedCompleteOnboardingInput =
     }
   | { method: "totp"; code: string };
 
-interface CompletionResult {
-  redirectTo: string;
-  recoveryCodes: string[];
-}
-
 function parseCompletionInput(
   input: unknown,
 ): Result<ParsedCompleteOnboardingInput, DomainError> {
@@ -32,50 +27,61 @@ function parseCompletionInput(
 
   switch (input.method) {
     case "none":
-      return Ok({ method: input.method });
+      return Ok({ method: "none" });
+
     case "passkey": {
       const challengeId = WebauthnChallengeId.parse(input.challengeId);
+
       if (isErr(challengeId)) {
         return challengeId;
       }
+
       if (!isRegistrationResponse(input.response)) {
         return Err(fail("invalid_passkey_request"));
       }
+
       return Ok({
-        method: input.method,
+        method: "passkey",
         challengeId: challengeId.value,
         response: input.response,
       });
     }
+
     case "totp":
       return typeof input.code === "string" && /^\d{6}$/.test(input.code)
-        ? Ok({ method: input.method, code: input.code })
+        ? Ok({ method: "totp", code: input.code })
         : Err(fail("totp_code_invalid"));
+
     default:
       return Err(fail("invalid_input"));
   }
 }
 
-export async function completeOnboardingAction(
-  input: unknown,
-): Promise<CompletionResult> {
+export async function completeOnboardingAction(input: unknown): Promise<{
+  redirectTo: string;
+  recoveryCodes: string[];
+}> {
   "use server";
 
   const result = await executeSessionServerFunction({
     name: "auth.onboarding.complete",
     access: { kind: "session" },
     parse: () => parseCompletionInput(input),
-    execute: async (ctx, command) => {
+
+    execute: (ctx, command) => {
       switch (command.method) {
         case "none":
           return application.auth.onboarding.completeWithoutFactor(ctx);
+
         case "passkey":
           return application.auth.onboarding.completeWithPasskey(ctx, command);
+
         case "totp":
           return application.auth.onboarding.completeWithTotp(
             ctx,
             command.code,
           );
+
         default:
           return command satisfies never;
       }
@@ -83,6 +89,7 @@ export async function completeOnboardingAction(
   });
 
   setSessionCookie(result.sessionToken);
+
   return {
     redirectTo: result.redirectTo,
     recoveryCodes: result.recoveryCodes,

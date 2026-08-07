@@ -13,11 +13,10 @@ export async function requestPasswordReset(
 
   const rawEmail = formData.get("email");
   const email = typeof rawEmail === "string" ? rawEmail : "";
-
-  const request = getRequestContext();
+  const { publicOrigin } = getRequestContext();
 
   const result = await application.auth.passwordReset.request(
-    { email, origin: request.publicOrigin },
+    { email, origin: publicOrigin },
     getRequestOperation(),
   );
 
@@ -33,11 +32,12 @@ export async function resetPassword(formData: FormData): Promise<{ ok: true }> {
 
   const rawToken = formData.get("token");
   const rawPassword = formData.get("password");
-  const rawConfirm = formData.get("confirmPassword");
+  const rawConfirmPassword = formData.get("confirmPassword");
 
   const token = typeof rawToken === "string" ? rawToken.trim() : "";
   const password = typeof rawPassword === "string" ? rawPassword : "";
-  const confirmPassword = typeof rawConfirm === "string" ? rawConfirm : "";
+  const confirmPassword =
+    typeof rawConfirmPassword === "string" ? rawConfirmPassword : "";
 
   const result = await application.auth.passwordReset.reset(
     { token, password, confirmPassword },

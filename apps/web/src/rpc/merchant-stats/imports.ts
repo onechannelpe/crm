@@ -72,7 +72,7 @@ export async function uploadMerchantReport(formData: FormData) {
       cutAt: cutAt.toISOString(),
     }),
 
-    execute: async (context, { file, cutAt }) => {
+    execute: async (ctx, { file, cutAt }) => {
       const submitted = await application.merchantStats.imports.submit(
         {
           file: {
@@ -81,9 +81,9 @@ export async function uploadMerchantReport(formData: FormData) {
             stream: file.stream(),
           },
           cutAt,
-          uploadedBy: context.actor.userId,
+          uploadedBy: ctx.actor.userId,
         },
-        context,
+        ctx,
       );
 
       if (!submitted.ok) {
@@ -116,7 +116,10 @@ export async function resolveGpvImportIssue(input: {
         resolution: reader.enum("resolution", SNAPSHOT_RESOLUTIONS),
       })),
 
-    telemetry: ({ issueId, resolution }) => ({ issueId, resolution }),
+    telemetry: ({ issueId, resolution }) => ({
+      issueId,
+      resolution,
+    }),
 
     execute: (ctx, { issueId, resolution }) =>
       application.merchantStats.imports.resolveIssue(

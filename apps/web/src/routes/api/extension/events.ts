@@ -9,26 +9,31 @@ import { readJsonBody } from "./json-body";
 
 function getBearerToken(request: Request): string | null {
   const header = request.headers.get("authorization");
+
   if (!header?.startsWith("Bearer ")) {
     return null;
   }
+
   const token = header.slice("Bearer ".length).trim();
+
   return token === "" ? null : token;
 }
 
 export async function POST(event: ApiRequestEvent): Promise<Response> {
   try {
     const sessionToken = getBearerToken(event.request);
+
     if (!sessionToken) {
       return new Response("Unauthorized", { status: 401 });
     }
 
     const parsed = await readJsonBody(event.request);
+
     if (!parsed.ok) {
       return parsed.response;
     }
-    const body = parsed.body;
-    if (!isExtensionRuntimeEventEnvelope(body)) {
+
+    if (!isExtensionRuntimeEventEnvelope(parsed.body)) {
       return Response.json(
         { error: "Invalid extension event payload" },
         { status: 400 },
@@ -38,10 +43,11 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
     const result = await application.extension.ingestRuntimeEvent(
       {
         sessionToken,
-        event: body,
+        event: parsed.body,
       },
       getRequestOperation(),
     );
+
     if (isErr(result)) {
       const status =
         result.error.code === "extension_session_invalid"
@@ -49,10 +55,11 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
           : result.error.code === "misconfigured"
             ? 503
             : 500;
+
       return Response.json({ error: toWire(result.error).message }, { status });
     }
 
-    return Response.json({ ok: true }, { status: 200 });
+    return Response.json({ ok: true });
   } catch {
     return new Response("Unexpected error", { status: 500 });
   }

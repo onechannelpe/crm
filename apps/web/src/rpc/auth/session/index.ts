@@ -11,7 +11,5 @@ export async function logout(): Promise<void> {
     execute: (context) => application.auth.sessions.logout(context),
   });
 
-  // Only reached once revocation succeeded, so a cookie that survives an early
-  // throw always points at a session that is already gone.
   deleteSessionCookie();
 }

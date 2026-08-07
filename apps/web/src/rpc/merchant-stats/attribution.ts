@@ -12,7 +12,7 @@ export async function adjustMonthCredit(raw: {
   ruc: string;
   month: CalendarMonth;
   sellerUserId: string | null;
-  reason: string;
+  reason?: string;
 }) {
   "use server";
 
@@ -31,7 +31,7 @@ export async function adjustMonthCredit(raw: {
     telemetry: ({ ruc, month }) => ({ ruc, month }),
 
     execute: async (ctx, input) => {
-      const resolved = await application.merchantStats.attribution.adjust(
+      const result = await application.merchantStats.attribution.adjust(
         {
           ruc: input.ruc,
           month: input.month,
@@ -42,9 +42,7 @@ export async function adjustMonthCredit(raw: {
         ctx,
       );
 
-      if (isErr(resolved)) {
-        return resolved;
-      }
+      if (isErr(result)) return result;
 
       return Ok({ ok: true as const });
     },
@@ -72,7 +70,7 @@ export async function setMerchantTarget(raw: {
     telemetry: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
 
     execute: async (ctx, input) => {
-      const updated = await application.merchantStats.attribution.setTarget(
+      const result = await application.merchantStats.attribution.setTarget(
         {
           ruc: input.ruc,
           effectiveFrom: input.effectiveFrom,
@@ -82,9 +80,7 @@ export async function setMerchantTarget(raw: {
         ctx,
       );
 
-      if (isErr(updated)) {
-        return updated;
-      }
+      if (isErr(result)) return result;
 
       return Ok({ ok: true as const });
     },

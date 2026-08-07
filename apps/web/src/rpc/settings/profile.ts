@@ -21,30 +21,21 @@ export async function updateUserProfile(
       const shape = parseObject({ phone: rawPhone }, validationFail, (r) => ({
         phone: r.str("phone"),
       }));
+      if (isErr(shape)) return shape;
 
-      if (isErr(shape)) {
-        return shape;
-      }
+      const phone = parsePhone(shape.value.phone);
+      if (!phone) return Err(fail("invalid_phone"));
 
-      const localPhone = parsePhone(shape.value.phone);
-
-      if (!localPhone) {
-        return Err(fail("invalid_phone"));
-      }
-
-      return Ok({ phone: localPhone });
+      return Ok({ phone });
     },
 
-    execute: async (ctx, command) => {
+    execute: async ({ actor, operationAt }, { phone }) => {
       const result = await application.users.updatePhone(
-        ctx.actor.userId,
-        command.phone,
-        ctx.operationAt,
+        actor.userId,
+        phone,
+        operationAt,
       );
-
-      if (isErr(result)) {
-        return Err(fail("phone_in_use"));
-      }
+      if (isErr(result)) return Err(fail("phone_in_use"));
 
       return Ok({ message: "Perfil actualizado" });
     },

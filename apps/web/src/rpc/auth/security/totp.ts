@@ -18,9 +18,10 @@ export async function beginTotpEnrollment(): Promise<{
   });
 }
 
-export async function finishTotpEnrollment(
-  rawCode: unknown,
-): Promise<{ recoveryCodes: string[]; message: string }> {
+export async function finishTotpEnrollment(rawCode: unknown): Promise<{
+  recoveryCodes: string[];
+  message: string;
+}> {
   "use server";
 
   const result = await executeSessionServerFunction({
@@ -35,8 +36,8 @@ export async function finishTotpEnrollment(
       return Ok({ code: rawCode });
     },
 
-    execute: (ctx, command) =>
-      application.auth.security.finishTotpEnrollment(ctx, command.code),
+    execute: (ctx, { code }) =>
+      application.auth.security.finishTotpEnrollment(ctx, code),
   });
 
   setSessionCookie(result.sessionToken);

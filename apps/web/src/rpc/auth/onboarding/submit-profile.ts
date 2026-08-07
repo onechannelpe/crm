@@ -1,9 +1,9 @@
 import type { OnboardingSnapshot } from "~/contracts/auth";
-import { fail, type DomainError } from "~/domain/errors";
+import { fail } from "~/domain/errors";
 import { parsePhone } from "~/domain/phone/pe-mobile";
 import { application } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
-import { Err, Ok, type Result } from "~/shared/result";
+import { Err, Ok } from "~/shared/result";
 
 export async function submitOnboardingProfile(input: {
   phone: unknown;
@@ -13,14 +13,14 @@ export async function submitOnboardingProfile(input: {
   return executeSessionServerFunction({
     name: "auth.onboarding.save_profile",
     access: { kind: "session" },
-    parse: (): Result<
-      NonNullable<ReturnType<typeof parsePhone>>,
-      DomainError
-    > => {
+
+    parse: () => {
       const phone =
         typeof input.phone === "string" ? parsePhone(input.phone) : null;
+
       return phone ? Ok(phone) : Err(fail("invalid_phone"));
     },
+
     execute: (ctx, phone) =>
       application.auth.onboarding.saveProfile(ctx, phone),
   });

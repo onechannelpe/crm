@@ -28,20 +28,24 @@ export async function uploadUserAvatar(
   return executeSessionServerFunction({
     name: "settings.avatar.upload",
     access: { kind: "session" },
+
     parse: (): Result<File, DomainError> => {
       const file = formData.get("file");
+
       if (!(file instanceof File)) {
         return Err(fail("profile_picture_required"));
       }
+
       return Ok(file);
     },
 
-    execute: async (ctx, file) => {
+    execute: async ({ actor, operationAt }, file) => {
       const result = await application.users.avatars.upload(
-        ctx.actor.userId,
+        actor.userId,
         file,
-        ctx.operationAt,
+        operationAt,
       );
+
       if (isErr(result)) {
         return Err(toAvatarDomainError(result.error.code));
       }
@@ -62,11 +66,12 @@ export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
     name: "settings.avatar.remove",
     access: { kind: "session" },
 
-    execute: async (ctx) => {
+    execute: async ({ actor, operationAt }) => {
       const result = await application.users.avatars.remove(
-        ctx.actor.userId,
-        ctx.operationAt,
+        actor.userId,
+        operationAt,
       );
+
       if (isErr(result)) {
         return Err(toAvatarDomainError(result.error.code));
       }

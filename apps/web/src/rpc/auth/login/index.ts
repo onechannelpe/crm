@@ -16,16 +16,7 @@ import {
   getRequestOperation,
 } from "~/server/platform/http/request-context-storage";
 import { getActionRequestContext } from "~/server/platform/observability/context";
-import type { OperationContext } from "~/server/platform/operation/context";
 import { isErr } from "~/shared/result";
-
-function recordAuthAnalyticsEvent(
-  event: Parameters<typeof application.auth.analytics>[0],
-  context: Parameters<typeof application.auth.analytics>[1],
-  operation: OperationContext,
-) {
-  return application.auth.analytics(event, context, operation);
-}
 
 export async function passwordLogin(
   formData: FormData,
@@ -34,7 +25,7 @@ export async function passwordLogin(
 
   const identifier = readLoginText(formData, "identifier");
   const password = readLoginText(formData, "password", { trim: false });
-  const request = getRequestClientMetadata();
+  const { ipAddress, userAgent } = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
   const operation = getRequestOperation();
 
@@ -42,15 +33,15 @@ export async function passwordLogin(
     {
       identifier,
       password,
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
+      ipAddress,
+      userAgent,
     },
     getRequestContext().publicOrigin,
     operation,
   );
 
   if (isErr(result)) {
-    await recordAuthAnalyticsEvent(
+    await application.auth.analytics(
       {
         source: "server",
         kind: "password_result",
@@ -65,7 +56,7 @@ export async function passwordLogin(
   }
 
   if (result.value.kind === "totp_required") {
-    await recordAuthAnalyticsEvent(
+    await application.auth.analytics(
       {
         source: "server",
         kind: "password_result",
@@ -79,7 +70,7 @@ export async function passwordLogin(
   }
 
   if (result.value.kind === "passkey_required") {
-    await recordAuthAnalyticsEvent(
+    await application.auth.analytics(
       {
         source: "server",
         kind: "password_result",
@@ -95,7 +86,7 @@ export async function passwordLogin(
     };
   }
 
-  await recordAuthAnalyticsEvent(
+  await application.auth.analytics(
     {
       source: "server",
       kind: "password_result",
@@ -119,7 +110,7 @@ export async function passkeyStart(
     throwDomain(internal("Invalid passkey login mode"));
   }
 
-  const request = getRequestClientMetadata();
+  const { ipAddress } = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
   const operation = getRequestOperation();
 
@@ -127,11 +118,11 @@ export async function passkeyStart(
     mode === "identified"
       ? {
           identifier: readLoginText(formData, "identifier"),
-          ipAddress: request.ipAddress,
+          ipAddress,
           mode,
         }
       : {
-          ipAddress: request.ipAddress,
+          ipAddress,
           mode,
         };
 
@@ -142,7 +133,7 @@ export async function passkeyStart(
   );
 
   if (isErr(result)) {
-    await recordAuthAnalyticsEvent(
+    await application.auth.analytics(
       {
         source: "server",
         kind: "passkey_start_result",
@@ -156,7 +147,7 @@ export async function passkeyStart(
     throwDomain(fail("invalid_credentials"));
   }
 
-  await recordAuthAnalyticsEvent(
+  await application.auth.analytics(
     {
       source: "server",
       kind: "passkey_start_result",
@@ -179,17 +170,22 @@ export async function totpLogin(formData: FormData): Promise<void> {
     throwDomain(fail("flow_expired"));
   }
 
-  const request = getRequestClientMetadata();
+  const { ipAddress, userAgent } = getRequestClientMetadata();
   const analyticsContext = getActionRequestContext();
   const operation = getRequestOperation();
+
   const verified = await application.auth.login.verifyTotp(
-    { flowId, totpCode, ipAddress: request.ipAddress },
+    {
+      flowId,
+      totpCode,
+      ipAddress,
+    },
     operation,
   );
 
   if (isErr(verified)) {
     if (verified.error.kind === "flow_expired") {
-      await recordAuthAnalyticsEvent(
+      await application.auth.analytics(
         {
           source: "server",
           kind: "totp_result",
@@ -203,7 +199,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
       throwDomain(fail("flow_expired"));
     }
 
-    await recordAuthAnalyticsEvent(
+    await application.auth.analytics(
       {
         source: "server",
         kind: "totp_result",
@@ -220,11 +216,12 @@ export async function totpLogin(formData: FormData): Promise<void> {
   const completed = await application.auth.login.complete(
     {
       proof: verified.value,
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
+      ipAddress,
+      userAgent,
     },
     operation,
   );
+
   if (isErr(completed)) {
     throwDomain(
       fail(
@@ -235,7 +232,7 @@ export async function totpLogin(formData: FormData): Promise<void> {
     );
   }
 
-  await recordAuthAnalyticsEvent(
+  await application.auth.analytics(
     {
       source: "server",
       kind: "totp_result",
@@ -258,10 +255,15 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
     throwDomain(fail("flow_expired"));
   }
 
-  const request = getRequestClientMetadata();
+  const { ipAddress, userAgent } = getRequestClientMetadata();
   const operation = getRequestOperation();
+
   const verified = await application.auth.login.verifyRecovery(
-    { flowId, recoveryCode, ipAddress: request.ipAddress },
+    {
+      flowId,
+      recoveryCode,
+      ipAddress,
+    },
     operation,
   );
 
@@ -278,11 +280,12 @@ export async function recoveryLogin(formData: FormData): Promise<void> {
   const completed = await application.auth.login.complete(
     {
       proof: verified.value,
-      ipAddress: request.ipAddress,
-      userAgent: request.userAgent,
+      ipAddress,
+      userAgent,
     },
     operation,
   );
+
   if (isErr(completed)) {
     throwDomain(
       fail(

@@ -24,20 +24,20 @@ export async function changeOnboardingPassword(input: {
       })),
 
     execute: async (ctx, credentials) => {
-      const changed = await application.auth.onboarding.changePassword(
+      const passwordChange = await application.auth.onboarding.changePassword(
         ctx,
         credentials,
       );
 
-      if (!changed.ok) {
-        return changed;
+      if (!passwordChange.ok) {
+        return passwordChange;
       }
 
       return application.auth.onboarding.snapshot(ctx.actor.userId);
     },
   });
 
-  // Changing the password revokes the current session.
+  // The password change revokes the current session.
   deleteSessionCookie();
 
   return snapshot;

@@ -80,7 +80,8 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
 
       const { importType, validRows, invalidRows } = parsedImport;
       const rowsTotal = validRows.length + invalidRows.length;
-      const storagePayload = new TextEncoder().encode(
+
+      const payload = new TextEncoder().encode(
         JSON.stringify({ validRows, invalidRows }),
       );
 
@@ -88,11 +89,15 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         type: importType,
         requestedByUserId: ctx.actor.userId,
         rowsTotal,
-        payload: storagePayload,
+        payload,
         createdAt: ctx.operationAt,
       });
 
-      return Ok({ jobId: job.id, importType, rowsTotal });
+      return Ok({
+        jobId: job.id,
+        importType,
+        rowsTotal,
+      });
     },
   });
 }

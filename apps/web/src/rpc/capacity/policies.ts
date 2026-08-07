@@ -39,17 +39,20 @@ export async function updateScopePolicy(input: unknown) {
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
     parse: () =>
-      parseObject(input, validationFail, (r) => ({
-        scope: (() => {
-          const kind = r.enum("scopeType", SCOPE_TYPES);
-          return kind === "branch"
+      parseObject(input, validationFail, (r) => {
+        const kind = r.enum("scopeType", SCOPE_TYPES);
+        const scope =
+          kind === "branch"
             ? { kind, scopeId: r.id("scopeId", BranchId) }
             : { kind, scopeId: r.id("scopeId", TeamId) };
-        })(),
-        monthlyLimit: r.posInt("monthlySearchLimit"),
-        bufferTarget: r.posInt("activeBufferTarget"),
-        dailyLimit: r.posInt("dailyRefillLimit"),
-      })),
+
+        return {
+          scope,
+          monthlyLimit: r.posInt("monthlySearchLimit"),
+          bufferTarget: r.posInt("activeBufferTarget"),
+          dailyLimit: r.posInt("dailyRefillLimit"),
+        };
+      }),
 
     telemetry: ({ scope }) => ({
       scopeKind: scope.kind,

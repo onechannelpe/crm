@@ -21,10 +21,10 @@ export async function listUserSessions(rawUserId: unknown) {
         userId: r.id("userId", UserId),
       })),
 
-    telemetry: (query) => ({ userId: query.userId }),
+    telemetry: ({ userId }) => ({ userId }),
 
-    execute: async (ctx, parsed) =>
-      Ok(await application.auth.sessions.listForUser(ctx, parsed)),
+    execute: async (ctx, query) =>
+      Ok(await application.auth.sessions.listForUser(ctx, query)),
   });
 }
 

@@ -11,18 +11,20 @@ import { readJsonBody } from "./json-body";
 
 export async function POST(event: ApiRequestEvent): Promise<Response> {
   const parsed = await readJsonBody(event.request);
+
   if (!parsed.ok) {
     return parsed.response;
   }
-  const body = parsed.body;
-  if (!isCreateExtensionHandoffTokenRequest(body)) {
+
+  if (!isCreateExtensionHandoffTokenRequest(parsed.body)) {
     return Response.json(
       { error: "Invalid handoff token request" },
       { status: 400 },
     );
   }
 
-  const assignmentId = ContactAssignmentId.parse(body.assignmentId);
+  const assignmentId = ContactAssignmentId.parse(parsed.body.assignmentId);
+
   if (isErr(assignmentId)) {
     return Response.json(
       { error: "Invalid handoff token request" },
@@ -31,12 +33,14 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
   }
 
   const auth = await authorizeRoutePermission("lead:work");
+
   if (isErr(auth)) {
     return auth.error;
   }
-  const session = auth.value;
 
+  const session = auth.value;
   const origin = event.request.headers.get("origin") ?? "";
+
   const result = await application.extension.createHandoffToken(
     {
       userId: session.userId,
@@ -49,16 +53,25 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
   );
 
   if (isErr(result)) {
-    const status =
-      result.error.code === "assignment_not_found"
-        ? 404
-        : result.error.code === "assignment_inactive"
-          ? 409
-          : result.error.code === "invalid_origin"
-            ? 403
-            : result.error.code === "misconfigured"
-              ? 503
-              : 500;
+    let status: number;
+
+    switch (result.error.code) {
+      case "assignment_not_found":
+        status = 404;
+        break;
+      case "assignment_inactive":
+        status = 409;
+        break;
+      case "invalid_origin":
+        status = 403;
+        break;
+      case "misconfigured":
+        status = 503;
+        break;
+      default:
+        status = 500;
+    }
+
     return Response.json({ error: toWire(result.error).message }, { status });
   }
 

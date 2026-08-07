@@ -30,7 +30,7 @@ export async function revokeUserSession(
 
     telemetry: (command) => ({ targetUserId: command.targetUserId }),
 
-    execute: (ctx, input) => application.auth.sessions.revoke(ctx, input),
+    execute: (ctx, command) => application.auth.sessions.revoke(ctx, command),
   });
 }
 
@@ -51,6 +51,7 @@ export async function revokeAllUserSessions(
 
     telemetry: (command) => ({ targetUserId: command.targetUserId }),
 
-    execute: (ctx, input) => application.auth.sessions.revokeAll(ctx, input),
+    execute: (ctx, command) =>
+      application.auth.sessions.revokeAll(ctx, command),
   });
 }
