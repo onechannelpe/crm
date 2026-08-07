@@ -60,7 +60,7 @@ export default function SearchPage() {
     };
   });
 
-  const urlKey = createMemo(() => searchKey(searchInputFromUrl()));
+  const urlKey = () => searchKey(searchInputFromUrl());
 
   const model = createMemo(() => {
     const current = result();
