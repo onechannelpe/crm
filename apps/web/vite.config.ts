@@ -15,7 +15,7 @@ import { createRequestTracePlugin, resolveRequestTraceConfig } from "./tracer";
 
 const requestTraceConfig = resolveRequestTraceConfig(process.env);
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   // Dev and E2E use different env files and cannot share a Vite cache.
   cacheDir: process.env.VITE_CACHE_DIR,
 
@@ -92,13 +92,19 @@ export default defineConfig({
     visualizer(),
     bundleAnalyzerPlugin({ format: "md" }),
     responsiveImagesPlugin(),
-    sentryVitePlugin({
-      org: process.env.SENTRY_ORG,
-      project: process.env.SENTRY_PROJECT,
-    }),
+    // Sourcemap upload and release telemetry only matter for shipped builds;
+    // skip it in dev to avoid noise and pointless network calls.
+    ...(command === "build"
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+          }),
+        ]
+      : []),
   ],
 
   esbuild: {
     target: "es2022",
   },
-});
+}));

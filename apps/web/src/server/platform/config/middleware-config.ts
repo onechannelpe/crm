@@ -7,7 +7,7 @@ export function middlewareConfig(
   source: Record<string, string | undefined> = process.env,
 ): MiddlewareConfig {
   return {
-    sentryIngestHost: parseSentryIngestHost(source["SENTRY_DSN"]),
+    sentryIngestHost: parseSentryIngestHost(source["VITE_SENTRY_DSN"]),
     trustedProxy: source["TRUSTED_PROXY"] === "true",
   };
 }
