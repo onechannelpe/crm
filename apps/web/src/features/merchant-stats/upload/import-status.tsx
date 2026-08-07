@@ -28,8 +28,8 @@ import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 import { gpvSnapshotQuery } from "~/rpc/merchant-stats/gpv-snapshot";
 
 import { resolveGpvImportIssueMutation } from "../data/mutations";
+import { PUBLISHED_GPV_QUERY_KEYS } from "../data/revalidation";
 import { formatInteger } from "../format";
-import { refreshPublishedGpvData } from "../revalidate";
 
 import styles from "./upload-report.module.css";
 
@@ -75,7 +75,7 @@ export function ImportStatus(props: { snapshotId: string }) {
     }
 
     refreshedActiveSnapshotId = view.snapshotId;
-    void refreshPublishedGpvData();
+    void revalidate(PUBLISHED_GPV_QUERY_KEYS);
   });
 
   async function submitDecision(

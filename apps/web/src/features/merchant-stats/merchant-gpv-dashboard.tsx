@@ -1,4 +1,9 @@
-import { useAction, useNavigate, useSubmission } from "@solidjs/router";
+import {
+  revalidate,
+  useAction,
+  useNavigate,
+  useSubmission,
+} from "@solidjs/router";
 import { Match, Switch } from "solid-js";
 
 import { downloadWithToken } from "~/browser/files/client";
@@ -13,12 +18,12 @@ import {
 
 import { CulqiView } from "./culqi/culqi-view";
 import { requestMerchantGpvExportMutation } from "./data/mutations";
+import { PUBLISHED_GPV_QUERY_KEYS } from "./data/revalidation";
 import { GpvFilterBar } from "./gpv-filter-bar";
 import { type GpvTabId, useGpvView } from "./gpv-view";
 import { AttributionGrid } from "./grids/attribution-grid";
 import { CohortGrid } from "./grids/cohort-grid";
 import { PerformanceTab } from "./performance-tab";
-import { refreshPublishedGpvData } from "./revalidate";
 
 import styles from "./merchant-gpv-dashboard.module.css";
 
@@ -48,7 +53,7 @@ export function MerchantGpvDashboard() {
 
   async function refreshData() {
     try {
-      await refreshPublishedGpvData();
+      await revalidate(PUBLISHED_GPV_QUERY_KEYS);
     } catch (error) {
       enqueueErrorSnackBar(actionErrorMessage(error));
     }
