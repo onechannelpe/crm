@@ -21,11 +21,13 @@ export default function SettingsRoleDetailPage() {
         keyed
         fallback={<p class={styles.rosterEmpty}>Rol no encontrado.</p>}
       >
-        {(role) => (
+        {(currentRole) => (
           <>
             <header class={styles.detailHeader}>
               <div class={styles.detailHeaderText}>
-                <span class={styles.detailName}>{getRoleLabel(role)}</span>
+                <span class={styles.detailName}>
+                  {getRoleLabel(currentRole)}
+                </span>
               </div>
             </header>
 
@@ -34,7 +36,7 @@ export default function SettingsRoleDetailPage() {
                 title="Permisos"
                 description="Lo que este rol puede ver y hacer en el sistema."
               >
-                <RolePermissions granted={getPermissions(role)} />
+                <RolePermissions granted={getPermissions(currentRole)} />
               </SettingsSection>
             </div>
           </>
