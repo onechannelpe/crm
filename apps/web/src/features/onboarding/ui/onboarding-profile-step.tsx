@@ -25,11 +25,8 @@ interface OnboardingProfileStepProps {
 }
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
-  const { email, fullName, role, phone, submitting, onPhoneInput, onSubmit } =
-    props;
-
-  const phoneValid = () => isValidPhone(phone);
-  const phoneError = () => phone.length > 0 && !phoneValid();
+  const phoneValid = () => isValidPhone(props.phone);
+  const phoneError = () => props.phone.length > 0 && !phoneValid();
 
   return (
     <>
@@ -44,7 +41,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
         onSubmit={(event) => {
           event.preventDefault();
           if (!phoneValid()) return;
-          onSubmit();
+          props.onSubmit();
         }}
       >
         <OnboardingStepAnimatedItem index={2}>
@@ -52,7 +49,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
             <div class={styles.profileGroup}>
               <div class={styles.infoList}>
                 <Show
-                  when={fullName.trim()}
+                  when={props.fullName.trim()}
                   fallback={
                     <div class={styles.infoRow}>
                       <span class={styles.infoKey}>Nombre</span>
@@ -64,18 +61,20 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
                 >
                   <div class={styles.infoRow}>
                     <span class={styles.infoKey}>Nombre</span>
-                    <span class={styles.infoValue}>{fullName}</span>
+                    <span class={styles.infoValue}>{props.fullName}</span>
                   </div>
                 </Show>
 
                 <div class={styles.infoRow}>
                   <span class={styles.infoKey}>Correo</span>
-                  <span class={styles.infoValue}>{email}</span>
+                  <span class={styles.infoValue}>{props.email}</span>
                 </div>
 
                 <div class={styles.infoRow}>
                   <span class={styles.infoKey}>Rol</span>
-                  <span class={styles.infoValue}>{getRoleLabel(role)}</span>
+                  <span class={styles.infoValue}>
+                    {getRoleLabel(props.role)}
+                  </span>
                 </div>
               </div>
 
@@ -92,9 +91,11 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
                 type="tel"
                 placeholder="987654321"
                 maxlength="9"
-                value={phone}
+                value={props.phone}
                 onInput={(event) =>
-                  onPhoneInput(normalizePhoneInput(event.currentTarget.value))
+                  props.onPhoneInput(
+                    normalizePhoneInput(event.currentTarget.value),
+                  )
                 }
                 required
               />
@@ -114,7 +115,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
           type="submit"
           form={FORM_ID}
           class={styles.primaryButton}
-          loading={submitting}
+          loading={props.submitting}
           disabled={!phoneValid()}
         >
           Continuar
