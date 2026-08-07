@@ -1,0 +1,15 @@
+.fields {
+  display: grid;
+  gap: 12px;
+}
+
+.label {
+  color: var(--foreground-secondary);
+  font-size: 12px;
+}
+
+.value {
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

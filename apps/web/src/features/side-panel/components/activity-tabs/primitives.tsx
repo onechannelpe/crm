@@ -26,6 +26,7 @@ export function ActivitySection(
         </h3>
         {props.action}
       </header>
+
       {props.children}
     </section>
   );
@@ -37,7 +38,7 @@ export function ActivityListCard(props: ParentProps) {
 
 export function ActivityListRow(
   props: ParentProps<{
-    onClick?: JSX.EventHandlerUnion<HTMLElement, MouseEvent>;
+    onClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>;
   }>,
 ) {
   const content = children(() => props.children);

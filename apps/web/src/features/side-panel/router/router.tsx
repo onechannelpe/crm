@@ -1,8 +1,6 @@
 import { Motion } from "@crm/solid-motion";
 import { ErrorBoundary, Show, Suspense } from "solid-js";
 
-import { Loading } from "~/components/feedback/loading/screen";
-
 import { HotkeyBoundary } from "../core/hotkeys/hotkey-boundary";
 import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
@@ -29,8 +27,9 @@ export function Router(props: { isMobile: boolean }) {
         <div class={styles.pageBody}>
           <Show when={currentEntry()} keyed>
             {(entry) => {
-              const PageComponent =
-                SIDE_PANEL_PAGES_CONFIG[entry.page].component;
+              const pageConfig = SIDE_PANEL_PAGES_CONFIG[entry.page];
+              const PageComponent = pageConfig.component;
+              const PageSkeleton = pageConfig.skeleton;
 
               return (
                 <HotkeyBoundary class={styles.pageContent}>
@@ -42,13 +41,7 @@ export function Router(props: { isMobile: boolean }) {
                         </div>
                       }
                     >
-                      <Suspense
-                        fallback={
-                          <div class={styles.pageState}>
-                            <Loading size="sm" />
-                          </div>
-                        }
-                      >
+                      <Suspense fallback={<PageSkeleton />}>
                         <PageComponent />
                       </Suspense>
                     </ErrorBoundary>

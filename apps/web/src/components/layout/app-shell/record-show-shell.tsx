@@ -5,6 +5,8 @@ import { RecordShowHeaderActions } from "~/features/record-show/header/record-sh
 import { MainContainerWithSidePanel } from "~/features/side-panel/shell/main-container-with-side-panel";
 import { SidePanelProvider } from "~/features/side-panel/state/use-side-panel";
 
+import { RecordShowShellSkeleton } from "./skeletons/record-show-shell-skeleton";
+
 import shellStyles from "~/components/layout/shell.module.css";
 
 export function RecordShowShell(props: RouteSectionProps) {
@@ -20,6 +22,7 @@ export function RecordShowShell(props: RouteSectionProps) {
                 <RecordShowHeaderActions leadId={params.recordId} />
               </RecordShowHeader>
             }
+            fallback={<RecordShowShellSkeleton />}
           >
             {props.children}
           </MainContainerWithSidePanel>

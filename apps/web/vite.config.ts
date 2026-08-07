@@ -7,6 +7,7 @@ import { solidStart } from "@solidjs/start/config";
 import { nitro } from "nitro/vite";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
+import { bundleAnalyzerPlugin } from "rolldown/experimental";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 
@@ -15,7 +16,7 @@ import { createRequestTracePlugin, resolveRequestTraceConfig } from "./tracer";
 const requestTraceConfig = resolveRequestTraceConfig(process.env);
 
 export default defineConfig({
-  // Dev and E2E use different env files, so they must not share a Vite cache.
+  // Dev and E2E use different env files and cannot share a Vite cache.
   cacheDir: process.env.VITE_CACHE_DIR,
 
   optimizeDeps: {
@@ -26,13 +27,18 @@ export default defineConfig({
     dedupe: ["solid-js", "solid-js/web"],
   },
 
+  // Nitro imports external SSR dependencies outside Vite's plugin pipeline.
+  // Keep `server-only` inside Vite so SolidStart can replace it safely.
+  ssr: {
+    noExternal: ["server-only"],
+  },
+
   server: {
-    // Initialize Vite's CSS-module cache for SSR environments too.
-    // Without this, a cold SSR render can fail with vitejs/vite#19606.
+    // Initialize the CSS-module cache for cold SSR renders.
+    // See vitejs/vite#19606.
     perEnvironmentStartEndDuringDev: true,
 
-    // Uploaded files are runtime data. Watching them restarts SolidStart's
-    // route handler while the browser is requesting the newly stored file.
+    // Uploaded files are runtime data and must not restart the route handler.
     watch: {
       ignored: ["**/.local-storage/**"],
     },
@@ -84,6 +90,7 @@ export default defineConfig({
       preset: "bun",
     }),
     visualizer(),
+    bundleAnalyzerPlugin({ format: "md" }),
     responsiveImagesPlugin(),
     sentryVitePlugin({
       org: process.env.SENTRY_ORG,

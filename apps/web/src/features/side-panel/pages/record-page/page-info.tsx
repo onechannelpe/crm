@@ -15,7 +15,7 @@ import { useLeadRecordPageState } from "./state";
 
 import styles from "./page-info.module.css";
 
-function initial(name: string): string {
+function firstInitial(name: string): string {
   return (name.trim().charAt(0) || "-").toUpperCase();
 }
 
@@ -30,7 +30,7 @@ export function RecordPageInfo() {
       icon={
         <Avatar
           imageUrl={null}
-          fallback={initial(pageState().title)}
+          fallback={firstInitial(pageState().title)}
           class={clsx(styles.avatar, isNameEmpty() && styles.avatarEmpty)}
           fallbackClass={clsx(
             styles.avatarFallback,

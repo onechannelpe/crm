@@ -1,5 +1,8 @@
 import type { Component } from "solid-js";
 
+import { CompactDetailPageSkeleton } from "../pages/common/skeletons/compact-detail-page-skeleton";
+import { ListPageSkeleton } from "../pages/common/skeletons/list-page-skeleton";
+import { RecordPageSkeleton } from "../pages/common/skeletons/record-page-skeleton";
 import { CreateLeadPage } from "../pages/create-lead/page";
 import { CreateLeadPageInfo } from "../pages/create-lead/page-info";
 import { DataGridDetailPage } from "../pages/data-grid-detail/page";
@@ -18,6 +21,7 @@ import type { SidePanelPageKey } from "../types/side-panel-page";
 type SidePanelPageConfig = {
   showsSearch: boolean;
   component: Component;
+  skeleton: Component;
   pageInfoComponent?: Component;
   topBarActionsComponent?: Component;
 };
@@ -26,42 +30,49 @@ export const SIDE_PANEL_PAGES_CONFIG = {
   "create-lead": {
     showsSearch: false,
     component: CreateLeadPage,
+    skeleton: RecordPageSkeleton,
     pageInfoComponent: CreateLeadPageInfo,
     topBarActionsComponent: undefined,
   },
   root: {
     showsSearch: true,
     component: RootPage,
+    skeleton: ListPageSkeleton,
     pageInfoComponent: undefined,
     topBarActionsComponent: undefined,
   },
   "search-person-detail": {
     showsSearch: false,
     component: SearchPersonPage,
+    skeleton: CompactDetailPageSkeleton,
     pageInfoComponent: SearchPersonPageInfo,
     topBarActionsComponent: undefined,
   },
   "search-company-detail": {
     showsSearch: false,
     component: SearchCompanyPage,
+    skeleton: CompactDetailPageSkeleton,
     pageInfoComponent: SearchCompanyPageInfo,
     topBarActionsComponent: undefined,
   },
   "view-record": {
     showsSearch: false,
     component: RecordPage,
+    skeleton: RecordPageSkeleton,
     pageInfoComponent: RecordPageInfo,
     topBarActionsComponent: undefined,
   },
   "lead-action": {
     showsSearch: false,
     component: LeadActionPage,
+    skeleton: RecordPageSkeleton,
     pageInfoComponent: LeadActionPageInfo,
     topBarActionsComponent: undefined,
   },
   "data-grid-detail": {
     showsSearch: false,
     component: DataGridDetailPage,
+    skeleton: CompactDetailPageSkeleton,
     pageInfoComponent: DataGridDetailPageInfo,
     topBarActionsComponent: undefined,
   },

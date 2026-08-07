@@ -35,61 +35,61 @@ export default function SettingsMemberDetailPage() {
   const { currentUser } = useAuthenticatedSession();
   const detail = createAsync(() => memberDetailQuery(params.userId));
 
-  // Match the server permission check and hide capacity for non-executives.
-  const canSeeCapacity = () =>
-    hasPermission(currentUser().role, "capacity:read:team");
-
   const tabs = createMemo<TabItem<MemberTabId>[]>(() => {
-    const record = detail();
-    const list: TabItem<MemberTabId>[] = [
+    const member = detail();
+    const items: TabItem<MemberTabId>[] = [
       { id: "info", label: "Información", icon: Info },
       { id: "permissions", label: "Permisos", icon: ShieldCheck },
     ];
 
-    if (record?.role === "executive" && canSeeCapacity()) {
-      list.push({
+    // Match the server permission check and hide capacity for non-executives.
+    if (
+      member?.role === "executive" &&
+      hasPermission(currentUser().role, "capacity:read:team")
+    ) {
+      items.push({
         id: "capacity",
         label: "Capacidad",
         icon: Activity,
       });
     }
 
-    return list;
+    return items;
   });
 
   const activeTab = createMemo<MemberTabId>(() => {
     const requested = search.tab;
-    const match = tabs().find((tab) => tab.id === requested);
+    const tab = tabs().find((item) => item.id === requested);
 
-    return match?.id ?? "info";
+    return tab?.id ?? "info";
   });
 
   return (
     <SettingsPageLayout>
       <Show when={detail()}>
-        {(record) => (
+        {(member) => (
           // Remount tabs when the member changes, but not on revalidation.
-          <Show when={record().id} keyed>
+          <Show when={member().id} keyed>
             {(memberId) => (
               <>
                 <header class={styles.detailHeader}>
                   <Avatar
                     class={styles.detailAvatar}
-                    imageUrl={record().avatarUrl}
-                    fallback={getUserInitials(shortName(record()))}
+                    imageUrl={member().avatarUrl}
+                    fallback={getUserInitials(shortName(member()))}
                   />
 
                   <div class={styles.detailHeaderText}>
-                    <span class={styles.detailName}>{shortName(record())}</span>
-                    <span class={styles.detailEmail}>{record().email}</span>
+                    <span class={styles.detailName}>{shortName(member())}</span>
+                    <span class={styles.detailEmail}>{member().email}</span>
 
                     <div class={styles.headerBadges}>
-                      <Badge variant={getRoleBadgeVariant(record().role)}>
-                        {getRoleLabel(record().role)}
+                      <Badge variant={getRoleBadgeVariant(member().role)}>
+                        {getRoleLabel(member().role)}
                       </Badge>
 
                       <Show
-                        when={record().isActive}
+                        when={member().isActive}
                         fallback={<Badge variant="secondary">Inactivo</Badge>}
                       >
                         <Badge variant="success">Activo</Badge>
@@ -107,12 +107,12 @@ export default function SettingsMemberDetailPage() {
                 <div class={styles.tabPane}>
                   <Switch>
                     <Match when={activeTab() === "info"}>
-                      <MemberInfoTab detail={record()} />
-                      <MemberAdminActions detail={record()} />
+                      <MemberInfoTab detail={member()} />
+                      <MemberAdminActions detail={member()} />
                     </Match>
 
                     <Match when={activeTab() === "permissions"}>
-                      <MemberPermissionsTab detail={record()} />
+                      <MemberPermissionsTab detail={member()} />
                     </Match>
 
                     <Match when={activeTab() === "capacity"}>

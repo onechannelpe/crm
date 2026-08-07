@@ -34,7 +34,6 @@ export function CreateLeadPage() {
 
   const validRuc = createMemo(() => {
     const value = draftRuc().trim();
-
     return /^\d{11}$/.test(value) ? value : null;
   });
 
@@ -49,10 +48,6 @@ export function CreateLeadPage() {
 
   const previewLegalName = createMemo(
     () => latestBootstrapPreview()?.legalName ?? null,
-  );
-
-  const previewAddress = createMemo(
-    () => latestBootstrapPreview()?.address ?? null,
   );
 
   const { errorMessage, submitting, submit } = createCreateLeadController({
@@ -97,7 +92,7 @@ export function CreateLeadPage() {
     kind: "draft",
     ruc: draftRuc(),
     legalName: previewLegalName(),
-    address: previewAddress(),
+    address: latestBootstrapPreview()?.address ?? null,
     engineStatus: engineStatus(),
     commercialScope: {
       values: draftScope(),

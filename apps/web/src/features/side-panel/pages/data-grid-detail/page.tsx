@@ -5,30 +5,19 @@ import { FieldEmptyValue } from "~/features/widgets/field-table";
 import { SidePanelPage } from "../../components/page";
 import { useSidePanelPageState } from "../../router/page-state";
 
+import styles from "./data-grid-detail-page.module.css";
+
 export function DataGridDetailPage() {
   const pageState = useSidePanelPageState("data-grid-detail");
 
   return (
     <SidePanelPage>
-      <div style={{ display: "grid", gap: "12px" }}>
+      <div class={styles.fields}>
         <For each={pageState().items}>
           {(item) => (
             <section>
-              <div
-                style={{
-                  color: "var(--foreground-secondary)",
-                  "font-size": "12px",
-                }}
-              >
-                {item.label}
-              </div>
-              <div
-                style={{
-                  "font-size": "14px",
-                  "white-space": "pre-wrap",
-                  "word-break": "break-word",
-                }}
-              >
+              <div class={styles.label}>{item.label}</div>
+              <div class={styles.value}>
                 <Show
                   when={item.value}
                   fallback={<FieldEmptyValue>{item.label}</FieldEmptyValue>}

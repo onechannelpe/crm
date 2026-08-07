@@ -6,6 +6,8 @@ import { MerchantGpvHeader } from "~/features/merchant-stats/merchant-gpv-header
 import { MainContainerWithSidePanel } from "~/features/side-panel/shell/main-container-with-side-panel";
 import { SidePanelProvider } from "~/features/side-panel/state/use-side-panel";
 
+import { MerchantGpvShellSkeleton } from "./skeletons/merchant-gpv-shell-skeleton";
+
 import shellStyles from "~/components/layout/shell.module.css";
 
 export function MerchantGpvShell(props: RouteSectionProps) {
@@ -20,6 +22,7 @@ export function MerchantGpvShell(props: RouteSectionProps) {
                 <AppHeaderActions />
               </MerchantGpvHeader>
             }
+            fallback={<MerchantGpvShellSkeleton />}
           >
             {props.children}
           </MainContainerWithSidePanel>

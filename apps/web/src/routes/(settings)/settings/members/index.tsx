@@ -23,7 +23,7 @@ export default function SettingsMembersPage() {
   const { currentUser } = useAuthenticatedSession();
   const [params, setParams] = useSearchParams();
 
-  // Invite actions require hr:manage, not team:manage.
+  // Invites require `hr:manage`, not `team:manage`.
   const canInvite = createMemo(() =>
     hasPermission(currentUser().role, "hr:manage"),
   );
