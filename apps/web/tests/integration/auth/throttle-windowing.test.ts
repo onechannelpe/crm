@@ -2,7 +2,10 @@ import { createAuthScenario } from "@tests/support/auth/scenario";
 import { createAuthThrottleKit } from "@tests/support/auth/throttle-kit";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import {
+  createAuthThrottleService,
+  type AuthThrottleService,
+} from "~/server/auth/application/throttle-service";
 import { AUTH_THROTTLE_POLICY } from "~/server/auth/password/throttle-policy";
 
 describe("auth throttle windowing", () => {
@@ -10,14 +13,16 @@ describe("auth throttle windowing", () => {
     freezeAtMs: 1_700_000_000_000,
   });
 
-  const service = createAuthThrottleService({
-    authThrottle: scenario.ctx.repos.authThrottle,
-  });
-
   const throttle = createAuthThrottleKit(scenario);
+
+  let service: AuthThrottleService;
 
   beforeAll(async () => {
     await scenario.setup();
+
+    service = createAuthThrottleService({
+      authThrottle: scenario.ctx.repos.authThrottle,
+    });
   });
 
   afterAll(async () => {
