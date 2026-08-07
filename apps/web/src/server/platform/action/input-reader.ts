@@ -18,7 +18,7 @@ export type StrListConstraints = {
 };
 
 export interface Reader<E> {
-  str(field: string): string;
+  str(field: string, opts?: { min?: number; max?: number }): string;
   id<Id extends string>(field: string, codec: IdCodec<Id>): Id;
   optId<Id extends string>(field: string, codec: IdCodec<Id>): Id | undefined;
   idList<Id extends string>(
@@ -60,11 +60,17 @@ class RecordReader<E> implements Reader<E> {
     private readonly path: string,
   ) {}
 
-  str(field: string): string {
+  str(field: string, opts?: { min?: number; max?: number }): string {
     const value = this.present(field);
     if (typeof value !== "string") this.reject(field, "invalid");
     const trimmed = value.trim();
     if (!trimmed) this.reject(field, "required");
+    if (opts?.min !== undefined && trimmed.length < opts.min) {
+      this.reject(field, "invalid");
+    }
+    if (opts?.max !== undefined && trimmed.length > opts.max) {
+      this.reject(field, "invalid");
+    }
     return trimmed;
   }
 

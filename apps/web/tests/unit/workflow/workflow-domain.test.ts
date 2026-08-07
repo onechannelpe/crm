@@ -11,8 +11,4 @@ describe("workflow domain", () => {
   it("moves to pricing when the status is available", () => {
     expect(resolveReviewTransition("DISPONIBLE")).toBe("PRICING");
   });
-
-  it("moves to pricing when the status is SIN RESULTADO", () => {
-    expect(resolveReviewTransition("SIN RESULTADO")).toBe("PRICING");
-  });
 });

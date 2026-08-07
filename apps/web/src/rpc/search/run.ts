@@ -19,7 +19,7 @@ export async function searchDirect(
     parse: () =>
       parseObject(input, validationFail, (r) => ({
         intent: r.enum("intent", SEARCH_INTENTS),
-        query: r.str("query"),
+        query: r.str("query", { min: 2, max: 120 }),
         limit: r.optIntRange("limit", { min: 1, max: 100 }) ?? 20,
       })),
 

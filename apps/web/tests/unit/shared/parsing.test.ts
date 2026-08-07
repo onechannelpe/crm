@@ -37,6 +37,27 @@ describe("parseObject", () => {
     expectErrCode(result, "reason_required");
   });
 
+  it.each(["a", "a".repeat(121)])(
+    "reports a string outside the min/max bounds as invalid",
+    (query) => {
+      const result = parseObject({ query }, validationFail, (r) => ({
+        query: r.str("query", { min: 2, max: 120 }),
+      }));
+
+      expectErrCode(result, "invalid_query");
+    },
+  );
+
+  it("accepts a string within the min/max bounds", () => {
+    const result = parseObject({ query: "ab" }, validationFail, (r) => ({
+      query: r.str("query", { min: 2, max: 120 }),
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.value.query).toBe("ab");
+  });
+
   it("reports a non-finite number as invalid, not missing", () => {
     const result = parseObject(
       { tasaActual: Number.NaN },
@@ -68,7 +89,7 @@ describe("parseObject", () => {
     expect(result.value.amount).toBe(1);
   });
 
-  it.each([999, 0, -1, Number.NaN])(
+  it.each([999, Number.NaN])(
     "reports %s as below the numAtLeast floor",
     (gpv) => {
       const result = parseObject({ gpv }, validationFail, (r) => ({

@@ -35,13 +35,16 @@ describe("validateUploadFile - extension checks", () => {
     expect(result).toMatchObject({ ok: true });
   });
 
-  it("accepts xlsx for merchant_gpv_export", () => {
+  it("rejects an extension not allowed for the purpose", () => {
     const result = validateUploadFile(
-      "merchant_gpv_export",
+      "records_export",
       "GPV AL 03-07-2026.xlsx",
       XLSX_MAGIC,
     );
-    expect(result).toMatchObject({ ok: true });
+    expect(result).toMatchObject({
+      ok: false,
+      reason: "extension_not_allowed",
+    });
   });
 
   it("rejects file without extension", () => {
