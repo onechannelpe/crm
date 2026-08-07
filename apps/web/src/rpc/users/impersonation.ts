@@ -22,24 +22,30 @@ export async function startImpersonation(
   return executeSessionServerFunction({
     name: "members.impersonation.start",
     access: { kind: "permission", permission: "admin:manage" },
+
     parse: () =>
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.id("userId", UserId),
       })),
-    telemetry: (command) => ({ userId: command.userId }),
+
+    telemetry: ({ userId }) => ({ userId }),
+
     execute: async (ctx, command) => {
-      // Read the administrator's own cookie before the swap so exiting
-      // impersonation can restore it.
-      const adminToken = getSessionCookie();
+      // Capture the original session before replacing it.
+      const originalSessionToken = getSessionCookie();
+
       const result = await application.auth.impersonation.start(ctx, command);
+
       if (isErr(result)) {
         return result;
       }
 
-      if (adminToken) {
-        setImpersonatorCookie(adminToken);
+      if (originalSessionToken) {
+        setImpersonatorCookie(originalSessionToken);
       }
+
       setSessionCookie(result.value.token);
+
       return Ok({ message: "Suplantación iniciada" });
     },
   });
@@ -51,17 +57,22 @@ export async function stopImpersonation(): Promise<{ message: string }> {
   return executeSessionServerFunction({
     name: "members.impersonation.stop",
     access: { kind: "auth" },
+
     execute: async (ctx) => {
       const result = await application.auth.impersonation.stop(ctx);
+
       if (isErr(result)) {
         return result;
       }
 
-      const adminToken = getImpersonatorCookie();
-      if (adminToken) {
-        setSessionCookie(adminToken);
+      const originalSessionToken = getImpersonatorCookie();
+
+      if (originalSessionToken) {
+        setSessionCookie(originalSessionToken);
       }
+
       deleteImpersonatorCookie();
+
       return Ok({ message: "Suplantación finalizada" });
     },
   });

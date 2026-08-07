@@ -8,21 +8,11 @@ function avatarUrl(version: number): string {
   return `/api/me/avatar?v=${version}`;
 }
 
-export interface UpdateAvatarResult {
+export async function uploadUserAvatar(formData: FormData): Promise<{
   avatarVersion: number;
   avatarUrl: string;
   message: string;
-}
-
-export interface RemoveAvatarResult {
-  avatarVersion: number;
-  avatarUrl: null;
-  message: string;
-}
-
-export async function uploadUserAvatar(
-  formData: FormData,
-): Promise<UpdateAvatarResult> {
+}> {
   "use server";
 
   return executeSessionServerFunction({
@@ -59,7 +49,11 @@ export async function uploadUserAvatar(
   });
 }
 
-export async function removeUserAvatar(): Promise<RemoveAvatarResult> {
+export async function removeUserAvatar(): Promise<{
+  avatarVersion: number;
+  avatarUrl: null;
+  message: string;
+}> {
   "use server";
 
   return executeSessionServerFunction({

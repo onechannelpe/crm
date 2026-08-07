@@ -35,16 +35,18 @@ export async function updateMemberProfile(
           r.optEnum("executiveCategory", EXECUTIVE_CATEGORIES) ?? null,
       })),
 
-    telemetry: (command) => ({ userId: command.userId }),
+    telemetry: ({ userId }) => ({ userId }),
 
     execute: async (ctx, command) => {
       const result = await application.users.members.updateProfile(
         ctx,
         command,
       );
+
       if (isErr(result)) {
         return result;
       }
+
       return Ok({ message: "Perfil actualizado" });
     },
   });
@@ -60,32 +62,36 @@ export async function changeMemberRole(
     access: { kind: "permission", permission: "team:manage" },
 
     parse: () => {
-      const command = parseObject(input, validationFail, (r) => ({
+      const parsed = parseObject(input, validationFail, (r) => ({
         userId: r.id("userId", UserId),
         role: r.enum("role", ROLES),
         executiveCategory:
           r.optEnum("executiveCategory", EXECUTIVE_CATEGORIES) ?? null,
       }));
-      if (isErr(command)) {
-        return command;
+
+      if (isErr(parsed)) {
+        return parsed;
       }
 
       if (
-        command.value.role === "executive" &&
-        command.value.executiveCategory === null
+        parsed.value.role === "executive" &&
+        parsed.value.executiveCategory === null
       ) {
         return Err(fail("invalid_executive_category"));
       }
-      return command;
+
+      return parsed;
     },
 
-    telemetry: (command) => ({ userId: command.userId, role: command.role }),
+    telemetry: ({ userId, role }) => ({ userId, role }),
 
     execute: async (ctx, command) => {
       const result = await application.users.members.changeRole(ctx, command);
+
       if (isErr(result)) {
         return result;
       }
+
       return Ok({ message: "Rol actualizado" });
     },
   });
@@ -99,19 +105,21 @@ export async function deactivateMember(
   return executeSessionServerFunction({
     name: "members.deactivate",
     access: { kind: "permission", permission: "team:manage" },
+
     parse: () =>
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.id("userId", UserId),
       })),
-    telemetry: (command) => ({ userId: command.userId }),
-    execute: async (ctx, command) => {
-      const result = await application.users.members.deactivate(
-        ctx,
-        command.userId,
-      );
+
+    telemetry: ({ userId }) => ({ userId }),
+
+    execute: async (ctx, { userId }) => {
+      const result = await application.users.members.deactivate(ctx, userId);
+
       if (isErr(result)) {
         return result;
       }
+
       return Ok({ message: "Usuario desactivado" });
     },
   });
@@ -125,19 +133,21 @@ export async function reactivateMember(
   return executeSessionServerFunction({
     name: "members.reactivate",
     access: { kind: "permission", permission: "team:manage" },
+
     parse: () =>
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.id("userId", UserId),
       })),
-    telemetry: (command) => ({ userId: command.userId }),
-    execute: async (ctx, command) => {
-      const result = await application.users.members.reactivate(
-        ctx,
-        command.userId,
-      );
+
+    telemetry: ({ userId }) => ({ userId }),
+
+    execute: async (ctx, { userId }) => {
+      const result = await application.users.members.reactivate(ctx, userId);
+
       if (isErr(result)) {
         return result;
       }
+
       return Ok({ message: "Usuario reactivado" });
     },
   });
@@ -158,13 +168,15 @@ export async function updateMemberExpiry(
         expiresOn: r.optCalendarDate("expiresOn"),
       })),
 
-    telemetry: (command) => ({ userId: command.userId }),
+    telemetry: ({ userId }) => ({ userId }),
 
     execute: async (ctx, command) => {
       const result = await application.users.members.updateExpiry(ctx, command);
+
       if (isErr(result)) {
         return result;
       }
+
       return Ok({ message: "Vencimiento actualizado" });
     },
   });
@@ -178,19 +190,21 @@ export async function deleteMember(
   return executeSessionServerFunction({
     name: "members.delete",
     access: { kind: "permission", permission: "team:manage" },
+
     parse: () =>
       parseObject({ userId: rawUserId }, validationFail, (r) => ({
         userId: r.id("userId", UserId),
       })),
-    telemetry: (command) => ({ userId: command.userId }),
-    execute: async (ctx, command) => {
-      const result = await application.users.members.remove(
-        ctx,
-        command.userId,
-      );
+
+    telemetry: ({ userId }) => ({ userId }),
+
+    execute: async (ctx, { userId }) => {
+      const result = await application.users.members.remove(ctx, userId);
+
       if (isErr(result)) {
         return result;
       }
+
       return Ok({ message: "Usuario eliminado" });
     },
   });

@@ -15,17 +15,19 @@ export async function markNotificationRead(
   await executeSessionServerFunction({
     name: "notifications.mark_read",
     access: { kind: "auth" },
+
     parse: () =>
       parseObject({ notificationId }, validationFail, (reader) => ({
         notificationId: reader.id("notificationId", AppNotificationId),
       })),
-    telemetry: (command) => ({ notificationId: command.notificationId }),
-    execute: async (ctx, command) => {
-      await application.notifications.markRead(
-        ctx.actor.userId,
-        command.notificationId,
-        ctx,
-      );
+
+    telemetry: ({ notificationId }) => ({ notificationId }),
+
+    execute: async ({ actor }, { notificationId }) => {
+      await application.notifications.markRead(actor.userId, notificationId, {
+        actor,
+      });
+
       return Ok(undefined);
     },
   });
@@ -37,8 +39,10 @@ export async function markAllNotificationsRead(): Promise<void> {
   await executeSessionServerFunction({
     name: "notifications.mark_all_read",
     access: { kind: "auth" },
-    execute: async (ctx) => {
-      await application.notifications.markAllRead(ctx.actor.userId, ctx);
+
+    execute: async ({ actor }) => {
+      await application.notifications.markAllRead(actor.userId, { actor });
+
       return Ok(undefined);
     },
   });

@@ -3,7 +3,6 @@ import type { Transaction } from "kysely";
 import { auditEntityId } from "~/domain/audit/entity";
 import { fail } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
-import { countActiveSessions } from "~/server/auth/application/queries/count-active-sessions";
 import { getCurrentUser } from "~/server/auth/application/queries/get-current-user";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { listAllActiveSessions } from "~/server/auth/application/queries/list-all-active-sessions";
@@ -320,7 +319,7 @@ export function createAuthRuntime(
       listForUser: (_ctx: AppContext, input: { userId: UserId }) =>
         adminSessions.listForUser(input.userId),
       countActive: (operation: OperationContext) =>
-        countActiveSessions(adminSessions, operation),
+        adminSessions.countActive(operation.operationAt),
       listActive: (operation: OperationContext) =>
         listAllActiveSessions(adminSessions, operation),
       revoke: (

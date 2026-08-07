@@ -1,10 +1,3 @@
-import type {
-  ChooseFulfillmentProductInput,
-  RecordUnitSerialInput,
-  RegisterUnitPaymentLinkInput,
-  RegisterUnitSaleInput,
-  RejectFulfillmentStepInput,
-} from "~/contracts/workflow/inputs";
 import {
   FULFILLMENT_ACTIONS,
   PRODUCT_KINDS,
@@ -129,20 +122,15 @@ export async function chooseFulfillmentProduct(input: unknown) {
     access: { kind: "auth" },
 
     parse: () =>
-      parseObject(
-        input,
-        validationFail,
-        (
-          r,
-        ): Omit<ChooseFulfillmentProductInput, "leadId"> & {
-          leadId: WorkflowLeadId;
-        } => ({
-          leadId: r.id("leadId", WorkflowLeadId),
-          productKind: r.enum("productKind", PRODUCT_KINDS),
-        }),
-      ),
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.id("leadId", WorkflowLeadId),
+        productKind: r.enum("productKind", PRODUCT_KINDS),
+      })),
 
-    telemetry: ({ leadId, productKind }) => ({ leadId, productKind }),
+    telemetry: ({ leadId, productKind }) => ({
+      leadId,
+      productKind,
+    }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.chooseFulfillmentProduct(
@@ -161,6 +149,7 @@ export async function uploadFulfillmentDocument(formData: FormData) {
   return executeSessionServerFunction({
     name: "application.workflow.upload_fulfillment_document",
     access: { kind: "auth" },
+
     parse: () => parseFulfillmentDocumentUpload(formData),
 
     telemetry: ({ leadId, action, file }) => ({
@@ -188,21 +177,16 @@ export async function recordFulfillmentSerial(input: unknown) {
     access: { kind: "auth" },
 
     parse: () =>
-      parseObject(
-        input,
-        validationFail,
-        (
-          r,
-        ): Omit<RecordUnitSerialInput, "leadId"> & {
-          leadId: WorkflowLeadId;
-        } => ({
-          leadId: r.id("leadId", WorkflowLeadId),
-          unitId: r.str("unitId"),
-          serial: r.str("serial"),
-        }),
-      ),
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.id("leadId", WorkflowLeadId),
+        unitId: r.str("unitId"),
+        serial: r.str("serial"),
+      })),
 
-    telemetry: ({ leadId, unitId }) => ({ leadId, unitId }),
+    telemetry: ({ leadId, unitId }) => ({
+      leadId,
+      unitId,
+    }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.recordFulfillmentSerial(
@@ -223,21 +207,16 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
     access: { kind: "auth" },
 
     parse: () =>
-      parseObject(
-        input,
-        validationFail,
-        (
-          r,
-        ): Omit<RegisterUnitPaymentLinkInput, "leadId"> & {
-          leadId: WorkflowLeadId;
-        } => ({
-          leadId: r.id("leadId", WorkflowLeadId),
-          unitId: r.str("unitId"),
-          paymentUrl: r.str("paymentUrl"),
-        }),
-      ),
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.id("leadId", WorkflowLeadId),
+        unitId: r.str("unitId"),
+        paymentUrl: r.str("paymentUrl"),
+      })),
 
-    telemetry: ({ leadId, unitId }) => ({ leadId, unitId }),
+    telemetry: ({ leadId, unitId }) => ({
+      leadId,
+      unitId,
+    }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.registerFulfillmentPaymentLink(
@@ -256,6 +235,7 @@ export async function uploadFulfillmentPaymentProof(formData: FormData) {
   return executeSessionServerFunction({
     name: "application.workflow.upload_fulfillment_payment_proof",
     access: { kind: "auth" },
+
     parse: () => parseFulfillmentPaymentProofUpload(formData),
 
     telemetry: ({ leadId, unitId, file }) => ({
@@ -308,18 +288,10 @@ export async function rejectFulfillmentStep(input: unknown) {
     access: { kind: "auth" },
 
     parse: () =>
-      parseObject(
-        input,
-        validationFail,
-        (
-          r,
-        ): Omit<RejectFulfillmentStepInput, "leadId"> & {
-          leadId: WorkflowLeadId;
-        } => ({
-          leadId: r.id("leadId", WorkflowLeadId),
-          reason: r.str("reason"),
-        }),
-      ),
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.id("leadId", WorkflowLeadId),
+        reason: r.str("reason"),
+      })),
 
     telemetry: ({ leadId }) => ({ leadId }),
 
@@ -342,21 +314,16 @@ export async function registerFulfillmentSale(input: unknown) {
     access: { kind: "auth" },
 
     parse: () =>
-      parseObject(
-        input,
-        validationFail,
-        (
-          r,
-        ): Omit<RegisterUnitSaleInput, "leadId"> & {
-          leadId: WorkflowLeadId;
-        } => ({
-          leadId: r.id("leadId", WorkflowLeadId),
-          unitId: r.str("unitId"),
-          serviceRef: r.str("serviceRef"),
-        }),
-      ),
+      parseObject(input, validationFail, (r) => ({
+        leadId: r.id("leadId", WorkflowLeadId),
+        unitId: r.str("unitId"),
+        serviceRef: r.str("serviceRef"),
+      })),
 
-    telemetry: ({ leadId, unitId }) => ({ leadId, unitId }),
+    telemetry: ({ leadId, unitId }) => ({
+      leadId,
+      unitId,
+    }),
 
     execute: (ctx, payload) =>
       application.workflow.commands.registerFulfillmentSale(
@@ -369,10 +336,7 @@ export async function registerFulfillmentSale(input: unknown) {
   });
 }
 
-export async function requestFulfillmentDownloadToken(input: {
-  leadId: string;
-  fileId: string;
-}) {
+export async function requestFulfillmentDownloadToken(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({

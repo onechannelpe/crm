@@ -18,29 +18,31 @@ function resolveAudience(
   audienceType: (typeof AUDIENCE_TYPES)[number],
   ref: string,
 ): Result<NotificationAudience, DomainError> {
+  const value = ref.trim();
+
   if (audienceType === "user_ids") {
-    const parsed = UserId.parse(ref.trim());
-    if (isErr(parsed)) {
+    const userId = UserId.parse(value);
+    if (isErr(userId)) {
       return Err(invalid({ code: "invalid_user_audience" }));
     }
 
-    return Ok({ kind: "user_ids", userIds: [parsed.value] });
+    return Ok({ kind: "user_ids", userIds: [userId.value] });
   }
 
   if (audienceType === "team") {
-    const parsed = TeamId.parse(ref.trim());
-    if (isErr(parsed)) {
+    const teamId = TeamId.parse(value);
+    if (isErr(teamId)) {
       return Err(invalid({ code: "invalid_team_audience" }));
     }
 
-    return Ok({ kind: "team_id", teamId: parsed.value });
+    return Ok({ kind: "team_id", teamId: teamId.value });
   }
 
-  if (!isRole(ref)) {
+  if (!isRole(value)) {
     return Err(invalid({ code: "invalid_role_audience" }));
   }
 
-  return Ok({ kind: "global_role", role: ref });
+  return Ok({ kind: "global_role", role: value });
 }
 
 export async function sendBroadcastNotification(
@@ -59,23 +61,15 @@ export async function sendBroadcastNotification(
         audienceType: r.enum("audienceType", AUDIENCE_TYPES),
         audienceRef: r.str("audienceRef"),
       }));
+      if (isErr(parsed)) return parsed;
 
-      if (isErr(parsed)) {
-        return parsed;
-      }
-
-      const audience = resolveAudience(
-        parsed.value.audienceType,
-        parsed.value.audienceRef,
-      );
-
-      if (isErr(audience)) {
-        return audience;
-      }
+      const { title, bodyText, audienceType, audienceRef } = parsed.value;
+      const audience = resolveAudience(audienceType, audienceRef);
+      if (isErr(audience)) return audience;
 
       return Ok({
-        title: parsed.value.title,
-        bodyText: parsed.value.bodyText,
+        title,
+        bodyText,
         audience: audience.value,
       });
     },
@@ -83,9 +77,7 @@ export async function sendBroadcastNotification(
     telemetry: ({ audience }) => ({ audienceKind: audience.kind }),
 
     execute: async (ctx, input) => {
-      const notifications = application.notifications;
-
-      await notifications.enqueue(
+      await application.notifications.enqueue(
         [
           {
             id: NotificationIntentId.trust(

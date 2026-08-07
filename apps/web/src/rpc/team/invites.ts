@@ -26,7 +26,7 @@ export async function createTeamInvite(input: unknown): Promise<{
     access: { kind: "permission", permission: "hr:manage" },
 
     parse: () => {
-      const command = parseObject(input, validationFail, (r) => {
+      const parsed = parseObject(input, validationFail, (r) => {
         const teamId = r.optStr("teamId");
 
         return {
@@ -41,16 +41,17 @@ export async function createTeamInvite(input: unknown): Promise<{
         };
       });
 
-      if (isErr(command)) {
-        return command;
+      if (isErr(parsed)) {
+        return parsed;
       }
 
-      const shape = validateTeamInviteShape(command.value);
+      const shape = validateTeamInviteShape(parsed.value);
+
       if (isErr(shape)) {
         return shape;
       }
 
-      return validateTeamInviteInput(command.value, getRequestOperation());
+      return validateTeamInviteInput(parsed.value, getRequestOperation());
     },
 
     telemetry: ({ role, teamId }) => ({
@@ -68,6 +69,7 @@ export async function createTeamInvite(input: unknown): Promise<{
       const message = result.value.delivered
         ? "Invitación enviada"
         : "Invitación creada. No se pudo enviar el correo; copia el enlace.";
+
       return Ok({ ...result.value, message });
     },
   });
@@ -87,7 +89,7 @@ export async function resendTeamInvite(
         inviteId: r.id("inviteId", UserInviteId),
       })),
 
-    telemetry: (command) => ({ inviteId: command.inviteId }),
+    telemetry: ({ inviteId }) => ({ inviteId }),
 
     execute: async (ctx, command) => {
       const result = await application.team.invites.resend(ctx, command);
@@ -99,6 +101,7 @@ export async function resendTeamInvite(
       const message = result.value.delivered
         ? "Invitación reenviada"
         : "Enlace renovado. No se pudo enviar el correo; copia el enlace.";
+
       return Ok({ message });
     },
   });
@@ -118,7 +121,7 @@ export async function revokeTeamInvite(
         inviteId: r.id("inviteId", UserInviteId),
       })),
 
-    telemetry: (command) => ({ inviteId: command.inviteId }),
+    telemetry: ({ inviteId }) => ({ inviteId }),
 
     execute: async (ctx, command) => {
       const result = await application.team.invites.revoke(ctx, command);

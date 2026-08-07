@@ -17,11 +17,11 @@ export async function saveRateProposalPolicy(input: { validityDays: number }) {
         validityDays: reader.posInt("validityDays"),
       })),
     telemetry: ({ validityDays }) => ({ validityDays }),
-    execute: (ctx, payload) =>
+    execute: (ctx, { validityDays }) =>
       application.workflow.commands.updateRateProposalPolicy(
         {
           actor: workflowActor(ctx.actor),
-          validityDays: payload.validityDays,
+          validityDays,
         },
         ctx,
       ),
