@@ -41,7 +41,9 @@ export async function getLeadDetail(
     { userId: input.actorUserId, role: input.actorRole },
     lead,
   );
-  if (!canAccess.ok) return canAccess;
+  if (!canAccess.ok) {
+    return canAccess;
+  }
 
   const userMap = new Map(loaded.value.userRows.map((u) => [u.id, u.fullName]));
   const executiveName = userMap.get(lead.executiveId) ?? "Desconocido";

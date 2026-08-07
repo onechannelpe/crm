@@ -65,7 +65,9 @@ function buildLeadUsageReservationPorts(
         buildRepos(trx),
         operation,
       );
-      if (isErr(snapshot)) return snapshot;
+      if (isErr(snapshot)) {
+        return snapshot;
+      }
       return Ok(snapshot.value.remaining);
     },
     reservations: createLeadUsageReservationsRepo,

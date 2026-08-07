@@ -42,7 +42,9 @@ export function InquiriesPage() {
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
-    if (submitting()) return;
+    if (submitting()) {
+      return;
+    }
 
     const value = ruc().trim();
     if (!/^\d{11}$/.test(value)) {

@@ -48,7 +48,9 @@ describe("password login service", () => {
       requestMeta,
     );
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) throw new Error("expected invalid credentials");
+    if (!isErr(result)) {
+      throw new Error("expected invalid credentials");
+    }
     expect(result.error.kind).toBe("invalid_credentials");
     const user = scenario.identity(identity);
 
@@ -103,7 +105,9 @@ describe("password login service", () => {
     );
 
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) throw new Error("expected invalid credentials");
+    if (!isErr(result)) {
+      throw new Error("expected invalid credentials");
+    }
     expect(result.error.kind).toBe("invalid_credentials");
   });
 

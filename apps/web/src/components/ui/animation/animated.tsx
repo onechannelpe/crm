@@ -96,12 +96,18 @@ export function Animated(inputProps: AnimatedProps) {
   const resolveTarget = (
     definition: false | string | string[] | MotionTarget | undefined,
   ): MotionTarget | undefined => {
-    if (definition === false || definition === undefined) return undefined;
-    if (typeof definition === "string") return local.variants?.[definition];
+    if (definition === false || definition === undefined) {
+      return undefined;
+    }
+    if (typeof definition === "string") {
+      return local.variants?.[definition];
+    }
     if (Array.isArray(definition)) {
       for (const label of definition) {
         const target = local.variants?.[label];
-        if (target) return target;
+        if (target) {
+          return target;
+        }
       }
       return undefined;
     }
@@ -109,31 +115,50 @@ export function Animated(inputProps: AnimatedProps) {
   };
 
   const targetToFrame = (target: MotionTarget | undefined): Keyframe => {
-    if (!target) return {};
+    if (!target) {
+      return {};
+    }
     const transforms: string[] = [];
-    if (target.x !== undefined)
+    if (target.x !== undefined) {
       transforms.push(`translateX(${formatUnit(target.x)})`);
-    if (target.y !== undefined)
+    }
+    if (target.y !== undefined) {
       transforms.push(`translateY(${formatUnit(target.y)})`);
-    if (target.scale !== undefined) transforms.push(`scale(${target.scale})`);
-    if (target.scaleX !== undefined)
+    }
+    if (target.scale !== undefined) {
+      transforms.push(`scale(${target.scale})`);
+    }
+    if (target.scaleX !== undefined) {
       transforms.push(`scaleX(${target.scaleX})`);
-    if (target.scaleY !== undefined)
+    }
+    if (target.scaleY !== undefined) {
       transforms.push(`scaleY(${target.scaleY})`);
-    if (target.rotate !== undefined)
+    }
+    if (target.rotate !== undefined) {
       transforms.push(`rotate(${formatUnit(target.rotate, "deg")})`);
+    }
 
     const frame: Keyframe = {};
-    if (target.opacity !== undefined) frame.opacity = String(target.opacity);
-    if (transforms.length > 0) frame.transform = transforms.join(" ");
+    if (target.opacity !== undefined) {
+      frame.opacity = String(target.opacity);
+    }
+    if (transforms.length > 0) {
+      frame.transform = transforms.join(" ");
+    }
     return frame;
   };
 
   const applyTarget = (target: MotionTarget | undefined) => {
-    if (!el || !target) return;
-    if (target.opacity !== undefined) el.style.opacity = String(target.opacity);
+    if (!el || !target) {
+      return;
+    }
+    if (target.opacity !== undefined) {
+      el.style.opacity = String(target.opacity);
+    }
     const frame = targetToFrame(target);
-    if (frame.transform) el.style.transform = String(frame.transform);
+    if (frame.transform) {
+      el.style.transform = String(frame.transform);
+    }
   };
 
   const animateTo = (
@@ -141,7 +166,9 @@ export function Animated(inputProps: AnimatedProps) {
     fromTarget?: MotionTarget,
     onFinish?: () => void,
   ) => {
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     if (!toTarget) {
       onFinish?.();
       return;
@@ -162,7 +189,9 @@ export function Animated(inputProps: AnimatedProps) {
     }
 
     const startAnimation = () => {
-      if (!el) return;
+      if (!el) {
+        return;
+      }
       activeAnimation = el.animate(
         [{ ...fromComputed, ...fromFrame }, toFrame],
         transitionToOptions(local.transition),
@@ -183,7 +212,9 @@ export function Animated(inputProps: AnimatedProps) {
   };
 
   const runLayoutAnimation = () => {
-    if (!el || !local.layout) return;
+    if (!el || !local.layout) {
+      return;
+    }
     const animateTarget = resolveTarget(local.animate);
     const initialTarget = resolveTarget(local.initial);
     const exitTarget = resolveTarget(local.exit);
@@ -216,7 +247,9 @@ export function Animated(inputProps: AnimatedProps) {
   createRenderEffect(runLayoutAnimation);
 
   createEffect(() => {
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
     const currentPresent = isPresent();
     const initialFromPresence = presenceContext?.initial;
@@ -254,7 +287,9 @@ export function Animated(inputProps: AnimatedProps) {
       ref={(node) => {
         el = node;
         const forwardedRef = domProps.ref;
-        if (typeof forwardedRef === "function") forwardedRef(node);
+        if (typeof forwardedRef === "function") {
+          forwardedRef(node);
+        }
       }}
       style={local.style}
     >
@@ -264,6 +299,8 @@ export function Animated(inputProps: AnimatedProps) {
 }
 
 function formatUnit(value: MotionValue, unit = "px"): string {
-  if (typeof value === "number") return `${value}${unit}`;
+  if (typeof value === "number") {
+    return `${value}${unit}`;
+  }
   return value;
 }

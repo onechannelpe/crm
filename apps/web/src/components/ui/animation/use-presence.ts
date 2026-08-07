@@ -13,21 +13,27 @@ type PresenceTuple = [Accessor<boolean>, (() => void) | null];
 
 export function usePresence(subscribe = true): PresenceTuple {
   const context = useContext(PresenceContext);
-  if (context === null) return [() => true, null];
+  if (context === null) {
+    return [() => true, null];
+  }
 
   const id = createUniqueId();
   let unregister: (() => void) | undefined;
   const isPresent = createMemo(() => context.isPresent());
 
   onMount(() => {
-    if (!subscribe) return;
+    if (!subscribe) {
+      return;
+    }
     unregister = context.register(id);
   });
 
   onCleanup(() => unregister?.());
 
   const safeToRemove = () => {
-    if (!subscribe) return;
+    if (!subscribe) {
+      return;
+    }
     context.onExitComplete?.(id);
   };
 

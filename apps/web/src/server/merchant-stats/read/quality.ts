@@ -90,8 +90,12 @@ export async function getQualityRows(
   issue: QualityIssue,
   page: Page,
 ): Promise<QualityRow[]> {
-  if (issue === "serial_mismatch") return serialMismatchRows(db, page);
-  if (issue === "no_target") return noTargetRows(db, page);
+  if (issue === "serial_mismatch") {
+    return serialMismatchRows(db, page);
+  }
+  if (issue === "no_target") {
+    return noTargetRows(db, page);
+  }
   return noOwnerRows(db, page);
 }
 

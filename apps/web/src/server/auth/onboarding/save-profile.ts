@@ -15,8 +15,12 @@ export function saveOnboardingProfile(
 ): Promise<Result<OnboardingSnapshot, DomainError>> {
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(input.userId);
-    if (!user) return Err(fail("user_not_found"));
-    if (user.onboarding_completed_at) return Err(fail("invalid_input"));
+    if (!user) {
+      return Err(fail("user_not_found"));
+    }
+    if (user.onboarding_completed_at) {
+      return Err(fail("invalid_input"));
+    }
 
     const claimed = await repos.userChannelAddresses.claimWhatsAppAddress({
       userId: input.userId,

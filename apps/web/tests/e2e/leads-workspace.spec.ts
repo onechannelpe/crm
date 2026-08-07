@@ -26,14 +26,18 @@ test.describe("leads workspace", () => {
     ).toHaveCount(0);
   });
 
-  test("registers a lead without a header error", async ({ asExecutive }) => {
+  test("an executive can register a lead", async ({ asExecutive }) => {
     const pageErrors: string[] = [];
-    asExecutive.on("pageerror", (error) => pageErrors.push(error.message));
+
+    asExecutive.on("pageerror", (error) => {
+      pageErrors.push(error.message);
+    });
 
     await asExecutive.goto("/records");
     await asExecutive
       .getByRole("button", { name: "Añadir un cliente" })
       .click();
+
     await asExecutive.getByRole("textbox", { name: "RUC" }).fill("20987654321");
     await asExecutive
       .getByRole("textbox", { name: "Proveedor actual" })
@@ -61,6 +65,7 @@ test.describe("leads workspace", () => {
     await expect(
       asExecutive.getByText("RUC 20987654321").first(),
     ).toBeVisible();
+
     expect(pageErrors).toEqual([]);
   });
 });

@@ -2,7 +2,9 @@
 // settled rather than a fresh clock read, so the stored retry time and the
 // stored settlement time agree.
 export function nextClaimableAt(attemptCount: number, settledAt: Date): Date {
-  if (attemptCount <= 0) return settledAt;
+  if (attemptCount <= 0) {
+    return settledAt;
+  }
 
   const INITIAL_DELAY_MS = 5_000;
   const MAX_DELAY_MS = 300_000;

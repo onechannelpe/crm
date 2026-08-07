@@ -28,7 +28,9 @@ export default function LoginPasskeyPage() {
   });
   const passkeyFlow = createMemo(() => {
     const flow = loginFlow();
-    if (flow === undefined && flowId()) return undefined;
+    if (flow === undefined && flowId()) {
+      return undefined;
+    }
     return flow?.state === "passkey" && flow.mode === "identified"
       ? flow
       : null;

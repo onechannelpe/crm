@@ -31,11 +31,15 @@ export function PresenceTransition(props: PresenceTransitionProps) {
     if (show) {
       setMounted(true);
 
-      if (prefersReducedMotion()) return;
+      if (prefersReducedMotion()) {
+        return;
+      }
 
       // rAF ensures paint before animating (the el ref is set on mount).
       requestAnimationFrame(() => {
-        if (!el) return;
+        if (!el) {
+          return;
+        }
         anim?.cancel();
         el.style.opacity = "0";
         anim = el.animate([{ opacity: 0 }, { opacity: 1 }], {
@@ -43,7 +47,9 @@ export function PresenceTransition(props: PresenceTransitionProps) {
           easing: "ease",
         });
         anim.onfinish = () => {
-          if (el) el.style.opacity = "";
+          if (el) {
+            el.style.opacity = "";
+          }
         };
       });
     } else {

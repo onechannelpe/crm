@@ -28,7 +28,9 @@ export function classifyRequest(pathname: string): RequestClass {
   if (MACHINE_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return "machine";
   }
-  if (isPublicPath(pathname)) return "public";
+  if (isPublicPath(pathname)) {
+    return "public";
+  }
   return "browser";
 }
 

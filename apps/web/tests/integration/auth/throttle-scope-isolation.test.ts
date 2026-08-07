@@ -22,7 +22,7 @@ describe("auth throttle scope isolation", () => {
   });
 
   it("blocks when account scope is actively blocked", async () => {
-    const svc = createAuthThrottleService({
+    const service = createAuthThrottleService({
       authThrottle: scenario.ctx.repos.authThrottle,
     });
     const throttle = createAuthThrottleKit(scenario);
@@ -37,16 +37,17 @@ describe("auth throttle scope isolation", () => {
       blockedUntil: new Date(now + 60_000),
     });
 
-    const status = await svc.checkLoginThrottle(
+    const status = await service.checkLoginThrottle(
       "exec1@test.local",
       "198.51.100.9",
       new Date(now),
     );
+
     expect(status.allowed).toBe(false);
   });
 
   it("blocks when ip_account scope is actively blocked", async () => {
-    const svc = createAuthThrottleService({
+    const service = createAuthThrottleService({
       authThrottle: scenario.ctx.repos.authThrottle,
     });
     const throttle = createAuthThrottleKit(scenario);
@@ -61,16 +62,17 @@ describe("auth throttle scope isolation", () => {
       blockedUntil: new Date(now + 60_000),
     });
 
-    const status = await svc.checkLoginThrottle(
+    const status = await service.checkLoginThrottle(
       "exec1@test.local",
       "198.51.100.12",
       new Date(now),
     );
+
     expect(status.allowed).toBe(false);
   });
 
   it("clears account and ip_account state but keeps ip state", async () => {
-    const svc = createAuthThrottleService({
+    const service = createAuthThrottleService({
       authThrottle: scenario.ctx.repos.authThrottle,
     });
     const throttle = createAuthThrottleKit(scenario);
@@ -86,6 +88,7 @@ describe("auth throttle scope isolation", () => {
       failureCount: 10,
       blockedUntil: new Date(now + 60_000),
     });
+
     await throttle.seedCounter({
       endpoint: "password_login",
       scope: "ip_account",
@@ -94,6 +97,7 @@ describe("auth throttle scope isolation", () => {
       failureCount: 10,
       blockedUntil: new Date(now + 60_000),
     });
+
     await throttle.seedCounter({
       endpoint: "password_login",
       scope: "ip",
@@ -103,7 +107,7 @@ describe("auth throttle scope isolation", () => {
       blockedUntil: new Date(now + 60_000),
     });
 
-    await svc.clearLoginFailureState(identifier, ipAddress);
+    await service.clearLoginFailureState(identifier, ipAddress);
 
     expect(
       await throttle.readCounter({
@@ -113,6 +117,7 @@ describe("auth throttle scope isolation", () => {
         ipAddress,
       }),
     ).toBeNull();
+
     expect(
       await throttle.readCounter({
         endpoint: "password_login",
@@ -121,6 +126,7 @@ describe("auth throttle scope isolation", () => {
         ipAddress,
       }),
     ).toBeNull();
+
     expect(
       await throttle.readCounter({
         endpoint: "password_login",
@@ -130,16 +136,17 @@ describe("auth throttle scope isolation", () => {
       }),
     ).not.toBeNull();
 
-    const status = await svc.checkLoginThrottle(
+    const status = await service.checkLoginThrottle(
       identifier,
       ipAddress,
       new Date(now),
     );
+
     expect(status.allowed).toBe(false);
   });
 
   it("keeps endpoint counters isolated", async () => {
-    const svc = createAuthThrottleService({
+    const service = createAuthThrottleService({
       authThrottle: scenario.ctx.repos.authThrottle,
     });
     const throttle = createAuthThrottleKit(scenario);
@@ -156,31 +163,30 @@ describe("auth throttle scope isolation", () => {
       blockedUntil: new Date(now + 60_000),
     });
 
-    expect(
-      (await svc.checkLoginThrottle(identifier, ipAddress, new Date(now)))
-        .allowed,
-    ).toBe(false);
-    expect(
-      (
-        await svc.checkPasskeyChallengeThrottle(
-          identifier,
-          ipAddress,
-          new Date(now),
-        )
-      ).allowed,
-    ).toBe(true);
-    expect(
-      (
-        await svc.checkPasskeyVerifyThrottle(
-          identifier,
-          ipAddress,
-          new Date(now),
-        )
-      ).allowed,
-    ).toBe(true);
-    expect(
-      (await svc.checkTotpVerifyThrottle(identifier, ipAddress, new Date(now)))
-        .allowed,
-    ).toBe(true);
+    const login = await service.checkLoginThrottle(
+      identifier,
+      ipAddress,
+      new Date(now),
+    );
+    const passkeyChallenge = await service.checkPasskeyChallengeThrottle(
+      identifier,
+      ipAddress,
+      new Date(now),
+    );
+    const passkeyVerify = await service.checkPasskeyVerifyThrottle(
+      identifier,
+      ipAddress,
+      new Date(now),
+    );
+    const totpVerify = await service.checkTotpVerifyThrottle(
+      identifier,
+      ipAddress,
+      new Date(now),
+    );
+
+    expect(login.allowed).toBe(false);
+    expect(passkeyChallenge.allowed).toBe(true);
+    expect(passkeyVerify.allowed).toBe(true);
+    expect(totpVerify.allowed).toBe(true);
   });
 });

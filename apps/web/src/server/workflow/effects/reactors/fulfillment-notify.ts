@@ -42,8 +42,12 @@ function isFulfillmentEvent(
 // fulfillment_started opens the order on CHOOSE_PRODUCT; step-advanced reports
 // its target step. Other event types have no current step.
 function targetStep(event: FulfillmentEvent): FulfillmentStep | null {
-  if (event.eventType === "fulfillment_started") return "CHOOSE_PRODUCT";
-  if (event.eventType === "fulfillment_step_advanced") return event.payload.to;
+  if (event.eventType === "fulfillment_started") {
+    return "CHOOSE_PRODUCT";
+  }
+  if (event.eventType === "fulfillment_step_advanced") {
+    return event.payload.to;
+  }
   return null;
 }
 
@@ -114,7 +118,9 @@ function audienceFor(
   if (owner === "executive") {
     return { kind: "user_ids", userIds: [executiveId] };
   }
-  if (branchId === null) return null;
+  if (branchId === null) {
+    return null;
+  }
   return { kind: "branch_role", branchId, role: "back_office" };
 }
 
@@ -185,9 +191,13 @@ export function deriveFulfillmentNotification(input: {
   if (input.event.eventType === "fulfillment_step_rejected") {
     const target = input.event.payload.to;
     const owner = pendingOwnerForStep(target);
-    if (owner === null) return [];
+    if (owner === null) {
+      return [];
+    }
     const audience = audienceFor(owner, input.executiveId, input.branchId);
-    if (audience === null) return [];
+    if (audience === null) {
+      return [];
+    }
     return [
       {
         id: NotificationIntentId.derive({
@@ -206,13 +216,19 @@ export function deriveFulfillmentNotification(input: {
   }
 
   const step = targetStep(input.event);
-  if (step === null) return [];
+  if (step === null) {
+    return [];
+  }
   const message = STEP_MESSAGE[step];
   const owner = pendingOwnerForStep(step);
-  if (message === null || owner === null) return [];
+  if (message === null || owner === null) {
+    return [];
+  }
 
   const audience = audienceFor(owner, input.executiveId, input.branchId);
-  if (audience === null) return [];
+  if (audience === null) {
+    return [];
+  }
 
   return [
     {
@@ -240,7 +256,9 @@ export async function reactToFulfillmentChanges(
 ): Promise<void> {
   const tx = scope.executor;
   const events = committed.filter(isFulfillmentEvent);
-  if (events.length === 0) return;
+  if (events.length === 0) {
+    return;
+  }
 
   const leadIds = [...new Set(events.map(({ event }) => event.leadId))];
   const leadRows = await tx
@@ -296,7 +314,9 @@ export async function reactToFulfillmentChanges(
   const intents: NotificationIntent[] = [];
   for (const { event, id } of events) {
     const lead = leadsById.get(event.leadId);
-    if (!lead) continue;
+    if (!lead) {
+      continue;
+    }
 
     const paymentUnits =
       event.eventType === "fulfillment_step_advanced" &&

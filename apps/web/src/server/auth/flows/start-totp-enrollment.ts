@@ -24,7 +24,9 @@ export async function startTotpEnrollment(
   >
 > {
   const user = await deps.repos.users.findById(ctx.actor.userId);
-  if (!user) return Err(forbidden());
+  if (!user) {
+    return Err(forbidden());
+  }
 
   const secret = generateTotpSecret();
   const encrypted = await encryptTotpSecret(secret);
@@ -34,7 +36,9 @@ export async function startTotpEnrollment(
 
   const persisted = await deps.uow.run(async (repos) => {
     const lockedUser = await repos.users.findByIdForUpdate(ctx.actor.userId);
-    if (!lockedUser) return Err(forbidden());
+    if (!lockedUser) {
+      return Err(forbidden());
+    }
 
     const existing = await repos.userTotpFactors.findByUserId(lockedUser.id);
     if (existing?.is_enabled) {
@@ -49,7 +53,9 @@ export async function startTotpEnrollment(
 
     return Ok(undefined);
   });
-  if (isErr(persisted)) return persisted;
+  if (isErr(persisted)) {
+    return persisted;
+  }
 
   return Ok({ otpauthUri, qrCodeDataUrl });
 }

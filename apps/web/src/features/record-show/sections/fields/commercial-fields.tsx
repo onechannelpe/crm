@@ -65,7 +65,9 @@ export function CommercialFields(props: { data: LeadDetailView }) {
     step: string,
     min = "0",
   ): InlineEdit | undefined {
-    if (!canEdit()) return undefined;
+    if (!canEdit()) {
+      return undefined;
+    }
     return {
       ariaLabel: `Editar ${label}`,
       renderEditor: (onClose) => (
@@ -87,7 +89,9 @@ export function CommercialFields(props: { data: LeadDetailView }) {
     current: string,
     toPatch: (value: string) => Partial<CommercialScope>,
   ): InlineEdit | undefined {
-    if (!canEdit()) return undefined;
+    if (!canEdit()) {
+      return undefined;
+    }
     return {
       ariaLabel: `Editar ${label}`,
       renderEditor: (onClose) => (
@@ -103,7 +107,9 @@ export function CommercialFields(props: { data: LeadDetailView }) {
   }
 
   function bankEdit(): InlineEdit | undefined {
-    if (!canEdit()) return undefined;
+    if (!canEdit()) {
+      return undefined;
+    }
     return {
       ariaLabel: "Editar Banco de abono",
       renderEditor: (onClose) => (

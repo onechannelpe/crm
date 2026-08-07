@@ -20,7 +20,9 @@ export async function expireLeadReservation(
     { executor, operationAt: expiredAt },
     async (ctx) => {
       const state = await ctx.repos.leads.findById(leadId);
-      if (!state) return Ok(undefined);
+      if (!state) {
+        return Ok(undefined);
+      }
       if (
         state.stage !== "PRICING" ||
         !isReservationLapsed(state, ctx.operationAt)
@@ -31,10 +33,14 @@ export async function expireLeadReservation(
       const transition = expireReservation(state, {
         occurredAt: ctx.operationAt,
       });
-      if (!transition.ok) return transition;
+      if (!transition.ok) {
+        return transition;
+      }
 
       const committed = await ctx.commitTransition(transition.value);
-      if (!committed.ok) return committed;
+      if (!committed.ok) {
+        return committed;
+      }
 
       return Ok(undefined);
     },
@@ -58,7 +64,9 @@ export async function expireLapsedReservations(
       leadId,
       lapsedAsOf,
     );
-    if (result.ok) expiredCount += 1;
+    if (result.ok) {
+      expiredCount += 1;
+    }
   }
   return expiredCount;
 }

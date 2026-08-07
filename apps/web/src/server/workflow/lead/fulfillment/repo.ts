@@ -120,7 +120,9 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         createdAt: Date;
       }>,
     ): Promise<void> {
-      if (units.length === 0) return;
+      if (units.length === 0) {
+        return;
+      }
       const rows: Insertable<Database["lead_fulfillment_units"]>[] = units.map(
         (unit) => ({
           order_id: unit.orderId,
@@ -145,7 +147,9 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .selectAll()
         .where("lead_id", "=", leadId)
         .executeTakeFirst();
-      if (!orderRow) return null;
+      if (!orderRow) {
+        return null;
+      }
 
       const [unitRows, docRows] = await Promise.all([
         db

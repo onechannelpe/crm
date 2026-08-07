@@ -34,7 +34,9 @@ export function createEnrichmentQueue(
   const { registry, scraper, engineFallback, projectOrganization } = deps;
 
   async function project(overlay: Overlay): Promise<void> {
-    if (overlay.documentType !== "ruc") return;
+    if (overlay.documentType !== "ruc") {
+      return;
+    }
     await projectOrganization({
       ruc: overlay.documentValue,
       legalName: overlay.legalName,
@@ -45,9 +47,13 @@ export function createEnrichmentQueue(
   }
 
   async function fallbackOverlay(job: RegistryRow): Promise<Overlay | null> {
-    if (job.document_type !== "ruc") return null;
+    if (job.document_type !== "ruc") {
+      return null;
+    }
     const hit = await engineFallback(job.document_value);
-    if (!hit) return null;
+    if (!hit) {
+      return null;
+    }
     // The Engine response is an external observation, not a consequence of
     // claiming this job. Its freshness window starts when that response is
     // received, so a slow fallback cannot be stored as already stale.

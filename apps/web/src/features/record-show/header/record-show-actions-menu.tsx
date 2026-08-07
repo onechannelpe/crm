@@ -36,7 +36,9 @@ export function RecordShowActionsMenu(props: RecordShowActionsMenuProps) {
   let menuRef: HTMLDivElement | undefined;
 
   function updateMenuPosition() {
-    if (!rootRef) return;
+    if (!rootRef) {
+      return;
+    }
 
     const rect = rootRef.getBoundingClientRect();
 
@@ -58,12 +60,18 @@ export function RecordShowActionsMenu(props: RecordShowActionsMenuProps) {
 
   onMount(() => {
     const handlePointerDown = (event: PointerEvent) => {
-      if (!open()) return;
+      if (!open()) {
+        return;
+      }
 
       const target = event.target;
 
-      if (!(target instanceof Node)) return;
-      if (rootRef?.contains(target) || menuRef?.contains(target)) return;
+      if (!(target instanceof Node)) {
+        return;
+      }
+      if (rootRef?.contains(target) || menuRef?.contains(target)) {
+        return;
+      }
 
       setOpen(false);
     };
@@ -76,7 +84,9 @@ export function RecordShowActionsMenu(props: RecordShowActionsMenuProps) {
   });
 
   createEffect(() => {
-    if (!open()) return;
+    if (!open()) {
+      return;
+    }
 
     updateMenuPosition();
 
@@ -128,7 +138,9 @@ export function RecordShowActionsMenu(props: RecordShowActionsMenuProps) {
                     disabled={item.disabled}
                     aria-disabled={item.disabled}
                     onClick={() => {
-                      if (item.disabled) return;
+                      if (item.disabled) {
+                        return;
+                      }
 
                       setOpen(false);
                       item.onSelect();

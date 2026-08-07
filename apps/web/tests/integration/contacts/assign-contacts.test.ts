@@ -17,23 +17,29 @@ import { Err, Ok, type Result } from "~/shared/result";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;
 const BRANCH_ID = TEST_FIXTURES.branches.lima.id;
-const BUFFER_TARGET = 10; // config.leadAssignment.defaultBufferTarget
+const BUFFER_TARGET = 10;
+
+const NOW = new Date("2026-08-07T17:00:00.000Z");
+const DAY_RANGE = appDayRange(appCalendarDateAt(NOW));
 
 function makeCandidate(seed: number): RecordCandidate {
   const n = String(seed).padStart(3, "0");
+
   return {
-    ruc: `2099${n}0000${n}`,
+    ruc: `20${n}000000`,
     organization_name: `Org ${n}`,
-    dni: `70${n}0000`,
+    dni: `70${n}000`,
     person_name: `Person ${n}`,
-    phone_primary: `+51999${n}0000`,
+    phone_primary: `+51999${n}000`,
   };
 }
 
 function engineReturning(
   candidates: RecordCandidate[],
 ): Pick<EngineClient, "requestCandidates"> {
-  return { requestCandidates: async () => Ok(candidates) };
+  return {
+    requestCandidates: async () => Ok(candidates),
+  };
 }
 
 function engineFailing(): Pick<EngineClient, "requestCandidates"> {
@@ -84,12 +90,13 @@ describe("assignContacts", () => {
       executor: ctx.db,
       engine,
     });
+
     return runtime.assign(
       {
         actorUserId: ACTOR_ID,
         branchId: BRANCH_ID,
       },
-      operationAt(new Date()),
+      operationAt(NOW),
     );
   }
 
@@ -97,15 +104,21 @@ describe("assignContacts", () => {
     const candidates = Array.from({ length: BUFFER_TARGET }, (_, i) =>
       makeCandidate(i + 1),
     );
+
     const fill = await runAssign(engineReturning(candidates));
+
     expect(fill.ok).toBe(true);
-    if (!fill.ok) throw new Error("expected success");
+    if (!fill.ok) {
+      throw new Error("expected success");
+    }
+
     expect(fill.value).toEqual({
       requested: BUFFER_TARGET,
       assigned: BUFFER_TARGET,
     });
 
     let engineCalled = false;
+
     const result = await runAssign({
       requestCandidates: async () => {
         engineCalled = true;
@@ -114,23 +127,31 @@ describe("assignContacts", () => {
     });
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected success");
+    if (!result.ok) {
+      throw new Error("expected success");
+    }
+
     expect(result.value).toEqual({ requested: 0, assigned: 0 });
     expect(engineCalled).toBe(false);
 
-    const range = appDayRange(appCalendarDateAt(new Date()));
     const reservations =
-      await ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range);
+      await ctx.repos.leadUsageReservations.findByUserAndRange(
+        ACTOR_ID,
+        DAY_RANGE,
+      );
+
     expect(reservations).toHaveLength(1);
   });
 
   it("skips a candidate on cooldown and only commits the assigned amount", async () => {
     const onCooldown = makeCandidate(1);
+
     const organization = await ctx.repos.organization.upsertOrganization({
       ruc: onCooldown.ruc,
       legalName: onCooldown.organization_name,
-      upsertedAt: new Date(),
+      upsertedAt: NOW,
     });
+
     const membership = await ctx.repos.organization.upsertMembership({
       organizationId: organization.id,
       person: {
@@ -142,36 +163,45 @@ describe("assignContacts", () => {
       },
       phone: onCooldown.phone_primary,
       email: null,
-      upsertedAt: new Date(),
+      upsertedAt: NOW,
     });
+
     await ctx.repos.cadence.touch({
       organizationPersonId: membership.id,
       userId: ACTOR_ID,
-      contactedAt: new Date(),
-      cooldownUntil: new Date(Date.now() + 60 * 60 * 1000),
+      contactedAt: NOW,
+      cooldownUntil: new Date(NOW.getTime() + 60 * 60 * 1000),
     });
 
     const candidates = [onCooldown, makeCandidate(2), makeCandidate(3)];
     const result = await runAssign(engineReturning(candidates));
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected success");
-    // requested is the buffer shortfall, not the candidate count.
+    if (!result.ok) {
+      throw new Error("expected success");
+    }
+
+    // `requested` is the buffer shortfall, not the number of candidates returned.
     expect(result.value).toEqual({ requested: BUFFER_TARGET, assigned: 2 });
 
     const activeCount = await ctx.repos.contactAssignments.countActiveByUser(
       ACTOR_ID,
-      new Date(),
+      NOW,
     );
+
     expect(activeCount).toBe(2);
 
-    const range = appDayRange(appCalendarDateAt(new Date()));
     const [reservations, commits] = await Promise.all([
-      ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range),
-      ctx.repos.leadUsageCommits.findByUserAndRange(ACTOR_ID, range),
+      ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, DAY_RANGE),
+      ctx.repos.leadUsageCommits.findByUserAndRange(ACTOR_ID, DAY_RANGE),
     ]);
+
     expect(reservations).toHaveLength(1);
-    expect(reservations[0]).toMatchObject({ amount: 2, status: "committed" });
+    expect(reservations[0]).toMatchObject({
+      amount: 2,
+      status: "committed",
+    });
+
     expect(commits).toHaveLength(1);
     expect(commits[0].amount).toBe(2);
   });
@@ -180,43 +210,62 @@ describe("assignContacts", () => {
     const result = await runAssign(engineReturning([makeCandidate(1)]));
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected success");
-    expect(result.value).toEqual({ requested: BUFFER_TARGET, assigned: 1 });
+    if (!result.ok) {
+      throw new Error("expected success");
+    }
 
-    const range = appDayRange(appCalendarDateAt(new Date()));
+    expect(result.value).toEqual({
+      requested: BUFFER_TARGET,
+      assigned: 1,
+    });
+
     const reservations =
-      await ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range);
+      await ctx.repos.leadUsageReservations.findByUserAndRange(
+        ACTOR_ID,
+        DAY_RANGE,
+      );
+
     expect(reservations).toHaveLength(1);
-    expect(reservations[0]).toMatchObject({ amount: 1, status: "committed" });
+    expect(reservations[0]).toMatchObject({
+      amount: 1,
+      status: "committed",
+    });
   });
 
   it("cancels the reservation when the engine reports an error", async () => {
     const result = await runAssign(engineFailing());
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("expected failure");
+    if (result.ok) {
+      throw new Error("expected failure");
+    }
+
     expect(result.error.details).toMatchObject({
       status: 503,
       request_id: "req-leads-1",
     });
 
-    const range = appDayRange(appCalendarDateAt(new Date()));
     const reservations =
-      await ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range);
+      await ctx.repos.leadUsageReservations.findByUserAndRange(
+        ACTOR_ID,
+        DAY_RANGE,
+      );
+
     expect(reservations).toHaveLength(1);
     expect(reservations[0].status).toBe("cancelled");
   });
 
-  // A thrown engine call must cancel the reservation like any failure inside
-  // the reservation callback.
   it("cancels the reservation and rethrows when a downstream step throws", async () => {
     await expect(
       runAssign(engineThrowing("engine connection lost")),
     ).rejects.toThrow("engine connection lost");
 
-    const range = appDayRange(appCalendarDateAt(new Date()));
     const reservations =
-      await ctx.repos.leadUsageReservations.findByUserAndRange(ACTOR_ID, range);
+      await ctx.repos.leadUsageReservations.findByUserAndRange(
+        ACTOR_ID,
+        DAY_RANGE,
+      );
+
     expect(reservations).toHaveLength(1);
     expect(reservations[0].status).toBe("cancelled");
   });

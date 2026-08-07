@@ -16,8 +16,12 @@ const STALE_AFTER_MS = 48 * 3_600_000;
 
 function waitingLabel(since: number, evaluatedAt: number): string {
   const hours = Math.floor((evaluatedAt - since) / 3_600_000);
-  if (hours < 1) return "Hace menos de 1h";
-  if (hours < 24) return `Hace ${hours}h`;
+  if (hours < 1) {
+    return "Hace menos de 1h";
+  }
+  if (hours < 24) {
+    return `Hace ${hours}h`;
+  }
   return `Hace ${Math.floor(hours / 24)}d`;
 }
 
@@ -27,8 +31,11 @@ function groupByStep(rows: FulfillmentQueueRowView[]): Group[] {
   const byStep = new Map<FulfillmentStep, FulfillmentQueueRowView[]>();
   for (const row of rows) {
     const existing = byStep.get(row.currentStep);
-    if (existing) existing.push(row);
-    else byStep.set(row.currentStep, [row]);
+    if (existing) {
+      existing.push(row);
+    } else {
+      byStep.set(row.currentStep, [row]);
+    }
   }
   return [...byStep.entries()]
     .map(([step, groupRows]) => ({ step, rows: groupRows }))

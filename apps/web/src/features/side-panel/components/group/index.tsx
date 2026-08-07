@@ -9,7 +9,9 @@ export function PanelGroup(props: PanelGroupProps) {
 
   const hasChildren = () => {
     const c = resolved();
-    if (Array.isArray(c)) return c.filter(Boolean).length > 0;
+    if (Array.isArray(c)) {
+      return c.filter(Boolean).length > 0;
+    }
     return Boolean(c);
   };
 

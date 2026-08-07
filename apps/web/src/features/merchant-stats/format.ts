@@ -53,11 +53,15 @@ export function formatPercent(value: number): string {
 
 // Empty denominators display as 0%, not NaN.
 export function formatRatio(numerator: number, denominator: number): string {
-  if (denominator === 0) return "0%";
+  if (denominator === 0) {
+    return "0%";
+  }
 
   const ratio = (numerator / denominator) * 100;
   const formatted = ratio.toFixed(1);
-  if (formatted.endsWith(".0")) return `${Math.round(ratio)}%`;
+  if (formatted.endsWith(".0")) {
+    return `${Math.round(ratio)}%`;
+  }
 
   return `${formatted}%`;
 }

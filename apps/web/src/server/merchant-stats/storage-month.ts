@@ -8,7 +8,9 @@ import {
 
 export function dateFromStorage(value: string): CalendarDate {
   const date = parseCalendarDate(value);
-  if (!date) throw new Error(`Invalid stored merchant date: ${value}`);
+  if (!date) {
+    throw new Error(`Invalid stored merchant date: ${value}`);
+  }
   return date;
 }
 

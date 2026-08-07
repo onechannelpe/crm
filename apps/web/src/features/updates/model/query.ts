@@ -4,7 +4,9 @@ export function queryUpdates(
   updates: readonly UpdateEntry[],
   filter: UpdateFilter,
 ): readonly UpdateEntry[] {
-  if (filter === "all") return updates;
+  if (filter === "all") {
+    return updates;
+  }
   if (filter === "technical") {
     return updates.filter((entry) => entry.kind === "technical");
   }

@@ -97,9 +97,13 @@ export async function recordActionObservation(
 
 function summarizeInput(input: unknown): string | null {
   const serialized = serializeEventPayload(input);
-  if (!serialized) return null;
+  if (!serialized) {
+    return null;
+  }
   const text = JSON.stringify(serialized);
-  if (text.length <= 400) return text;
+  if (text.length <= 400) {
+    return text;
+  }
   return `${text.slice(0, 400)}…`;
 }
 
@@ -221,8 +225,12 @@ interface AuthFunnelSnapshotFilter {
 function parseObservationStatus(
   value: string | undefined,
 ): Result<ObservationStatus | undefined, DomainError> {
-  if (!value) return Ok(undefined);
-  if (value === "ok" || value === "error") return Ok(value);
+  if (!value) {
+    return Ok(undefined);
+  }
+  if (value === "ok" || value === "error") {
+    return Ok(value);
+  }
 
   return Err(invalid({ code: "invalid_status" }));
 }
@@ -230,8 +238,12 @@ function parseObservationStatus(
 function parseAuthFunnelEventName(
   value: string | undefined,
 ): Result<AuthFunnelEventName | undefined, DomainError> {
-  if (!value) return Ok(undefined);
-  if (isAuthFunnelEventName(value)) return Ok(value);
+  if (!value) {
+    return Ok(undefined);
+  }
+  if (isAuthFunnelEventName(value)) {
+    return Ok(value);
+  }
 
   return Err(invalid({ code: "invalid_event_name" }));
 }
@@ -239,8 +251,12 @@ function parseAuthFunnelEventName(
 function parseAuthFunnelMethod(
   value: string | undefined,
 ): Result<AuthFunnelMethod | undefined, DomainError> {
-  if (!value) return Ok(undefined);
-  if (isAuthFunnelMethod(value)) return Ok(value);
+  if (!value) {
+    return Ok(undefined);
+  }
+  if (isAuthFunnelMethod(value)) {
+    return Ok(value);
+  }
 
   return Err(invalid({ code: "invalid_method" }));
 }
@@ -248,8 +264,12 @@ function parseAuthFunnelMethod(
 function parseAuthFunnelOutcome(
   value: string | undefined,
 ): Result<AuthFunnelOutcome | undefined, DomainError> {
-  if (!value) return Ok(undefined);
-  if (isAuthFunnelOutcome(value)) return Ok(value);
+  if (!value) {
+    return Ok(undefined);
+  }
+  if (isAuthFunnelOutcome(value)) {
+    return Ok(value);
+  }
 
   return Err(invalid({ code: "invalid_outcome" }));
 }
@@ -266,7 +286,9 @@ function parseActionSnapshotFilter(
       max: OBSERVABILITY_MAX_WINDOW_MINUTES,
     },
   );
-  if (isErr(parsedWindowMinutes)) return parsedWindowMinutes;
+  if (isErr(parsedWindowMinutes)) {
+    return parsedWindowMinutes;
+  }
 
   const parsedLimit = parsePositiveIntegerAtMost(
     input?.limit ?? OBSERVABILITY_DEFAULT_LIMIT,
@@ -276,10 +298,14 @@ function parseActionSnapshotFilter(
       max: OBSERVABILITY_MAX_LIMIT,
     },
   );
-  if (isErr(parsedLimit)) return parsedLimit;
+  if (isErr(parsedLimit)) {
+    return parsedLimit;
+  }
 
   const parsedStatus = parseObservationStatus(input?.status);
-  if (isErr(parsedStatus)) return parsedStatus;
+  if (isErr(parsedStatus)) {
+    return parsedStatus;
+  }
 
   const windowMinutes = parsedWindowMinutes.value;
 
@@ -305,7 +331,9 @@ function parseAuthFunnelSnapshotFilter(
       max: OBSERVABILITY_MAX_WINDOW_MINUTES,
     },
   );
-  if (isErr(parsedWindowMinutes)) return parsedWindowMinutes;
+  if (isErr(parsedWindowMinutes)) {
+    return parsedWindowMinutes;
+  }
 
   const parsedLimit = parsePositiveIntegerAtMost(
     input?.limit ?? OBSERVABILITY_DEFAULT_LIMIT,
@@ -315,16 +343,24 @@ function parseAuthFunnelSnapshotFilter(
       max: OBSERVABILITY_MAX_LIMIT,
     },
   );
-  if (isErr(parsedLimit)) return parsedLimit;
+  if (isErr(parsedLimit)) {
+    return parsedLimit;
+  }
 
   const parsedEventName = parseAuthFunnelEventName(input?.eventName);
-  if (isErr(parsedEventName)) return parsedEventName;
+  if (isErr(parsedEventName)) {
+    return parsedEventName;
+  }
 
   const parsedMethod = parseAuthFunnelMethod(input?.method);
-  if (isErr(parsedMethod)) return parsedMethod;
+  if (isErr(parsedMethod)) {
+    return parsedMethod;
+  }
 
   const parsedOutcome = parseAuthFunnelOutcome(input?.outcome);
-  if (isErr(parsedOutcome)) return parsedOutcome;
+  if (isErr(parsedOutcome)) {
+    return parsedOutcome;
+  }
 
   const windowMinutes = parsedWindowMinutes.value;
 
@@ -367,7 +403,9 @@ export function createObservabilityService(repos: ObservabilityRepos) {
       windowEndsAt: Date,
     ): Promise<Result<ObservabilitySnapshot, DomainError>> {
       const parsed = parseActionSnapshotFilter(input, windowEndsAt);
-      if (isErr(parsed)) return parsed;
+      if (isErr(parsed)) {
+        return parsed;
+      }
 
       const filter = parsed.value;
       const [summary, recent] = await Promise.all([
@@ -417,7 +455,9 @@ export function createObservabilityService(repos: ObservabilityRepos) {
       windowEndsAt: Date,
     ): Promise<Result<AuthFunnelSnapshot, DomainError>> {
       const parsed = parseAuthFunnelSnapshotFilter(input, windowEndsAt);
-      if (isErr(parsed)) return parsed;
+      if (isErr(parsed)) {
+        return parsed;
+      }
 
       const filter = parsed.value;
       const [summary, recent] = await Promise.all([

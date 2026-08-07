@@ -52,7 +52,9 @@ export function createBlobStore(rootDir: string): BlobStore {
       let failed = false;
 
       async function writeChunk(chunk: Uint8Array): Promise<void> {
-        if (failed) throw new Error("write_session_closed");
+        if (failed) {
+          throw new Error("write_session_closed");
+        }
         await onChunk?.(chunk);
         sizeBytes += chunk.byteLength;
         hasher.update(chunk);

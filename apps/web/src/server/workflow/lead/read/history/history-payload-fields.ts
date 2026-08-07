@@ -210,6 +210,8 @@ export function requireMoneda(
   row: HistoryEventRow,
 ): Result<Currency, DomainError> {
   const value = requireString(payload, "currency", row);
-  if (!value.ok) return value;
+  if (!value.ok) {
+    return value;
+  }
   return parseVocabularyValue(value.value, CURRENCIES, "invalid_moneda");
 }

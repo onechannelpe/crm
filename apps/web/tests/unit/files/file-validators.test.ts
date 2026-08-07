@@ -79,7 +79,9 @@ describe("validateUploadFile - filename sanitization", () => {
       "mi archivo@datos.csv",
       CSV_BYTES,
     );
-    if ("reason" in result) throw new Error("Expected success");
+    if ("reason" in result) {
+      throw new Error("Expected success");
+    }
     expect(result.safeDisplayFilename).toBe("mi archivo_datos.csv");
   });
 });
@@ -91,7 +93,9 @@ describe("validateUploadFile - signature checks", () => {
       "import.csv",
       CSV_BYTES,
     );
-    if ("reason" in result) throw new Error("Expected success");
+    if ("reason" in result) {
+      throw new Error("Expected success");
+    }
     expect(result.signatureKind).toBe("csv");
   });
 });
@@ -138,7 +142,9 @@ describe("validateUploadFile - MIME output", () => {
       "data.csv",
       CSV_BYTES,
     );
-    if ("reason" in result) throw new Error("Expected success");
+    if ("reason" in result) {
+      throw new Error("Expected success");
+    }
     expect(result.detectedMime).toBe("text/csv; charset=utf-8");
   });
 });

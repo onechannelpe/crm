@@ -26,6 +26,7 @@ describe("passkey onboarding flow", () => {
 
   beforeEach(async () => {
     await scenario.reset();
+
     await scenario.ctx.db
       .updateTable("users")
       .set({ onboarding_completed_at: null, role: "admin" })
@@ -33,11 +34,16 @@ describe("passkey onboarding flow", () => {
       .execute();
   });
 
-  it("commits factor, recovery codes, onboarding, and session replacement together", async () => {
+  it("completes passkey onboarding and recovery setup", async () => {
     const setup = createAuthSetupContext(scenario.ctx.db);
     const userId = scenario.identity(identity).userId;
     const user = await setup.repos.users.findById(userId);
-    if (!user) throw new Error("expected seeded user");
+
+    if (!user) {
+      throw new Error("expected seeded user");
+    }
+
+    const now = new Date("2026-07-14T20:00:00.000Z");
 
     const currentSession: AuthSession = {
       id: "onboarding-session",
@@ -50,7 +56,7 @@ describe("passkey onboarding flow", () => {
       strongAuthAt: null,
       impersonatorUserId: null,
     };
-    const now = new Date("2026-07-14T20:00:00.000Z");
+
     await setup.repos.sessions.create({
       id: currentSession.id,
       user_id: user.id,
@@ -67,6 +73,7 @@ describe("passkey onboarding flow", () => {
       last_activity: now,
       expires_at: new Date(now.getTime() + 60_000),
     });
+
     const profile = await saveOnboardingProfile(
       setup,
       {
@@ -75,13 +82,17 @@ describe("passkey onboarding flow", () => {
       },
       operationAt(now),
     );
-    if (isErr(profile)) throw new Error("expected saved profile");
+
+    if (isErr(profile)) {
+      throw new Error("expected saved profile");
+    }
 
     const challengeId = await createRegistrationChallenge({
       ctx: scenario.ctx,
       userId,
       challenge: "challenge-1",
     });
+
     const result = await completeOnboarding(
       {
         actor: currentSession,
@@ -109,17 +120,20 @@ describe("passkey onboarding flow", () => {
       },
     );
 
-    expect(isErr(result)).toBe(false);
-    if (isErr(result)) throw new Error("expected successful onboarding");
+    if (isErr(result)) {
+      throw new Error("expected successful onboarding");
+    }
+
+    const recoverySessionId = hashSessionToken(result.value.sessionToken);
+
     expect(result.value.recoveryCodes.length).toBeGreaterThan(0);
 
     const completedUser = await setup.repos.users.findById(userId);
+
     expect(completedUser?.onboarding_completed_at).toEqual(now);
     expect(await setup.repos.sessions.findById(currentSession.id)).toBeNull();
     expect(
-      await setup.repos.sessions.findById(
-        hashSessionToken(result.value.sessionToken),
-      ),
+      await setup.repos.sessions.findById(recoverySessionId),
     ).toMatchObject({
       session_class: "recovery_setup",
       strong_auth_method: "passkey",
@@ -133,7 +147,9 @@ describe("passkey onboarding flow", () => {
     ).toBeUndefined();
     expect(
       await setup.repos.userRecoveryCodes.getActiveSet(userId),
-    ).toMatchObject({ total: result.value.recoveryCodes.length });
+    ).toMatchObject({
+      total: result.value.recoveryCodes.length,
+    });
     expect(
       await scenario.ctx.db
         .selectFrom("events")
@@ -143,7 +159,6 @@ describe("passkey onboarding flow", () => {
         .executeTakeFirst(),
     ).toEqual({ type: "onboarding_completed" });
 
-    const recoverySessionId = hashSessionToken(result.value.sessionToken);
     const acknowledged = await acknowledgeRecoverySetup(
       {
         actor: {
@@ -162,16 +177,23 @@ describe("passkey onboarding flow", () => {
       },
       setup,
     );
-    expect(isErr(acknowledged)).toBe(false);
-    if (isErr(acknowledged)) throw new Error("expected acknowledged codes");
+
+    if (isErr(acknowledged)) {
+      throw new Error("expected acknowledged codes");
+    }
+
     expect(await setup.repos.sessions.findById(recoverySessionId)).toBeNull();
     expect(
       await setup.repos.sessions.findById(
         hashSessionToken(acknowledged.value.sessionToken),
       ),
-    ).toMatchObject({ session_class: "app" });
+    ).toMatchObject({
+      session_class: "app",
+    });
     expect(
       await setup.repos.userRecoveryCodes.getActiveSet(userId),
-    ).toMatchObject({ acknowledgedAt: now });
+    ).toMatchObject({
+      acknowledgedAt: now,
+    });
   });
 });

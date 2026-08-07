@@ -26,7 +26,9 @@ export function createRecipientRepository(
     resolveAudience: (audience) => resolveAudience(db, audience),
 
     async findVerifiedAddresses(userIds, channel) {
-      if (userIds.length === 0) return new Map();
+      if (userIds.length === 0) {
+        return new Map();
+      }
 
       const rows = await db
         .selectFrom("user_channel_addresses")

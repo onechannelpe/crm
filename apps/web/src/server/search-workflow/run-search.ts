@@ -39,7 +39,9 @@ export async function runDirectSearch(
         command.query,
         command.limit,
       );
-      if (isErr(searchResult)) return searchResult;
+      if (isErr(searchResult)) {
+        return searchResult;
+      }
       return Ok({ value: { rows: searchResult.value }, consumed: 1 });
     },
   );

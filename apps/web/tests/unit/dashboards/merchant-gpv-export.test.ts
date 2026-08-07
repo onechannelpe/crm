@@ -47,7 +47,9 @@ describe("buildMerchantGpvWorkbook", () => {
     const bytes = buildMerchantGpvWorkbook([ROW]);
     const workbook = XLSX.read(bytes, { cellDates: true });
     const worksheet = workbook.Sheets.BASE;
-    if (!worksheet) throw new Error("Expected BASE worksheet");
+    if (!worksheet) {
+      throw new Error("Expected BASE worksheet");
+    }
 
     const records = XLSX.utils.sheet_to_json<Record<string, unknown>>(
       worksheet,

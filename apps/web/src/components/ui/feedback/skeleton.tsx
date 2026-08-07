@@ -9,7 +9,9 @@ type SkeletonProps = {
 };
 
 function toSize(value: number | string | undefined, fallback: string): string {
-  if (value === undefined) return fallback;
+  if (value === undefined) {
+    return fallback;
+  }
   return typeof value === "number" ? `${value}px` : value;
 }
 

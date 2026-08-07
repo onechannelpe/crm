@@ -12,7 +12,9 @@ const INPUT_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
 // only cut ordering is load-bearing.
 export function cutAtFromFilename(filename: string): Date | null {
   const match = CUT_PATTERN.exec(filename);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   const [, dd, mm, yy, rawSequence, hh, minute] = match;
 
@@ -28,7 +30,9 @@ export function cutAtFromFilename(filename: string): Date | null {
 
 export function cutAtFromInput(value: string): Date | null {
   const match = INPUT_PATTERN.exec(value);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   const [, year, month, day, hour, minute] = match;
   return cutAtFromParts({
@@ -51,9 +55,15 @@ function cutAtFromParts(parts: {
 }): Date | null {
   const { year, month, day, hour, minute, sequence } = parts;
 
-  if (month < 1 || month > 12) return null;
-  if (day < 1 || day > 31) return null;
-  if (hour > 23 || minute > 59) return null;
+  if (month < 1 || month > 12) {
+    return null;
+  }
+  if (day < 1 || day > 31) {
+    return null;
+  }
+  if (hour > 23 || minute > 59) {
+    return null;
+  }
   if (!Number.isInteger(sequence) || sequence < 0 || sequence > 999) {
     return null;
   }

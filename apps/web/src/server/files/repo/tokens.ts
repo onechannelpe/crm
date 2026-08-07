@@ -35,7 +35,9 @@ export function createTokensRepo(db: DB) {
         .where("token_hash", "=", tokenHash)
         .executeTakeFirst();
 
-      if (!row) return null;
+      if (!row) {
+        return null;
+      }
 
       return {
         id: row.id,

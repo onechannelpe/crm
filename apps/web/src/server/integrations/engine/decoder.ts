@@ -10,7 +10,9 @@ function isArray(value: unknown): value is unknown[] {
 }
 
 function isRecordCandidate(value: unknown): value is RecordCandidate {
-  if (!isPlainRecord(value)) return false;
+  if (!isPlainRecord(value)) {
+    return false;
+  }
   return (
     typeof value.ruc === "string" &&
     typeof value.organization_name === "string" &&

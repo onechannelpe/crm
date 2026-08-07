@@ -53,11 +53,15 @@ export function authorizeAccess(
   operation: OperationContext,
 ): Result<AuthSession, DomainError> {
   const authorized = authorizeFor(actor, access);
-  if (isErr(authorized)) return authorized;
+  if (isErr(authorized)) {
+    return authorized;
+  }
 
   if (stepUp === "recent_strong_auth") {
     const strong = checkRecentStrongAuth(actor, operation.operationAt);
-    if (isErr(strong)) return strong;
+    if (isErr(strong)) {
+      return strong;
+    }
   }
 
   return Ok(actor);

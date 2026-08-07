@@ -12,7 +12,9 @@ function expectErrCode(
   code: string,
 ) {
   expect(result.ok).toBe(false);
-  if (result.ok) throw new Error("expected err");
+  if (result.ok) {
+    throw new Error("expected err");
+  }
   expect(result.error.code).toBe(code);
 }
 
@@ -25,7 +27,9 @@ describe("parseObject", () => {
     );
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected ok");
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
     expect(result.value.reason).toBe("Reviewed by executive");
   });
 
@@ -54,7 +58,9 @@ describe("parseObject", () => {
     }));
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected ok");
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
     expect(result.value.query).toBe("ab");
   });
 
@@ -85,7 +91,9 @@ describe("parseObject", () => {
     }));
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected ok");
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
     expect(result.value.amount).toBe(1);
   });
 
@@ -106,7 +114,9 @@ describe("parseObject", () => {
     }));
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected ok");
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
     expect(result.value.gpv).toBe(1000);
   });
 

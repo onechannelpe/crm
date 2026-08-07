@@ -279,11 +279,21 @@ export function createOrganizationRepo(
         district?: string;
         department?: string;
       } = {};
-      if (input.legalName !== undefined) patch.legal_name = input.legalName;
-      if (input.address !== undefined) patch.address = input.address;
-      if (input.district !== undefined) patch.district = input.district;
-      if (input.department !== undefined) patch.department = input.department;
-      if (Object.keys(patch).length === 0) return;
+      if (input.legalName !== undefined) {
+        patch.legal_name = input.legalName;
+      }
+      if (input.address !== undefined) {
+        patch.address = input.address;
+      }
+      if (input.district !== undefined) {
+        patch.district = input.district;
+      }
+      if (input.department !== undefined) {
+        patch.department = input.department;
+      }
+      if (Object.keys(patch).length === 0) {
+        return;
+      }
 
       await db
         .updateTable("organizations")

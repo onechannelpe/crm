@@ -84,7 +84,9 @@ describe("deriveFulfillmentNotification: AWAITING_PAYMENT step", () => {
 
     expect(intents).toHaveLength(1);
     const [intent] = intents;
-    if (!intent) throw new Error("expected one intent");
+    if (!intent) {
+      throw new Error("expected one intent");
+    }
 
     expect(intent.eventType).toBe("lead.fulfillment_handoff");
     expect(intent.audience).toEqual({
@@ -108,7 +110,9 @@ describe("deriveFulfillmentNotification: AWAITING_PAYMENT step", () => {
 
     expect(intents).toHaveLength(1);
     const [intent] = intents;
-    if (!intent) throw new Error("expected one intent");
+    if (!intent) {
+      throw new Error("expected one intent");
+    }
     expect(intent.bodyText).toBe(
       "Envía el link de pago al cliente RUC 20123456789 y sube el comprobante.",
     );
@@ -125,7 +129,9 @@ describe("deriveFulfillmentNotification: AWAITING_PAYMENT step", () => {
 
     expect(intents).toHaveLength(1);
     const [intent] = intents;
-    if (!intent) throw new Error("expected one intent");
+    if (!intent) {
+      throw new Error("expected one intent");
+    }
     expect(intent.channels).toEqual(["in_app"]);
   });
 });

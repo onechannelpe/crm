@@ -69,7 +69,9 @@ export function getSidebarChildren(
   entryId: string,
 ): SidebarChild[] {
   const entry = SIDEBAR_ENTRIES.find((e) => e.id === entryId);
-  if (!entry?.children) return [];
+  if (!entry?.children) {
+    return [];
+  }
 
   return entry.children
     .filter((child) => canAccessPath(role, child.href))
@@ -85,9 +87,13 @@ export function getNavigableRoutes(role: Role): SidebarEntry[] {
 export function getHeaderRoute(pathname: string): HeaderDescriptor {
   for (const rule of PAGE_HEADERS) {
     if (typeof rule.match === "string") {
-      if (pathname === rule.match) return rule.header;
+      if (pathname === rule.match) {
+        return rule.header;
+      }
     } else {
-      if (rule.match.test(pathname)) return rule.header;
+      if (rule.match.test(pathname)) {
+        return rule.header;
+      }
     }
   }
   return HEADER_FALLBACK;

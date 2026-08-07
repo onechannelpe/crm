@@ -13,7 +13,9 @@ export async function reactToRegistration(
   const requestsByRuc = new Map<string, EnrichmentRequest>();
 
   for (const { event } of committed) {
-    if (event.eventType !== "lead_registered") continue;
+    if (event.eventType !== "lead_registered") {
+      continue;
+    }
 
     requestsByRuc.set(event.payload.ruc, {
       documentType: "ruc",

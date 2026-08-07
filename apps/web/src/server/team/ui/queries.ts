@@ -12,7 +12,9 @@ export async function getInviteManagement(): Promise<
     access: { kind: "permission", permission: "hr:manage" },
     execute: async (ctx) => {
       const management = await application.team.management.get(ctx);
-      if (isErr(management)) return management;
+      if (isErr(management)) {
+        return management;
+      }
 
       return Ok({
         ...management.value,

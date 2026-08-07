@@ -33,7 +33,9 @@ async function upsertOrganizationsByRuc(
 ): Promise<Map<string, OrganizationId>> {
   const byRuc = new Map<string, RecordCandidate>();
   for (const candidate of candidates) {
-    if (!byRuc.has(candidate.ruc)) byRuc.set(candidate.ruc, candidate);
+    if (!byRuc.has(candidate.ruc)) {
+      byRuc.set(candidate.ruc, candidate);
+    }
   }
 
   const entries = await Promise.all(
@@ -62,9 +64,13 @@ async function upsertMembershipsForCandidates(
   >();
   for (const candidate of candidates) {
     const organizationId = organizationIdsByRuc.get(candidate.ruc);
-    if (organizationId === undefined) continue;
+    if (organizationId === undefined) {
+      continue;
+    }
     const key = `${organizationId}:${candidate.dni}`;
-    if (!byKey.has(key)) byKey.set(key, { organizationId, candidate });
+    if (!byKey.has(key)) {
+      byKey.set(key, { organizationId, candidate });
+    }
   }
 
   return Promise.all(

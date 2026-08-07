@@ -94,7 +94,9 @@ export async function queryLeadDetail(
         },
         ctx,
       );
-      if (isErr(detail)) return detail;
+      if (isErr(detail)) {
+        return detail;
+      }
 
       return Ok({
         ...detail.value,
@@ -117,7 +119,9 @@ export async function queryFulfillmentQueue(): Promise<
         actorRole: role,
         actorBranchId: branchId,
       });
-      if (isErr(queue)) return queue;
+      if (isErr(queue)) {
+        return queue;
+      }
 
       return Ok({
         ...queue.value,

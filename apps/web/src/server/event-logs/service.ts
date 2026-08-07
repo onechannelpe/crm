@@ -353,7 +353,9 @@ export function createEventLogsService(db: Kysely<Database>) {
         input.first ?? DEFAULT_FIRST,
         { code: "invalid_first", field: "first", max: MAX_FIRST },
       );
-      if (isErr(parsedFirst)) return parsedFirst;
+      if (isErr(parsedFirst)) {
+        return parsedFirst;
+      }
 
       const cursor = input.after ? decodeEventLogCursor(input.after) : null;
       if (input.after && !cursor) {

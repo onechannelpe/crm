@@ -29,7 +29,9 @@ async function setBranchCap(
     },
     operationAt(runtime.now.get()),
   );
-  if (!result.ok) throw new Error("pending_quotation_policy_update_failed");
+  if (!result.ok) {
+    throw new Error("pending_quotation_policy_update_failed");
+  }
 }
 
 async function fillPendingQuotations(

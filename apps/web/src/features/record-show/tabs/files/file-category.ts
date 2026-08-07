@@ -62,25 +62,51 @@ export function getFileExtension(filename: string): string | null {
 export function getFileCategoryFromExtension(
   extension?: string | null,
 ): FileCategory {
-  if (!extension) return "other";
+  if (!extension) {
+    return "other";
+  }
   const ext = extension.toLowerCase().replace(".", "");
 
-  if (IMAGE_EXTENSIONS.has(ext)) return "image";
-  if (VIDEO_EXTENSIONS.has(ext)) return "video";
-  if (AUDIO_EXTENSIONS.has(ext)) return "audio";
-  if (ARCHIVE_EXTENSIONS.has(ext)) return "archive";
-  if (SPREADSHEET_EXTENSIONS.has(ext)) return "spreadsheet";
-  if (PRESENTATION_EXTENSIONS.has(ext)) return "presentation";
-  if (TEXT_DOCUMENT_EXTENSIONS.has(ext)) return "text_document";
+  if (IMAGE_EXTENSIONS.has(ext)) {
+    return "image";
+  }
+  if (VIDEO_EXTENSIONS.has(ext)) {
+    return "video";
+  }
+  if (AUDIO_EXTENSIONS.has(ext)) {
+    return "audio";
+  }
+  if (ARCHIVE_EXTENSIONS.has(ext)) {
+    return "archive";
+  }
+  if (SPREADSHEET_EXTENSIONS.has(ext)) {
+    return "spreadsheet";
+  }
+  if (PRESENTATION_EXTENSIONS.has(ext)) {
+    return "presentation";
+  }
+  if (TEXT_DOCUMENT_EXTENSIONS.has(ext)) {
+    return "text_document";
+  }
   return "other";
 }
 
 export function getFileCategoryFromMime(mime: string): FileCategory {
-  if (mime.startsWith("image/")) return "image";
-  if (mime.startsWith("video/")) return "video";
-  if (mime.startsWith("audio/")) return "audio";
-  if (mime === "application/pdf") return "text_document";
-  if (mime.includes("zip") || mime.includes("compressed")) return "archive";
+  if (mime.startsWith("image/")) {
+    return "image";
+  }
+  if (mime.startsWith("video/")) {
+    return "video";
+  }
+  if (mime.startsWith("audio/")) {
+    return "audio";
+  }
+  if (mime === "application/pdf") {
+    return "text_document";
+  }
+  if (mime.includes("zip") || mime.includes("compressed")) {
+    return "archive";
+  }
   if (
     mime.includes("sheet") ||
     mime.includes("excel") ||

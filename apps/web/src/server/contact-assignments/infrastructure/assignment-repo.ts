@@ -21,7 +21,9 @@ export function createContactAssignmentsRepo(db: Kysely<Database>) {
   const createMany = async (
     assignments: ContactAssignmentDraft[],
   ): Promise<void> => {
-    if (assignments.length === 0) return;
+    if (assignments.length === 0) {
+      return;
+    }
     await db.insertInto("contact_assignments").values(assignments).execute();
   };
 

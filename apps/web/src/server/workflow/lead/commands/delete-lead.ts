@@ -13,19 +13,27 @@ export async function deleteLeadCommand(
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findByIdIncludingDeleted(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     // Idempotent: deleting an already-deleted lead is a no-op, not an error.
-    if (state.deletedAt !== null) return Ok({ leadId: input.leadId });
+    if (state.deletedAt !== null) {
+      return Ok({ leadId: input.leadId });
+    }
 
     const transition = deleteLead(state, {
       actor: input.actor,
       occurredAt: ctx.operationAt,
     });
-    if (!transition.ok) return transition;
+    if (!transition.ok) {
+      return transition;
+    }
 
     const committed = await ctx.commitTransition(transition.value);
-    if (!committed.ok) return committed;
+    if (!committed.ok) {
+      return committed;
+    }
 
     return Ok({ leadId: input.leadId });
   });

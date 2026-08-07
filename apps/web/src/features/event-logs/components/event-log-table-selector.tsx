@@ -20,7 +20,9 @@ export function EventLogTableSelector(props: EventLogTableSelectorProps) {
       value={props.value}
       onChange={(event) => {
         const next = event.currentTarget.value;
-        if (isEventLogTable(next)) props.onChange(next);
+        if (isEventLogTable(next)) {
+          props.onChange(next);
+        }
       }}
     >
       <For each={EVENT_LOG_SOURCES}>

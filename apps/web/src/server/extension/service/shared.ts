@@ -24,7 +24,9 @@ export async function hasActiveAuthSession(
   activeAsOf: Date,
 ): Promise<boolean> {
   const authSession = await repos.sessions.findById(authSessionId);
-  if (!authSession || authSession.expires_at <= activeAsOf) return false;
+  if (!authSession || authSession.expires_at <= activeAsOf) {
+    return false;
+  }
 
   const user = await repos.users.findById(authSession.user_id);
   return (

@@ -38,7 +38,9 @@ function NotasView(props: { data: LeadDetailView }) {
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
     const trimmed = body().trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      return;
+    }
 
     setSaving(true);
     setErrorMessage(null);

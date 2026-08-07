@@ -25,9 +25,13 @@ function isChromeRuntimeConnectApi(
 
 function getChromeRuntimeConnectApi(): ChromeRuntimeConnectApi | null {
   const chromeValue = Reflect.get(globalThis, "chrome");
-  if (!isPlainRecord(chromeValue)) return null;
+  if (!isPlainRecord(chromeValue)) {
+    return null;
+  }
   const runtimeValue = Reflect.get(chromeValue, "runtime");
-  if (!isChromeRuntimeConnectApi(runtimeValue)) return null;
+  if (!isChromeRuntimeConnectApi(runtimeValue)) {
+    return null;
+  }
   return runtimeValue;
 }
 
@@ -63,7 +67,9 @@ export function createExtensionPortConnection(): ExtensionPortConnection {
   }
 
   port.onMessage.addListener((message: unknown) => {
-    if (!isRuntimeResponse(message)) return;
+    if (!isRuntimeResponse(message)) {
+      return;
+    }
     if (message.ok) {
       hasReceivedState = true;
       setState(message.executiveState);

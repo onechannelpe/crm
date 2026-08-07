@@ -74,20 +74,25 @@ export function runLeadTransaction<O>(
         },
         appendFacts: async (events) => {
           const outcome = await appendFacts(tx, scope.operationAt, events);
-          if (outcome.ok)
+          if (outcome.ok) {
             committed.push(...zip(events, outcome.value.eventIds));
+          }
           return outcome;
         },
       });
 
-      if (isErr(result)) throw new LeadTransactionRollback(result.error);
+      if (isErr(result)) {
+        throw new LeadTransactionRollback(result.error);
+      }
 
       // Effects share the transaction with source events: no orphaned delivery.
       await enqueueLeadEffects(txScope, committed);
       return result;
     })
     .catch((error: unknown) => {
-      if (error instanceof LeadTransactionRollback) return Err(error.error);
+      if (error instanceof LeadTransactionRollback) {
+        return Err(error.error);
+      }
       throw error;
     });
 }

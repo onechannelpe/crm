@@ -23,8 +23,9 @@ import { membersRosterQuery } from "~/rpc/team-management/members-roster";
 import styles from "./team-management.module.css";
 
 function statusBadge(member: MemberListItem) {
-  if (!member.isActive)
+  if (!member.isActive) {
     return { variant: "secondary", label: "Inactivo" } as const;
+  }
   if (!member.onboardingCompleted) {
     return { variant: "warning", label: "Pendiente" } as const;
   }
@@ -40,7 +41,9 @@ export function TeamTab() {
   const filtered = createMemo(() => {
     const members = roster()?.members ?? [];
     const value = filter().trim().toLowerCase();
-    if (!value) return members;
+    if (!value) {
+      return members;
+    }
     return members.filter((member) =>
       `${shortName(member)} ${member.email}`.toLowerCase().includes(value),
     );
@@ -50,7 +53,9 @@ export function TeamTab() {
 
   // Roster never navigates into the actor's own row.
   function openMember(member: MemberListItem) {
-    if (isSelf(member)) return;
+    if (isSelf(member)) {
+      return;
+    }
     navigate(`/settings/members/${member.id}`);
   }
 

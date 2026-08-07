@@ -41,8 +41,12 @@ export default function LoginVerifyPage() {
 
   const totpFlow = createMemo(() => {
     const flow = loginFlow();
-    if (flow === undefined && flowId()) return undefined;
-    if (flowExpiredAtSubmit()) return null;
+    if (flow === undefined && flowId()) {
+      return undefined;
+    }
+    if (flowExpiredAtSubmit()) {
+      return null;
+    }
     return flow?.state === "totp" ? flow : null;
   });
 

@@ -139,9 +139,13 @@ export function pendingOwnerForStep(
 
 // Shared actions are validated against the current step by their command.
 function stepForAction(action: FulfillmentAction): FulfillmentStep | null {
-  if (action === "choose_product") return "CHOOSE_PRODUCT";
+  if (action === "choose_product") {
+    return "CHOOSE_PRODUCT";
+  }
   for (const step of FULFILLMENT_STEPS) {
-    if (STEP_DEFINITIONS[step].action === action) return step;
+    if (STEP_DEFINITIONS[step].action === action) {
+      return step;
+    }
   }
   return null;
 }
@@ -150,7 +154,9 @@ export function docKindForAction(
   action: FulfillmentAction,
 ): FulfillmentDocKind | null {
   const step = stepForAction(action);
-  if (step === null) return null;
+  if (step === null) {
+    return null;
+  }
   const def = STEP_DEFINITIONS[step];
   return def.kind === "document" ? def.docKind : null;
 }
@@ -163,7 +169,9 @@ export function nextStep(
 ): FulfillmentStep {
   const sequence = STEP_SEQUENCE[productKind];
   const index = sequence.indexOf(current);
-  if (index < 0 || index + 1 >= sequence.length) return "COMPLETED";
+  if (index < 0 || index + 1 >= sequence.length) {
+    return "COMPLETED";
+  }
   return sequence[index + 1];
 }
 

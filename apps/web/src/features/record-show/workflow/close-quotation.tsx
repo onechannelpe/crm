@@ -35,7 +35,9 @@ export function CloseQuotationSection(props: { leadId: string }) {
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    if (submitting()) return;
+    if (submitting()) {
+      return;
+    }
 
     const selected = reason();
     if (!selected) {

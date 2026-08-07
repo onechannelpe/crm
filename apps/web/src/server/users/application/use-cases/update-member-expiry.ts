@@ -21,7 +21,9 @@ export async function updateMemberExpiry(
       tx.users,
       command.userId,
     );
-    if (isErr(target)) return target;
+    if (isErr(target)) {
+      return target;
+    }
 
     const expiresAt = command.expiresOn
       ? appDayRange(command.expiresOn).endExclusive

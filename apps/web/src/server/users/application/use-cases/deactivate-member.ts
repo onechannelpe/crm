@@ -17,7 +17,9 @@ export async function deactivateMember(
 ): Promise<Result<void, DomainError>> {
   return deps.lifecycle.run(async (tx) => {
     const target = await authorizeMemberManagement(ctx, tx.users, userId);
-    if (isErr(target)) return target;
+    if (isErr(target)) {
+      return target;
+    }
 
     await tx.users.setActive(userId, false);
     await revokeUserAccess(tx, userId, ctx.operationAt);

@@ -14,7 +14,9 @@ export async function expireUsersAndInvalidateSessions(
   const candidates = await deps.accessSecurity.uow.run(async (tx) =>
     Ok(await tx.users.findActiveIdsExpiringBefore(expiredBefore)),
   );
-  if (!candidates.ok) return 0;
+  if (!candidates.ok) {
+    return 0;
+  }
 
   let expiredCount = 0;
 
@@ -35,7 +37,9 @@ export async function expireUsersAndInvalidateSessions(
       });
       return Ok(true);
     });
-    if (expired.ok && expired.value) expiredCount += 1;
+    if (expired.ok && expired.value) {
+      expiredCount += 1;
+    }
   }
 
   return expiredCount;

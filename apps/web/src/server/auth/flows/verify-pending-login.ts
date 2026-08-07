@@ -58,7 +58,9 @@ export async function verifyTotpLoginProof(
     input.flowId,
     operation.operationAt,
   );
-  if (isErr(pending)) return pending;
+  if (isErr(pending)) {
+    return pending;
+  }
   if (pending.value.flow.state !== "totp") {
     await deps.repos.loginFlows.delete(pending.value.flow.id);
     return Err({ kind: "flow_expired" });
@@ -71,7 +73,9 @@ export async function verifyTotpLoginProof(
     deps: deps.repos,
     occurredAt: operation.operationAt,
   });
-  if (isErr(verified)) return verified;
+  if (isErr(verified)) {
+    return verified;
+  }
 
   return Ok({
     method: "totp",
@@ -107,7 +111,9 @@ export async function verifyRecoveryLoginProof(
     input.flowId,
     operation.operationAt,
   );
-  if (isErr(pending)) return pending;
+  if (isErr(pending)) {
+    return pending;
+  }
 
   const verified = await verifyRecoveryCode({
     user: pending.value.user,
@@ -116,7 +122,9 @@ export async function verifyRecoveryLoginProof(
     deps: deps.repos,
     occurredAt: operation.operationAt,
   });
-  if (isErr(verified)) return verified;
+  if (isErr(verified)) {
+    return verified;
+  }
 
   return Ok({
     method: "recovery",

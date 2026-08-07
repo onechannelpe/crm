@@ -13,8 +13,12 @@ const BRANCH_SCOPED_ROLES = new Set<Role>([
 ]);
 
 export function getWorkspaceScopeForRole(role: Role): WorkspaceScopeType {
-  if (TEAM_SCOPED_ROLES.has(role)) return "team";
-  if (BRANCH_SCOPED_ROLES.has(role)) return "branch";
+  if (TEAM_SCOPED_ROLES.has(role)) {
+    return "team";
+  }
+  if (BRANCH_SCOPED_ROLES.has(role)) {
+    return "branch";
+  }
   return "global";
 }
 

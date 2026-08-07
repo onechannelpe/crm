@@ -16,17 +16,25 @@ const RUC_PATTERN = /^\d{11}$/;
 const DNI_PATTERN = /^\d{8}$/;
 
 export function parseRuc(value: unknown): Result<Ruc, DomainError> {
-  if (typeof value !== "string") return Err(fail("invalid_ruc"));
+  if (typeof value !== "string") {
+    return Err(fail("invalid_ruc"));
+  }
   const trimmed = value.trim();
-  if (!RUC_PATTERN.test(trimmed)) return Err(fail("invalid_ruc"));
+  if (!RUC_PATTERN.test(trimmed)) {
+    return Err(fail("invalid_ruc"));
+  }
   // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return Ok(trimmed as Ruc);
 }
 
 function parseDni(value: unknown): Result<Dni, DomainError> {
-  if (typeof value !== "string") return Err(fail("invalid_dni"));
+  if (typeof value !== "string") {
+    return Err(fail("invalid_dni"));
+  }
   const trimmed = value.trim();
-  if (!DNI_PATTERN.test(trimmed)) return Err(fail("invalid_dni"));
+  if (!DNI_PATTERN.test(trimmed)) {
+    return Err(fail("invalid_dni"));
+  }
   // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
   return Ok(trimmed as Dni);
 }

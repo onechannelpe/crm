@@ -17,14 +17,18 @@ export async function updateMemberAvatar(
     deps.users,
     command.userId,
   );
-  if (isErr(target)) return target;
+  if (isErr(target)) {
+    return target;
+  }
 
   const result = await deps.avatars.upload(
     command.userId,
     command.file,
     ctx.operationAt,
   );
-  if (isErr(result)) return Err(toAvatarDomainError(result.error.code));
+  if (isErr(result)) {
+    return Err(toAvatarDomainError(result.error.code));
+  }
 
   return Ok({ avatarVersion: result.value.avatarVersion });
 }

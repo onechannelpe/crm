@@ -18,7 +18,9 @@ export async function updateMemberProfile(
     deps.users,
     command.userId,
   );
-  if (isErr(target)) return target;
+  if (isErr(target)) {
+    return target;
+  }
 
   await deps.users.updateProfile(command.userId, {
     names: command.names,

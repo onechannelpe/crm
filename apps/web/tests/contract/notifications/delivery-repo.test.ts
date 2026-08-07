@@ -13,8 +13,9 @@ import {
 } from "~/server/notifications/repos/delivery-repo";
 
 const NOW = new Date(1_700_000_000_000);
+const LEASE_MS = 30_000;
 const RETRY_AT = new Date(NOW.getTime() + 5_000);
-const RECLAIM_AT = new Date(NOW.getTime() + 30_001);
+const RECLAIM_AT = new Date(NOW.getTime() + LEASE_MS + 1);
 const WORKER_ID = "worker";
 const INTENT_ID = NotificationIntentId.trust("intent-1");
 const USER_ID = UserId.trust("01974fd5-f261-7a7d-93f5-2f3d0f969001");
@@ -75,7 +76,7 @@ describe("delivery repository", () => {
 
     await repository.insertPlanned([planned()], NOW);
 
-    const [job] = await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
+    const [job] = await repository.store.claim(WORKER_ID, NOW, 10, LEASE_MS);
 
     if (!job) {
       throw new Error("expected planned delivery job");
@@ -88,7 +89,7 @@ describe("delivery repository", () => {
       attempt_count: 1,
     });
 
-    const second = await repository.store.claim("worker-2", NOW, 10, 30_000);
+    const second = await repository.store.claim("worker-2", NOW, 10, LEASE_MS);
 
     expect(second).toEqual([]);
   });
@@ -98,7 +99,7 @@ describe("delivery repository", () => {
 
     await repository.insertPlanned([planned()], NOW);
 
-    const [job] = await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
+    const [job] = await repository.store.claim(WORKER_ID, NOW, 10, LEASE_MS);
 
     if (!job) {
       throw new Error("expected planned delivery job");
@@ -137,7 +138,7 @@ describe("delivery repository", () => {
 
     await repository.insertPlanned([planned({ channel: "email" })], NOW);
 
-    const [first] = await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
+    const [first] = await repository.store.claim(WORKER_ID, NOW, 10, LEASE_MS);
 
     if (!first) {
       throw new Error("expected planned delivery job");
@@ -172,7 +173,7 @@ describe("delivery repository", () => {
       WORKER_ID,
       RETRY_AT,
       10,
-      30_000,
+      LEASE_MS,
     );
 
     expect(second?.id).toBe(first.id);
@@ -184,7 +185,7 @@ describe("delivery repository", () => {
 
     await repository.insertPlanned([planned({ channel: "email" })], NOW);
 
-    const [job] = await repository.store.claim(WORKER_ID, NOW, 10, 30_000);
+    const [job] = await repository.store.claim(WORKER_ID, NOW, 10, LEASE_MS);
 
     if (!job) {
       throw new Error("expected planned delivery job");
@@ -220,21 +221,20 @@ describe("delivery repository", () => {
       "dead-worker",
       NOW,
       1,
-      30_000,
+      LEASE_MS,
     );
 
     if (!leased) {
       throw new Error("expected planned delivery job");
     }
 
-    expect(await repository.store.claim("other", NOW, 1, 30_000)).toEqual([]);
+    expect(await repository.store.claim("other", NOW, 1, LEASE_MS)).toEqual([]);
 
-    // Claims reclaim expired leases without a separate sweeper.
     const [reclaimed] = await repository.store.claim(
       "other",
       RECLAIM_AT,
       1,
-      30_000,
+      LEASE_MS,
     );
 
     expect(reclaimed?.id).toBe(leased.id);
@@ -246,7 +246,6 @@ describe("delivery repository", () => {
 
     await repository.insertPlanned([planned()], NOW);
 
-    // Each abandoned lease consumes an attempt. The sixth claim must fail.
     let deadline = NOW;
 
     for (let attempt = 1; attempt <= 5; attempt++) {
@@ -255,16 +254,16 @@ describe("delivery repository", () => {
         `worker-${attempt}`,
         deadline,
         1,
-        30_000,
+        LEASE_MS,
       );
 
       expect(claimed?.attempt_count).toBe(attempt);
 
-      deadline = new Date(deadline.getTime() + 30_001);
+      deadline = new Date(deadline.getTime() + LEASE_MS + 1);
     }
 
     expect(
-      await repository.store.claim("worker-6", deadline, 1, 30_000),
+      await repository.store.claim("worker-6", deadline, 1, LEASE_MS),
     ).toEqual([]);
   });
 
@@ -277,7 +276,7 @@ describe("delivery repository", () => {
       "stale-worker",
       NOW,
       1,
-      30_000,
+      LEASE_MS,
     );
 
     if (!staleJob) {
@@ -288,7 +287,7 @@ describe("delivery repository", () => {
       "current-worker",
       RECLAIM_AT,
       1,
-      30_000,
+      LEASE_MS,
     );
 
     if (!currentJob) {
@@ -348,7 +347,7 @@ describe("delivery repository", () => {
 
     expect(await repository.store.countOutstanding()).toBe(2);
 
-    const [job] = await repository.store.claim(WORKER_ID, NOW, 1, 30_000);
+    const [job] = await repository.store.claim(WORKER_ID, NOW, 1, LEASE_MS);
 
     if (!job) {
       throw new Error("expected job");

@@ -26,7 +26,9 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 function isNotificationAudience(value: unknown): value is NotificationAudience {
-  if (!isPlainRecord(value) || typeof value["kind"] !== "string") return false;
+  if (!isPlainRecord(value) || typeof value["kind"] !== "string") {
+    return false;
+  }
 
   switch (value["kind"]) {
     case "user_ids":
@@ -66,7 +68,9 @@ function isNotificationPriority(
 }
 
 function isNotificationIntent(value: unknown): value is NotificationIntent {
-  if (!isPlainRecord(value)) return false;
+  if (!isPlainRecord(value)) {
+    return false;
+  }
   return (
     typeof value["id"] === "string" &&
     !isErr(NotificationIntentId.parse(value["id"])) &&

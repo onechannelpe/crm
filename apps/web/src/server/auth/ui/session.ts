@@ -10,7 +10,9 @@ import { isErr } from "~/shared/result";
 
 export async function getLoginFlow(flowId: string) {
   const parsedFlowId = AuthLoginFlowId.parse(flowId);
-  if (isErr(parsedFlowId)) return null;
+  if (isErr(parsedFlowId)) {
+    return null;
+  }
 
   return application.auth.login.getFlow(
     parsedFlowId.value,

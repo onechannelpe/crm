@@ -241,7 +241,9 @@ export function createLeadVenueRepo(db: DatabaseExecutor) {
         .where("id", "=", id)
         .executeTakeFirst();
 
-      if (!row) return Ok(undefined);
+      if (!row) {
+        return Ok(undefined);
+      }
 
       const accountRows = await db
         .selectFrom("workflow_lead_venue_accounts")

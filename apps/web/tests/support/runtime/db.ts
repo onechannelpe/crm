@@ -398,7 +398,9 @@ async function truncateDynamicTables(db: Kysely<Database>): Promise<void> {
     .map((row) => row.tablename)
     .filter((name) => !STATIC_TABLES.has(name));
 
-  if (targets.length === 0) return;
+  if (targets.length === 0) {
+    return;
+  }
 
   await sql`truncate table ${sql.join(targets.map((name) => sql.table(name)))} cascade`.execute(
     db,

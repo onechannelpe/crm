@@ -46,7 +46,9 @@ export async function startPasskeyLogin(
           occurredAt: operation.operationAt,
         },
   );
-  if (isErr(prepared)) return prepared;
+  if (isErr(prepared)) {
+    return prepared;
+  }
 
   return deps.uow.run(async (repos) =>
     Ok(await persistPasskeyLoginFlow(repos, prepared.value)),

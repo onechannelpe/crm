@@ -43,10 +43,14 @@ export function validateInviteAcceptance(
   }
 
   const token = readInviteToken(input.token);
-  if (isErr(token)) return Err(token.error);
+  if (isErr(token)) {
+    return Err(token.error);
+  }
 
   const password = readStrongPassword(input.password);
-  if (isErr(password)) return Err(password.error);
+  if (isErr(password)) {
+    return Err(password.error);
+  }
 
   return Ok({ token: token.value, password: password.value });
 }

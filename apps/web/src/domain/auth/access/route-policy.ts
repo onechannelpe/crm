@@ -15,9 +15,13 @@ function isAppPath(p: string): p is AppPath {
 
 export function getRoutePermission(pathname: string): Permission | null {
   const dynamic = DYNAMIC_ROUTES.find((r) => r.pattern.test(pathname));
-  if (dynamic) return dynamic.permission ?? null;
+  if (dynamic) {
+    return dynamic.permission ?? null;
+  }
 
-  if (isAppPath(pathname)) return ROUTE_MANIFEST[pathname].permission ?? null;
+  if (isAppPath(pathname)) {
+    return ROUTE_MANIFEST[pathname].permission ?? null;
+  }
 
   // Prefix fallback: /settings/members/foo inherits /settings/members' permission.
   const prefix = Object.keys(ROUTE_MANIFEST)
@@ -30,13 +34,17 @@ export function getRoutePermission(pathname: string): Permission | null {
 
 export function canAccessPath(role: Role, pathname: string): boolean {
   const permission = getRoutePermission(pathname);
-  if (!permission) return true;
+  if (!permission) {
+    return true;
+  }
   return hasPermission(role, permission);
 }
 
 export function getDefaultAppPath(role: Role): string {
   const roleDefault = ROLE_DEFAULT_PATHS[role];
-  if (roleDefault) return roleDefault;
+  if (roleDefault) {
+    return roleDefault;
+  }
 
   const candidate = Object.keys(ROUTE_MANIFEST)
     .filter(isAppPath)

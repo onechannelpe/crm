@@ -149,14 +149,18 @@ export async function completePendingLogin(
     const context = user
       ? await loadActiveAuthContextForUser(user, repos, operation)
       : null;
-    if (!context) return Err({ kind: "flow_expired" });
+    if (!context) {
+      return Err({ kind: "flow_expired" });
+    }
 
     const consumed = await consumeVerifiedProof(
       repos,
       input.proof,
       operation.operationAt,
     );
-    if (isErr(consumed)) return consumed;
+    if (isErr(consumed)) {
+      return consumed;
+    }
 
     await enqueueAlertOnNewLoginSource({
       user: context.user,

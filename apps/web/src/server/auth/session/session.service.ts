@@ -192,7 +192,9 @@ export function createAuditedSessionIssuer(deps: AuditedSessionIssuerDeps) {
       operation: OperationContext,
     ): Promise<Result<IssuedSession, DomainError>> {
       const issued = await issuer.establish(spec, operation);
-      if (!issued.ok) return issued;
+      if (!issued.ok) {
+        return issued;
+      }
 
       await deps.events.append({
         type: spec.auditAction,

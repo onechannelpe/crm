@@ -20,7 +20,9 @@ function getForwardedOrigin(headers: Headers): string | null {
 }
 
 function stripForwardedValue(value: string | undefined): string | null {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
   const normalized = value.trim().replace(/^"|"$/g, "");
   return normalized || null;
 }

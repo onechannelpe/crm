@@ -19,7 +19,9 @@ export type ContactAssignmentSeedRow = {
 export function createContactAssignmentsTestKit(ctx: TestDbContext) {
   return {
     async seedAssignments(rows: ContactAssignmentSeedRow[]): Promise<void> {
-      if (rows.length === 0) return;
+      if (rows.length === 0) {
+        return;
+      }
       await ctx.db
         .insertInto("contact_assignments")
         .values(

@@ -19,22 +19,34 @@ export function toRepLegalEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const nombres = requireString(payload, "nombres", row);
-  if (!nombres.ok) return nombres;
+  if (!nombres.ok) {
+    return nombres;
+  }
 
   const apellidoPaterno = requireString(payload, "apellidoPaterno", row);
-  if (!apellidoPaterno.ok) return apellidoPaterno;
+  if (!apellidoPaterno.ok) {
+    return apellidoPaterno;
+  }
 
   const apellidoMaterno = requireString(payload, "apellidoMaterno", row);
-  if (!apellidoMaterno.ok) return apellidoMaterno;
+  if (!apellidoMaterno.ok) {
+    return apellidoMaterno;
+  }
 
   const dni = requireString(payload, "dni", row);
-  if (!dni.ok) return dni;
+  if (!dni.ok) {
+    return dni;
+  }
 
   const telefono = requireString(payload, "telefono", row);
-  if (!telefono.ok) return telefono;
+  if (!telefono.ok) {
+    return telefono;
+  }
 
   const email = requireString(payload, "email", row);
-  if (!email.ok) return email;
+  if (!email.ok) {
+    return email;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -55,13 +67,19 @@ export function toRateProposedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const proposalId = requireString(payload, "proposalId", row);
-  if (!proposalId.ok) return proposalId;
+  if (!proposalId.ok) {
+    return proposalId;
+  }
 
   const round = requireNumber(payload, "round", row);
-  if (!round.ok) return round;
+  if (!round.ok) {
+    return round;
+  }
 
   const currency = requireMoneda(payload, row);
-  if (!currency.ok) return currency;
+  if (!currency.ok) {
+    return currency;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -79,13 +97,19 @@ export function toRateRevisionRequestedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const revisionId = requireString(payload, "revisionId", row);
-  if (!revisionId.ok) return revisionId;
+  if (!revisionId.ok) {
+    return revisionId;
+  }
 
   const round = requireNumber(payload, "round", row);
-  if (!round.ok) return round;
+  if (!round.ok) {
+    return round;
+  }
 
   const justification = requireString(payload, "justification", row);
-  if (!justification.ok) return justification;
+  if (!justification.ok) {
+    return justification;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -103,7 +127,9 @@ export function toRateAcceptedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const proposalId = requireString(payload, "proposalId", row);
-  if (!proposalId.ok) return proposalId;
+  if (!proposalId.ok) {
+    return proposalId;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -119,10 +145,14 @@ export function toRateProposalCorrectedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const proposalId = requireString(payload, "proposalId", row);
-  if (!proposalId.ok) return proposalId;
+  if (!proposalId.ok) {
+    return proposalId;
+  }
 
   const round = requireNumber(payload, "round", row);
-  if (!round.ok) return round;
+  if (!round.ok) {
+    return round;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -149,9 +179,13 @@ export function toVenueAddedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const venueId = requireString(payload, "venueId", row);
-  if (!venueId.ok) return venueId;
+  if (!venueId.ok) {
+    return venueId;
+  }
   const tradeName = requireString(payload, "tradeName", row);
-  if (!tradeName.ok) return tradeName;
+  if (!tradeName.ok) {
+    return tradeName;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -168,9 +202,13 @@ export function toVenueUpdatedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const venueId = requireString(payload, "venueId", row);
-  if (!venueId.ok) return venueId;
+  if (!venueId.ok) {
+    return venueId;
+  }
   const tradeName = requireString(payload, "tradeName", row);
-  if (!tradeName.ok) return tradeName;
+  if (!tradeName.ok) {
+    return tradeName;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),

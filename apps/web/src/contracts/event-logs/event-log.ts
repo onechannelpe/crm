@@ -109,9 +109,15 @@ function isJson(value: unknown): value is Json {
   ) {
     return true;
   }
-  if (typeof value === "number") return Number.isFinite(value);
-  if (Array.isArray(value)) return value.every(isJson);
-  if (!isObject(value)) return false;
+  if (typeof value === "number") {
+    return Number.isFinite(value);
+  }
+  if (Array.isArray(value)) {
+    return value.every(isJson);
+  }
+  if (!isObject(value)) {
+    return false;
+  }
   return Object.values(value).every(isJson);
 }
 
@@ -256,10 +262,14 @@ export function decodeEventLogCursor(raw: string): EventLogCursor | null {
   try {
     const decoded = atob(raw);
     const separator = decoded.indexOf(":");
-    if (separator < 0) return null;
+    if (separator < 0) {
+      return null;
+    }
     const timestamp = Number(decoded.slice(0, separator));
     const id = decoded.slice(separator + 1);
-    if (!Number.isFinite(timestamp) || id.length === 0) return null;
+    if (!Number.isFinite(timestamp) || id.length === 0) {
+      return null;
+    }
     return { timestamp, id };
   } catch {
     return null;

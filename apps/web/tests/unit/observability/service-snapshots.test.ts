@@ -127,7 +127,9 @@ describe("observability service snapshots", () => {
     );
 
     expect(isErr(result)).toBe(false);
-    if (isErr(result)) return;
+    if (isErr(result)) {
+      return;
+    }
 
     expect(result.value).toEqual({
       windowMinutes: 120,
@@ -246,7 +248,9 @@ describe("observability service snapshots", () => {
     );
 
     expect(isErr(result)).toBe(false);
-    if (isErr(result)) return;
+    if (isErr(result)) {
+      return;
+    }
 
     expect(result.value).toEqual({
       windowMinutes: 30,

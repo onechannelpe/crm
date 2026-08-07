@@ -16,7 +16,9 @@ export async function getCurrentUser(
     ctx.actor;
 
   const user = await deps.repos.users.findById(userId);
-  if (!user) return Ok(null);
+  if (!user) {
+    return Ok(null);
+  }
 
   const [strongAuthStatus, whatsappAddr] = await Promise.all([
     getStrongAuthStatus(userId, deps.repos),

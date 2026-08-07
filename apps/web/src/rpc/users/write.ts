@@ -42,7 +42,9 @@ export async function updateMemberProfile(
         ctx,
         command,
       );
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
       return Ok({ message: "Perfil actualizado" });
     },
   });
@@ -64,7 +66,9 @@ export async function changeMemberRole(
         executiveCategory:
           r.optEnum("executiveCategory", EXECUTIVE_CATEGORIES) ?? null,
       }));
-      if (isErr(command)) return command;
+      if (isErr(command)) {
+        return command;
+      }
 
       if (
         command.value.role === "executive" &&
@@ -79,7 +83,9 @@ export async function changeMemberRole(
 
     execute: async (ctx, command) => {
       const result = await application.users.members.changeRole(ctx, command);
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
       return Ok({ message: "Rol actualizado" });
     },
   });
@@ -103,7 +109,9 @@ export async function deactivateMember(
         ctx,
         command.userId,
       );
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
       return Ok({ message: "Usuario desactivado" });
     },
   });
@@ -127,7 +135,9 @@ export async function reactivateMember(
         ctx,
         command.userId,
       );
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
       return Ok({ message: "Usuario reactivado" });
     },
   });
@@ -152,7 +162,9 @@ export async function updateMemberExpiry(
 
     execute: async (ctx, command) => {
       const result = await application.users.members.updateExpiry(ctx, command);
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
       return Ok({ message: "Vencimiento actualizado" });
     },
   });
@@ -176,7 +188,9 @@ export async function deleteMember(
         ctx,
         command.userId,
       );
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
       return Ok({ message: "Usuario eliminado" });
     },
   });

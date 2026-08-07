@@ -58,7 +58,9 @@ describe("executeDownload", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (result.ok) return;
+    if (result.ok) {
+      return;
+    }
     expect(result.error.code).toBe("token_already_used");
   });
 });

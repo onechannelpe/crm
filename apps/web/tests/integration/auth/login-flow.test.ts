@@ -33,7 +33,9 @@ describe("login flow service", () => {
     });
 
     expect(isErr(result)).toBe(false);
-    if (isErr(result)) throw new Error("expected successful password login");
+    if (isErr(result)) {
+      throw new Error("expected successful password login");
+    }
     expect(result.value.kind).toBe("complete");
     const persisted = await scenario.ctx.db
       .selectFrom("login_flows")
@@ -95,7 +97,9 @@ describe("login flow service", () => {
     );
 
     expect(isErr(result)).toBe(false);
-    if (isErr(result)) throw new Error("expected passkey flow");
+    if (isErr(result)) {
+      throw new Error("expected passkey flow");
+    }
 
     const flow = await getLoginFlowState(
       AuthLoginFlowId.trust(result.value.id),
@@ -104,8 +108,9 @@ describe("login flow service", () => {
       operationAt(new Date()),
     );
     expect(flow?.state).toBe("passkey");
-    if (!flow || flow.state !== "passkey")
+    if (!flow || flow.state !== "passkey") {
       throw new Error("expected passkey state");
+    }
     expect(flow.requestOptions.allowCredentials).toHaveLength(1);
     expect(flow.requestOptions.rpId).toBe(result.value.requestOptions.rpId);
     expect(flow.requestOptions.challenge).toBe(

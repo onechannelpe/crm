@@ -43,11 +43,21 @@ export default function LoginRecoveryPage() {
   // has no user for recovery-code redemption.
   const recoveryFlow = createMemo(() => {
     const flow = loginFlow();
-    if (flow === undefined && flowId()) return undefined;
-    if (flowExpiredAtSubmit()) return null;
-    if (!flow) return null;
-    if (flow.state === "totp") return flow;
-    if (flow.state === "passkey" && flow.mode === "identified") return flow;
+    if (flow === undefined && flowId()) {
+      return undefined;
+    }
+    if (flowExpiredAtSubmit()) {
+      return null;
+    }
+    if (!flow) {
+      return null;
+    }
+    if (flow.state === "totp") {
+      return flow;
+    }
+    if (flow.state === "passkey" && flow.mode === "identified") {
+      return flow;
+    }
     return null;
   });
 

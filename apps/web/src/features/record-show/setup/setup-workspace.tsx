@@ -285,7 +285,9 @@ function DigitalPolicyPanel(props: {
                   value={onlineEnabled()}
                   onChange={(checked) => {
                     setOnlineEnabled(checked);
-                    if (!checked) setOnlineCollectionMode("");
+                    if (!checked) {
+                      setOnlineCollectionMode("");
+                    }
                   }}
                 />
               </FieldInputValue>

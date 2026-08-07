@@ -8,12 +8,16 @@ interface LabelUser extends WorkspaceIdentity {
 
 export function getWorkspaceLabel(user: LabelUser): string {
   if (user.role === "executive") {
-    if (!user.supervisor) return "Equipo sin supervisor";
+    if (!user.supervisor) {
+      return "Equipo sin supervisor";
+    }
     return `Equipo de ${user.supervisor.names}`;
   }
 
   if (user.role === "supervisor") {
-    if (!user.team) return "Mi equipo";
+    if (!user.team) {
+      return "Mi equipo";
+    }
     return `Equipo ${user.team.name}`;
   }
 

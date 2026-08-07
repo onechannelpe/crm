@@ -130,7 +130,9 @@ export function AccountsForm(props: {
                 value={form.usarDolares()}
                 onChange={(checked) => {
                   form.setUsarDolares(checked);
-                  if (!checked) form.setSettlementCurrency("PEN");
+                  if (!checked) {
+                    form.setSettlementCurrency("PEN");
+                  }
                 }}
               />
             </FormFieldRow>

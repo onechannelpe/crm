@@ -209,7 +209,9 @@ describe("lead action policy", () => {
     });
 
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
+    if (!result.ok) {
+      return;
+    }
     expect(result.value.next.stage).toBe("CLOSED_LOST");
     expect(result.value.events.map((e) => e.eventType)).toContain(
       "lead_closed",
@@ -276,7 +278,9 @@ describe("lead action policy", () => {
     });
 
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
+    if (!result.ok) {
+      return;
+    }
     expect(result.value.next.stage).toBe("PRICING");
     expect(result.value.next.status).toBe("DISPONIBLE");
     expect(result.value.next.priority).toBe("P1");
@@ -298,7 +302,9 @@ describe("lead action policy", () => {
     });
 
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
+    if (!result.ok) {
+      return;
+    }
     expect(result.value.next.stage).toBe("DISQUALIFIED");
   });
 
@@ -322,7 +328,9 @@ describe("lead action policy", () => {
       occurredAt: new Date(200),
     });
     expect(owner.ok).toBe(true);
-    if (!owner.ok) return;
+    if (!owner.ok) {
+      return;
+    }
     expect(owner.value.next.stage).toBe("PRICING");
 
     // Back office does not own the lead but carries lead:view:all.

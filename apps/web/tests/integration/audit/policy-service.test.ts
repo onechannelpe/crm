@@ -9,6 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createAuditPolicyService } from "~/server/audit-reader/policy-service";
 
+const NOW = new Date("2026-01-01T00:00:00.000Z");
 const ACTOR_USER_ID = TEST_FIXTURES.users.superUser.id;
 
 describe("audit policy service", () => {
@@ -39,7 +40,7 @@ describe("audit policy service", () => {
           isActive: true,
           actorUserId: ACTOR_USER_ID,
         },
-        operationAt(new Date()),
+        operationAt(NOW),
       ),
     ).rejects.toThrow("protected policies cannot be downgraded");
   });
@@ -56,15 +57,17 @@ describe("audit policy service", () => {
         isActive: true,
         actorUserId: ACTOR_USER_ID,
       },
-      operationAt(new Date()),
+      operationAt(NOW),
     );
 
     const snapshot = await service.getSnapshot();
     const leadsPolicy = snapshot.items.find(
       (item) => item.action === "leads_requested",
     );
-    expect(leadsPolicy).toBeDefined();
-    expect(leadsPolicy?.riskLevel).toBe("medium");
-    expect(leadsPolicy?.isProtected).toBe(false);
+
+    expect(leadsPolicy).toMatchObject({
+      riskLevel: "medium",
+      isProtected: false,
+    });
   });
 });

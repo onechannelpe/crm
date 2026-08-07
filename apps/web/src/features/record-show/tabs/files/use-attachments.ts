@@ -17,7 +17,9 @@ export function useAttachments(leadId: Accessor<string | null>) {
     attachments,
     refetch: async () => {
       const id = leadId();
-      if (!id) return;
+      if (!id) {
+        return;
+      }
 
       await revalidate(leadSaleProofFilesQuery.keyFor(id));
     },

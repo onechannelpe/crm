@@ -190,7 +190,9 @@ describe("auth middleware csrf policy", () => {
     });
 
     expect(decision.kind).toBe("reject");
-    if (decision.kind !== "reject") throw new Error("Expected reject");
+    if (decision.kind !== "reject") {
+      throw new Error("Expected reject");
+    }
     expect(decision.response.status).toBe(403);
   });
 
@@ -201,7 +203,9 @@ describe("auth middleware csrf policy", () => {
     });
 
     expect(decision.kind).toBe("reject");
-    if (decision.kind !== "reject") throw new Error("Expected reject");
+    if (decision.kind !== "reject") {
+      throw new Error("Expected reject");
+    }
     expect(decision.response.status).toBe(403);
   });
 
@@ -215,7 +219,9 @@ describe("auth middleware csrf policy", () => {
     });
 
     expect(decision.kind).toBe("reject");
-    if (decision.kind !== "reject") throw new Error("Expected reject");
+    if (decision.kind !== "reject") {
+      throw new Error("Expected reject");
+    }
     expect(decision.response.status).toBe(403);
   });
 });

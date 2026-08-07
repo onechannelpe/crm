@@ -42,7 +42,9 @@ export async function adjustMonthCredit(raw: {
         ctx,
       );
 
-      if (isErr(resolved)) return resolved;
+      if (isErr(resolved)) {
+        return resolved;
+      }
 
       return Ok({ ok: true as const });
     },
@@ -80,7 +82,9 @@ export async function setMerchantTarget(raw: {
         ctx,
       );
 
-      if (isErr(updated)) return updated;
+      if (isErr(updated)) {
+        return updated;
+      }
 
       return Ok({ ok: true as const });
     },

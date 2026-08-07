@@ -37,7 +37,9 @@ describe("privileged password login", () => {
       requestMeta,
     );
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) throw new Error("expected strong auth requirement");
+    if (!isErr(result)) {
+      throw new Error("expected strong auth requirement");
+    }
     expect(result.error.kind).toBe("strong_auth_required");
   });
 
@@ -127,7 +129,9 @@ describe("privileged password login", () => {
     const flowId = AuthLoginFlowId.trust(passwordResult.value.flow.id);
     const result = await scenario.loginTotp(flowId, code, requestMeta);
     expect(isErr(result)).toBe(false);
-    if (isErr(result)) throw new Error("expected successful totp login");
+    if (isErr(result)) {
+      throw new Error("expected successful totp login");
+    }
 
     const sessions = await scenario.ctx.repos.sessions.listForUser(user.userId);
     expect(sessions[0]?.session_class).toBe("app");
@@ -164,7 +168,9 @@ describe("privileged password login", () => {
       requestMeta,
     );
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) throw new Error("expected invalid totp");
+    if (!isErr(result)) {
+      throw new Error("expected invalid totp");
+    }
     expect(result.error.kind).toBe("invalid_totp");
   });
 

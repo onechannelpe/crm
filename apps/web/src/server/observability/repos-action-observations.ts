@@ -46,7 +46,9 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
         const payload = serializeEventLogStreamPayload(
           mapActionObservationRow(row),
         );
-        if (payload) await notify(trx, EVENT_LOGS_STREAM_CHANNEL, payload);
+        if (payload) {
+          await notify(trx, EVENT_LOGS_STREAM_CHANNEL, payload);
+        }
 
         return row;
       });

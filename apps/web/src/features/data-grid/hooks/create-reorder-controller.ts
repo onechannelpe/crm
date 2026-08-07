@@ -87,7 +87,9 @@ export function createDataGridReorderController<T>(
     isDragged: (id) => activeRowId() === id && dragging(),
     isDropTarget(id) {
       const index = targetIndex();
-      if (index === undefined) return false;
+      if (index === undefined) {
+        return false;
+      }
       const row = rows()[index];
       return row !== undefined && rowId(row) === id;
     },

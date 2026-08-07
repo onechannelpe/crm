@@ -60,7 +60,9 @@ async function reserveUsage<K extends CapacityKind>(
         command.actorUserId,
         operation,
       );
-      if (isErr(remaining)) return remaining;
+      if (isErr(remaining)) {
+        return remaining;
+      }
 
       if (remaining.value < command.amount) {
         return Err(fail(EXHAUSTED_CODE[command.kind]));

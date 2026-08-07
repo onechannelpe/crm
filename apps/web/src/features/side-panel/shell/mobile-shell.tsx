@@ -23,7 +23,9 @@ export function MobileShell(props: MobileShellProps) {
         ? styles.variantClosedFullScreen
         : styles.variantClosed;
     }
-    if (props.targetVariant === "fullScreen") return styles.variantFullScreen;
+    if (props.targetVariant === "fullScreen") {
+      return styles.variantFullScreen;
+    }
     return styles.variantNormal;
   };
 
@@ -35,7 +37,9 @@ export function MobileShell(props: MobileShellProps) {
 
   onMount(() => {
     function handlePointerDown(e: PointerEvent) {
-      if (!isOpen()) return;
+      if (!isOpen()) {
+        return;
+      }
       if (
         containerRef &&
         e.target instanceof Node &&

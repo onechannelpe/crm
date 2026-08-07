@@ -102,7 +102,9 @@ function pendingAction(data: LeadDetailView): FulfillmentAction | null {
   const found = data.availableActions.find((action) =>
     action.startsWith("fulfillment:"),
   );
-  if (!found) return null;
+  if (!found) {
+    return null;
+  }
   const action = found.slice("fulfillment:".length);
   return isFulfillmentAction(action) ? action : null;
 }
@@ -117,8 +119,9 @@ function docsOfKind(view: LeadDetailFulfillmentView, kind: FulfillmentDocKind) {
 }
 
 function productKindLabel(productKind: string | null): string {
-  if (!productKind || !isProductKind(productKind))
+  if (!productKind || !isProductKind(productKind)) {
     return "Producto sin definir";
+  }
   return describeProductKind(productKind);
 }
 
@@ -323,21 +326,29 @@ function ProductChooser(props: { data: LeadDetailView }) {
 
   const unitSummary = () => {
     const kind = productKind();
-    if (kind === "") return null;
-    if (kind === "digital_only") return "Se creará 1 registro digital.";
+    if (kind === "") {
+      return null;
+    }
+    if (kind === "digital_only") {
+      return "Se creará 1 registro digital.";
+    }
     const count = Math.max(1, posCount());
     return `Se crearán ${count} unidad${count === 1 ? "" : "es"}, una por POS.`;
   };
 
   const productConsequence = () => {
     const kind = productKind();
-    if (kind === "") return null;
+    if (kind === "") {
+      return null;
+    }
     return PRODUCT_CONSEQUENCE[kind];
   };
 
   async function submitProduct() {
     const kind = productKind();
-    if (kind === "") return;
+    if (kind === "") {
+      return;
+    }
     state.setSubmitting(true);
     state.setError(null);
     try {
@@ -489,7 +500,9 @@ function UnitTextRows(props: {
     const entries = props.units
       .map((unit) => [unit.id, (values()[unit.id] ?? "").trim()] as const)
       .filter(([, value]) => value.length > 0);
-    if (entries.length === 0) return;
+    if (entries.length === 0) {
+      return;
+    }
 
     state.setSubmitting(true);
     state.setError(null);
@@ -772,7 +785,9 @@ function UnitFileControl(props: {
 
   async function submitFile() {
     const selected = file();
-    if (!selected) return;
+    if (!selected) {
+      return;
+    }
     state.setSubmitting(true);
     state.setError(null);
     try {
@@ -809,9 +824,15 @@ function UnitFileControl(props: {
 }
 
 function paymentStatus(unit: Unit): string {
-  if (unit.paymentValidated) return "Validado";
-  if (unit.paymentProofFileId) return "Comprobante recibido";
-  if (unit.paymentUrl) return "Link enviado";
+  if (unit.paymentValidated) {
+    return "Validado";
+  }
+  if (unit.paymentProofFileId) {
+    return "Comprobante recibido";
+  }
+  if (unit.paymentUrl) {
+    return "Link enviado";
+  }
   return "Pendiente";
 }
 

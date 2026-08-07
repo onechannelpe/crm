@@ -30,7 +30,9 @@ export async function finishPasskeyLogin(
   const requestContext = getActionRequestContext();
 
   const parsedFlowId = AuthLoginFlowId.parse(flowId);
-  if (isErr(parsedFlowId)) throwDomain(parsedFlowId.error);
+  if (isErr(parsedFlowId)) {
+    throwDomain(parsedFlowId.error);
+  }
   if (!isAuthenticationResponse(response)) {
     throwDomain(fail("invalid_credentials"));
   }

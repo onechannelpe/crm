@@ -196,7 +196,9 @@ export async function verifyPasskeyEnrollment(
       credential: registration.credential,
     });
   } catch (error: unknown) {
-    if (!isPasskeyRequestError(error)) throw error;
+    if (!isPasskeyRequestError(error)) {
+      throw error;
+    }
     await recordVerificationFailure(repos, input, input.verifiedAt);
     return Err(fail("invalid_passkey_request"));
   }

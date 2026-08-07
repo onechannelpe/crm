@@ -109,8 +109,12 @@ function readObservations(
   const observations: GpvObservation[] = [];
   for (let offset = 0; offset <= GPV_MAX_MONTH_OFFSET; offset++) {
     const gpvKey = `gpv_m${offset}`;
-    if (!(gpvKey in cells)) continue;
-    if (addCalendarMonths(saleMonth, offset) > cutMonth) continue;
+    if (!(gpvKey in cells)) {
+      continue;
+    }
+    if (addCalendarMonths(saleMonth, offset) > cutMonth) {
+      continue;
+    }
     observations.push({
       offset,
       gpv: cellNumber(cells[gpvKey]),

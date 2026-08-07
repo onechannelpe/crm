@@ -83,7 +83,9 @@ async function cohortTargets(
 
   const byMonth = new Map<string, number>();
   for (const row of rows) {
-    if (row.monthly_target_gpv == null) continue;
+    if (row.monthly_target_gpv == null) {
+      continue;
+    }
     byMonth.set(
       row.sale_month,
       (byMonth.get(row.sale_month) ?? 0) + row.monthly_target_gpv,
@@ -143,7 +145,9 @@ export async function getCohortRows(
     ? await salesQuery.limit(page.limit).offset(page.offset).execute()
     : await salesQuery.execute();
 
-  if (sales.length === 0) return [];
+  if (sales.length === 0) {
+    return [];
+  }
 
   const points = await pointsBySale(
     db,

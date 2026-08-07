@@ -10,7 +10,9 @@ export function toNoteEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const body = requireString(payload, "body", row);
-  if (!body.ok) return body;
+  if (!body.ok) {
+    return body;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),

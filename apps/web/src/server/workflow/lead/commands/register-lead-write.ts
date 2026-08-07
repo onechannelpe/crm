@@ -30,21 +30,27 @@ export function reassignRegisteredLead(input: {
 }): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   return runLeadTransaction(input.scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     const transition = reassignLead(state, {
       actor: input.actor,
       toExecutiveId: input.actor.userId,
       occurredAt: ctx.operationAt,
     });
-    if (!transition.ok) return transition;
+    if (!transition.ok) {
+      return transition;
+    }
 
     const committed = await ctx.commitTransition(transition.value, {
       toExecutiveId: input.actor.userId,
       assignedBy: input.actor.userId,
       assignedAt: ctx.operationAt,
     });
-    if (!committed.ok) return committed;
+    if (!committed.ok) {
+      return committed;
+    }
 
     // The reassigned lead already carries its own status and priority, so the
     // inquiry only links up; no answer carry-over.
@@ -111,7 +117,9 @@ export function createRegisteredLead(input: {
           commercialScope: input.commercialScope,
           createdAt: ctx.operationAt,
         });
-        if (!draft.ok) return draft;
+        if (!draft.ok) {
+          return draft;
+        }
 
         const leadId = await ctx.repos.leads.insert(draft.value);
         const assigned = await assignOrganizationOwnerInTransaction(ctx.tx, {
@@ -121,7 +129,9 @@ export function createRegisteredLead(input: {
           assignedAt: ctx.operationAt,
           reason: "lead_registration",
         });
-        if (!assigned.ok) return assigned;
+        if (!assigned.ok) {
+          return assigned;
+        }
 
         const appended = await ctx.appendFacts([
           createHistoryEvent({
@@ -140,7 +150,9 @@ export function createRegisteredLead(input: {
             occurredAt: ctx.operationAt,
           }),
         ]);
-        if (!appended.ok) return appended;
+        if (!appended.ok) {
+          return appended;
+        }
 
         if (input.inquiry) {
           const bornState: LeadState = {
@@ -154,7 +166,9 @@ export function createRegisteredLead(input: {
             leadId,
             bornState,
           });
-          if (!converted.ok) return converted;
+          if (!converted.ok) {
+            return converted;
+          }
         }
 
         return Ok({ leadId });

@@ -8,8 +8,12 @@ import {
 import type { GpvCellValue } from "./types";
 
 export function cellText(value: GpvCellValue): string {
-  if (value == null) return "";
-  if (value instanceof Date) return isoDate(value);
+  if (value == null) {
+    return "";
+  }
+  if (value instanceof Date) {
+    return isoDate(value);
+  }
   if (typeof value === "number") {
     return Number.isInteger(value) ? value.toFixed(0) : String(value);
   }
@@ -22,9 +26,15 @@ export function cellTextOrNull(value: GpvCellValue): string | null {
 }
 
 export function cellNumberOrNull(value: GpvCellValue): number | null {
-  if (value == null || value === "") return null;
-  if (typeof value === "number") return Number.isFinite(value) ? value : null;
-  if (value instanceof Date) return null;
+  if (value == null || value === "") {
+    return null;
+  }
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (value instanceof Date) {
+    return null;
+  }
   const parsed = Number(String(value).replace(/[^\d.-]/g, ""));
   return Number.isFinite(parsed) ? parsed : null;
 }
@@ -34,7 +44,9 @@ export function cellNumber(value: GpvCellValue): number {
 }
 
 export function cellDateOrNull(value: GpvCellValue): CalendarDate | null {
-  if (value instanceof Date) return isoDate(value);
+  if (value instanceof Date) {
+    return isoDate(value);
+  }
   if (typeof value === "number") {
     // Excel serial date (days since 1899-12-30).
     const ms = Math.round((value - 25569) * 86_400_000);
@@ -42,13 +54,17 @@ export function cellDateOrNull(value: GpvCellValue): CalendarDate | null {
     return Number.isNaN(date.getTime()) ? null : isoDate(date);
   }
   const text = String(value ?? "").trim();
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
   return parseFlexibleDate(text);
 }
 
 export function saleMonthFromAnomes(value: GpvCellValue): CalendarMonth | null {
   const text = cellText(value).replace(/\D/g, "");
-  if (text.length !== 6) return null;
+  if (text.length !== 6) {
+    return null;
+  }
   return parseCalendarMonth(`${text.slice(0, 4)}-${text.slice(4, 6)}`);
 }
 
@@ -66,7 +82,9 @@ function isoDate(date: Date): CalendarDate {
 // A cell whose second part exceeds 12 identifies m/d/y if the export changes locale.
 function parseFlexibleDate(text: string): CalendarDate | null {
   const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (iso) return buildDate(iso[1], Number(iso[2]), Number(iso[3]));
+  if (iso) {
+    return buildDate(iso[1], Number(iso[2]), Number(iso[3]));
+  }
 
   const parts = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
   if (parts) {

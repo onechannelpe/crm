@@ -49,7 +49,9 @@ export async function convertInquiryOnRegistration(
     .select(["id", "role"])
     .where("id", "=", inquiry.answeredBy)
     .executeTakeFirst();
-  if (!reviewer) return Ok(undefined);
+  if (!reviewer) {
+    return Ok(undefined);
+  }
 
   const actor = { userId: reviewer.id, role: reviewer.role };
 
@@ -61,14 +63,20 @@ export async function convertInquiryOnRegistration(
     reason: CARRYOVER_REASON,
     occurredAt: ctx.operationAt,
   });
-  if (!statusTransition.ok) return Ok(undefined);
+  if (!statusTransition.ok) {
+    return Ok(undefined);
+  }
 
   const statusCommitted = await ctx.commitTransition(statusTransition.value);
-  if (!statusCommitted.ok) return statusCommitted;
+  if (!statusCommitted.ok) {
+    return statusCommitted;
+  }
 
   // A priority-less answer stamps only the status, exactly like a status-only
   // import row: the stage changes once both fields are known.
-  if (inquiry.priority === null) return Ok(undefined);
+  if (inquiry.priority === null) {
+    return Ok(undefined);
+  }
 
   const priorityTransition = reviewLead(statusTransition.value.next, {
     actor,
@@ -78,12 +86,16 @@ export async function convertInquiryOnRegistration(
     reason: CARRYOVER_REASON,
     occurredAt: ctx.operationAt,
   });
-  if (!priorityTransition.ok) return Ok(undefined);
+  if (!priorityTransition.ok) {
+    return Ok(undefined);
+  }
 
   const priorityCommitted = await ctx.commitTransition(
     priorityTransition.value,
   );
-  if (!priorityCommitted.ok) return priorityCommitted;
+  if (!priorityCommitted.ok) {
+    return priorityCommitted;
+  }
 
   return Ok(undefined);
 }

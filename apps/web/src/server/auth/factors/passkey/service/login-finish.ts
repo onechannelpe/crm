@@ -125,7 +125,9 @@ export async function verifyPasskeyLogin(
       userId: verification.userId,
     });
   } catch (error: unknown) {
-    if (!isPasskeyRequestError(error)) throw error;
+    if (!isPasskeyRequestError(error)) {
+      throw error;
+    }
 
     await throttleService.recordPasskeyVerifyFailure(
       identifier,

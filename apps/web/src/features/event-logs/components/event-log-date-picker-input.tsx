@@ -31,7 +31,9 @@ export function EventLogDatePickerInput(props: EventLogDatePickerInputProps) {
         }
 
         const date = parseCalendarDate(value);
-        if (date) props.onChange(date);
+        if (date) {
+          props.onChange(date);
+        }
       }}
     />
   );

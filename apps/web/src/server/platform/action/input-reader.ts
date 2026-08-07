@@ -62,9 +62,13 @@ class RecordReader<E> implements Reader<E> {
 
   str(field: string, opts?: { min?: number; max?: number }): string {
     const value = this.present(field);
-    if (typeof value !== "string") this.reject(field, "invalid");
+    if (typeof value !== "string") {
+      this.reject(field, "invalid");
+    }
     const trimmed = value.trim();
-    if (!trimmed) this.reject(field, "required");
+    if (!trimmed) {
+      this.reject(field, "required");
+    }
     if (opts?.min !== undefined && trimmed.length < opts.min) {
       this.reject(field, "invalid");
     }
@@ -77,15 +81,21 @@ class RecordReader<E> implements Reader<E> {
   id<Id extends string>(field: string, codec: IdCodec<Id>): Id {
     const raw = this.str(field);
     const parsed = codec.parse(raw);
-    if (isErr(parsed)) this.reject(field, "invalid");
+    if (isErr(parsed)) {
+      this.reject(field, "invalid");
+    }
     return parsed.value;
   }
 
   optId<Id extends string>(field: string, codec: IdCodec<Id>): Id | undefined {
     const raw = this.optStr(field);
-    if (raw === null) return undefined;
+    if (raw === null) {
+      return undefined;
+    }
     const parsed = codec.parse(raw);
-    if (isErr(parsed)) this.reject(field, "invalid");
+    if (isErr(parsed)) {
+      this.reject(field, "invalid");
+    }
     return parsed.value;
   }
 
@@ -96,7 +106,9 @@ class RecordReader<E> implements Reader<E> {
   ): Id[] {
     return this.strList(field, opts).map((raw) => {
       const parsed = codec.parse(raw);
-      if (isErr(parsed)) this.reject(field, "invalid");
+      if (isErr(parsed)) {
+        this.reject(field, "invalid");
+      }
       return parsed.value;
     });
   }
@@ -127,7 +139,9 @@ class RecordReader<E> implements Reader<E> {
 
   bool(field: string): boolean {
     const value = this.present(field);
-    if (typeof value !== "boolean") this.reject(field, "invalid");
+    if (typeof value !== "boolean") {
+      this.reject(field, "invalid");
+    }
     return value;
   }
 
@@ -136,20 +150,30 @@ class RecordReader<E> implements Reader<E> {
     if (value === undefined || value === null || value === "") {
       this.reject(field, "required");
     }
-    if (typeof value !== "string") this.reject(field, "invalid");
+    if (typeof value !== "string") {
+      this.reject(field, "invalid");
+    }
     const match = options.find((option) => option === value);
-    if (match === undefined) this.reject(field, "invalid");
+    if (match === undefined) {
+      this.reject(field, "invalid");
+    }
     return match;
   }
 
   strList(field: string, opts?: StrListConstraints): string[] {
     const value = this.present(field);
-    if (!Array.isArray(value)) this.reject(field, "invalid");
+    if (!Array.isArray(value)) {
+      this.reject(field, "invalid");
+    }
     const items: string[] = [];
     for (const item of value) {
-      if (typeof item !== "string") this.reject(field, "invalid");
+      if (typeof item !== "string") {
+        this.reject(field, "invalid");
+      }
       const trimmed = item.trim();
-      if (!trimmed) this.reject(field, "invalid");
+      if (!trimmed) {
+        this.reject(field, "invalid");
+      }
       items.push(trimmed);
     }
     if (opts?.min !== undefined && items.length < opts.min) {
@@ -166,7 +190,9 @@ class RecordReader<E> implements Reader<E> {
 
   optNum(field: string): number | null {
     const value = this.record[field];
-    if (value === undefined || value === null) return null;
+    if (value === undefined || value === null) {
+      return null;
+    }
     if (typeof value !== "number" || !Number.isFinite(value)) {
       this.reject(field, "invalid");
     }
@@ -178,7 +204,9 @@ class RecordReader<E> implements Reader<E> {
     opts: { min: number; max: number },
   ): number | null {
     const value = this.record[field];
-    if (value === undefined || value === null) return null;
+    if (value === undefined || value === null) {
+      return null;
+    }
     if (
       typeof value !== "number" ||
       !Number.isInteger(value) ||
@@ -192,15 +220,23 @@ class RecordReader<E> implements Reader<E> {
 
   optStr(field: string): string | null {
     const value = this.record[field];
-    if (value === undefined || value === null || value === "") return null;
-    if (typeof value !== "string") this.reject(field, "invalid");
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
+    if (typeof value !== "string") {
+      this.reject(field, "invalid");
+    }
     return value.trim() || null;
   }
 
   optBool(field: string): boolean | null {
     const value = this.record[field];
-    if (value === undefined || value === null) return null;
-    if (typeof value !== "boolean") this.reject(field, "invalid");
+    if (value === undefined || value === null) {
+      return null;
+    }
+    if (typeof value !== "boolean") {
+      this.reject(field, "invalid");
+    }
     return value;
   }
 
@@ -209,52 +245,78 @@ class RecordReader<E> implements Reader<E> {
     options: readonly T[],
   ): T | undefined {
     const value = this.record[field];
-    if (value === undefined || value === null || value === "") return undefined;
-    if (typeof value !== "string") this.reject(field, "invalid");
+    if (value === undefined || value === null || value === "") {
+      return undefined;
+    }
+    if (typeof value !== "string") {
+      this.reject(field, "invalid");
+    }
     const match = options.find((option) => option === value);
-    if (match === undefined) this.reject(field, "invalid");
+    if (match === undefined) {
+      this.reject(field, "invalid");
+    }
     return match;
   }
 
   calendarDate(field: string): CalendarDate {
     const value = parseCalendarDate(this.str(field));
-    if (!value) this.reject(field, "invalid");
+    if (!value) {
+      this.reject(field, "invalid");
+    }
     return value;
   }
 
   optCalendarDate(field: string): CalendarDate | null {
     const raw = this.optStr(field);
-    if (raw === null) return null;
+    if (raw === null) {
+      return null;
+    }
     const value = parseCalendarDate(raw);
-    if (!value) this.reject(field, "invalid");
+    if (!value) {
+      this.reject(field, "invalid");
+    }
     return value;
   }
 
   calendarMonth(field: string): CalendarMonth {
     const value = parseCalendarMonth(this.str(field));
-    if (!value) this.reject(field, "invalid");
+    if (!value) {
+      this.reject(field, "invalid");
+    }
     return value;
   }
 
   optCalendarMonth(field: string): CalendarMonth | null {
     const raw = this.optStr(field);
-    if (raw === null) return null;
+    if (raw === null) {
+      return null;
+    }
     const value = parseCalendarMonth(raw);
-    if (!value) this.reject(field, "invalid");
+    if (!value) {
+      this.reject(field, "invalid");
+    }
     return value;
   }
 
   obj<T>(field: string, build: (reader: Reader<E>) => T): T {
     const value = this.record[field];
-    if (value === undefined || value === null) this.reject(field, "required");
-    if (!isPlainRecord(value)) this.reject(field, "invalid");
+    if (value === undefined || value === null) {
+      this.reject(field, "required");
+    }
+    if (!isPlainRecord(value)) {
+      this.reject(field, "invalid");
+    }
     return build(new RecordReader(value, this.fail, this.pathOf(field)));
   }
 
   optObj<T>(field: string, build: (reader: Reader<E>) => T): T | undefined {
     const value = this.record[field];
-    if (value === undefined || value === null) return undefined;
-    if (!isPlainRecord(value)) this.reject(field, "invalid");
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+    if (!isPlainRecord(value)) {
+      this.reject(field, "invalid");
+    }
     return build(new RecordReader(value, this.fail, this.pathOf(field)));
   }
 
@@ -264,7 +326,9 @@ class RecordReader<E> implements Reader<E> {
 
   private present(field: string): unknown {
     const value = this.record[field];
-    if (value === undefined || value === null) this.reject(field, "required");
+    if (value === undefined || value === null) {
+      this.reject(field, "required");
+    }
     return value;
   }
 

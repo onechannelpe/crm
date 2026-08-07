@@ -59,7 +59,9 @@ export function deleteLead(
   input: { actor: Actor; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("delete", input.actor, state);
-  if (!authz.ok) return authz;
+  if (!authz.ok) {
+    return authz;
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -79,7 +81,9 @@ export function reassignLead(
   input: { actor: Actor; toExecutiveId: UserId; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("reassign", input.actor, state);
-  if (!authz.ok) return authz;
+  if (!authz.ok) {
+    return authz;
+  }
 
   if (state.executiveId === input.toExecutiveId) {
     return Err(fail("same_executive"));
@@ -114,8 +118,12 @@ export function proposeRate(
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("propose-rate", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -151,8 +159,12 @@ export function editRateProposal(
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("propose-rate", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
   if (!isReservationActive(state, input.occurredAt)) {
     return Err(fail("rate_proposal_expired"));
   }
@@ -183,7 +195,9 @@ export function editCommercialScope(
     input.actor,
     state,
   );
-  if (!authz.ok) return authz;
+  if (!authz.ok) {
+    return authz;
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -211,13 +225,19 @@ export function reviewLead(
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "QUALIFYING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [];
 
   if (input.rowType === "status") {
-    if (input.status === null) return Err(fail("invalid_stage"));
+    if (input.status === null) {
+      return Err(fail("invalid_stage"));
+    }
     events.push(
       createHistoryEvent({
         leadId: state.id,
@@ -232,7 +252,9 @@ export function reviewLead(
       }),
     );
   } else {
-    if (input.priority === null) return Err(fail("invalid_stage"));
+    if (input.priority === null) {
+      return Err(fail("invalid_stage"));
+    }
     events.push(
       createHistoryEvent({
         leadId: state.id,
@@ -288,8 +310,12 @@ export function qualifyLead(
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "QUALIFYING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const toStage = resolveReviewTransition(input.status);
 
@@ -346,8 +372,12 @@ export function acceptRate(
   input: { actor: Actor; proposalId: WorkflowRateProposalId; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("accept-rate", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -379,8 +409,12 @@ export function closeLead(
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("close-lead", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -410,7 +444,9 @@ export function expireReservation(
   state: LeadState,
   input: { occurredAt: Date },
 ): TransitionResult {
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -435,8 +471,12 @@ export function restartQuotation(
   input: { actor: Actor; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("restart-quotation", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "EXPIRED") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "EXPIRED") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -465,8 +505,12 @@ export function recordRepLegal(
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("record-rep-legal", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "SETUP") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -499,8 +543,12 @@ export function addVenueAccounts(
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("add-venue-accounts", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "SETUP") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -536,8 +584,12 @@ export function completeFulfillment(
   input: { actor: Actor; orderId: FulfillmentOrderId; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("complete-fulfillment", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "FULFILLMENT") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "FULFILLMENT") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -576,8 +628,12 @@ export function requestRateRevision(
     input.actor,
     state,
   );
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   if (input.round > MAX_RATE_REVISION_ROUNDS) {
     return Err(fail("max_rate_revision_rounds_reached"));

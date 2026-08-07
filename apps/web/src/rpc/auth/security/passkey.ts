@@ -38,7 +38,9 @@ export async function finishPasskeyEnrollment(
       DomainError
     > => {
       const parsedChallengeId = WebauthnChallengeId.parse(challengeId);
-      if (isErr(parsedChallengeId)) return parsedChallengeId;
+      if (isErr(parsedChallengeId)) {
+        return parsedChallengeId;
+      }
       if (!isRegistrationResponse(response)) {
         return Err(fail("invalid_passkey_request"));
       }

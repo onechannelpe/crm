@@ -26,7 +26,9 @@ function createFakeSink(): FakeSink {
     ping: () => {},
     close: () => {
       sink.closed = true;
-      for (const listener of listeners.splice(0)) listener();
+      for (const listener of listeners.splice(0)) {
+        listener();
+      }
     },
     onClosed: (listener) => listeners.push(listener),
   };

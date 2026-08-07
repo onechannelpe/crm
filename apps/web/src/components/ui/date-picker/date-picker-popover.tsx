@@ -40,11 +40,15 @@ export function DatePickerPopover(props: DatePickerPopoverProps) {
   let popoverRef: HTMLDialogElement | undefined;
 
   createEffect(() => {
-    if (!props.isOpen()) return;
+    if (!props.isOpen()) {
+      return;
+    }
 
     const updatePosition = () => {
       const anchor = props.anchor();
-      if (!anchor || typeof window === "undefined") return;
+      if (!anchor || typeof window === "undefined") {
+        return;
+      }
 
       const rect = anchor.getBoundingClientRect();
       const popoverWidth = popoverRef?.offsetWidth ?? POPOVER_FALLBACK_WIDTH;

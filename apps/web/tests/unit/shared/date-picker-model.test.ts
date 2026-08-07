@@ -10,7 +10,9 @@ import { parseCalendarDate } from "~/domain/time/calendar-date";
 
 function date(value: string) {
   const parsed = parseCalendarDate(value);
-  if (!parsed) throw new Error(`Invalid test date: ${value}`);
+  if (!parsed) {
+    throw new Error(`Invalid test date: ${value}`);
+  }
   return parsed;
 }
 

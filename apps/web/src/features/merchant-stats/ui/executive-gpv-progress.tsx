@@ -196,8 +196,12 @@ function lastTransactionLabel(
 
   const days = daysBetween(lastTransaction, cutDate);
 
-  if (days === 0) return "Hoy";
-  if (days === 1) return "Hace 1 día";
+  if (days === 0) {
+    return "Hoy";
+  }
+  if (days === 1) {
+    return "Hace 1 día";
+  }
 
   return `Hace ${days} días`;
 }

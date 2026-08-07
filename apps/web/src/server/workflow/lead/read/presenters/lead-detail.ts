@@ -57,7 +57,9 @@ function resolveDisqualification(
   stage: LeadState["stage"],
   revealFullNames: boolean,
 ): LeadDetailDisqualificationView | null {
-  if (stage !== "DISQUALIFIED") return null;
+  if (stage !== "DISQUALIFIED") {
+    return null;
+  }
 
   const reviewed = history
     .toReversed()
@@ -67,7 +69,9 @@ function resolveDisqualification(
         entry.payload.toStage === "DISQUALIFIED",
     );
 
-  if (!reviewed) return null;
+  if (!reviewed) {
+    return null;
+  }
 
   return {
     reason: reviewed.payload.reason,
@@ -262,8 +266,12 @@ function toLeadDetailVenue(venue: LeadVenue): LeadDetailVenueView {
     createdBy: venue.createdBy,
   };
 
-  if (venue.solesAccount) result.solesAccount = venue.solesAccount;
-  if (venue.dollarAccount) result.dollarAccount = venue.dollarAccount;
+  if (venue.solesAccount) {
+    result.solesAccount = venue.solesAccount;
+  }
+  if (venue.dollarAccount) {
+    result.dollarAccount = venue.dollarAccount;
+  }
 
   return result;
 }

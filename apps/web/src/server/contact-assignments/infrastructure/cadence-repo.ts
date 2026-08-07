@@ -16,7 +16,9 @@ export function createContactCadenceRepo(db: Kysely<Database>) {
   const findMany = async (
     organizationPersonIds: OrganizationPersonId[],
   ): Promise<Map<OrganizationPersonId, CadenceSnapshot>> => {
-    if (organizationPersonIds.length === 0) return new Map();
+    if (organizationPersonIds.length === 0) {
+      return new Map();
+    }
     const rows = await db
       .selectFrom("contact_cadence")
       .selectAll()

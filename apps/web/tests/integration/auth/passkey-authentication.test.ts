@@ -32,6 +32,7 @@ async function finishPasskeyLogin(
   },
 ) {
   const operation = operationAt(new Date());
+
   const verified = await verifyPasskeyLogin(
     login.repos,
     {
@@ -42,7 +43,10 @@ async function finishPasskeyLogin(
     },
     operation,
   );
-  if (isErr(verified)) return verified;
+
+  if (isErr(verified)) {
+    return verified;
+  }
 
   return completePendingLogin(
     login,
@@ -58,8 +62,9 @@ async function finishPasskeyLogin(
 describe("passkey authentication", () => {
   const scenario = createAuthScenario("passkey-authentication");
   const ipAddress = "198.51.100.66";
-  const execOne = getSeededIdentity("execOne");
-  const backOne = getSeededIdentity("backOne");
+  const userAgent = "vitest-agent";
+  const executive = getSeededIdentity("execOne");
+  const backOffice = getSeededIdentity("backOne");
 
   beforeAll(async () => {
     await scenario.setup();
@@ -75,43 +80,60 @@ describe("passkey authentication", () => {
 
   it("begin identified login creates authentication challenge", async () => {
     const login = createAuthLoginContext(scenario.ctx.db);
+
     const result = await startPasskeyLogin(
-      { identifier: "exec.one", ipAddress, mode: "identified" },
+      {
+        identifier: "exec.one",
+        ipAddress,
+        mode: "identified",
+      },
       login,
       createTestPasskeyProvider(login.repos),
       operationAt(new Date()),
     );
+
     const value = expectOk(result);
 
     expect(value.mode).toBe("identified");
+
     const flow = await scenario.ctx.repos.loginFlows.findById(
       AuthLoginFlowId.trust(value.id),
     );
+
     const challenge = flow?.challenge_id
       ? await scenario.ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
+
     expect(challenge?.type).toBe("authentication");
-    expect(challenge?.user_id).toBe(execOne.userId);
+    expect(challenge?.user_id).toBe(executive.userId);
     expect(challenge?.challenge).toBe(value.requestOptions.challenge);
   });
 
   it("begin discoverable login creates unscoped challenge", async () => {
     const login = createAuthLoginContext(scenario.ctx.db);
+
     const result = await startPasskeyLogin(
-      { ipAddress, mode: "discoverable" },
+      {
+        ipAddress,
+        mode: "discoverable",
+      },
       login,
       createTestPasskeyProvider(login.repos),
       operationAt(new Date()),
     );
+
     const value = expectOk(result);
 
     expect(value.mode).toBe("discoverable");
+
     const flow = await scenario.ctx.repos.loginFlows.findById(
       AuthLoginFlowId.trust(value.id),
     );
+
     const challenge = flow?.challenge_id
       ? await scenario.ctx.repos.webauthnChallenges.findById(flow.challenge_id)
       : undefined;
+
     expect(flow?.user_id).toBeNull();
     expect(challenge?.user_id).toBeNull();
   });
@@ -119,15 +141,16 @@ describe("passkey authentication", () => {
   it("finish login issues session on valid assertion", async () => {
     await scenario.ctx.repos.passkeys.create({
       id: "passkey-1",
-      user_id: execOne.userId,
+      user_id: executive.userId,
       public_key: "base64-public-key",
       counter: 0,
       transports: JSON.stringify(["internal"]),
       created_at: new Date(),
     });
+
     const { flowId } = await createAuthFlow({
       ctx: scenario.ctx,
-      userId: execOne.userId,
+      userId: executive.userId,
       challenge: "challenge-workflow-1",
     });
 
@@ -136,17 +159,18 @@ describe("passkey authentication", () => {
       {
         webauthnProvider: createWebauthnProviderWithAuth(async () => ({
           verified: true,
-          userId: execOne.userId,
+          userId: executive.userId,
         })),
         flowId,
         response: buildAssertionResponse("passkey-1"),
         ipAddress,
-        userAgent: "vitest-agent",
+        userAgent,
       },
     );
 
     const value = expectOk(result);
     const persisted = await scenario.ctx.repos.loginFlows.findById(flowId);
+
     expect(persisted).toBeUndefined();
     expect(value.token).toBeTruthy();
     expect(value.role).toBe("executive");
@@ -155,7 +179,7 @@ describe("passkey authentication", () => {
   it("returns invalid credentials when identified flow verifies a different user", async () => {
     const { flowId } = await createAuthFlow({
       ctx: scenario.ctx,
-      userId: execOne.userId,
+      userId: executive.userId,
       challenge: "challenge-mismatch-1",
     });
 
@@ -164,16 +188,17 @@ describe("passkey authentication", () => {
       {
         webauthnProvider: createWebauthnProviderWithAuth(async () => ({
           verified: true,
-          userId: backOne.userId,
+          userId: backOffice.userId,
         })),
         flowId,
         response: buildAssertionResponse("passkey-1"),
         ipAddress,
-        userAgent: "vitest-agent",
+        userAgent,
       },
     );
 
     const error = expectErr(result);
+
     expect(error.kind).toBe("invalid_credentials");
   });
 
@@ -185,11 +210,12 @@ describe("passkey authentication", () => {
         flowId: AuthLoginFlowId.trust("01974fd5-f261-7a7d-93f5-2f3d0f96f101"),
         response: buildAssertionResponse("passkey-1"),
         ipAddress,
-        userAgent: "vitest-agent",
+        userAgent,
       },
     );
 
     const error = expectErr(result);
+
     expect(error.kind).toBe("flow_expired");
   });
 });

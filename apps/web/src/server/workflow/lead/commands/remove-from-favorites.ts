@@ -13,10 +13,14 @@ export async function removeFromFavoritesCommand(
 ): Promise<Result<{ leadId: string }, DomainError>> {
   return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     const authz = authorizeLeadAction("view", input.actor, state);
-    if (!authz.ok) return authz;
+    if (!authz.ok) {
+      return authz;
+    }
 
     await ctx.repos.leadFavorites.removeForUser({
       leadId: input.leadId,

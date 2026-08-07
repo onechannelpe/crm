@@ -48,18 +48,30 @@ function isPositiveInteger(value: string): boolean {
 function validateCommercialScope(
   values: CommercialScopeFormValues,
 ): string | null {
-  if (!values.currentProvider.trim()) return "Proveedor actual es requerido";
-  if (!isAtLeast(values.currentDebitRate, 0))
+  if (!values.currentProvider.trim()) {
+    return "Proveedor actual es requerido";
+  }
+  if (!isAtLeast(values.currentDebitRate, 0)) {
     return "Tasa débito actual es requerida";
-  if (!isAtLeast(values.currentCreditRate, 0))
+  }
+  if (!isAtLeast(values.currentCreditRate, 0)) {
     return "Tasa crédito actual es requerida";
-  if (!isAtLeast(values.gpv, MIN_GPV))
+  }
+  if (!isAtLeast(values.gpv, MIN_GPV)) {
     return `GPV debe ser al menos ${MIN_GPV}`;
-  if (!isAtLeast(values.ticket, 0)) return "Ticket es requerido";
-  if (!values.lineOfBusiness.trim()) return "Giro de negocio es requerido";
-  if (!values.settlementBank) return "Banco de abono es requerido";
-  if (!isPositiveInteger(values.posCount))
+  }
+  if (!isAtLeast(values.ticket, 0)) {
+    return "Ticket es requerido";
+  }
+  if (!values.lineOfBusiness.trim()) {
+    return "Giro de negocio es requerido";
+  }
+  if (!values.settlementBank) {
+    return "Banco de abono es requerido";
+  }
+  if (!isPositiveInteger(values.posCount)) {
     return "Cantidad de POS debe ser un entero mayor a 0";
+  }
   return null;
 }
 

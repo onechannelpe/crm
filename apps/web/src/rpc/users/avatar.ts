@@ -23,7 +23,9 @@ export async function uploadMemberAvatar(
         validationFail,
         (r) => ({ userId: r.id("userId", UserId) }),
       );
-      if (isErr(parsedId)) return parsedId;
+      if (isErr(parsedId)) {
+        return parsedId;
+      }
 
       const file = formData.get("file");
       if (!(file instanceof File)) {
@@ -36,7 +38,9 @@ export async function uploadMemberAvatar(
 
     execute: async (ctx, command) => {
       const result = await application.users.members.uploadAvatar(ctx, command);
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
       return Ok({ message: "Foto de perfil actualizada" });
     },
   });
@@ -63,7 +67,9 @@ export async function removeMemberAvatar(
         ctx,
         command.userId,
       );
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
       return Ok({ message: "Foto de perfil eliminada" });
     },
   });

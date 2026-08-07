@@ -17,10 +17,14 @@ export function createBoundedFailureCache(
       return entries.has(url);
     },
     add(url) {
-      if (entries.has(url)) return;
+      if (entries.has(url)) {
+        return;
+      }
       if (entries.size >= maxSize) {
         const oldest = entries.values().next().value;
-        if (oldest !== undefined) entries.delete(oldest);
+        if (oldest !== undefined) {
+          entries.delete(oldest);
+        }
       }
       entries.add(url);
     },

@@ -14,7 +14,9 @@ export async function grantSearchCapacityDirect(
   input: { targetUserId: UserId; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   const amount = validateRequestAmount(input.amount);
-  if (!amount.ok) return amount;
+  if (!amount.ok) {
+    return amount;
+  }
 
   return deps.uow.run(async (tx) => {
     const check = await canManageExecutive(ctx.actor, input.targetUserId, tx);
@@ -36,7 +38,9 @@ export async function grantSearchCapacityDirect(
       { grants: tx.searchCapacityGrants },
       ctx,
     );
-    if (isErr(result)) return result;
+    if (isErr(result)) {
+      return result;
+    }
     return Ok({ success: true });
   });
 }

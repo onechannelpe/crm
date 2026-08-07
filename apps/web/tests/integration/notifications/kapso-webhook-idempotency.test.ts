@@ -50,35 +50,39 @@ describe("kapso webhook idempotency", () => {
     runtime.now.set(NOW);
   });
 
-  it("deduplicates provider retries and batch fallback redelivery", async () => {
+  it("deduplicates provider retries and redeliveries of the same message", async () => {
     const messageId = "wamid.same-message";
     const notifications = createTestNotificationRuntime(runtime);
+    const operation = operationAt(NOW);
 
     expect(
       await notifications.webhooks.receiveKapso(
         kapsoWebhook("delivery-1", messageId),
-        operationAt(NOW),
+        operation,
       ),
     ).toMatchObject({ ok: true });
+
     expect(
       await notifications.webhooks.receiveKapso(
         kapsoWebhook("delivery-1", messageId),
-        operationAt(NOW),
+        operation,
       ),
     ).toMatchObject({ ok: true });
+
     expect(
       await notifications.webhooks.receiveKapso(
         kapsoWebhook("delivery-2", messageId),
-        operationAt(NOW),
+        operation,
       ),
     ).toMatchObject({ ok: true });
 
     const deliveries = await runtime.ctx.db
       .selectFrom("kapso_webhook_deliveries")
-      .select(["idempotency_key"])
+      .select("idempotency_key")
       .where("idempotency_key", "in", ["delivery-1", "delivery-2"])
       .orderBy("idempotency_key")
       .execute();
+
     expect(deliveries.map((row) => row.idempotency_key)).toEqual([
       "delivery-1",
       "delivery-2",
@@ -89,6 +93,7 @@ describe("kapso webhook idempotency", () => {
       .select(["id", "delivery_key", "queue_state"])
       .where("id", "=", messageId)
       .execute();
+
     expect(events).toEqual([
       {
         id: messageId,

@@ -25,7 +25,9 @@ function createFakeEngine() {
 
   const client: EngineClient = {
     async search(intent, query) {
-      if (intent !== "companies") return { ok: true, value: [] };
+      if (intent !== "companies") {
+        return { ok: true, value: [] };
+      }
       const overlay = companies.get(query);
       const value = overlay ? [companyResult(query, overlay)] : [];
       return { ok: true, value };

@@ -35,10 +35,14 @@ function parseLeadUpload(formData: unknown): Result<LeadUpload, DomainError> {
     validationFail,
     (reader) => ({ leadId: reader.id("leadId", WorkflowLeadId) }),
   );
-  if (!parsed.ok) return parsed;
+  if (!parsed.ok) {
+    return parsed;
+  }
 
   const file = formData.get("file");
-  if (!(file instanceof File)) return Err(fail("file_required"));
+  if (!(file instanceof File)) {
+    return Err(fail("file_required"));
+  }
 
   return Ok({
     leadId: parsed.value.leadId,

@@ -8,7 +8,9 @@ const LAST_USED_KEY = "last_auth_method";
 function readLastUsed(): LastUsedMethod {
   try {
     const v = localStorage.getItem(LAST_USED_KEY);
-    if (v === "google" || v === "password" || v === "passkey") return v;
+    if (v === "google" || v === "password" || v === "passkey") {
+      return v;
+    }
   } catch {
     // localStorage throws in SSR and sandboxed contexts
   }

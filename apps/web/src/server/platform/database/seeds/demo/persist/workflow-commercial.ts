@@ -29,7 +29,9 @@ async function insertRateRevisions(
 ): Promise<void> {
   const rows = leads.flatMap((lead) =>
     (lead.spec.proposals ?? []).flatMap((proposal, index) => {
-      if (proposal.outcome !== "revision_requested") return [];
+      if (proposal.outcome !== "revision_requested") {
+        return [];
+      }
       const revisionId = lead.rateRevisionIds[index];
       if (revisionId === null || proposal.decidedOffsetDays === undefined) {
         throw new Error(`missing_compiled_rate_revision:${lead.spec.key}`);
@@ -48,7 +50,9 @@ async function insertRateRevisions(
       ];
     }),
   );
-  if (rows.length === 0) return;
+  if (rows.length === 0) {
+    return;
+  }
   await db.insertInto("workflow_rate_revisions").values(rows).execute();
 }
 
@@ -78,7 +82,9 @@ async function insertRateProposals(
           : new Date(anchorMs - proposal.decidedOffsetDays * day),
     })),
   );
-  if (rows.length === 0) return;
+  if (rows.length === 0) {
+    return;
+  }
   await db.insertInto("workflow_rate_proposals").values(rows).execute();
 }
 
@@ -91,7 +97,9 @@ async function insertVenues(
   const venueRows = leads.flatMap((lead) => {
     const venue = lead.spec.venue;
     const venueId = lead.venueId;
-    if (!venue || !venueId) return [];
+    if (!venue || !venueId) {
+      return [];
+    }
 
     return [
       {
@@ -114,14 +122,18 @@ async function insertVenues(
       },
     ];
   });
-  if (venueRows.length === 0) return;
+  if (venueRows.length === 0) {
+    return;
+  }
 
   await db.insertInto("workflow_lead_venues").values(venueRows).execute();
 
   const accountRows = leads.flatMap((lead) => {
     const venue = lead.spec.venue;
     const venueId = lead.venueId;
-    if (!venue || !venueId) return [];
+    if (!venue || !venueId) {
+      return [];
+    }
 
     return venue.accounts.map((account, index) => {
       const accountId = lead.venueAccountIds[index];
@@ -142,7 +154,9 @@ async function insertVenues(
       };
     });
   });
-  if (accountRows.length === 0) return;
+  if (accountRows.length === 0) {
+    return;
+  }
   await db
     .insertInto("workflow_lead_venue_accounts")
     .values(accountRows)
@@ -157,7 +171,9 @@ async function insertDigitalPolicies(
 ): Promise<void> {
   const rows = leads.flatMap((lead) => {
     const policy = lead.spec.digitalPolicy;
-    if (!policy) return [];
+    if (!policy) {
+      return [];
+    }
     return [
       {
         lead_id: lead.leadId,
@@ -171,7 +187,9 @@ async function insertDigitalPolicies(
       },
     ];
   });
-  if (rows.length === 0) return;
+  if (rows.length === 0) {
+    return;
+  }
   await db.insertInto("workflow_lead_digital_policy").values(rows).execute();
 }
 
@@ -185,7 +203,9 @@ async function insertLegalReps(
   leads: readonly CompiledLead[],
 ): Promise<void> {
   for (const lead of leads) {
-    if (!lead.spec.legalRep) continue;
+    if (!lead.spec.legalRep) {
+      continue;
+    }
     const organizationId = orgIdByRuc.get(lead.spec.org.ruc);
     if (!organizationId) {
       throw new Error(`missing_seed_organization_id:${lead.spec.org.ruc}`);

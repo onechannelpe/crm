@@ -56,10 +56,18 @@ export function useGpvView(): GpvView {
     setFilter: (patch) => {
       const next: Record<string, string | null> = {};
       // Omitted URL parameters stay unchanged. Null clears the selected filter.
-      if ("branchId" in patch) next.branch = patch.branchId ?? null;
-      if ("sellerUserId" in patch) next.seller = patch.sellerUserId ?? null;
-      if ("month" in patch) next.month = patch.month ?? null;
-      if ("product" in patch) next.product = patch.product ?? null;
+      if ("branchId" in patch) {
+        next.branch = patch.branchId ?? null;
+      }
+      if ("sellerUserId" in patch) {
+        next.seller = patch.sellerUserId ?? null;
+      }
+      if ("month" in patch) {
+        next.month = patch.month ?? null;
+      }
+      if ("product" in patch) {
+        next.product = patch.product ?? null;
+      }
       setParams(next, { replace: true, scroll: false });
     },
   };

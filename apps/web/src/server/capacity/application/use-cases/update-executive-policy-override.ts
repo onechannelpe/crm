@@ -28,16 +28,26 @@ export async function updateExecutivePolicyOverride(
   },
 ): Promise<Result<{ success: true }, DomainError>> {
   const monthlyLimit = validateSearchLimit(input.monthlyLimit);
-  if (!monthlyLimit.ok) return monthlyLimit;
+  if (!monthlyLimit.ok) {
+    return monthlyLimit;
+  }
   const leadValues = validateLeadPolicyValues(input);
-  if (!leadValues.ok) return leadValues;
+  if (!leadValues.ok) {
+    return leadValues;
+  }
   const expiresAt = validateOverrideExpiry(input.expiresAt, ctx.operationAt);
-  if (!expiresAt.ok) return expiresAt;
+  if (!expiresAt.ok) {
+    return expiresAt;
+  }
 
   return deps.uow.run(async (tx) => {
     const access = await canManageExecutive(ctx.actor, input.userId, tx);
-    if (!access.target) return Err(fail("executive_not_found"));
-    if (!access.ok) return Err(fail("cannot_manage_executive"));
+    if (!access.target) {
+      return Err(fail("executive_not_found"));
+    }
+    if (!access.ok) {
+      return Err(fail("cannot_manage_executive"));
+    }
 
     const searchWrite = await setSearchUserOverride(
       {
@@ -49,7 +59,9 @@ export async function updateExecutivePolicyOverride(
       tx,
       ctx,
     );
-    if (isErr(searchWrite)) return searchWrite;
+    if (isErr(searchWrite)) {
+      return searchWrite;
+    }
 
     const leadWrite = await setLeadUserOverride(
       {
@@ -62,7 +74,9 @@ export async function updateExecutivePolicyOverride(
       tx,
       ctx,
     );
-    if (isErr(leadWrite)) return leadWrite;
+    if (isErr(leadWrite)) {
+      return leadWrite;
+    }
 
     return Ok({ success: true });
   });

@@ -36,7 +36,9 @@ function retainPageStateByNavigationStack(
 
   for (const entry of stack) {
     const state = pageStateById[entry.pageId];
-    if (!state) continue;
+    if (!state) {
+      continue;
+    }
     retained[entry.pageId] = state;
   }
 

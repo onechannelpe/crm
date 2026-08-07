@@ -22,7 +22,9 @@ export async function changeMemberRole(
       tx.users,
       command.userId,
     );
-    if (isErr(target)) return target;
+    if (isErr(target)) {
+      return target;
+    }
 
     if (!canAssignRole(ctx.actor.role, command.role)) {
       return Err(fail("role_not_assignable"));

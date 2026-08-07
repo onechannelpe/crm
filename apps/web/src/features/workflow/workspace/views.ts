@@ -54,7 +54,9 @@ export function viewsForRole(role: string): WorkspaceView[] {
 export function defaultViewIdForRole(role: string): string {
   const views = viewsForRole(role);
   const configured = DEFAULT_VIEW_BY_ROLE[role];
-  if (configured && views.some((v) => v.id === configured)) return configured;
+  if (configured && views.some((v) => v.id === configured)) {
+    return configured;
+  }
   return views[0].id;
 }
 

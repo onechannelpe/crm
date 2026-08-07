@@ -20,7 +20,9 @@ export async function requestCapacity(
   );
 
   const amount = validateRequestAmount(input.amount);
-  if (!amount.ok) return amount;
+  if (!amount.ok) {
+    return amount;
+  }
 
   return deps.uow.run(async (tx) => {
     await tx.capacityRequests.create({

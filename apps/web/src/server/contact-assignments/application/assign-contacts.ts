@@ -50,9 +50,13 @@ export async function assignContacts(
     repos,
     operation,
   );
-  if (isErr(plan)) return plan;
+  if (isErr(plan)) {
+    return plan;
+  }
 
-  if (plan.value.requested === 0) return Ok({ requested: 0, assigned: 0 });
+  if (plan.value.requested === 0) {
+    return Ok({ requested: 0, assigned: 0 });
+  }
 
   const assignedResult = await executeWithUsageReservation(
     {

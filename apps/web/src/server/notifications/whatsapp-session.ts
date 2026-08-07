@@ -31,7 +31,9 @@ export async function filterUsersWithActiveSession(
   userIds: UserId[],
   activeAsOf: Date,
 ): Promise<Set<UserId>> {
-  if (userIds.length === 0) return new Set();
+  if (userIds.length === 0) {
+    return new Set();
+  }
 
   const rows = await db
     .selectFrom("whatsapp_sessions")

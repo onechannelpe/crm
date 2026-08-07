@@ -163,17 +163,23 @@ export function validateUploadFile(
   bytes: Uint8Array,
 ): ValidationResult | ValidationFailure {
   const staticValidation = validateUploadMetadata(purpose, originalFilename);
-  if (!staticValidation.ok) return staticValidation;
+  if (!staticValidation.ok) {
+    return staticValidation;
+  }
 
   const inspector = createUploadStreamInspector(
     purpose,
     staticValidation.extension,
   );
   const streamError = inspector.pushChunk(bytes);
-  if (streamError) return streamError;
+  if (streamError) {
+    return streamError;
+  }
 
   const streamValidation = inspector.finalize();
-  if (!streamValidation.ok) return streamValidation;
+  if (!streamValidation.ok) {
+    return streamValidation;
+  }
 
   const metadata = buildUploadMetadata(
     staticValidation.safeDisplayFilename,
@@ -195,20 +201,28 @@ export function maxUploadBytesForFilePurpose(purpose: FilePurpose): number {
 }
 
 function sanitizeFilename(filename: string): string | null {
-  if (PATH_SEGMENT_RE.test(filename)) return null;
+  if (PATH_SEGMENT_RE.test(filename)) {
+    return null;
+  }
 
   const base = filename.trim();
-  if (!base || base.length > MAX_FILENAME_LENGTH) return null;
+  if (!base || base.length > MAX_FILENAME_LENGTH) {
+    return null;
+  }
 
   const safe = base.replace(/[^a-zA-Z0-9 \-_.]/g, "_");
-  if (!SAFE_FILENAME_RE.test(safe)) return null;
+  if (!SAFE_FILENAME_RE.test(safe)) {
+    return null;
+  }
 
   return safe;
 }
 
 function extractExtension(filename: string): string | null {
   const dot = filename.lastIndexOf(".");
-  if (dot === -1) return null;
+  if (dot === -1) {
+    return null;
+  }
   return filename.slice(dot + 1).toLowerCase() || null;
 }
 
@@ -223,9 +237,13 @@ function detectSignatureFromPrefix(
   }
 
   if (ext === "csv") {
-    if (sizeBytes === 0) return "csv";
+    if (sizeBytes === 0) {
+      return "csv";
+    }
     const first = XLSX_MAGIC.every((b, i) => prefix[i] === b);
-    if (first) return "mismatch";
+    if (first) {
+      return "mismatch";
+    }
     return "csv";
   }
 

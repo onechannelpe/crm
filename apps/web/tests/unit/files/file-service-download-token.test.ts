@@ -41,7 +41,9 @@ describe("issueDownloadToken", () => {
     });
 
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
+    if (!result.ok) {
+      return;
+    }
     expect(inserted[0]).toMatchObject({
       fileAssetId,
       requestedByUserId: UserId.trust("user-10"),

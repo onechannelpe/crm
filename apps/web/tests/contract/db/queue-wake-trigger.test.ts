@@ -17,13 +17,13 @@ import { migrateToLatest } from "~/server/platform/database/migrate";
 const NOW = new Date(1_700_000_000_000);
 const CHANNEL = "job:notifications-intents";
 
-function waitForNotification(
+function nextNotification(
   listener: Client,
   timeoutMs = 2_000,
 ): Promise<Notification> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
-      listener.removeListener("notification", onNotification);
+      listener.off("notification", onNotification);
       reject(
         new Error(`timed out waiting for a notification after ${timeoutMs}ms`),
       );
@@ -31,7 +31,7 @@ function waitForNotification(
 
     function onNotification(notification: Notification) {
       clearTimeout(timer);
-      listener.removeListener("notification", onNotification);
+      listener.off("notification", onNotification);
       resolve(notification);
     }
 
@@ -39,7 +39,7 @@ function waitForNotification(
   });
 }
 
-async function collectNotifications(
+async function notificationsDuring(
   listener: Client,
   run: () => Promise<void>,
   windowMs = 200,
@@ -55,9 +55,10 @@ async function collectNotifications(
   try {
     await run();
     await new Promise((resolve) => setTimeout(resolve, windowMs));
+
     return notifications;
   } finally {
-    listener.removeListener("notification", onNotification);
+    listener.off("notification", onNotification);
   }
 }
 
@@ -76,6 +77,7 @@ describe("notification intent queue wake trigger", () => {
   it("wakes only when work becomes pending", async () => {
     ctx = await createFreshDb("notification-intent-queue-wake");
     const db = ctx.db;
+
     await migrateToLatest(db);
 
     listener = new Client({
@@ -88,27 +90,24 @@ describe("notification intent queue wake trigger", () => {
     const repository = createIntentRepository(db);
     const id = notificationIntentId("intent-1");
 
-    const inserted = waitForNotification(listener);
+    const inserted = nextNotification(listener);
 
     await db
       .insertInto("notification_intents")
       .values(anIntentRow({ id: "intent-1", now: NOW }))
       .execute();
 
-    await expect(inserted).resolves.toMatchObject({
+    expect(await inserted).toMatchObject({
       channel: CHANNEL,
     });
 
-    const claimNotifications = await collectNotifications(
-      listener,
-      async () => {
-        await repository.store.claim("worker-1", NOW, 10, 30_000);
-      },
-    );
+    const claimNotifications = await notificationsDuring(listener, async () => {
+      await repository.store.claim("worker-1", NOW, 10, 30_000);
+    });
 
     expect(claimNotifications).toEqual([]);
 
-    const unrelatedUpdateNotifications = await collectNotifications(
+    const unrelatedUpdateNotifications = await notificationsDuring(
       listener,
       async () => {
         await db
@@ -121,7 +120,7 @@ describe("notification intent queue wake trigger", () => {
 
     expect(unrelatedUpdateNotifications).toEqual([]);
 
-    const retried = waitForNotification(listener);
+    const retried = nextNotification(listener);
 
     await repository.store.scheduleRetry(
       id,
@@ -130,7 +129,7 @@ describe("notification intent queue wake trigger", () => {
       null,
     );
 
-    await expect(retried).resolves.toMatchObject({
+    expect(await retried).toMatchObject({
       channel: CHANNEL,
     });
   });

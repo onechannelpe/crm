@@ -129,7 +129,9 @@ async function persistTargets(
   const byRuc = new Map<string, MerchantSpec>();
 
   for (const merchant of merchants) {
-    if (!targetableRucs.has(merchant.ruc)) continue;
+    if (!targetableRucs.has(merchant.ruc)) {
+      continue;
+    }
     if (merchant.projectedGpv != null && !byRuc.has(merchant.ruc)) {
       byRuc.set(merchant.ruc, merchant);
     }

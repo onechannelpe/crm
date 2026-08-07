@@ -52,18 +52,24 @@ export function SidePanelFooter(props: SidePanelFooterProps) {
   const closeOptions = () => setIsOptionsOpen(false);
 
   const toggleOptions = () => {
-    if (!hasOptions()) return;
+    if (!hasOptions()) {
+      return;
+    }
     setIsOptionsOpen((current) => !current);
   };
 
   const runPrimary = () => {
-    if (props.primary.disabled) return;
+    if (props.primary.disabled) {
+      return;
+    }
     props.primary.onClick();
   };
 
   function updateMenuPosition() {
     const trigger = triggerRef();
-    if (!trigger) return;
+    if (!trigger) {
+      return;
+    }
 
     const GUTTER = 8;
     const OFFSET = 8;
@@ -92,7 +98,9 @@ export function SidePanelFooter(props: SidePanelFooterProps) {
   });
 
   createEffect(() => {
-    if (!isOptionsOpen()) return;
+    if (!isOptionsOpen()) {
+      return;
+    }
 
     updateMenuPosition();
 
@@ -155,7 +163,9 @@ export function SidePanelFooter(props: SidePanelFooterProps) {
                   }}
                   disabled={option.disabled}
                   onClick={() => {
-                    if (option.disabled) return;
+                    if (option.disabled) {
+                      return;
+                    }
                     option.onSelect();
                     closeOptions();
                   }}

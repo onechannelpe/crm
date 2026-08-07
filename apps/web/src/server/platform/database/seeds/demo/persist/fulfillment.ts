@@ -41,7 +41,9 @@ export async function persistWorkflowFulfillment(
   const plans = leads
     .filter((lead) => lead.spec.fulfillment)
     .map((lead) => buildOrderPlan(lead, anchorMs, day));
-  if (plans.length === 0) return;
+  if (plans.length === 0) {
+    return;
+  }
 
   await db
     .insertInto("lead_fulfillment_orders")
@@ -102,7 +104,9 @@ function buildOrderPlan(
   }
 
   const venue = spec.venue;
-  if (!venue) throw new Error(`missing_seed_fulfillment_venue:${spec.key}`);
+  if (!venue) {
+    throw new Error(`missing_seed_fulfillment_venue:${spec.key}`);
+  }
 
   const sequence = stepsForProduct(fulfillment.productKind);
   const targetIndex = sequence.indexOf(fulfillment.targetStep);
@@ -177,7 +181,9 @@ function buildOrderPlan(
         break;
       }
       case "confirm":
-        for (const unit of units) unit.payment_validated = true;
+        for (const unit of units) {
+          unit.payment_validated = true;
+        }
         break;
       case "per_unit":
         units.forEach((unit, unitIndex) => {

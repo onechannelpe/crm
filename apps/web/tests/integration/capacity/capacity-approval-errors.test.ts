@@ -48,7 +48,9 @@ describe("capacity approval failures", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
+    if (result.ok) {
+      throw new Error("Expected failure");
+    }
     expect(result.error.code).toBe("request_not_found");
     expect(await searchGrantsFor(ctx, EXECUTIVE_ID)).toEqual([]);
     expect(await leadGrantsFor(ctx, EXECUTIVE_ID)).toEqual([]);
@@ -70,7 +72,9 @@ describe("capacity approval failures", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
+    if (result.ok) {
+      throw new Error("Expected failure");
+    }
     expect(result.error.code).toBe("request_not_pending");
     expect((await ctx.repos.capacityRequests.findById(requestId))?.status).toBe(
       "approved",
@@ -101,7 +105,9 @@ describe("capacity approval failures", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
+    if (result.ok) {
+      throw new Error("Expected failure");
+    }
     expect(result.error.kind).toBe("forbidden");
     expect((await ctx.repos.capacityRequests.findById(requestId))?.status).toBe(
       "pending",
@@ -148,7 +154,9 @@ describe("capacity approval failures", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("Expected failure");
+    if (result.ok) {
+      throw new Error("Expected failure");
+    }
     expect(result.error.code).toBe("decision_note_required");
     expect((await ctx.repos.capacityRequests.findById(requestId))?.status).toBe(
       "pending",

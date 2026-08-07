@@ -90,7 +90,9 @@ async function enforceWebhookRequest(
   pathname: string,
 ): Promise<AuthRequestDecision> {
   const policy = getWebhookPolicy(pathname);
-  if (!policy) return reject(403, "Forbidden");
+  if (!policy) {
+    return reject(403, "Forbidden");
+  }
   if (policy.handshakeMethods.includes(request.method)) {
     return { kind: "allow" };
   }
@@ -149,7 +151,9 @@ export async function enforceAuthRequest(
     }
   }
 
-  if (requestClass === "public") return { kind: "allow" };
+  if (requestClass === "public") {
+    return { kind: "allow" };
+  }
 
   const session = requestContext.principal;
   if (!session) {

@@ -61,7 +61,9 @@ export function RootPage() {
 
   const filteredGroups = () => {
     const query = searchText().toLowerCase();
-    if (!query) return commandGroups();
+    if (!query) {
+      return commandGroups();
+    }
     return commandGroups()
       .map((group) =>
         Object.assign({}, group, {

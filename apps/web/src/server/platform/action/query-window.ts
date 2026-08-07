@@ -3,7 +3,9 @@ import { Err, Ok, type Result } from "~/shared/result";
 
 export function trimOrUndefined(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
-  if (!trimmed) return undefined;
+  if (!trimmed) {
+    return undefined;
+  }
   return trimmed;
 }
 

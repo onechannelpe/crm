@@ -63,21 +63,24 @@ describe("session authentication", () => {
         user_agent: null,
         created_at: NOW,
         last_activity: NOW,
-        expires_at: new Date(NOW.getTime() + 60 * 60 * 1000),
+        expires_at: new Date(NOW.getTime() + 60 * 60_000),
       })
       .execute();
   }
 
-  // A removed role cannot pass the Role union, so seed its stale value with SQL.
+  // Bypass the Role type to simulate a stale persisted value.
   async function corruptSessionRole(sessionId: string) {
-    await sql`update user_sessions set role = 'retired_role' where id = ${sessionId}`.execute(
-      ctx.db,
-    );
+    await sql`
+      update user_sessions
+      set role = 'retired_role'
+      where id = ${sessionId}
+    `.execute(ctx.db);
   }
 
   it("resolves a session from the database and reflects its persisted session class", async () => {
     const token = generateSessionToken();
     const sessionId = hashSessionToken(token);
+
     await seedSession(sessionId, { session_class: "pre_auth" });
 
     const result = await makeAuthenticator().resolve(token, operationAt(NOW));
@@ -89,6 +92,7 @@ describe("session authentication", () => {
   it("deletes the session when the persisted role is no longer a valid role", async () => {
     const token = generateSessionToken();
     const sessionId = hashSessionToken(token);
+
     await seedSession(sessionId);
     await corruptSessionRole(sessionId);
 

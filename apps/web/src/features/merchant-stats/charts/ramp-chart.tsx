@@ -103,7 +103,9 @@ export function RampChart(props: RampChartProps) {
 
   const tooltip = createMemo(() => {
     const offset = activeOffset();
-    if (offset === null) return null;
+    if (offset === null) {
+      return null;
+    }
 
     const items = geometry()
       .lines.map((line) => ({
@@ -117,13 +119,17 @@ export function RampChart(props: RampChartProps) {
           item.value !== undefined && item.value !== 0,
       );
 
-    if (items.length === 0) return null;
+    if (items.length === 0) {
+      return null;
+    }
     return { offset, items };
   });
 
   const anchor = createMemo(() => {
     const active = tooltip();
-    if (!active) return null;
+    if (!active) {
+      return null;
+    }
     const ys = geometry()
       .lines.flatMap((line) =>
         line.coords.filter((coord) => coord.offset === active.offset),
@@ -134,7 +140,9 @@ export function RampChart(props: RampChartProps) {
 
   const tooltipLeft = () => {
     const point = anchor();
-    if (!point) return 0;
+    if (!point) {
+      return 0;
+    }
     const tipWidth = tooltipSize.width ?? TOOLTIP_WIDTH;
     const leftPlaced = point.x - tipWidth - TOOLTIP_GAP;
     const placed =
@@ -148,7 +156,9 @@ export function RampChart(props: RampChartProps) {
 
   const tooltipTop = () => {
     const point = anchor();
-    if (!point) return 0;
+    if (!point) {
+      return 0;
+    }
     const tipHeight = tooltipSize.height ?? TOOLTIP_FALLBACK_HEIGHT;
     return clamp(
       point.y - tipHeight / 2,

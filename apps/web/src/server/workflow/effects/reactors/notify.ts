@@ -26,7 +26,9 @@ export function deriveLeadStageNotifications(input: {
 }): NotificationIntent[] {
   // Availability qualification cleared the lead: back office now proposes a rate.
   if (input.toStage === "PRICING") {
-    if (input.branchId === null) return [];
+    if (input.branchId === null) {
+      return [];
+    }
     return [
       {
         id: NotificationIntentId.derive({
@@ -80,7 +82,9 @@ export async function reactToStageChanges(
 ): Promise<void> {
   const tx = scope.executor;
   const stageChanges = committed.filter(isCommittedStageChange);
-  if (stageChanges.length === 0) return;
+  if (stageChanges.length === 0) {
+    return;
+  }
 
   const leadIds = [...new Set(stageChanges.map(({ event }) => event.leadId))];
   const leadRows = await tx
@@ -106,7 +110,9 @@ export async function reactToStageChanges(
   for (const { event, id } of stageChanges) {
     const lead = leadsById.get(event.leadId);
 
-    if (!lead) continue;
+    if (!lead) {
+      continue;
+    }
 
     intents.push(
       ...deriveLeadStageNotifications({

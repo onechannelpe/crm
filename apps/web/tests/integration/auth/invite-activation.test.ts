@@ -13,6 +13,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { submitInviteAcceptance } from "~/server/auth/flows/submit-invite-acceptance";
 import { isErr } from "~/shared/result";
 
+const NOW = new Date("2026-01-01T00:00:00Z");
+
 const REQUEST = {
   ipAddress: "198.51.100.44",
   userAgent: "vitest-agent",
@@ -53,6 +55,28 @@ describe("invite activation", () => {
     return { kit, invite };
   }
 
+  function acceptInvite(
+    kit: ReturnType<typeof createInviteTestKit>,
+    input: {
+      token: string;
+      password: string;
+      confirmPassword?: string;
+    },
+  ) {
+    return submitInviteAcceptance(
+      {
+        inviteService: kit.service,
+        repos: {
+          users: ctx.repos.users,
+          sessions: ctx.repos.sessions,
+        },
+      },
+      REQUEST,
+      input,
+      operationAt(NOW),
+    );
+  }
+
   it.each([
     ["invite_token_malformed", "invalid", "StrongPassword123", undefined],
     ["invite_password_too_short", undefined, "Password1", undefined],
@@ -79,28 +103,28 @@ describe("invite activation", () => {
     "keeps the invitation usable when activation input is rejected (%s)",
     async (code, tokenInput, password, confirmPassword) => {
       const { kit, invite } = await createPendingInvite();
-      const result = await submitInviteAcceptance(
-        {
-          inviteService: kit.service,
-          repos: {
-            users: ctx.repos.users,
-            sessions: ctx.repos.sessions,
-          },
-        },
-        REQUEST,
-        { token: tokenInput ?? invite.token, password, confirmPassword },
-        operationAt(new Date()),
-      );
+
+      const result = await acceptInvite(kit, {
+        token: tokenInput ?? invite.token,
+        password,
+        confirmPassword,
+      });
 
       expect(isErr(result)).toBe(true);
-      if (!isErr(result)) throw new Error("expected rejected activation");
+      if (!isErr(result)) {
+        throw new Error("expected rejected activation");
+      }
+
       expect(result.error.code).toBe(code);
       expect(await kit.expect.inviteStatus(invite.inviteId)).toBe("pending");
 
       const pendingInvite = await ctx.repos.userInvites.findById(
         invite.inviteId,
       );
-      if (!pendingInvite) throw new Error("expected pending invitation");
+      if (!pendingInvite) {
+        throw new Error("expected pending invitation");
+      }
+
       const sessions = await ctx.repos.sessions.listForUser(
         pendingInvite.user_id,
       );
@@ -110,33 +134,19 @@ describe("invite activation", () => {
 
   it("allows activation after rejected input", async () => {
     const { kit, invite } = await createPendingInvite();
-    const rejected = await submitInviteAcceptance(
-      {
-        inviteService: kit.service,
-        repos: {
-          users: ctx.repos.users,
-          sessions: ctx.repos.sessions,
-        },
-      },
-      REQUEST,
-      { token: invite.token, password: "Password1" },
-      operationAt(new Date()),
-    );
+
+    const rejected = await acceptInvite(kit, {
+      token: invite.token,
+      password: "Password1",
+    });
+
     expect(isErr(rejected)).toBe(true);
 
     expectOk(
-      await submitInviteAcceptance(
-        {
-          inviteService: kit.service,
-          repos: {
-            users: ctx.repos.users,
-            sessions: ctx.repos.sessions,
-          },
-        },
-        REQUEST,
-        { token: invite.token, password: "StrongPassword123" },
-        operationAt(new Date()),
-      ),
+      await acceptInvite(kit, {
+        token: invite.token,
+        password: "StrongPassword123",
+      }),
     );
 
     expect(await kit.expect.inviteStatus(invite.inviteId)).toBe("accepted");
@@ -144,27 +154,24 @@ describe("invite activation", () => {
 
   it("activates a pending account and starts onboarding", async () => {
     const { kit, invite } = await createPendingInvite();
+
     const result = expectOk(
-      await submitInviteAcceptance(
-        {
-          inviteService: kit.service,
-          repos: {
-            users: ctx.repos.users,
-            sessions: ctx.repos.sessions,
-          },
-        },
-        REQUEST,
-        { token: invite.token, password: "StrongPassword123" },
-        operationAt(new Date()),
-      ),
+      await acceptInvite(kit, {
+        token: invite.token,
+        password: "StrongPassword123",
+      }),
     );
 
     expect(result.redirectTo).toBe("/onboarding");
     expect(await kit.expect.inviteStatus(invite.inviteId)).toBe("accepted");
+
     const acceptedInvite = await ctx.repos.userInvites.findById(
       invite.inviteId,
     );
-    if (!acceptedInvite) throw new Error("expected accepted invitation");
+    if (!acceptedInvite) {
+      throw new Error("expected accepted invitation");
+    }
+
     expect(await kit.expect.userActive(acceptedInvite.user_id)).toBe(true);
 
     const sessions = await ctx.repos.sessions.listForUser(

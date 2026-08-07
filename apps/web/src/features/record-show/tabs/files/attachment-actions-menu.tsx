@@ -20,7 +20,9 @@ export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
   let menuRef: HTMLDivElement | undefined;
 
   function updateMenuPosition() {
-    if (!triggerRef) return;
+    if (!triggerRef) {
+      return;
+    }
     const rect = triggerRef.getBoundingClientRect();
     setMenuPosition({
       top: rect.bottom + 4,
@@ -30,10 +32,16 @@ export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
 
   onMount(() => {
     const handlePointerDown = (event: PointerEvent) => {
-      if (!isOpen()) return;
+      if (!isOpen()) {
+        return;
+      }
       const target = event.target;
-      if (!(target instanceof Node)) return;
-      if (rootRef?.contains(target) || menuRef?.contains(target)) return;
+      if (!(target instanceof Node)) {
+        return;
+      }
+      if (rootRef?.contains(target) || menuRef?.contains(target)) {
+        return;
+      }
       setIsOpen(false);
     };
 
@@ -44,7 +52,9 @@ export function AttachmentActionsMenu(props: AttachmentActionsMenuProps) {
   });
 
   createEffect(() => {
-    if (!isOpen()) return;
+    if (!isOpen()) {
+      return;
+    }
     updateMenuPosition();
 
     const onViewportChange = () => updateMenuPosition();

@@ -37,13 +37,17 @@ export function FileDropzone(props: FileDropzoneProps) {
   };
 
   function openPicker() {
-    if (local.disabled) return;
+    if (local.disabled) {
+      return;
+    }
     inputRef?.click();
   }
 
   function onInputChange(event: Event) {
     const target = event.currentTarget;
-    if (!(target instanceof HTMLInputElement)) return;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
     const files = Array.from(target.files ?? []);
     if (files.length > 0) {
       local.onFiles(files);
@@ -52,34 +56,52 @@ export function FileDropzone(props: FileDropzoneProps) {
   }
 
   function onDragEnter(event: DragEvent) {
-    if (local.disabled) return;
-    if (!event.dataTransfer?.types.includes("Files")) return;
+    if (local.disabled) {
+      return;
+    }
+    if (!event.dataTransfer?.types.includes("Files")) {
+      return;
+    }
     event.preventDefault();
     setDragging(true);
   }
 
   function onDragOver(event: DragEvent) {
-    if (local.disabled) return;
-    if (!event.dataTransfer?.types.includes("Files")) return;
+    if (local.disabled) {
+      return;
+    }
+    if (!event.dataTransfer?.types.includes("Files")) {
+      return;
+    }
     event.preventDefault();
-    if (!dragging()) setDragging(true);
+    if (!dragging()) {
+      setDragging(true);
+    }
   }
 
   function onDragLeave(event: DragEvent) {
-    if (local.disabled) return;
+    if (local.disabled) {
+      return;
+    }
     const target = event.currentTarget;
     if (!(target instanceof HTMLElement)) {
       setDragging(false);
       return;
     }
     const next = event.relatedTarget;
-    if (next instanceof Node && target.contains(next)) return;
+    if (next instanceof Node && target.contains(next)) {
+      return;
+    }
     setDragging(false);
   }
 
   function onDrop(event: DragEvent) {
-    if (local.disabled) return;
-    if (!event.dataTransfer?.types.includes("Files")) return;
+    if (local.disabled) {
+      return;
+    }
+    if (!event.dataTransfer?.types.includes("Files")) {
+      return;
+    }
     event.preventDefault();
     setDragging(false);
     const files = Array.from(event.dataTransfer.files);
@@ -89,8 +111,12 @@ export function FileDropzone(props: FileDropzoneProps) {
   }
 
   function onClick(event: MouseEvent) {
-    if (local.disabled) return;
-    if (event.target === inputRef) return;
+    if (local.disabled) {
+      return;
+    }
+    if (event.target === inputRef) {
+      return;
+    }
     event.preventDefault();
     openPicker();
   }

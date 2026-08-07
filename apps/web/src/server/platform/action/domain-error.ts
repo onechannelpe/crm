@@ -28,7 +28,9 @@ function messageFor(error: DomainError): string {
     return ERROR_CATALOG[error.catalogCode].message;
   }
 
-  if (error.kind === "external") return CLASS_MESSAGE_ES.internal;
+  if (error.kind === "external") {
+    return CLASS_MESSAGE_ES.internal;
+  }
   return CLASS_MESSAGE_ES[error.kind];
 }
 

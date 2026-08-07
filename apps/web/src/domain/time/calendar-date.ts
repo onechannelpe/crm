@@ -19,10 +19,14 @@ const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MONTH_PATTERN = /^(\d{4})-(\d{2})$/;
 
 export function parseCalendarDate(value: unknown): CalendarDate | null {
-  if (typeof value !== "string") return null;
+  if (typeof value !== "string") {
+    return null;
+  }
 
   const match = DATE_PATTERN.exec(value);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   const parts = {
     year: Number(match[1]),
@@ -34,14 +38,20 @@ export function parseCalendarDate(value: unknown): CalendarDate | null {
 }
 
 export function parseCalendarMonth(value: unknown): CalendarMonth | null {
-  if (typeof value !== "string") return null;
+  if (typeof value !== "string") {
+    return null;
+  }
 
   const match = MONTH_PATTERN.exec(value);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   const year = Number(match[1]);
   const month = Number(match[2]);
-  if (year < 1 || month < 1 || month > 12) return null;
+  if (year < 1 || month < 1 || month > 12) {
+    return null;
+  }
 
   return asCalendarMonth(value);
 }

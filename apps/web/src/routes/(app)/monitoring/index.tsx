@@ -68,7 +68,9 @@ const MONITORING_COLUMNS = [
 ] satisfies ReadonlyArray<DataGridColumn<MonitoringRow>>;
 
 function parseStatus(value: string): MonitoringStatus {
-  if (value === "ok" || value === "error") return value;
+  if (value === "ok" || value === "error") {
+    return value;
+  }
   return "all";
 }
 

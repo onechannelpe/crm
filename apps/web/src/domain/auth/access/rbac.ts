@@ -240,20 +240,30 @@ export function isRole(value: string): value is Role {
 }
 
 export function hasPermission(role: string, permission: Permission): boolean {
-  if (!isRole(role)) return false;
+  if (!isRole(role)) {
+    return false;
+  }
   const perms = ROLE_PERMISSIONS[role];
-  if (!perms) return false;
+  if (!perms) {
+    return false;
+  }
   return perms.includes(permission);
 }
 
 export function getPermissions(role: string): Permission[] {
-  if (!isRole(role)) return [];
+  if (!isRole(role)) {
+    return [];
+  }
   return ROLE_PERMISSIONS[role] ?? [];
 }
 
 export function canAssignRole(actorRole: Role, targetRole: Role): boolean {
-  if (actorRole === "superuser") return targetRole !== "superuser";
-  if (actorRole === "admin") return targetRole !== "superuser";
+  if (actorRole === "superuser") {
+    return targetRole !== "superuser";
+  }
+  if (actorRole === "admin") {
+    return targetRole !== "superuser";
+  }
   if (actorRole === "hr") {
     return targetRole !== "admin" && targetRole !== "superuser";
   }

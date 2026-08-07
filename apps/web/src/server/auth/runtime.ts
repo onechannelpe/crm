@@ -115,7 +115,9 @@ export function createAuthRuntime(
   });
   const loadAccountSecurityState = async (userId: UserId) => {
     const user = await setup.repos.users.findById(userId);
-    if (!user) return Err(fail("user_not_found"));
+    if (!user) {
+      return Err(fail("user_not_found"));
+    }
 
     return Ok({
       user,
@@ -130,13 +132,17 @@ export function createAuthRuntime(
     changedAt: Date,
   ) => {
     const state = await loadAccountSecurityState(userId);
-    if (!state.ok) return state;
+    if (!state.ok) {
+      return state;
+    }
 
     const valid = await verifyPassword(
       state.value.user.password_hash,
       currentPassword,
     );
-    if (!valid) return Err(fail("current_password_incorrect"));
+    if (!valid) {
+      return Err(fail("current_password_incorrect"));
+    }
 
     return setup.uow.run(async (repos) => {
       await repos.users.updatePassword(userId, await hashPassword(newPassword));
@@ -155,7 +161,9 @@ export function createAuthRuntime(
 
   const removeAccountPasskeys = async (userId: UserId, removedAt: Date) => {
     const state = await loadAccountSecurityState(userId);
-    if (!state.ok) return state;
+    if (!state.ok) {
+      return state;
+    }
 
     const { user, strongAuthStatus } = state.value;
     if (
@@ -172,8 +180,9 @@ export function createAuthRuntime(
 
     return setup.uow.run(async (repos) => {
       await repos.passkeys.deleteAllByUser(userId);
-      if (!strongAuthStatus.hasTotp)
+      if (!strongAuthStatus.hasTotp) {
         await repos.userRecoveryCodes.deleteAllByUser(userId);
+      }
       await repos.events.append({
         type: "passkeys_removed",
         entityType: "user",
@@ -187,7 +196,9 @@ export function createAuthRuntime(
 
   const disableAccountTotp = async (userId: UserId, disabledAt: Date) => {
     const state = await loadAccountSecurityState(userId);
-    if (!state.ok) return state;
+    if (!state.ok) {
+      return state;
+    }
 
     const { user, strongAuthStatus } = state.value;
     if (
@@ -204,8 +215,9 @@ export function createAuthRuntime(
 
     return setup.uow.run(async (repos) => {
       await repos.userTotpFactors.disable(userId, disabledAt);
-      if (!strongAuthStatus.hasPasskey)
+      if (!strongAuthStatus.hasPasskey) {
         await repos.userRecoveryCodes.deleteAllByUser(userId);
+      }
       await repos.events.append({
         type: "totp_disabled",
         entityType: "user",
@@ -482,7 +494,9 @@ export function createAuthRuntime(
       loginRetries: async (username: string, operation: OperationContext) => {
         const { users, authEvents } = login.repos;
         const user = await users.findByUsername(username);
-        if (!user) return null;
+        if (!user) {
+          return null;
+        }
 
         const since = operation.operationAt.getTime();
         const fifteenMinutesAgo = new Date(since - 15 * 60_000);

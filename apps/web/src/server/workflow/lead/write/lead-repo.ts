@@ -185,7 +185,9 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .where("deleted_at", "is", null)
         .executeTakeFirst();
 
-      if (!row) return undefined;
+      if (!row) {
+        return undefined;
+      }
       return {
         currentProvider: row.current_provider,
         currentDebitRate: row.current_debit_rate,
@@ -207,7 +209,9 @@ export function createLeadRepo(db: DatabaseExecutor) {
     },
 
     async findByRucMany(rucs: string[]): Promise<LeadState[]> {
-      if (rucs.length === 0) return [];
+      if (rucs.length === 0) {
+        return [];
+      }
       const rows = await selectLeadWithOrganization
         .where("org.ruc", "in", rucs)
         .execute();

@@ -37,7 +37,7 @@ describe("intent repository", () => {
       .execute();
   }
 
-  it("leases a pending intent, incrementing the attempt and taking the lease", async () => {
+  it("leases a pending intent, increments the attempt, and takes the lease", async () => {
     await seedPending("intent-1");
     const repository = createIntentRepository(ctx.db);
 
@@ -53,7 +53,7 @@ describe("intent repository", () => {
       .where("id", "=", notificationIntentId("intent-1"))
       .executeTakeFirstOrThrow();
 
-    // While processing, claimable_at is the lease expiration.
+    // While processing, claimable_at holds the lease expiration.
     expect(row).toEqual({
       queue_state: "processing",
       lease_owner: "worker-1",
@@ -71,7 +71,7 @@ describe("intent repository", () => {
     expect(second).toEqual([]);
   });
 
-  it("records expanded state and clears the lease with one timestamp", async () => {
+  it("marks an intent done and clears its lease", async () => {
     await seedPending("intent-1");
     const repository = createIntentRepository(ctx.db);
 
@@ -97,7 +97,7 @@ describe("intent repository", () => {
     });
   });
 
-  it("schedules a retry back to pending and records terminal failure", async () => {
+  it("schedules retries and records terminal failures", async () => {
     await seedPending("intent-retry");
     await seedPending("intent-fail");
     const repository = createIntentRepository(ctx.db);
@@ -148,7 +148,7 @@ describe("intent repository", () => {
     expect(retry.claimable_at).toEqual(RETRY_AT);
   });
 
-  it("counts pending and expanding intents as outstanding", async () => {
+  it("counts pending and processing intents as outstanding", async () => {
     await seedPending("intent-1");
     await seedPending("intent-2");
     const repository = createIntentRepository(ctx.db);

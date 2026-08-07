@@ -12,7 +12,9 @@ export async function enqueueLeadEffects(
   scope: WorkflowWriteContext,
   committed: CommittedLeadEvent[],
 ): Promise<void> {
-  if (committed.length === 0) return;
+  if (committed.length === 0) {
+    return;
+  }
 
   await reactToStageChanges(scope, committed);
   await reactToFulfillmentChanges(scope, committed);

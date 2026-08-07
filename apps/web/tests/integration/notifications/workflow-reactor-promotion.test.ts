@@ -40,12 +40,14 @@ describe("workflow notification pipeline", () => {
   });
 
   it("persists the actual stage reactor intent and plans WhatsApp delivery", async () => {
+    const executive = actorBy("execOne");
     const lead = await createLeadFixtureWriter(runtime)({
       kind: "setup",
       key: "ready-for-sale",
     });
+
     await runtime.ctx.repos.userChannelAddresses.upsert({
-      user_id: actorBy("execOne").userId,
+      user_id: executive.userId,
       channel: "whatsapp",
       address: "51911000001",
       is_verified: true,
@@ -53,10 +55,9 @@ describe("workflow notification pipeline", () => {
       created_at: NOW,
       updated_at: NOW,
     });
-    // Queue expansion is a later job event, so its actual claim instant, not
-    // the historic workflow event, determines whether the WhatsApp session is
-    // still active.
-    await openSession(runtime.ctx.db, actorBy("execOne").userId, new Date());
+
+    // Delivery planning uses the claim time, not the workflow event time.
+    await openSession(runtime.ctx.db, executive.userId, new Date());
 
     const committed: CommittedLeadEvent[] = [
       {
@@ -64,7 +65,7 @@ describe("workflow notification pipeline", () => {
         event: {
           leadId: lead.id,
           eventType: "workflow_stage_changed",
-          actorUserId: actorBy("execOne").userId,
+          actorUserId: executive.userId,
           subjectUserId: null,
           payload: { from: "PRICING", to: "SETUP" },
           changes: [],
@@ -80,7 +81,11 @@ describe("workflow notification pipeline", () => {
 
     const reader = createNotificationReader(runtime);
     const [entry] = await reader.intents();
-    if (!entry) throw new Error("expected stage notification outbox entry");
+
+    if (!entry) {
+      throw new Error("expected stage notification outbox entry");
+    }
+
     expect(entry).toMatchObject({
       event_type: "lead.ready_for_sale",
       queue_state: "pending",
@@ -92,10 +97,11 @@ describe("workflow notification pipeline", () => {
 
     const notifications = createTestNotificationRuntime(runtime);
     const planned = await notifications.planIntentRow(entry, NOW);
-    expect(planned.inAppRecipients).toEqual([actorBy("execOne").userId]);
+
+    expect(planned.inAppRecipients).toEqual([executive.userId]);
     expect(planned.externalDeliveries).toEqual([
       {
-        userId: actorBy("execOne").userId,
+        userId: executive.userId,
         channel: "whatsapp",
         recipientAddress: "51911000001",
       },
@@ -104,9 +110,10 @@ describe("workflow notification pipeline", () => {
     await notifications.drain();
 
     const [delivery] = await reader.deliveries();
+
     expect(delivery).toMatchObject({
       intent_id: entry.id,
-      user_id: actorBy("execOne").userId,
+      user_id: executive.userId,
       channel: "whatsapp",
       recipient_address: "51911000001",
       queue_state: "done",
@@ -117,13 +124,18 @@ describe("workflow notification pipeline", () => {
   });
 
   it("persists payment URLs produced by the fulfillment reactor", async () => {
+    const backOffice = actorBy("backOne");
     const lead = await createLeadFixtureWriter(runtime)({
       kind: "fulfillment",
       key: "payment-ready",
       step: "AWAITING_PAYMENT",
     });
+
     const orderId = lead.fulfillmentOrderId;
-    if (!orderId) throw new Error("expected fulfillment order id");
+
+    if (!orderId) {
+      throw new Error("expected fulfillment order id");
+    }
 
     await runtime.ctx.db
       .insertInto("lead_fulfillment_units")
@@ -148,7 +160,7 @@ describe("workflow notification pipeline", () => {
           event: {
             leadId: lead.id,
             eventType: "fulfillment_step_advanced",
-            actorUserId: actorBy("backOne").userId,
+            actorUserId: backOffice.userId,
             subjectUserId: null,
             payload: {
               orderId,
@@ -164,8 +176,11 @@ describe("workflow notification pipeline", () => {
     );
 
     const [entry] = await createNotificationReader(runtime).intents();
-    if (!entry)
+
+    if (!entry) {
       throw new Error("expected fulfillment notification outbox entry");
+    }
+
     expect(entry.event_type).toBe("lead.fulfillment_handoff");
     expect(entry.body_text).toContain("https://pay.example.com/abc");
     expect(parseNotificationChannels(entry.channels_json)).toEqual([
@@ -175,6 +190,8 @@ describe("workflow notification pipeline", () => {
   });
 
   it("plans an in-app-only intent without inventing external deliveries", async () => {
+    const backOffice = actorBy("backOne");
+
     const intent: NotificationIntent = {
       id: NotificationIntentId.derive({
         sourceEventId: "event-in-app-only",
@@ -183,7 +200,7 @@ describe("workflow notification pipeline", () => {
       eventType: "lead.ready_for_quotation",
       audience: {
         kind: "branch_role",
-        branchId: actorBy("backOne").branchId,
+        branchId: backOffice.branchId,
         role: "back_office",
       },
       channels: ["in_app"],
@@ -192,22 +209,27 @@ describe("workflow notification pipeline", () => {
       bodyText: "El cliente está listo para proponer tarifa",
       actionUrl: null,
     };
+
     await enqueueNotifications(runtime.ctx.db, [intent], NOW);
 
-    const [entry] = await createNotificationReader(runtime).intents();
-    if (!entry) throw new Error("expected in-app notification outbox entry");
+    const reader = createNotificationReader(runtime);
+    const [entry] = await reader.intents();
+
+    if (!entry) {
+      throw new Error("expected in-app notification outbox entry");
+    }
+
     const notifications = createTestNotificationRuntime(runtime);
     const planned = await notifications.planIntentRow(entry, NOW);
 
-    expect(planned.inAppRecipients).toEqual([actorBy("backOne").userId]);
+    expect(planned.inAppRecipients).toEqual([backOffice.userId]);
     expect(planned.externalDeliveries).toEqual([]);
 
     await notifications.drain();
 
-    const reader = createNotificationReader(runtime);
     expect(await reader.appNotifications()).toEqual([
       {
-        user_id: actorBy("backOne").userId,
+        user_id: backOffice.userId,
         event_type: "lead.ready_for_quotation",
         intent_id: "event-in-app-only:in-app-only",
       },

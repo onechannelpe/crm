@@ -36,14 +36,18 @@ export function MemberPermissionsTab(props: { detail: MemberDetail }) {
     const option = props.detail.assignableRoles.find(
       (role) => role.value === value,
     );
-    if (!option || option.value === props.detail.role) return;
+    if (!option || option.value === props.detail.role) {
+      return;
+    }
     setPendingCategory(props.detail.executiveCategory ?? "");
     setPendingRole(option.value);
   }
 
   async function confirmRoleChange() {
     const role = pendingRole();
-    if (!role) return;
+    if (!role) {
+      return;
+    }
     try {
       const { message } = await changeRole({
         userId: props.detail.id,

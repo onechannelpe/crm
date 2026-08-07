@@ -18,7 +18,9 @@ export async function deleteMember(
 ): Promise<Result<void, DomainError>> {
   return deps.lifecycle.run(async (tx) => {
     const target = await authorizeMemberManagement(ctx, tx.users, userId);
-    if (isErr(target)) return target;
+    if (isErr(target)) {
+      return target;
+    }
 
     if (!canDeleteMember(ctx.actor.role, target.value.role)) {
       return Err(fail("cannot_manage_member"));

@@ -103,7 +103,9 @@ const RECORD_TABS: readonly RecordTabDefinition[] = [
 ];
 
 function tabAppears(tab: RecordTabDefinition, context: RecordContext): boolean {
-  if (!tab.visibleForKinds.includes(context.kind)) return false;
+  if (!tab.visibleForKinds.includes(context.kind)) {
+    return false;
+  }
   if (tab.isVisibleAtStage && context.kind === "lead") {
     return tab.isVisibleAtStage(context.data.lead.stage);
   }

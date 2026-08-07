@@ -121,7 +121,9 @@ describe("runDirectSearch", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("expected failure");
+    if (result.ok) {
+      throw new Error("expected failure");
+    }
     expect(result.error.details).toMatchObject({
       status: 503,
       request_id: "req-search-1",
@@ -177,7 +179,9 @@ describe("runDirectSearch", () => {
     );
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("expected failure");
+    if (result.ok) {
+      throw new Error("expected failure");
+    }
     expect(result.error.code).toBe("search_exhausted");
     expect(engineCalled).toBe(false);
   });

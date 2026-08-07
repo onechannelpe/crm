@@ -38,6 +38,7 @@ describe("passkey error mapping", () => {
 
   it("returns invalid credentials for empty identifier", async () => {
     const login = createAuthLoginContext(scenario.ctx.db);
+
     const result = await startPasskeyLogin(
       { identifier: "   ", ipAddress, mode: "identified" },
       login,
@@ -46,6 +47,7 @@ describe("passkey error mapping", () => {
     );
 
     const error = expectErr(result);
+
     expect(error.kind).toBe("invalid_credentials");
   });
 
@@ -70,7 +72,10 @@ describe("passkey error mapping", () => {
         account: { kind: "lookup" },
       },
     );
-    if (isErr(prepared)) throw new Error("expected prepared passkey login");
+
+    if (isErr(prepared)) {
+      throw new Error("expected prepared passkey login");
+    }
 
     await expect(
       persistPasskeyLoginFlow(
@@ -97,6 +102,7 @@ describe("passkey error mapping", () => {
 
     const login = createAuthLoginContext(scenario.ctx.db);
     const operation = operationAt(new Date());
+
     const verified = await verifyPasskeyLogin(
       login.repos,
       {
@@ -107,6 +113,7 @@ describe("passkey error mapping", () => {
       },
       operation,
     );
+
     const result = isErr(verified)
       ? verified
       : await completePendingLogin(
@@ -120,20 +127,23 @@ describe("passkey error mapping", () => {
         );
 
     const error = expectErr(result);
+
     expect(error.kind).toBe("invalid_credentials");
 
-    const consumed =
+    const challenge =
       await scenario.ctx.repos.webauthnChallenges.findById(challengeId);
-    expect(consumed).toBeUndefined();
 
-    const retries =
+    expect(challenge).toBeUndefined();
+
+    const recentRetries =
       await scenario.ctx.repos.authEvents.findRecentLoginRetriesByUser(
         execOne.userId,
         5,
       );
-    expect(retries[0]?.method).toBe("passkey");
-    expect(retries[0]?.stage).toBe("verify");
-    expect(retries[0]?.outcome).toBe("failure");
-    expect(retries[0]?.reason).toBe("assertion_invalid");
+
+    expect(recentRetries[0]?.method).toBe("passkey");
+    expect(recentRetries[0]?.stage).toBe("verify");
+    expect(recentRetries[0]?.outcome).toBe("failure");
+    expect(recentRetries[0]?.reason).toBe("assertion_invalid");
   });
 });

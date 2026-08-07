@@ -31,7 +31,9 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
   }
 
   const auth = await authorizeRoutePermission("lead:work");
-  if (isErr(auth)) return auth.error;
+  if (isErr(auth)) {
+    return auth.error;
+  }
   const session = auth.value;
 
   const origin = event.request.headers.get("origin") ?? "";

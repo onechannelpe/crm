@@ -20,7 +20,9 @@ export function BankPicker(props: BankPickerProps) {
 
   const filteredBanks = createMemo(() => {
     const term = search().toLowerCase().trim();
-    if (!term) return SETTLEMENT_BANKS;
+    if (!term) {
+      return SETTLEMENT_BANKS;
+    }
     return SETTLEMENT_BANKS.filter((bank) => bank.toLowerCase().includes(term));
   });
 

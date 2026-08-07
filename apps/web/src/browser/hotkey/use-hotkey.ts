@@ -7,9 +7,15 @@ const INPUT_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 
 function isTypingContext(event: KeyboardEvent): boolean {
   const target = event.target;
-  if (!(target instanceof Element)) return false;
-  if (INPUT_TAGS.has(target.tagName)) return true;
-  if (target.getAttribute("contenteditable") != null) return true;
+  if (!(target instanceof Element)) {
+    return false;
+  }
+  if (INPUT_TAGS.has(target.tagName)) {
+    return true;
+  }
+  if (target.getAttribute("contenteditable") != null) {
+    return true;
+  }
   return false;
 }
 
@@ -43,13 +49,23 @@ export function useHotkey(
   const parsed = parseCombo(combo);
 
   createEffect(() => {
-    if (enabled && !enabled()) return;
+    if (enabled && !enabled()) {
+      return;
+    }
 
     const listener = (event: KeyboardEvent) => {
-      if (!allowInInputs && isTypingContext(event)) return;
-      if (shouldHandleEvent && !shouldHandleEvent(event)) return;
-      if (!matchesEvent(event, parsed)) return;
-      if (preventDefault) event.preventDefault();
+      if (!allowInInputs && isTypingContext(event)) {
+        return;
+      }
+      if (shouldHandleEvent && !shouldHandleEvent(event)) {
+        return;
+      }
+      if (!matchesEvent(event, parsed)) {
+        return;
+      }
+      if (preventDefault) {
+        event.preventDefault();
+      }
       handler(event);
     };
 

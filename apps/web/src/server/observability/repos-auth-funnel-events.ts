@@ -45,7 +45,9 @@ export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
         const payload = serializeEventLogStreamPayload(
           mapAuthFunnelEventRow(row),
         );
-        if (payload) await notify(trx, EVENT_LOGS_STREAM_CHANNEL, payload);
+        if (payload) {
+          await notify(trx, EVENT_LOGS_STREAM_CHANNEL, payload);
+        }
 
         return row;
       });

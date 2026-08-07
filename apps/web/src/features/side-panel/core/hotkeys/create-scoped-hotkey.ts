@@ -22,7 +22,9 @@ export function useScopedHotkey(
     preventDefault: options.preventDefault,
     shouldHandleEvent: (event) => {
       const scopeElement = scope.container();
-      if (!scopeElement) return false;
+      if (!scopeElement) {
+        return false;
+      }
       return isEventInsideScope(event, scopeElement);
     },
   });

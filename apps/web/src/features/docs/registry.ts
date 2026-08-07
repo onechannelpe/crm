@@ -30,12 +30,18 @@ function getDocSlug(path: string): string {
 }
 
 function isDocFrontmatter(value: unknown): value is DocFrontmatter {
-  if (!value || typeof value !== "object") return false;
-  if (!("title" in value) || typeof value.title !== "string") return false;
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  if (!("title" in value) || typeof value.title !== "string") {
+    return false;
+  }
   if (!("description" in value) || typeof value.description !== "string") {
     return false;
   }
-  if (!("order" in value) || typeof value.order !== "number") return false;
+  if (!("order" in value) || typeof value.order !== "number") {
+    return false;
+  }
   return true;
 }
 
@@ -66,6 +72,8 @@ function isDocSlug(slug: string): slug is DocSlug {
 }
 
 export function getDocBySlug(slug: string | undefined): DocEntry | undefined {
-  if (!slug || !isDocSlug(slug)) return undefined;
+  if (!slug || !isDocSlug(slug)) {
+    return undefined;
+  }
   return docsBySlug[slug];
 }

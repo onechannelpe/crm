@@ -29,7 +29,9 @@ export async function persistWorkflowHistoryEvents(
   leads: readonly CompiledLead[],
 ): Promise<void> {
   const drafts = leads.flatMap((lead) => buildLeadEvents(lead, anchorMs, day));
-  if (drafts.length === 0) return;
+  if (drafts.length === 0) {
+    return;
+  }
 
   await db
     .insertInto("events")

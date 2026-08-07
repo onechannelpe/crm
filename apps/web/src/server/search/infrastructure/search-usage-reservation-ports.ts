@@ -20,7 +20,9 @@ export function createSearchUsageReservationPorts(
         buildSearchUsageRepos(tx),
         operation,
       );
-      if (isErr(snapshot)) return snapshot;
+      if (isErr(snapshot)) {
+        return snapshot;
+      }
       return Ok(snapshot.value.remaining);
     },
     reservations: createSearchUsageReservationsRepo,

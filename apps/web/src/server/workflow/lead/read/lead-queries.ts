@@ -113,15 +113,17 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
 
       q = applyLeadListFilters(q, filters);
 
-      if (filters.sortBy === "createdAt")
+      if (filters.sortBy === "createdAt") {
         q = q.orderBy("lead.created_at", filters.sortDirection);
-      else if (filters.sortBy === "updatedAt")
+      } else if (filters.sortBy === "updatedAt") {
         q = q.orderBy("lead.updated_at", filters.sortDirection);
-      else if (filters.sortBy === "registeredBy") {
+      } else if (filters.sortBy === "registeredBy") {
         q = q
           .orderBy("creator.names", filters.sortDirection)
           .orderBy("creator.first_surname", filters.sortDirection);
-      } else q = q.orderBy("org.ruc", filters.sortDirection);
+      } else {
+        q = q.orderBy("org.ruc", filters.sortDirection);
+      }
 
       const rows = await q
         .orderBy("lead.id", "desc")

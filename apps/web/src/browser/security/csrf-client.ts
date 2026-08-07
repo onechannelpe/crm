@@ -6,7 +6,9 @@ import { CSRF_CONFIG } from "~/shared/csrf-config";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
 
 export function setupBrowserRequestSecurity() {
-  if (typeof window === "undefined" || !("fetch" in window)) return;
+  if (typeof window === "undefined" || !("fetch" in window)) {
+    return;
+  }
 
   const originalFetch = window.fetch;
 
@@ -17,7 +19,9 @@ export function setupBrowserRequestSecurity() {
     const request = addCsrfToken(new Request(input, init));
     const response = await originalFetch(request);
 
-    if (!isServerFunctionRequest(request) || response.ok) return response;
+    if (!isServerFunctionRequest(request) || response.ok) {
+      return response;
+    }
 
     const error = new ServerFunctionTransportError(response.status);
     captureException(error, {
@@ -45,10 +49,14 @@ export function setupBrowserRequestSecurity() {
 }
 
 function addCsrfToken(request: Request): Request {
-  if (!needsCsrfToken(request)) return request;
+  if (!needsCsrfToken(request)) {
+    return request;
+  }
 
   const token = getCsrfMetaToken();
-  if (!token || request.headers.has(CSRF_CONFIG.HEADER_NAME)) return request;
+  if (!token || request.headers.has(CSRF_CONFIG.HEADER_NAME)) {
+    return request;
+  }
 
   const headers = new Headers(request.headers);
   headers.set(CSRF_CONFIG.HEADER_NAME, token);
@@ -56,7 +64,9 @@ function addCsrfToken(request: Request): Request {
 }
 
 function needsCsrfToken(request: Request): boolean {
-  if (SAFE_METHODS.has(request.method.toUpperCase())) return false;
+  if (SAFE_METHODS.has(request.method.toUpperCase())) {
+    return false;
+  }
   return new URL(request.url).origin === window.location.origin;
 }
 
@@ -65,7 +75,9 @@ function isServerFunctionRequest(request: Request): boolean {
 }
 
 function getCsrfMetaToken(): string | null {
-  if (typeof document === "undefined") return null;
+  if (typeof document === "undefined") {
+    return null;
+  }
   const meta = document.querySelector<HTMLMetaElement>(
     `meta[name="${CSRF_CONFIG.META_NAME}"]`,
   );

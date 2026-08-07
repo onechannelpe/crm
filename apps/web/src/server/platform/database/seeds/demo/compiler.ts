@@ -102,8 +102,12 @@ function compileLead(spec: LeadSpec): CompiledLead {
 
 function fulfillmentUnitCount(spec: LeadSpec): number {
   const fulfillment = spec.fulfillment;
-  if (!fulfillment || fulfillment.productKind === null) return 0;
-  if (fulfillment.productKind === "digital_only") return 1;
+  if (!fulfillment || fulfillment.productKind === null) {
+    return 0;
+  }
+  if (fulfillment.productKind === "digital_only") {
+    return 1;
+  }
   return Math.max(1, spec.venue?.posQuantity ?? 1);
 }
 
@@ -253,7 +257,9 @@ function validateFulfillmentStory(spec: LeadSpec): void {
 }
 
 function requireOwner(label: string, spec: LeadSpec, userId: string): void {
-  if (userId === spec.executiveId) return;
+  if (userId === spec.executiveId) {
+    return;
+  }
   throw new Error(`invalid_workflow_seed_${label}:${spec.key}:${userId}`);
 }
 
@@ -263,6 +269,8 @@ function requireMember(
   userId: string,
   members: Record<string, string>,
 ): void {
-  if (Object.values(members).includes(userId)) return;
+  if (Object.values(members).includes(userId)) {
+    return;
+  }
   throw new Error(`invalid_workflow_seed_${label}:${leadKey}:${userId}`);
 }

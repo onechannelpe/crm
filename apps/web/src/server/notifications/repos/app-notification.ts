@@ -29,7 +29,9 @@ export function createAppNotificationRepo(db: DatabaseExecutor) {
     },
 
     async createMany(values: NewAppNotificationRow[]): Promise<void> {
-      if (values.length === 0) return;
+      if (values.length === 0) {
+        return;
+      }
       await db
         .insertInto("app_notifications")
         .values(values)

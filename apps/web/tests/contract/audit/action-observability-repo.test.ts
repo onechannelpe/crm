@@ -20,6 +20,7 @@ import { isErr } from "~/shared/result";
 
 const EXEC_USER_ID = TEST_FIXTURES.users.execOne.id;
 const SUPERUSER_ID = TEST_FIXTURES.users.superUser.id;
+const BASE_TIME_MS = 1_700_000_000_000;
 
 describe("action observations snapshot", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>>;
@@ -34,21 +35,18 @@ describe("action observations snapshot", () => {
 
   beforeEach(async () => {
     await resetTestDb(ctx);
+    vi.useFakeTimers();
   });
 
-  // `getActionSnapshot` windows off the real clock (see
-  // `parseActionSnapshotFilter`). Freeze time here so fixed `createdAt` seeds
-  // land inside the query window.
   afterEach(() => {
     vi.useRealTimers();
   });
 
   it("projects ok and error rows into summary and recent", async () => {
     const audit = createAuditTestKit(ctx);
-    const baseTimeMs = 1_700_000_000_000;
-    const baseTime = new Date(baseTimeMs);
-    const nextTime = new Date(baseTimeMs + 1);
-    vi.useFakeTimers();
+    const baseTime = new Date(BASE_TIME_MS);
+    const nextTime = new Date(BASE_TIME_MS + 1);
+
     vi.setSystemTime(nextTime);
 
     await audit.recordAction({
@@ -63,6 +61,7 @@ describe("action observations snapshot", () => {
       input: { contactId: 1 },
       createdAt: baseTime,
     });
+
     await audit.recordAction({
       traceId: "trace-b",
       requestId: "req-b",
@@ -84,11 +83,16 @@ describe("action observations snapshot", () => {
     );
 
     expect(isErr(snapshotResult)).toBe(false);
-    if (isErr(snapshotResult)) return;
+    if (isErr(snapshotResult)) {
+      return;
+    }
+
     const snapshot = snapshotResult.value;
 
     expect(snapshot.summary).toHaveLength(1);
+
     const summaryRow = snapshot.summary[0];
+
     expect(summaryRow).toMatchObject({
       actionName: "leads.request",
       count: 2,
@@ -96,7 +100,6 @@ describe("action observations snapshot", () => {
     });
     expect(summaryRow?.avgDurationMs).toBeGreaterThan(0);
 
-    // recent rows are ordered by created_at desc, so the error row is first.
     expect(snapshot.recent).toHaveLength(2);
     expect(snapshot.recent[0]?.status).toBe("error");
     expect(snapshot.recent[1]?.status).toBe("ok");
@@ -104,10 +107,8 @@ describe("action observations snapshot", () => {
 
   it("normalizes wire error codes into the public error column", async () => {
     const audit = createAuditTestKit(ctx);
-    const baseTimeMs = 1_700_000_000_000;
-    const baseTime = new Date(baseTimeMs);
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(baseTimeMs + 1));
+
+    vi.setSystemTime(new Date(BASE_TIME_MS + 1));
 
     await audit.recordAction({
       traceId: "trace-validation",
@@ -121,8 +122,9 @@ describe("action observations snapshot", () => {
       errorCode: "validation",
       errorMessage: "email must be valid",
       input: { role: "executive" },
-      createdAt: baseTime,
+      createdAt: new Date(BASE_TIME_MS),
     });
+
     await audit.recordAction({
       traceId: "trace-unauth",
       requestId: "req-unauth",
@@ -135,7 +137,7 @@ describe("action observations snapshot", () => {
       errorCode: "unauthenticated",
       errorMessage: "no session",
       input: { role: "executive" },
-      createdAt: new Date(baseTimeMs + 1),
+      createdAt: new Date(BASE_TIME_MS + 1),
     });
 
     const snapshotResult = await audit.observability.getActionSnapshot(
@@ -148,12 +150,15 @@ describe("action observations snapshot", () => {
     );
 
     expect(isErr(snapshotResult)).toBe(false);
-    if (isErr(snapshotResult)) return;
+    if (isErr(snapshotResult)) {
+      return;
+    }
 
     const codes = snapshotResult.value.recent
       .map((row) => row.errorCode)
       .filter((code): code is string => code !== null)
       .toSorted((a, b) => a.localeCompare(b));
+
     expect(codes).toEqual(["authentication_required", "validation_failed"]);
     expect(snapshotResult.value.summary[0]).toMatchObject({
       actionName: "team.invite.create",
@@ -164,10 +169,9 @@ describe("action observations snapshot", () => {
 
   it("deletes old observations via the retention sweep", async () => {
     const audit = createAuditTestKit(ctx);
-    const baseTimeMs = 1_700_000_000_000;
-    const cutoff = new Date(baseTimeMs);
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(baseTimeMs + 1_000));
+    const cutoff = new Date(BASE_TIME_MS);
+
+    vi.setSystemTime(new Date(BASE_TIME_MS + 1_000));
 
     await audit.recordAction({
       traceId: "trace-old",
@@ -181,7 +185,7 @@ describe("action observations snapshot", () => {
       errorCode: "validation",
       errorMessage: "email must be valid",
       input: { role: "executive" },
-      createdAt: new Date(baseTimeMs - 1_000),
+      createdAt: new Date(BASE_TIME_MS - 1_000),
     });
 
     await audit.recordAction({
@@ -194,38 +198,44 @@ describe("action observations snapshot", () => {
       status: "ok",
       durationMs: 11,
       input: { role: "executive" },
-      createdAt: new Date(baseTimeMs + 1_000),
+      createdAt: new Date(BASE_TIME_MS + 1_000),
     });
 
-    // Anchor the snapshot window to the new row so both rows are visible.
     const beforeSweep = await audit.observability.getActionSnapshot(
       { windowMinutes: 60 },
       new Date(),
     );
+
     expect(isErr(beforeSweep)).toBe(false);
-    if (isErr(beforeSweep)) throw new Error("Expected snapshot success");
+    if (isErr(beforeSweep)) {
+      throw new Error("Expected snapshot success");
+    }
+
     expect(beforeSweep.value.recent).toHaveLength(2);
 
     const deleted =
       await ctx.repos.actionObservations.deleteCreatedBefore(cutoff);
+
     expect(deleted).toBe(1);
 
     const afterSweep = await audit.observability.getActionSnapshot(
       { windowMinutes: 60 },
       new Date(),
     );
+
     expect(isErr(afterSweep)).toBe(false);
-    if (isErr(afterSweep)) return;
+    if (isErr(afterSweep)) {
+      return;
+    }
+
     expect(afterSweep.value.recent).toHaveLength(1);
     expect(afterSweep.value.recent[0]?.actionName).toBe("team.invite.create");
   });
 
   it("filters summary consistently by status and action name", async () => {
     const audit = createAuditTestKit(ctx);
-    const baseTimeMs = 1_700_000_000_000;
-    const baseTime = new Date(baseTimeMs);
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(baseTimeMs + 2));
+
+    vi.setSystemTime(new Date(BASE_TIME_MS + 2));
 
     await audit.recordAction({
       traceId: "trace-1",
@@ -238,8 +248,9 @@ describe("action observations snapshot", () => {
       durationMs: 10,
       errorCode: "validation",
       errorMessage: "invalid email",
-      createdAt: baseTime,
+      createdAt: new Date(BASE_TIME_MS),
     });
+
     await audit.recordAction({
       traceId: "trace-2",
       requestId: "req-2",
@@ -249,8 +260,9 @@ describe("action observations snapshot", () => {
       actorRole: "superuser",
       status: "ok",
       durationMs: 11,
-      createdAt: new Date(baseTimeMs + 1),
+      createdAt: new Date(BASE_TIME_MS + 1),
     });
+
     await audit.recordAction({
       traceId: "trace-3",
       requestId: "req-3",
@@ -262,7 +274,7 @@ describe("action observations snapshot", () => {
       durationMs: 12,
       errorCode: "forbidden",
       errorMessage: "forbidden",
-      createdAt: new Date(baseTimeMs + 2),
+      createdAt: new Date(BASE_TIME_MS + 2),
     });
 
     const filteredResult = await audit.observability.getActionSnapshot(
@@ -275,7 +287,10 @@ describe("action observations snapshot", () => {
     );
 
     expect(isErr(filteredResult)).toBe(false);
-    if (isErr(filteredResult)) return;
+    if (isErr(filteredResult)) {
+      return;
+    }
+
     const filtered = filteredResult.value;
 
     expect(filtered.summary).toHaveLength(1);

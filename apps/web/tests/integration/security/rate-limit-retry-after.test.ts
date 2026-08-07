@@ -59,7 +59,9 @@ describe("rate limit retry after", () => {
         "198.51.100.1",
       );
     } catch (error) {
-      if (error instanceof ActionError) blocked = error;
+      if (error instanceof ActionError) {
+        blocked = error;
+      }
     }
 
     const wire = blocked?.wire;

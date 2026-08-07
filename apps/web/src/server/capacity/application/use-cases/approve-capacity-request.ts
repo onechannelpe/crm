@@ -60,7 +60,9 @@ export async function approveCapacityRequest(
         { grants: tx.searchCapacityGrants },
         ctx,
       );
-      if (isErr(granted)) return granted;
+      if (isErr(granted)) {
+        return granted;
+      }
     } else {
       const granted = await grantUsageCapacity(
         {
@@ -73,7 +75,9 @@ export async function approveCapacityRequest(
         { grants: tx.leadCapacityGrants },
         ctx,
       );
-      if (isErr(granted)) return granted;
+      if (isErr(granted)) {
+        return granted;
+      }
     }
 
     return Ok({ success: true as const });

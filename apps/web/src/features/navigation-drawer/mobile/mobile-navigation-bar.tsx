@@ -32,10 +32,18 @@ export function MobileNavigationBar() {
   const openSettingsMenu = useOpenSettingsMenu();
 
   const activeItemName = createMemo(() => {
-    if (isSettingsPage()) return "settings";
-    if (expanded()) return currentMobileDrawer();
-    if (location.pathname.startsWith("/records")) return "records";
-    if (location.pathname.startsWith("/search")) return "search";
+    if (isSettingsPage()) {
+      return "settings";
+    }
+    if (expanded()) {
+      return currentMobileDrawer();
+    }
+    if (location.pathname.startsWith("/records")) {
+      return "records";
+    }
+    if (location.pathname.startsWith("/search")) {
+      return "search";
+    }
 
     return "main";
   });

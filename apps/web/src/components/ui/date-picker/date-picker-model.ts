@@ -86,7 +86,9 @@ export function isPreviousMonthDisabled(
   visibleMonth: VisibleMonth,
   minDate: CalendarDate | null,
 ): boolean {
-  if (!minDate) return false;
+  if (!minDate) {
+    return false;
+  }
   const minMonth = getVisibleMonth(minDate);
   return compareVisibleMonth(visibleMonth, minMonth) <= 0;
 }
@@ -100,6 +102,8 @@ function weekdayOffset(date: CalendarDate): number {
 }
 
 function compareVisibleMonth(left: VisibleMonth, right: VisibleMonth): number {
-  if (left.year !== right.year) return left.year - right.year;
+  if (left.year !== right.year) {
+    return left.year - right.year;
+  }
   return left.month - right.month;
 }

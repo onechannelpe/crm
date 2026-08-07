@@ -102,8 +102,9 @@ export function generateMerchants(input: GenerateInput): MerchantSpec[] {
   const rng = mulberry32(input.context.randomSeed);
   const saleMonths = cohortMonths(input.context.anchorDate);
   const requiredCaseMonth = saleMonths.at(-2);
-  if (!requiredCaseMonth)
+  if (!requiredCaseMonth) {
     throw new Error("merchant_seed_missing_cohort_months");
+  }
   const merchants: MerchantSpec[] = [];
   for (let index = 0; index < input.totalMerchants; index++) {
     const linkedOrganization = input.linkedOrganizations[index];
@@ -206,7 +207,9 @@ function culqiUser(
   index: number,
 ): Pick<MerchantSpec, "culqiUserCode" | "culqiUserName"> {
   // A handful of rows arrive with no usuario at all, as they do in the export.
-  if (index % 23 === 0) return { culqiUserCode: null, culqiUserName: null };
+  if (index % 23 === 0) {
+    return { culqiUserCode: null, culqiUserName: null };
+  }
   const slot = Math.floor(rng() * CULQI_USERS.length);
   return {
     culqiUserCode: `V${(100 + slot).toString()}`,
@@ -221,7 +224,9 @@ function buildSeries(rng: () => number): Array<{ gpv: number; trx: number }> {
   const decay = [1, 0.9 + rng() * 0.3, 0.6 + rng() * 0.3, 0.3 + rng() * 0.3];
   return decay.map((factor, offset) => {
     const alive = chance(rng, PROFILE.monthlyNonZeroRates[offset]);
-    if (!alive) return { gpv: 0, trx: 0 };
+    if (!alive) {
+      return { gpv: 0, trx: 0 };
+    }
     const gpv = round2(scale * factor * (0.7 + rng() * 0.6));
     const ticket = 40 + rng() * 120;
     return { gpv, trx: Math.max(1, Math.round(gpv / ticket)) };
@@ -231,10 +236,18 @@ function buildSeries(rng: () => number): Array<{ gpv: number; trx: number }> {
 function tailedScale(rng: () => number): number {
   const r = rng();
   const q = PROFILE.gpvM0Quantiles;
-  if (r < 0.5) return rng() * q.p50;
-  if (r < 0.75) return q.p50 + rng() * (q.p75 - q.p50);
-  if (r < 0.9) return q.p75 + rng() * (q.p90 - q.p75);
-  if (r < 0.99) return q.p90 + rng() * (q.p99 - q.p90);
+  if (r < 0.5) {
+    return rng() * q.p50;
+  }
+  if (r < 0.75) {
+    return q.p50 + rng() * (q.p75 - q.p50);
+  }
+  if (r < 0.9) {
+    return q.p75 + rng() * (q.p90 - q.p75);
+  }
+  if (r < 0.99) {
+    return q.p90 + rng() * (q.p99 - q.p90);
+  }
   return q.p99 + rng() * q.p99 * 1.5;
 }
 
@@ -247,7 +260,9 @@ export function toSourceRow(
 ): SourceRow {
   const cutMonth = calendarMonthFromDate(cutDate);
   const gpv = merchant.series.flatMap((point, offset) => {
-    if (addCalendarMonths(merchant.saleMonth, offset) > cutMonth) return [];
+    if (addCalendarMonths(merchant.saleMonth, offset) > cutMonth) {
+      return [];
+    }
     return [{ offset, gpv: point.gpv, trx: point.trx }];
   });
 
@@ -350,7 +365,9 @@ function weightedPick<T extends { weight: number }>(
   let acc = 0;
   for (const item of items) {
     acc += item.weight;
-    if (r <= acc) return item;
+    if (r <= acc) {
+      return item;
+    }
   }
   return items[0];
 }

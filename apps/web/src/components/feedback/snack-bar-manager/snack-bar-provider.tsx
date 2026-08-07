@@ -68,7 +68,9 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
       const isDuplicate = items.some(
         (item) => item.dedupeKey === spec.dedupeKey,
       );
-      if (isDuplicate) return "";
+      if (isDuplicate) {
+        return "";
+      }
     }
 
     counter += 1;
@@ -104,11 +106,18 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
     setItems(
       produce((draft) => {
         const item = draft.find((i) => i.id === id);
-        if (!item) return;
-        if (patch.message !== undefined) item.message = patch.message;
-        if (patch.detailedMessage !== undefined)
+        if (!item) {
+          return;
+        }
+        if (patch.message !== undefined) {
+          item.message = patch.message;
+        }
+        if (patch.detailedMessage !== undefined) {
           item.detailedMessage = patch.detailedMessage;
-        if (patch.variant !== undefined) item.variant = patch.variant;
+        }
+        if (patch.variant !== undefined) {
+          item.variant = patch.variant;
+        }
         if (patch.duration !== undefined) {
           item.duration = patch.duration;
           item.elapsed = 0;
@@ -125,7 +134,9 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
     setItems(
       produce((draft) => {
         const item = draft.find((i) => i.id === id);
-        if (item) item.paused = true;
+        if (item) {
+          item.paused = true;
+        }
       }),
     );
   };
@@ -134,7 +145,9 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
     setItems(
       produce((draft) => {
         const item = draft.find((i) => i.id === id);
-        if (item) item.paused = false;
+        if (item) {
+          item.paused = false;
+        }
       }),
     );
   };

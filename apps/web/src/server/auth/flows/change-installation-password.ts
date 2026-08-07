@@ -49,7 +49,9 @@ export async function changeInstallationPassword(
     });
     return Ok(undefined);
   });
-  if (isErr(changed)) return changed;
+  if (isErr(changed)) {
+    return changed;
+  }
 
   return Ok(undefined);
 }

@@ -40,7 +40,9 @@ export async function getLeadCapacitySnapshot(
   operation: OperationContext,
 ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
   const policyResult = await getEffectiveLeadPolicy(userId, repos, operation);
-  if (!policyResult.ok) return policyResult;
+  if (!policyResult.ok) {
+    return policyResult;
+  }
 
   const range = appDayRange(appCalendarDateAt(operation.operationAt));
   const [grants, reservations, commits, activeAssignments] = await Promise.all([

@@ -216,7 +216,9 @@ export async function createHalftoneRuntime({
   const lookAtTarget = new Vector3();
 
   const renderFrame = (timestamp?: DOMHighResTimeStamp) => {
-    if (cancelled || disposed) return;
+    if (cancelled || disposed) {
+      return;
+    }
     clock.update(timestamp);
     const activeSettings = config.settings;
     const delta = clock.getDelta();
@@ -331,7 +333,9 @@ export async function createHalftoneRuntime({
         transmissionTarget,
       });
     }
-    if (!activeSettings.halftone.enabled && !isImageMode) return;
+    if (!activeSettings.halftone.enabled && !isImageMode) {
+      return;
+    }
     blurHorizontalMaterial.uniforms.tInput.value = sceneTarget.texture;
     renderer.setRenderTarget(blurTargetA);
     renderer.render(blurHorizontalScene, orthographicCamera);
@@ -382,7 +386,9 @@ export async function createHalftoneRuntime({
       offscreen.width = width;
       offscreen.height = height;
       const ctx = offscreen.getContext("2d");
-      if (!ctx) return null;
+      if (!ctx) {
+        return null;
+      }
       if (includeBackground) {
         ctx.fillStyle = backgroundColor ?? config.settings.background.color;
         ctx.fillRect(0, 0, width, height);
@@ -432,7 +438,9 @@ export async function createHalftoneRuntime({
 
   return {
     dispose: () => {
-      if (disposed) return;
+      if (disposed) {
+        return;
+      }
       disposed = true;
       disposeRuntime();
     },
@@ -448,7 +456,9 @@ export async function createHalftoneRuntime({
     },
     setActive: (nextActive: boolean) => {
       active = nextActive;
-      if (!renderLoop) return;
+      if (!renderLoop) {
+        return;
+      }
       if (active) {
         renderLoop.start();
       } else {

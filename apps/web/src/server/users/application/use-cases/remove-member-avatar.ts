@@ -13,10 +13,14 @@ export async function removeMemberAvatar(
   userId: UserId,
 ): Promise<Result<{ avatarVersion: number }, DomainError>> {
   const target = await authorizeMemberManagement(ctx, deps.users, userId);
-  if (isErr(target)) return target;
+  if (isErr(target)) {
+    return target;
+  }
 
   const result = await deps.avatars.remove(userId, ctx.operationAt);
-  if (isErr(result)) return Err(toAvatarDomainError(result.error.code));
+  if (isErr(result)) {
+    return Err(toAvatarDomainError(result.error.code));
+  }
 
   return Ok({ avatarVersion: result.value.avatarVersion });
 }

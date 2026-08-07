@@ -42,7 +42,9 @@ describe("inquiry pipeline", () => {
       { ruc: RUC, actor: actorBy("execOne") },
       operationAt(runtime.now.get()),
     );
-    if (!created.ok) throw new Error(`inquiry failed: ${created.error.code}`);
+    if (!created.ok) {
+      throw new Error(`inquiry failed: ${created.error.code}`);
+    }
     return created.value.inquiryId;
   }
 

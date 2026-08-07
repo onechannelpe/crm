@@ -38,7 +38,9 @@ interface ResolveWorkspaceContextInput {
 }
 
 function createTeam(team: { id: TeamId; name: string } | null) {
-  if (!team) return null;
+  if (!team) {
+    return null;
+  }
   return { id: team.id, name: team.name };
 }
 

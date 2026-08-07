@@ -13,7 +13,9 @@ export function middlewareConfig(
 }
 
 function parseSentryIngestHost(dsn: string | undefined): string | null {
-  if (!dsn) return null;
+  if (!dsn) {
+    return null;
+  }
 
   try {
     return new URL(dsn).host;

@@ -56,11 +56,18 @@ export async function registerLead(
     const found = await createInquiryRepo(scope.executor).findById(
       input.inquiryId,
     );
-    if (!found) return Err(fail("inquiry_not_found"));
-    if (found.executiveId !== actor.userId)
+    if (!found) {
+      return Err(fail("inquiry_not_found"));
+    }
+    if (found.executiveId !== actor.userId) {
       return Err(fail("inquiry_not_owned"));
-    if (found.state === "CONVERTED") return Err(fail("inquiry_converted"));
-    if (found.ruc !== ruc.value) return Err(fail("inquiry_ruc_mismatch"));
+    }
+    if (found.state === "CONVERTED") {
+      return Err(fail("inquiry_converted"));
+    }
+    if (found.ruc !== ruc.value) {
+      return Err(fail("inquiry_ruc_mismatch"));
+    }
     inquiry = found;
   }
 

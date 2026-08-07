@@ -39,7 +39,9 @@ export function BulkImportSection() {
 
   createEffect(
     on(bulkImportSetup, (setup) => {
-      if (!setup) return;
+      if (!setup) {
+        return;
+      }
       if (!setup.assignableRoles.some((option) => option.value === role())) {
         setRole(setup.assignableRoles[0]?.value ?? "");
       }
@@ -48,7 +50,9 @@ export function BulkImportSection() {
 
   async function handlePreview(): Promise<void> {
     const file = csvFile();
-    if (!file || !role()) return;
+    if (!file || !role()) {
+      return;
+    }
     setIsPreviewing(true);
     setPreview(null);
     setResult(null);
@@ -65,7 +69,9 @@ export function BulkImportSection() {
 
   async function handleImport(): Promise<void> {
     const file = csvFile();
-    if (!file || !role()) return;
+    if (!file || !role()) {
+      return;
+    }
     setIsImporting(true);
     try {
       const csv = await readFileText(file);

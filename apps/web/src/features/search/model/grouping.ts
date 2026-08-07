@@ -33,7 +33,9 @@ function pushUnique(
   value: string | null | undefined,
 ): void {
   const safe = normalized(value);
-  if (!safe || seen.has(safe)) return;
+  if (!safe || seen.has(safe)) {
+    return;
+  }
   seen.add(safe);
   values.push(safe);
 }
@@ -56,7 +58,9 @@ export function groupByDocument(
     Extract<SearchResult, { kind: "document" }>[]
   >();
   for (const row of results) {
-    if (row.kind !== "document") continue;
+    if (row.kind !== "document") {
+      continue;
+    }
     const key = `${row.doc.doc_type}:${row.doc.doc_number}`;
     const existing = groups.get(key);
     if (existing) {
@@ -69,7 +73,9 @@ export function groupByDocument(
   const out: PersonGroup[] = [];
   for (const [key, rows] of groups.entries()) {
     const first = rows[0];
-    if (!first) continue;
+    if (!first) {
+      continue;
+    }
     const docType = first.doc.doc_type;
     const docNumber = first.doc.doc_number;
 
@@ -118,7 +124,9 @@ export function groupByCompany(
   const groups = new Map<string, CompanyGroup>();
 
   for (const row of results) {
-    if (row.kind !== "company") continue;
+    if (row.kind !== "company") {
+      continue;
+    }
     const key = companyGroupKey(row);
     const ruc = normalized(row.company.ruc);
     const existing = groups.get(key);

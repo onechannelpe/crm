@@ -22,7 +22,9 @@ export function regenerateRecoverySetup(
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
-    if (!user?.onboarding_completed_at) return Err(fail("invalid_input"));
+    if (!user?.onboarding_completed_at) {
+      return Err(fail("invalid_input"));
+    }
 
     const recoveryCodes = await regenerateRecoveryCodes(
       repos,
@@ -61,13 +63,17 @@ export async function acknowledgeRecoverySetup(
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
-    if (!user?.onboarding_completed_at) return Err(fail("invalid_input"));
+    if (!user?.onboarding_completed_at) {
+      return Err(fail("invalid_input"));
+    }
 
     const acknowledged = await repos.userRecoveryCodes.acknowledgeActiveSet(
       user.id,
       acknowledgedAt,
     );
-    if (!acknowledged) return Err(fail("invalid_input"));
+    if (!acknowledged) {
+      return Err(fail("invalid_input"));
+    }
 
     const sessionToken = await replaceSession(
       repos,

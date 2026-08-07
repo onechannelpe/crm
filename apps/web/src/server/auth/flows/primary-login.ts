@@ -82,7 +82,9 @@ export async function completePrimaryAuthProof(params: {
         account: { kind: "authenticated", user: params.context.user },
       },
     );
-    if (isErr(prepared)) return Err({ kind: "invalid_credentials" });
+    if (isErr(prepared)) {
+      return Err({ kind: "invalid_credentials" });
+    }
     preparedPasskey = prepared.value;
   }
 

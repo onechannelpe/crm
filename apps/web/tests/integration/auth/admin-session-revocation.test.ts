@@ -50,7 +50,7 @@ describe("admin session revocation", () => {
     await resetTestDb(ctx);
   });
 
-  function makePort() {
+  function makeSecurityContext() {
     return createAccessSecurityContext(ctx.db);
   }
 
@@ -105,28 +105,23 @@ describe("admin session revocation", () => {
     });
   }
 
-  async function findEvent(entityType: string, entityId: string) {
-    return ctx.db
-      .selectFrom("events")
-      .selectAll()
-      .where("entity_type", "=", entityType)
-      .where("entity_id", "=", entityId)
-      .executeTakeFirst();
-  }
-
   it("revokes a single session, clears its installation, flips sync health, and audits the action", async () => {
     const sessionId = "sess-single-revoke";
+
     await seedSession(sessionId);
     await seedExecutiveStatus();
     await seedInstallationSession(sessionId);
 
-    const result = await revokeUserSession(makeAdminContext(), makePort(), {
-      sessionId,
-      targetUserId: TARGET.userId,
-    });
+    const result = await revokeUserSession(
+      makeAdminContext(),
+      makeSecurityContext(),
+      {
+        sessionId,
+        targetUserId: TARGET.userId,
+      },
+    );
 
     expect(result.ok).toBe(true);
-
     expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
 
     const installation = await ctx.db
@@ -134,6 +129,7 @@ describe("admin session revocation", () => {
       .selectAll()
       .where("auth_session_id", "=", sessionId)
       .executeTakeFirstOrThrow();
+
     expect(installation.revoked_at).not.toBeNull();
 
     const status = await ctx.db
@@ -141,10 +137,17 @@ describe("admin session revocation", () => {
       .selectAll()
       .where("user_id", "=", TARGET.userId)
       .executeTakeFirstOrThrow();
+
     expect(status.sync_health).toBe("reauth_required");
     expect(status.sync_updated_at).toEqual(NOW);
 
-    const event = await findEvent("user_session", sessionId);
+    const event = await ctx.db
+      .selectFrom("events")
+      .selectAll()
+      .where("entity_type", "=", "user_session")
+      .where("entity_id", "=", sessionId)
+      .executeTakeFirst();
+
     expect(event).toMatchObject({
       type: "session_revoked_by_admin",
       actor_user_id: ADMIN.userId,
@@ -158,18 +161,22 @@ describe("admin session revocation", () => {
   it("revokes every session for a user, clears every installation, and audits once", async () => {
     const sessionOne = "sess-all-one";
     const sessionTwo = "sess-all-two";
+
     await seedSession(sessionOne);
     await seedSession(sessionTwo);
     await seedExecutiveStatus();
     await seedInstallationSession(sessionOne);
     await seedInstallationSession(sessionTwo);
 
-    const result = await revokeAllUserSessions(makeAdminContext(), makePort(), {
-      targetUserId: TARGET.userId,
-    });
+    const result = await revokeAllUserSessions(
+      makeAdminContext(),
+      makeSecurityContext(),
+      {
+        targetUserId: TARGET.userId,
+      },
+    );
 
     expect(result.ok).toBe(true);
-
     expect(await ctx.repos.sessions.findById(sessionOne)).toBeNull();
     expect(await ctx.repos.sessions.findById(sessionTwo)).toBeNull();
 
@@ -178,6 +185,7 @@ describe("admin session revocation", () => {
       .selectAll()
       .where("user_id", "=", TARGET.userId)
       .execute();
+
     expect(installations).toHaveLength(2);
     expect(installations.every((row) => row.revoked_at !== null)).toBe(true);
 
@@ -186,6 +194,7 @@ describe("admin session revocation", () => {
       .selectAll()
       .where("user_id", "=", TARGET.userId)
       .executeTakeFirstOrThrow();
+
     expect(status.sync_health).toBe("reauth_required");
 
     const events = await ctx.db
@@ -194,11 +203,14 @@ describe("admin session revocation", () => {
       .where("entity_type", "=", "user")
       .where("entity_id", "=", TARGET.userId)
       .execute();
+
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({
       type: "all_sessions_revoked",
       actor_user_id: ADMIN.userId,
     });
-    expect(events[0].payload_json).toEqual({ revokedBy: ADMIN.userId });
+    expect(events[0].payload_json).toEqual({
+      revokedBy: ADMIN.userId,
+    });
   });
 });

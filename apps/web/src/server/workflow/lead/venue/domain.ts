@@ -23,8 +23,12 @@ export function createVenue(
   },
 ): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("create-venue", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "SETUP") {
+    return Err(fail("invalid_stage"));
+  }
 
   return Ok([
     createHistoryEvent({
@@ -47,8 +51,12 @@ export function updateVenue(
   },
 ): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("update-venue", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "SETUP") {
+    return Err(fail("invalid_stage"));
+  }
 
   return Ok([
     createHistoryEvent({
@@ -78,14 +86,18 @@ export function buildVenueAccounts(input: {
   }
 
   const soles = normalizeAccount(input.solesAccount, "soles");
-  if (!soles.ok) return soles;
+  if (!soles.ok) {
+    return soles;
+  }
 
   if (!input.dollarAccount) {
     return Ok({ solesAccount: soles.value });
   }
 
   const dollar = normalizeAccount(input.dollarAccount, "dolares");
-  if (!dollar.ok) return dollar;
+  if (!dollar.ok) {
+    return dollar;
+  }
 
   return Ok({ solesAccount: soles.value, dollarAccount: dollar.value });
 }

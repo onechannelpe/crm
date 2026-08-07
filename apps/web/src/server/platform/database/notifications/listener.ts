@@ -49,7 +49,9 @@ export function createPgListener(
   }
 
   function scheduleReconnect(): void {
-    if (stopped || connecting || reconnectTimer !== null) return;
+    if (stopped || connecting || reconnectTimer !== null) {
+      return;
+    }
 
     const delay = reconnectDelayMs;
     reconnectDelayMs = Math.min(reconnectDelayMs * 2, RECONNECT_MAX_DELAY_MS);
@@ -78,7 +80,9 @@ export function createPgListener(
   }
 
   async function connect(): Promise<void> {
-    if (stopped || connecting || client) return;
+    if (stopped || connecting || client) {
+      return;
+    }
 
     connecting = true;
     const next = new Client({ connectionString });
@@ -86,7 +90,9 @@ export function createPgListener(
 
     next.on("notification", (message) => {
       const handlers = channels[message.channel];
-      if (!handlers) return;
+      if (!handlers) {
+        return;
+      }
 
       for (const handler of handlers) {
         try {
@@ -103,10 +109,14 @@ export function createPgListener(
       logger.error("listener_connection_error", {
         error: error instanceof Error ? error.message : "Unknown error",
       });
-      if (client === next) disconnect();
+      if (client === next) {
+        disconnect();
+      }
     });
     next.on("end", () => {
-      if (client === next) disconnect();
+      if (client === next) {
+        disconnect();
+      }
     });
 
     let retry = false;
@@ -134,18 +144,24 @@ export function createPgListener(
       await next.end().catch(() => {
         // The connection did not finish opening.
       });
-      if (client === next) client = null;
+      if (client === next) {
+        client = null;
+      }
       retry = true;
     } finally {
       connecting = false;
     }
 
-    if (retry) scheduleReconnect();
+    if (retry) {
+      scheduleReconnect();
+    }
   }
 
   return {
     start() {
-      if (!stopped) return;
+      if (!stopped) {
+        return;
+      }
       stopped = false;
       void connect();
     },
@@ -158,7 +174,9 @@ export function createPgListener(
       const current = client;
       client = null;
       connected = false;
-      if (current) await current.end();
+      if (current) {
+        await current.end();
+      }
     },
     isConnected: () => connected,
   };

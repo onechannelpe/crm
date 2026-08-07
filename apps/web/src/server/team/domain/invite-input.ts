@@ -37,7 +37,9 @@ export function validateTeamInviteInput(
   operation: OperationContext,
 ): Result<CreateTeamInviteCommand, DomainError> {
   const shape = validateTeamInviteShape(input);
-  if (!shape.ok) return shape;
+  if (!shape.ok) {
+    return shape;
+  }
 
   const expiresAt = validateExpiry(input.expiresOn, operation.operationAt);
 

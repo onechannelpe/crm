@@ -20,7 +20,9 @@ describe("deriveLeadStageNotifications", () => {
 
     expect(intents).toHaveLength(1);
     const [intent] = intents;
-    if (!intent) throw new Error("expected one intent");
+    if (!intent) {
+      throw new Error("expected one intent");
+    }
 
     expect(intent.eventType).toBe("lead.ready_for_sale");
     expect(intent.audience).toEqual({
@@ -44,7 +46,9 @@ describe("deriveLeadStageNotifications", () => {
 
     expect(intents).toHaveLength(1);
     const [intent] = intents;
-    if (!intent) throw new Error("expected one intent");
+    if (!intent) {
+      throw new Error("expected one intent");
+    }
 
     expect(intent.eventType).toBe("lead.ready_for_quotation");
     expect(intent.audience).toEqual({

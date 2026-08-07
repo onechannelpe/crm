@@ -32,9 +32,13 @@ export async function startImpersonation(
       // impersonation can restore it.
       const adminToken = getSessionCookie();
       const result = await application.auth.impersonation.start(ctx, command);
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
 
-      if (adminToken) setImpersonatorCookie(adminToken);
+      if (adminToken) {
+        setImpersonatorCookie(adminToken);
+      }
       setSessionCookie(result.value.token);
       return Ok({ message: "Suplantación iniciada" });
     },
@@ -49,10 +53,14 @@ export async function stopImpersonation(): Promise<{ message: string }> {
     access: { kind: "auth" },
     execute: async (ctx) => {
       const result = await application.auth.impersonation.stop(ctx);
-      if (isErr(result)) return result;
+      if (isErr(result)) {
+        return result;
+      }
 
       const adminToken = getImpersonatorCookie();
-      if (adminToken) setSessionCookie(adminToken);
+      if (adminToken) {
+        setSessionCookie(adminToken);
+      }
       deleteImpersonatorCookie();
       return Ok({ message: "Suplantación finalizada" });
     },

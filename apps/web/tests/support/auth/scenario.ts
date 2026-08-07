@@ -165,7 +165,9 @@ export function createAuthScenario(
         },
         operation,
       );
-      if (isErr(verified)) return verified;
+      if (isErr(verified)) {
+        return verified;
+      }
 
       const completed = await completePendingLogin(
         login,

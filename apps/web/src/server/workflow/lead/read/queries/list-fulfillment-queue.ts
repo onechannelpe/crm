@@ -16,7 +16,9 @@ import { Err, Ok, type Result } from "~/shared/result";
 
 // Back office sees everything pending an internal action, scoped to their branch.
 function queueStepsForRole(role: Role): FulfillmentStep[] | null {
-  if (hasPermission(role, "fulfillment:manage")) return backOfficeQueueSteps();
+  if (hasPermission(role, "fulfillment:manage")) {
+    return backOfficeQueueSteps();
+  }
   return null;
 }
 
@@ -25,8 +27,12 @@ export async function listFulfillmentQueue(
   input: { actorRole: Role; actorBranchId: BranchId },
 ): Promise<Result<FulfillmentQueueView, DomainError>> {
   const steps = queueStepsForRole(input.actorRole);
-  if (steps === null) return Err(forbidden());
-  if (steps.length === 0) return Ok({ rows: [] });
+  if (steps === null) {
+    return Err(forbidden());
+  }
+  if (steps.length === 0) {
+    return Ok({ rows: [] });
+  }
 
   const rows = await db
     .selectFrom("lead_fulfillment_orders as order")

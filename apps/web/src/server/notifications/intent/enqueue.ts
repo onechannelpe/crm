@@ -10,7 +10,9 @@ export async function enqueueNotifications(
   intents: readonly unknown[],
   enqueuedAt: Date,
 ): Promise<void> {
-  if (intents.length === 0) return;
+  if (intents.length === 0) {
+    return;
+  }
 
   // Validate every intent at the producer boundary.
   const validated: NotificationIntent[] = intents.map((intent) =>

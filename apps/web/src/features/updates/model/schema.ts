@@ -25,7 +25,9 @@ function getFrontmatterValue(
   frontmatter: unknown,
   key: keyof UpdateFrontmatterInput,
 ): unknown {
-  if (typeof frontmatter !== "object" || frontmatter === null) return undefined;
+  if (typeof frontmatter !== "object" || frontmatter === null) {
+    return undefined;
+  }
   return Reflect.get(frontmatter, key);
 }
 
@@ -53,14 +55,20 @@ function normalizeVisibility(value: unknown): UpdateVisibility | null {
 }
 
 function normalizeTags(value: unknown): string[] | null {
-  if (value == null) return [];
-  if (!Array.isArray(value)) return null;
+  if (value == null) {
+    return [];
+  }
+  if (!Array.isArray(value)) {
+    return null;
+  }
 
   const tags = value.filter(
     (entry): entry is string =>
       typeof entry === "string" && entry.trim() !== "",
   );
-  if (tags.length !== value.length || tags.length > 8) return null;
+  if (tags.length !== value.length || tags.length > 8) {
+    return null;
+  }
   return tags;
 }
 
@@ -69,20 +77,24 @@ function parseModule(path: string, module: UpdateModule) {
 
   const titleValue = getFrontmatterValue(module.frontmatter, "title");
   const title = typeof titleValue === "string" ? titleValue.trim() : "";
-  if (!title)
+  if (!title) {
     issues.push({ path, field: "title", reason: "required non-empty string" });
+  }
 
   const rawDate = getFrontmatterValue(module.frontmatter, "date");
   const date = isIsoDate(rawDate) ? rawDate : null;
-  if (!date) issues.push({ path, field: "date", reason: "must be YYYY-MM-DD" });
+  if (!date) {
+    issues.push({ path, field: "date", reason: "must be YYYY-MM-DD" });
+  }
 
   const kind = normalizeKind(getFrontmatterValue(module.frontmatter, "kind"));
-  if (!kind)
+  if (!kind) {
     issues.push({
       path,
       field: "kind",
       reason: 'must be "release" or "technical"',
     });
+  }
 
   const cadence = normalizeCadence(
     getFrontmatterValue(module.frontmatter, "cadence"),
@@ -149,8 +161,12 @@ function parseModule(path: string, module: UpdateModule) {
 }
 
 function compareEntries(left: UpdateEntry, right: UpdateEntry): number {
-  if (left.date !== right.date) return left.date < right.date ? 1 : -1;
-  if (left.id === right.id) return 0;
+  if (left.date !== right.date) {
+    return left.date < right.date ? 1 : -1;
+  }
+  if (left.id === right.id) {
+    return 0;
+  }
   return left.id < right.id ? 1 : -1;
 }
 
@@ -204,8 +220,14 @@ export function parseAndValidateUpdates(
 }
 
 export function parseUpdateFilter(value: string | undefined): UpdateFilter {
-  if (value === "technical") return value;
-  if (value === "release-nightly") return value;
-  if (value === "release-weekly") return value;
+  if (value === "technical") {
+    return value;
+  }
+  if (value === "release-nightly") {
+    return value;
+  }
+  if (value === "release-weekly") {
+    return value;
+  }
   return "all";
 }

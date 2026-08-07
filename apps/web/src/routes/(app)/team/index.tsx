@@ -78,7 +78,9 @@ export default function TeamPage() {
   const filtered = createMemo(() => {
     const value = filter().trim().toLowerCase();
     const rows = executives() ?? [];
-    if (!value) return rows;
+    if (!value) {
+      return rows;
+    }
     return rows.filter((executive) =>
       `${executive.fullName} ${executive.email}`.toLowerCase().includes(value),
     );

@@ -56,7 +56,9 @@ export function createLoggerWithConfig(
     message: string,
     meta: Record<string, unknown> = {},
   ) {
-    if (LOG_LEVEL_WEIGHT[level] < LOG_LEVEL_WEIGHT[minimumLevel]) return;
+    if (LOG_LEVEL_WEIGHT[level] < LOG_LEVEL_WEIGHT[minimumLevel]) {
+      return;
+    }
 
     const mergedMeta = { ...baseMeta, ...meta };
     const normalizedMeta = Object.fromEntries(

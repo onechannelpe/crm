@@ -35,8 +35,12 @@ export function getRoleLabel(role: Role): string {
 export function getRoleBadgeVariant(
   role: Role,
 ): "default" | "warning" | "info" {
-  if (role === "supervisor") return "warning";
-  if (role === "admin" || role === "superuser") return "info";
+  if (role === "supervisor") {
+    return "warning";
+  }
+  if (role === "admin" || role === "superuser") {
+    return "info";
+  }
   return "default";
 }
 

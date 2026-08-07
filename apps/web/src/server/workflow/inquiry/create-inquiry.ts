@@ -15,10 +15,14 @@ export async function createInquiry(
 ): Promise<Result<{ inquiryId: WorkflowInquiryId }, DomainError>> {
   // Same actor set as registration: an inquiry is a pre-registration ask.
   const canRegister = requireCapability("register", { role: input.actor.role });
-  if (!canRegister.ok) return canRegister;
+  if (!canRegister.ok) {
+    return canRegister;
+  }
 
   const ruc = parseRuc(input.ruc);
-  if (!ruc.ok) return ruc;
+  if (!ruc.ok) {
+    return ruc;
+  }
 
   // The executive's own active lead already receives the answer through the
   // import; an inquiry would duplicate it. Another executive's lead does not

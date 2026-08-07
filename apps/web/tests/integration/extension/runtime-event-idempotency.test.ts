@@ -30,6 +30,7 @@ describe("extension runtime event idempotency", () => {
     const { sessionToken, assignmentId } = await scenario.claim(
       "11111111-1111-4111-8111-111111111111",
     );
+
     const event = {
       id: "evt-duplicate",
       sequence: 1,
@@ -58,9 +59,10 @@ describe("extension runtime event idempotency", () => {
 
     const events = await ctx.db
       .selectFrom("extension_runtime_events")
-      .select(["id"])
+      .select("id")
       .where("id", "=", event.id)
       .execute();
+
     expect(events).toHaveLength(1);
   });
 
@@ -71,51 +73,37 @@ describe("extension runtime event idempotency", () => {
     const authSessionId = await scenario.session();
     const assignmentId = await scenario.assignment();
 
-    const firstHandoff = await scenario.service.createHandoffToken(
-      {
-        userId: execOne.id,
-        authSessionId,
-        branchId: lima.id,
-        assignmentId,
-        origin: "http://localhost:3000",
-      },
-      operationAt(new Date()),
-    );
-    const firstHandoffValue = expectOk(firstHandoff);
+    async function claim(installationId: string) {
+      const handoff = await scenario.service.createHandoffToken(
+        {
+          userId: execOne.id,
+          authSessionId,
+          branchId: lima.id,
+          assignmentId,
+          origin: "http://localhost:3000",
+        },
+        operationAt(new Date()),
+      );
 
-    const firstClaim = await scenario.service.claimInstallationSession(
-      {
-        handoffToken: firstHandoffValue.handoffToken,
-        installationId: "11111111-1111-4111-8111-111111111111",
-      },
-      operationAt(new Date()),
-    );
-    const firstClaimValue = expectOk(firstClaim);
+      const { handoffToken } = expectOk(handoff);
 
-    const secondHandoff = await scenario.service.createHandoffToken(
-      {
-        userId: execOne.id,
-        authSessionId,
-        branchId: lima.id,
-        assignmentId,
-        origin: "http://localhost:3000",
-      },
-      operationAt(new Date()),
-    );
-    const secondHandoffValue = expectOk(secondHandoff);
+      const result = await scenario.service.claimInstallationSession(
+        {
+          handoffToken,
+          installationId,
+        },
+        operationAt(new Date()),
+      );
 
-    const secondClaim = await scenario.service.claimInstallationSession(
-      {
-        handoffToken: secondHandoffValue.handoffToken,
-        installationId: "22222222-2222-4222-8222-222222222222",
-      },
-      operationAt(new Date()),
-    );
-    const secondClaimValue = expectOk(secondClaim);
+      return expectOk(result);
+    }
+
+    const firstClaim = await claim("11111111-1111-4111-8111-111111111111");
+    const secondClaim = await claim("22222222-2222-4222-8222-222222222222");
 
     const oldSessionResult = await scenario.service.ingestRuntimeEvent(
       {
-        sessionToken: firstClaimValue.sessionToken,
+        sessionToken: firstClaim.sessionToken,
         event: {
           id: "evt-old-installation",
           sequence: 1,
@@ -126,9 +114,10 @@ describe("extension runtime event idempotency", () => {
       },
       operationAt(new Date()),
     );
+
     const newSessionResult = await scenario.service.ingestRuntimeEvent(
       {
-        sessionToken: secondClaimValue.sessionToken,
+        sessionToken: secondClaim.sessionToken,
         event: {
           id: "evt-new-installation",
           sequence: 1,
@@ -140,8 +129,7 @@ describe("extension runtime event idempotency", () => {
       operationAt(new Date()),
     );
 
-    const oldSessionError = expectErr(oldSessionResult);
-    expect(oldSessionError.code).toBe("extension_session_invalid");
+    expect(expectErr(oldSessionResult).code).toBe("extension_session_invalid");
     expectOk(newSessionResult);
   });
 });

@@ -76,7 +76,9 @@ describe("storeUploadedFile", () => {
             const reader = body.getReader();
             for (;;) {
               const chunk = await reader.read();
-              if (chunk.done) break;
+              if (chunk.done) {
+                break;
+              }
               await onChunk?.(chunk.value);
             }
             return { sha256: "abc123", sizeBytes: CSV_BYTES.length };

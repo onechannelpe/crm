@@ -132,12 +132,16 @@ export function buildMerchantGpvWorkbook(
 
   for (let columnIndex = 0; columnIndex < COLUMNS.length; columnIndex += 1) {
     const format = COLUMNS[columnIndex]?.format;
-    if (!format) continue;
+    if (!format) {
+      continue;
+    }
 
     for (let rowIndex = 1; rowIndex <= rows.length; rowIndex += 1) {
       const cell =
         worksheet[XLSX.utils.encode_cell({ c: columnIndex, r: rowIndex })];
-      if (cell) cell.z = format;
+      if (cell) {
+        cell.z = format;
+      }
     }
   }
 
@@ -157,7 +161,9 @@ function pointValue(
 }
 
 function excelDate(value: CalendarDate | null): Date | null {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
   const parts = calendarDateParts(value);
   const date = new Date(0);
   date.setUTCFullYear(parts.year, parts.month - 1, parts.day);

@@ -51,7 +51,9 @@ async function appendEvents(
   input: EventToAppend | EventToAppend[],
 ): Promise<EventId[]> {
   const rows = toNewEventRows(input);
-  if (rows.length === 0) return [];
+  if (rows.length === 0) {
+    return [];
+  }
 
   await tx.insertInto("events").values(rows).execute();
 

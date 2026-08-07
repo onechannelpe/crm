@@ -46,7 +46,9 @@ export async function createTeamInvite(input: unknown): Promise<{
       }
 
       const shape = validateTeamInviteShape(command.value);
-      if (isErr(shape)) return shape;
+      if (isErr(shape)) {
+        return shape;
+      }
 
       return validateTeamInviteInput(command.value, getRequestOperation());
     },

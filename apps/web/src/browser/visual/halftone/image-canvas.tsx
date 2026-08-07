@@ -81,7 +81,9 @@ export function HalftoneImageCanvas(
 
   onMount(() => {
     const host = mountRef;
-    if (!host) return;
+    if (!host) {
+      return;
+    }
 
     let cancelled = false;
 

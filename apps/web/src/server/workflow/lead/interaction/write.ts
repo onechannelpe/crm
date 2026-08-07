@@ -17,17 +17,23 @@ export async function addLeadNote(
 ): Promise<Result<{ interactionId: string }, DomainError>> {
   return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     const events = recordNote(state, {
       actor: input.actor,
       body: input.body,
       occurredAt: ctx.operationAt,
     });
-    if (isErr(events)) return Err(events.error);
+    if (isErr(events)) {
+      return Err(events.error);
+    }
 
     const appended = await ctx.appendFacts(events.value);
-    if (!appended.ok) return appended;
+    if (!appended.ok) {
+      return appended;
+    }
 
     return Ok({ interactionId: appended.value.eventIds[0] });
   });

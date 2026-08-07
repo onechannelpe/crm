@@ -58,7 +58,9 @@ export function createLeadDraft(input: {
   createdAt: Date;
 }): Result<LeadDraft, DomainError> {
   const ruc = parseRuc(input.ruc);
-  if (!ruc.ok) return ruc;
+  if (!ruc.ok) {
+    return ruc;
+  }
 
   return Ok({
     organizationId: input.organizationId,

@@ -53,7 +53,9 @@ export async function resetPassword(
     });
     return Ok(undefined);
   });
-  if (isErr(reset)) return reset;
+  if (isErr(reset)) {
+    return reset;
+  }
 
   return Ok({ ok: true });
 }

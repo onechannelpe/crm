@@ -32,7 +32,9 @@ export function createPollingController(
   }
 
   async function tick(currentRunToken: number) {
-    if (currentRunToken !== runToken) return;
+    if (currentRunToken !== runToken) {
+      return;
+    }
     if (!options.shouldContinue()) {
       stop();
       return;
@@ -57,7 +59,9 @@ export function createPollingController(
       // Keep polling on transient failures. The next tick can recover.
     }
 
-    if (currentRunToken !== runToken) return;
+    if (currentRunToken !== runToken) {
+      return;
+    }
     if (!options.shouldContinue()) {
       stop();
       return;
@@ -69,7 +73,9 @@ export function createPollingController(
   }
 
   function start() {
-    if (state() === "running") return;
+    if (state() === "running") {
+      return;
+    }
 
     runToken += 1;
     const currentRunToken = runToken;

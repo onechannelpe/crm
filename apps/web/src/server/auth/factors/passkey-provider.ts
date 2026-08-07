@@ -212,7 +212,9 @@ export function createPasskeyProvider(
       challenge: string,
     ) {
       const passkey = await repos.passkeys.findById(response.id);
-      if (!passkey) throw new PasskeyRequestError("Passkey not found");
+      if (!passkey) {
+        throw new PasskeyRequestError("Passkey not found");
+      }
 
       let verification: VerifiedAuthenticationResponse;
       try {

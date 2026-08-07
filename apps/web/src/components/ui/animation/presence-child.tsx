@@ -37,7 +37,9 @@ export function PresenceChild(props: PresenceChildProps) {
     onExitComplete: (childId: string) => {
       presenceChildren.set(childId, true);
       for (const isComplete of presenceChildren.values()) {
-        if (!isComplete) return;
+        if (!isComplete) {
+          return;
+        }
       }
       props.onExitComplete?.();
     },

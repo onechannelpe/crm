@@ -94,7 +94,9 @@ export async function addVenueAccountsCommand(
           occurredAt: ctx.operationAt,
         }),
       ]);
-      if (!started.ok) return started;
+      if (!started.ok) {
+        return started;
+      }
     }
 
     return Ok({ leadId: state.id });

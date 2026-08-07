@@ -55,7 +55,9 @@ export function validateOverrideExpiry(
   expiresAt: number | null,
   validatedAt: Date,
 ): Result<Date | null, DomainError> {
-  if (expiresAt === null) return Ok(null);
+  if (expiresAt === null) {
+    return Ok(null);
+  }
   if (!Number.isInteger(expiresAt) || expiresAt < 1) {
     return Err(fail("invalid_expires_at"));
   }

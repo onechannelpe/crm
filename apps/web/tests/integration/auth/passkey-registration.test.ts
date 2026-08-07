@@ -38,7 +38,7 @@ describe("passkey registration", () => {
     await scenario.reset();
   });
 
-  it("begin enrollment creates registration challenge", async () => {
+  it("creates a registration challenge when enrollment starts", async () => {
     const result = await startPasskeyEnrollment(
       createAuthSetupContext(scenario.ctx.db),
       {
@@ -48,21 +48,23 @@ describe("passkey registration", () => {
         webauthnProvider: createTestPasskeyProvider(scenario.ctx.repos),
       },
     );
-    const value = expectOk(result);
 
+    const value = expectOk(result);
     const challenge = await scenario.ctx.repos.webauthnChallenges.findById(
       WebauthnChallengeId.trust(value.challengeId),
     );
+
     expect(challenge?.type).toBe("registration");
     expect(challenge?.user_id).toBe(execOne.userId);
   });
 
-  it("returns invalid request when enrollment start is throttled", async () => {
-    const throttleSvc = createAuthThrottleService({
+  it("rejects enrollment when challenge creation is throttled", async () => {
+    const throttle = createAuthThrottleService({
       authThrottle: scenario.ctx.repos.authThrottle,
     });
+
     for (let attempt = 0; attempt < 9; attempt += 1) {
-      await throttleSvc.recordPasskeyChallengeFailure(
+      await throttle.recordPasskeyChallengeFailure(
         `user:${execOne.userId}`,
         ipAddress,
         new Date(),
@@ -72,14 +74,19 @@ describe("passkey registration", () => {
     const result = await preparePasskeyEnrollment(
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
-      { userId: execOne.userId, ipAddress, occurredAt: new Date() },
+      {
+        userId: execOne.userId,
+        ipAddress,
+        occurredAt: new Date(),
+      },
     );
 
     const error = expectErr(result);
+
     expect(error.code).toBe("invalid_passkey_request");
   });
 
-  it("rejects challenge ownership mismatch", async () => {
+  it("rejects a challenge owned by another user", async () => {
     const challengeId = await createRegistrationChallenge({
       ctx: scenario.ctx,
       userId: execOne.userId,
@@ -99,10 +106,11 @@ describe("passkey registration", () => {
     );
 
     const error = expectErr(result);
+
     expect(error.code).toBe("invalid_passkey_request");
   });
 
-  it("returns invalid request when verification fails", async () => {
+  it("rejects an invalid registration response", async () => {
     const challengeId = await createRegistrationChallenge({
       ctx: scenario.ctx,
       userId: execOne.userId,
@@ -122,10 +130,11 @@ describe("passkey registration", () => {
     );
 
     const error = expectErr(result);
+
     expect(error.code).toBe("invalid_passkey_request");
   });
 
-  it("propagates provider errors during option and verification generation", async () => {
+  it("propagates provider errors while creating registration options", async () => {
     await expect(
       preparePasskeyEnrollment(
         scenario.ctx.repos,
@@ -134,10 +143,16 @@ describe("passkey registration", () => {
             throw new Error("boom");
           },
         }),
-        { userId: execOne.userId, ipAddress, occurredAt: new Date() },
+        {
+          userId: execOne.userId,
+          ipAddress,
+          occurredAt: new Date(),
+        },
       ),
     ).rejects.toThrow("boom");
+  });
 
+  it("propagates provider errors while verifying registration", async () => {
     const challengeId = await createRegistrationChallenge({
       ctx: scenario.ctx,
       userId: execOne.userId,

@@ -8,7 +8,9 @@ export function buildRecordExportCsv(
 }
 
 function cell(value: unknown): string {
-  if (value === null || value === undefined) return "";
+  if (value === null || value === undefined) {
+    return "";
+  }
   if (typeof value === "string" || typeof value === "number") {
     return escapeCsv(String(value));
   }

@@ -19,7 +19,9 @@ export function resolveSessionClass(input: {
   onboardingCompleted: boolean;
   recoveryCodesAcknowledgementRequired: boolean;
 }): SessionClass {
-  if (!input.onboardingCompleted) return "pre_auth";
+  if (!input.onboardingCompleted) {
+    return "pre_auth";
+  }
   return input.recoveryCodesAcknowledgementRequired ? "recovery_setup" : "app";
 }
 

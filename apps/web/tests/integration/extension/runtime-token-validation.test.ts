@@ -26,16 +26,18 @@ describe("extension runtime token validation", () => {
 
   it("classifies malformed handoff tokens as handoff_invalid", async () => {
     const scenario = createExtensionScenario(ctx);
+    const now = new Date();
 
     const result = await scenario.service.claimInstallationSession(
       {
         handoffToken: "not-a-jwt",
         installationId: "11111111-1111-4111-8111-111111111111",
       },
-      operationAt(new Date()),
+      operationAt(now),
     );
 
     const error = expectErr(result);
+
     expect(error.code).toBe("handoff_invalid");
   });
 
@@ -43,6 +45,8 @@ describe("extension runtime token validation", () => {
     const scenario = createExtensionScenario(ctx);
     const { execOne } = ctx.fixtures.users;
     const { lima } = ctx.fixtures.branches;
+    const now = new Date();
+
     const authSessionId = await scenario.session();
     const contactId = await scenario.contactWithoutPhone(1);
     const assignmentId = await scenario.assignment({
@@ -58,10 +62,11 @@ describe("extension runtime token validation", () => {
         assignmentId,
         origin: "http://localhost:3000",
       },
-      operationAt(new Date()),
+      operationAt(now),
     );
 
     const error = expectErr(result);
+
     expect(error.code).toBe("assignment_inactive");
 
     const handoffs = await ctx.db
@@ -69,11 +74,13 @@ describe("extension runtime token validation", () => {
       .select(["jti"])
       .where("assignment_id", "=", assignmentId)
       .execute();
+
     expect(handoffs).toHaveLength(0);
   });
 
   it("classifies malformed session tokens as extension_session_invalid", async () => {
     const scenario = createExtensionScenario(ctx);
+    const now = new Date();
 
     const result = await scenario.service.ingestRuntimeEvent(
       {
@@ -86,10 +93,11 @@ describe("extension runtime token validation", () => {
           payload: { occurredAt: 10_000 },
         },
       },
-      operationAt(new Date()),
+      operationAt(now),
     );
 
     const error = expectErr(result);
+
     expect(error.code).toBe("extension_session_invalid");
   });
 });

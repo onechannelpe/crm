@@ -9,13 +9,17 @@ export function PanelList(props: ParentProps) {
   const [focusedIndex, setFocusedIndex] = createSignal(-1);
 
   function getItems(): HTMLElement[] {
-    if (!listRef) return [];
+    if (!listRef) {
+      return [];
+    }
     return Array.from(listRef.querySelectorAll<HTMLElement>("[data-index]"));
   }
 
   function focusItem(index: number) {
     const items = getItems();
-    if (items.length === 0) return;
+    if (items.length === 0) {
+      return;
+    }
     const clamped = ((index % items.length) + items.length) % items.length;
     setFocusedIndex(clamped);
     items[clamped]?.focus();
@@ -23,9 +27,13 @@ export function PanelList(props: ParentProps) {
 
   onMount(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (!listRef) return;
+      if (!listRef) {
+        return;
+      }
       const items = getItems();
-      if (items.length === 0) return;
+      if (items.length === 0) {
+        return;
+      }
 
       const action = getVerticalNavigationAction(e.key, {
         currentIndex: focusedIndex(),

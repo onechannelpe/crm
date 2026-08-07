@@ -40,8 +40,12 @@ export async function getExecutiveDetail(
     deps.repos.capacityRequests.listByUser(input.userId),
   ]);
 
-  if (isErr(searchStatus)) return searchStatus;
-  if (isErr(leadStatus)) return leadStatus;
+  if (isErr(searchStatus)) {
+    return searchStatus;
+  }
+  if (isErr(leadStatus)) {
+    return leadStatus;
+  }
 
   return Ok({
     executive: {

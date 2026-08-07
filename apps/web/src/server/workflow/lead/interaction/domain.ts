@@ -16,7 +16,9 @@ export function recordNote(
   input: { actor: Actor; body: string; occurredAt: Date },
 ): Result<LeadHistoryEventDraft[], DomainError> {
   const authz = authorizeLeadAction("add-note", input.actor, state);
-  if (!authz.ok) return authz;
+  if (!authz.ok) {
+    return authz;
+  }
 
   return Ok([
     createHistoryEvent({

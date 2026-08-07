@@ -26,14 +26,18 @@ interface CompletionResult {
 function parseCompletionInput(
   input: unknown,
 ): Result<ParsedCompleteOnboardingInput, DomainError> {
-  if (!isPlainRecord(input)) return Err(fail("invalid_input"));
+  if (!isPlainRecord(input)) {
+    return Err(fail("invalid_input"));
+  }
 
   switch (input.method) {
     case "none":
       return Ok({ method: input.method });
     case "passkey": {
       const challengeId = WebauthnChallengeId.parse(input.challengeId);
-      if (isErr(challengeId)) return challengeId;
+      if (isErr(challengeId)) {
+        return challengeId;
+      }
       if (!isRegistrationResponse(input.response)) {
         return Err(fail("invalid_passkey_request"));
       }

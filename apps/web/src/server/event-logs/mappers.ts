@@ -22,8 +22,12 @@ type EventRow = {
 };
 
 function toProperties(value: Json | null): JsonObject {
-  if (value === null) return {};
-  if (typeof value === "object" && !Array.isArray(value)) return value;
+  if (value === null) {
+    return {};
+  }
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
   return { value };
 }
 

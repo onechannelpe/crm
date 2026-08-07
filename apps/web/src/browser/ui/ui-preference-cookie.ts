@@ -14,8 +14,12 @@ type UiPreferenceCookieOptions<T> = {
 
 export const booleanUiPreferenceCookieCodec = {
   decode(value: string): boolean | null {
-    if (value === "true") return true;
-    if (value === "false") return false;
+    if (value === "true") {
+      return true;
+    }
+    if (value === "false") {
+      return false;
+    }
     return null;
   },
   encode: String,
@@ -39,7 +43,9 @@ export function defineUiPreferenceCookie<T>(
     },
 
     write(value: T): void {
-      if (isServer) return;
+      if (isServer) {
+        return;
+      }
 
       document.cookie = serializeCookie(
         options.name,

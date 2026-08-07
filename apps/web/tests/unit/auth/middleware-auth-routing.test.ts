@@ -53,7 +53,9 @@ describe("auth middleware routing", () => {
     });
 
     expect(decision.kind).toBe("redirect_home");
-    if (decision.kind !== "redirect_home") throw new Error("Expected redirect");
+    if (decision.kind !== "redirect_home") {
+      throw new Error("Expected redirect");
+    }
     expect(decision.to).toBe("/home");
   });
 
@@ -69,7 +71,9 @@ describe("auth middleware routing", () => {
     });
 
     expect(decision.kind).toBe("redirect_home");
-    if (decision.kind !== "redirect_home") throw new Error("Expected redirect");
+    if (decision.kind !== "redirect_home") {
+      throw new Error("Expected redirect");
+    }
     expect(decision.to).toBe("/home");
   });
 
@@ -85,7 +89,9 @@ describe("auth middleware routing", () => {
     });
 
     expect(decision.kind).toBe("redirect_home");
-    if (decision.kind !== "redirect_home") throw new Error("Expected redirect");
+    if (decision.kind !== "redirect_home") {
+      throw new Error("Expected redirect");
+    }
     expect(decision.to).toBe("/inventory");
   });
 
@@ -145,7 +151,9 @@ describe("auth middleware routing", () => {
     });
 
     expect(decision.kind).toBe("reject");
-    if (decision.kind !== "reject") throw new Error("Expected reject");
+    if (decision.kind !== "reject") {
+      throw new Error("Expected reject");
+    }
     expect(decision.response.status).toBe(401);
   });
 });

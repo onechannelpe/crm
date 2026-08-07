@@ -72,9 +72,15 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
     hasPermission(role, "quotation:view:all") ||
     hasPermission(role, "lead:reassign");
 
-  if (canRead) caps.add("view");
-  if (hasPermission(role, "lead:delete")) caps.add("delete");
-  if (hasPermission(role, "lead:note:add")) caps.add("add-note");
+  if (canRead) {
+    caps.add("view");
+  }
+  if (hasPermission(role, "lead:delete")) {
+    caps.add("delete");
+  }
+  if (hasPermission(role, "lead:note:add")) {
+    caps.add("add-note");
+  }
   if (hasPermission(role, "lead:reassign")) {
     caps.add("reassign");
     caps.add("list-assignable-executives");
@@ -108,8 +114,12 @@ function resolveCapabilities(role: Role): Set<LeadCapability> {
     caps.add("propose-rate");
     caps.add("restart-quotation");
   }
-  if (hasPermission(role, "lead:review")) caps.add("review");
-  if (hasPermission(role, "lead:register")) caps.add("register");
+  if (hasPermission(role, "lead:review")) {
+    caps.add("review");
+  }
+  if (hasPermission(role, "lead:register")) {
+    caps.add("register");
+  }
   if (hasPermission(role, "fulfillment:manage")) {
     caps.add("complete-fulfillment");
   }
@@ -124,13 +134,19 @@ export function authorizeFulfillmentStep(
   actor: { userId: UserId; role: Role },
   state: { executiveId: UserId; stage: LeadStage },
 ): Result<void, DomainError> {
-  if (state.stage !== "FULFILLMENT") return Err(forbidden());
+  if (state.stage !== "FULFILLMENT") {
+    return Err(forbidden());
+  }
 
   const owner = pendingOwnerForStep(step);
-  if (owner === null) return Err(forbidden());
+  if (owner === null) {
+    return Err(forbidden());
+  }
 
   if (owner === "executive") {
-    if (state.executiveId !== actor.userId) return Err(forbidden());
+    if (state.executiveId !== actor.userId) {
+      return Err(forbidden());
+    }
     if (!hasPermission(actor.role, "fulfillment:client-step")) {
       return Err(forbidden());
     }
@@ -163,12 +179,18 @@ export function authorizeLeadAction(
 ): Result<void, DomainError> {
   const caps = resolveCapabilities(actor.role);
 
-  if (!caps.has("view")) return Err(forbidden());
+  if (!caps.has("view")) {
+    return Err(forbidden());
+  }
 
   const ownsLead = state.executiveId === actor.userId;
-  if (!ownsLead && !canViewAllLeads(actor.role)) return Err(forbidden());
+  if (!ownsLead && !canViewAllLeads(actor.role)) {
+    return Err(forbidden());
+  }
 
-  if (!caps.has(capability)) return Err(forbidden());
+  if (!caps.has(capability)) {
+    return Err(forbidden());
+  }
 
   if (
     (capability === "accept-rate" ||
@@ -179,7 +201,9 @@ export function authorizeLeadAction(
     return Err(forbidden());
   }
 
-  if (OWNER_REQUIRED.has(capability) && !ownsLead) return Err(forbidden());
+  if (OWNER_REQUIRED.has(capability) && !ownsLead) {
+    return Err(forbidden());
+  }
 
   return Ok(undefined);
 }
@@ -188,7 +212,9 @@ export function requireCapability(
   capability: LeadCapability,
   actor: { role: Role },
 ): Result<void, DomainError> {
-  if (!resolveCapabilities(actor.role).has(capability)) return Err(forbidden());
+  if (!resolveCapabilities(actor.role).has(capability)) {
+    return Err(forbidden());
+  }
   return Ok(undefined);
 }
 

@@ -6,7 +6,9 @@ import { isErr } from "~/shared/result";
 
 export async function GET(): Promise<Response> {
   const auth = await authorizeRoutePermission("team:read");
-  if (isErr(auth)) return auth.error;
+  if (isErr(auth)) {
+    return auth.error;
+  }
   const session = auth.value;
 
   const result = await application.extension.listTeamExecutiveStatuses(

@@ -40,7 +40,9 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
         class={styles.formContents}
         onSubmit={(event) => {
           event.preventDefault();
-          if (!phoneValid()) return;
+          if (!phoneValid()) {
+            return;
+          }
           props.onSubmit();
         }}
       >

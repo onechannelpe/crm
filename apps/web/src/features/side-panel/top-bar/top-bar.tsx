@@ -24,7 +24,9 @@ export function TopBar(props: { isMobile: boolean }) {
   const showCloseButton = () => !(props.isMobile && showBackButton());
   const showSearch = () => {
     const entry = currentEntry();
-    if (!entry) return false;
+    if (!entry) {
+      return false;
+    }
 
     return SIDE_PANEL_PAGES_CONFIG[entry.page].showsSearch;
   };

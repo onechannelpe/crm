@@ -19,14 +19,16 @@ describe("session repository lifecycle", () => {
   });
 
   it("creates, reads, updates, extends, and deletes session", async () => {
-    const now = new Date();
-    const activityAt = new Date(now.getTime() + 5_000);
-    const expiresAt = new Date(now.getTime() + 60_000);
-    const extendedExpiresAt = new Date(now.getTime() + 120_000);
-    const sessionId = `s-${now.getTime()}`;
+    const sessions = scenario.ctx.repos.sessions;
     const identity = scenario.identity(user);
 
-    await scenario.ctx.repos.sessions.create({
+    const now = new Date("2026-01-01T00:00:00Z");
+    const activityAt = new Date("2026-01-01T00:00:05Z");
+    const expiresAt = new Date("2026-01-01T00:01:00Z");
+    const extendedExpiresAt = new Date("2026-01-01T00:02:00Z");
+    const sessionId = "session-lifecycle";
+
+    await sessions.create({
       id: sessionId,
       user_id: identity.userId,
       branch_id: identity.branchId,
@@ -42,30 +44,31 @@ describe("session repository lifecycle", () => {
       expires_at: expiresAt,
     });
 
-    const loaded = await scenario.ctx.repos.sessions.findById(sessionId);
+    const loaded = await sessions.findById(sessionId);
     expect(loaded?.id).toBe(sessionId);
 
-    await scenario.ctx.repos.sessions.updateActivity(sessionId, activityAt);
-    await scenario.ctx.repos.sessions.extendExpiry(
-      sessionId,
-      extendedExpiresAt,
-    );
+    await sessions.updateActivity(sessionId, activityAt);
+    await sessions.extendExpiry(sessionId, extendedExpiresAt);
 
-    const updated = await scenario.ctx.repos.sessions.findById(sessionId);
+    const updated = await sessions.findById(sessionId);
     expect(updated?.last_activity).toEqual(activityAt);
     expect(updated?.expires_at).toEqual(extendedExpiresAt);
 
-    await scenario.ctx.repos.sessions.delete(sessionId);
-    const missing = await scenario.ctx.repos.sessions.findById(sessionId);
+    await sessions.delete(sessionId);
+
+    const missing = await sessions.findById(sessionId);
     expect(missing).toBeNull();
   });
 
   it("deletes expired sessions and counts active sessions", async () => {
-    const now = new Date();
-    const activeExpiresAt = new Date(now.getTime() + 60_000);
-    const expiredAt = new Date(now.getTime() - 1);
+    const sessions = scenario.ctx.repos.sessions;
     const identity = scenario.identity(user);
-    await scenario.ctx.repos.sessions.create({
+
+    const now = new Date("2026-01-01T00:00:00Z");
+    const activeExpiresAt = new Date("2026-01-01T00:01:00Z");
+    const expiredAt = new Date("2025-12-31T23:59:59Z");
+
+    await sessions.create({
       id: "active-1",
       user_id: identity.userId,
       branch_id: identity.branchId,
@@ -80,7 +83,8 @@ describe("session repository lifecycle", () => {
       last_activity: now,
       expires_at: activeExpiresAt,
     });
-    await scenario.ctx.repos.sessions.create({
+
+    await sessions.create({
       id: "expired-1",
       user_id: identity.userId,
       branch_id: identity.branchId,
@@ -96,27 +100,22 @@ describe("session repository lifecycle", () => {
       expires_at: expiredAt,
     });
 
-    const countBefore = await scenario.ctx.repos.sessions.countActive(now);
-    expect(countBefore).toBe(1);
+    expect(await sessions.countActive(now)).toBe(1);
 
-    const deleted = await scenario.ctx.repos.sessions.deleteExpired(now);
-    expect(deleted).toBe(1);
+    expect(await sessions.deleteExpired(now)).toBe(1);
 
-    const expired = await scenario.ctx.repos.sessions.findById("expired-1");
-    const active = await scenario.ctx.repos.sessions.findById("active-1");
-    expect(expired).toBeNull();
-    expect(active).not.toBeNull();
+    expect(await sessions.findById("expired-1")).toBeNull();
+    expect(await sessions.findById("active-1")).not.toBeNull();
   });
 
   it("bulk deletes sessions for user", async () => {
+    const sessions = scenario.ctx.repos.sessions;
     const identity = scenario.identity(user);
+
     await seedBulkSessions(scenario.ctx, user, 200);
+    await sessions.deleteAllForUser(identity.userId);
 
-    await scenario.ctx.repos.sessions.deleteAllForUser(identity.userId);
-
-    const remaining = await scenario.ctx.repos.sessions.listForUser(
-      identity.userId,
-    );
+    const remaining = await sessions.listForUser(identity.userId);
     expect(remaining).toHaveLength(0);
   });
 });

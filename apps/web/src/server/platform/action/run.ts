@@ -66,7 +66,9 @@ function runParse<TIn>(
   ports: ServerFunctionPorts,
 ): Result<TIn, WireError> {
   const parsed = parse();
-  if (isErr(parsed)) return Err(projectFault(parsed.error, ports));
+  if (isErr(parsed)) {
+    return Err(projectFault(parsed.error, ports));
+  }
   return Ok(parsed.value);
 }
 
@@ -78,7 +80,9 @@ async function runExecute<TIn, TOut, E extends DomainError>(
 ): Promise<Result<TOut, WireError>> {
   const result = await execute(ctx, input);
 
-  if (!isErr(result)) return Ok(result.value);
+  if (!isErr(result)) {
+    return Ok(result.value);
+  }
   return Err(projectFault(result.error, ports));
 }
 
@@ -89,7 +93,9 @@ async function runExecuteEmpty<TOut, E extends DomainError>(
 ): Promise<Result<TOut, WireError>> {
   const result = await execute(ctx);
 
-  if (!isErr(result)) return Ok(result.value);
+  if (!isErr(result)) {
+    return Ok(result.value);
+  }
   return Err(projectFault(result.error, ports));
 }
 
@@ -103,7 +109,9 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
     const identity: Result<AuthSession, DomainError> = await authenticateAccess(
       def.access,
     );
-    if (isErr(identity)) return Err(projectFault(identity.error, ports));
+    if (isErr(identity)) {
+      return Err(projectFault(identity.error, ports));
+    }
 
     const ctx = createAppContext(identity.value);
     const tele: TelemetryContext = {
@@ -145,7 +153,9 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
 
     if (def.parse) {
       const parsed = runParse(def.parse, ports);
-      if (isErr(parsed)) return parsed;
+      if (isErr(parsed)) {
+        return parsed;
+      }
       const telemetry = def.telemetry?.(parsed.value) ?? {};
       return runAuthenticated(def, startedTicks, telemetry, (ctx) =>
         runExecute(ctx, parsed.value, def.execute, ports),
@@ -162,7 +172,9 @@ export function createServerFunctionExecutor(ports: ServerFunctionPorts) {
     def: ActionDef<TIn, TOut, E>,
   ): Promise<TOut> {
     const result = await executeResult(def);
-    if (isErr(result)) throw new ActionError(result.error);
+    if (isErr(result)) {
+      throw new ActionError(result.error);
+    }
     return result.value;
   }
 

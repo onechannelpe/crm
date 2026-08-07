@@ -37,7 +37,9 @@ export async function getSearchCapacitySnapshot(
   operation: OperationContext,
 ): Promise<Result<SearchCapacitySnapshot, DomainError>> {
   const policyResult = await getEffectiveSearchPolicy(userId, repos, operation);
-  if (!policyResult.ok) return policyResult;
+  if (!policyResult.ok) {
+    return policyResult;
+  }
 
   const range = appMonthRange(operation.operationAt);
   const [grants, reservations, commits] = await Promise.all([

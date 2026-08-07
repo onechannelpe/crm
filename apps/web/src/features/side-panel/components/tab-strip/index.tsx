@@ -63,11 +63,15 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
     for (let i = 0; i < allTabs.length; i++) {
       const tab = allTabs[i];
       const w = widths[tab.id];
-      if (w === undefined) return allTabs.length;
+      if (w === undefined) {
+        return allTabs.length;
+      }
       const gap = i > 0 ? TAB_GAP : 0;
       const moreNeeded = i < allTabs.length - 1 ? mbw + TAB_GAP : 0;
       total += w + gap;
-      if (total + moreNeeded > cw) return Math.max(1, i);
+      if (total + moreNeeded > cw) {
+        return Math.max(1, i);
+      }
     }
     return allTabs.length;
   });
@@ -92,11 +96,17 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
 
   onMount(() => {
     const handleDocumentPointerDown = (event: PointerEvent) => {
-      if (!isOverflowOpen()) return;
+      if (!isOverflowOpen()) {
+        return;
+      }
       const target = event.target;
       const wrap = overflowWrapRef();
-      if (!(target instanceof Node) || !wrap) return;
-      if (wrap.contains(target)) return;
+      if (!(target instanceof Node) || !wrap) {
+        return;
+      }
+      if (wrap.contains(target)) {
+        return;
+      }
       setIsOverflowOpen(false);
     };
     document.addEventListener("pointerdown", handleDocumentPointerDown);

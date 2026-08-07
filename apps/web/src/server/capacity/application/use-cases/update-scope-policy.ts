@@ -23,13 +23,19 @@ export async function updateScopePolicy(
   },
 ): Promise<Result<{ success: true }, DomainError>> {
   const monthlyLimit = validateSearchLimit(input.monthlyLimit);
-  if (!monthlyLimit.ok) return monthlyLimit;
+  if (!monthlyLimit.ok) {
+    return monthlyLimit;
+  }
   const leadValues = validateLeadPolicyValues(input);
-  if (!leadValues.ok) return leadValues;
+  if (!leadValues.ok) {
+    return leadValues;
+  }
 
   return deps.uow.run(async (tx) => {
     const check = await canManageScope(ctx.actor, input.scope, tx);
-    if (isErr(check)) return check;
+    if (isErr(check)) {
+      return check;
+    }
 
     const searchWrite = await setSearchScopeDefault(
       input.scope.kind === "branch"
@@ -45,7 +51,9 @@ export async function updateScopePolicy(
           },
       tx,
     );
-    if (isErr(searchWrite)) return searchWrite;
+    if (isErr(searchWrite)) {
+      return searchWrite;
+    }
 
     const leadWrite = await setLeadScopeDefault(
       input.scope.kind === "branch"
@@ -63,7 +71,9 @@ export async function updateScopePolicy(
           },
       tx,
     );
-    if (isErr(leadWrite)) return leadWrite;
+    if (isErr(leadWrite)) {
+      return leadWrite;
+    }
 
     return Ok({ success: true });
   });

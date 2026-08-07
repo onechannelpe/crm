@@ -19,7 +19,9 @@ export function useCreateLeadPageState() {
 
   function patchDraft(patch: Partial<LeadRecordDraftState>) {
     updatePageState(pageId(), (state) => {
-      if (state.page !== "create-lead") return state;
+      if (state.page !== "create-lead") {
+        return state;
+      }
       return { ...state, draft: { ...state.draft, ...patch } };
     });
   }

@@ -96,11 +96,17 @@ async function sendMessage(
 
 export function focusExtensionWindow(): void {
   const chrome = Reflect.get(globalThis, "chrome");
-  if (typeof chrome !== "object" || chrome === null) return;
+  if (typeof chrome !== "object" || chrome === null) {
+    return;
+  }
   const runtime = Reflect.get(chrome, "runtime");
-  if (typeof runtime !== "object" || runtime === null) return;
+  if (typeof runtime !== "object" || runtime === null) {
+    return;
+  }
   const send: unknown = Reflect.get(runtime, "sendMessage");
-  if (typeof send === "function") send.call(runtime, { action: "focusWindow" });
+  if (typeof send === "function") {
+    send.call(runtime, { action: "focusWindow" });
+  }
 }
 
 export async function handoffLeadToExtension(input: {

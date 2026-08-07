@@ -40,7 +40,9 @@ export async function requestMerchantGpvExport(
     { repo: deps.filesRepo, storage: deps.filesStorage },
   );
 
-  if (!storedFile.ok) return storedFile;
+  if (!storedFile.ok) {
+    return storedFile;
+  }
 
   return issueDownloadToken(ctx, storedFile.value.id, { repo: deps.filesRepo });
 }

@@ -37,7 +37,9 @@ export function createNotificationOptOutRepo(
 ): NotificationOptOutRepo {
   return {
     async findOptOuts(userIds, category) {
-      if (userIds.length === 0) return new Set();
+      if (userIds.length === 0) {
+        return new Set();
+      }
 
       const rows = await db
         .selectFrom("notification_opt_outs")
@@ -83,7 +85,9 @@ export function createNotificationOptOutRepo(
     },
 
     async muteChannel({ userId, channel, categories, changedAt }) {
-      if (categories.length === 0) return;
+      if (categories.length === 0) {
+        return;
+      }
 
       await db
         .insertInto("notification_opt_outs")

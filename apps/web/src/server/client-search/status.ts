@@ -93,11 +93,15 @@ function toOverlay(record: RegistryRow | null | undefined): Overlay | null {
 
 // Validate the stored JSON before exposing it as typed data.
 function normalizeEconomicActivities(value: unknown): SunatEconomicActivity[] {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    return [];
+  }
 
   return value
     .map((entry): SunatEconomicActivity | null => {
-      if (typeof entry !== "object" || entry === null) return null;
+      if (typeof entry !== "object" || entry === null) {
+        return null;
+      }
 
       const role = Reflect.get(entry, "role");
       const order = Reflect.get(entry, "order");

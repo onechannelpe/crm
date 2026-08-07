@@ -32,11 +32,21 @@ function canManageExecutiveRecord(
   actor: AuthSession,
   target: ManageableCapacityUser,
 ): boolean {
-  if (target.role !== "executive") return false;
-  if (actor.role === "superuser") return true;
-  if (target.branchId !== actor.branchId) return false;
-  if (actor.role === "admin") return true;
-  if (actor.role === "supervisor") return true;
+  if (target.role !== "executive") {
+    return false;
+  }
+  if (actor.role === "superuser") {
+    return true;
+  }
+  if (target.branchId !== actor.branchId) {
+    return false;
+  }
+  if (actor.role === "admin") {
+    return true;
+  }
+  if (actor.role === "supervisor") {
+    return true;
+  }
   return false;
 }
 
@@ -46,7 +56,9 @@ export async function canManageExecutive<T extends ManageableCapacityUser>(
   repos: ExecutiveRepos<T>,
 ): Promise<{ ok: boolean; target: T | null }> {
   const target = await repos.users.findById(targetUserId);
-  if (!target) return { ok: false, target: null };
+  if (!target) {
+    return { ok: false, target: null };
+  }
 
   if (!canManageExecutiveRecord(actor, target)) {
     return { ok: false, target };

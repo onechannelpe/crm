@@ -92,7 +92,9 @@ async function prepareIdentifiedLogin(
   input: Extract<PreparePasskeyLoginInput, { mode: "identified" }>,
 ): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
   const identifier = input.identifier.trim();
-  if (!identifier) return Err({ kind: "invalid_credentials" });
+  if (!identifier) {
+    return Err({ kind: "invalid_credentials" });
+  }
 
   const throttleService = createAuthThrottleService({
     authThrottle: repos.authThrottle,

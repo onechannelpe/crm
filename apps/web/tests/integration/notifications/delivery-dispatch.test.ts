@@ -43,6 +43,7 @@ describe("notification delivery dispatch", () => {
   beforeEach(async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(NOW);
+
     await runtime.reset();
     runtime.now.set(NOW);
   });
@@ -51,7 +52,7 @@ describe("notification delivery dispatch", () => {
     vi.useRealTimers();
   });
 
-  async function giveAddresses(userId: UserId, withSession: boolean) {
+  async function giveAddresses(userId: UserId, withWhatsAppSession: boolean) {
     await runtime.ctx.repos.userChannelAddresses.upsert({
       user_id: userId,
       channel: "email",
@@ -72,12 +73,14 @@ describe("notification delivery dispatch", () => {
       updated_at: NOW,
     });
 
-    if (withSession) {
+    if (withWhatsAppSession) {
       await openSession(runtime.ctx.db, userId, NOW);
     }
   }
 
-  function intent(overrides: Partial<NotificationIntent>): NotificationIntent {
+  function intent(
+    overrides: Partial<NotificationIntent> = {},
+  ): NotificationIntent {
     return {
       id: NotificationIntentId.derive({
         sourceEventId: "event-intent-1",
@@ -114,6 +117,7 @@ describe("notification delivery dispatch", () => {
         channels: ["in_app", "email", "whatsapp"],
       }),
     ]);
+
     await notifications.drain();
 
     const reader = createNotificationReader(runtime);
@@ -157,6 +161,7 @@ describe("notification delivery dispatch", () => {
         channels: ["in_app", "whatsapp"],
       }),
     ]);
+
     await notifications.drain();
 
     const reader = createNotificationReader(runtime);
@@ -173,7 +178,9 @@ describe("notification delivery dispatch", () => {
   });
 
   it("reschedules a transient send with backoff then succeeds after the clock advances", async () => {
-    await giveAddresses(runtime.ctx.fixtures.users.execOne.id, true);
+    const { execOne } = runtime.ctx.fixtures.users;
+
+    await giveAddresses(execOne.id, true);
 
     const notifications = createTestNotificationRuntime(runtime);
 
@@ -182,7 +189,7 @@ describe("notification delivery dispatch", () => {
       okReceipt("whatsapp", "whatsapp_cloud", "wamid.ok"),
     );
 
-    await notifications.enqueue([intent({})]);
+    await notifications.enqueue([intent()]);
     await notifications.expandThenDispatch();
 
     const reader = createNotificationReader(runtime);
@@ -201,6 +208,7 @@ describe("notification delivery dispatch", () => {
     expect(afterRetry?.claimable_at?.getTime()).toBeLessThan(NOW_MS + 5_000);
 
     vi.setSystemTime(NOW_MS + 5_001);
+
     await notifications.expandThenDispatch();
 
     const [afterRecovery] = await reader.deliveries();
@@ -213,7 +221,9 @@ describe("notification delivery dispatch", () => {
   });
 
   it("fails a terminal send immediately without retrying", async () => {
-    await giveAddresses(runtime.ctx.fixtures.users.execOne.id, true);
+    const { execOne } = runtime.ctx.fixtures.users;
+
+    await giveAddresses(execOne.id, true);
 
     const notifications = createTestNotificationRuntime(runtime);
 
@@ -221,7 +231,7 @@ describe("notification delivery dispatch", () => {
       terminalProviderError("whatsapp", "whatsapp_cloud"),
     );
 
-    await notifications.enqueue([intent({})]);
+    await notifications.enqueue([intent()]);
     await notifications.expandThenDispatch();
 
     const reader = createNotificationReader(runtime);
@@ -289,6 +299,7 @@ describe("notification delivery dispatch", () => {
         channels: ["in_app", "whatsapp"],
       }),
     ]);
+
     await notifications.drain();
 
     const reader = createNotificationReader(runtime);
