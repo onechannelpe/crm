@@ -2,7 +2,7 @@ import { createEffect, onMount } from "solid-js";
 
 import { useIsMobile } from "~/components/ui/layout/responsive/use-is-mobile";
 
-import { readNavigationDrawerExpandedFromCookie } from "../state/navigation-drawer-expanded";
+import { navigationDrawerExpandedCookie } from "../state/navigation-drawer-expanded";
 import { useNavigationDrawerState } from "../state/navigation-drawer-provider";
 
 export function NavigationDrawerBrowserEffects() {
@@ -11,7 +11,7 @@ export function NavigationDrawerBrowserEffects() {
 
   onMount(() => {
     const hasExpandedPreference =
-      readNavigationDrawerExpandedFromCookie() !== null;
+      navigationDrawerExpandedCookie.read() !== null;
 
     if (!hasExpandedPreference && isMobile()) {
       setExpanded(false);

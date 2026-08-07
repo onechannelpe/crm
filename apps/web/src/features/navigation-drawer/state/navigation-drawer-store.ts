@@ -2,7 +2,7 @@ import { createSignal } from "solid-js";
 
 import { isSettingsRoutePath } from "~/domain/navigation/route-classification";
 
-import { persistNavigationDrawerExpandedToCookie } from "./navigation-drawer-expanded";
+import { navigationDrawerExpandedCookie } from "./navigation-drawer-expanded";
 import {
   clampNavigationDrawerWidth,
   NAVIGATION_DRAWER_WIDTH_CONSTRAINTS,
@@ -83,7 +83,7 @@ export function createNavigationDrawerStore(
     const next = typeof value === "function" ? value(previous) : value;
 
     setExpandedSignal(next);
-    persistNavigationDrawerExpandedToCookie(next);
+    navigationDrawerExpandedCookie.write(next);
   };
 
   const setAdvancedModeEnabled: NavigationDrawerStateValue["setAdvancedModeEnabled"] =
