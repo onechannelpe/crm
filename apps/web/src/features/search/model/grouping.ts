@@ -33,21 +33,17 @@ function pushUnique(
   value: string | null | undefined,
 ): void {
   const safe = normalized(value);
+
   if (!safe || seen.has(safe)) {
     return;
   }
+
   seen.add(safe);
   values.push(safe);
 }
 
 function companyKey(ruc: string | null, name: string | null): string {
   return `${normalized(ruc)}|${normalized(name)}`;
-}
-
-function companyGroupKey(
-  row: Extract<SearchResult, { kind: "company" }>,
-): string {
-  return `company:${row.company.id}`;
 }
 
 export function groupByDocument(
@@ -57,12 +53,15 @@ export function groupByDocument(
     string,
     Extract<SearchResult, { kind: "document" }>[]
   >();
+
   for (const row of results) {
     if (row.kind !== "document") {
       continue;
     }
+
     const key = `${row.doc.doc_type}:${row.doc.doc_number}`;
     const existing = groups.get(key);
+
     if (existing) {
       existing.push(row);
     } else {
@@ -71,13 +70,13 @@ export function groupByDocument(
   }
 
   const out: PersonGroup[] = [];
-  for (const [key, rows] of groups.entries()) {
+
+  for (const [key, rows] of groups) {
     const first = rows[0];
+
     if (!first) {
       continue;
     }
-    const docType = first.doc.doc_type;
-    const docNumber = first.doc.doc_number;
 
     const aliases: string[] = [];
     const aliasSet = new Set<string>();
@@ -88,15 +87,19 @@ export function groupByDocument(
 
     for (const row of rows) {
       pushUnique(aliases, aliasSet, row.doc.name);
+
       pushUnique(phones, phoneSet, row.phones.primary);
       pushUnique(phones, phoneSet, row.phones.secondary);
+
       for (const siblingPhone of row.phones.siblings ?? []) {
         pushUnique(phones, phoneSet, siblingPhone);
       }
 
-      const ck = companyKey(row.org?.ruc ?? null, row.org?.name ?? null);
-      if (ck !== "|" && !companyKeys.has(ck)) {
-        companyKeys.add(ck);
+      const orgKey = companyKey(row.org?.ruc ?? null, row.org?.name ?? null);
+
+      if (orgKey !== "|" && !companyKeys.has(orgKey)) {
+        companyKeys.add(orgKey);
+
         companies.push({
           ruc: normalized(row.org?.ruc) || null,
           name: normalized(row.org?.name) || null,
@@ -104,17 +107,17 @@ export function groupByDocument(
       }
     }
 
-    const displayName = aliases.find((alias) => alias.length > 0) ?? docNumber;
     out.push({
       key,
-      doc_type: docType,
-      doc_number: docNumber,
-      displayName,
+      doc_type: first.doc.doc_type,
+      doc_number: first.doc.doc_number,
+      displayName: aliases[0] ?? first.doc.doc_number,
       aliases,
       companies,
       phones,
     });
   }
+
   return out;
 }
 
@@ -127,8 +130,8 @@ export function groupByCompany(
     if (row.kind !== "company") {
       continue;
     }
-    const key = companyGroupKey(row);
-    const ruc = normalized(row.company.ruc);
+
+    const key = `company:${row.company.id}`;
     const existing = groups.get(key);
 
     if (existing) {
@@ -137,18 +140,23 @@ export function groupByCompany(
       }
 
       const phoneSet = new Set(existing.phones);
+
       pushUnique(existing.phones, phoneSet, row.phones.primary);
       pushUnique(existing.phones, phoneSet, row.phones.secondary);
+
       for (const siblingPhone of row.phones.siblings ?? []) {
         pushUnique(existing.phones, phoneSet, siblingPhone);
       }
+
       continue;
     }
 
     const phones: string[] = [];
     const phoneSet = new Set<string>();
+
     pushUnique(phones, phoneSet, row.phones.primary);
     pushUnique(phones, phoneSet, row.phones.secondary);
+
     for (const siblingPhone of row.phones.siblings ?? []) {
       pushUnique(phones, phoneSet, siblingPhone);
     }
@@ -156,7 +164,7 @@ export function groupByCompany(
     groups.set(key, {
       id: row.company.id,
       key,
-      ruc: ruc || null,
+      ruc: normalized(row.company.ruc) || null,
       name: normalized(row.company.legal_name) || null,
       phones,
     });

@@ -18,6 +18,7 @@ function first(value: string | string[] | undefined): string | undefined {
 
 export function readGpvTab(query: GpvQuery): GpvTabId {
   const raw = first(query.tab);
+
   return GPV_TAB_IDS.find((id) => id === raw) ?? DEFAULT_TAB;
 }
 
@@ -46,28 +47,37 @@ export function useGpvView(): GpvView {
     product?: string;
   }>();
 
-  const filter = createMemo<BookFilter>(() => readGpvFilter(params));
+  const tab = createMemo(() => readGpvTab(params));
+  const filter = createMemo(() => readGpvFilter(params));
 
   return {
-    tab: () => readGpvTab(params),
+    tab,
+
     setTab: (id) =>
       setParams({ tab: id === DEFAULT_TAB ? null : id }, { scroll: false }),
+
     filter,
+
     setFilter: (patch) => {
       const next: Record<string, string | null> = {};
-      // Omitted URL parameters stay unchanged. Null clears the selected filter.
+
+      // Missing keys stay unchanged; null clears them.
       if ("branchId" in patch) {
         next.branch = patch.branchId ?? null;
       }
+
       if ("sellerUserId" in patch) {
         next.seller = patch.sellerUserId ?? null;
       }
+
       if ("month" in patch) {
         next.month = patch.month ?? null;
       }
+
       if ("product" in patch) {
         next.product = patch.product ?? null;
       }
+
       setParams(next, { replace: true, scroll: false });
     },
   };

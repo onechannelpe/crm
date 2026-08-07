@@ -11,13 +11,12 @@ export function createPollingController(
 ): PollingController {
   const [state, setState] = createSignal<PollingState>("idle");
 
-  // Monotonic reading from `performance.now()`. The timeout measures elapsed
-  // time, so a wall-clock adjustment mid-poll must not shorten or extend it.
-  let startedTicks: number | null = null;
+  // Use a monotonic clock so wall-clock changes do not affect the timeout.
+  let startedAt: number | null = null;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let runToken = 0;
 
-  function clearScheduledTick() {
+  function clearTimer() {
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
       timeoutId = null;
@@ -26,8 +25,8 @@ export function createPollingController(
 
   function stop() {
     runToken += 1;
-    clearScheduledTick();
-    startedTicks = null;
+    clearTimer();
+    startedAt = null;
     setState("stopped");
   }
 
@@ -35,19 +34,20 @@ export function createPollingController(
     if (currentRunToken !== runToken) {
       return;
     }
+
     if (!options.shouldContinue()) {
       stop();
       return;
     }
 
-    if (startedTicks === null) {
-      startedTicks = performance.now();
+    if (startedAt === null) {
+      startedAt = performance.now();
     }
 
-    if (performance.now() - startedTicks >= options.timeoutMs) {
+    if (performance.now() - startedAt >= options.timeoutMs) {
       runToken += 1;
-      clearScheduledTick();
-      startedTicks = null;
+      clearTimer();
+      startedAt = null;
       setState("timed_out");
       options.onTimeout?.();
       return;
@@ -56,12 +56,13 @@ export function createPollingController(
     try {
       await options.runOnce();
     } catch {
-      // Keep polling on transient failures. The next tick can recover.
+      // Transient failures should not stop polling.
     }
 
     if (currentRunToken !== runToken) {
       return;
     }
+
     if (!options.shouldContinue()) {
       stop();
       return;
@@ -79,8 +80,9 @@ export function createPollingController(
 
     runToken += 1;
     const currentRunToken = runToken;
-    clearScheduledTick();
-    startedTicks = performance.now();
+
+    clearTimer();
+    startedAt = performance.now();
     setState("running");
 
     timeoutId = setTimeout(() => {
@@ -88,9 +90,7 @@ export function createPollingController(
     }, options.intervalMs);
   }
 
-  onCleanup(() => {
-    stop();
-  });
+  onCleanup(stop);
 
   return {
     state,

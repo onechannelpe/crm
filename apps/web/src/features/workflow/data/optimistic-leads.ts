@@ -4,7 +4,7 @@ import type { LeadListRowView } from "~/contracts/workflow/views";
 
 const [state, setState] = createStore<Record<string, LeadListRowView[]>>({});
 
-let nextOptimisticLeadId = -1;
+let nextOptimisticLeadId = 1;
 
 export function createOptimisticLeadRow(input: {
   ruc: string;
@@ -17,9 +17,7 @@ export function createOptimisticLeadRow(input: {
   createdAt: number;
 }): LeadListRowView {
   return {
-    // The counter, not the submit instant, is what makes the row identifiable:
-    // two submissions for the same RUC in the same millisecond would collide.
-    id: `optimistic-${nextOptimisticLeadId--}`,
+    id: `optimistic-${nextOptimisticLeadId++}`,
     ruc: input.ruc,
     legalName: input.legalName,
     address: input.address,
@@ -36,7 +34,6 @@ export function createOptimisticLeadRow(input: {
   };
 }
 
-// Reactive read for source() and other tracking contexts.
 export function getOptimisticLeadRows(key: string): LeadListRowView[] {
   return state[key] ?? [];
 }

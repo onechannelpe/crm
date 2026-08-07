@@ -11,11 +11,12 @@ const RELATIVE_DATE_FORMAT = new Intl.RelativeTimeFormat(APP_LOCALE, {
 });
 
 function getDayIndex(date: CalendarDate): number {
-  const parts = calendarDateParts(date);
-  return Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
+  const { year, month, day } = calendarDateParts(date);
+
+  return Math.floor(Date.UTC(year, month - 1, day) / DAY_MS);
 }
 
-function getPastDayDistance(earlier: number, now: number): number {
+function getRelativeDayValue(earlier: number, now: number): number {
   return (
     getDayIndex(appCalendarDateAt(earlier)) -
     getDayIndex(appCalendarDateAt(now))
@@ -25,6 +26,7 @@ function getPastDayDistance(earlier: number, now: number): number {
 function getElapsedMonths(earlier: number, now: number): number {
   const earlierDate = calendarDateParts(appCalendarDateAt(earlier));
   const nowDate = calendarDateParts(appCalendarDateAt(now));
+
   const monthDiff =
     (nowDate.year - earlierDate.year) * 12 + nowDate.month - earlierDate.month;
 
@@ -35,7 +37,7 @@ function getElapsedMonths(earlier: number, now: number): number {
   return Math.max(0, monthDiff);
 }
 
-function toPastRelativeUnit(
+function getPastRelativeValue(
   earlier: number,
   now: number,
 ): {
@@ -43,19 +45,30 @@ function toPastRelativeUnit(
   unit: Intl.RelativeTimeFormatUnit;
 } {
   const months = getElapsedMonths(earlier, now);
+
   if (months >= 12) {
-    return { value: -Math.trunc(months / 12), unit: "year" };
-  }
-  if (months >= 1) {
-    return { value: -months, unit: "month" };
+    return {
+      value: -Math.trunc(months / 12),
+      unit: "year",
+    };
   }
 
-  return { value: getPastDayDistance(earlier, now), unit: "day" };
+  if (months >= 1) {
+    return {
+      value: -months,
+      unit: "month",
+    };
+  }
+
+  return {
+    value: getRelativeDayValue(earlier, now),
+    unit: "day",
+  };
 }
 
-// Records only ever display dates in the past (created/updated timestamps), so a
-// future timestamp clamps to "today" rather than rendering "in N days".
+// Future timestamps display as today.
 export function formatPastRelativeDate(timestamp: number, now: number): string {
-  const relative = toPastRelativeUnit(Math.min(timestamp, now), now);
+  const relative = getPastRelativeValue(Math.min(timestamp, now), now);
+
   return RELATIVE_DATE_FORMAT.format(relative.value, relative.unit);
 }

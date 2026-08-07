@@ -18,10 +18,6 @@ import {
 import { createCommandController } from "../../core/commands/create-command-controller";
 import { createOptimisticTransactionStore } from "../../core/optimistic/create-optimistic-transaction-store";
 
-type CreateLeadResult = {
-  leadId: string;
-};
-
 type CreateLeadControllerInput = {
   draftRuc: Accessor<string>;
   inquiryId: Accessor<string | null>;
@@ -29,7 +25,7 @@ type CreateLeadControllerInput = {
   previewName: Accessor<string | null>;
   scope: Accessor<CommercialScopeFormValues>;
   currentUser: Accessor<CurrentUserView>;
-  createLead: (input: CreateLeadInput) => Promise<CreateLeadResult>;
+  createLead: (input: CreateLeadInput) => Promise<{ leadId: string }>;
   onLeadCreated: (input: { leadId: string; ruc: string }) => void;
   setActiveTab: (tab: RecordTabId) => void;
 };
@@ -43,7 +39,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
 
   const optimisticTransactions = createOptimisticTransactionStore();
   const createCommand = createCommandController({
-    run: (command: CreateLeadInput) => input.createLead(command),
+    run: input.createLead,
   });
 
   async function submit() {
@@ -52,6 +48,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
     }
 
     const ruc = input.validRuc();
+
     if (!ruc) {
       setErrorMessage("El RUC debe tener 11 dígitos.");
       input.setActiveTab("registro");
@@ -59,6 +56,7 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
     }
 
     const scopePayload = toCommercialScopePayload(input.scope());
+
     if (!scopePayload.ok) {
       setErrorMessage(scopePayload.error);
       input.setActiveTab("registro");
@@ -68,10 +66,10 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
     setErrorMessage(null);
 
     const user = input.currentUser();
+    const userName = shortName(user);
 
-    // clock-boundary: form submission. The provisional row is stamped once here
-    // and replaced by the server's row on commit, so `apply` must not re-read
-    // the clock when the transaction store replays it.
+    // clock-boundary: form submission. `apply` may replay, so keep the
+    // original submission timestamp rather than re-reading the clock.
     const submittedAt = Date.now();
 
     const txId = optimisticTransactions.begin({
@@ -83,9 +81,9 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
             legalName: input.previewName(),
             address: null,
             executiveId: user.id,
-            executiveName: shortName(user),
+            executiveName: userName,
             createdBy: user.id,
-            createdByName: shortName(user),
+            createdByName: userName,
             createdAt: submittedAt,
           }),
         ),
@@ -97,11 +95,14 @@ export function createCreateLeadController(input: CreateLeadControllerInput) {
         inquiryId: input.inquiryId() ?? undefined,
         ...scopePayload.value,
       });
+
       optimisticTransactions.commit(txId);
       input.onLeadCreated({ leadId: result.leadId, ruc });
     } catch (submitError) {
       optimisticTransactions.rollback(txId);
+
       const wire = parseWireError(submitError);
+
       if (codeIs(wire, "invalid_ruc") || codeIs(wire, "ruc_required")) {
         setErrorMessage(wire.message);
         input.setActiveTab("registro");

@@ -139,7 +139,6 @@ export function useRecordsImport() {
         return;
       }
 
-      // The import continues while the connection is offline.
       if (state === "offline") {
         updateSnackBar(snackBarId, {
           message: "Sin conexión. La importación continúa...",
@@ -187,21 +186,16 @@ export function useRecordsImport() {
   function onFileInputChange(event: Event): void {
     const target = event.currentTarget;
 
-    if (
-      !(target instanceof HTMLInputElement) ||
-      !target.files ||
-      target.files.length === 0
-    ) {
+    if (!(target instanceof HTMLInputElement)) {
       return;
     }
 
-    const file = target.files.item(0);
+    const file = target.files?.item(0);
+    target.value = "";
 
     if (file) {
       void importFile(file);
     }
-
-    target.value = "";
   }
 
   return {

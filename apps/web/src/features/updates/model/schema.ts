@@ -28,16 +28,29 @@ function getFrontmatterValue(
   if (typeof frontmatter !== "object" || frontmatter === null) {
     return undefined;
   }
+
   return Reflect.get(frontmatter, key);
 }
 
 function getSlug(path: string): string {
   const match = path.match(/\/([^/]+)\.mdx?$/);
+
   return match ? match[1] : path;
 }
 
 function isIsoDate(value: unknown): value is string {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 }
 
 function normalizeKind(value: unknown): UpdateKind | null {
@@ -58,6 +71,7 @@ function normalizeTags(value: unknown): string[] | null {
   if (value == null) {
     return [];
   }
+
   if (!Array.isArray(value)) {
     return null;
   }
@@ -66,9 +80,11 @@ function normalizeTags(value: unknown): string[] | null {
     (entry): entry is string =>
       typeof entry === "string" && entry.trim() !== "",
   );
+
   if (tags.length !== value.length || tags.length > 8) {
     return null;
   }
+
   return tags;
 }
 
@@ -77,17 +93,28 @@ function parseModule(path: string, module: UpdateModule) {
 
   const titleValue = getFrontmatterValue(module.frontmatter, "title");
   const title = typeof titleValue === "string" ? titleValue.trim() : "";
+
   if (!title) {
-    issues.push({ path, field: "title", reason: "required non-empty string" });
+    issues.push({
+      path,
+      field: "title",
+      reason: "required non-empty string",
+    });
   }
 
   const rawDate = getFrontmatterValue(module.frontmatter, "date");
   const date = isIsoDate(rawDate) ? rawDate : null;
+
   if (!date) {
-    issues.push({ path, field: "date", reason: "must be YYYY-MM-DD" });
+    issues.push({
+      path,
+      field: "date",
+      reason: "must be YYYY-MM-DD",
+    });
   }
 
   const kind = normalizeKind(getFrontmatterValue(module.frontmatter, "kind"));
+
   if (!kind) {
     issues.push({
       path,
@@ -99,6 +126,7 @@ function parseModule(path: string, module: UpdateModule) {
   const cadence = normalizeCadence(
     getFrontmatterValue(module.frontmatter, "cadence"),
   );
+
   if (!cadence) {
     issues.push({
       path,
@@ -110,11 +138,17 @@ function parseModule(path: string, module: UpdateModule) {
   const visibility = normalizeVisibility(
     getFrontmatterValue(module.frontmatter, "visibility"),
   );
+
   if (!visibility) {
-    issues.push({ path, field: "visibility", reason: 'must be "internal"' });
+    issues.push({
+      path,
+      field: "visibility",
+      reason: 'must be "internal"',
+    });
   }
 
   const tags = normalizeTags(getFrontmatterValue(module.frontmatter, "tags"));
+
   if (!tags) {
     issues.push({
       path,
@@ -164,9 +198,11 @@ function compareEntries(left: UpdateEntry, right: UpdateEntry): number {
   if (left.date !== right.date) {
     return left.date < right.date ? 1 : -1;
   }
+
   if (left.id === right.id) {
     return 0;
   }
+
   return left.id < right.id ? 1 : -1;
 }
 
@@ -176,6 +212,7 @@ function validateNoDuplicateIds(entries: UpdateEntry[]): ValidationIssue[] {
 
   for (const entry of entries) {
     const existing = seen.get(entry.id);
+
     if (existing) {
       issues.push({
         path: entry.slug,
@@ -184,6 +221,7 @@ function validateNoDuplicateIds(entries: UpdateEntry[]): ValidationIssue[] {
       });
       continue;
     }
+
     seen.set(entry.id, entry.slug);
   }
 
@@ -220,14 +258,12 @@ export function parseAndValidateUpdates(
 }
 
 export function parseUpdateFilter(value: string | undefined): UpdateFilter {
-  if (value === "technical") {
-    return value;
+  switch (value) {
+    case "technical":
+    case "release-nightly":
+    case "release-weekly":
+      return value;
+    default:
+      return "all";
   }
-  if (value === "release-nightly") {
-    return value;
-  }
-  if (value === "release-weekly") {
-    return value;
-  }
-  return "all";
 }

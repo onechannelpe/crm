@@ -5,27 +5,26 @@ export const SELECTION_COLUMN_WIDTH = 28;
 export const ADD_COLUMN_WIDTH = 32;
 
 function toTrack<T>(column: DataGridColumn<T>) {
-  if (column.width) {
+  if (column.width !== undefined) {
     return `${column.width}px`;
   }
-  if (column.grow && column.minWidth && column.maxWidth) {
+
+  if (column.minWidth !== undefined && column.maxWidth !== undefined) {
     return `minmax(${column.minWidth}px, ${column.maxWidth}px)`;
   }
-  if (column.grow && column.minWidth) {
+
+  if (column.minWidth !== undefined) {
     return `minmax(${column.minWidth}px, 1fr)`;
   }
-  if (column.minWidth && column.maxWidth) {
-    return `minmax(${column.minWidth}px, ${column.maxWidth}px)`;
-  }
-  if (column.minWidth) {
-    return `minmax(${column.minWidth}px, 1fr)`;
-  }
-  if (column.maxWidth) {
+
+  if (column.maxWidth !== undefined) {
     return `fit-content(${column.maxWidth}px)`;
   }
+
   if (column.grow) {
     return "minmax(180px, 1fr)";
   }
+
   return "max-content";
 }
 
@@ -37,19 +36,17 @@ export function buildDataGridTemplateColumns<T>(
     columnWidths?: Record<string, number>;
   },
 ) {
-  const dataColumnTracks = columns
-    .map((column) => {
-      const override = options?.columnWidths?.[column.key];
-      return override !== undefined ? `${override}px` : toTrack(column);
-    })
-    .join(" ");
+  const dataTracks = columns.map((column) => {
+    const override = options?.columnWidths?.[column.key];
+
+    return override !== undefined ? `${override}px` : toTrack(column);
+  });
+
   return [
     ...(options?.leadingTracks ?? []).map((width) => `${width}px`),
-    dataColumnTracks,
+    ...dataTracks,
     ...(options?.trailingTracks ?? []).map((width) => `${width}px`),
-  ]
-    .filter(Boolean)
-    .join(" ");
+  ].join(" ");
 }
 
 export function getStickyDataGridColumnIndex<T>(

@@ -6,9 +6,12 @@ import {
 } from "~/domain/time/calendar-date";
 
 const MIN_INVITE_EXPIRY_DAYS = 7;
+
 export const INVITE_EXPIRY_HELPER_TEXT =
   "Opcional. Debe vencer al menos 7 días después de hoy.";
+
 const INVALID_INVITE_EXPIRY_ERROR_TEXT = "Ingresa una fecha válida.";
+
 export const INVITE_EXPIRY_ERROR_TEXT =
   "Elige una fecha al menos 7 días después de hoy.";
 
@@ -23,6 +26,7 @@ export function parseInviteExpiryDate(
   }
 
   const expiresOn = parseCalendarDate(value);
+
   if (!expiresOn) {
     return { isErr: true, error: INVALID_INVITE_EXPIRY_ERROR_TEXT };
   }
@@ -47,6 +51,7 @@ export function getInviteExpiryFieldError(
   }
 
   const validation = parseInviteExpiryDate(value, now);
+
   return validation.isErr ? validation.error : undefined;
 }
 

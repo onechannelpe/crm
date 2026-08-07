@@ -4,6 +4,7 @@ export function formatAmount(value: number | null | undefined): string {
   if (value == null) {
     return "--";
   }
+
   return new Intl.NumberFormat(APP_LOCALE, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -14,5 +15,10 @@ export function formatRate(value: number | null | undefined): string {
   if (value == null) {
     return "--";
   }
-  return `${value.toFixed(2)}%`;
+
+  return new Intl.NumberFormat(APP_LOCALE, {
+    style: "percent",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value / 100);
 }

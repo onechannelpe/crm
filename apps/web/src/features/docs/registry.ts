@@ -22,6 +22,7 @@ const docModules = import.meta.glob<DocModule>("../../../content/docs/*.mdx", {
 
 function getDocSlug(path: string): string {
   const match = path.match(/\/([^/]+)\.mdx$/);
+
   if (!match) {
     throw new Error(`Invalid docs content path: ${path}`);
   }
@@ -33,15 +34,19 @@ function isDocFrontmatter(value: unknown): value is DocFrontmatter {
   if (!value || typeof value !== "object") {
     return false;
   }
+
   if (!("title" in value) || typeof value.title !== "string") {
     return false;
   }
+
   if (!("description" in value) || typeof value.description !== "string") {
     return false;
   }
+
   if (!("order" in value) || typeof value.order !== "number") {
     return false;
   }
+
   return true;
 }
 
@@ -61,19 +66,14 @@ export const docs = Object.entries(docModules)
   .map(([path, module]) => getDocEntry(path, module))
   .toSorted((left, right) => left.order - right.order);
 
-export type DocSlug = (typeof docs)[number]["slug"];
-
 const docsBySlug = Object.fromEntries(
   docs.map((entry) => [entry.slug, entry]),
-) as Record<DocSlug, DocEntry>;
-
-function isDocSlug(slug: string): slug is DocSlug {
-  return Object.hasOwn(docsBySlug, slug);
-}
+) as Record<string, DocEntry>;
 
 export function getDocBySlug(slug: string | undefined): DocEntry | undefined {
-  if (!slug || !isDocSlug(slug)) {
+  if (!slug) {
     return undefined;
   }
+
   return docsBySlug[slug];
 }

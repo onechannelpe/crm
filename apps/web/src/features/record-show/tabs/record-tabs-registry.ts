@@ -27,7 +27,7 @@ export type RecordTabDefinition = {
   id: RecordTabId;
   label: string;
   icon?: TabIconComponent;
-  visibleForKinds: RecordTabKind[];
+  visibleForKinds: readonly RecordTabKind[];
   isVisibleAtStage?: (stage: LeadStage) => boolean;
   component: (props: {
     context: RecordContext;
@@ -35,11 +35,11 @@ export type RecordTabDefinition = {
   }) => JSX.Element;
 };
 
-const LEAD: RecordTabKind[] = ["lead"];
-const DRAFT: RecordTabKind[] = ["draft"];
-const BOTH: RecordTabKind[] = ["lead", "draft"];
+const LEAD: readonly RecordTabKind[] = ["lead"];
+const DRAFT: readonly RecordTabKind[] = ["draft"];
+const BOTH: readonly RecordTabKind[] = ["lead", "draft"];
 
-const inAfiliacion = (stage: LeadStage) =>
+const isAfiliacionStage = (stage: LeadStage) =>
   stage === "SETUP" || stage === "LIVE";
 
 const RECORD_TABS: readonly RecordTabDefinition[] = [
@@ -76,7 +76,7 @@ const RECORD_TABS: readonly RecordTabDefinition[] = [
     icon: Building2,
     label: "Afiliación",
     visibleForKinds: LEAD,
-    isVisibleAtStage: inAfiliacion,
+    isVisibleAtStage: isAfiliacionStage,
     component: AfiliacionTab,
   },
   {
@@ -102,18 +102,23 @@ const RECORD_TABS: readonly RecordTabDefinition[] = [
   },
 ];
 
-function tabAppears(tab: RecordTabDefinition, context: RecordContext): boolean {
+function isTabVisible(
+  tab: RecordTabDefinition,
+  context: RecordContext,
+): boolean {
   if (!tab.visibleForKinds.includes(context.kind)) {
     return false;
   }
+
   if (tab.isVisibleAtStage && context.kind === "lead") {
     return tab.isVisibleAtStage(context.data.lead.stage);
   }
+
   return true;
 }
 
 export function recordTabsFor(context: RecordContext): RecordTabDefinition[] {
-  return RECORD_TABS.filter((tab) => tabAppears(tab, context));
+  return RECORD_TABS.filter((tab) => isTabVisible(tab, context));
 }
 
 export function resolveActiveRecordTabId(
@@ -123,11 +128,14 @@ export function resolveActiveRecordTabId(
   const available = RECORD_TABS.filter((tab) =>
     tab.visibleForKinds.includes(kind),
   );
+
   const match = available.find((tab) => tab.id === tabId);
+
   return match ? match.id : available[0].id;
 }
 
 export function recordTabDisplayLabel(tabId: RecordTabId): string {
   const tab = RECORD_TABS.find((entry) => entry.id === tabId);
+
   return tab?.label ?? "";
 }

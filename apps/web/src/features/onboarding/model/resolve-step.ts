@@ -16,11 +16,14 @@ export function resolveOnboardingStep(
   if (snapshot.passwordChangeRequired) {
     return "password";
   }
+
   if (!snapshot.user.phone) {
     return "profile";
   }
-  if (requestedStep) {
+
+  if (requestedStep !== null) {
     return requestedStep;
   }
+
   return "security";
 }

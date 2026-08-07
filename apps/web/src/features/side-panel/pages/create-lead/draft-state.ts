@@ -7,8 +7,7 @@ import {
 export type LeadRecordDraftState = {
   activeTab: RecordTabId;
   ruc: string;
-  // Present when the draft was opened from an answered availability inquiry;
-  // the registration converts it and may carry its answer onto the lead.
+  // Availability inquiry this draft was opened from, if any.
   inquiryId: string | null;
 } & CommercialScopeFormValues;
 

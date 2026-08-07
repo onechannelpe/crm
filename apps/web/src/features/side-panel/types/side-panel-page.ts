@@ -115,6 +115,7 @@ function createEntitySidePanelPageId(page: SidePanelPageKey, entityId: string) {
 
 export function createRootSidePanelPage(): SidePanelPageDefinition {
   const pageId = createSidePanelPageId();
+
   return {
     entry: {
       page: "root",
@@ -128,14 +129,10 @@ export function createRootSidePanelPage(): SidePanelPageDefinition {
   };
 }
 
-type CreateSearchPersonDetailSidePanelPageInput = {
+export function createSearchPersonDetailSidePanelPage(input: {
   person: PersonGroup;
   query: string;
-};
-
-export function createSearchPersonDetailSidePanelPage(
-  input: CreateSearchPersonDetailSidePanelPageInput,
-): SidePanelPageDefinition {
+}): SidePanelPageDefinition {
   const pageId = createSidePanelPageId();
 
   return {
@@ -153,14 +150,10 @@ export function createSearchPersonDetailSidePanelPage(
   };
 }
 
-type CreateSearchCompanyDetailSidePanelPageInput = {
+export function createSearchCompanyDetailSidePanelPage(input: {
   company: CompanyGroup;
   query: string;
-};
-
-export function createSearchCompanyDetailSidePanelPage(
-  input: CreateSearchCompanyDetailSidePanelPageInput,
-): SidePanelPageDefinition {
+}): SidePanelPageDefinition {
   const pageId = createEntitySidePanelPageId(
     "search-company-detail",
     String(input.company.id),
@@ -180,12 +173,6 @@ export function createSearchCompanyDetailSidePanelPage(
     },
   };
 }
-
-type CreateLeadRecordDetailSidePanelPageInput = {
-  leadId: string;
-  title: string;
-  subtitle?: string;
-};
 
 export function createLeadRecordCreateSidePanelPage(input?: {
   ruc?: string;
@@ -214,9 +201,11 @@ export function createLeadRecordCreateSidePanelPage(input?: {
   };
 }
 
-export function createLeadRecordDetailSidePanelPage(
-  input: CreateLeadRecordDetailSidePanelPageInput,
-): SidePanelPageDefinition {
+export function createLeadRecordDetailSidePanelPage(input: {
+  leadId: string;
+  title: string;
+  subtitle?: string;
+}): SidePanelPageDefinition {
   const pageId = createEntitySidePanelPageId("view-record", input.leadId);
 
   return {
@@ -237,16 +226,12 @@ export function createLeadRecordDetailSidePanelPage(
   };
 }
 
-type CreateLeadActionSidePanelPageInput = {
+export function createLeadActionSidePanelPage(input: {
   leadId: string;
   action: LeadActionKind;
   title: string;
   subtitle: string;
-};
-
-export function createLeadActionSidePanelPage(
-  input: CreateLeadActionSidePanelPageInput,
-): SidePanelPageDefinition {
+}): SidePanelPageDefinition {
   const pageId = createEntitySidePanelPageId(
     "lead-action",
     `${input.leadId}:${input.action}`,
@@ -269,15 +254,11 @@ export function createLeadActionSidePanelPage(
   };
 }
 
-type CreateDataGridDetailSidePanelPageInput = {
+export function createDataGridDetailSidePanelPage(input: {
   title: string;
   subtitle?: string;
   items: DataGridDetailSidePanelItem[];
-};
-
-export function createDataGridDetailSidePanelPage(
-  input: CreateDataGridDetailSidePanelPageInput,
-): SidePanelPageDefinition {
+}): SidePanelPageDefinition {
   const pageId = createSidePanelPageId();
 
   return {

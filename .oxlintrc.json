@@ -17,8 +17,7 @@
     "import/no-unassigned-import": "off",
     "typescript/no-unsafe-type-assertion": "error",
     "typescript/no-floating-promises": "error",
-    "typescript/no-misused-promises": "error",
-    "eslint/curly": ["error", "all"]
+    "typescript/no-misused-promises": "error"
   },
   "overrides": [
     {

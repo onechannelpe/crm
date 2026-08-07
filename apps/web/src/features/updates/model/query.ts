@@ -4,23 +4,25 @@ export function queryUpdates(
   updates: readonly UpdateEntry[],
   filter: UpdateFilter,
 ): readonly UpdateEntry[] {
-  if (filter === "all") {
-    return updates;
-  }
-  if (filter === "technical") {
-    return updates.filter((entry) => entry.kind === "technical");
-  }
-  if (filter === "release-nightly") {
-    return updates.filter(
-      (entry) => entry.kind === "release" && entry.cadence === "nightly",
-    );
-  }
-  if (filter === "release-weekly") {
-    return updates.filter(
-      (entry) => entry.kind === "release" && entry.cadence === "weekly",
-    );
-  }
+  switch (filter) {
+    case "all":
+      return updates;
 
-  filter satisfies never;
-  return updates;
+    case "technical":
+      return updates.filter((entry) => entry.kind === "technical");
+
+    case "release-nightly":
+      return updates.filter(
+        (entry) => entry.kind === "release" && entry.cadence === "nightly",
+      );
+
+    case "release-weekly":
+      return updates.filter(
+        (entry) => entry.kind === "release" && entry.cadence === "weekly",
+      );
+
+    default:
+      filter satisfies never;
+      return updates;
+  }
 }

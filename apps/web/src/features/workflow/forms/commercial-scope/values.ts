@@ -9,10 +9,6 @@ type ProjectionResult<T> =
   | { ok: true; value: T }
   | { ok: false; error: string };
 
-// Form fields stay strings until submit so text, number, and select inputs share
-// one editable shape.
-export type CommercialScopePayload = CommercialScope;
-
 export type CommercialScopeFormValues = {
   currentProvider: string;
   currentDebitRate: string;
@@ -37,55 +33,52 @@ export const EMPTY_COMMERCIAL_SCOPE_VALUES: CommercialScopeFormValues = {
 
 function isAtLeast(value: string, min: number): boolean {
   const parsed = Number(value);
+
   return value.trim() !== "" && Number.isFinite(parsed) && parsed >= min;
 }
 
 function isPositiveInteger(value: string): boolean {
   const parsed = Number(value);
-  return value.trim() !== "" && Number.isInteger(parsed) && parsed >= 1;
-}
 
-function validateCommercialScope(
-  values: CommercialScopeFormValues,
-): string | null {
-  if (!values.currentProvider.trim()) {
-    return "Proveedor actual es requerido";
-  }
-  if (!isAtLeast(values.currentDebitRate, 0)) {
-    return "Tasa débito actual es requerida";
-  }
-  if (!isAtLeast(values.currentCreditRate, 0)) {
-    return "Tasa crédito actual es requerida";
-  }
-  if (!isAtLeast(values.gpv, MIN_GPV)) {
-    return `GPV debe ser al menos ${MIN_GPV}`;
-  }
-  if (!isAtLeast(values.ticket, 0)) {
-    return "Ticket es requerido";
-  }
-  if (!values.lineOfBusiness.trim()) {
-    return "Giro de negocio es requerido";
-  }
-  if (!values.settlementBank) {
-    return "Banco de abono es requerido";
-  }
-  if (!isPositiveInteger(values.posCount)) {
-    return "Cantidad de POS debe ser un entero mayor a 0";
-  }
-  return null;
+  return value.trim() !== "" && Number.isInteger(parsed) && parsed >= 1;
 }
 
 export function toCommercialScopePayload(
   values: CommercialScopeFormValues,
-): ProjectionResult<CommercialScopePayload> {
-  const error = validateCommercialScope(values);
-  if (error) {
-    return { ok: false, error };
+): ProjectionResult<CommercialScope> {
+  if (!values.currentProvider.trim()) {
+    return { ok: false, error: "Proveedor actual es requerido" };
   }
 
-  const bank = values.settlementBank;
-  if (!bank) {
+  if (!isAtLeast(values.currentDebitRate, 0)) {
+    return { ok: false, error: "Tasa débito actual es requerida" };
+  }
+
+  if (!isAtLeast(values.currentCreditRate, 0)) {
+    return { ok: false, error: "Tasa crédito actual es requerida" };
+  }
+
+  if (!isAtLeast(values.gpv, MIN_GPV)) {
+    return { ok: false, error: `GPV debe ser al menos ${MIN_GPV}` };
+  }
+
+  if (!isAtLeast(values.ticket, 0)) {
+    return { ok: false, error: "Ticket es requerido" };
+  }
+
+  if (!values.lineOfBusiness.trim()) {
+    return { ok: false, error: "Giro de negocio es requerido" };
+  }
+
+  if (!values.settlementBank) {
     return { ok: false, error: "Banco de abono es requerido" };
+  }
+
+  if (!isPositiveInteger(values.posCount)) {
+    return {
+      ok: false,
+      error: "Cantidad de POS debe ser un entero mayor a 0",
+    };
   }
 
   return {
@@ -97,7 +90,7 @@ export function toCommercialScopePayload(
       gpv: Number(values.gpv),
       ticket: Number(values.ticket),
       lineOfBusiness: values.lineOfBusiness.trim(),
-      settlementBank: bank,
+      settlementBank: values.settlementBank,
       posCount: Number(values.posCount),
     },
   };
