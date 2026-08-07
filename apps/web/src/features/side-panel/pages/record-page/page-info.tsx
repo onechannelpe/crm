@@ -16,12 +16,12 @@ import { useLeadRecordPageState } from "./state";
 import styles from "./page-info.module.css";
 
 function firstInitial(name: string): string {
-  return (name.trim().charAt(0) || "-").toUpperCase();
+  return (name.trim()[0] ?? "-").toUpperCase();
 }
 
 export function RecordPageInfo() {
   const { pageState, leadId } = useLeadRecordPageState();
-  const detail = createAsync(() => leadDetailQuery(leadId()));
+  const leadDetail = createAsync(() => leadDetailQuery(leadId()));
 
   const isNameEmpty = () => !pageState().title.trim();
 
@@ -40,7 +40,7 @@ export function RecordPageInfo() {
       }
       title={pageState().title}
       badge={
-        <Show when={detail()} keyed>
+        <Show when={leadDetail()} keyed>
           {(data) => (
             <Tag
               color={leadStageColor(data.lead.stage)}

@@ -19,6 +19,7 @@ import {
 
 import pageStyles from "~/features/search/ui/search-page-shell.module.css";
 
+const SEARCH_LIMIT = 20;
 const EMPTY_SEARCH_MODEL = createSearchViewModel({ rows: [] });
 
 function searchKey(input: { intent: SearchIntent; query: string }): string {
@@ -34,33 +35,47 @@ export default function SearchPage() {
     model: ReturnType<typeof createSearchViewModel>;
   }>();
   const [selectedKey, setSelectedKey] = createSignal<string | null>(null);
+
+  // Keep searches imperative because each request consumes quota.
   const executeSearch = useAction(searchDirectMutation);
   const submission = useSubmission(searchDirectMutation);
   const { openPanel, closePanel } = useSidePanel();
+
   const tab = createMemo(() => tabFromIntent(intent()));
-  const committedInput = createMemo(() => {
+
+  const searchInputFromUrl = createMemo(() => {
     const urlQuery =
       typeof searchParams.query === "string" ? searchParams.query : "";
+
     const urlIntent =
       typeof searchParams.intent === "string" &&
       isSearchIntent(searchParams.intent)
         ? searchParams.intent
         : "people";
 
-    return { intent: urlIntent, query: urlQuery, limit: 20 };
+    return {
+      intent: urlIntent,
+      query: urlQuery,
+      limit: SEARCH_LIMIT,
+    };
   });
-  const committedKey = () => searchKey(committedInput());
+
+  const urlKey = createMemo(() => searchKey(searchInputFromUrl()));
+
   const model = createMemo(() => {
     const current = result();
-    return current?.key === committedKey() ? current.model : EMPTY_SEARCH_MODEL;
+
+    return current?.key === urlKey() ? current.model : EMPTY_SEARCH_MODEL;
   });
-  const resultCount = createMemo(() => model().total);
+
   let autoSearchKey: string | null = null;
+  let latestSearchId = 0;
 
   createEffect(() => {
-    const committed = committedInput();
-    setQuery(committed.query);
-    setIntent(committed.intent);
+    const input = searchInputFromUrl();
+
+    setQuery(input.query);
+    setIntent(input.intent);
   });
 
   async function runSearch(input: {
@@ -68,13 +83,25 @@ export default function SearchPage() {
     query: string;
     limit: number;
   }): Promise<void> {
+    const searchId = ++latestSearchId;
+    const key = searchKey(input);
+
     setResult(undefined);
     setSelectedKey(null);
     closePanel();
 
     const response = await executeSearch(input);
-    const key = searchKey(input);
-    setResult({ key, model: createSearchViewModel(response) });
+
+    // Ignore responses superseded by a newer search.
+    if (searchId !== latestSearchId) {
+      return;
+    }
+
+    setResult({
+      key,
+      model: createSearchViewModel(response),
+    });
+
     setSearchParams({
       intent: input.intent,
       query: input.query,
@@ -84,11 +111,12 @@ export default function SearchPage() {
 
   async function handleSearch(event?: Event): Promise<void> {
     event?.preventDefault();
+
     try {
       await runSearch({
         intent: intent(),
         query: query(),
-        limit: 20,
+        limit: SEARCH_LIMIT,
       });
     } catch {
       setSelectedKey(null);
@@ -97,13 +125,20 @@ export default function SearchPage() {
   }
 
   createEffect(() => {
-    const input = committedInput();
+    const input = searchInputFromUrl();
     const key = searchKey(input);
+
     if (!input.query || result()?.key === key || autoSearchKey === key) {
       return;
     }
+
     autoSearchKey = key;
-    void runSearch(input).catch(() => undefined);
+
+    void runSearch(input).catch(() => {
+      if (autoSearchKey === key) {
+        autoSearchKey = null;
+      }
+    });
   });
 
   return (
@@ -125,7 +160,7 @@ export default function SearchPage() {
           }}
           searching={Boolean(submission.pending)}
           onSearch={(event) => void handleSearch(event)}
-          totalCount={resultCount()}
+          totalCount={model().total}
           people={model().people}
           companies={model().companies}
           selectedKey={selectedKey()}

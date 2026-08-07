@@ -42,7 +42,6 @@ export default function SettingsMemberDetailPage() {
       { id: "permissions", label: "Permisos", icon: ShieldCheck },
     ];
 
-    // Match the server permission check and hide capacity for non-executives.
     if (
       member?.role === "executive" &&
       hasPermission(currentUser().role, "capacity:read:team")
@@ -68,7 +67,7 @@ export default function SettingsMemberDetailPage() {
     <SettingsPageLayout>
       <Show when={detail()}>
         {(member) => (
-          // Remount tabs when the member changes, but not on revalidation.
+          // Remount when the member changes, but not on revalidation.
           <Show when={member().id} keyed>
             {(memberId) => (
               <>

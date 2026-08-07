@@ -19,15 +19,19 @@ import styles from "./requests-page.module.css";
 
 export default function TeamRequestsPage() {
   const requests = createAsync(() => pendingCapacityRequestsQuery());
-  const approve = useAction(approveCapacityRequestMutation);
-  const reject = useAction(rejectCapacityRequestMutation);
-  const source = (): DataGridSource<PendingCapacityRequestView> => {
+  const approveRequest = useAction(approveCapacityRequestMutation);
+  const rejectRequest = useAction(rejectCapacityRequestMutation);
+
+  const requestSource = (): DataGridSource<PendingCapacityRequestView> => {
     const rows = requests();
+
     if (rows === undefined) {
       return { status: "pending", rows: [] };
     }
+
     return { status: "ready", rows };
   };
+
   const columns = [
     {
       key: "names",
@@ -36,7 +40,9 @@ export default function TeamRequestsPage() {
       minWidth: 240,
       sticky: true,
       renderCell: (request) =>
-        `${request.names} ${request.firstSurname} ${request.secondSurname}`,
+        [request.names, request.firstSurname, request.secondSurname]
+          .filter(Boolean)
+          .join(" "),
     },
     {
       key: "kind",
@@ -72,15 +78,18 @@ export default function TeamRequestsPage() {
             type="button"
             variant="secondary"
             size="sm"
-            onClick={() => void approve(request.id)}
+            onClick={() => void approveRequest(request.id)}
           >
             Aprobar
           </Button>
+
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => void reject(request.id, "Rechazado desde la cola")}
+            onClick={() =>
+              void rejectRequest(request.id, "Rechazado desde la cola")
+            }
           >
             Rechazar
           </Button>
@@ -96,7 +105,7 @@ export default function TeamRequestsPage() {
         columns={columns}
         emptyState="No hay solicitudes pendientes."
         rowId={(row) => row.id}
-        source={source()}
+        source={requestSource()}
       />
     </div>
   );

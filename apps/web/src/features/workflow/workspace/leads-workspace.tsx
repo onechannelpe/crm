@@ -31,6 +31,7 @@ import styles from "./styles.module.css";
 
 async function handleLeadsExport() {
   const { token } = await requestWorkflowLeadsExportDownloadToken();
+
   downloadWithToken(token);
 }
 
@@ -38,12 +39,15 @@ export function LeadsWorkspace() {
   const { currentUser } = useAuthenticatedSession();
   const user = currentUser();
 
-  const available = viewsForRole(user.role);
-  const defaultViewId = defaultViewIdForRole(user.role);
+  const canRegister = hasPermission(user.role, "lead:register");
+  const canManageIntegrations = hasPermission(user.role, "integration:manage");
+
+  const availableViews = viewsForRole(user.role);
   const route = useLeadIndexRoute({
-    availableViews: available,
-    defaultViewId,
+    availableViews,
+    defaultViewId: defaultViewIdForRole(user.role),
   });
+
   const leads = createGridSource(
     () =>
       leadListQuery(
@@ -55,10 +59,16 @@ export function LeadsWorkspace() {
             search: route.search.query(),
             pageIndex: route.page.index(),
           },
-          { id: user.id, role: user.role },
+          {
+            id: user.id,
+            role: user.role,
+          },
         ),
       ),
-    (data) => ({ rows: data.rows, totalCount: data.totalCount }),
+    (data) => ({
+      rows: data.rows,
+      totalCount: data.totalCount,
+    }),
     {
       overlay: (rows) =>
         mergeLeadRows(rows, getOptimisticLeadRows(route.activeView().id)),
@@ -73,28 +83,37 @@ export function LeadsWorkspace() {
   const openLeadRecord = useOpenLeadRecord();
   const { enqueueWarningSnackBar } = useSnackBar();
 
-  const canRegister = hasPermission(user.role, "lead:register");
   const pendingQuotations = createAsync(
     () =>
       canRegister
         ? pendingQuotationCountQuery()
         : Promise.resolve({ count: 0, limit: null }),
-    { initialValue: { count: 0, limit: null } },
+    {
+      initialValue: {
+        count: 0,
+        limit: null,
+      },
+    },
   );
+
   const isRegistrationBlocked = () => {
-    const limit = pendingQuotations().limit;
-    return limit !== null && pendingQuotations().count >= limit;
+    const { count, limit } = pendingQuotations();
+
+    return limit !== null && count >= limit;
   };
 
   const createAction = useCreateLeadRecordAction({
     isBlocked: isRegistrationBlocked,
-    onBlocked: () =>
+    onBlocked: () => {
+      const { count } = pendingQuotations();
+
       enqueueWarningSnackBar(
-        `Tienes ${pendingQuotations().count} cotizaciones pendientes de decisión. Acéptalas, solicita revisión o ciérralas para registrar nuevos clientes.`,
-      ),
+        `Tienes ${count} cotizaciones pendientes de decisión. Acéptalas, solicita revisión o ciérralas para registrar nuevos clientes.`,
+      );
+    },
   });
+
   const recordImport = useRecordsImport();
-  const canManageIntegrations = hasPermission(user.role, "integration:manage");
 
   const recordIndex = {
     id: "leads-workspace",
@@ -102,18 +121,22 @@ export function LeadsWorkspace() {
     ariaLabel: "Clientes",
     class: styles.page,
     pickerIcon: List,
+
     object: {
       label: "Registros",
       icon: Building2,
       color: "blue",
     },
+
     columns: workspaceColumnsForRole(user.role),
     source: leads.source,
+
     search: {
       value: route.search.value,
       placeholder: "RUC, cliente, dirección o ejecutivo",
       set: route.search.set,
     },
+
     pagination: {
       currentPage: route.page.index,
       pageSize: LEAD_PAGE_SIZE,
@@ -129,18 +152,25 @@ export function LeadsWorkspace() {
         }
       },
     },
+
     onRowOpen: openLeadRecord,
     rowOpenIndicator: "panel",
+
     emptyState: {
       icon: Building2,
       title: "No hay clientes",
       description: "No hay clientes que coincidan con los filtros actuales.",
     },
+
     createAction: canRegister ? createAction : undefined,
+
     views: {
-      catalog: { available },
+      catalog: {
+        available: availableViews,
+      },
       control: route.view,
     },
+
     actions: canManageIntegrations
       ? [
           {
@@ -153,10 +183,12 @@ export function LeadsWorkspace() {
           },
         ]
       : undefined,
+
     filter: {
       catalog: LEAD_WORKSPACE_FILTER,
       control: route.filter,
     },
+
     sort: {
       catalog: LEAD_WORKSPACE_SORT,
       control: route.sort,
@@ -175,6 +207,7 @@ export function LeadsWorkspace() {
         style={{ display: "none" }}
         onChange={recordImport.onFileInputChange}
       />
+
       <RecordIndexScreen definition={recordIndex} />
     </ImportDropzone>
   );

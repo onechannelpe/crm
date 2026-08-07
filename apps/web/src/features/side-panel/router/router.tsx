@@ -24,6 +24,7 @@ export function Router(props: { isMobile: boolean }) {
         >
           <TopBar isMobile={props.isMobile} />
         </Motion.div>
+
         <div class={styles.pageBody}>
           <Show when={currentEntry()} keyed>
             {(entry) => {

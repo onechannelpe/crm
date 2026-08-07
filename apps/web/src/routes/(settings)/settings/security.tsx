@@ -132,6 +132,9 @@ export default function SecurityPage() {
   const [currentPassword, setCurrentPassword] = createSignal("");
   const [newPassword, setNewPassword] = createSignal("");
   const [confirmPassword, setConfirmPassword] = createSignal("");
+  const [freshRecoveryCodes, setFreshRecoveryCodes] = createSignal<string[]>(
+    [],
+  );
 
   const removePasskeysDialog = useConfirmDialog();
   const disableTotpDialog = useConfirmDialog();
@@ -142,7 +145,7 @@ export default function SecurityPage() {
   const removePasskeys = useAction(removeAllPasskeysMutation);
   const removePasskeysSubmission = useSubmission(removeAllPasskeysMutation);
 
-  const disableAuthenticator = useAction(disableTotpMutation);
+  const disableTotp = useAction(disableTotpMutation);
   const disableTotpSubmission = useSubmission(disableTotpMutation);
 
   const regenerateRecovery = useAction(regenerateRecoveryCodesMutation);
@@ -155,13 +158,8 @@ export default function SecurityPage() {
     acknowledgeRecoveryCodesMutation,
   );
 
-  const savePassword = useAction(changePasswordMutation);
+  const changePassword = useAction(changePasswordMutation);
   const changePasswordSubmission = useSubmission(changePasswordMutation);
-
-  // Recovery codes are shown once, so retain them until acknowledged.
-  const [freshRecoveryCodes, setFreshRecoveryCodes] = createSignal<string[]>(
-    [],
-  );
 
   function showFreshRecoveryCodes(codes: string[]) {
     setFreshRecoveryCodes(codes);
@@ -196,7 +194,7 @@ export default function SecurityPage() {
 
   async function handleDisableTotp(): Promise<void> {
     try {
-      const { message } = await disableAuthenticator();
+      const { message } = await disableTotp();
 
       totpEnrollment.reset();
       enqueueSuccessSnackBar(message);
@@ -243,9 +241,8 @@ export default function SecurityPage() {
     }
 
     try {
-      await savePassword(currentPassword(), newPassword());
+      await changePassword(currentPassword(), newPassword());
 
-      // Changing the password revokes the current session.
       enqueueSuccessSnackBar(
         "Contraseña actualizada. Inicia sesión nuevamente.",
       );

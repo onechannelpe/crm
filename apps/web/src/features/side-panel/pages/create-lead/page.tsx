@@ -34,11 +34,13 @@ export function CreateLeadPage() {
 
   const validRuc = createMemo(() => {
     const value = draftRuc().trim();
+
     return /^\d{11}$/.test(value) ? value : null;
   });
 
   const bootstrapPreview = createAsync(() => {
     const ruc = validRuc();
+
     return ruc ? leadBootstrapPreviewQuery(ruc) : Promise.resolve(null);
   });
 
@@ -62,7 +64,7 @@ export function CreateLeadPage() {
       navigateTo(
         createLeadRecordDetailSidePanelPage({
           leadId,
-          title: previewLegalName() || `RUC ${ruc}`,
+          title: previewLegalName() ?? `RUC ${ruc}`,
           subtitle: `RUC ${ruc}`,
         }),
         { resetStack: true },
@@ -111,9 +113,6 @@ export function CreateLeadPage() {
             disabled: submitting(),
           }}
           options={
-            // The fork to a probe: an inquiry asks for the RUC's availability
-            // without registering. Hidden when this draft already converts an
-            // inquiry, where the question is answered.
             draftInquiryId() === null
               ? [
                   {
@@ -122,6 +121,7 @@ export function CreateLeadPage() {
                     icon: CircleQuestionMark,
                     onSelect: () => {
                       const ruc = draftRuc().trim();
+
                       closePanel();
                       navigate(
                         ruc
