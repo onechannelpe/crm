@@ -1,0 +1,10 @@
+{
+  "$schema": "https://schema.fallow.tools/.fallowrc.json",
+  "extends": "../../.fallowrc.json",
+  "ignorePatterns": [
+    "**/*.generated.ts",
+    "**/*.generated.tsx",
+    "**/.wxt/**",
+    "entrypoints/popup/style.css"
+  ]
+}

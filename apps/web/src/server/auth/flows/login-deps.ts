@@ -5,7 +5,6 @@ import type { OAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
 import { type UserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
 import { type UserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import type { EventsWriter } from "~/server/event-logs/events-repo";
-import type { NotificationIntent } from "~/server/notifications/types";
 import type { SessionRepository } from "~/server/sessions/repos-sessions";
 import type { PasskeysRepo } from "~/server/users/repos-passkeys";
 import type { UsersRepo } from "~/server/users/repos-users";
@@ -23,7 +22,4 @@ export type AuthLoginRepos = {
   userRecoveryCodes: UserRecoveryCodesRepo;
   passkeys: PasskeysRepo;
   webauthnChallenges: WebauthnChallengesRepo;
-  notificationIntents: {
-    enqueue(intents: NotificationIntent[], occurredAt: Date): Promise<void>;
-  };
 };

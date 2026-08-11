@@ -1,0 +1,53 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "publicPackages": [
+    "@crm/contracts",
+    "@crm/email-composer",
+    "@crm/fetch-refs",
+    "@crm/images",
+    "@crm/message-channels",
+    "@crm/solid-motion"
+  ],
+  "ignorePatterns": [
+    "**/*.generated.ts",
+    "**/*.generated.tsx",
+    "**/public/**",
+    "**/.output/**",
+    "**/content/**"
+  ],
+  "rules": {
+    "unused-files": "warn",
+    "unused-exports": "warn",
+    "unused-types": "off",
+    "unused-dependencies": "warn",
+    "unused-dev-dependencies": "warn",
+    "unused-optional-dependencies": "warn",
+    "unused-class-members": "off",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "error",
+    "duplicate-exports": "warn",
+    "circular-dependencies": "warn",
+    "boundary-violation": "warn",
+    "type-only-dependencies": "warn",
+    "test-only-dependencies": "warn",
+    "stale-suppressions": "warn"
+  },
+  "duplicates": {
+    "mode": "mild",
+    "minTokens": 80,
+    "minLines": 8,
+    "skipLocal": true,
+    "ignoreImports": true
+  },
+  "health": {
+    "ignore": [
+      "**/tests/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx",
+      "**/*.bench.ts",
+      "**/*.bench.tsx"
+    ]
+  }
+}

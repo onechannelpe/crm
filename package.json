@@ -4,7 +4,7 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "tools/*"
+    "tools/codegen"
   ],
   "scripts": {
     "dev": "bun run --parallel --no-exit-on-error dev:infra dev:engine dev:web dev:worker",

@@ -18,7 +18,7 @@ import type { AuthLoginContext } from "~/server/auth/infrastructure/login-contex
 import { evaluateLoginPolicy } from "~/server/auth/policy/engine";
 import type { AuthProof } from "~/server/auth/policy/types";
 import { recordAuthEvent } from "~/server/auth/security/auth-events";
-import { enqueueAlertOnNewLoginSource } from "~/server/auth/security/login-source-alert";
+import { recordNewLoginSource } from "~/server/auth/security/login-source-audit";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
 import { createAuditedSessionIssuer } from "~/server/auth/session/session.service";
 import type { OperationContext } from "~/server/platform/operation/context";
@@ -126,7 +126,7 @@ export async function completePrimaryAuthProof(params: {
         return Ok({ kind: "passkey_required", flow });
       }
 
-      await enqueueAlertOnNewLoginSource({
+      await recordNewLoginSource({
         user: params.context.user,
         ipAddress: params.request.ipAddress,
         method: params.proof.kind,

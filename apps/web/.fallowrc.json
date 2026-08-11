@@ -1,5 +1,6 @@
 {
   "$schema": "https://schema.fallow.tools/.fallowrc.json",
+  "extends": "../../.fallowrc.json",
   "entry": [
     "src/app.tsx",
     "src/entry-client.tsx",
@@ -10,7 +11,6 @@
     "src/rpc/**/*.{ts,tsx}",
     "src/server/platform/database/migrate-cli.ts",
     "src/server/platform/database/seed.ts",
-    "src/workers/maintenance-runner.ts",
     "tools/e2e/prepare.ts",
     "vite.config.ts",
     "tracer.ts",
@@ -41,6 +41,7 @@
   ],
   "ignoreUnresolvedImports": [
     "~/*",
+    "@/*",
     "@tests/*",
     "virtual:*",
     "@solidjs/start/*"
@@ -50,8 +51,54 @@
     "@crm/contracts",
     "@crm/email-composer",
     "@crm/message-channels",
+    "crossws",
+    "srvx",
     "solid-mdx"
   ],
+  "ignoreExports": [
+    {
+      "file": "src/routes/api/extension/**/*.ts",
+      "exports": ["POST"]
+    },
+    {
+      "file": "src/server/platform/database/schema/modules/*.ts",
+      "exports": ["createTables"]
+    }
+  ],
+  "rules": {
+    "unused-files": "warn",
+    "unused-exports": "warn",
+    "unused-types": "off",
+    "unused-dependencies": "warn",
+    "unused-dev-dependencies": "warn",
+    "unused-class-members": "off",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "error",
+    "duplicate-exports": "warn",
+    "circular-dependencies": "warn",
+    "boundary-violation": "warn",
+    "type-only-dependencies": "warn",
+    "test-only-dependencies": "warn",
+    "stale-suppressions": "warn"
+  },
+  "duplicates": {
+    "mode": "mild",
+    "minTokens": 80,
+    "minLines": 8,
+    "skipLocal": true,
+    "ignoreImports": true
+  },
+  "health": {
+    "ignore": [
+      "**/tests/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx",
+      "**/*.bench.ts",
+      "**/*.bench.tsx"
+    ]
+  },
   "boundaries": {
     "zones": [
       {
@@ -390,10 +437,5 @@
         ]
       }
     ]
-  },
-  "rules": {
-    "unused-files": "warn",
-    "unused-exports": "warn",
-    "unused-types": "warn"
   }
 }
