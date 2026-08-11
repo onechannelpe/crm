@@ -1,3 +1,5 @@
+import { isPlainRecord } from "~/shared/type-guards";
+
 const AUTH_FUNNEL_SOURCES = ["client", "server"] as const;
 
 export type AuthFunnelSource = (typeof AUTH_FUNNEL_SOURCES)[number];
@@ -111,6 +113,34 @@ export function isAuthFunnelScreen(value: unknown): value is AuthFunnelScreen {
     typeof value === "string" &&
     AUTH_FUNNEL_SCREENS.some((screen) => screen === value)
   );
+}
+
+export function readAuthFunnelClientEvent(
+  input: unknown,
+): AuthFunnelClientEventPayload | null {
+  if (!isPlainRecord(input)) {
+    return null;
+  }
+
+  if (input.kind === "screen_viewed" && isAuthFunnelScreen(input.screen)) {
+    return { kind: "screen_viewed", screen: input.screen };
+  }
+
+  if (
+    input.kind === "passkey_result" &&
+    input.outcome === "failed" &&
+    (input.code === "cancelled" ||
+      input.code === "unsupported" ||
+      input.code === "server_error")
+  ) {
+    return {
+      kind: "passkey_result",
+      outcome: "failed",
+      code: input.code,
+    };
+  }
+
+  return null;
 }
 
 export function isAuthFunnelEventName(

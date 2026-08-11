@@ -37,12 +37,9 @@ export async function validateGpvSnapshotInTransaction(
     .select("id")
     .where("state", "=", "active")
     .executeTakeFirst();
-  const issues = [
-    ...(active
-      ? await compareSnapshots(db, active.id, snapshotId, validatedAt)
-      : []),
-    ...(await findCrmWarnings(db, snapshotId, validatedAt)),
-  ];
+  const issues = active
+    ? await compareSnapshots(db, active.id, snapshotId, validatedAt)
+    : [];
 
   for (const chunk of chunks(issues, ISSUE_CHUNK)) {
     // eslint-disable-next-line no-await-in-loop
@@ -159,66 +156,4 @@ function loadPlacementComparisonRows(
     .select(["placement_key", "ruc", "sale_month"])
     .where("snapshot_id", "=", snapshotId)
     .execute();
-}
-
-async function findCrmWarnings(
-  db: DatabaseExecutor,
-  snapshotId: GpvSnapshotId,
-  createdAt: Date,
-): Promise<IssueInsert[]> {
-  const rows = await db
-    .selectFrom("gpv_snapshot_placements as placement")
-    .leftJoin(
-      "organizations as organization",
-      "organization.ruc",
-      "placement.ruc",
-    )
-    .leftJoin(
-      "organization_current_owners as owner",
-      "owner.organization_id",
-      "organization.id",
-    )
-    .select([
-      "placement.ruc",
-      "organization.id as organization_id",
-      "owner.executive_id",
-    ])
-    .where("placement.snapshot_id", "=", snapshotId)
-    .distinct()
-    .execute();
-
-  return rows.flatMap((row): IssueInsert[] => {
-    if (!row.organization_id) {
-      return [
-        {
-          snapshot_id: snapshotId,
-          issue_key: `crm-ruc:${row.ruc}`,
-          issue_type: "crm_ruc_missing",
-          entity_key: row.ruc,
-          severity: "warning",
-          detail: "El RUC no existe todavía en CRM.",
-          previous_value: null,
-          candidate_value: JSON.stringify({ ruc: row.ruc }),
-          created_at: createdAt,
-        },
-      ];
-    }
-    if (!row.executive_id) {
-      return [
-        {
-          snapshot_id: snapshotId,
-          issue_key: `crm-owner:${row.ruc}`,
-          issue_type: "crm_owner_missing",
-          entity_key: row.ruc,
-          severity: "warning",
-          detail: "El RUC no tiene un ejecutivo actual en CRM.",
-          previous_value: null,
-          candidate_value: JSON.stringify({ ruc: row.ruc }),
-          created_at: createdAt,
-        },
-      ];
-    }
-
-    return [];
-  });
 }

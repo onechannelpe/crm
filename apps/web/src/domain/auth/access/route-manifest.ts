@@ -7,6 +7,7 @@ export type AppPath =
   | "/settings/security-policies"
   | "/settings/capacity-policies"
   | "/settings/quotation-policies"
+  | "/settings/commission-scheme"
   | "/settings/event-logs"
   | "/monitoring"
   | "/settings/members"
@@ -43,6 +44,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/settings/security-policies": { permission: "admin:manage" },
   "/settings/capacity-policies": { permission: "capacity:policy:manage" },
   "/settings/quotation-policies": { permission: "quotation:policy:manage" },
+  "/settings/commission-scheme": { permission: "commission:manage" },
   "/settings/event-logs": { permission: "audit:read" },
   "/monitoring": { permission: "admin:read" },
   "/settings/members": { permission: "team:read" },

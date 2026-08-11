@@ -1,3 +1,4 @@
+import type { CommissionManagerView } from "~/contracts/merchant-stats/commission-views";
 import type { GpvSnapshotProgressEvent } from "~/contracts/merchant-stats/imports";
 import type {
   BookFilter,
@@ -17,7 +18,9 @@ import type {
   GpvSnapshotJobId,
   UserId,
 } from "~/domain/ids";
+import type { CommissionSchemeRules } from "~/domain/merchant-stats/commission";
 import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
+import { appCalendarDateAt } from "~/domain/time/app-time";
 import type {
   FileOperationContext,
   FileRepos,
@@ -29,7 +32,13 @@ import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { OperationContext } from "~/server/platform/operation/context";
 import type { Result } from "~/shared/result";
 
+import {
+  setCommissionScheme,
+  type SetCommissionSchemeInput,
+} from "../commands/set-commission-scheme";
 import { setTarget, type SetTargetInput } from "../commands/set-target";
+import { getCommissionSchemeAsOf } from "../commission/scheme-repo";
+import { getCommissionManagerView } from "../commission/ui/manager-view";
 import {
   adjustMerchantMonthCredit,
   type AdjustMerchantMonthCreditInput,
@@ -110,6 +119,24 @@ export function createMerchantStatsRuntime(deps: MerchantStatsRuntimeDeps) {
         operation: OperationContext,
       ): Promise<Result<void, DomainError>> =>
         setTarget(deps.db, { ...input, operation }),
+    },
+    commission: {
+      getScheme: (
+        operation: OperationContext,
+      ): Promise<CommissionSchemeRules> =>
+        getCommissionSchemeAsOf(
+          deps.db,
+          appCalendarDateAt(operation.operationAt),
+        ),
+      setScheme: (
+        input: Omit<SetCommissionSchemeInput, "operation">,
+        operation: OperationContext,
+      ): Promise<Result<void, DomainError>> =>
+        setCommissionScheme(deps.db, { ...input, operation }),
+      managerView: (
+        operation: OperationContext,
+      ): Promise<CommissionManagerView> =>
+        getCommissionManagerView(deps.db, operation),
     },
     imports: {
       submit: (

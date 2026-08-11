@@ -43,14 +43,17 @@ export async function verifyPasskeyLogin(
   },
   operation: OperationContext,
 ): Promise<Result<VerifiedPasskeyLogin, FinishPasskeyLoginError>> {
+  const now = operation.operationAt;
   const flow = await repos.loginFlows.findById(input.flowId);
+
   if (
     !flow ||
     flow.state !== "passkey" ||
-    flow.expires_at < operation.operationAt ||
+    flow.expires_at < now ||
     !flow.challenge_id
   ) {
     await deleteLoginFlow(flow, repos);
+
     return Err({ kind: "flow_expired" });
   }
 
@@ -58,15 +61,18 @@ export async function verifyPasskeyLogin(
   const identifier = challenge?.user_id
     ? `user:${challenge.user_id}`
     : `challenge:${flow.challenge_id}`;
+
   const throttleService = createAuthThrottleService({
     authThrottle: repos.authThrottle,
   });
-  const throttle = await throttleService.checkPasskeyVerifyThrottle(
+
+  const throttleCheck = await throttleService.checkPasskeyVerifyThrottle(
     identifier,
     input.ipAddress,
-    operation.operationAt,
+    now,
   );
-  if (!throttle.allowed) {
+
+  if (!throttleCheck.allowed) {
     await recordAuthEvent(repos, {
       userId: challenge?.user_id ?? null,
       identifier,
@@ -75,21 +81,23 @@ export async function verifyPasskeyLogin(
       stage: "verify",
       outcome: "throttled",
       reason: "threshold_exceeded",
-      occurredAt: operation.operationAt,
+      occurredAt: now,
     });
+
     return Err({ kind: "invalid_credentials" });
   }
 
   if (
     !challenge ||
     challenge.type !== "authentication" ||
-    challenge.expires_at < operation.operationAt
+    challenge.expires_at < now
   ) {
     await throttleService.recordPasskeyVerifyFailure(
       identifier,
       input.ipAddress,
-      operation.operationAt,
+      now,
     );
+
     await recordAuthEvent(repos, {
       userId: challenge?.user_id ?? null,
       identifier,
@@ -98,9 +106,11 @@ export async function verifyPasskeyLogin(
       stage: "verify",
       outcome: "failure",
       reason: challenge ? "challenge_expired" : "invalid_challenge",
-      occurredAt: operation.operationAt,
+      occurredAt: now,
     });
+
     await deleteLoginFlow(flow, repos);
+
     return Err({ kind: "invalid_credentials" });
   }
 
@@ -109,9 +119,11 @@ export async function verifyPasskeyLogin(
       input.response,
       challenge.challenge,
     );
+
     if (!verification.verified) {
       throw new PasskeyRequestError("Authentication verification failed");
     }
+
     if (challenge.user_id && verification.userId !== challenge.user_id) {
       throw new PasskeyRequestError("Credential user mismatch");
     }
@@ -132,8 +144,9 @@ export async function verifyPasskeyLogin(
     await throttleService.recordPasskeyVerifyFailure(
       identifier,
       input.ipAddress,
-      operation.operationAt,
+      now,
     );
+
     await recordAuthEvent(repos, {
       userId: challenge.user_id,
       identifier,
@@ -142,9 +155,11 @@ export async function verifyPasskeyLogin(
       stage: "verify",
       outcome: "failure",
       reason: "assertion_invalid",
-      occurredAt: operation.operationAt,
+      occurredAt: now,
     });
+
     await deleteLoginFlow(flow, repos);
+
     return Err({ kind: "invalid_credentials" });
   }
 }

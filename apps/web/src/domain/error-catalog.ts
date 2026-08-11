@@ -136,6 +136,71 @@ export const ERROR_CATALOG = {
     kind: "not_found",
     message: "No se encontró el recurso solicitado.",
   },
+  commission_scheme_not_found: {
+    kind: "not_found",
+    message: "No se encontró un esquema de comisiones vigente.",
+  },
+
+  commission_target_negative: {
+    kind: "validation",
+    message: "La meta de la caja 3 no puede ser negativa.",
+  },
+  commission_activation_threshold_negative: {
+    kind: "validation",
+    message: "Los criterios de activación no pueden ser negativos.",
+  },
+  commission_m0_target_negative: {
+    kind: "validation",
+    message: "La meta de activas en M0 no puede ser negativa.",
+  },
+  commission_active_pos_threshold_negative: {
+    kind: "validation",
+    message: "El mínimo de POS activo no puede ser negativo.",
+  },
+  commission_corporate_caja2_threshold_negative: {
+    kind: "validation",
+    message: "Los criterios de la caja 2 de mesa 1 no pueden ser negativos.",
+  },
+  commission_reversion_threshold_negative: {
+    kind: "validation",
+    message: "El mínimo de M2 para evitar la reversión no puede ser negativo.",
+  },
+  commission_reversion_pct_out_of_range: {
+    kind: "validation",
+    message: "El porcentaje de reversión debe estar entre 0% y 100%.",
+  },
+  commission_activation_floor_negative: {
+    kind: "validation",
+    message: "El mínimo de activación por mesa no puede ser negativo.",
+  },
+  commission_inactive_rate_out_of_range: {
+    kind: "validation",
+    message: "El porcentaje máximo de inactivas debe estar entre 0% y 100%.",
+  },
+  commission_executive_bar_negative: {
+    kind: "validation",
+    message: "El mínimo de activación por ejecutivo no puede ser negativo.",
+  },
+  commission_bands_empty: {
+    kind: "validation",
+    message: "Debe haber al menos un rango configurado.",
+  },
+  commission_bands_not_ascending: {
+    kind: "validation",
+    message: "Los rangos deben estar en orden ascendente y no superponerse.",
+  },
+  commission_band_range_invalid: {
+    kind: "validation",
+    message: "El máximo de un rango debe ser mayor que su mínimo.",
+  },
+  commission_band_open_end_not_last: {
+    kind: "validation",
+    message: "Solo el último rango puede quedar sin máximo.",
+  },
+  commission_band_payout_negative: {
+    kind: "validation",
+    message: "El pago de un rango no puede ser negativo.",
+  },
 
   request_not_pending: {
     kind: "conflict",

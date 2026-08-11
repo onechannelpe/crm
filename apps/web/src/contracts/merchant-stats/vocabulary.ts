@@ -27,6 +27,7 @@ export const QUALITY_ISSUES = [
   "no_owner",
   "no_target",
   "serial_mismatch",
+  "no_mesa",
 ] as const;
 export type QualityIssue = (typeof QUALITY_ISSUES)[number];
 

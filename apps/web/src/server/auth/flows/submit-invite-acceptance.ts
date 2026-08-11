@@ -1,7 +1,4 @@
-import {
-  validateInviteAcceptance,
-  type InviteAcceptanceInput,
-} from "~/domain/auth/invite/activation-input";
+import { validateInviteAcceptance } from "~/domain/auth/invite/activation-input";
 import type { DomainError } from "~/domain/errors";
 import { createSessionIssuer } from "~/server/auth/session/session.service";
 import type { InviteService } from "~/server/invites/application/types";
@@ -22,7 +19,7 @@ export async function submitInviteAcceptance(
     ipAddress: string;
     userAgent: string | null;
   },
-  input: InviteAcceptanceInput,
+  input: unknown,
   operation: OperationContext,
 ): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
   const validated = validateInviteAcceptance(input);

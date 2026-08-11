@@ -11,6 +11,7 @@ import {
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
+import CircleCheckBig from "~/components/icons/circle-check-big";
 import type {
   ExecutiveGpvMerchantView,
   ExecutiveGpvProgressView,
@@ -169,6 +170,15 @@ function merchantColumns(
       ),
     },
     {
+      key: "activation",
+      label: "Activación",
+      icon: CircleCheckBig,
+      width: 130,
+      renderCell: (merchant) => (
+        <span class={styles.muted}>{activationLabel(merchant.isActive)}</span>
+      ),
+    },
+    {
       key: "lastTransaction",
       label: "Última transacción",
       icon: CalendarDays,
@@ -180,6 +190,14 @@ function merchantColumns(
       ),
     },
   ];
+}
+
+function activationLabel(isActive: boolean | null): string {
+  if (isActive === null) {
+    return "Pendiente";
+  }
+
+  return isActive ? "Activo" : "Inactivo";
 }
 
 function lastTransactionLabel(

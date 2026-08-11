@@ -51,7 +51,9 @@ export type Permission =
   | "fulfillment:client-step"
   | "dashboards:read"
   | "dashboards:read:own"
-  | "dashboards:manage";
+  | "dashboards:manage"
+  | "commission:read"
+  | "commission:manage";
 
 export const ROLES = [
   "executive",
@@ -151,6 +153,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "dashboards:read",
     "dashboards:read:own",
     "dashboards:manage",
+    "commission:read",
+    "commission:manage",
   ],
   logistics: ["inventory:read", "inventory:manage"],
   hr: ["hr:read", "hr:manage", "team:read"],
@@ -191,6 +195,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "dashboards:read",
     "dashboards:read:own",
     "dashboards:manage",
+    "commission:read",
+    "commission:manage",
   ],
   superuser: [
     "lead:note:add",
@@ -232,6 +238,8 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "dashboards:read",
     "dashboards:read:own",
     "dashboards:manage",
+    "commission:read",
+    "commission:manage",
   ],
 };
 

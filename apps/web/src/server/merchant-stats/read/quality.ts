@@ -49,7 +49,7 @@ function serialMismatched(eb: SaleContext): Expression<SqlBool> {
 export async function getQualitySummary(
   db: DatabaseExecutor,
 ): Promise<QualitySummary> {
-  const [noOwner, noTarget, serialMismatch] = await Promise.all([
+  const [noOwner, noTarget, serialMismatch, noMesa] = await Promise.all([
     db
       .selectFrom("merchant_monthly_gpv as m")
       .leftJoin("merchant_month_credit as credit", (join) =>
@@ -71,16 +71,23 @@ export async function getQualitySummary(
       .where((eb) => serialMismatched(eb))
       .select((eb) => eb.fn.countAll<number>().as("count"))
       .executeTakeFirst(),
+    db
+      .selectFrom("merchant_sales as s")
+      .where("s.mesa", "is", null)
+      .select((eb) => eb.fn.countAll<number>().as("count"))
+      .executeTakeFirst(),
   ]);
 
   const counts: QualitySummary = {
     no_owner: noOwner?.count ?? 0,
     no_target: 0,
     serial_mismatch: 0,
+    no_mesa: 0,
   };
 
   counts.no_target = noTarget?.count ?? 0;
   counts.serial_mismatch = serialMismatch?.count ?? 0;
+  counts.no_mesa = noMesa?.count ?? 0;
 
   return counts;
 }
@@ -95,6 +102,9 @@ export async function getQualityRows(
   }
   if (issue === "no_target") {
     return noTargetRows(db, page);
+  }
+  if (issue === "no_mesa") {
+    return noMesaRows(db, page);
   }
   return noOwnerRows(db, page);
 }
@@ -243,5 +253,44 @@ async function serialMismatchRows(
     confidence: "none" as const,
     detail: QUALITY_ISSUE_COPY.serial_mismatch.detail,
     evidence: { culqiSerial: row.serial_number },
+  }));
+}
+
+async function noMesaRows(
+  db: DatabaseExecutor,
+  page: Page,
+): Promise<QualityRow[]> {
+  const rows = await db
+    .selectFrom("merchant_sales as s")
+    .leftJoin("organizations as o", "o.ruc", "s.ruc")
+    .leftJoin("merchant_monthly_gpv as m", (join) =>
+      join.onRef("m.ruc", "=", "s.ruc").onRef("m.month", "=", "s.sale_month"),
+    )
+    .where("s.mesa", "is", null)
+    .select([
+      "s.ruc",
+      "s.sale_month",
+      "s.trade_name",
+      "s.culqi_user_name",
+      "m.gpv",
+      "o.legal_name",
+    ])
+    .orderBy("m.gpv", "desc")
+    .limit(page.limit)
+    .offset(page.offset)
+    .execute();
+
+  return rows.map((row) => ({
+    ruc: row.ruc,
+    month: monthFromStorageDate(row.sale_month),
+    organizationName: row.legal_name,
+    tradeName: row.trade_name,
+    sellerName: null,
+    culqiUserName: row.culqi_user_name,
+    gpvAtStake: row.gpv ?? 0,
+    method: "none" as const,
+    confidence: "none" as const,
+    detail: QUALITY_ISSUE_COPY.no_mesa.detail,
+    evidence: null,
   }));
 }

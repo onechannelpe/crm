@@ -21,12 +21,14 @@ export async function markNotificationRead(
         notificationId: reader.id("notificationId", AppNotificationId),
       })),
 
-    telemetry: ({ notificationId }) => ({ notificationId }),
+    telemetry: (command) => ({ notificationId: command.notificationId }),
 
-    execute: async ({ actor }, { notificationId }) => {
-      await application.notifications.markRead(actor.userId, notificationId, {
-        actor,
-      });
+    execute: async (ctx, command) => {
+      await application.notifications.markRead(
+        ctx.actor.userId,
+        command.notificationId,
+        ctx,
+      );
 
       return Ok(undefined);
     },
@@ -40,8 +42,8 @@ export async function markAllNotificationsRead(): Promise<void> {
     name: "notifications.mark_all_read",
     access: { kind: "auth" },
 
-    execute: async ({ actor }) => {
-      await application.notifications.markAllRead(actor.userId, { actor });
+    execute: async (ctx) => {
+      await application.notifications.markAllRead(ctx.actor.userId, ctx);
 
       return Ok(undefined);
     },

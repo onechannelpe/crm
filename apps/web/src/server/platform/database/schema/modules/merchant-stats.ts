@@ -274,6 +274,18 @@ export async function createTables(db: Kysely<Database>): Promise<void> {
     .execute();
 
   await db.schema
+    .createTable("commission_scheme_versions")
+    .addColumn("id", "uuid", (col) => col.primaryKey().defaultTo(sql`uuidv7()`))
+    .addColumn("effective_from", "date", (col) => col.notNull())
+    .addColumn("rules", "jsonb", (col) => col.notNull())
+    .addColumn("set_by", "uuid", (col) => col.notNull().references("users.id"))
+    .addColumn("set_at", "timestamptz", (col) => col.notNull())
+    .addUniqueConstraint("commission_scheme_versions_effective_from", [
+      "effective_from",
+    ])
+    .execute();
+
+  await db.schema
     .createTable("merchant_gpv_targets")
     .addColumn("organization_id", "uuid", (col) =>
       col.notNull().references("organizations.id").onDelete("cascade"),

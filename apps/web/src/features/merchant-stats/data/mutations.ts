@@ -4,6 +4,11 @@ import {
   adjustMonthCredit,
   setMerchantTarget,
 } from "~/rpc/merchant-stats/attribution";
+import {
+  commissionManagerDashboardQuery,
+  commissionSchemeDraftQuery,
+  setCommissionScheme,
+} from "~/rpc/merchant-stats/commission-scheme";
 import { requestMerchantGpvExportDownloadToken } from "~/rpc/merchant-stats/dashboard";
 import { gpvSnapshotQuery } from "~/rpc/merchant-stats/gpv-snapshot";
 import {
@@ -38,6 +43,20 @@ export const setMerchantTargetMutation = action(
     return json(result, { revalidate: ATTRIBUTION_GPV_QUERY_KEYS });
   },
   "setMerchantGpvTarget",
+);
+
+export const setCommissionSchemeMutation = action(
+  async (input: Parameters<typeof setCommissionScheme>[0]) => {
+    const result = await setCommissionScheme(input);
+
+    return json(result, {
+      revalidate: [
+        commissionSchemeDraftQuery.key,
+        commissionManagerDashboardQuery.key,
+      ],
+    });
+  },
+  "setCommissionScheme",
 );
 
 export const uploadMerchantReportMutation = action(

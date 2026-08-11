@@ -4,12 +4,13 @@ import { fail, forbidden } from "~/domain/errors";
 import type { UserId } from "~/domain/ids";
 import { throwDomain } from "~/server/platform/action/domain-error";
 
-// Missing records resolve as not_found; non-owners as forbidden unless their
-// role bypasses ownership. Prefer repo-level WHERE ownership for pure mutations
-// that can encode the user in SQL.
+export const ADMIN_BYPASS = new Set<Role>(["admin", "superuser"]);
+
+// Missing records are not found; non-owners are forbidden unless their role
+// bypasses ownership. Prefer SQL ownership checks for simple mutations.
 export function assertOwnedRecord<T>(
   record: T | null | undefined,
-  getOwnerId: (r: T) => UserId | null | undefined,
+  getOwnerId: (record: T) => UserId | null | undefined,
   session: Pick<AuthSession, "userId" | "role">,
   options?: {
     resourceName?: string;
@@ -20,12 +21,11 @@ export function assertOwnedRecord<T>(
     throwDomain(fail("resource_not_found"));
   }
 
-  const bypass = options?.bypassRoles ?? ADMIN_BYPASS;
-  if (!bypass.has(session.role) && getOwnerId(record) !== session.userId) {
+  const bypassRoles = options?.bypassRoles ?? ADMIN_BYPASS;
+
+  if (!bypassRoles.has(session.role) && getOwnerId(record) !== session.userId) {
     throwDomain(forbidden({ code: "ownership_forbidden" }));
   }
 
   return record;
 }
-
-export const ADMIN_BYPASS = new Set<Role>(["admin", "superuser"]);

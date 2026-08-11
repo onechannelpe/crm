@@ -80,6 +80,9 @@ export const GpvSnapshotPlacementId = uuidId("GpvSnapshotPlacementId");
 export type GpvSnapshotIssueId = BrandedId<"GpvSnapshotIssueId">;
 export const GpvSnapshotIssueId = uuidId("GpvSnapshotIssueId");
 
+export type CommissionSchemeVersionId = BrandedId<"CommissionSchemeVersionId">;
+export const CommissionSchemeVersionId = uuidId("CommissionSchemeVersionId");
+
 export type OrganizationOwnerAssignmentId =
   BrandedId<"OrganizationOwnerAssignmentId">;
 export const OrganizationOwnerAssignmentId = uuidId(

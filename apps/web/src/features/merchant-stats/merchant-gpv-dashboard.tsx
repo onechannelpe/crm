@@ -9,13 +9,16 @@ import { Match, Switch } from "solid-js";
 import { downloadWithToken } from "~/browser/files/client";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { AppPage } from "~/components/layout/page";
+import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { Button } from "~/components/ui/input/button";
 import { actionErrorMessage } from "~/contracts/errors";
+import { hasPermission } from "~/domain/auth/access/rbac";
 import {
   TabStrip,
   type TabItem,
 } from "~/features/side-panel/components/tab-strip";
 
+import { CommissionTab } from "./commission/commission-tab";
 import { CulqiView } from "./culqi/culqi-view";
 import { requestMerchantGpvExportMutation } from "./data/mutations";
 import { PUBLISHED_GPV_QUERY_KEYS } from "./data/revalidation";
@@ -27,7 +30,7 @@ import { PerformanceTab } from "./performance-tab";
 
 import styles from "./merchant-gpv-dashboard.module.css";
 
-const GPV_TABS: ReadonlyArray<TabItem<GpvTabId>> = [
+const BASE_GPV_TABS: ReadonlyArray<TabItem<GpvTabId>> = [
   { id: "rendimiento", label: "Rendimiento" },
   { id: "cohortes", label: "Cohortes" },
   { id: "atribucion", label: "Atribución" },
@@ -40,6 +43,19 @@ export function MerchantGpvDashboard() {
   const requestExport = useAction(requestMerchantGpvExportMutation);
   const exportSubmission = useSubmission(requestMerchantGpvExportMutation);
   const { enqueueErrorSnackBar } = useSnackBar();
+  const { currentUser } = useAuthenticatedSession();
+
+  // The Comisiones tab is query-param state on this same route, not a
+  // separate path, so route-manifest.ts's route-level `dashboards:read`
+  // gate can't hide it -- back_office/supervisor already hold that
+  // permission. Hiding the tab here is the UX half; the RPC behind it
+  // gates on commission:read independently, which is the real boundary.
+  const canReadCommission = () =>
+    hasPermission(currentUser().role, "commission:read");
+  const gpvTabs = (): ReadonlyArray<TabItem<GpvTabId>> =>
+    canReadCommission()
+      ? [...BASE_GPV_TABS, { id: "comisiones", label: "Comisiones" }]
+      : BASE_GPV_TABS;
 
   async function exportReport() {
     try {
@@ -62,7 +78,7 @@ export function MerchantGpvDashboard() {
   return (
     <AppPage>
       <TabStrip
-        tabs={GPV_TABS}
+        tabs={gpvTabs()}
         activeTab={view.tab()}
         onTabSelect={view.setTab}
         rightComponent={
@@ -106,6 +122,10 @@ export function MerchantGpvDashboard() {
 
         <Match when={view.tab() === "culqi"}>
           <CulqiView view={view} />
+        </Match>
+
+        <Match when={view.tab() === "comisiones" && canReadCommission()}>
+          <CommissionTab />
         </Match>
       </Switch>
     </AppPage>

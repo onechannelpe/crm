@@ -17,23 +17,23 @@ export async function previewBulkCsv(
 ): Promise<BulkPreviewResult> {
   "use server";
 
-  return {
-    parsed: await executeSessionServerFunction({
-      name: "team.bulk_import.preview",
-      access: { kind: "permission", permission: "admin:manage" },
+  const parsed = await executeSessionServerFunction({
+    name: "team.bulk_import.preview",
+    access: { kind: "permission", permission: "admin:manage" },
 
-      parse: () =>
-        parseObject({ csvContent, role }, validationFail, (r) => ({
-          csvContent: r.str("csvContent"),
-          role: r.enum("role", ROLES),
-        })),
+    parse: () =>
+      parseObject({ csvContent, role }, validationFail, (r) => ({
+        csvContent: r.str("csvContent"),
+        role: r.enum("role", ROLES),
+      })),
 
-      telemetry: ({ role }) => ({ role }),
+    telemetry: (input) => ({ role: input.role }),
 
-      execute: (ctx, input) =>
-        previewBulkImportService(input.csvContent, input.role, ctx),
-    }),
-  };
+    execute: (ctx, input) =>
+      previewBulkImportService(input.csvContent, input.role, ctx),
+  });
+
+  return { parsed };
 }
 
 export async function applyBulkImport(
@@ -52,7 +52,7 @@ export async function applyBulkImport(
         role: r.enum("role", ROLES),
       })),
 
-    telemetry: ({ role }) => ({ role }),
+    telemetry: (input) => ({ role: input.role }),
 
     execute: (ctx, input) =>
       application.team.invites.applyBulkImport(ctx, {

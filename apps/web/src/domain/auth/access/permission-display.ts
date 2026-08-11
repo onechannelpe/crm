@@ -235,6 +235,16 @@ const PERMISSION_CATALOG: Record<Permission, PermissionMeta> = {
       "Importar reportes de dealers y resolver la atribución por comercio.",
     group: "negocio",
   },
+  "commission:read": {
+    label: "Ver comisiones",
+    description: "Consultar el panel de cajas y penalidades por mesa.",
+    group: "negocio",
+  },
+  "commission:manage": {
+    label: "Gestionar esquema de comisiones",
+    description: "Definir los umbrales, rangos y porcentajes de comisión.",
+    group: "negocio",
+  },
   "admin:read": {
     label: "Ver administración",
     description: "Acceder a las secciones administrativas.",
