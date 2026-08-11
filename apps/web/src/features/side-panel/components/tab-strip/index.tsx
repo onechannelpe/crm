@@ -2,6 +2,7 @@ import { createResizeObserver } from "@solid-primitives/resize-observer";
 import {
   For,
   Show,
+  children,
   createEffect,
   createMemo,
   createSignal,
@@ -37,6 +38,8 @@ type TabStripProps<TId extends string> = {
 };
 
 export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
+  const rightComponent = children(() => props.rightComponent);
+
   const [tabWidths, setTabWidths] = createStore<
     Record<string, number | undefined>
   >({});
@@ -194,8 +197,8 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
         </div>
       </Show>
 
-      <Show when={props.rightComponent}>
-        {(right) => <div class={styles.rightSlot}>{right()}</div>}
+      <Show when={rightComponent()}>
+        <div class={styles.rightSlot}>{rightComponent()}</div>
       </Show>
     </div>
   );

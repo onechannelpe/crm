@@ -2,16 +2,17 @@
   all: unset;
   align-items: center;
   background-color: transparent;
-  color: var(--foreground-secondary);
+  color: var(--t-font-color-secondary);
   cursor: pointer;
   display: flex;
+  gap: var(--t-spacing-1);
   justify-content: center;
   position: relative;
   text-decoration: none;
 }
 
 .tabButtonActive {
-  color: var(--foreground);
+  color: var(--t-font-color-primary);
 }
 
 .tabButton::after {
@@ -26,27 +27,27 @@
 }
 
 .tabButtonActive::after {
-  background-color: var(--foreground);
+  background-color: var(--t-border-color-inverted);
 }
 
 .tabHover {
   align-items: center;
-  border-radius: var(--radius-md);
+  border-radius: var(--t-border-radius-md);
   box-sizing: border-box;
   display: flex;
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
-  gap: var(--spacing-1);
-  padding: var(--spacing-1) var(--spacing-2);
+  font-size: var(--t-font-size-md);
+  font-weight: var(--t-font-weight-medium);
+  gap: var(--t-spacing-1);
+  padding: var(--t-spacing-1) var(--t-spacing-2);
   white-space: nowrap;
 }
 
 .tabHover:hover {
-  background: var(--tertiary);
+  background: var(--t-background-tertiary);
 }
 
 .tabHover:active {
-  background: var(--quaternary);
+  background: var(--t-background-quaternary);
 }
 
 .tabButton:focus-visible {
@@ -59,7 +60,7 @@
 
 .tabMeasure {
   align-items: center;
-  color: var(--foreground-secondary);
+  color: var(--t-font-color-secondary);
   display: flex;
   justify-content: center;
   position: relative;

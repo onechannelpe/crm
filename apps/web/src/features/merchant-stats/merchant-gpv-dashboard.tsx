@@ -8,7 +8,7 @@ import { Match, Switch } from "solid-js";
 
 import { downloadWithToken } from "~/browser/files/client";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
-import { AppPage } from "~/components/layout/page";
+import { AppPageBody } from "~/components/layout/page";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { Button } from "~/components/ui/input/button";
 import { actionErrorMessage } from "~/contracts/errors";
@@ -76,7 +76,7 @@ export function MerchantGpvDashboard() {
   }
 
   return (
-    <AppPage>
+    <AppPageBody>
       <TabStrip
         tabs={gpvTabs()}
         activeTab={view.tab()}
@@ -85,6 +85,7 @@ export function MerchantGpvDashboard() {
           <div class={styles.tabActions}>
             <Button
               variant="secondary"
+              size="sm"
               loading={exportSubmission.pending}
               onClick={() => void exportReport()}
             >
@@ -93,6 +94,7 @@ export function MerchantGpvDashboard() {
 
             <Button
               variant="secondary"
+              size="sm"
               onClick={() => navigate("/dashboards/merchant-gpv/imports/new")}
             >
               Importar reporte
@@ -128,6 +130,6 @@ export function MerchantGpvDashboard() {
           <CommissionTab />
         </Match>
       </Switch>
-    </AppPage>
+    </AppPageBody>
   );
 }

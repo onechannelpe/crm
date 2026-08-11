@@ -9,15 +9,18 @@ import {
 
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import { SearchInput } from "~/components/ui/input/search-input";
-import { ScrollWrapper } from "~/components/ui/utilities/scroll-wrapper";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
-import { WidgetGrid, WidgetGridItem } from "~/features/widgets/widget-layout";
+import {
+  WidgetCanvas,
+  WidgetGrid,
+  WidgetGridItem,
+} from "~/features/widgets/widget-layout";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 import { gpvCulqiViewQuery } from "~/rpc/merchant-stats/gpv-culqi-view";
 
+import { BarList } from "../charts/bar-list";
 import { formatMonth, formatSolesCompact } from "../format";
 import type { GpvView } from "../gpv-view";
-import { BarTile } from "../tiles";
 
 import styles from "./culqi-view.module.css";
 
@@ -45,6 +48,8 @@ export function CulqiView(props: { view: GpvView }) {
     );
   });
 
+  const total = () => filteredRows().reduce((sum, row) => sum + row.gpv, 0);
+
   return (
     <ErrorBoundary fallback={<CulqiError />}>
       <Suspense fallback={<CulqiSkeleton />}>
@@ -58,42 +63,43 @@ export function CulqiView(props: { view: GpvView }) {
           }
         >
           {(view) => (
-            <div class={styles.scrollArea}>
-              <ScrollWrapper>
-                <WidgetGrid>
-                  <WidgetGridItem span="full">
-                    <p class={styles.note}>
-                      El <strong>usuario de Culqi</strong> solo se usa para
-                      comparar con el reporte de Culqi. La atribución real está
-                      en la pestaña Rendimiento.
-                    </p>
-                  </WidgetGridItem>
-                  <WidgetGridItem span="full">
-                    <SearchInput
-                      value={search()}
-                      onValueChange={setSearch}
-                      placeholder="Buscar usuario de Culqi..."
-                      aria-label="Buscar usuario de Culqi"
-                    />
-                  </WidgetGridItem>
-                  <BarTile
-                    title={`GPV ${formatMonth(
-                      view().month,
-                    )} por usuario de Culqi · ${formatSolesCompact(
-                      filteredRows().reduce((sum, row) => sum + row.gpv, 0),
-                    )}`}
-                    span="full"
-                    rows={filteredRows().map((row) => ({
-                      key: row.culqiUserName ?? "sin-usuario",
-                      label: row.culqiUserName ?? "Sin usuario",
-                      sublabel: `${row.deviceCount} dispositivos`,
-                      value: row.gpv,
-                      target: null,
-                    }))}
-                  />
-                </WidgetGrid>
-              </ScrollWrapper>
-            </div>
+            <WidgetCanvas>
+              <WidgetGrid>
+                <WidgetGridItem span="full">
+                  <WidgetCardShell
+                    title={`GPV ${formatMonth(view().month)} por usuario de Culqi · ${formatSolesCompact(total())}`}
+                    count={filteredRows().length}
+                    status={filteredRows().length ? "ready" : "empty"}
+                    emptyLabel="Ningún usuario coincide con la búsqueda."
+                  >
+                    <div class={styles.body}>
+                      <p class={styles.note}>
+                        El <strong>usuario de Culqi</strong> solo se usa para
+                        comparar con el reporte de Culqi. La atribución real
+                        está en la pestaña Rendimiento.
+                      </p>
+
+                      <SearchInput
+                        value={search()}
+                        onValueChange={setSearch}
+                        placeholder="Buscar usuario de Culqi..."
+                        aria-label="Buscar usuario de Culqi"
+                      />
+
+                      <BarList
+                        rows={filteredRows().map((row) => ({
+                          key: row.culqiUserName ?? "sin-usuario",
+                          label: row.culqiUserName ?? "Sin usuario",
+                          sublabel: `${row.deviceCount} dispositivos`,
+                          value: row.gpv,
+                          target: null,
+                        }))}
+                      />
+                    </div>
+                  </WidgetCardShell>
+                </WidgetGridItem>
+              </WidgetGrid>
+            </WidgetCanvas>
           )}
         </Show>
       </Suspense>
@@ -103,24 +109,26 @@ export function CulqiView(props: { view: GpvView }) {
 
 function CulqiSkeleton() {
   return (
-    <div class={styles.scrollArea}>
-      <ScrollWrapper>
-        <WidgetGrid>
-          <WidgetGridItem span="full">
-            <WidgetSkeleton />
-          </WidgetGridItem>
-        </WidgetGrid>
-      </ScrollWrapper>
-    </div>
+    <WidgetCanvas>
+      <WidgetGrid>
+        <WidgetGridItem span="full">
+          <WidgetSkeleton />
+        </WidgetGridItem>
+      </WidgetGrid>
+    </WidgetCanvas>
   );
 }
 
 function CulqiError() {
   return (
-    <div class={styles.scrollArea}>
-      <WidgetCardShell title="Vista Culqi" status="error">
-        <span />
-      </WidgetCardShell>
-    </div>
+    <WidgetCanvas>
+      <WidgetGrid>
+        <WidgetGridItem span="full">
+          <WidgetCardShell title="Vista Culqi" status="error">
+            <span />
+          </WidgetCardShell>
+        </WidgetGridItem>
+      </WidgetGrid>
+    </WidgetCanvas>
   );
 }

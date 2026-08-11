@@ -1,35 +1,33 @@
-import { A, createAsync } from "@solidjs/router";
+import { createAsync } from "@solidjs/router";
 import { ErrorBoundary, Show, Suspense } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state/empty";
-import { Skeleton } from "~/components/ui/feedback/skeleton";
+import { AppPageBody } from "~/components/layout/page";
 import { MassMarketCaja1Section } from "~/features/merchant-stats/commission/commission-tab";
+import { WidgetCanvas } from "~/features/widgets/widget-layout";
+import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 import { commissionManagerDashboardQuery } from "~/rpc/merchant-stats/commission-scheme";
-
-import styles from "./sales-manager-caja1-snapshot.module.css";
 
 export function SalesManagerCaja1Snapshot() {
   const view = createAsync(() => commissionManagerDashboardQuery());
 
   return (
-    <div class={styles.page}>
-      <div class={styles.header}>
-        <h1 class={styles.title}>Caja 1 · Mesa 2 y 3</h1>
-        <A class={styles.link} href="/dashboards/merchant-gpv?tab=comisiones">
-          Ver comisiones completo
-        </A>
-      </div>
-
-      <ErrorBoundary fallback={<SnapshotError />}>
-        <Suspense fallback={<Skeleton height={120} />}>
-          <Show when={view()}>
-            {(readyView) => (
-              <MassMarketCaja1Section result={readyView().massMarketCaja1} />
-            )}
-          </Show>
-        </Suspense>
-      </ErrorBoundary>
-    </div>
+    <AppPageBody>
+      <WidgetCanvas>
+        <ErrorBoundary fallback={<SnapshotError />}>
+          <Suspense fallback={<WidgetSkeleton />}>
+            <Show when={view()}>
+              {(readyView) => (
+                <MassMarketCaja1Section
+                  result={readyView().massMarketCaja1}
+                  tileHref="/dashboards/merchant-gpv?tab=comisiones"
+                />
+              )}
+            </Show>
+          </Suspense>
+        </ErrorBoundary>
+      </WidgetCanvas>
+    </AppPageBody>
   );
 }
 

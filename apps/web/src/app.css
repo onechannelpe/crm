@@ -146,6 +146,8 @@
   --t-font-weight-medium: 500;
   --t-font-weight-semi-bold: 600;
   --t-font-family: var(--font-sans);
+  --t-text-line-height-md: var(--line-height-md);
+  --t-text-line-height-lg: var(--line-height-lg);
 
   --color-white: color(display-p3 1 1 1);
   --color-blue: color(display-p3 0.276 0.384 0.837);
@@ -236,6 +238,8 @@
 
   --t-background-primary: var(--background);
   --t-background-secondary: var(--secondary);
+  --t-background-tertiary: var(--tertiary);
+  --t-background-quaternary: var(--quaternary);
   --t-background-transparent-lighter: var(--background-transparent-lighter);
   --t-background-transparent-light: var(--background-transparent-light);
   --t-background-transparent-medium: var(--background-transparent-medium);
@@ -243,10 +247,12 @@
   --t-border-color-strong: color(display-p3 0.839 0.839 0.839);
   --t-border-color-medium: color(display-p3 0.922 0.922 0.922);
   --t-border-color-light: color(display-p3 0.945 0.945 0.945);
+  --t-border-color-inverted: var(--foreground);
   --t-font-color-primary: var(--foreground);
   --t-font-color-secondary: var(--foreground-secondary);
   --t-font-color-tertiary: var(--foreground-tertiary);
   --t-font-color-light: var(--foreground-light);
+  --t-font-color-extra-light: color(display-p3 0.8 0.8 0.8);
   --t-blur-light: blur(6px) saturate(200%) contrast(50%) brightness(130%);
   --t-blur-medium: blur(12px) saturate(200%) contrast(50%) brightness(130%);
   --t-blur-strong: blur(20px) saturate(200%) contrast(50%) brightness(130%);
@@ -352,6 +358,8 @@
 
   --t-background-primary: var(--background);
   --t-background-secondary: var(--secondary);
+  --t-background-tertiary: var(--tertiary);
+  --t-background-quaternary: var(--quaternary);
   --background-transparent-lighter: color(display-p3 1 1 1 / 0.031);
   --background-transparent-light: color(display-p3 1 1 1 / 0.059);
   --background-transparent-medium: color(display-p3 1 1 1 / 0.102);
@@ -364,10 +372,12 @@
   --t-border-color-strong: color(display-p3 0.282 0.282 0.282);
   --t-border-color-medium: color(display-p3 0.133 0.133 0.133);
   --t-border-color-light: color(display-p3 0.114 0.114 0.114);
+  --t-border-color-inverted: var(--foreground);
   --t-font-color-primary: var(--foreground);
   --t-font-color-secondary: var(--foreground-secondary);
   --t-font-color-tertiary: var(--foreground-tertiary);
   --t-font-color-light: var(--foreground-light);
+  --t-font-color-extra-light: color(display-p3 0.298 0.298 0.298);
   --t-blur-light: blur(6px) saturate(200%) contrast(100%) brightness(130%);
   --t-blur-medium: blur(12px) saturate(200%) contrast(100%) brightness(130%);
   --t-blur-strong: blur(20px) saturate(200%) contrast(100%) brightness(130%);

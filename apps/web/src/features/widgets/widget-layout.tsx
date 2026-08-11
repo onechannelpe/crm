@@ -1,15 +1,23 @@
 import type { JSX } from "solid-js";
 
+import { ScrollWrapper } from "~/components/ui/utilities/scroll-wrapper";
+
 import styles from "./widget-layout.module.css";
 
 export type WidgetSpan = "quarter" | "half" | "full";
 
-export function WidgetGrid(props: { children: JSX.Element }) {
-  return <div class={styles.grid}>{props.children}</div>;
+export function WidgetCanvas(props: { children: JSX.Element }) {
+  return (
+    <div class={styles.canvas}>
+      <ScrollWrapper>
+        <div class={styles.canvasContent}>{props.children}</div>
+      </ScrollWrapper>
+    </div>
+  );
 }
 
-export function WidgetStatGrid(props: { children: JSX.Element }) {
-  return <div class={styles.statGrid}>{props.children}</div>;
+export function WidgetGrid(props: { children: JSX.Element }) {
+  return <div class={styles.grid}>{props.children}</div>;
 }
 
 export function WidgetGridItem(props: {

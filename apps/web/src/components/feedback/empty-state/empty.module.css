@@ -1,5 +1,6 @@
 .root {
   flex: 1;
+  margin-inline: auto;
   max-width: 420px;
   padding: 56px 24px 48px;
   display: flex;

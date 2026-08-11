@@ -19,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { ScrollWrapper } from "~/components/ui/utilities/scroll-wrapper";
 import type {
   CommissionManagerView,
   CorporateCaja2Result,
@@ -29,9 +28,9 @@ import type {
 } from "~/contracts/merchant-stats/commission-views";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import {
+  WidgetCanvas,
   WidgetGrid,
   WidgetGridItem,
-  WidgetStatGrid,
 } from "~/features/widgets/widget-layout";
 import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 import { commissionManagerDashboardQuery } from "~/rpc/merchant-stats/commission-scheme";
@@ -50,23 +49,21 @@ export function CommissionTab() {
   const view = createAsync(() => commissionManagerDashboardQuery());
 
   return (
-    <div class={styles.surface}>
-      <ErrorBoundary fallback={<TabError />}>
-        <Suspense fallback={<WidgetSkeleton />}>
-          <Show
-            when={view()}
-            fallback={
-              <EmptyState
-                title="Sin datos de comisiones"
-                description="Importa un reporte de GPV para calcular las cajas y penalidades."
-              />
-            }
-          >
-            {(readyView) => <CommissionContent view={readyView()} />}
-          </Show>
-        </Suspense>
-      </ErrorBoundary>
-    </div>
+    <ErrorBoundary fallback={<TabError />}>
+      <Suspense fallback={<WidgetSkeleton />}>
+        <Show
+          when={view()}
+          fallback={
+            <EmptyState
+              title="Sin datos de comisiones"
+              description="Importa un reporte de GPV para calcular las cajas y penalidades."
+            />
+          }
+        >
+          {(readyView) => <CommissionContent view={readyView()} />}
+        </Show>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
@@ -81,13 +78,17 @@ function TabError() {
 
 function PendingCard(props: { title: string }) {
   return (
-    <WidgetGridItem span="full">
-      <WidgetCardShell title={props.title}>
-        <p class={styles.helperText}>
-          Sin configurar. Defínelo en Ajustes → Esquema de comisiones.
-        </p>
-      </WidgetCardShell>
-    </WidgetGridItem>
+    <WidgetGrid>
+      <WidgetGridItem span="full">
+        <WidgetCardShell
+          title={props.title}
+          status="empty"
+          emptyLabel="Sin configurar. Defínelo en Ajustes → Esquema de comisiones."
+        >
+          <span />
+        </WidgetCardShell>
+      </WidgetGridItem>
+    </WidgetGrid>
   );
 }
 
@@ -96,99 +97,98 @@ function PendingCard(props: { title: string }) {
 // and the corporate desk last.
 function CommissionContent(props: { view: CommissionManagerView }) {
   return (
-    <div class={styles.scrollArea}>
-      <ScrollWrapper>
-        <MassMarketCaja1Section result={props.view.massMarketCaja1} />
-        <MassMarketCaja2Section result={props.view.massMarketCaja2} />
+    <WidgetCanvas>
+      <MassMarketCaja1Section result={props.view.massMarketCaja1} />
+      <MassMarketCaja2Section result={props.view.massMarketCaja2} />
 
-        <Show
-          when={
-            props.view.penalidadReversion.status === "evaluated"
-              ? props.view.penalidadReversion
-              : null
-          }
-          fallback={<PendingCard title="Penalidad de reversión" />}
-        >
-          {(reversion) => (
-            <WidgetStatGrid>
-              <AggregateTile
-                title="POS comisionados (M0+M1)"
-                span="quarter"
-                value={formatInteger(reversion().commissionedCount)}
-              />
-              <AggregateTile
-                title="POS penalizados (M2)"
-                span="quarter"
-                value={formatInteger(reversion().penalizedCount)}
-              />
-              <AggregateTile
-                title="Reversión conocida"
-                span="quarter"
-                value={formatSolesCompact(reversion().knownReversalTotal)}
-                caption={
-                  reversion().unknownReversalCount > 0
-                    ? `${formatInteger(reversion().unknownReversalCount)} con pago aún sin definir`
-                    : undefined
-                }
-              />
-            </WidgetStatGrid>
-          )}
-        </Show>
+      <Show
+        when={
+          props.view.penalidadReversion.status === "evaluated"
+            ? props.view.penalidadReversion
+            : null
+        }
+        fallback={<PendingCard title="Penalidad de reversión" />}
+      >
+        {(reversion) => (
+          <WidgetGrid>
+            <AggregateTile
+              title="POS comisionados (M0+M1)"
+              span="quarter"
+              value={formatInteger(reversion().commissionedCount)}
+            />
+            <AggregateTile
+              title="POS penalizados (M2)"
+              span="quarter"
+              value={formatInteger(reversion().penalizedCount)}
+            />
+            <AggregateTile
+              title="Reversión conocida"
+              span="quarter"
+              value={formatSolesCompact(reversion().knownReversalTotal)}
+              caption={
+                reversion().unknownReversalCount > 0
+                  ? `${formatInteger(reversion().unknownReversalCount)} con pago aún sin definir`
+                  : undefined
+              }
+            />
+          </WidgetGrid>
+        )}
+      </Show>
 
-        <Show
-          when={
-            props.view.penalidadActivacion.status === "evaluated"
-              ? props.view.penalidadActivacion
-              : null
-          }
-          fallback={<PendingCard title="Penalidad de activación" />}
-        >
-          {(activacion) => (
-            <WidgetStatGrid>
-              <AggregateTile
-                title="Tasa de inactivas"
-                span="quarter"
-                value={formatPercent(activacion().inactiveRate)}
-                caption={`Límite ${formatPercent(activacion().maxInactiveRate)}${activacion().penalized ? " · Penalizado" : ""}`}
-              />
-              <AggregateTile
-                title="Ventas activas"
-                span="quarter"
-                value={formatInteger(activacion().totalActive)}
-                caption={`de ${formatInteger(activacion().totalSales)} ventas`}
-              />
-            </WidgetStatGrid>
-          )}
-        </Show>
+      <Show
+        when={
+          props.view.penalidadActivacion.status === "evaluated"
+            ? props.view.penalidadActivacion
+            : null
+        }
+        fallback={<PendingCard title="Penalidad de activación" />}
+      >
+        {(activacion) => (
+          <WidgetGrid>
+            <AggregateTile
+              title="Tasa de inactivas"
+              span="quarter"
+              value={formatPercent(activacion().inactiveRate)}
+              caption={`Límite ${formatPercent(activacion().maxInactiveRate)}${activacion().penalized ? " · Penalizado" : ""}`}
+            />
+            <AggregateTile
+              title="Ventas activas"
+              span="quarter"
+              value={formatInteger(activacion().totalActive)}
+              caption={`de ${formatInteger(activacion().totalSales)} ventas`}
+            />
+          </WidgetGrid>
+        )}
+      </Show>
 
-        <Show
-          when={
-            props.view.companyCaja3.status === "evaluated"
-              ? props.view.companyCaja3
-              : null
-          }
-          fallback={<PendingCard title="Caja 3 · Toda la empresa" />}
-        >
-          {(caja3) => (
-            <WidgetStatGrid>
-              <AggregateTile
-                title="Caja 3 · Toda la empresa"
-                span="quarter"
-                value={formatSolesCompact(caja3().totalGpv)}
-                caption={`Meta ${formatSolesCompact(caja3().target)}`}
-              />
-            </WidgetStatGrid>
-          )}
-        </Show>
+      <Show
+        when={
+          props.view.companyCaja3.status === "evaluated"
+            ? props.view.companyCaja3
+            : null
+        }
+        fallback={<PendingCard title="Caja 3 · Toda la empresa" />}
+      >
+        {(caja3) => (
+          <WidgetGrid>
+            <AggregateTile
+              title="Caja 3 · Toda la empresa"
+              span="quarter"
+              value={formatSolesCompact(caja3().totalGpv)}
+              caption={`Meta ${formatSolesCompact(caja3().target)}`}
+            />
+          </WidgetGrid>
+        )}
+      </Show>
 
-        <CorporateCaja2Section result={props.view.corporateCaja2} />
-      </ScrollWrapper>
-    </div>
+      <CorporateCaja2Section result={props.view.corporateCaja2} />
+    </WidgetCanvas>
   );
 }
 
 export function MassMarketCaja1Section(props: {
   result: MassMarketCaja1Result;
+  tileHref?: string;
 }) {
   return (
     <Show
@@ -196,7 +196,7 @@ export function MassMarketCaja1Section(props: {
       fallback={<PendingCard title="Caja 1 · Mesa 2 y 3" />}
     >
       {(result) => (
-        <WidgetStatGrid>
+        <WidgetGrid>
           <For each={result().mesas}>
             {(mesa) => (
               <AggregateTile
@@ -204,10 +204,11 @@ export function MassMarketCaja1Section(props: {
                 span="quarter"
                 value={`${formatInteger(mesa.activeCountM0)} / ${formatInteger(mesa.target)}`}
                 caption={`${formatInteger(mesa.activeCountM0Plus15)} activas a M0+15${mesa.band?.payout != null ? ` · ${formatSolesCompact(mesa.band.payout)}` : ""}`}
+                href={props.tileHref}
               />
             )}
           </For>
-        </WidgetStatGrid>
+        </WidgetGrid>
       )}
     </Show>
   );
@@ -220,7 +221,7 @@ function MassMarketCaja2Section(props: { result: MassMarketCaja2Result }) {
       fallback={<PendingCard title="Caja 2 · Mesa 2 y 3" />}
     >
       {(result) => (
-        <WidgetStatGrid>
+        <WidgetGrid>
           <For each={result().mesas}>
             {(mesa) => (
               <AggregateTile
@@ -233,7 +234,7 @@ function MassMarketCaja2Section(props: { result: MassMarketCaja2Result }) {
               />
             )}
           </For>
-        </WidgetStatGrid>
+        </WidgetGrid>
       )}
     </Show>
   );
@@ -247,7 +248,7 @@ function CorporateCaja2Section(props: { result: CorporateCaja2Result }) {
     >
       {(result) => (
         <>
-          <WidgetStatGrid>
+          <WidgetGrid>
             <AggregateTile
               title="Caja 2 · Mesa 1 (M0+M1)"
               span="quarter"
@@ -264,7 +265,7 @@ function CorporateCaja2Section(props: { result: CorporateCaja2Result }) {
               )}
               caption={`de ${formatInteger(result().users.length)} usuarios`}
             />
-          </WidgetStatGrid>
+          </WidgetGrid>
           <CorporateCaja2UsersTable users={result().users} />
         </>
       )}

@@ -12,6 +12,7 @@ import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import CircleCheckBig from "~/components/icons/circle-check-big";
+import { AppPageBody } from "~/components/layout/page";
 import { Skeleton } from "~/components/ui/feedback/skeleton";
 import type {
   ExecutiveGpvMerchantView,
@@ -35,7 +36,7 @@ export function ExecutiveGpvProgress() {
   const portfolio = createAsync(() => executiveGpvProgressQuery());
 
   return (
-    <div class={styles.page}>
+    <AppPageBody>
       <ErrorBoundary fallback={<PortfolioError />}>
         <Suspense fallback={<PortfolioLoading />}>
           <Show when={portfolio()}>
@@ -43,7 +44,7 @@ export function ExecutiveGpvProgress() {
           </Show>
         </Suspense>
       </ErrorBoundary>
-    </div>
+    </AppPageBody>
   );
 }
 
@@ -58,65 +59,72 @@ function PortfolioContent(props: {
 
   return (
     <>
-      <div class={styles.header}>
-        <h1 class={styles.title}>Mis comercios</h1>
-        <Show
-          when={portfolio().cutDate}
-          fallback={
-            <span class={styles.updated}>GPV pendiente de actualización</span>
-          }
-        >
-          {(cutDate) => (
-            <span class={styles.updated}>
-              Actualizado al {formatCalendarDate(cutDate())}
-            </span>
-          )}
-        </Show>
-      </div>
+      <ViewBar
+        count={portfolio().merchants.length}
+        cutDate={portfolio().cutDate}
+      />
 
-      <Show
-        when={portfolio().merchants.length > 0}
-        fallback={
+      <DataGrid
+        ariaLabel="Mis comercios"
+        columns={columns()}
+        emptyState={
           <EmptyState
             title="Aún no tienes comercios asignados."
             description="Los comercios aparecerán aquí cuando se te asigne su gestión."
           />
         }
-      >
-        <p class={styles.summary}>
-          {merchantCountLabel(portfolio().merchants.length)}
-        </p>
-
-        <DataGrid
-          ariaLabel="Mis comercios"
-          columns={columns()}
-          emptyState=""
-          rowId={(merchant) => merchant.ruc}
-          rowOpenIndicator="route"
-          source={{
-            status: "ready",
-            rows: portfolio().merchants,
-          }}
-          onRowOpen={(merchant) =>
-            navigate(
-              merchant.leadId
-                ? `/records/${merchant.leadId}`
-                : `/records?query=${encodeURIComponent(merchant.ruc)}`,
-            )
-          }
-        />
-      </Show>
+        rowId={(merchant) => merchant.ruc}
+        rowOpenIndicator="route"
+        source={{
+          status: "ready",
+          rows: portfolio().merchants,
+        }}
+        onRowOpen={(merchant) =>
+          navigate(
+            merchant.leadId
+              ? `/records/${merchant.leadId}`
+              : `/records?query=${encodeURIComponent(merchant.ruc)}`,
+          )
+        }
+      />
     </>
+  );
+}
+
+function ViewBar(props: { count: number; cutDate: CalendarDate | null }) {
+  return (
+    <div class={styles.viewBar}>
+      <div class={styles.viewIdentity}>
+        <Building2 size={16} class={styles.viewIcon} />
+        <span class={styles.viewLabel}>Mis comercios</span>
+        <span class={styles.viewMeta}>· {merchantCountLabel(props.count)}</span>
+      </div>
+
+      <Show
+        when={props.cutDate}
+        fallback={
+          <span class={styles.updated}>GPV pendiente de actualización</span>
+        }
+      >
+        {(cutDate) => (
+          <span class={styles.updated}>
+            Actualizado al {formatCalendarDate(cutDate())}
+          </span>
+        )}
+      </Show>
+    </div>
   );
 }
 
 function PortfolioLoading() {
   return (
     <>
-      <div class={styles.header}>
-        <Skeleton width={140} height={20} />
+      <div class={styles.viewBar}>
+        <Skeleton width={140} height={16} />
       </div>
-      <Skeleton height={280} />
+      <div class={styles.loadingBody}>
+        <Skeleton height={280} />
+      </div>
     </>
   );
 }

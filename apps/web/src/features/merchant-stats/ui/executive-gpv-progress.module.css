@@ -1,38 +1,48 @@
-.page {
+.viewBar {
+  align-items: center;
+  border-bottom: 1px solid var(--t-border-color-light);
   box-sizing: border-box;
   display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  padding-top: var(--spacing-3);
-}
-
-.header {
-  align-items: baseline;
-  display: flex;
+  flex-shrink: 0;
+  gap: var(--t-spacing-3);
+  height: var(--topbar-height);
   justify-content: space-between;
-  gap: var(--spacing-3);
-  margin: 0 0 var(--spacing-3);
-  padding: 0 var(--spacing-3);
+  margin-left: var(--t-spacing-3);
+  padding-right: var(--t-spacing-2);
 }
 
-.title {
-  margin: 0;
-  font-size: var(--font-size-heading-sm);
-  font-weight: var(--font-weight-semibold);
+.viewIdentity {
+  align-items: center;
+  color: var(--t-font-color-secondary);
+  display: flex;
+  gap: var(--t-spacing-1);
+  min-width: 0;
 }
 
-.updated {
-  color: var(--foreground-tertiary);
-  font-size: var(--font-size-sm);
+.viewIcon {
+  color: var(--t-font-color-tertiary);
+  flex-shrink: 0;
+}
+
+.viewLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.summary {
-  color: var(--foreground-secondary);
-  font-size: var(--font-size-sm);
-  margin: 0 0 var(--spacing-2);
-  padding: 0 var(--spacing-3);
+.viewMeta {
+  color: var(--t-font-color-tertiary);
+  flex-shrink: 0;
+}
+
+.updated {
+  color: var(--t-font-color-tertiary);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.loadingBody {
+  padding: var(--t-spacing-3);
 }
 
 .merchant {
@@ -42,7 +52,7 @@
 }
 
 .merchantName {
-  color: var(--foreground);
+  color: var(--t-font-color-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -50,14 +60,14 @@
 
 .ruc,
 .muted {
-  color: var(--foreground-tertiary);
-  font-size: var(--font-size-sm);
+  color: var(--t-font-color-tertiary);
+  font-size: var(--t-font-size-xs);
 }
 
 .progress {
   align-items: baseline;
   display: flex;
-  gap: var(--spacing-1);
+  gap: var(--t-spacing-1);
   white-space: nowrap;
 }
 
