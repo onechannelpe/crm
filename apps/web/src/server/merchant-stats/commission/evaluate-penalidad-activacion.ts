@@ -1,4 +1,5 @@
 import type {
+  Mesa,
   PenalidadActivacionMesaRow,
   PenalidadActivacionResult,
 } from "~/contracts/merchant-stats/commission-views";
@@ -9,7 +10,7 @@ import {
 } from "~/domain/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
-import { ALL_MESAS, type Mesa } from "./mesa";
+import { ALL_MESAS } from "./mesa";
 
 // All mesas, but the "active" floor differs per mesa (mesa 1: 2K, mesa 2/3:
 // 1K on the M0+M1+M2 sum) while the inactive-rate cap itself is evaluated

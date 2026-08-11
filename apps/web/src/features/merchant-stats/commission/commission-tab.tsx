@@ -38,7 +38,7 @@ import { commissionManagerDashboardQuery } from "~/rpc/merchant-stats/commission
 
 import {
   formatInteger,
-  formatMonth,
+  formatMesa,
   formatPercent,
   formatSolesCompact,
 } from "../format";
@@ -46,9 +46,6 @@ import { AggregateTile } from "../tiles";
 
 import styles from "../merchant-gpv-dashboard.module.css";
 
-// Ordered by daily-review priority: Caja 1 mass-market first, Caja 2
-// second, both penalidades next (they gate those same two cajas), Caja 3
-// and the corporate desk last.
 export function CommissionTab() {
   const view = createAsync(() => commissionManagerDashboardQuery());
 
@@ -94,16 +91,14 @@ function PendingCard(props: { title: string }) {
   );
 }
 
+// Ordered by daily-review priority: Caja 1 mass-market first, Caja 2
+// second, both penalidades next (they gate those same two cajas), Caja 3
+// and the corporate desk last.
 function CommissionContent(props: { view: CommissionManagerView }) {
-  const monthLabel = () => formatMonth(props.view.cohortMonth);
-
   return (
     <div class={styles.scrollArea}>
       <ScrollWrapper>
-        <MassMarketCaja1Section
-          result={props.view.massMarketCaja1}
-          monthLabel={monthLabel()}
-        />
+        <MassMarketCaja1Section result={props.view.massMarketCaja1} />
         <MassMarketCaja2Section result={props.view.massMarketCaja2} />
 
         <Show
@@ -154,7 +149,7 @@ function CommissionContent(props: { view: CommissionManagerView }) {
                 title="Tasa de inactivas"
                 span="quarter"
                 value={formatPercent(activacion().inactiveRate)}
-                caption={`Límite ${formatPercent(activacion().maxInactiveRate)}${activacion().penalized ? " -- penalizado" : ""}`}
+                caption={`Límite ${formatPercent(activacion().maxInactiveRate)}${activacion().penalized ? " · Penalizado" : ""}`}
               />
               <AggregateTile
                 title="Ventas activas"
@@ -172,12 +167,12 @@ function CommissionContent(props: { view: CommissionManagerView }) {
               ? props.view.companyCaja3
               : null
           }
-          fallback={<PendingCard title="Caja 3 -- toda la empresa" />}
+          fallback={<PendingCard title="Caja 3 · Toda la empresa" />}
         >
           {(caja3) => (
             <WidgetStatGrid>
               <AggregateTile
-                title="Caja 3 -- toda la empresa"
+                title="Caja 3 · Toda la empresa"
                 span="quarter"
                 value={formatSolesCompact(caja3().totalGpv)}
                 caption={`Meta ${formatSolesCompact(caja3().target)}`}
@@ -192,21 +187,20 @@ function CommissionContent(props: { view: CommissionManagerView }) {
   );
 }
 
-function MassMarketCaja1Section(props: {
+export function MassMarketCaja1Section(props: {
   result: MassMarketCaja1Result;
-  monthLabel: string;
 }) {
   return (
     <Show
       when={props.result.status === "evaluated" ? props.result : null}
-      fallback={<PendingCard title="Caja 1 -- mesa 2 y 3" />}
+      fallback={<PendingCard title="Caja 1 · Mesa 2 y 3" />}
     >
       {(result) => (
         <WidgetStatGrid>
           <For each={result().mesas}>
             {(mesa) => (
               <AggregateTile
-                title={`Caja 1 -- ${mesa.mesa}`}
+                title={`Caja 1 · ${formatMesa(mesa.mesa)}`}
                 span="quarter"
                 value={`${formatInteger(mesa.activeCountM0)} / ${formatInteger(mesa.target)}`}
                 caption={`${formatInteger(mesa.activeCountM0Plus15)} activas a M0+15${mesa.band?.payout != null ? ` · ${formatSolesCompact(mesa.band.payout)}` : ""}`}
@@ -223,14 +217,14 @@ function MassMarketCaja2Section(props: { result: MassMarketCaja2Result }) {
   return (
     <Show
       when={props.result.status === "evaluated" ? props.result : null}
-      fallback={<PendingCard title="Caja 2 -- mesa 2 y 3" />}
+      fallback={<PendingCard title="Caja 2 · Mesa 2 y 3" />}
     >
       {(result) => (
         <WidgetStatGrid>
           <For each={result().mesas}>
             {(mesa) => (
               <AggregateTile
-                title={`Caja 2 -- ${mesa.mesa}`}
+                title={`Caja 2 · ${formatMesa(mesa.mesa)}`}
                 span="quarter"
                 value={formatInteger(
                   mesa.bandsM0PlusM1.reduce((sum, b) => sum + b.activeCount, 0),
@@ -249,13 +243,13 @@ function CorporateCaja2Section(props: { result: CorporateCaja2Result }) {
   return (
     <Show
       when={props.result.status === "evaluated" ? props.result : null}
-      fallback={<PendingCard title="Caja 2 -- mesa 1 (corporativa)" />}
+      fallback={<PendingCard title="Caja 2 · Mesa 1 (corporativa)" />}
     >
       {(result) => (
         <>
           <WidgetStatGrid>
             <AggregateTile
-              title="Caja 2 -- mesa 1 (M0+M1)"
+              title="Caja 2 · Mesa 1 (M0+M1)"
               span="quarter"
               value={formatInteger(
                 result().users.filter((u) => u.m0PlusM1.active).length,
@@ -263,7 +257,7 @@ function CorporateCaja2Section(props: { result: CorporateCaja2Result }) {
               caption={`de ${formatInteger(result().users.length)} usuarios`}
             />
             <AggregateTile
-              title="Caja 2 -- mesa 1 (M2)"
+              title="Caja 2 · Mesa 1 (M2)"
               span="quarter"
               value={formatInteger(
                 result().users.filter((u) => u.m2.active).length,
@@ -297,7 +291,7 @@ function CorporateCaja2UsersTable(props: { users: CorporateCaja2UserRow[] }) {
   return (
     <WidgetGrid>
       <WidgetGridItem span="full">
-        <WidgetCardShell title="Caja 2 -- mesa 1, por usuario">
+        <WidgetCardShell title="Caja 2 · Mesa 1, por usuario">
           <div class={styles.userTableStack}>
             <SearchInput
               value={search()}

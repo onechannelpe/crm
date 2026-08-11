@@ -5,13 +5,14 @@ import {
   Show,
   Suspense,
   type Accessor,
-  type JSX,
 } from "solid-js";
 
+import { EmptyState } from "~/components/feedback/empty-state/empty";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import CircleCheckBig from "~/components/icons/circle-check-big";
+import { Skeleton } from "~/components/ui/feedback/skeleton";
 import type {
   ExecutiveGpvMerchantView,
   ExecutiveGpvProgressView,
@@ -24,8 +25,6 @@ import {
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatSoles } from "~/features/merchant-stats/format";
-import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
-import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 import { executiveGpvProgressQuery } from "~/rpc/merchant-stats/executive-gpv-progress";
 
 import styles from "./executive-gpv-progress.module.css";
@@ -36,13 +35,15 @@ export function ExecutiveGpvProgress() {
   const portfolio = createAsync(() => executiveGpvProgressQuery());
 
   return (
-    <ErrorBoundary fallback={<PortfolioError />}>
-      <Suspense fallback={<WidgetSkeleton />}>
-        <Show when={portfolio()}>
-          {(data) => <PortfolioContent portfolio={data} />}
-        </Show>
-      </Suspense>
-    </ErrorBoundary>
+    <div class={styles.page}>
+      <ErrorBoundary fallback={<PortfolioError />}>
+        <Suspense fallback={<PortfolioLoading />}>
+          <Show when={portfolio()}>
+            {(data) => <PortfolioContent portfolio={data} />}
+          </Show>
+        </Suspense>
+      </ErrorBoundary>
+    </div>
   );
 }
 
@@ -56,9 +57,9 @@ function PortfolioContent(props: {
   const columns = createMemo(() => merchantColumns(portfolio().cutDate));
 
   return (
-    <WidgetCardShell
-      title="Mis comercios"
-      action={
+    <>
+      <div class={styles.header}>
+        <h1 class={styles.title}>Mis comercios</h1>
         <Show
           when={portfolio().cutDate}
           fallback={
@@ -71,59 +72,61 @@ function PortfolioContent(props: {
             </span>
           )}
         </Show>
-      }
-    >
-      <div class={styles.content}>
-        <Show
-          when={portfolio().merchants.length > 0}
-          fallback={<PortfolioEmpty />}
-        >
-          <p class={styles.summary}>
-            {merchantCountLabel(portfolio().merchants.length)}
-          </p>
-
-          <div class={styles.grid}>
-            <DataGrid
-              ariaLabel="Mis comercios"
-              columns={columns()}
-              emptyState=""
-              rowId={(merchant) => merchant.ruc}
-              rowOpenIndicator="route"
-              source={{
-                status: "ready",
-                rows: portfolio().merchants,
-              }}
-              onRowOpen={(merchant) =>
-                navigate(
-                  merchant.leadId
-                    ? `/records/${merchant.leadId}`
-                    : `/records?query=${encodeURIComponent(merchant.ruc)}`,
-                )
-              }
-            />
-          </div>
-        </Show>
       </div>
-    </WidgetCardShell>
+
+      <Show
+        when={portfolio().merchants.length > 0}
+        fallback={
+          <EmptyState
+            title="Aún no tienes comercios asignados."
+            description="Los comercios aparecerán aquí cuando se te asigne su gestión."
+          />
+        }
+      >
+        <p class={styles.summary}>
+          {merchantCountLabel(portfolio().merchants.length)}
+        </p>
+
+        <DataGrid
+          ariaLabel="Mis comercios"
+          columns={columns()}
+          emptyState=""
+          rowId={(merchant) => merchant.ruc}
+          rowOpenIndicator="route"
+          source={{
+            status: "ready",
+            rows: portfolio().merchants,
+          }}
+          onRowOpen={(merchant) =>
+            navigate(
+              merchant.leadId
+                ? `/records/${merchant.leadId}`
+                : `/records?query=${encodeURIComponent(merchant.ruc)}`,
+            )
+          }
+        />
+      </Show>
+    </>
   );
 }
 
-function PortfolioEmpty() {
+function PortfolioLoading() {
   return (
-    <div class={styles.empty}>
-      <p class={styles.emptyTitle}>Aún no tienes comercios asignados.</p>
-      <p class={styles.emptyDescription}>
-        Los comercios aparecerán aquí cuando se te asigne su gestión.
-      </p>
-    </div>
+    <>
+      <div class={styles.header}>
+        <Skeleton width={140} height={20} />
+      </div>
+      <Skeleton height={280} />
+    </>
   );
 }
 
-function PortfolioError(): JSX.Element {
+function PortfolioError() {
   return (
-    <WidgetCardShell title="Mis comercios" status="error">
-      <span />
-    </WidgetCardShell>
+    <EmptyState
+      title="No se pudo cargar tu portafolio"
+      description="Vuelve a intentarlo en unos segundos."
+    />
   );
 }
 

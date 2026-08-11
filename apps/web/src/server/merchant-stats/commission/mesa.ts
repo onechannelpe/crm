@@ -11,5 +11,3 @@ export const MASS_MARKET_MESAS: readonly MassMarketMesa[] = [
 ];
 
 export const ALL_MESAS: readonly Mesa[] = ["MESA 1", "MESA 2", "MESA 3"];
-
-export type { Mesa, MassMarketMesa };

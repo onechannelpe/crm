@@ -1,4 +1,4 @@
-import type { Permission } from "./rbac";
+import type { Permission, Role } from "./rbac";
 
 export type AppPath =
   | "/search"
@@ -29,12 +29,14 @@ export type AppPath =
 
 export interface RouteConfig {
   permission?: Permission;
+  roles?: readonly Role[];
   landingPriority?: number;
 }
 
 export interface DynamicRouteConfig {
   pattern: RegExp;
   permission?: Permission;
+  roles?: readonly Role[];
 }
 
 export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
@@ -55,7 +57,11 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/inquiries": { permission: "lead:register" },
   "/fulfillment": { permission: "fulfillment:manage" },
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
-  "/home": { permission: "lead:work", landingPriority: 1 },
+  "/home": {
+    permission: "lead:work",
+    roles: ["executive", "sales_manager"],
+    landingPriority: 1,
+  },
   "/dashboards": { permission: "dashboards:read" },
   "/dashboards/merchant-gpv": { permission: "dashboards:read" },
   "/schedule": {},

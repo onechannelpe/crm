@@ -1,5 +1,6 @@
 import { ErrorBoundary, Suspense } from "solid-js";
 
+import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
 import Package from "~/components/icons/package";
@@ -35,8 +36,8 @@ function formatGpvAndTrx(point: GpvPoint | null): string | null {
 const COHORT_COLUMNS = [
   {
     key: "comercial",
-    label: "Comercial",
-    icon: ChartColumn,
+    label: "Comercio",
+    icon: Building2,
     minWidth: 200,
     grow: true,
     sticky: true,
@@ -58,7 +59,7 @@ const COHORT_COLUMNS = [
   },
   {
     key: "saleMonth",
-    label: "Mes venta",
+    label: "Mes de venta",
     icon: CalendarDays,
     width: 110,
     renderCell: (row) => formatMonth(row.saleMonth),
