@@ -1,5 +1,6 @@
 import type { Selectable } from "kysely";
 
+import { getRoleLabel } from "~/domain/auth/access/role-display";
 import { longName } from "~/domain/identity/display-name";
 import { NotificationIntentId } from "~/domain/ids";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
@@ -51,14 +52,14 @@ export async function enqueueAlertOnNewLoginSource(params: {
         audience: { kind: "user_ids", userIds: [params.user.id] },
         channels: ["in_app", "email", "whatsapp"],
         priority: "high",
-        title: `Security alert: privileged login (${params.user.role})`,
+        title: `Alerta de seguridad: acceso privilegiado (${getRoleLabel(params.user.role)})`,
         bodyText: [
-          "Privileged login detected.",
-          `User: ${longName(params.user)} <${params.user.email}>`,
-          `Role: ${params.user.role}`,
-          `Method: ${params.method}`,
+          "Se detectó un acceso privilegiado.",
+          `Usuario: ${longName(params.user)} <${params.user.email}>`,
+          `Rol: ${getRoleLabel(params.user.role)}`,
+          `Método: ${params.method}`,
           `IP: ${params.ipAddress}`,
-          `Time: ${params.occurredAt.toISOString()}`,
+          `Hora: ${params.occurredAt.toISOString()}`,
         ].join("\n"),
         actionUrl: null,
       },

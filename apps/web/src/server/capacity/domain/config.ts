@@ -1,6 +1,6 @@
 export const CAPACITY_LIMITS = {
-  defaultSearchMonthly: 250,
-  maxSearchMonthly: 5_000,
+  defaultSearchMonthly: 2_000,
+  maxSearchMonthly: 20_000,
   defaultLeadBuffer: 10,
   defaultDailyRefill: 25,
   maxLeadBuffer: 50,

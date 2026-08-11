@@ -1,5 +1,5 @@
 // @refresh reload
-import { init, replayIntegration } from "@sentry/solid";
+import { addIntegration, init } from "@sentry/solid";
 import { solidRouterBrowserTracingIntegration } from "@sentry/solid/solidrouter";
 import { mount, StartClient } from "@solidjs/start/client";
 
@@ -14,7 +14,7 @@ import { sentryDefaultDataCollection } from "./shared/observability/sentry";
 if (import.meta.env.PROD) {
   init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
-    integrations: [solidRouterBrowserTracingIntegration(), replayIntegration()],
+    integrations: [solidRouterBrowserTracingIntegration()],
     tracesSampleRate: Number(
       import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? "0.1",
     ),
@@ -72,4 +72,10 @@ if (hydrationDiagnosticsEnabled) {
       search: window.location.search,
     });
   });
+}
+
+if (import.meta.env.PROD) {
+  void import("@sentry/solid").then(({ replayIntegration }) =>
+    addIntegration(replayIntegration()),
+  );
 }
