@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { Show } from "solid-js";
+import { Show, createEffect } from "solid-js";
 
 import X from "~/components/icons/x";
 
@@ -16,9 +16,12 @@ export function TopBar(props: { isMobile: boolean }) {
     navigationStack,
     currentEntry,
     closePanel,
+    goBack,
     searchText,
     setSearchText,
   } = useSidePanel();
+
+  let inputRef: HTMLInputElement | undefined;
 
   const showBackButton = () => navigationStack().length > 1;
   const showCloseButton = () => !(props.isMobile && showBackButton());
@@ -31,25 +34,73 @@ export function TopBar(props: { isMobile: boolean }) {
     return SIDE_PANEL_PAGES_CONFIG[entry.page].showsSearch;
   };
 
+  /*
+    Landing on a search page puts the caret in the box. This is also what makes
+    pressing the search button a second time do something: the panel is already
+    open on that page, so a fresh page id is the only signal, and taking focus
+    back is the only visible change.
+  */
+  createEffect(() => {
+    const entry = currentEntry();
+
+    if (!entry || !SIDE_PANEL_PAGES_CONFIG[entry.page].showsSearch) {
+      return;
+    }
+
+    void entry.pageId;
+    inputRef?.focus();
+  });
+
+  /*
+    Escape and Backspace are handled on the input rather than as global hotkeys:
+    the caret lives here whenever the panel is on a search page, and dropdowns
+    inside the panel own those keys while they hold focus.
+  */
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.isComposing) {
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (searchText() !== "") {
+        setSearchText("");
+        return;
+      }
+
+      goBack();
+      return;
+    }
+
+    if (event.key === "Backspace" && searchText() === "" && showBackButton()) {
+      event.preventDefault();
+      event.stopPropagation();
+      goBack();
+    }
+  }
+
   return (
     <div class={clsx(styles.topBar, props.isMobile && styles.topBarMobile)}>
       <div class={styles.content}>
-        <div class={styles.leftControls}>
-          <BackButton visible={showBackButton()} />
-        </div>
+        <BackButton visible={showBackButton()} />
 
-        <div class={styles.rightSlot}>
-          <Show when={showSearch()} fallback={<PageInfo />}>
-            <input
-              type="text"
-              class={styles.searchInput}
-              placeholder="Buscar o escribir un comando..."
-              value={searchText()}
-              onInput={(e) => setSearchText(e.currentTarget.value)}
-            />
-          </Show>
-        </div>
+        <Show when={showSearch()} fallback={<PageInfo />}>
+          <input
+            ref={(element) => {
+              inputRef = element;
+            }}
+            type="text"
+            class={styles.searchInput}
+            placeholder="Buscar o escribir un comando..."
+            value={searchText()}
+            onInput={(e) => setSearchText(e.currentTarget.value)}
+            onKeyDown={handleKeyDown}
+          />
+        </Show>
       </div>
+
       <div class={styles.rightControls}>
         <TopBarActions />
         <Show when={showCloseButton()}>

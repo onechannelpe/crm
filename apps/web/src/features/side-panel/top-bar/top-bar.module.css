@@ -23,6 +23,7 @@
   flex: 1;
   gap: 4px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .searchInput {
@@ -56,25 +57,9 @@
   width: 24px;
 }
 
-.leftControls {
-  align-items: center;
-  display: flex;
-  flex-shrink: 0;
-  gap: 4px;
-}
-
 .closeButton:hover {
   background: var(--background-transparent-light);
   color: var(--foreground);
-}
-
-.rightSlot {
-  align-items: center;
-  display: flex;
-  flex: 1;
-  gap: 4px;
-  min-width: 0;
-  overflow: hidden;
 }
 
 .rightControls {

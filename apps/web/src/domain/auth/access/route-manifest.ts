@@ -1,7 +1,6 @@
 import type { Permission, Role } from "./rbac";
 
 export type AppPath =
-  | "/search"
   | "/settings/security"
   | "/settings/login-protection"
   | "/settings/security-policies"
@@ -40,7 +39,6 @@ export interface DynamicRouteConfig {
 }
 
 export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
-  "/search": { permission: "search:use", landingPriority: 3 },
   "/settings/security": {},
   "/settings/login-protection": { permission: "admin:manage" },
   "/settings/security-policies": { permission: "admin:manage" },

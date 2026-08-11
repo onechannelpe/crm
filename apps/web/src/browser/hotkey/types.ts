@@ -70,12 +70,17 @@ export type FunctionKey =
   | "F11"
   | "F12";
 
+// Keys whose physical position depends on the layout. On the Latin American
+// layout "/" is Shift+7, so bindings on these must ignore modifiers.
+export type PunctuationKey = "/";
+
 export type Key =
   | LetterKey
   | NumberKey
   | EditingKey
   | NavigationKey
-  | FunctionKey;
+  | FunctionKey
+  | PunctuationKey;
 
 // Platform-adaptive modifier: "Mod" = Ctrl on Windows/Linux, Cmd (Meta) on macOS.
 // Prefer "Mod" over "Ctrl"/"Meta" for cross-platform shortcuts.

@@ -16,6 +16,7 @@ import { SearchCompanyPage } from "../pages/search-company/page";
 import { SearchCompanyPageInfo } from "../pages/search-company/page-info";
 import { SearchPersonPage } from "../pages/search-person/page";
 import { SearchPersonPageInfo } from "../pages/search-person/page-info";
+import { SearchRecordsPage } from "../pages/search-records/page";
 import type { SidePanelPageKey } from "../types/side-panel-page";
 
 type SidePanelPageConfig = {
@@ -37,6 +38,13 @@ export const SIDE_PANEL_PAGES_CONFIG = {
   root: {
     showsSearch: true,
     component: RootPage,
+    skeleton: ListPageSkeleton,
+    pageInfoComponent: undefined,
+    topBarActionsComponent: undefined,
+  },
+  "search-records": {
+    showsSearch: true,
+    component: SearchRecordsPage,
     skeleton: ListPageSkeleton,
     pageInfoComponent: undefined,
     topBarActionsComponent: undefined,

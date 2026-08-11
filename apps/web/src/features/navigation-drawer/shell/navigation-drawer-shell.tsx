@@ -11,6 +11,7 @@ import { LightIconButton } from "~/components/ui/input/light-icon-button";
 import { useResizablePanel } from "~/components/ui/layout/resizable-panel/use-resizable-panel";
 import { shortName } from "~/domain/identity/display-name";
 import { logoutMutation } from "~/features/auth/data/mutations";
+import { useSidePanelMenu } from "~/features/side-panel/hooks/use-side-panel-menu";
 
 import { NAVIGATION_DRAWER_CLICK_OUTSIDE_ID } from "../constants/navigation-drawer-click-outside-id";
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
@@ -43,6 +44,7 @@ export function NavigationDrawer(props: {
     memorizeNavigationState,
   } = useNavigationDrawerState();
   const isSettingsDrawer = useIsSettingsDrawer();
+  const { openSearchRecordsPage } = useSidePanelMenu();
   const logout = useAction(logoutMutation);
   const [resizing, setResizing] = createSignal(false);
 
@@ -109,7 +111,7 @@ export function NavigationDrawer(props: {
                     <LightIconButton
                       Icon={Search}
                       accent="secondary"
-                      onClick={() => navigate("/search")}
+                      onClick={openSearchRecordsPage}
                       aria-label="Buscar"
                     />
                   </Show>

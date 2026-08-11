@@ -260,6 +260,7 @@
   --t-background-transparent-light: var(--background-transparent-light);
   --t-background-transparent-medium: var(--background-transparent-medium);
   --t-background-transparent-primary: var(--background-transparent-primary);
+  --t-background-transparent-danger: color(display-p3 0.75 0.2 0.2 / 0.08);
   --t-border-color-strong: color(display-p3 0.839 0.839 0.839);
   --t-border-color-medium: color(display-p3 0.922 0.922 0.922);
   --t-border-color-light: color(display-p3 0.945 0.945 0.945);
@@ -269,6 +270,7 @@
   --t-font-color-tertiary: var(--foreground-tertiary);
   --t-font-color-light: var(--foreground-light);
   --t-font-color-extra-light: color(display-p3 0.8 0.8 0.8);
+  --t-font-color-danger: var(--destructive);
   --t-blur-light: blur(6px) saturate(200%) contrast(50%) brightness(130%);
   --t-blur-medium: blur(12px) saturate(200%) contrast(50%) brightness(130%);
   --t-blur-strong: blur(20px) saturate(200%) contrast(50%) brightness(130%);
@@ -401,6 +403,7 @@
   --t-background-transparent-light: var(--background-transparent-light);
   --t-background-transparent-medium: var(--background-transparent-medium);
   --t-background-transparent-primary: var(--background-transparent-primary);
+  --t-background-transparent-danger: color(display-p3 1 0.57 0.55 / 0.08);
   --t-border-color-strong: color(display-p3 0.282 0.282 0.282);
   --t-border-color-medium: color(display-p3 0.133 0.133 0.133);
   --t-border-color-light: color(display-p3 0.114 0.114 0.114);
@@ -410,6 +413,7 @@
   --t-font-color-tertiary: var(--foreground-tertiary);
   --t-font-color-light: var(--foreground-light);
   --t-font-color-extra-light: color(display-p3 0.298 0.298 0.298);
+  --t-font-color-danger: var(--color-red-11);
   --t-blur-light: blur(6px) saturate(200%) contrast(100%) brightness(130%);
   --t-blur-medium: blur(12px) saturate(200%) contrast(100%) brightness(130%);
   --t-blur-strong: blur(20px) saturate(200%) contrast(100%) brightness(130%);

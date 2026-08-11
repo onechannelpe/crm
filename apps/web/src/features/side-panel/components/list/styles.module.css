@@ -1,6 +1,0 @@
-/* Keyboard-navigation container only. Scrolling is owned by SidePanelPage. */
-.list {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}

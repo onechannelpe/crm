@@ -1,43 +1,21 @@
-import { createSignal, onMount } from "solid-js";
-
-import { useHotkey } from "~/browser/hotkey/use-hotkey";
+import { useModKeyLabel } from "~/browser/hotkey/use-mod-key-label";
 import { createExtensionPortConnection } from "~/features/extension/port";
-import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
-import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
-import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-page";
+import { useSidePanelMenu } from "~/features/side-panel/hooks/use-side-panel-menu";
 
 export function useAppHeaderSidePanel() {
-  const [modKey, setModKey] = createSignal("Ctrl");
-  const { isOpen, openPanel, closePanel } = useSidePanel();
+  const { isSidePanelOpen, toggleSidePanelMenu } = useSidePanelMenu();
   const {
     state: extensionState,
     errorMessage: extensionErrorMessage,
     isAvailable: isExtensionAvailable,
   } = createExtensionPortConnection();
 
-  onMount(() => {
-    if (/Mac/i.test(navigator.platform)) {
-      setModKey("⌘");
-    }
-  });
-
-  const toggleSidePanel = () => {
-    if (isOpen()) {
-      closePanel();
-      return;
-    }
-
-    openPanel(createRootSidePanelPage());
-  };
-
-  useHotkey(SIDE_PANEL_HOTKEY, toggleSidePanel);
-
   return {
-    modKey,
-    isSidePanelOpen: isOpen,
+    modKey: useModKeyLabel(),
+    isSidePanelOpen,
     extensionState,
     extensionErrorMessage,
     isExtensionAvailable,
-    toggleSidePanel,
+    toggleSidePanel: toggleSidePanelMenu,
   };
 }
