@@ -1,6 +1,7 @@
 {
   "$schema": "https://schema.fallow.tools/.fallowrc.json",
   "extends": "../../.fallowrc.json",
+  "entry": [],
   "ignorePatterns": [
     "**/*.generated.ts",
     "**/*.generated.tsx",

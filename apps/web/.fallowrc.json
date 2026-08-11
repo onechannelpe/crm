@@ -37,6 +37,14 @@
     {
       "file": "src/server/entrypoints/nitro/realtime-lifecycle.ts",
       "exports": ["default"]
+    },
+    {
+      "file": "src/routes/api/extension/**/*.ts",
+      "exports": ["POST"]
+    },
+    {
+      "file": "src/server/platform/database/schema/modules/*.ts",
+      "exports": ["createTables"]
     }
   ],
   "ignoreUnresolvedImports": [
@@ -54,16 +62,6 @@
     "crossws",
     "srvx",
     "solid-mdx"
-  ],
-  "ignoreExports": [
-    {
-      "file": "src/routes/api/extension/**/*.ts",
-      "exports": ["POST"]
-    },
-    {
-      "file": "src/server/platform/database/schema/modules/*.ts",
-      "exports": ["createTables"]
-    }
   ],
   "rules": {
     "unused-files": "warn",

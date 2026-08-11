@@ -1,5 +1,24 @@
 {
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": [
+    "apps/web/src/app.tsx",
+    "apps/web/src/entry-client.tsx",
+    "apps/web/src/entry-server.tsx",
+    "apps/web/src/middleware.ts",
+    "apps/web/src/workers/maintenance-runner.ts",
+    "apps/web/src/routes/**/*.{ts,tsx}",
+    "apps/web/src/rpc/**/*.{ts,tsx}",
+    "apps/web/src/server/platform/database/migrate-cli.ts",
+    "apps/web/src/server/platform/database/seed.ts",
+    "apps/web/tools/e2e/prepare.ts",
+    "apps/web/vite.config.ts",
+    "apps/web/tracer.ts",
+    "apps/web/vitest.bench.config.ts",
+    "apps/extension/entrypoints/**/*.{ts,tsx}",
+    "packages/email-composer/scripts/build-emails.ts",
+    "packages/fetch-refs/src/cli.ts",
+    "tools/codegen/bin/**/*.ts"
+  ],
   "publicPackages": [
     "@crm/contracts",
     "@crm/email-composer",
