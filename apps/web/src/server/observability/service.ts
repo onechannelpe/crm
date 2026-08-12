@@ -1,3 +1,4 @@
+import type { WireKind } from "~/contracts/errors";
 import { serializeEventPayload } from "~/contracts/events";
 import type {
   AuthFunnelSnapshot,
@@ -8,7 +9,9 @@ import type {
   ObservabilitySnapshotInput,
   ObservationStatus,
 } from "~/contracts/observability/snapshot";
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
+import { invalid, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import {
   isAuthFunnelEventName,
   isAuthFunnelMethod,
@@ -18,15 +21,13 @@ import {
   type AuthFunnelOutcome,
   type AuthFunnelScreen,
   type AuthFunnelSource,
-} from "~/lib/observability/auth-funnel";
-import type { WireKind } from "~/lib/wire-error";
-import { invalid, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
+} from "~/domain/observability/auth-funnel";
+import { addMilliseconds } from "~/domain/time/clock";
 import {
   parsePositiveIntegerAtMost,
   trimOrUndefined,
-} from "~/server/shared/query-window";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+} from "~/server/platform/action/query-window";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { createActionObservationsRepo } from "./repos-action-observations";
 import type { createAuthFunnelEventsRepo } from "./repos-auth-funnel-events";
@@ -57,7 +58,7 @@ export interface RecordActionObservationInput {
   createdAt: Date;
 }
 
-export interface RecordAuthFunnelEventInput {
+interface RecordAuthFunnelEventInput {
   traceId: string;
   requestId: string;
   routePath: string | null;
@@ -70,11 +71,39 @@ export interface RecordAuthFunnelEventInput {
   createdAt: Date;
 }
 
+export async function recordActionObservation(
+  actionObservations: ObservabilityRepos["actionObservations"],
+  input: RecordActionObservationInput,
+): Promise<void> {
+  const errorDetails = resolveErrorDetails(input.status, input.errorCode);
+  await actionObservations.create({
+    trace_id: input.traceId,
+    request_id: input.requestId,
+    route_path: input.routePath,
+    http_method: input.httpMethod,
+    action_name: input.actionName,
+    actor_user_id: input.actorUserId,
+    actor_role: input.actorRole,
+    status: input.status,
+    duration_ms: Math.max(0, Math.round(input.durationMs)),
+    error_code: errorDetails.code,
+    error_category: errorDetails.category,
+    public_error: errorDetails.publicError,
+    is_sensitive: errorDetails.isSensitive,
+    input_summary: summarizeInput(input.input),
+    created_at: input.createdAt,
+  });
+}
+
 function summarizeInput(input: unknown): string | null {
   const serialized = serializeEventPayload(input);
-  if (!serialized) return null;
+  if (!serialized) {
+    return null;
+  }
   const text = JSON.stringify(serialized);
-  if (text.length <= 400) return text;
+  if (text.length <= 400) {
+    return text;
+  }
   return `${text.slice(0, 400)}…`;
 }
 
@@ -196,8 +225,12 @@ interface AuthFunnelSnapshotFilter {
 function parseObservationStatus(
   value: string | undefined,
 ): Result<ObservationStatus | undefined, DomainError> {
-  if (!value) return Ok(undefined);
-  if (value === "ok" || value === "error") return Ok(value);
+  if (!value) {
+    return Ok(undefined);
+  }
+  if (value === "ok" || value === "error") {
+    return Ok(value);
+  }
 
   return Err(invalid({ code: "invalid_status" }));
 }
@@ -205,8 +238,12 @@ function parseObservationStatus(
 function parseAuthFunnelEventName(
   value: string | undefined,
 ): Result<AuthFunnelEventName | undefined, DomainError> {
-  if (!value) return Ok(undefined);
-  if (isAuthFunnelEventName(value)) return Ok(value);
+  if (!value) {
+    return Ok(undefined);
+  }
+  if (isAuthFunnelEventName(value)) {
+    return Ok(value);
+  }
 
   return Err(invalid({ code: "invalid_event_name" }));
 }
@@ -214,8 +251,12 @@ function parseAuthFunnelEventName(
 function parseAuthFunnelMethod(
   value: string | undefined,
 ): Result<AuthFunnelMethod | undefined, DomainError> {
-  if (!value) return Ok(undefined);
-  if (isAuthFunnelMethod(value)) return Ok(value);
+  if (!value) {
+    return Ok(undefined);
+  }
+  if (isAuthFunnelMethod(value)) {
+    return Ok(value);
+  }
 
   return Err(invalid({ code: "invalid_method" }));
 }
@@ -223,14 +264,19 @@ function parseAuthFunnelMethod(
 function parseAuthFunnelOutcome(
   value: string | undefined,
 ): Result<AuthFunnelOutcome | undefined, DomainError> {
-  if (!value) return Ok(undefined);
-  if (isAuthFunnelOutcome(value)) return Ok(value);
+  if (!value) {
+    return Ok(undefined);
+  }
+  if (isAuthFunnelOutcome(value)) {
+    return Ok(value);
+  }
 
   return Err(invalid({ code: "invalid_outcome" }));
 }
 
 function parseActionSnapshotFilter(
   input: ObservabilitySnapshotInput | undefined,
+  windowEndsAt: Date,
 ): Result<ActionSnapshotFilter, DomainError> {
   const parsedWindowMinutes = parsePositiveIntegerAtMost(
     input?.windowMinutes ?? OBSERVABILITY_DEFAULT_WINDOW_MINUTES,
@@ -240,7 +286,9 @@ function parseActionSnapshotFilter(
       max: OBSERVABILITY_MAX_WINDOW_MINUTES,
     },
   );
-  if (isErr(parsedWindowMinutes)) return parsedWindowMinutes;
+  if (isErr(parsedWindowMinutes)) {
+    return parsedWindowMinutes;
+  }
 
   const parsedLimit = parsePositiveIntegerAtMost(
     input?.limit ?? OBSERVABILITY_DEFAULT_LIMIT,
@@ -250,19 +298,22 @@ function parseActionSnapshotFilter(
       max: OBSERVABILITY_MAX_LIMIT,
     },
   );
-  if (isErr(parsedLimit)) return parsedLimit;
+  if (isErr(parsedLimit)) {
+    return parsedLimit;
+  }
 
   const parsedStatus = parseObservationStatus(input?.status);
-  if (isErr(parsedStatus)) return parsedStatus;
+  if (isErr(parsedStatus)) {
+    return parsedStatus;
+  }
 
   const windowMinutes = parsedWindowMinutes.value;
-  const now = new Date();
 
   return Ok({
     windowMinutes,
     limit: parsedLimit.value,
-    fromInclusive: new Date(now.getTime() - windowMinutes * 60_000),
-    toInclusive: now,
+    fromInclusive: addMilliseconds(windowEndsAt, -windowMinutes * 60_000),
+    toInclusive: windowEndsAt,
     actionName: trimOrUndefined(input?.actionName),
     status: parsedStatus.value,
   });
@@ -270,6 +321,7 @@ function parseActionSnapshotFilter(
 
 function parseAuthFunnelSnapshotFilter(
   input: AuthFunnelSnapshotInput | undefined,
+  windowEndsAt: Date,
 ): Result<AuthFunnelSnapshotFilter, DomainError> {
   const parsedWindowMinutes = parsePositiveIntegerAtMost(
     input?.windowMinutes ?? OBSERVABILITY_DEFAULT_WINDOW_MINUTES,
@@ -279,7 +331,9 @@ function parseAuthFunnelSnapshotFilter(
       max: OBSERVABILITY_MAX_WINDOW_MINUTES,
     },
   );
-  if (isErr(parsedWindowMinutes)) return parsedWindowMinutes;
+  if (isErr(parsedWindowMinutes)) {
+    return parsedWindowMinutes;
+  }
 
   const parsedLimit = parsePositiveIntegerAtMost(
     input?.limit ?? OBSERVABILITY_DEFAULT_LIMIT,
@@ -289,25 +343,32 @@ function parseAuthFunnelSnapshotFilter(
       max: OBSERVABILITY_MAX_LIMIT,
     },
   );
-  if (isErr(parsedLimit)) return parsedLimit;
+  if (isErr(parsedLimit)) {
+    return parsedLimit;
+  }
 
   const parsedEventName = parseAuthFunnelEventName(input?.eventName);
-  if (isErr(parsedEventName)) return parsedEventName;
+  if (isErr(parsedEventName)) {
+    return parsedEventName;
+  }
 
   const parsedMethod = parseAuthFunnelMethod(input?.method);
-  if (isErr(parsedMethod)) return parsedMethod;
+  if (isErr(parsedMethod)) {
+    return parsedMethod;
+  }
 
   const parsedOutcome = parseAuthFunnelOutcome(input?.outcome);
-  if (isErr(parsedOutcome)) return parsedOutcome;
+  if (isErr(parsedOutcome)) {
+    return parsedOutcome;
+  }
 
   const windowMinutes = parsedWindowMinutes.value;
-  const now = new Date();
 
   return Ok({
     windowMinutes,
     limit: parsedLimit.value,
-    fromInclusive: new Date(now.getTime() - windowMinutes * 60_000),
-    toInclusive: now,
+    fromInclusive: addMilliseconds(windowEndsAt, -windowMinutes * 60_000),
+    toInclusive: windowEndsAt,
     eventName: parsedEventName.value,
     method: parsedMethod.value,
     outcome: parsedOutcome.value,
@@ -316,25 +377,8 @@ function parseAuthFunnelSnapshotFilter(
 
 export function createObservabilityService(repos: ObservabilityRepos) {
   return {
-    async recordAction(input: RecordActionObservationInput): Promise<void> {
-      const errorDetails = resolveErrorDetails(input.status, input.errorCode);
-      await repos.actionObservations.create({
-        trace_id: input.traceId,
-        request_id: input.requestId,
-        route_path: input.routePath,
-        http_method: input.httpMethod,
-        action_name: input.actionName,
-        actor_user_id: input.actorUserId,
-        actor_role: input.actorRole,
-        status: input.status,
-        duration_ms: Math.max(0, Math.round(input.durationMs)),
-        error_code: errorDetails.code,
-        error_category: errorDetails.category,
-        public_error: errorDetails.publicError,
-        is_sensitive: errorDetails.isSensitive,
-        input_summary: summarizeInput(input.input),
-        created_at: input.createdAt,
-      });
+    recordAction(input: RecordActionObservationInput): Promise<void> {
+      return recordActionObservation(repos.actionObservations, input);
     },
 
     async recordAuthFunnelEvent(
@@ -355,10 +399,13 @@ export function createObservabilityService(repos: ObservabilityRepos) {
     },
 
     async getActionSnapshot(
-      input?: ObservabilitySnapshotInput,
+      input: ObservabilitySnapshotInput | undefined,
+      windowEndsAt: Date,
     ): Promise<Result<ObservabilitySnapshot, DomainError>> {
-      const parsed = parseActionSnapshotFilter(input);
-      if (isErr(parsed)) return parsed;
+      const parsed = parseActionSnapshotFilter(input, windowEndsAt);
+      if (isErr(parsed)) {
+        return parsed;
+      }
 
       const filter = parsed.value;
       const [summary, recent] = await Promise.all([
@@ -404,10 +451,13 @@ export function createObservabilityService(repos: ObservabilityRepos) {
     },
 
     async getAuthFunnelSnapshot(
-      input?: AuthFunnelSnapshotInput,
+      input: AuthFunnelSnapshotInput | undefined,
+      windowEndsAt: Date,
     ): Promise<Result<AuthFunnelSnapshot, DomainError>> {
-      const parsed = parseAuthFunnelSnapshotFilter(input);
-      if (isErr(parsed)) return parsed;
+      const parsed = parseAuthFunnelSnapshotFilter(input, windowEndsAt);
+      if (isErr(parsed)) {
+        return parsed;
+      }
 
       const filter = parsed.value;
       const [summary, recent] = await Promise.all([

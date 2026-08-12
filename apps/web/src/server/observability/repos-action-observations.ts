@@ -1,19 +1,22 @@
 import type { Insertable, Kysely } from "kysely";
 
-import { notify } from "~/lib/db/notify";
-import type { ActionObservationsTable, Database } from "~/lib/db/types";
+import type { UserId } from "~/domain/ids";
 import { mapActionObservationRow } from "~/server/event-logs/mappers";
 import {
   EVENT_LOGS_STREAM_CHANNEL,
   serializeEventLogStreamPayload,
 } from "~/server/event-logs/stream-contract";
-import type { UserId } from "~/server/shared/ids";
+import { notify } from "~/server/platform/database/notifications/publish";
+import type {
+  ActionObservationsTable,
+  Database,
+} from "~/server/platform/database/types";
 
 type NewActionObservationRow = Insertable<Database["action_observations"]>;
 
 type ObservationStatus = ActionObservationsTable["status"];
 
-export interface ActionObservationFilter {
+interface ActionObservationFilter {
   fromInclusive: Date;
   toInclusive: Date;
   actionName?: string;
@@ -22,7 +25,7 @@ export interface ActionObservationFilter {
   limit: number;
 }
 
-export interface ActionObservationSummaryFilter {
+interface ActionObservationSummaryFilter {
   fromInclusive: Date;
   toInclusive: Date;
   actionName?: string;
@@ -33,18 +36,22 @@ export interface ActionObservationSummaryFilter {
 export function createActionObservationsRepo(db: Kysely<Database>) {
   return {
     async create(values: NewActionObservationRow) {
-      const row = await db
-        .insertInto("action_observations")
-        .values(values)
-        .returningAll()
-        .executeTakeFirstOrThrow();
+      return db.transaction().execute(async (trx) => {
+        const row = await trx
+          .insertInto("action_observations")
+          .values(values)
+          .returningAll()
+          .executeTakeFirstOrThrow();
 
-      const payload = serializeEventLogStreamPayload(
-        mapActionObservationRow(row),
-      );
-      if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+        const payload = serializeEventLogStreamPayload(
+          mapActionObservationRow(row),
+        );
+        if (payload) {
+          await notify(trx, EVENT_LOGS_STREAM_CHANNEL, payload);
+        }
 
-      return row;
+        return row;
+      });
     },
 
     async findRecent(filter: ActionObservationFilter) {
@@ -99,16 +106,12 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
       return query.groupBy("action_name").orderBy("count", "desc").execute();
     },
 
-    async deleteCreatedBefore(cutoff: Date): Promise<number> {
+    async deleteCreatedBefore(createdBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("action_observations")
-        .where("created_at", "<", cutoff)
+        .where("created_at", "<", createdBefore)
         .executeTakeFirst();
       return Number(result.numDeletedRows ?? 0);
     },
   };
 }
-
-export type ActionObservationsRepo = ReturnType<
-  typeof createActionObservationsRepo
->;
