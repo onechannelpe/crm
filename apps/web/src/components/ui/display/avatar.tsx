@@ -11,11 +11,6 @@ export type AvatarType = "squared" | "rounded";
 interface AvatarProps {
   imageUrl: string | null;
   fallback: string;
-  /*
-    Seeds the placeholder tint. Pass a stable record id so one record keeps one
-    colour everywhere it appears; defaults to the fallback text, which drifts
-    when a name is edited.
-  */
   placeholderColorSeed?: string;
   size?: AvatarSize;
   type?: AvatarType;
@@ -30,19 +25,12 @@ export function Avatar(props: AvatarProps) {
   createEffect(
     on(
       () => props.imageUrl,
-      () => {
-        setHasImageError(false);
-      },
+      () => setHasImageError(false),
     ),
   );
 
   const showImage = () => Boolean(props.imageUrl) && !hasImageError();
 
-  /*
-    The tint rides on the placeholder rather than the root so callers that style
-    the root with their own background keep winning. An image fills the box edge
-    to edge anyway, so a tint behind it would only fringe transparent logos.
-  */
   const placeholderStyle = () => {
     if (props.placeholderColorSeed === undefined) {
       return undefined;
@@ -52,7 +40,10 @@ export function Avatar(props: AvatarProps) {
       props.placeholderColorSeed,
     );
 
-    return { "--avatar-background": background, "--avatar-color": foreground };
+    return {
+      "--avatar-background": background,
+      "--avatar-color": foreground,
+    };
   };
 
   return (

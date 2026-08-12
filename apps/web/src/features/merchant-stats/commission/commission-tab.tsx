@@ -92,9 +92,6 @@ function PendingCard(props: { title: string }) {
   );
 }
 
-// Ordered by daily-review priority: Caja 1 mass-market first, Caja 2
-// second, both penalidades next (they gate those same two cajas), Caja 3
-// and the corporate desk last.
 function CommissionContent(props: { view: CommissionManagerView }) {
   return (
     <WidgetCanvas>
@@ -228,9 +225,14 @@ function MassMarketCaja2Section(props: { result: MassMarketCaja2Result }) {
                 title={`Caja 2 · ${formatMesa(mesa.mesa)}`}
                 span="quarter"
                 value={formatInteger(
-                  mesa.bandsM0PlusM1.reduce((sum, b) => sum + b.activeCount, 0),
+                  mesa.bandsM0PlusM1.reduce(
+                    (sum, band) => sum + band.activeCount,
+                    0,
+                  ),
                 )}
-                caption={`POS activos M0+M1 · ${formatInteger(mesa.bandsM2.reduce((sum, b) => sum + b.activeCount, 0))} en M2`}
+                caption={`POS activos M0+M1 · ${formatInteger(
+                  mesa.bandsM2.reduce((sum, band) => sum + band.activeCount, 0),
+                )} en M2`}
               />
             )}
           </For>
@@ -253,7 +255,7 @@ function CorporateCaja2Section(props: { result: CorporateCaja2Result }) {
               title="Caja 2 · Mesa 1 (M0+M1)"
               span="quarter"
               value={formatInteger(
-                result().users.filter((u) => u.m0PlusM1.active).length,
+                result().users.filter((user) => user.m0PlusM1.active).length,
               )}
               caption={`de ${formatInteger(result().users.length)} usuarios`}
             />
@@ -261,7 +263,7 @@ function CorporateCaja2Section(props: { result: CorporateCaja2Result }) {
               title="Caja 2 · Mesa 1 (M2)"
               span="quarter"
               value={formatInteger(
-                result().users.filter((u) => u.m2.active).length,
+                result().users.filter((user) => user.m2.active).length,
               )}
               caption={`de ${formatInteger(result().users.length)} usuarios`}
             />
@@ -273,17 +275,17 @@ function CorporateCaja2Section(props: { result: CorporateCaja2Result }) {
   );
 }
 
-// Real Culqi usuario identity, independent of whether a CRM user account
-// exists for that person -- most usuarios in mesa 1 won't have one, so
-// filtering here must not depend on a CRM match.
+// Culqi users do not require a matching culqi360 account.
 function CorporateCaja2UsersTable(props: { users: CorporateCaja2UserRow[] }) {
   const [search, setSearch] = createSignal("");
 
   const filteredUsers = createMemo(() => {
     const query = search().trim().toLowerCase();
+
     if (!query) {
       return props.users;
     }
+
     return props.users.filter((user) =>
       `${user.userName ?? ""} ${user.userCode}`.toLowerCase().includes(query),
     );

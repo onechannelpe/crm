@@ -46,7 +46,7 @@ export function NavigationDrawer(props: {
   const isSettingsDrawer = useIsSettingsDrawer();
   const { openSearchRecordsPage } = useSidePanelMenu();
   const logout = useAction(logoutMutation);
-  const [resizing, setResizing] = createSignal(false);
+  const [isResizing, setIsResizing] = createSignal(false);
 
   const onPointerDown = useResizablePanel({
     side: "right",
@@ -54,8 +54,8 @@ export function NavigationDrawer(props: {
     getCurrentWidth: width,
     onWidthChange: setWidth,
     onCollapse: () => setExpanded(false),
-    onResizeStart: () => setResizing(true),
-    onResizeEnd: () => setResizing(false),
+    onResizeStart: () => setIsResizing(true),
+    onResizeEnd: () => setIsResizing(false),
     cssVariableName: NAVIGATION_DRAWER_WIDTH_VAR,
     dragThresholdPx: 4,
   });
@@ -80,7 +80,7 @@ export function NavigationDrawer(props: {
       <div
         class={clsx(
           styles.drawer,
-          resizing() && styles.drawerResizing,
+          isResizing() && styles.drawerResizing,
           props.className,
           isSettingsDrawer() && styles.drawerSettings,
           expanded() && !isMobile() && styles.drawerExpandedDesktop,
@@ -121,7 +121,7 @@ export function NavigationDrawer(props: {
                       <LightIconButton
                         Icon={LayoutSidebarLeftCollapse}
                         accent="secondary"
-                        onClick={() => setExpanded((value) => !value)}
+                        onClick={() => setExpanded(false)}
                         aria-label="Contraer barra lateral"
                       />
                     </div>
@@ -147,7 +147,7 @@ export function NavigationDrawer(props: {
           <Show when={!isMobile() && !isSettingsDrawer() && expanded()}>
             <button
               type="button"
-              class={clsx(styles.resizeHandle, resizing() && styles.resizing)}
+              class={clsx(styles.resizeHandle, isResizing() && styles.resizing)}
               onPointerDown={onPointerDown}
               aria-label="Redimensionar barra lateral"
             />

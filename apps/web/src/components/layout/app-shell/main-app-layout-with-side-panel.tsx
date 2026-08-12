@@ -5,12 +5,8 @@ import { SidePanelHost } from "~/features/side-panel/shell/host";
 
 import styles from "./main-app-layout-with-side-panel.module.css";
 
-/*
-  The page and the side panel share one row: the panel animates its own width,
-  so the page reflows instead of being covered. One instance serves every
-  signed-in route, which is what keeps the panel open across navigation and
-  gives the command menu hotkeys a single mount point.
-*/
+// The panel shares layout space with the page, so content reflows as it opens.
+// This layout stays mounted across signed-in routes to preserve panel state.
 export function MainAppLayoutWithSidePanel(props: ParentProps) {
   useSidePanelHotkeys();
 

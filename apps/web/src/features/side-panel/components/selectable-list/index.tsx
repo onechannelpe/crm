@@ -11,18 +11,12 @@ type SelectableListProps = ParentProps<{
   onSelect: (id: string) => void;
 }>;
 
-/*
-  Selection lives on an id rather than on DOM focus, so the arrow keys walk the
-  list while the caret stays in the top bar's search box. Moving focus onto the
-  rows instead would end the user's typing on the first ArrowDown.
-*/
 export function SelectableList(props: SelectableListProps) {
   const selectedIndex = createMemo(() =>
     props.itemIds.findIndex((id) => id === props.selectedId),
   );
 
-  // Anything that reorders the list (a new search, a narrowed filter) leaves the
-  // old selection dangling, so fall back to the first row.
+  // Reset to the first item when the current selection disappears.
   createEffect(() => {
     const [firstId] = props.itemIds;
 

@@ -28,33 +28,36 @@ export function CulqiView(props: { view: GpvView }) {
   const culqi = createAsync(() =>
     gpvCulqiViewQuery({ filter: props.view.filter() }),
   );
-  const ready = () => {
+
+  const readyView = () => {
     const view = culqi();
+
     return view?.kind === "ready" ? view : null;
   };
+
   const [search, setSearch] = createSignal("");
 
-  // Culqi's own usuario identity, unrelated to whether a CRM user account
-  // exists for that person -- filtering here must never depend on a CRM
-  // match, since most usuarios won't have one.
   const filteredRows = createMemo(() => {
-    const rows = ready()?.rows ?? [];
+    const rows = readyView()?.rows ?? [];
     const query = search().trim().toLowerCase();
+
     if (!query) {
       return rows;
     }
+
     return rows.filter((row) =>
       (row.culqiUserName ?? "sin usuario").toLowerCase().includes(query),
     );
   });
 
   const total = () => filteredRows().reduce((sum, row) => sum + row.gpv, 0);
+  const count = () => filteredRows().length;
 
   return (
     <ErrorBoundary fallback={<CulqiError />}>
       <Suspense fallback={<CulqiSkeleton />}>
         <Show
-          when={ready()}
+          when={readyView()}
           fallback={
             <EmptyState
               title="Sin datos de GPV"
@@ -68,8 +71,8 @@ export function CulqiView(props: { view: GpvView }) {
                 <WidgetGridItem span="full">
                   <WidgetCardShell
                     title={`GPV ${formatMonth(view().month)} por usuario de Culqi · ${formatSolesCompact(total())}`}
-                    count={filteredRows().length}
-                    status={filteredRows().length ? "ready" : "empty"}
+                    count={count()}
+                    status={count() ? "ready" : "empty"}
                     emptyLabel="Ningún usuario coincide con la búsqueda."
                   >
                     <div class={styles.body}>

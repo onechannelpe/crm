@@ -126,6 +126,7 @@ function ConfigurableSection(props: {
             />
           }
         />
+
         <Show when={props.enabled}>{props.children}</Show>
       </SettingsOptionCard>
     </SettingsSection>
@@ -163,9 +164,10 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
         effectiveFrom: new Date().toISOString().slice(0, 10),
         rules: draft,
       });
+
       enqueueSuccessSnackBar("Esquema de comisiones actualizado");
-    } catch (caught: unknown) {
-      enqueueErrorSnackBar(actionErrorMessage(caught));
+    } catch (error) {
+      enqueueErrorSnackBar(actionErrorMessage(error));
     }
   }
 
@@ -197,10 +199,14 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                 onChange={(minGpv) =>
                   setDraft("massMarket", "caja1", {
                     ...caja1(),
-                    activation: { ...caja1().activation, minGpv },
+                    activation: {
+                      ...caja1().activation,
+                      minGpv,
+                    },
                   })
                 }
               />
+
               <SettingsOptionCardRow
                 title="Transacciones mínimas (M0)"
                 control={
@@ -212,12 +218,16 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                     onChange={(minTrx) =>
                       setDraft("massMarket", "caja1", {
                         ...caja1(),
-                        activation: { ...caja1().activation, minTrx },
+                        activation: {
+                          ...caja1().activation,
+                          minTrx,
+                        },
                       })
                     }
                   />
                 }
               />
+
               <SettingsOptionCardRow
                 title="Meta de activas en M0"
                 control={
@@ -227,11 +237,15 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                     min={0}
                     max={200}
                     onChange={(m0Target) =>
-                      setDraft("massMarket", "caja1", { ...caja1(), m0Target })
+                      setDraft("massMarket", "caja1", {
+                        ...caja1(),
+                        m0Target,
+                      })
                     }
                   />
                 }
               />
+
               <BandTableRow
                 label="Rangos de pago (activas en M0+15)"
                 bands={caja1().m0Plus15Bands}
@@ -272,6 +286,7 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                   })
                 }
               />
+
               <BandTableRow
                 label="Rangos de pago (M0+M1)"
                 bands={caja2().bandsM0PlusM1}
@@ -282,11 +297,15 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                   })
                 }
               />
+
               <BandTableRow
                 label="Rangos de pago (M2)"
                 bands={caja2().bandsM2}
                 onChange={(bandsM2) =>
-                  setDraft("massMarket", "caja2", { ...caja2(), bandsM2 })
+                  setDraft("massMarket", "caja2", {
+                    ...caja2(),
+                    bandsM2,
+                  })
                 }
               />
             </>
@@ -319,6 +338,7 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                   })
                 }
               />
+
               <NumberField
                 label="Suma mínima de RUCs calificados"
                 value={caja2().minAggregateGpv}
@@ -329,6 +349,7 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                   })
                 }
               />
+
               <SettingsOptionCardRow
                 title="Mínimo de RUCs calificados"
                 control={
@@ -406,6 +427,7 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                   })
                 }
               />
+
               <PercentField
                 label="Porcentaje de reversión"
                 value={reversion().reversalPct}
@@ -453,6 +475,7 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                   })
                 }
               />
+
               <NumberField
                 label="GPV mínimo acumulado -- Mesa 2"
                 value={activacion().minCumulativeGpvByMesa.mesa2}
@@ -466,6 +489,7 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                   })
                 }
               />
+
               <NumberField
                 label="GPV mínimo acumulado -- Mesa 3"
                 value={activacion().minCumulativeGpvByMesa.mesa3}
@@ -479,6 +503,7 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
                   })
                 }
               />
+
               <PercentField
                 label="Porcentaje máximo de inactivas"
                 description="Estrictamente menor a este porcentaje."

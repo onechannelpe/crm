@@ -19,7 +19,7 @@ import { useCohortRowsGrid } from "./use-cohort-rows-grid";
 
 import styles from "./grid-surface.module.css";
 
-function pointAt(row: CohortSaleRow, offset: number): GpvPoint | null {
+function gpvPointAt(row: CohortSaleRow, offset: number): GpvPoint | null {
   return row.months.find((month) => month.offset === offset) ?? null;
 }
 
@@ -69,9 +69,9 @@ const COHORT_COLUMNS = [
     label: "M0",
     icon: ChartColumn,
     width: 110,
-    renderCell: (row) => formatGpv(pointAt(row, 0)),
+    renderCell: (row) => formatGpv(gpvPointAt(row, 0)),
   },
-  // Covers M0 and the first 15 days of M1.
+  // M0 plus the first 15 days of M1.
   {
     key: "m0_plus_15d",
     label: "M0+15D",
@@ -84,21 +84,21 @@ const COHORT_COLUMNS = [
     label: "M1",
     icon: ChartColumn,
     width: 110,
-    renderCell: (row) => formatGpv(pointAt(row, 1)),
+    renderCell: (row) => formatGpv(gpvPointAt(row, 1)),
   },
   {
     key: "m2",
     label: "M2",
     icon: ChartColumn,
     width: 110,
-    renderCell: (row) => formatGpv(pointAt(row, 2)),
+    renderCell: (row) => formatGpv(gpvPointAt(row, 2)),
   },
   {
     key: "m3",
     label: "M3",
     icon: ChartColumn,
     width: 110,
-    renderCell: (row) => formatGpv(pointAt(row, 3)),
+    renderCell: (row) => formatGpv(gpvPointAt(row, 3)),
   },
   {
     key: "projected",
@@ -131,7 +131,7 @@ export function CohortGrid(props: { view: GpvView }) {
         },
         ...COHORT_OFFSETS.map((offset) => ({
           label: `M${offset} (GPV / TRX)`,
-          value: formatGpvAndTrx(pointAt(row, offset)),
+          value: formatGpvAndTrx(gpvPointAt(row, offset)),
         })),
         {
           label: "M0+15D (GPV / TRX)",
@@ -160,8 +160,18 @@ export function CohortGrid(props: { view: GpvView }) {
 
   return (
     <div class={styles.surface}>
-      <ErrorBoundary fallback={renderGrid({ status: "error", rows: [] })}>
-        <Suspense fallback={renderGrid({ status: "pending", rows: [] })}>
+      <ErrorBoundary
+        fallback={renderGrid({
+          status: "error",
+          rows: [],
+        })}
+      >
+        <Suspense
+          fallback={renderGrid({
+            status: "pending",
+            rows: [],
+          })}
+        >
           {renderGrid({
             status: "ready",
             rows: grid.rows(),

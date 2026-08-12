@@ -1,5 +1,3 @@
-"use server";
-
 import {
   createAsync,
   revalidate,
@@ -180,7 +178,7 @@ export default function SecurityPage() {
     onRecoveryCodes: showFreshRecoveryCodes,
   });
 
-  async function handleRemovePasskeys(): Promise<void> {
+  async function handleRemovePasskeys() {
     try {
       const { message } = await removePasskeys();
 
@@ -192,7 +190,7 @@ export default function SecurityPage() {
     }
   }
 
-  async function handleDisableTotp(): Promise<void> {
+  async function handleDisableTotp() {
     try {
       const { message } = await disableTotp();
 
@@ -205,13 +203,13 @@ export default function SecurityPage() {
     }
   }
 
-  async function handleCopySetupKey(setupKey: string): Promise<void> {
+  async function handleCopySetupKey(setupKey: string) {
     await navigator.clipboard.writeText(setupKey);
 
     enqueueSuccessSnackBar("Clave de configuración copiada");
   }
 
-  async function handleRegenerateRecovery(): Promise<void> {
+  async function handleRegenerateRecovery() {
     try {
       const { recoveryCodes } = await regenerateRecovery();
 
@@ -223,7 +221,7 @@ export default function SecurityPage() {
     }
   }
 
-  async function handleAcknowledgeRecovery(): Promise<void> {
+  async function handleAcknowledgeRecovery() {
     try {
       await acknowledgeRecovery();
       setFreshRecoveryCodes([]);
@@ -232,7 +230,7 @@ export default function SecurityPage() {
     }
   }
 
-  async function handleChangePassword(event: SubmitEvent): Promise<void> {
+  async function handleChangePassword(event: SubmitEvent) {
     event.preventDefault();
 
     if (newPassword() !== confirmPassword()) {

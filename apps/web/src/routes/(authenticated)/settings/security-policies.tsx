@@ -14,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import type { AuditActionPolicyItem } from "~/contracts/audit-reader/policy";
 import { upsertAuditPolicyMutation } from "~/features/audit-policies/data/mutations";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import { auditPolicySnapshotQuery } from "~/rpc/audit-policies/audit-policy-snapshot";
@@ -24,7 +23,7 @@ import styles from "./settings-page.module.css";
 
 type PolicyRiskLevel = "high" | "medium" | "low";
 
-const RISK_LEVEL_LABEL: Record<PolicyRiskLevel, string> = {
+const RISK_LEVEL_LABELS: Record<PolicyRiskLevel, string> = {
   high: "Alto",
   medium: "Medio",
   low: "Bajo",
@@ -32,7 +31,7 @@ const RISK_LEVEL_LABEL: Record<PolicyRiskLevel, string> = {
 
 function riskLevelLabel(value: string): string {
   return value === "high" || value === "medium" || value === "low"
-    ? RISK_LEVEL_LABEL[value]
+    ? RISK_LEVEL_LABELS[value]
     : value;
 }
 
@@ -58,7 +57,6 @@ export default function SecurityPoliciesPage() {
   const saveAuditPolicy = useAction(upsertAuditPolicyMutation);
 
   const rows = createMemo(() => policySnapshot()?.items ?? []);
-
   const canSubmit = createMemo(
     () => canManagePolicies() && action().trim().length > 0,
   );
@@ -95,6 +93,7 @@ export default function SecurityPoliciesPage() {
             <col style={{ width: "100px" }} />
             <col style={{ width: "130px" }} />
           </colgroup>
+
           <TableHeader>
             <TableRow>
               <TableHead>Acción</TableHead>
@@ -104,6 +103,7 @@ export default function SecurityPoliciesPage() {
               <TableHead>Actualizada por</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             <Show
               when={rows().length > 0}
@@ -120,7 +120,7 @@ export default function SecurityPoliciesPage() {
               }
             >
               <For each={rows()}>
-                {(item: AuditActionPolicyItem) => (
+                {(item) => (
                   <TableRow>
                     <TableCell ellipsis>
                       <span class={styles.strong}>{item.action}</span>

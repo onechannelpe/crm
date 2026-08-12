@@ -27,22 +27,20 @@ import {
 
 import styles from "./record-show-header.module.css";
 
-type RecordShowHeaderActionsProps = {
-  leadId: string;
-};
-
 const LEAD_NAVIGATION_LIMIT = 200;
 
-export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
+export function RecordShowHeaderActions(props: { leadId: string }) {
   const navigate = useNavigate();
   const detail = createAsync(() => leadDetailQuery(props.leadId));
   const leadList = createAsync(() =>
     leadListQuery({ limit: LEAD_NAVIGATION_LIMIT, offset: 0 }),
   );
+
   const { favoriteBusy, setFavorite, deleteBusy, deleteLead } =
     useLeadActions();
   const { currentUser } = useAuthenticatedSession();
-  const user = currentUser();
+  const { isSidePanelOpen, toggleSidePanelMenu } = useSidePanelMenu();
+  const modKey = useModKeyLabel();
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = createSignal(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = createSignal<
@@ -50,7 +48,9 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   >(null);
 
   const canDelete = createMemo(
-    () => detail()?.lead != null && hasPermission(user.role, "lead:delete"),
+    () =>
+      detail()?.lead != null &&
+      hasPermission(currentUser().role, "lead:delete"),
   );
 
   const menuItems = createMemo<RecordShowMenuItem[]>(() => {
@@ -73,20 +73,9 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
     return items;
   });
 
-  async function handleConfirmDelete() {
-    setDeleteErrorMessage(null);
-
-    try {
-      await deleteLead(props.leadId);
-      setConfirmDeleteOpen(false);
-      navigate("/records");
-    } catch (caught) {
-      setDeleteErrorMessage(actionErrorMessage(caught));
-    }
-  }
-
   const currentIndex = createMemo(() => {
     const rows = leadList()?.rows;
+
     if (!rows) {
       return -1;
     }
@@ -97,6 +86,7 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   const previousLeadId = createMemo(() => {
     const rows = leadList()?.rows;
     const index = currentIndex();
+
     if (!rows || index <= 0) {
       return null;
     }
@@ -107,15 +97,13 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   const nextLeadId = createMemo(() => {
     const rows = leadList()?.rows;
     const index = currentIndex();
+
     if (!rows || index < 0 || index >= rows.length - 1) {
       return null;
     }
 
     return rows[index + 1]?.id ?? null;
   });
-
-  const modKey = useModKeyLabel();
-  const { isSidePanelOpen, toggleSidePanelMenu } = useSidePanelMenu();
 
   const isFavorite = () => detail()?.lead.isFavorite ?? false;
 
@@ -127,7 +115,21 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
     navigate(`/records/${leadId}`);
   };
 
-  const toggleFavorite = () => void setFavorite(props.leadId, isFavorite());
+  const toggleFavorite = () => {
+    void setFavorite(props.leadId, isFavorite());
+  };
+
+  async function handleConfirmDelete() {
+    setDeleteErrorMessage(null);
+
+    try {
+      await deleteLead(props.leadId);
+      setConfirmDeleteOpen(false);
+      navigate("/records");
+    } catch (caught) {
+      setDeleteErrorMessage(actionErrorMessage(caught));
+    }
+  }
 
   return (
     <>

@@ -22,7 +22,7 @@ export default function TeamRequestsPage() {
   const approveRequest = useAction(approveCapacityRequestMutation);
   const rejectRequest = useAction(rejectCapacityRequestMutation);
 
-  const requestSource = (): DataGridSource<PendingCapacityRequestView> => {
+  const source = (): DataGridSource<PendingCapacityRequestView> => {
     const rows = requests();
 
     if (rows === undefined) {
@@ -105,7 +105,7 @@ export default function TeamRequestsPage() {
         columns={columns}
         emptyState="No hay solicitudes pendientes."
         rowId={(row) => row.id}
-        source={requestSource()}
+        source={source()}
       />
     </div>
   );

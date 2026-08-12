@@ -34,18 +34,19 @@ export function RootPage() {
   const [selectedId, setSelectedId] = createSignal<string | null>(null);
 
   const commandGroups = createMemo<CommandGroup[]>(() => {
-    const grouped = new Map<string, ActionItem[]>();
     const routes = getNavigableRoutes(currentUser().role);
+    const grouped = new Map<string, ActionItem[]>();
 
     for (const route of routes) {
-      const groupLabel =
+      const label =
         route.section === "primary"
           ? "Accesos rápidos"
           : (route.group ?? "Más");
-      const existingItems = grouped.get(groupLabel) ?? [];
+
+      const items = grouped.get(label) ?? [];
       const Icon = ICON_BY_ROUTE[route.icon];
 
-      existingItems.push({
+      items.push({
         id: route.href,
         label: route.navLabel ?? route.label,
         icon: Icon,
@@ -55,7 +56,7 @@ export function RootPage() {
         },
       });
 
-      grouped.set(groupLabel, existingItems);
+      grouped.set(label, items);
     }
 
     return Array.from(grouped, ([label, items]) => ({
@@ -66,31 +67,34 @@ export function RootPage() {
 
   const filteredGroups = createMemo(() => {
     const query = searchText().toLowerCase();
+
     if (!query) {
       return commandGroups();
     }
-    return commandGroups()
-      .map((group) =>
-        Object.assign({}, group, {
-          items: group.items.filter((item) =>
-            item.label.toLowerCase().includes(query),
-          ),
-        }),
-      )
-      .filter((group) => group.items.length > 0);
+
+    return commandGroups().flatMap((group) => {
+      const items = group.items.filter((item) =>
+        item.label.toLowerCase().includes(query),
+      );
+
+      return items.length > 0 ? [{ label: group.label, items }] : [];
+    });
   });
 
   const visibleItems = createMemo(() =>
     filteredGroups().flatMap((group) => group.items),
   );
+
   const itemIds = createMemo(() => visibleItems().map((item) => item.id));
 
   useHotkey(
     "Enter",
     () => {
-      visibleItems()
-        .find((item) => item.id === selectedId())
-        ?.onAction();
+      const selectedItem = visibleItems().find(
+        (item) => item.id === selectedId(),
+      );
+
+      selectedItem?.onAction();
     },
     { allowInInputs: true },
   );

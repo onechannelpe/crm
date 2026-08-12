@@ -45,13 +45,10 @@ export function MerchantGpvDashboard() {
   const { enqueueErrorSnackBar } = useSnackBar();
   const { currentUser } = useAuthenticatedSession();
 
-  // The Comisiones tab is query-param state on this same route, not a
-  // separate path, so route-manifest.ts's route-level `dashboards:read`
-  // gate can't hide it -- back_office/supervisor already hold that
-  // permission. Hiding the tab here is the UX half; the RPC behind it
-  // gates on commission:read independently, which is the real boundary.
+  // Tab visibility is UX only; the RPC enforces `commission:read`.
   const canReadCommission = () =>
     hasPermission(currentUser().role, "commission:read");
+
   const gpvTabs = (): ReadonlyArray<TabItem<GpvTabId>> =>
     canReadCommission()
       ? [...BASE_GPV_TABS, { id: "comisiones", label: "Comisiones" }]

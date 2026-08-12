@@ -4,6 +4,7 @@ export function isMac(): boolean {
   if (typeof navigator === "undefined") {
     return false;
   }
+
   return (navigator.platform ?? navigator.userAgent)
     .toLowerCase()
     .includes("mac");
@@ -41,8 +42,7 @@ export function parseCombo(combo: HotkeyCombo): ParsedCombo {
     }
   }
 
-  // Last segment is always the key; uppercase single letters to match event.key.
-  const rawKey = parts[parts.length - 1];
+  const rawKey = parts.at(-1) ?? "";
   const key = rawKey.length === 1 ? rawKey.toUpperCase() : rawKey;
 
   return { key, ctrl, shift, alt, meta };
@@ -53,19 +53,14 @@ export function matchesEvent(
   parsed: ParsedCombo,
   options: { ignoreModifiers?: boolean } = {},
 ): boolean {
-  if (!options.ignoreModifiers) {
-    if (event.ctrlKey !== parsed.ctrl) {
-      return false;
-    }
-    if (event.shiftKey !== parsed.shift) {
-      return false;
-    }
-    if (event.altKey !== parsed.alt) {
-      return false;
-    }
-    if (event.metaKey !== parsed.meta) {
-      return false;
-    }
+  if (
+    !options.ignoreModifiers &&
+    (event.ctrlKey !== parsed.ctrl ||
+      event.shiftKey !== parsed.shift ||
+      event.altKey !== parsed.alt ||
+      event.metaKey !== parsed.meta)
+  ) {
+    return false;
   }
 
   const { key: target } = parsed;
@@ -74,11 +69,12 @@ export function matchesEvent(
     if (event.key.toUpperCase() === target) {
       return true;
     }
-    // macOS dead-key fallback: Option+letter sets event.key to "Dead";
-    // event.code still identifies the physical key.
+
+    // macOS Option+letter may report "Dead"; event.code still identifies the key.
     if (event.key === "Dead" && event.code?.startsWith("Key")) {
       return event.code.slice(3).toUpperCase() === target;
     }
+
     return false;
   }
 

@@ -45,7 +45,7 @@ export function PerformanceTab(props: { view: GpvView }) {
     gpvPerformanceViewQuery({ filter: props.view.filter() }),
   );
 
-  const readyView = () => {
+  const readyPerformance = () => {
     const view = performance();
 
     return view?.kind === "ready" ? view : null;
@@ -55,7 +55,7 @@ export function PerformanceTab(props: { view: GpvView }) {
     <ErrorBoundary fallback={<TabError />}>
       <Suspense fallback={<TabSkeleton />}>
         <Show
-          when={readyView()}
+          when={readyPerformance()}
           fallback={
             <EmptyState
               title="Sin datos de GPV"
@@ -75,13 +75,13 @@ function PerformanceContent(props: {
 }) {
   const monthLabel = () => formatMonth(props.view.month);
 
-  const totalTarget = () =>
+  const projectedGpvTotal = () =>
     props.view.attainment.sellers.reduce(
       (sum, seller) => sum + (seller.projectedGpv ?? 0),
       0,
     );
 
-  const activeDevices = () =>
+  const activeDeviceCount = () =>
     props.view.attainment.sellers.reduce(
       (sum, seller) => sum + seller.deviceCount,
       0,
@@ -94,7 +94,7 @@ function PerformanceContent(props: {
           title={`GPV ${monthLabel()}`}
           span="quarter"
           value={formatSolesCompact(props.view.attainment.coverage.totalGpv)}
-          caption={`${formatInteger(activeDevices())} dispositivos activos`}
+          caption={`${formatInteger(activeDeviceCount())} dispositivos activos`}
         />
 
         <AggregateTile
@@ -115,9 +115,9 @@ function PerformanceContent(props: {
           span="quarter"
           value={formatRatio(
             props.view.attainment.coverage.attributedGpv,
-            totalTarget(),
+            projectedGpvTotal(),
           )}
-          caption={`Objetivo ${formatSolesCompact(totalTarget())}`}
+          caption={`Objetivo ${formatSolesCompact(projectedGpvTotal())}`}
         />
 
         <AggregateTile

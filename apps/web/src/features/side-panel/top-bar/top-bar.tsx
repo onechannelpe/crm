@@ -25,8 +25,10 @@ export function TopBar(props: { isMobile: boolean }) {
 
   const showBackButton = () => navigationStack().length > 1;
   const showCloseButton = () => !(props.isMobile && showBackButton());
+
   const showSearch = () => {
     const entry = currentEntry();
+
     if (!entry) {
       return false;
     }
@@ -34,12 +36,6 @@ export function TopBar(props: { isMobile: boolean }) {
     return SIDE_PANEL_PAGES_CONFIG[entry.page].showsSearch;
   };
 
-  /*
-    Landing on a search page puts the caret in the box. This is also what makes
-    pressing the search button a second time do something: the panel is already
-    open on that page, so a fresh page id is the only signal, and taking focus
-    back is the only visible change.
-  */
   createEffect(() => {
     const entry = currentEntry();
 
@@ -47,15 +43,11 @@ export function TopBar(props: { isMobile: boolean }) {
       return;
     }
 
+    // Re-focus when the same search page is opened again.
     void entry.pageId;
     inputRef?.focus();
   });
 
-  /*
-    Escape and Backspace are handled on the input rather than as global hotkeys:
-    the caret lives here whenever the panel is on a search page, and dropdowns
-    inside the panel own those keys while they hold focus.
-  */
   function handleKeyDown(event: KeyboardEvent) {
     if (event.isComposing) {
       return;
@@ -95,7 +87,7 @@ export function TopBar(props: { isMobile: boolean }) {
             class={styles.searchInput}
             placeholder="Buscar o escribir un comando..."
             value={searchText()}
-            onInput={(e) => setSearchText(e.currentTarget.value)}
+            onInput={(event) => setSearchText(event.currentTarget.value)}
             onKeyDown={handleKeyDown}
           />
         </Show>
@@ -103,6 +95,7 @@ export function TopBar(props: { isMobile: boolean }) {
 
       <div class={styles.rightControls}>
         <TopBarActions />
+
         <Show when={showCloseButton()}>
           <button
             type="button"

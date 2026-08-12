@@ -21,14 +21,13 @@ export function AnchoredPopover(props: {
   class?: string;
   dismissible?: boolean;
   matchAnchorWidth?: boolean;
-  // Only fires for a dismissible popover; a pinned one is closed by its owner.
   onClose?: () => void;
   placement?: "bottom-start" | "bottom-end" | "overlap" | "left-start";
-  // Gap between anchor and panel. Only "left-start" reads it today.
   offset?: number;
   variant?: "panel" | "positioner";
 }) {
   let panel: HTMLDivElement | undefined;
+
   const anchor = () =>
     typeof props.anchor === "function" ? props.anchor() : props.anchor;
 
@@ -41,6 +40,7 @@ export function AnchoredPopover(props: {
 
   function updatePosition() {
     const anchorElement = anchor();
+
     if (!panel || !anchorElement) {
       return;
     }
@@ -48,11 +48,7 @@ export function AnchoredPopover(props: {
     const rect = anchorElement.getBoundingClientRect();
     const placement = props.placement ?? "bottom-start";
 
-    /*
-      Side placement aligns tops and clamps on both axes. The drop placements
-      below instead flip above the anchor when they would run off the bottom,
-      which is what a menu wants and a side panel does not.
-    */
+    // Side placement clamps in place; bottom placements flip above if needed.
     if (placement === "left-start") {
       const offset = props.offset ?? 0;
 
@@ -61,23 +57,29 @@ export function AnchoredPopover(props: {
         panel.offsetWidth,
         window.innerWidth,
       )}px`;
+
       panel.style.top = `${clampToViewport(
         rect.top,
         panel.offsetHeight,
         window.innerHeight,
       )}px`;
+
       panel.style.minWidth = props.matchAnchorWidth ? `${rect.width}px` : "";
+
       return;
     }
 
     const preferredLeft =
       placement === "bottom-end" ? rect.right - panel.offsetWidth : rect.left;
+
     const left = clampToViewport(
       preferredLeft,
       panel.offsetWidth,
       window.innerWidth,
     );
+
     const preferredTop = placement === "overlap" ? rect.top : rect.bottom;
+
     const top =
       preferredTop + panel.offsetHeight + VIEWPORT_PADDING > window.innerHeight
         ? Math.max(VIEWPORT_PADDING, rect.top - panel.offsetHeight)
@@ -94,6 +96,7 @@ export function AnchoredPopover(props: {
     }
 
     const currentPanel = panel;
+
     const handleToggle = (event: ToggleEvent) => {
       if (event.newState === "closed") {
         props.onClose?.();
@@ -103,18 +106,22 @@ export function AnchoredPopover(props: {
     if (props.dismissible !== false) {
       currentPanel.addEventListener("toggle", handleToggle);
       currentPanel.showPopover();
+
       queueMicrotask(() =>
         currentPanel.querySelector<HTMLElement>("[autofocus]")?.focus(),
       );
     }
 
     updatePosition();
+
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
+
     onCleanup(() => {
       currentPanel.removeEventListener("toggle", handleToggle);
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
+
       if (props.dismissible !== false) {
         anchor()?.focus();
       }
@@ -123,6 +130,7 @@ export function AnchoredPopover(props: {
 
   createEffect(() => {
     const anchorElement = anchor();
+
     updatePosition();
 
     if (!panel || !anchorElement) {
@@ -130,8 +138,10 @@ export function AnchoredPopover(props: {
     }
 
     const observer = new ResizeObserver(updatePosition);
+
     observer.observe(panel);
     observer.observe(anchorElement);
+
     onCleanup(() => observer.disconnect());
   });
 

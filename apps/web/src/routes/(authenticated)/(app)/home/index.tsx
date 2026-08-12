@@ -7,8 +7,6 @@ import { SalesManagerCaja1Snapshot } from "~/features/merchant-stats/ui/sales-ma
 
 export const route = {} satisfies RouteDefinition;
 
-// Each role view owns its own page body: the executive gets a record-index
-// shaped list, the manager a widget dashboard. They do not share a container.
 export default function HomePage() {
   const { currentUser } = useAuthenticatedSession();
 

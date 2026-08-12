@@ -39,8 +39,6 @@ export function SearchPreviewCard(props: { item: SearchResultItem }) {
   );
 }
 
-// Rows keep a fixed height so the card is the same shape for every record, and
-// so a long value clips at the edge instead of growing the card.
 function PreviewFieldRow(props: { field: SearchResultField }) {
   return (
     <div class={styles.fieldRow}>

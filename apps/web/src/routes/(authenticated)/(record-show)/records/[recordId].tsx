@@ -4,7 +4,7 @@ import { RecordShowPage } from "~/features/record-show/page/record-show-page";
 import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
 import { leadListQuery } from "~/rpc/workflow/lead-list";
 
-const HEADER_LEAD_NAVIGATION_LIMIT = 200;
+const LEAD_NAVIGATION_LIMIT = 200;
 
 export const route = {
   preload: ({ params }) => {
@@ -15,7 +15,7 @@ export const route = {
     void Promise.all([
       leadDetailQuery(params.recordId),
       leadListQuery({
-        limit: HEADER_LEAD_NAVIGATION_LIMIT,
+        limit: LEAD_NAVIGATION_LIMIT,
         offset: 0,
       }),
     ]);
