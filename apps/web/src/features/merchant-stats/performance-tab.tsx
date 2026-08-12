@@ -81,20 +81,16 @@ function PerformanceContent(props: {
       0,
     );
 
-  const activeDeviceCount = () =>
-    props.view.attainment.sellers.reduce(
-      (sum, seller) => sum + seller.deviceCount,
-      0,
-    );
-
   return (
     <WidgetCanvas>
       <WidgetGrid>
         <AggregateTile
           title={`GPV ${monthLabel()}`}
           span="quarter"
-          value={formatSolesCompact(props.view.attainment.coverage.totalGpv)}
-          caption={`${formatInteger(activeDeviceCount())} dispositivos activos`}
+          value={formatSolesCompact(props.view.attainment.coverage.cohortGpv)}
+          caption={`${formatInteger(
+            props.view.attainment.coverage.cohortDeviceCount,
+          )} dispositivos vendidos`}
         />
 
         <AggregateTile
