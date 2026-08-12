@@ -1,5 +1,6 @@
 import { createContext, type ParentProps, useContext } from "solid-js";
 
+import { navigationDrawerExpandedCookie } from "./navigation-drawer-expanded";
 import {
   createNavigationDrawerStore,
   type NavigationDrawerStateValue,
@@ -12,6 +13,7 @@ const NavigationDrawerStateContext =
 export function NavigationDrawerStateProvider(props: ParentProps) {
   const value = createNavigationDrawerStore({
     initialWidth: readNavigationDrawerWidthFromCookie(),
+    initialExpanded: navigationDrawerExpandedCookie.read() ?? true,
   });
 
   return (

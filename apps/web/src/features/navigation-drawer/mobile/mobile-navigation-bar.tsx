@@ -10,7 +10,9 @@ import {
   NavigationBar,
   type NavigationBarItemDef,
 } from "~/components/ui/navigation/navigation-bar/navigation-bar";
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
+import { getDefaultAppPath } from "~/domain/auth/access/route-policy";
+import { useSidePanelMenu } from "~/features/side-panel/hooks/use-side-panel-menu";
+import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
 
 import { useIsSettingsPage } from "../hooks/use-is-settings-page";
 import { useOpenSettingsMenu } from "../hooks/use-open-settings-menu";
@@ -30,15 +32,31 @@ export function MobileNavigationBar() {
   } = useNavigationDrawerState();
   const isSettingsPage = useIsSettingsPage();
   const openSettingsMenu = useOpenSettingsMenu();
+  const { isOpen, currentEntry } = useSidePanel();
+  const { openSearchRecordsPage } = useSidePanelMenu();
+
+  // Search is a side panel page, not a route, so its tab tracks the panel.
+  const isSearchPanelOpen = () =>
+    isOpen() && currentEntry()?.page === "search-records";
 
   const activeItemName = createMemo(() => {
-    if (isSettingsPage()) return "settings";
-    if (expanded()) return currentMobileDrawer();
-    if (location.pathname.startsWith("/records")) return "records";
+    if (isSearchPanelOpen()) {
+      return "search";
+    }
+    if (isSettingsPage()) {
+      return "settings";
+    }
+    if (expanded()) {
+      return currentMobileDrawer();
+    }
+    if (location.pathname.startsWith("/records")) {
+      return "records";
+    }
+
     return "main";
   });
 
-  const items = createMemo<NavigationBarItemDef[]>(() => [
+  const items: NavigationBarItemDef[] = [
     {
       name: "main",
       label: "Abrir navegación",
@@ -67,7 +85,7 @@ export function MobileNavigationBar() {
       Icon: Search,
       onClick: () => {
         setExpanded(false);
-        navigate("/search");
+        openSearchRecordsPage();
       },
     },
     {
@@ -86,11 +104,11 @@ export function MobileNavigationBar() {
         }
       },
     },
-  ]);
+  ];
 
   return (
     <Show when={isMobile()}>
-      <NavigationBar activeItemName={activeItemName()} items={items()} />
+      <NavigationBar activeItemName={activeItemName()} items={items} />
     </Show>
   );
 }

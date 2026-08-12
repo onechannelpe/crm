@@ -1,6 +1,6 @@
 import type { JSX } from "solid-js";
 
-import type { TileColor } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
+import type { TileColor } from "~/shared/ui/tile-color";
 
 export type NavigationDrawerSubItemState =
   | "intermediate-before-selected"

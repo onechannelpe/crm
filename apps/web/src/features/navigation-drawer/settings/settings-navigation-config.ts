@@ -7,7 +7,7 @@ import ShieldCheck from "~/components/icons/shield-check";
 import Sun from "~/components/icons/sun";
 import UserIcon from "~/components/icons/user";
 import UserRound from "~/components/icons/user-round";
-import { canAccessPath, type Role } from "~/lib/auth/access/route-policy";
+import { canAccessPath, type Role } from "~/domain/auth/access/route-policy";
 
 import type { SettingsNavSection } from "./settings-navigation.types";
 
@@ -77,6 +77,14 @@ export function createSettingsNavigationSections(
             options.role,
             "/settings/quotation-policies",
           ),
+        },
+        {
+          id: "commission-scheme",
+          label: "Esquema de comisiones",
+          href: "/settings/commission-scheme",
+          icon: Settings,
+          section: "operations",
+          isHidden: !canAccessPath(options.role, "/settings/commission-scheme"),
         },
       ],
     },
