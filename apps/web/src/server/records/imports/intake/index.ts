@@ -3,8 +3,6 @@ import { fromCsv } from "./csv";
 import { mapRecordImportRow } from "./row-mapper";
 import { fromXlsx } from "./xlsx";
 
-export { type ParsedFile } from "./contracts";
-
 export function parseImportFile(
   buffer: ArrayBuffer,
   extension: "csv" | "xlsx",

@@ -1,73 +1,37 @@
-import {
-  type RecordImportProgressEvent,
-  type RecordImportType,
-} from "~/features/records-imports/contracts";
-import { db } from "~/lib/db/db";
-import { notify } from "~/lib/db/notify";
-import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
-import type {
-  IntegrationJobRow,
-  IntegrationJobsPort,
-  IntegrationJobStatus,
-} from "~/server/integrations/types";
-import { IntegrationJobId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import type { RecordImportProgressEvent } from "~/contracts/records/imports";
+import type { IntegrationJobRow } from "~/server/integrations/types";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { notify } from "~/server/platform/database/notifications/publish";
 
-function toRecordImportType(type: IntegrationJobRow["type"]): RecordImportType {
-  if (type === "import_status" || type === "import_prioridad") {
-    return type;
-  }
+export const RECORDS_IMPORT_PROGRESS_CHANNEL = "records-import-progress";
 
-  throw new Error(`Unsupported record import type: ${type}`);
-}
-
-export async function findRecordImportJob(
-  jobs: Pick<IntegrationJobsPort, "findById">,
-  jobId: string,
-): Promise<IntegrationJobRow | null> {
-  const parsedJobId = IntegrationJobId.parse(jobId);
-  if (isErr(parsedJobId)) return null;
-  const job = await jobs.findById(parsedJobId.value);
-  if (job?.type !== "import_status" && job?.type !== "import_prioridad") {
-    return null;
-  }
-
-  return job;
-}
-
-export function buildRecordImportProgressEvent(input: {
+export function buildRecordImportProgressEvent(
   job: Pick<
     IntegrationJobRow,
     | "id"
     | "type"
-    | "status"
+    | "queue_state"
     | "rows_applied"
     | "rows_failed"
     | "rows_total"
     | "error_message"
-  >;
-  rowsApplied?: number;
-  rowsFailed?: number;
-  rowsTotal?: number;
-  status?: IntegrationJobStatus;
-  errorMessage?: string | null;
-}): RecordImportProgressEvent {
+  >,
+): RecordImportProgressEvent {
   return {
     type: "job_progress",
-    jobId: input.job.id,
-    importType: toRecordImportType(input.job.type),
-    status: input.status ?? input.job.status,
-    rowsApplied: input.rowsApplied ?? input.job.rows_applied ?? 0,
-    rowsFailed: input.rowsFailed ?? input.job.rows_failed ?? 0,
-    rowsTotal: input.rowsTotal ?? input.job.rows_total ?? 0,
-    errorMessage: input.errorMessage ?? input.job.error_message,
+    jobId: job.id,
+    importType: job.type,
+    queueState: job.queue_state,
+    rowsApplied: job.rows_applied ?? 0,
+    rowsFailed: job.rows_failed ?? 0,
+    rowsTotal: job.rows_total ?? 0,
+    errorMessage: job.error_message,
   };
 }
 
 export function publishRecordImportProgress(
+  db: DatabaseExecutor,
   event: RecordImportProgressEvent,
-): void {
-  // Progress is ephemeral and not part of any business transaction: fires on
-  // the pooled db handle and delivers immediately.
-  notify(db, RECORDS_IMPORT_PROGRESS_CHANNEL, JSON.stringify(event));
+): Promise<void> {
+  return notify(db, RECORDS_IMPORT_PROGRESS_CHANNEL, JSON.stringify(event));
 }

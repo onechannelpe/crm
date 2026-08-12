@@ -1,4 +1,4 @@
-import type { RecordImportType } from "~/features/records-imports/contracts";
+import type { RecordImportType } from "~/contracts/records/imports";
 import { normalizeCsvHeader } from "~/server/csv/core";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 

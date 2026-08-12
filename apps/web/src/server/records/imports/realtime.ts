@@ -1,43 +1,59 @@
-import {
-  parseRecordImportTopic,
-  recordImportTopic,
-  parseRecordImportProgressMessage,
-  type RecordImportProgressEvent,
-} from "~/features/records-imports/contracts";
-import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "~/lib/job-queue/registry";
-import { getServerRuntime } from "~/server/platform/container";
-import type { TopicHub } from "~/server/realtime/topic-hub";
-import { createTopicRealtimeChannel } from "~/server/realtime/topic-realtime-channel";
+import { REALTIME_CHANNELS } from "~/contracts/realtime/channel";
+import { parseRecordImportProgressMessage } from "~/contracts/records/imports";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import { IntegrationJobId } from "~/domain/ids";
+import { defineRealtimeChannel } from "~/server/realtime/channel";
+import { isErr } from "~/shared/result";
 
-import {
-  buildRecordImportProgressEvent,
-  findRecordImportJob,
-} from "./progress-events";
+import { RECORDS_IMPORT_PROGRESS_CHANNEL } from "./progress-events";
+import { buildRecordImportProgressEvent } from "./progress-events";
+import type { createRecordImportsRuntime } from "./runtime";
 
-async function reconcileRecordImportsProgress(hub: TopicHub): Promise<void> {
-  const { integration } = getServerRuntime().integrations;
+export function createRecordImportChannel(
+  recordImports: Pick<
+    ReturnType<typeof createRecordImportsRuntime>,
+    "find" | "canAccess"
+  >,
+) {
+  return defineRealtimeChannel({
+    name: REALTIME_CHANNELS.recordImport,
+    pgChannel: RECORDS_IMPORT_PROGRESS_CHANNEL,
 
-  await Promise.all(
-    hub.topics().map(async (topic) => {
-      const jobId = parseRecordImportTopic(topic);
-      if (jobId === null) return;
+    parseId: (raw) => {
+      const parsed = IntegrationJobId.parse(raw);
 
-      const job = await findRecordImportJob(integration.jobs, jobId);
-      if (!job) return;
+      return isErr(parsed) ? null : parsed.value;
+    },
 
-      hub.broadcast(
-        topic,
-        JSON.stringify(buildRecordImportProgressEvent({ job })),
+    // The job provides both access control and the initial progress snapshot.
+    open: async (session, jobId) => {
+      if (!hasPermission(session.role, "integration:manage")) {
+        return null;
+      }
+
+      const job = await recordImports.find(jobId);
+
+      if (!job) {
+        return null;
+      }
+
+      const canAccess = await recordImports.canAccess(
+        {
+          userId: session.userId,
+          branchId: session.branchId,
+          role: session.role,
+        },
+        job,
       );
-    }),
-  );
-}
 
-export const recordImportsRealtime =
-  createTopicRealtimeChannel<RecordImportProgressEvent>({
-    name: "records-imports",
-    channel: RECORDS_IMPORT_PROGRESS_CHANNEL,
-    parseEvent: parseRecordImportProgressMessage,
-    topicForEvent: (event) => recordImportTopic(event.jobId),
-    reconcile: reconcileRecordImportsProgress,
+      if (!canAccess) {
+        return null;
+      }
+
+      return [{ data: JSON.stringify(buildRecordImportProgressEvent(job)) }];
+    },
+
+    topicIdOfPayload: (payload) =>
+      parseRecordImportProgressMessage(payload)?.jobId ?? null,
   });
+}

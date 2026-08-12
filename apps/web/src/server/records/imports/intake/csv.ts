@@ -1,4 +1,4 @@
-import type { RecordImportType } from "~/features/records-imports/contracts";
+import type { RecordImportType } from "~/contracts/records/imports";
 import { parseCsvRows } from "~/server/csv/core";
 
 import {
