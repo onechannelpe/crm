@@ -55,7 +55,7 @@
     "clsx": "^2.1.1",
     "cookie-es": "^3.1.1",
     "crossws": "^0.4.5",
-    "eventsource-parser": "^3.1.0",
+    "eventsource-parser": "^4.0.0",
     "h3": "2.0.1-rc.26",
     "kysely": "^0.29.5",
     "pg": "^8.23.0",
