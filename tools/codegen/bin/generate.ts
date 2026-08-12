@@ -1,19 +1,23 @@
 /**
- * Generates all contract artifacts from the JSON contracts in /contracts.
- * Pass --check to assert existing files are up to date instead of writing.
+ * Generates the contract artifacts from the JSON files in /contracts.
+ * Pass --check to verify that the committed artifacts are up to date.
  *
- * Artifacts produced:
+ * Generated files are committed so Rust builds do not require Bun and fresh
+ * checkouts do not require a generation step.
+ *
  *   contracts/engine/record-api.json
  *     -> crates/leads/src/contracts_generated.rs
- *     -> apps/web/src/server/shared/engine/record-contract.ts
+ *     -> apps/web/src/contracts/engine/record-api.generated.ts
  *
- *   contracts/engine/doc-projection.json + contracts/engine/company-projection.json
+ *   contracts/engine/doc-projection.json
  *     -> crates/search/src/doc_projection_contract_generated.rs
+ *
+ *   contracts/engine/company-projection.json
  *     -> crates/search/src/company_projection_contract_generated.rs
+ *
+ *   Both projection contracts
  *     -> crates/search/src/result_contract_generated.rs
- *     -> apps/web/src/server/shared/engine/doc-projection-contract.ts
- *     -> apps/web/src/server/shared/engine/company-projection-contract.ts
- *     -> apps/web/src/server/shared/engine/result-contract.ts
+ *     -> apps/web/src/contracts/search/engine-results.generated.ts
  */
 
 import {
@@ -26,11 +30,8 @@ import {
   renderProjectionContractRust,
   renderResultContractRust,
 } from "../src/search-projection/render-rust.ts";
-import {
-  renderProjectionContractTs,
-  renderResultContractTs,
-} from "../src/search-projection/render-ts.ts";
-import { loadJson, writeOrCheck } from "../src/shared.ts";
+import { renderResultContractTs } from "../src/search-projection/render-ts.ts";
+import { checkArtifact, loadJson, writeArtifact } from "../src/shared.ts";
 
 const check = Bun.argv.includes("--check");
 
@@ -38,27 +39,26 @@ const recordSpec = parseRecordApiSpec(
   await loadJson("contracts/engine/record-api.json"),
 );
 
-// doc and company are independent projection contracts. Each drives one Rust
-// and one TS path set.
 const docSource = "contracts/engine/doc-projection.json";
 const companySource = "contracts/engine/company-projection.json";
-const docProjSpec = parseProjectionSpec(await loadJson(docSource));
-const companyProjSpec = parseProjectionSpec(await loadJson(companySource));
+
+const docProjectionSpec = parseProjectionSpec(await loadJson(docSource));
+const companyProjectionSpec = parseProjectionSpec(
+  await loadJson(companySource),
+);
 
 const projections = [
   {
-    spec: docProjSpec,
+    spec: docProjectionSpec,
     prefix: "DOC_PROJECTION",
     source: docSource,
     rust: "crates/search/src/doc_projection_contract_generated.rs",
-    ts: "apps/web/src/server/shared/engine/doc-projection-contract.ts",
   },
   {
-    spec: companyProjSpec,
+    spec: companyProjectionSpec,
     prefix: "COMPANY_PROJECTION",
     source: companySource,
     rust: "crates/search/src/company_projection_contract_generated.rs",
-    ts: "apps/web/src/server/shared/engine/company-projection-contract.ts",
   },
 ];
 
@@ -68,29 +68,31 @@ const artifacts: { path: string; content: string }[] = [
     content: renderRecordContractRust(recordSpec),
   },
   {
-    path: "apps/web/src/server/shared/engine/record-contract.ts",
+    path: "apps/web/src/contracts/engine/record-api.generated.ts",
     content: renderRecordContractTs(recordSpec),
   },
-  ...projections.flatMap((p) => [
-    {
-      path: p.rust,
-      content: renderProjectionContractRust(p.spec, p.prefix, p.source),
-    },
-    {
-      path: p.ts,
-      content: renderProjectionContractTs(p.spec, p.prefix, p.source),
-    },
-  ]),
+  ...projections.map((projection) => ({
+    path: projection.rust,
+    content: renderProjectionContractRust(
+      projection.spec,
+      projection.prefix,
+      projection.source,
+    ),
+  })),
   {
     path: "crates/search/src/result_contract_generated.rs",
-    content: renderResultContractRust(docProjSpec, companyProjSpec),
+    content: renderResultContractRust(docProjectionSpec, companyProjectionSpec),
   },
   {
-    path: "apps/web/src/server/shared/engine/result-contract.ts",
-    content: renderResultContractTs(docProjSpec, companyProjSpec),
+    path: "apps/web/src/contracts/search/engine-results.generated.ts",
+    content: renderResultContractTs(docProjectionSpec, companyProjectionSpec),
   },
 ];
 
-await Promise.all(artifacts.map((a) => writeOrCheck(a.path, a.content, check)));
+const applyArtifact = check ? checkArtifact : writeArtifact;
+
+await Promise.all(
+  artifacts.map((artifact) => applyArtifact(artifact.path, artifact.content)),
+);
 
 console.log(check ? "all contracts are up to date" : "all contracts generated");

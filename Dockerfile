@@ -3,7 +3,6 @@ FROM oven/bun:1.3.14 AS production-deps
 WORKDIR /app
 
 COPY package.json bun.lock ./
-COPY patches ./patches
 COPY apps/extension/package.json ./apps/extension/package.json
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/contracts/package.json ./packages/contracts/package.json
