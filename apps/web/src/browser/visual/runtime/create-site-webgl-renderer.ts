@@ -1,6 +1,6 @@
 import { WebGLRenderer, WebGLRendererParameters } from "three";
 
-export type SiteWebGlRendererParameters = WebGLRendererParameters & {
+type SiteWebGlRendererParameters = WebGLRendererParameters & {
   onContextLost?: (event: Event) => void;
 };
 
@@ -55,5 +55,3 @@ export function createSiteWebGlRenderer(
 
   return renderer;
 }
-
-export type SiteWebGlRendererCreationFailureHandler = (error: unknown) => void;

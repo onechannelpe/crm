@@ -1,4 +1,3 @@
-export type HalftoneTabId = "design" | "animations" | "export";
 export type HalftoneSourceMode = "shape" | "image";
 export type HalftoneMaterialSurface = "solid" | "glass";
 export type HalftoneToneTarget = "light" | "dark";
@@ -12,7 +11,6 @@ export type HalftoneRotateAxis =
   | "-z"
   | "-xy";
 export type HalftoneRotatePreset = "axis" | "lissajous" | "orbit" | "tumble";
-export type HalftoneModelLoader = "fbx" | "glb";
 
 export interface HalftoneLightingSettings {
   intensity: number;
@@ -124,27 +122,6 @@ export type HalftoneStudioSettingsOverrides = Partial<
   animation?: Partial<HalftoneAnimationSettings>;
 };
 
-export interface HalftoneGeometrySpec {
-  key: string;
-  label: string;
-  kind: "builtin" | "imported";
-  loader?: HalftoneModelLoader;
-  filename?: string;
-  description?: string;
-  extensions?: readonly string[];
-  userProvided?: boolean;
-}
-
-export interface HalftoneStudioState {
-  activeTab: HalftoneTabId;
-  geometrySpecs: HalftoneGeometrySpec[];
-  importedFiles: Record<string, File>;
-  settings: HalftoneStudioSettings;
-  showHint: boolean;
-  statusMessage: string;
-  statusIsError: boolean;
-}
-
 export interface HalftonePose {
   autoElapsed: number;
   rotateElapsed: number;
@@ -155,26 +132,6 @@ export interface HalftonePose {
   targetRotationY: number;
   timeElapsed: number;
 }
-
-export type HalftoneStudioAction =
-  | { type: "setTab"; value: HalftoneTabId }
-  | { type: "setSourceMode"; value: HalftoneSourceMode }
-  | { type: "setShapeKey"; value: string }
-  | { type: "replaceSettings"; value: HalftoneStudioSettings }
-  | { type: "patchLighting"; value: Partial<HalftoneLightingSettings> }
-  | { type: "patchMaterial"; value: Partial<HalftoneMaterialSettings> }
-  | { type: "patchHalftone"; value: Partial<HalftonePatternSettings> }
-  | { type: "patchBackground"; value: Partial<HalftoneBackgroundSettings> }
-  | { type: "patchAnimation"; value: Partial<HalftoneAnimationSettings> }
-  | {
-      type: "registerImportedFile";
-      spec: HalftoneGeometrySpec;
-      file: File;
-      activate: boolean;
-    }
-  | { type: "setStatus"; message: string; isError?: boolean }
-  | { type: "clearStatus" }
-  | { type: "hideHint" };
 
 const DEFAULT_SHAPE_HALFTONE_SETTINGS: HalftonePatternSettings = {
   enabled: true,

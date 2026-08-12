@@ -1,9 +1,9 @@
 import { BufferGeometry } from "three";
 
-import type { HalftoneImageFit } from "../footprint";
 import type { HalftonePose, HalftoneStudioSettings } from "../state";
 
 export type HalftoneRenderStrategy = "continuous" | "static";
+export type HalftoneImageFit = "contain" | "cover";
 
 export type HalftonePointerSettings = {
   hoverFadeIn: number;
@@ -50,9 +50,7 @@ export type HalftoneRuntimeConfig = {
 export type HalftoneRuntime = {
   dispose: () => void;
   renderNow: () => void;
-  resize: (viewport?: HalftoneViewport) => void;
+  resize: () => void;
   setActive: (active: boolean) => void;
-  setImage: (imageElement: HTMLImageElement | null) => void;
   snapshot: (request: HalftoneSnapshotRequest) => Promise<Blob | null>;
-  updateConfig: (nextConfig: HalftoneRuntimeConfig) => void;
 };

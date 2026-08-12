@@ -13,10 +13,6 @@ function readBooleanEnv(value: string | undefined): boolean {
   return normalized === "1" || normalized === "true" || normalized === "yes";
 }
 
-function isHeavyVisualsKillSwitchEnabled(): boolean {
-  return readBooleanEnv(import.meta.env.VITE_DISABLE_HEAVY_VISUALS);
-}
-
 let cachedSupportProbe: boolean | null = null;
 
 function isWebGlContext(
@@ -77,7 +73,7 @@ function detectPrefersReducedMotion(): boolean {
 export function evaluateWebGlPolicy(): WebGlPolicyDecision {
   const reducedMotion = detectPrefersReducedMotion();
 
-  if (isHeavyVisualsKillSwitchEnabled()) {
+  if (readBooleanEnv(import.meta.env.VITE_DISABLE_HEAVY_VISUALS)) {
     return { allowed: false, reason: "kill-switch", reducedMotion };
   }
 

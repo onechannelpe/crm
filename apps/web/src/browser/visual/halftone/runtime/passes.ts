@@ -13,11 +13,11 @@ import {
   WebGLRenderer,
 } from "three";
 
-import type { HalftoneImageFit } from "../footprint";
 import { createHalftoneMaterialAssets } from "../materials/assets";
 import { createHalftoneMaterial } from "../materials/material";
 import type { HalftoneStudioSettings } from "../state";
 import { createRenderTarget, type SceneResources } from "./core";
+import type { HalftoneImageFit } from "./types";
 
 const passThroughVertexShader = `
   varying vec2 vUv;
