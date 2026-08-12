@@ -1,7 +1,7 @@
 # Web configuration
 
-Culqi360 reads local development values from the env file selected by each
-package script. Production commands read their environment from the process.
+Local development reads environment values from the file selected by each
+package script. Production reads them from the process environment.
 
 [`src/server/platform/config/env.ts`](../src/server/platform/config/env.ts) is
 the canonical server configuration. [`vite.config.ts`](../vite.config.ts) and
@@ -18,8 +18,8 @@ directly.
 | `WEB_UPLOADS_ROOT`      | Optional          | `.local-storage/documents` | Stores uploaded and generated files.                                               |
 | `INSTALLATION_PASSWORD` | Installation seed | None                       | Sets the initial installation password and must contain at least eight characters. |
 
-`APP_PUBLIC_ORIGIN` must contain only an HTTP or HTTPS origin. It cannot include
-a path, query, or fragment.
+`APP_PUBLIC_ORIGIN` must be an HTTP or HTTPS origin with no path, query, or
+fragment.
 
 Passkey registration and verification derive the relying-party ID and origin
 from each request. Set `TRUSTED_PROXY=true` only behind a trusted proxy that
@@ -43,12 +43,12 @@ supplies the forwarded origin headers.
 
 Extension handoff uses `EXTENSION_EXPECTED_ORIGIN`,
 `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64`, and
-`EXTENSION_HANDOFF_PUBLIC_KEY_SPKI_BASE64`. The expected origin defaults to
-`http://localhost:3000`; the keys default to empty values.
+`EXTENSION_HANDOFF_PUBLIC_KEY_SPKI_BASE64`. The origin defaults to
+`http://localhost:3000`; both keys default to empty values.
 
 ## Notifications
 
-`NOTIFICATION_ROUTES` maps each channel to a provider. Its default is
+`NOTIFICATION_ROUTES` maps channels to providers. The default is
 `email:resend,whatsapp:kapso`. Omitting a channel disables it.
 
 | Provider or boundary | Variables                                                                                                |
@@ -58,24 +58,28 @@ Extension handoff uses `EXTENSION_EXPECTED_ORIGIN`,
 | Meta Cloud           | `WHATSAPP_CLOUD_ACCESS_TOKEN`, `WHATSAPP_CLOUD_PHONE_NUMBER_ID`, optional `WHATSAPP_CLOUD_GRAPH_VERSION` |
 | WhatsApp webhook     | `WHATSAPP_WEBHOOK_VERIFY_TOKEN`, optional `KAPSO_WEBHOOK_SECRET`                                         |
 
-Provider credentials are required only when `NOTIFICATION_ROUTES` selects that
-provider. `WHATSAPP_WEBHOOK_VERIFY_TOKEN` is required by the notification
-runtime.
+Provider credentials are required only when selected by `NOTIFICATION_ROUTES`.
+`WHATSAPP_WEBHOOK_VERIFY_TOKEN` is required by the notification runtime.
 
 ## Observability and development diagnostics
 
 Server Sentry uses `VITE_SENTRY_DSN` and optional `SENTRY_TRACES_SAMPLE_RATE`.
-Browser Sentry also reads `VITE_SENTRY_TRACES_SAMPLE_RATE`,
-`VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE`, and
+Browser Sentry also reads `VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE` and
 `VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE`.
 
 Source-map uploads use `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT`.
+
+`VITE_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` are
+read at Vite build time, not only at container runtime. The container build must
+receive them as Docker build args. `compose.app.yml` passes them through
+`build.args`; `environment:` or `env_file:` alone does not reach the build
+stage.
+
 Logging uses `LOG_LEVEL` and `LOG_FORMAT`.
 
-Development diagnostics use `DEBUG_DIAGNOSTICS`, `DEBUG_DIAGNOSTICS_FILTER`,
-`DEBUG_DIAGNOSTICS_REQUESTS`, and `DEBUG_DIAGNOSTICS_REQUESTS_SLOW_MS` on the
-server. Browser diagnostics use `VITE_DEBUG_DIAGNOSTICS` and
-`VITE_DEBUG_DIAGNOSTICS_FILTER`.
+Server diagnostics use `DEBUG_DIAGNOSTICS`, `DEBUG_DIAGNOSTICS_FILTER`,
+`DEBUG_DIAGNOSTICS_REQUESTS`, and `DEBUG_DIAGNOSTICS_REQUESTS_SLOW_MS`. Browser
+diagnostics use `VITE_DEBUG_DIAGNOSTICS` and `VITE_DEBUG_DIAGNOSTICS_FILTER`.
 
 See [`.env.example`](../../../.env.example) for local values and
 [`ops/deployment/app.env.example`](../../../ops/deployment/app.env.example) for
