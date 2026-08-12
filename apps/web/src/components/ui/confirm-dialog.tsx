@@ -22,9 +22,13 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog(props: ConfirmDialogProps) {
   createEffect(() => {
-    if (!props.isOpen) return;
+    if (!props.isOpen) {
+      return;
+    }
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !props.loading) props.onClose();
+      if (e.key === "Escape" && !props.loading) {
+        props.onClose();
+      }
     };
     document.addEventListener("keydown", handler);
     onCleanup(() => document.removeEventListener("keydown", handler));
@@ -37,7 +41,9 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
           class={styles.overlay}
           role="presentation"
           onClick={(e) => {
-            if (e.target === e.currentTarget && !props.loading) props.onClose();
+            if (e.target === e.currentTarget && !props.loading) {
+              props.onClose();
+            }
           }}
         >
           <dialog open class={styles.dialog} aria-modal="true">

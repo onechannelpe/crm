@@ -1,7 +1,7 @@
+import { clsx } from "clsx";
 import { type JSX, mergeProps, splitProps } from "solid-js";
 
 import { Loader } from "~/components/feedback/loading/loader";
-import { cn } from "~/lib/utils";
 
 import styles from "./button.module.css";
 
@@ -49,7 +49,7 @@ export function Button(props: ButtonProps) {
 
   return (
     <button
-      class={cn(
+      class={clsx(
         styles.button,
         styles[local.size],
         styles[local.variant],
@@ -60,7 +60,10 @@ export function Button(props: ButtonProps) {
       {...others}
     >
       <span
-        class={cn(styles.loaderSlot, !local.loading && styles.loaderSlotHidden)}
+        class={clsx(
+          styles.loaderSlot,
+          !local.loading && styles.loaderSlotHidden,
+        )}
         aria-hidden={local.loading ? undefined : "true"}
       >
         {local.loading ? <Loader /> : null}

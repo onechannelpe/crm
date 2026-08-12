@@ -1,4 +1,5 @@
 import { A } from "@solidjs/router";
+import { clsx } from "clsx";
 import { Show } from "solid-js";
 import type { JSX } from "solid-js";
 
@@ -8,7 +9,6 @@ import Info from "~/components/icons/info";
 import X from "~/components/icons/x";
 import { ProgressBar } from "~/components/ui/feedback/progress-bar";
 import { Button } from "~/components/ui/input/button";
-import { cn } from "~/lib/utils";
 
 import type { SnackBarItem, SnackBarVariant } from "./types";
 
@@ -45,9 +45,9 @@ export function SnackBar(props: SnackBarProps) {
 
   return (
     <div
-      class={cn(styles.snackBar, variantStyles[props.item.variant])}
-      onMouseEnter={props.onPause}
-      onMouseLeave={props.onResume}
+      class={clsx(styles.snackBar, variantStyles[props.item.variant])}
+      onMouseEnter={() => props.onPause()}
+      onMouseLeave={() => props.onResume()}
       role={props.item.role}
       aria-live={props.item.role === "alert" ? "assertive" : "polite"}
       data-globally-prevent-click-outside

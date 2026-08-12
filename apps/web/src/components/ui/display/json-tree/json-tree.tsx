@@ -44,15 +44,25 @@ const JsonTreeConfigContext = createContext<JsonTreeConfig>();
 
 function useConfig(): JsonTreeConfig {
   const config = useContext(JsonTreeConfigContext);
-  if (!config) throw new Error("JsonTree node rendered outside JsonTree");
+  if (!config) {
+    throw new Error("JsonTree node rendered outside JsonTree");
+  }
   return config;
 }
 
 function toNodeModel(value: Json): JsonNodeModel {
-  if (value === null) return { kind: "null" };
-  if (typeof value === "string") return { kind: "string", value };
-  if (typeof value === "number") return { kind: "number", value };
-  if (typeof value === "boolean") return { kind: "boolean", value };
+  if (value === null) {
+    return { kind: "null" };
+  }
+  if (typeof value === "string") {
+    return { kind: "string", value };
+  }
+  if (typeof value === "number") {
+    return { kind: "number", value };
+  }
+  if (typeof value === "boolean") {
+    return { kind: "boolean", value };
+  }
   if (Array.isArray(value)) {
     return {
       kind: "array",

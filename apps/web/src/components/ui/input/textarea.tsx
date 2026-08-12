@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { createUniqueId, type JSX, splitProps } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import { InputErrorHelper } from "./input-error-helper";
 import { InputLabel } from "./input-label";
@@ -14,19 +13,20 @@ export interface TextareaProps extends JSX.TextareaHTMLAttributes<HTMLTextAreaEl
 
 export function Textarea(props: TextareaProps) {
   const [local, others] = splitProps(props, ["label", "error", "class", "id"]);
-  const textareaId = local.id || createUniqueId();
+  const generatedId = createUniqueId();
+  const textareaId = () => local.id || generatedId;
 
   return (
     <div class={styles.field}>
       {local.label && (
-        <InputLabel for={textareaId}>
+        <InputLabel for={textareaId()}>
           {local.label}
           {props.required && <span class={styles.required}>*</span>}
         </InputLabel>
       )}
       <textarea
-        id={textareaId}
-        class={cn(
+        id={textareaId()}
+        class={clsx(
           styles.textareaControl,
           local.error ? styles.errorControl : undefined,
           local.class,

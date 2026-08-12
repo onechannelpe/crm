@@ -1,17 +1,9 @@
 import type { JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
-import styles from "./tinted-icon-tile.module.css";
+import type { TileColor } from "~/shared/ui/tile-color";
 
-export type TileColor =
-  | "blue"
-  | "purple"
-  | "turquoise"
-  | "green"
-  | "orange"
-  | "red"
-  | "yellow"
-  | "pink";
+import styles from "./tinted-icon-tile.module.css";
 
 type TileIcon = (props: { size?: number; color?: string }) => JSX.Element;
 

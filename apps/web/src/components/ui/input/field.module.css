@@ -30,11 +30,7 @@
   height: 32px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: color-mix(
-    in srgb,
-    var(--background-transparent-light) 84%,
-    var(--background) 16%
-  );
+  background: var(--background-transparent-lighter);
   color: var(--foreground);
   font-size: var(--font-size-body);
   padding: 0 8px;
@@ -90,11 +86,7 @@
   min-height: 32px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: color-mix(
-    in srgb,
-    var(--background-transparent-light) 84%,
-    var(--background) 16%
-  );
+  background: var(--background-transparent-lighter);
   color: var(--foreground);
   font-size: var(--font-size-body);
   padding: 6px 8px;
@@ -105,11 +97,7 @@
   min-height: 96px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: color-mix(
-    in srgb,
-    var(--background-transparent-light) 84%,
-    var(--background) 16%
-  );
+  background: var(--background-transparent-lighter);
   color: var(--foreground);
   font-size: var(--font-size-body);
   padding: 8px;

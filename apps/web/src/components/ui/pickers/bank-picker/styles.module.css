@@ -2,7 +2,7 @@
   background: var(--background);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-elevation-2);
   min-width: 200px;
   position: absolute;
   right: 0;
@@ -57,7 +57,7 @@
 }
 
 .item:hover:not(:disabled) {
-  background: var(--background-secondary);
+  background: var(--secondary);
 }
 
 .item:disabled {

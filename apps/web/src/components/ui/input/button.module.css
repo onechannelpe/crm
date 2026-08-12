@@ -114,7 +114,7 @@
 }
 
 .ghost:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }
 
@@ -134,7 +134,7 @@
 .ghost:disabled,
 .destructive:disabled {
   background: var(--secondary);
-  border-color: var(--bg-translucent-subtle);
+  border-color: var(--background-transparent-lighter);
   color: var(--foreground-tertiary);
 }
 

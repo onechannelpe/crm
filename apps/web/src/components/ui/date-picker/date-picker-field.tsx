@@ -1,3 +1,4 @@
+import { clsx } from "clsx";
 import {
   createEffect,
   createMemo,
@@ -7,16 +8,12 @@ import {
   onMount,
 } from "solid-js";
 
+import { useHotkey } from "~/browser/hotkey/use-hotkey";
 import CalendarDays from "~/components/icons/calendar-days";
-import { useHotkey } from "~/lib/hotkey/use-hotkey";
-import { cn } from "~/lib/utils";
+import { appCalendarDateAt } from "~/domain/time/app-time";
+import { parseCalendarDate } from "~/domain/time/calendar-date";
 
-import {
-  formatIsoDate,
-  getVisibleMonth,
-  parseIsoDate,
-  todayLocalDate,
-} from "./date-picker-model";
+import { getVisibleMonth, shiftVisibleMonth } from "./date-picker-model";
 import { DatePickerPopover } from "./date-picker-popover";
 
 import styles from "./date-picker.module.css";
@@ -36,36 +33,59 @@ export interface DatePickerProps {
 }
 
 export function DatePicker(props: DatePickerProps) {
-  const inputId = props.id || createUniqueId();
+  const inputId = props.id ?? createUniqueId();
   const messageId = `${inputId}-message`;
+
   const [isOpen, setIsOpen] = createSignal(false);
-  const selectedDate = createMemo(() => parseIsoDate(props.value));
-  const minDate = createMemo(() => parseIsoDate(props.min ?? ""));
-  const initialViewDate = createMemo(
-    () => selectedDate() ?? minDate() ?? todayLocalDate(),
+  const selectedDate = createMemo(() => parseCalendarDate(props.value));
+  const minDate = createMemo(() => parseCalendarDate(props.min ?? ""));
+  const referenceDate = createMemo(
+    () => selectedDate() ?? minDate() ?? appCalendarDateAt(Date.now()),
   );
   const [viewMonth, setViewMonth] = createSignal(
-    getVisibleMonth(initialViewDate()),
+    getVisibleMonth(referenceDate()),
   );
+
   let fieldRef: HTMLDivElement | undefined;
-  let controlRef: HTMLDivElement | undefined;
+  let anchorRef: HTMLDivElement | undefined;
   let popoverRef: HTMLDialogElement | undefined;
+
+  const hasMessage = () => Boolean(props.error || props.description);
 
   const closePicker = () => {
     setIsOpen(false);
   };
 
+  const syncViewMonth = () => {
+    setViewMonth(getVisibleMonth(referenceDate()));
+  };
+
+  const openPicker = () => {
+    syncViewMonth();
+    setIsOpen(true);
+  };
+
   onMount(() => {
     const handlePointerDown = (event: PointerEvent) => {
-      if (!isOpen()) return;
+      if (!isOpen()) {
+        return;
+      }
+
       const target = event.target;
-      if (!(target instanceof Node)) return;
-      if (fieldRef?.contains(target)) return;
-      if (popoverRef?.contains(target)) return;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (fieldRef?.contains(target) || popoverRef?.contains(target)) {
+        return;
+      }
+
       closePicker();
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
+
     onCleanup(() => {
       document.removeEventListener("pointerdown", handlePointerDown);
     });
@@ -76,23 +96,10 @@ export function DatePicker(props: DatePickerProps) {
     allowInInputs: true,
   });
 
-  const describedBy = () => {
-    if (!props.description && !props.error) return undefined;
-    return messageId;
-  };
-
-  const syncViewMonth = () => {
-    setViewMonth(getVisibleMonth(initialViewDate()));
-  };
-
-  const openPicker = () => {
-    syncViewMonth();
-    setIsOpen(true);
-  };
-
   createEffect(() => {
-    if (isOpen()) return;
-    syncViewMonth();
+    if (!isOpen()) {
+      syncViewMonth();
+    }
   });
 
   return (
@@ -112,14 +119,15 @@ export function DatePicker(props: DatePickerProps) {
           )}
         </label>
       )}
+
       <div
-        class={cn(
+        class={clsx(
           styles.controlShell,
           props.error ? styles.errorShell : undefined,
           isOpen() ? styles.openShell : undefined,
         )}
         ref={(element) => {
-          controlRef = element;
+          anchorRef = element;
         }}
       >
         <input
@@ -132,17 +140,19 @@ export function DatePicker(props: DatePickerProps) {
           spellcheck={false}
           placeholder={props.placeholder ?? "AAAA-MM-DD"}
           value={props.value}
-          aria-describedby={describedBy()}
+          aria-describedby={hasMessage() ? messageId : undefined}
           aria-invalid={props.error ? "true" : undefined}
           disabled={props.disabled}
           onFocus={openPicker}
           onInput={(event) => {
             props.onInput(event.currentTarget.value);
+
             if (!isOpen()) {
               openPicker();
             }
           }}
         />
+
         <button
           type="button"
           class={styles.iconButton}
@@ -155,13 +165,15 @@ export function DatePicker(props: DatePickerProps) {
               closePicker();
               return;
             }
+
             openPicker();
           }}
         >
           <CalendarDays size={16} />
         </button>
       </div>
-      {(props.error || props.description) && (
+
+      {hasMessage() && (
         <p
           id={messageId}
           class={props.error ? styles.errorText : styles.descriptionText}
@@ -169,9 +181,10 @@ export function DatePicker(props: DatePickerProps) {
           {props.error ?? props.description}
         </p>
       )}
+
       <DatePickerPopover
         isOpen={isOpen}
-        anchor={() => controlRef ?? fieldRef}
+        anchor={() => anchorRef ?? fieldRef}
         selectedDate={selectedDate()}
         minDate={minDate()}
         visibleMonth={viewMonth()}
@@ -188,17 +201,13 @@ export function DatePicker(props: DatePickerProps) {
           }))
         }
         onPreviousMonth={() =>
-          setViewMonth((current) =>
-            getVisibleMonth(new Date(current.year, current.month - 1, 1)),
-          )
+          setViewMonth((current) => shiftVisibleMonth(current, -1))
         }
         onNextMonth={() =>
-          setViewMonth((current) =>
-            getVisibleMonth(new Date(current.year, current.month + 1, 1)),
-          )
+          setViewMonth((current) => shiftVisibleMonth(current, 1))
         }
         onSelect={(date) => {
-          props.onInput(formatIsoDate(date));
+          props.onInput(date);
           closePicker();
         }}
         onPopoverMount={(element) => {

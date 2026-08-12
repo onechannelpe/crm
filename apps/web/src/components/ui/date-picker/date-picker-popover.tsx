@@ -7,6 +7,8 @@ import {
 } from "solid-js";
 import { Portal } from "solid-js/web";
 
+import type { CalendarDate } from "~/domain/time/calendar-date";
+
 import { DatePickerCalendar } from "./date-picker-calendar";
 import {
   isPreviousMonthDisabled,
@@ -22,14 +24,14 @@ const POPOVER_FALLBACK_HEIGHT = 320;
 interface DatePickerPopoverProps {
   isOpen: Accessor<boolean>;
   anchor: Accessor<HTMLElement | undefined>;
-  selectedDate: Date | null;
-  minDate: Date | null;
+  selectedDate: CalendarDate | null;
+  minDate: CalendarDate | null;
   visibleMonth: VisibleMonth;
   onMonthChange: (month: number) => void;
   onYearChange: (year: number) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
-  onSelect: (date: Date) => void;
+  onSelect: (date: CalendarDate) => void;
   onPopoverMount: (element: HTMLDialogElement | undefined) => void;
 }
 
@@ -38,11 +40,15 @@ export function DatePickerPopover(props: DatePickerPopoverProps) {
   let popoverRef: HTMLDialogElement | undefined;
 
   createEffect(() => {
-    if (!props.isOpen()) return;
+    if (!props.isOpen()) {
+      return;
+    }
 
     const updatePosition = () => {
       const anchor = props.anchor();
-      if (!anchor || typeof window === "undefined") return;
+      if (!anchor || typeof window === "undefined") {
+        return;
+      }
 
       const rect = anchor.getBoundingClientRect();
       const popoverWidth = popoverRef?.offsetWidth ?? POPOVER_FALLBACK_WIDTH;

@@ -12,8 +12,12 @@ export function EnterTransition(props: EnterTransitionProps) {
   let animation: Animation | undefined;
 
   onMount(() => {
-    if (typeof window === "undefined" || !containerRef) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (typeof window === "undefined" || !containerRef) {
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
 
     const element = containerRef;
     const targetHeight = element.scrollHeight;

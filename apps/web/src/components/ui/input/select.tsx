@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { createUniqueId, type JSX, splitProps } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import { InputErrorHelper } from "./input-error-helper";
 import { InputLabel } from "./input-label";
@@ -20,19 +19,20 @@ export function Select(props: SelectProps) {
     "id",
     "children",
   ]);
-  const selectId = local.id || createUniqueId();
+  const generatedId = createUniqueId();
+  const selectId = () => local.id || generatedId;
 
   return (
     <div class={styles.field}>
       {local.label && (
-        <InputLabel for={selectId}>
+        <InputLabel for={selectId()}>
           {local.label}
           {props.required && <span class={styles.required}>*</span>}
         </InputLabel>
       )}
       <select
-        id={selectId}
-        class={cn(
+        id={selectId()}
+        class={clsx(
           styles.control,
           local.error ? styles.errorControl : undefined,
           local.class,

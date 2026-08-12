@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { splitProps, type JSX } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import styles from "./table.module.css";
 
@@ -13,7 +12,7 @@ export const Table = (props: TableProps) => {
   return (
     <div class={styles.wrapper}>
       <table
-        class={cn(
+        class={clsx(
           styles.table,
           local.variant === "list" && styles.list,
           local.class,
@@ -40,7 +39,7 @@ export const TableRow = (props: TableRowProps) => {
   const [local, rowProps] = splitProps(props, ["class", "clickable"]);
   return (
     <tr
-      class={cn(styles.row, local.class)}
+      class={clsx(styles.row, local.class)}
       data-clickable={local.clickable ? "true" : undefined}
       {...rowProps}
     />
@@ -55,7 +54,7 @@ export const TableHead = (props: TableHeadProps) => {
   const [local, headProps] = splitProps(props, ["align", "class"]);
   return (
     <th
-      class={cn(styles.head, local.class)}
+      class={clsx(styles.head, local.class)}
       data-align={local.align ?? "left"}
       {...headProps}
     />
@@ -71,7 +70,7 @@ export const TableCell = (props: TableCellProps) => {
   const [local, cellProps] = splitProps(props, ["align", "class", "ellipsis"]);
   return (
     <td
-      class={cn(styles.cell, local.ellipsis && styles.ellipsis, local.class)}
+      class={clsx(styles.cell, local.ellipsis && styles.ellipsis, local.class)}
       data-align={local.align ?? "left"}
       {...cellProps}
     />

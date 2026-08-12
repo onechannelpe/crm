@@ -18,8 +18,12 @@ export function SpringParallax(props: SpringParallaxProps) {
   let rafId: number | undefined;
 
   onMount(() => {
-    if (typeof window === "undefined" || !containerRef) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (typeof window === "undefined" || !containerRef) {
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
 
     const range = props.range ?? 2;
     const stiffness = props.stiffness ?? 100;
@@ -84,7 +88,9 @@ export function SpringParallax(props: SpringParallaxProps) {
     onCleanup(() => {
       window.removeEventListener("mousemove", onMouseMove);
       window.document.removeEventListener("mouseleave", onMouseLeave);
-      if (rafId != null) cancelAnimationFrame(rafId);
+      if (rafId != null) {
+        cancelAnimationFrame(rafId);
+      }
     });
   });
 

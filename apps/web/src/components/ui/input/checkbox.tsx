@@ -1,8 +1,8 @@
+import { clsx } from "clsx";
 import { createEffect, Show, type JSX, splitProps } from "solid-js";
 
 import Check from "~/components/icons/check";
 import Minus from "~/components/icons/minus";
-import { cn } from "~/lib/utils";
 
 import styles from "./field.module.css";
 
@@ -39,7 +39,7 @@ export function Checkbox(props: CheckboxProps) {
 
   return (
     <label
-      class={cn(
+      class={clsx(
         styles.checkboxRoot,
         local.size === "large" ? styles.checkboxLarge : styles.checkboxSmall,
         hoverable() && styles.checkboxHoverable,

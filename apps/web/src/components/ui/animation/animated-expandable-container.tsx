@@ -26,7 +26,9 @@ export function AnimatedExpandableContainer(
 
   createEffect(() => {
     const open = props.isExpanded;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
     if (!initialized) {
       initialized = true;
@@ -58,7 +60,9 @@ export function AnimatedExpandableContainer(
         { duration, easing: EASING },
       );
       currentAnim.onfinish = () => {
-        if (!el) return;
+        if (!el) {
+          return;
+        }
         el.style.height = "auto";
         el.style.overflow = "";
         el.style.opacity = "";
@@ -79,7 +83,9 @@ export function AnimatedExpandableContainer(
         { duration, easing: EASING },
       );
       currentAnim.onfinish = () => {
-        if (!el) return;
+        if (!el) {
+          return;
+        }
         el.style.height = "0px";
         el.style.opacity = "0";
       };
