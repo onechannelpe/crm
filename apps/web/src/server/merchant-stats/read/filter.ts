@@ -1,11 +1,11 @@
 import type { Expression, ExpressionBuilder, SqlBool } from "kysely";
 
 import type { BookFilter } from "~/contracts/merchant-stats/views";
-import type { Database } from "~/lib/db/types";
-import { BranchId, UserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 type CreditExpressionBuilder = ExpressionBuilder<
-  Database & { a: Database["merchant_monthly_attribution"] },
+  Database & { a: Database["merchant_month_credit"] },
   "a"
 >;
 

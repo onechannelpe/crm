@@ -4,7 +4,11 @@ import type {
   AttainmentRow,
   BookFilter,
 } from "~/contracts/merchant-stats/views";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import {
+  calendarMonthStart,
+  type CalendarMonth,
+} from "~/domain/time/calendar-date";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { creditFilter } from "./filter";
 import { displayName } from "./names";
@@ -13,7 +17,7 @@ import { targetAsOfMonth } from "./target-as-of";
 export async function getAttainment(
   db: DatabaseExecutor,
   filter: BookFilter,
-  month: string,
+  month: CalendarMonth,
 ): Promise<Attainment> {
   const [sellers, branches, coverage] = await Promise.all([
     sellerRows(db, filter, month),
@@ -27,17 +31,17 @@ export async function getAttainment(
 async function sellerRows(
   db: DatabaseExecutor,
   filter: BookFilter,
-  month: string,
+  month: CalendarMonth,
 ): Promise<AttainmentRow[]> {
   const rows = await db
     .selectFrom("merchant_monthly_gpv as m")
-    .innerJoin("merchant_monthly_attribution as a", (join) =>
+    .innerJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
     )
     .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
     .leftJoin("users as u", "u.id", "a.seller_user_id")
     .leftJoin("branches as b", "b.id", "a.branch_id")
-    .where("m.month", "=", month)
+    .where("m.month", "=", calendarMonthStart(month))
     .where((eb) => creditFilter(eb, filter))
     .select((eb) => [
       "a.seller_user_id",
@@ -45,8 +49,7 @@ async function sellerRows(
       "u.first_surname",
       "b.name as branch_name",
       eb.fn.sum<number>("m.gpv").as("gpv"),
-      // Preserve null when no attributed RUC has a target.
-      eb.fn.sum<number | null>("t.projected_gpv").as("projected_gpv"),
+      eb.fn.sum<number | null>("t.monthly_target_gpv").as("monthly_target_gpv"),
       eb.fn.count<number>("m.ruc").distinct().as("ruc_count"),
       eb.fn.sum<number>("m.device_count").as("device_count"),
     ])
@@ -59,7 +62,7 @@ async function sellerRows(
       label: displayName(row) ?? "Sin asignar",
       sublabel: row.branch_name,
       gpv: row.gpv ?? 0,
-      projectedGpv: row.projected_gpv,
+      projectedGpv: row.monthly_target_gpv,
       rucCount: row.ruc_count ?? 0,
       deviceCount: row.device_count ?? 0,
     }))
@@ -69,23 +72,22 @@ async function sellerRows(
 async function branchRows(
   db: DatabaseExecutor,
   filter: BookFilter,
-  month: string,
+  month: CalendarMonth,
 ): Promise<AttainmentRow[]> {
   const rows = await db
     .selectFrom("merchant_monthly_gpv as m")
-    .innerJoin("merchant_monthly_attribution as a", (join) =>
+    .innerJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
     )
     .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
     .leftJoin("branches as b", "b.id", "a.branch_id")
-    .where("m.month", "=", month)
+    .where("m.month", "=", calendarMonthStart(month))
     .where((eb) => creditFilter(eb, filter))
     .select((eb) => [
       "a.branch_id",
       "b.name as branch_name",
       eb.fn.sum<number>("m.gpv").as("gpv"),
-      // Preserve null when no attributed RUC has a target.
-      eb.fn.sum<number | null>("t.projected_gpv").as("projected_gpv"),
+      eb.fn.sum<number | null>("t.monthly_target_gpv").as("monthly_target_gpv"),
       eb.fn.count<number>("m.ruc").distinct().as("ruc_count"),
       eb.fn.sum<number>("m.device_count").as("device_count"),
     ])
@@ -98,24 +100,23 @@ async function branchRows(
       label: row.branch_name ?? "Sin zonal",
       sublabel: null,
       gpv: row.gpv ?? 0,
-      projectedGpv: row.projected_gpv,
+      projectedGpv: row.monthly_target_gpv,
       rucCount: row.ruc_count ?? 0,
       deviceCount: row.device_count ?? 0,
     }))
     .toSorted((a, b) => b.gpv - a.gpv);
 }
 
-// Coverage ignores the selected seller or branch, otherwise it would always be 100%.
 async function monthCoverage(
   db: DatabaseExecutor,
-  month: string,
+  month: CalendarMonth,
 ): Promise<AttainmentCoverage> {
   const row = await db
     .selectFrom("merchant_monthly_gpv as m")
-    .leftJoin("merchant_monthly_attribution as a", (join) =>
+    .leftJoin("merchant_month_credit as a", (join) =>
       join.onRef("a.ruc", "=", "m.ruc").onRef("a.month", "=", "m.month"),
     )
-    .where("m.month", "=", month)
+    .where("m.month", "=", calendarMonthStart(month))
     .select((eb) => [
       eb.fn.coalesce(eb.fn.sum<number>("m.gpv"), eb.lit(0)).as("total_gpv"),
       eb.fn
@@ -132,10 +133,10 @@ async function monthCoverage(
         )
         .as("attributed_gpv"),
     ])
-    .executeTakeFirst();
+    .executeTakeFirstOrThrow();
 
   return {
-    attributedGpv: row?.attributed_gpv ?? 0,
-    totalGpv: row?.total_gpv ?? 0,
+    attributedGpv: row.attributed_gpv,
+    totalGpv: row.total_gpv,
   };
 }

@@ -1,9 +1,12 @@
 import { read, utils, type WorkBook, type WorkSheet } from "xlsx";
 
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import {
+  calendarDateFromParts,
+  calendarMonthFromDate,
+} from "~/domain/time/calendar-date";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
-import { firstOfMonth } from "./cells";
 import {
   GPV_REQUIRED_HEADERS,
   headerSetHasAll,
@@ -22,14 +25,22 @@ export interface ParseReportInput {
 }
 
 export function parseReport(
-  buffer: ArrayBuffer,
+  bytes: Uint8Array,
   input: ParseReportInput,
 ): Result<ParsedReport, DomainError> {
-  const workbook = read(buffer, { type: "array", cellDates: true });
+  const workbook = read(bytes, { type: "array", cellDates: true });
   const sheet = selectGpvSheet(workbook);
-  if (isErr(sheet)) return sheet;
 
-  const cutMonth = firstOfMonth(isoDay(input.cutAt));
+  if (isErr(sheet)) {
+    return sheet;
+  }
+
+  const cutDate = calendarDateFromParts({
+    year: input.cutAt.getUTCFullYear(),
+    month: input.cutAt.getUTCMonth() + 1,
+    day: input.cutAt.getUTCDate(),
+  });
+  const cutMonth = calendarMonthFromDate(cutDate);
   const rows: SourceRow[] = [];
   const rejections: Rejection[] = [];
 
@@ -40,34 +51,41 @@ export function parseReport(
       cells,
       cutMonth,
     });
+
     if (isErr(decoded)) {
       rejections.push(decoded.error);
       return;
     }
+
     rows.push(decoded.value);
   });
 
   return Ok({ rows, rejections });
 }
 
-function isoDay(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-// The dealer export carries a single worksheet. Ties break on row
-// count so a summary tab can never outrank the data.
+// Prefer the matching sheet with the most data rows over summary sheets.
 function selectGpvSheet(
   workbook: WorkBook,
 ): Result<ExtractedSheet, DomainError> {
   const candidates: ExtractedSheet[] = [];
+
   for (const name of workbook.SheetNames) {
     const worksheet = workbook.Sheets[name];
-    if (!worksheet) continue;
+
+    if (!worksheet) {
+      continue;
+    }
+
     const extracted = extractSheet(worksheet);
-    if (extracted) candidates.push(extracted);
+
+    if (extracted) {
+      candidates.push(extracted);
+    }
   }
 
-  if (candidates.length === 0) return Err(fail("gpv_no_worksheet"));
+  if (candidates.length === 0) {
+    return Err(fail("gpv_no_worksheet"));
+  }
 
   return Ok(
     candidates.reduce((best, sheet) =>
@@ -88,7 +106,10 @@ function extractSheet(worksheet: WorkSheet): ExtractedSheet | null {
     const headers = grid[index].map((cell) =>
       normalizeGpvHeader(String(cell ?? "")),
     );
-    if (!headerSetHasAll(headers, GPV_REQUIRED_HEADERS)) continue;
+
+    if (!headerSetHasAll(headers, GPV_REQUIRED_HEADERS)) {
+      continue;
+    }
 
     const rows = grid
       .slice(index + 1)
