@@ -30,8 +30,6 @@ export interface ExecutiveGpvMerchantView {
   projectedGpv: number | null;
   lastTransactionAt: CalendarDate | null;
   leadId: string | null;
-
-  // Null means the commission scheme has not defined the threshold yet.
   isActive: boolean | null;
 }
 
@@ -61,6 +59,10 @@ export interface AttainmentRow {
 export interface AttainmentCoverage {
   attributedGpv: number;
   totalGpv: number;
+
+  // GPV from the current month's sales cohort only.
+  cohortGpv: number;
+  cohortDeviceCount: number;
 }
 
 export interface Attainment {

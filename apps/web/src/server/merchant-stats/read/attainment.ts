@@ -19,13 +19,21 @@ export async function getAttainment(
   filter: BookFilter,
   month: CalendarMonth,
 ): Promise<Attainment> {
-  const [sellers, branches, coverage] = await Promise.all([
+  const [sellers, branches, gpvCoverage, cohortCoverage] = await Promise.all([
     sellerRows(db, filter, month),
     branchRows(db, filter, month),
     monthCoverage(db, month),
+    monthCohort(db, month),
   ]);
 
-  return { sellers, branches, coverage };
+  return {
+    sellers,
+    branches,
+    coverage: {
+      ...gpvCoverage,
+      ...cohortCoverage,
+    },
+  };
 }
 
 async function sellerRows(
@@ -110,7 +118,7 @@ async function branchRows(
 async function monthCoverage(
   db: DatabaseExecutor,
   month: CalendarMonth,
-): Promise<AttainmentCoverage> {
+): Promise<Pick<AttainmentCoverage, "attributedGpv" | "totalGpv">> {
   const row = await db
     .selectFrom("merchant_monthly_gpv as m")
     .leftJoin("merchant_month_credit as a", (join) =>
@@ -138,5 +146,26 @@ async function monthCoverage(
   return {
     attributedGpv: row.attributed_gpv,
     totalGpv: row.total_gpv,
+  };
+}
+
+// `month_offset = 0` isolates sales from this month's own cohort.
+async function monthCohort(
+  db: DatabaseExecutor,
+  month: CalendarMonth,
+): Promise<Pick<AttainmentCoverage, "cohortGpv" | "cohortDeviceCount">> {
+  const row = await db
+    .selectFrom("merchant_sale_gpv as sg")
+    .where("sg.sale_month", "=", calendarMonthStart(month))
+    .where("sg.month_offset", "=", 0)
+    .select((eb) => [
+      eb.fn.coalesce(eb.fn.sum<number>("sg.gpv"), eb.lit(0)).as("cohort_gpv"),
+      eb.fn.count<number>("sg.sale_id").as("cohort_device_count"),
+    ])
+    .executeTakeFirstOrThrow();
+
+  return {
+    cohortGpv: row.cohort_gpv,
+    cohortDeviceCount: row.cohort_device_count,
   };
 }
