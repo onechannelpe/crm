@@ -1,154 +1,93 @@
-# The web
+# Culqi360 web application
 
-Serves the CRM UI, the CRM API routes, and the background maintenance worker.
+The web application serves the Culqi360 UI, API routes, and maintenance worker.
+It stores application state in PostgreSQL and uses the engine for contact search
+and candidate assignment.
 
-The request path starts in [`src/entry-server.tsx`](src/entry-server.tsx) and mounts the router in [`src/app.tsx`](src/app.tsx). Every request passes through [`src/middleware.ts`](src/middleware.ts). Middleware sets the CSP nonce, request tracing fields, and CSRF cookie, then delegates access control to [`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts). That auth layer handles public paths separately, validates the session cookie, redirects for login or onboarding, and stores the session on `event.locals`.
+## Request lifecycle
 
-Authenticated pages live under [`src/routes/(app).tsx`](src/routes/%28app%29.tsx). Public pages live under [`src/routes/(public).tsx`](src/routes/%28public%29.tsx). Server functions live under [`src/actions/`](src/actions/). Read wrappers live under [`src/lib/queries/`](src/lib/queries/). Write wrappers live under [`src/lib/mutations/`](src/lib/mutations/). Domain services and repositories live under [`src/server/`](src/server/). Action runtime wiring lives in [`src/server/shared/action-runtime/`](src/server/shared/action-runtime/). Runtime dependency assembly lives in [`src/server/runtime/`](src/server/runtime/).
+```mermaid
+flowchart TD
+    Entry[entry-server.tsx] --> App[app.tsx]
+    App --> Middleware[middleware.ts]
+    Middleware --> Auth[request-auth.ts]
+    Auth --> Route[Route]
+    Route --> Action[Server action]
+    Action --> Service[Domain service]
+    Service --> Database[Repository or database]
+```
 
-Most feature work follows the same path. A route calls a server function in [`src/actions/`](src/actions/). The action calls a service under [`src/server/`](src/server/), and the service receives dependencies from the relevant runtime module under [`src/server/runtime/`](src/server/runtime/). Database access starts in [`src/lib/db/client.ts`](src/lib/db/client.ts) and [`src/lib/db/db.ts`](src/lib/db/db.ts). Schema modules live under [`src/lib/db/schema/`](src/lib/db/schema/).
+[`middleware.ts`](src/middleware.ts) adds request metadata, prepares the CSP
+nonce and CSRF cookie, and delegates authentication to
+[`request-auth.ts`](src/server/platform/http/request-auth.ts). Public requests
+bypass session checks. Authenticated requests store their session on
+`event.locals`.
 
-Search and candidate discovery are the main cross-service dependencies. Engine
-configuration is built in
-[`src/server/shared/engine/config.ts`](src/server/shared/engine/config.ts), the
-runtime-facing client interface is in
-[`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts), and
-the HTTP adapter is implemented in
-[`src/server/adapters/engine/client.ts`](src/server/adapters/engine/client.ts).
-Direct search flows through [`src/actions/search/run.ts`](src/actions/search/run.ts)
-and [`src/server/search-workflow/run-search.ts`](src/server/search-workflow/run-search.ts).
-Candidate assignment flows through
-[`src/server/contact-assignments/application/assign-contacts.ts`](src/server/contact-assignments/application/assign-contacts.ts)
-and [`src/server/workflow/infrastructure/engine-gateway.ts`](src/server/workflow/infrastructure/engine-gateway.ts).
-Extension session and event APIs live under [`src/routes/api/extension/`](src/routes/api/extension/).
+Authenticated routes live under [`src/routes/(app)/`](src/routes/%28app%29/),
+and public routes live under [`src/routes/(public)/`](src/routes/%28public%29/).
+Routes and features call server functions in [`src/rpc/`](src/rpc/). Each RPC
+module validates transport input and delegates to its product capability.
 
-## Configuration
+Domain services and repositories live under [`src/server/`](src/server/).
+[`src/server/platform/action/`](src/server/platform/action/) runs actions with
+authentication, parsing, auditing, and error handling. Runtime dependencies are
+assembled by domain in
+[`src/server/platform/container/`](src/server/platform/container/).
 
-Configuration is loaded from env files selected by the script or passed by the caller.
+## Persistence
 
-| Group               | Variable                                     |
-| ------------------- | -------------------------------------------- |
-| Core auth           | `SESSION_SECRET`                             |
-| Core auth           | `TOTP_ENCRYPTION_KEY`                        |
-| Core auth           | `ENGINE_HMAC_KEY_ID`                         |
-| Core auth           | `ENGINE_HMAC_SECRET`                         |
-| Engine client       | `ENGINE_CONNECT_MODE`                        |
-| Engine client       | `ENGINE_URL`                                 |
-| Storage and proxy   | `WEB_DB_PATH`                                |
-| Storage and proxy   | `WEB_UPLOADS_ROOT`                           |
-| Storage and proxy   | `TRUSTED_PROXY`                              |
-| Extension and OAuth | `EXTENSION_EXPECTED_ORIGIN`                  |
-| Extension and OAuth | `EXTENSION_HANDOFF_PRIVATE_KEY_PKCS8_BASE64` |
-| Extension and OAuth | `EXTENSION_HANDOFF_PUBLIC_KEY_SPKI_BASE64`   |
-| Extension and OAuth | `GOOGLE_CLIENT_ID`                           |
-| Extension and OAuth | `GOOGLE_CLIENT_SECRET`                       |
-| Extension and OAuth | `GOOGLE_REDIRECT_URI`                        |
-| Notifications       | `NOTIFICATION_ROUTES`                        |
-| Notifications       | `RESEND_API_KEY`                             |
-| Notifications       | `EMAIL_FROM`                                 |
-| Notifications       | `KAPSO_API_KEY`                              |
-| Notifications       | `KAPSO_WHATSAPP_PHONE_NUMBER_ID`             |
-| Notifications       | `KAPSO_META_GRAPH_VERSION`                   |
-| Notifications       | `WHATSAPP_CLOUD_ACCESS_TOKEN`                |
-| Notifications       | `WHATSAPP_CLOUD_PHONE_NUMBER_ID`             |
-| Notifications       | `WHATSAPP_CLOUD_GRAPH_VERSION`               |
-| Notifications       | `WHATSAPP_WEBHOOK_VERIFY_TOKEN`              |
-| Notifications       | `KAPSO_WEBHOOK_SECRET`                       |
+PostgreSQL stores application state. Database infrastructure lives under
+[`src/server/platform/database/`](src/server/platform/database/). Schema modules
+live under
+[`src/server/platform/database/schema/modules/`](src/server/platform/database/schema/modules/).
 
-The engine client defaults to `ENGINE_CONNECT_MODE=local` and `ENGINE_URL=http://127.0.0.1:3001`. Local mode requires a loopback `http` endpoint so the engine stays private to the host. Remote mode requires an `https` endpoint. The WebAuthn relying party is derived per request from the public origin (`requestContext.publicOrigin`). Definitions live in [`src/lib/env.ts`](src/lib/env.ts), [`src/lib/config.ts`](src/lib/config.ts), and [`vite.config.ts`](vite.config.ts).
+See [Database development](docs/database.md).
 
-## Running
+## Background processing
 
-Run from the repo root:
+The maintenance worker executes durable jobs stored in PostgreSQL. PostgreSQL
+`LISTEN`/`NOTIFY` wakes the worker when work is available, and a one-second poll
+recovers missed notifications.
+
+Browser updates use the realtime pipeline in
+[`src/server/realtime/`](src/server/realtime/). See
+[Realtime](docs/realtime.md).
+
+The worker entry point is
+[`maintenance-runner.ts`](src/workers/maintenance-runner.ts). Queue
+infrastructure lives in
+[`src/server/platform/jobs/`](src/server/platform/jobs/).
+
+## Engine integration
+
+The engine client contract and HTTP adapter live in
+[`src/server/integrations/engine/`](src/server/integrations/engine/). Direct
+search is implemented under
+[`src/server/search-workflow/`](src/server/search-workflow/). Candidate
+assignment is implemented under
+[`src/server/contact-assignments/`](src/server/contact-assignments/).
+
+## Run the application
+
+From the repository root:
 
 ```sh
+bun run dev:infra:setup
 bun run dev
-bun run dev:web
-bun run dev:worker
 ```
 
-From the repo root, `bun run dev` starts engine, web, and worker.
-Web startup runs migrations, provisions an empty installation, and adds development fixtures before Vite starts.
-`bun run dev:worker` starts only the maintenance worker.
+The setup command is required once for a new checkout. `bun run dev` starts the
+web application, maintenance worker, PostgreSQL, and the engine.
 
-Run from `apps/web/`:
+See the repository README for additional development commands.
 
-```sh
-bun run dev
-bun run migrate
-bun run seed
-bun run build
-bun run test
-bun run test:unit
-bun run test:contract
-bun run test:integration
-bun run test:journey
-bun run test:prepare
-bun run test:server
-bun run worker:maintenance
-bun --env-file=../../.env.production run start
-bun --env-file=../../.env.production run migrate:prod
-bun --env-file=../../.env.production run provision:prod
-bun --env-file=../../.env.production run worker:maintenance:prod
-```
+## Further reading
 
-Local scripts choose their default env file automatically. Production entrypoints stay explicit through `start`, `migrate:prod`, `provision:prod`, and `worker:maintenance:prod`.
-
-## Validation
-
-Validation commands:
-
-```sh
-bun run check:web
-bun run test
-bun run test:unit
-bun run test:contract
-bun run test:integration
-bun run test:journey
-bun run test:integration:browser
-bun run test:perf
-```
-
-## Diagnostics
-
-Use diagnostics for SSR, hydration, and request debugging. These traces are opt-in and separate from audit or operational logs. Keep product code instrumentation minimal. Prefer stable boundaries and generic wrappers over feature-level render tracing.
-
-Server-side channels use `DEBUG_DIAGNOSTICS`. Client-side channels use `VITE_DEBUG_DIAGNOSTICS`. Narrow output with `DEBUG_DIAGNOSTICS_FILTER` or `VITE_DEBUG_DIAGNOSTICS_FILTER`.
-
-```sh
-DEBUG_DIAGNOSTICS=ssr bun run dev
-VITE_DEBUG_DIAGNOSTICS=hydration bun run dev
-DEBUG_DIAGNOSTICS=requests bun run dev
-DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS=verbose bun run dev
-DEBUG_DIAGNOSTICS=requests DEBUG_DIAGNOSTICS_REQUESTS_SLOW_MS=500 bun run dev
-DEBUG_DIAGNOSTICS=ssr DEBUG_DIAGNOSTICS_FILTER=app-layout,auth-session-action bun run dev
-```
-
-Diagnostic channels:
-
-- `ssr`: shared render boundaries and a small set of server-side wrappers
-- `hydration`: client mount, boundary failures, window errors, unhandled rejections
-- `requests`: Vite dev-server request tracing
-
-Request tracing defaults to useful traffic only: document navigations, `/_server`, `/api/*`, non-`GET` requests, slow responses, failures, and aborted requests. Use `DEBUG_DIAGNOSTICS_REQUESTS=verbose` only when you need asset-level request noise.
-
-## First reads
-
-The engine contracts live under [`../../contracts/engine/`](../../contracts/engine/).
-Generated bindings live in
-[`src/server/shared/engine/record-contract.ts`](src/server/shared/engine/record-contract.ts),
-[`src/server/shared/engine/doc-projection-contract.ts`](src/server/shared/engine/doc-projection-contract.ts),
-and
-[`src/server/shared/engine/company-projection-contract.ts`](src/server/shared/engine/company-projection-contract.ts).
-
-Start with [`src/middleware.ts`](src/middleware.ts) and
-[`src/lib/auth/access/request-auth.ts`](src/lib/auth/access/request-auth.ts) for
-request and session flow. Then read
-[`src/actions/auth/login/index.ts`](src/actions/auth/login/index.ts) and
-[`src/server/shared/action-runtime/`](src/server/shared/action-runtime/) for
-action execution. For engine-backed search or candidate assignment, continue with
-[`src/server/shared/engine/client.ts`](src/server/shared/engine/client.ts),
-[`src/server/adapters/engine/client.ts`](src/server/adapters/engine/client.ts),
-[`src/server/search-workflow/run-search.ts`](src/server/search-workflow/run-search.ts),
-and
-[`src/server/contact-assignments/application/assign-contacts.ts`](src/server/contact-assignments/application/assign-contacts.ts).
+- [Web configuration](docs/configuration.md)
+- [Database development](docs/database.md)
+- [Realtime](docs/realtime.md)
+- [Diagnostics](docs/diagnostics.md)
+- [End-to-end testing](docs/e2e-testing.md)
+- [Merchant GPV](docs/merchant-gpv.md)
+- [User-facing terminology](docs/glossary.md)
+- [Repository architecture](../../docs/architecture.md)

@@ -1,95 +1,99 @@
-<h1 align="center">onechannel.pe</h1>
+# Culqi360
+
+Culqi360 is Infinity's internal sales CRM. It combines lead management, sales
+workflows, merchant performance reporting, search, and call handling.
 
 <p align="center">
-  <a href="apps/web/readme.md">web</a>
-  ·
-  <a href="crates/engine/readme.md">engine</a>
-  ·
-  <a href="crates/pipeline/readme.md">pipeline</a>
-  ·
-  <a href="apps/extension/readme.md">extension</a>
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/web.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/web.yml/badge.svg?branch=master" alt="Web workflow status"></a>
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/engine.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/engine.yml/badge.svg?branch=master" alt="Engine workflow status"></a>
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/pipeline.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/pipeline.yml/badge.svg?branch=master" alt="Pipeline workflow status"></a>
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/extension.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/extension.yml/badge.svg?branch=master" alt="Extension workflow status"></a>
+  <a href="https://github.com/totallynotdavid/culqi360/actions/workflows/contracts.yml"><img src="https://github.com/totallynotdavid/culqi360/actions/workflows/contracts.yml/badge.svg?branch=master" alt="Contracts workflow status"></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/onechannelpe/crm/actions/workflows/web.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/web.yml/badge.svg?branch=master" alt="web"></a>
-  <a href="https://github.com/onechannelpe/crm/actions/workflows/engine.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/engine.yml/badge.svg?branch=master" alt="engine"></a>
-  <a href="https://github.com/onechannelpe/crm/actions/workflows/pipeline.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/pipeline.yml/badge.svg?branch=master" alt="pipeline"></a>
-  <a href="https://github.com/onechannelpe/crm/actions/workflows/extension.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/extension.yml/badge.svg?branch=master" alt="extension"></a>
-  <a href="https://github.com/onechannelpe/crm/actions/workflows/contracts.yml"><img src="https://github.com/onechannelpe/crm/actions/workflows/contracts.yml/badge.svg?branch=master" alt="contracts"></a>
-</p>
+This repository contains four main components:
 
-This monorepo is built around a shared contact dataset (`contacts.sqlite`).
+- [`apps/web/`](apps/web/) serves the Culqi360 UI, API routes, and maintenance
+  worker.
+- [`crates/engine/`](crates/engine/) serves contact search and candidate
+  selection from published SQLite datasets.
+- [`crates/pipeline/`](crates/pipeline/) builds those datasets from source
+  files.
+- [`apps/extension/`](apps/extension/) handles browser-based call workflows.
 
-```mermaid
-flowchart LR
-    src[source DBs] -->|normalize| pipe[pipeline]
-    pipe -->|build| contacts[(contacts.sqlite)]
-    engine[engine] -->|read| contacts
-    web[web] -->|request contacts| engine
-    web <--> appdb[(crm.db)]
-    ext[extension] -->|get assignments| web
-
-    click pipe "https://github.com/onechannelpe/crm/tree/master/crates/pipeline"
-    click engine "https://github.com/onechannelpe/crm/tree/master/crates/engine"
-    click web "https://github.com/onechannelpe/crm/tree/master/apps/web"
-    click ext "https://github.com/onechannelpe/crm/tree/master/apps/extension"
-```
-
-The pipeline builds a SQLite snapshot from source files and shared contracts.
-The engine serves that snapshot through signed HTTP endpoints for search, record
-candidates, record imports, and health checks. The web application serves the CRM
-UI, keeps application state in its own SQLite database, and calls the engine
-through its shared engine adapter. The browser extension receives signed handoff
-messages from the web application and syncs call state through extension API
-routes.
-
-The engine HTTP and projection contracts live under
-[`contracts/engine/`](contracts/engine/). Generated bindings in the web,
-`search`, and `leads` crates are derived from those files. If a contract changes,
-regenerate bindings with `bun run generate`. Validate generated artifacts with
-`bun run check:contracts` and search compatibility with
-`bun run check:search-contract`.
-
-## Applications
-
-- [`apps/web/`](apps/web/)
-  The main application. It serves the UI, API routes, and the maintenance worker.
-- [`crates/engine/`](crates/engine/)
-  The search service. It verifies signed requests and queries the published SQLite dataset.
-- [`crates/pipeline/`](crates/pipeline/)
-  The dataset pipeline. It validates source files, builds the staged dataset, and promotes the SQLite snapshot used by the engine.
-- [`apps/extension/`](apps/extension/)
-  The browser extension for call handling. It receives assignment handoff and syncs call state back to the web application.
+See [System architecture](docs/architecture.md) for the connections between
+these components and their data stores.
 
 ## Get started
 
-Install the toolchain, install dependencies, create `.env`, generate contract bindings, and start the web application and engine:
+Install the toolchain and dependencies, then create the local environment file:
 
 ```sh
-mise install # install mise if you don't have it yet: curl https://mise.run | sh
+mise install
 bun install
 cp .env.example .env
+```
+
+Fill the required values in `.env`. See
+[Web configuration](apps/web/docs/configuration.md) for requirements and
+defaults. Then generate contracts, initialize PostgreSQL, and start Culqi360:
+
+```sh
 bun run generate
+bun run dev:infra:setup
 bun run dev
 ```
 
-`bun run dev` starts engine, web, and worker.
-`bun run dev:web`, `bun run dev:engine`, and `bun run dev:worker` start each process individually.
+Run `bun run dev:infra:setup` once for a new checkout. The normal development
+command, `bun run dev`, starts PostgreSQL, the engine, the web server, and the
+maintenance worker. The web process creates the schema and seeds development
+data before starting Vite.
 
-## Read this first
+See [Database development](apps/web/docs/database.md) before resetting the local
+database or changing a schema module.
 
-- Web request and auth flow: [`apps/web/src/middleware.ts`](apps/web/src/middleware.ts), [`apps/web/src/lib/auth/access/request-auth.ts`](apps/web/src/lib/auth/access/request-auth.ts)
-- Web service wiring: [`apps/web/src/server/shared/context.ts`](apps/web/src/server/shared/context.ts), [`apps/web/src/server/shared/registry.ts`](apps/web/src/server/shared/registry.ts)
-- Engine startup and request handling: [`crates/engine/src/runtime.rs`](crates/engine/src/runtime.rs), [`crates/search/src/api.rs`](crates/search/src/api.rs), [`crates/leads/src/api.rs`](crates/leads/src/api.rs)
-- Pipeline orchestration: [`crates/pipeline/src/pipeline.rs`](crates/pipeline/src/pipeline.rs), [`crates/pipeline/src/cli.rs`](crates/pipeline/src/cli.rs)
-- Extension runtime and handoff flow: [`apps/extension/src/background/runtime.ts`](apps/extension/src/background/runtime.ts), [`apps/extension/src/services/external-auth.ts`](apps/extension/src/services/external-auth.ts)
+## Run one component
 
-## Validation
+```sh
+bun run dev:infra
+bun run dev:engine
+bun run dev:web
+bun run dev:worker
+```
+
+The web server requires PostgreSQL. Search and candidate-assignment flows also
+require the engine.
+
+## Validate the repository
+
+Run the complete repository check from the root:
 
 ```sh
 bun run check
-bun run check:web
-bun run check:engine
-bun run check:contracts
-bun run check:search-contract
 ```
+
+The command checks Rust, generated contracts, search compatibility, web types,
+lint, and formatting. Focused checks are available in
+[`package.json`](package.json).
+
+Run tests with the component that owns them:
+
+```sh
+bun run --cwd apps/web test
+bun run test:engine
+bun run test:extension:integration
+```
+
+## Documentation
+
+- [System architecture](docs/architecture.md)
+- [Web application](apps/web/readme.md)
+- [Web configuration](apps/web/docs/configuration.md)
+- [Database development](apps/web/docs/database.md)
+- [End-to-end testing](apps/web/docs/e2e-testing.md)
+- [Merchant GPV](apps/web/docs/merchant-gpv.md)
+- [User-facing terminology](apps/web/docs/glossary.md)
+
+Container deployments use [`compose.app.yml`](compose.app.yml) and
+[`compose.engine.yml`](compose.engine.yml). Their environment templates live in
+[`ops/deployment/`](ops/deployment/).
