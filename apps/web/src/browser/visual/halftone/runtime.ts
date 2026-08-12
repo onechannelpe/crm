@@ -24,12 +24,10 @@ import {
 import { createRuntimeInteractionHandlers } from "./runtime/interaction";
 import { createRuntimePasses, resizeRuntimePasses } from "./runtime/passes";
 import type {
-  HalftonePointerSettings,
   HalftoneRuntime,
   HalftoneRuntimeConfig,
   HalftoneSnapshotRequest,
 } from "./runtime/types";
-import type { HalftonePose } from "./state";
 
 type MutableRefObject<T> = { current: T };
 
@@ -58,23 +56,18 @@ export async function createHalftoneRuntime({
   let disposed = false;
   let active = true;
 
-  const interactionReference: MutableRefObject<HalftoneInteractionState> = {
+  const interactionRef: MutableRefObject<HalftoneInteractionState> = {
     current: createHalftoneInteractionState(initialConfig.initialPose),
   };
 
-  const didInteractReference: MutableRefObject<boolean> = {
+  const didInteractRef: MutableRefObject<boolean> = {
     current: false,
   };
 
-  const initialPoseReference: MutableRefObject<
-    Partial<HalftonePose> | undefined
-  > = {
-    current: initialConfig.initialPose,
-  };
-
-  const imageInteractionReference: MutableRefObject<HalftonePointerSettings> = {
-    current: resolveImageInteractionSettings(initialConfig.imageInteraction),
-  };
+  const initialPose = initialConfig.initialPose;
+  const imageInteractionSettings = resolveImageInteractionSettings(
+    initialConfig.imageInteraction,
+  );
 
   const getWidth = () => Math.max(host.clientWidth, 1);
   const getHeight = () => Math.max(host.clientHeight, 1);
@@ -173,7 +166,22 @@ export async function createHalftoneRuntime({
   } = resources;
 
   syncResources(resources, initialConfig.settings);
-  syncImageElementTexture(resources, getImageElement());
+
+  let syncedImageElement: HTMLImageElement | null = null;
+
+  // Image loading can finish after runtime setup, so check for it every frame.
+  const syncImageElementIfChanged = () => {
+    const currentImageElement = getImageElement();
+
+    if (currentImageElement === syncedImageElement) {
+      return;
+    }
+
+    syncedImageElement = currentImageElement;
+    syncImageElementTexture(resources, currentImageElement);
+  };
+
+  syncImageElementIfChanged();
 
   const syncSize = () => {
     const width = getWidth();
@@ -200,9 +208,9 @@ export async function createHalftoneRuntime({
   const { handlePointerDown, handlePointerLeave, handlePointerMove } =
     createRuntimeInteractionHandlers({
       canvas,
-      didInteractReference,
+      didInteractReference: didInteractRef,
       getSourceMode: () => getConfig().settings.sourceMode,
-      interactionReference,
+      interactionReference: interactionRef,
       onFirstInteraction: () => getConfig().onFirstInteraction(),
     });
 
@@ -217,12 +225,12 @@ export async function createHalftoneRuntime({
     }
 
     clock.update(timestamp);
+    syncImageElementIfChanged();
 
     const config = getConfig();
     const activeSettings = config.settings;
     const delta = clock.getDelta();
-    const elapsedTime =
-      (initialPoseReference.current?.timeElapsed ?? 0) + clock.getElapsed();
+    const elapsedTime = (initialPose?.timeElapsed ?? 0) + clock.getElapsed();
     const baseDistance = config.previewDistance;
     const logicalWidth = getVirtualWidth();
     const logicalHeight = getVirtualHeight();
@@ -246,8 +254,7 @@ export async function createHalftoneRuntime({
     halftoneMaterial.uniforms.cropToBounds.value = isImageMode ? 1 : 0;
 
     if (isImageMode) {
-      const imageInteractionSettings = imageInteractionReference.current;
-      const interaction = interactionReference.current;
+      const interaction = interactionRef.current;
 
       const hoverEasing =
         1 -
