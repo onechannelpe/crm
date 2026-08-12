@@ -1,16 +1,10 @@
-import path from "node:path";
-
 import codspeedPlugin from "@codspeed/vitest-plugin";
 import {
   defineConfig,
   type TestProjectInlineConfiguration,
 } from "vitest/config";
 
-const alias = {
-  "~": path.resolve(__dirname, "./src"),
-  "@tests": path.resolve(__dirname, "./tests"),
-  "server-only": path.resolve(__dirname, "./tests/mocks/server-only.ts"),
-};
+import { testAliases } from "./paths.ts";
 
 function databaseProject(namespace: string) {
   return {
@@ -73,5 +67,5 @@ export default defineConfig({
     },
     projects,
   },
-  resolve: { alias },
+  resolve: { alias: { ...testAliases } },
 });

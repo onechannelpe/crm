@@ -4,9 +4,9 @@
   "scripts": {
     "dev": "bun run wait:db && bun run migrate && bun run seed && bun run dev:server",
     "wait:db": "until mise x postgres -- pg_isready -h localhost -p 5432 -U postgres -q; do echo 'waiting for postgres...'; sleep 0.3; done",
-    "dev:server": "bun --env-file=../../.env --bun vite --config vite.config.ts",
-    "build": "bun --env-file=../../.env.production --bun vite build --config vite.config.ts",
-    "build:container": "bun --bun vite build --config vite.config.ts",
+    "dev:server": "bun --env-file=../../.env --bun vite --configLoader native --config vite.config.ts",
+    "build": "bun --env-file=../../.env.production --bun vite build --configLoader native --config vite.config.ts",
+    "build:container": "bun --bun vite build --configLoader native --config vite.config.ts",
     "start": "bun run .output/server/index.mjs",
     "worker:maintenance": "bun --env-file=../../.env src/workers/maintenance-runner.ts",
     "worker:maintenance:prod": "bun src/workers/maintenance-runner.ts",

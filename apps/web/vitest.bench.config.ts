@@ -1,7 +1,9 @@
-import path from "node:path";
+import { resolve } from "node:path";
 
 import codspeedPlugin from "@codspeed/vitest-plugin";
 import { defineConfig } from "vitest/config";
+
+import { testAliases } from "./paths.ts";
 
 export default defineConfig({
   plugins: [codspeedPlugin()],
@@ -21,10 +23,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "~": path.resolve(__dirname, "./src"),
-      "@tests": path.resolve(__dirname, "./tests"),
-      bun: path.resolve(__dirname, "./tests/mocks/bun.ts"),
-      "server-only": path.resolve(__dirname, "./tests/mocks/server-only.ts"),
+      ...testAliases,
+
+      // Benchmarks use deterministic UUIDs so generated ids are stable across runs.
+      bun: resolve(import.meta.dirname, "./tests/mocks/bun.ts"),
     },
   },
 });

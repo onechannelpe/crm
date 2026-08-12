@@ -1,5 +1,3 @@
-import { resolve } from "node:path";
-
 import { responsiveImagesPlugin } from "@crm/images/vite";
 import mdx from "@mdx-js/rollup";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
@@ -11,13 +9,32 @@ import { bundleAnalyzerPlugin } from "rolldown/experimental";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 
-import { createRequestTracePlugin, resolveRequestTraceConfig } from "./tracer";
+import { appAlias } from "./paths.ts";
+import {
+  createRequestTracePlugin,
+  resolveRequestTraceConfig,
+} from "./tracer.ts";
 
 const requestTraceConfig = resolveRequestTraceConfig(process.env);
 
+function uploadsSourceMaps(command: string): boolean {
+  return (
+    command === "build" &&
+    Boolean(
+      process.env.SENTRY_AUTH_TOKEN &&
+      process.env.SENTRY_ORG &&
+      process.env.SENTRY_PROJECT,
+    )
+  );
+}
+
 export default defineConfig(({ command }) => ({
-  // Dev and E2E use different env files and cannot share a Vite cache.
+  // Dev and E2E use separate Vite caches.
   cacheDir: process.env.VITE_CACHE_DIR,
+
+  build: {
+    sourcemap: uploadsSourceMaps(command),
+  },
 
   optimizeDeps: {
     include: ["@solid-primitives/keyed"],
@@ -27,8 +44,7 @@ export default defineConfig(({ command }) => ({
     dedupe: ["solid-js", "solid-js/web"],
   },
 
-  // Nitro imports external SSR dependencies outside Vite's plugin pipeline.
-  // Keep `server-only` inside Vite so SolidStart can replace it safely.
+  // Keep `server-only` inside Vite so SolidStart can replace it.
   ssr: {
     noExternal: ["server-only"],
   },
@@ -38,7 +54,7 @@ export default defineConfig(({ command }) => ({
     // See vitejs/vite#19606.
     perEnvironmentStartEndDuringDev: true,
 
-    // Uploaded files are runtime data and must not restart the route handler.
+    // Uploaded files must not restart the dev server.
     watch: {
       ignored: ["**/.local-storage/**"],
     },
@@ -46,6 +62,7 @@ export default defineConfig(({ command }) => ({
 
   plugins: [
     ...createRequestTracePlugin(requestTraceConfig),
+
     {
       enforce: "pre",
       ...mdx({
@@ -56,6 +73,7 @@ export default defineConfig(({ command }) => ({
         remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
       }),
     },
+
     solidStart({
       middleware: "./src/middleware.ts",
       extensions: ["md", "mdx"],
@@ -69,10 +87,9 @@ export default defineConfig(({ command }) => ({
         onError: "./src/server-function-error.ts",
       },
     }),
+
     nitro({
-      alias: {
-        "~": resolve(process.cwd(), "src"),
-      },
+      alias: { ...appAlias },
       plugins: ["./src/server/entrypoints/nitro/realtime-lifecycle.ts"],
       rollupConfig: {
         external: [/^@node-rs\/argon2/],
@@ -89,16 +106,25 @@ export default defineConfig(({ command }) => ({
       },
       preset: "bun",
     }),
+
     visualizer(),
     bundleAnalyzerPlugin({ format: "md" }),
     responsiveImagesPlugin(),
-    // Sourcemap upload and release telemetry only matter for shipped builds;
-    // skip it in dev to avoid noise and pointless network calls.
-    ...(command === "build"
+
+    ...(uploadsSourceMaps(command)
       ? [
           sentryVitePlugin({
+            authToken: process.env.SENTRY_AUTH_TOKEN,
             org: process.env.SENTRY_ORG,
             project: process.env.SENTRY_PROJECT,
+
+            // Debug IDs map stack traces without creating Sentry releases.
+            release: { create: false },
+
+            sourcemaps: {
+              filesToDeleteAfterUpload: ["**/*.map"],
+            },
+            telemetry: false,
           }),
         ]
       : []),
