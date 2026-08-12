@@ -1,16 +1,18 @@
-import { isPlainRecord } from "~/lib/type-guards";
 import type {
   RecordCandidate,
   RecordCandidatesResponse,
-  SearchResponse,
-} from "~/server/shared/engine/types";
+} from "~/contracts/engine/record-api.generated";
+import type { SearchResponse } from "~/contracts/search/engine-results.generated";
+import { isPlainRecord } from "~/shared/type-guards";
 
 function isArray(value: unknown): value is unknown[] {
   return Array.isArray(value);
 }
 
 function isRecordCandidate(value: unknown): value is RecordCandidate {
-  if (!isPlainRecord(value)) return false;
+  if (!isPlainRecord(value)) {
+    return false;
+  }
   return (
     typeof value.ruc === "string" &&
     typeof value.organization_name === "string" &&

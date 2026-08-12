@@ -1,12 +1,12 @@
-import { external } from "~/server/shared/domain-error";
+import { external } from "~/domain/errors";
 import type {
   EngineClient,
   RecordCandidatesRequest,
-} from "~/server/shared/engine/client";
-import type { EngineClientConfig } from "~/server/shared/engine/config";
-import { ENGINE_ENDPOINTS } from "~/server/shared/engine/endpoints";
-import { signRequest } from "~/server/shared/engine/signature";
-import { Err, Ok } from "~/server/shared/result";
+} from "~/server/integrations/engine/client";
+import type { EngineClientConfig } from "~/server/integrations/engine/config";
+import { ENGINE_ENDPOINTS } from "~/server/integrations/engine/endpoints";
+import { signRequest } from "~/server/integrations/engine/signature";
+import { Err, Ok } from "~/shared/result";
 
 import {
   decodeSearchResponse,
@@ -20,7 +20,16 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
     body: string,
     requestId: string,
   ): Promise<Response> {
-    const { signature, timestamp } = signRequest(body, config.hmacSecret);
+    // Deliberately not the operation instant. This timestamp is the replay
+    // window Engine checks against its own clock, so it has to describe when
+    // the request leaves, not when the request or job that triggered it began.
+    // A long-running job inheriting its claim instant would sign a timestamp
+    // minutes stale and get rejected for skew.
+    const { signature, timestamp } = signRequest(
+      body,
+      config.hmacSecret,
+      Date.now(), // clock-boundary: outbound Engine request signing
+    );
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), config.timeoutMs);

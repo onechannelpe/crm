@@ -1,18 +1,17 @@
 import type { Json } from "~/contracts/json";
-import type { WorkflowIntegrationJobsTable } from "~/lib/db/types";
-import type { JobStore } from "~/lib/job-queue/job-store";
-import type { QueueJobBase } from "~/lib/job-queue/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { IntegrationJobId, UserId } from "~/server/shared/ids";
-import type { LeadQueries } from "~/server/workflow/lead/read/lead-queries";
+import type { IntegrationJobId, UserId } from "~/domain/ids";
+import type { QueueState } from "~/domain/jobs/queue-state";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { WorkflowIntegrationJobsTable } from "~/server/platform/database/types";
+import type { JobStore } from "~/server/platform/jobs/job-store";
+import type { QueueJobBase } from "~/server/platform/jobs/types";
 
 export type IntegrationJobType = WorkflowIntegrationJobsTable["type"];
-export type IntegrationJobStatus = WorkflowIntegrationJobsTable["status"];
 
 export interface IntegrationJobRow extends QueueJobBase {
   id: IntegrationJobId;
   type: IntegrationJobType;
-  status: IntegrationJobStatus;
+  queue_state: QueueState;
   created_at: Date;
   completed_at: Date | null;
   error_message: string | null;
@@ -20,46 +19,40 @@ export interface IntegrationJobRow extends QueueJobBase {
   rows_applied: number | null;
   rows_failed: number | null;
   results_json: Json | null;
-  available_at: Date;
+  claimable_at: Date;
   lease_owner: string | null;
-  lease_until: Date | null;
   file_path: string | null;
   requested_by_user_id: UserId;
 }
 
 export interface NewIntegrationJob {
   type: IntegrationJobType;
-  status: IntegrationJobStatus;
   requested_by_user_id: UserId;
   file_path: string | null;
+  rows_total: number;
   max_attempts: number;
   created_at: Date;
 }
 
-export interface IntegrationJobCompletion {
-  rowsTotal: number;
-  rowsApplied: number;
-  rowsFailed: number;
-  resultsJson: string | null;
-}
-
 export interface IntegrationJobsPort {
   store: JobStore<IntegrationJobId, IntegrationJobRow>;
-  insert(values: NewIntegrationJob): Promise<IntegrationJobId>;
+  insert(values: NewIntegrationJob): Promise<IntegrationJobRow>;
   findById(id: IntegrationJobId): Promise<IntegrationJobRow | undefined>;
   list(limit: number, offset: number): Promise<IntegrationJobRow[]>;
   updateProgress(
     id: IntegrationJobId,
-    progress: { rowsTotal?: number; rowsApplied?: number; rowsFailed?: number },
-  ): Promise<unknown>;
-  setFilePath(id: IntegrationJobId, filePath: string): Promise<unknown>;
+    progress: {
+      rowsTotal: number;
+      rowsApplied: number;
+      rowsFailed: number;
+    },
+  ): Promise<IntegrationJobRow>;
+  setFilePath(id: IntegrationJobId, filePath: string): Promise<void>;
 }
 
 export interface IntegrationRuntime {
   executor: DatabaseExecutor;
-  now: () => Date;
   jobs: IntegrationJobsPort;
-  recordExportQuery: LeadQueries;
   leads: {
     findByRucMany(
       rucs: string[],
@@ -70,22 +63,9 @@ export interface IntegrationRuntime {
   };
 }
 
-export interface ExportJobProcessResult extends IntegrationJobCompletion {}
-
-export interface ImportJobProcessResult extends IntegrationJobCompletion {
+export interface ImportJobProcessResult {
+  rowsTotal: number;
+  rowsApplied: number;
+  rowsFailed: number;
   resultsJson: string;
-}
-
-export interface ExportBatchRunner {
-  processJob(
-    job: IntegrationJobRow,
-    signal: AbortSignal,
-  ): Promise<ExportJobProcessResult>;
-}
-
-export interface ImportBatchRunner {
-  processJob(
-    job: IntegrationJobRow,
-    signal: AbortSignal,
-  ): Promise<ImportJobProcessResult>;
 }

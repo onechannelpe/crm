@@ -1,4 +1,4 @@
-import { external, type DomainError } from "~/server/shared/domain-error";
+import { external, type DomainError } from "~/domain/errors";
 
 interface EngineErrorPayload {
   error?: string;
