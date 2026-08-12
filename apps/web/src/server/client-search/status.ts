@@ -81,7 +81,7 @@ function toOverlay(record: RegistryRow | null | undefined): Overlay | null {
     department: record.department,
     contributorStatus: record.contributor_status,
     contributorCondition: record.contributor_condition,
-    economicActivities: normalizeEconomicActivities(
+    economicActivities: parseEconomicActivities(
       record.economic_activities_json,
     ),
     source: record.source,
@@ -91,8 +91,7 @@ function toOverlay(record: RegistryRow | null | undefined): Overlay | null {
   };
 }
 
-// Validate the stored JSON before exposing it as typed data.
-function normalizeEconomicActivities(value: unknown): SunatEconomicActivity[] {
+function parseEconomicActivities(value: unknown): SunatEconomicActivity[] {
   if (!Array.isArray(value)) {
     return [];
   }

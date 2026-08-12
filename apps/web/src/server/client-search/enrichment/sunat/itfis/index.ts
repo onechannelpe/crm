@@ -3,13 +3,15 @@ import { isPlainRecord } from "~/shared/type-guards";
 import type { SunatDniData } from "../contracts";
 import { sanitizeField } from "../text";
 
-function firstListaEntry(
+function getFirstListaEntry(
   payload: Record<string, unknown>,
 ): Record<string, unknown> | null {
-  if (!Array.isArray(payload.lista) || payload.lista.length < 1) {
+  if (!Array.isArray(payload.lista) || payload.lista.length === 0) {
     return null;
   }
+
   const first = payload.lista[0];
+
   return isPlainRecord(first) ? first : null;
 }
 
@@ -21,11 +23,17 @@ function splitNamesFromItfisdenreg(full: string): {
   const [lastNamesRaw, namesRaw] = full.split(",");
   const lastNames = sanitizeField(lastNamesRaw);
   const nombres = sanitizeField(namesRaw);
+
   if (!lastNames) {
-    return { nombres, apellidoPaterno: null, apellidoMaterno: null };
+    return {
+      nombres,
+      apellidoPaterno: null,
+      apellidoMaterno: null,
+    };
   }
 
   const surnameParts = lastNames.split(" ").filter((part) => part.length > 0);
+
   if (surnameParts.length < 2) {
     return {
       nombres,
@@ -52,14 +60,16 @@ export function readDni(dni: string, payload: unknown): SunatDniData | null {
         payload,
       };
     }
+
     return null;
   }
 
-  const lista = firstListaEntry(payload);
-  const itfisNames = sanitizeField(lista?.nombresapellidos);
-  const parsedItfis =
-    typeof itfisNames === "string"
-      ? splitNamesFromItfisdenreg(itfisNames)
+  const lista = getFirstListaEntry(payload);
+  const rawNames = sanitizeField(lista?.nombresapellidos);
+
+  const parsedNames =
+    typeof rawNames === "string"
+      ? splitNamesFromItfisdenreg(rawNames)
       : {
           nombres: null,
           apellidoPaterno: null,
@@ -67,17 +77,19 @@ export function readDni(dni: string, payload: unknown): SunatDniData | null {
         };
 
   const nombres =
-    parsedItfis.nombres ??
+    parsedNames.nombres ??
     sanitizeField(payload.nombres) ??
     sanitizeField(payload.nombreSoli) ??
     sanitizeField(payload.nombre);
+
   const apellidoPaterno =
-    parsedItfis.apellidoPaterno ??
+    parsedNames.apellidoPaterno ??
     sanitizeField(payload.apellidoPaterno) ??
     sanitizeField(payload.apePatSoli) ??
     sanitizeField(payload.apellido_pat);
+
   const apellidoMaterno =
-    parsedItfis.apellidoMaterno ??
+    parsedNames.apellidoMaterno ??
     sanitizeField(payload.apellidoMaterno) ??
     sanitizeField(payload.apeMatSoli) ??
     sanitizeField(payload.apellido_mat);
@@ -109,12 +121,15 @@ export function readRuc(
   if (!isPlainRecord(payload)) {
     return null;
   }
-  const lista = firstListaEntry(payload);
+
+  const lista = getFirstListaEntry(payload);
+
   if (!lista) {
     return null;
   }
 
   const legalName = sanitizeField(lista.apenomdenunciado);
+
   if (!legalName) {
     return null;
   }

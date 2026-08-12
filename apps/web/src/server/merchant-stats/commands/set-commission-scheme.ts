@@ -20,9 +20,6 @@ export interface SetCommissionSchemeInput {
   operation: OperationContext;
 }
 
-// Effective-dated, not mutable-in-place, and audited: this config drives
-// real payout money, unlike the capacity/quotation policy configs
-// elsewhere in this app which are forward-looking-only settings.
 export async function setCommissionScheme(
   db: DatabaseExecutor,
   input: SetCommissionSchemeInput,
@@ -41,19 +38,19 @@ async function setCommissionSchemeInTransaction(
     return validated;
   }
 
-  const rules = JSON.stringify(validated.value);
+  const serializedRules = JSON.stringify(validated.value);
 
   await tx
     .insertInto("commission_scheme_versions")
     .values({
       effective_from: input.effectiveFrom,
-      rules,
+      rules: serializedRules,
       set_by: input.setBy,
       set_at: input.operation.operationAt,
     })
     .onConflict((oc) =>
       oc.column("effective_from").doUpdateSet({
-        rules,
+        rules: serializedRules,
         set_by: input.setBy,
         set_at: input.operation.operationAt,
       }),

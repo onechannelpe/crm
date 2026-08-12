@@ -6,13 +6,15 @@ export function sanitizeField(value: unknown): string | null {
   if (typeof value !== "string") {
     return null;
   }
+
   const normalized = normalizeWhitespace(value);
-  return normalized.length > 0 ? normalized : null;
+  return normalized || null;
 }
 
 export function parseJsonOrTextPayload(payloadText: string): unknown {
   const trimmed = payloadText.trim();
-  if (trimmed.length < 1) {
+
+  if (!trimmed) {
     return null;
   }
 
@@ -42,11 +44,10 @@ export function decodeHtmlEntities(value: string): string {
 }
 
 export function normalizeLabel(label: string): string {
-  return label
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/:/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
+  return normalizeWhitespace(
+    label
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/:/g, " "),
+  ).toLowerCase();
 }

@@ -8,24 +8,19 @@ import type {
 import type { InstantRange } from "~/domain/time/app-time";
 import type { Database } from "~/server/platform/database/types";
 
-// These repos never read the clock. Timestamps arrive as values from the
-// operation that is writing, so every row one operation touches carries the
-// same instant.
-
 export function createSearchCapacityGrantsRepo(db: Kysely<Database>) {
   return {
-    insert(values: {
+    async insert(values: {
       user_id: UserId;
       amount: number;
       reason: string;
       actor_user_id: UserId;
       created_at: Date;
     }): Promise<void> {
-      return db
+      await db
         .insertInto("search_capacity_grants")
         .values(values)
-        .executeTakeFirstOrThrow()
-        .then(() => undefined);
+        .executeTakeFirstOrThrow();
     },
 
     findByUserAndRange(userId: UserId, range: InstantRange) {
@@ -64,34 +59,31 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    updateStatus(
+    async updateStatus(
       id: SearchReservationId,
       status: "committed" | "cancelled" | "expired",
       updatedAt: Date,
     ): Promise<void> {
-      return db
+      await db
         .updateTable("search_usage_reservations")
         .set({ status, updated_at: updatedAt })
         .where("id", "=", id)
-        .executeTakeFirst()
-        .then(() => undefined);
+        .executeTakeFirst();
     },
 
-    // Search always commits with consumed === requested, so this collapses to
-    // a status update. Kept on the interface so both repos satisfy
-    // UsageReservationsRepo<K> with the same shape.
-    updateAmountAndStatus(
+    // Search consumes the full reservation, but this method keeps both usage
+    // repositories on the same interface.
+    async updateAmountAndStatus(
       id: SearchReservationId,
       amount: number,
       status: "committed" | "cancelled" | "expired",
       updatedAt: Date,
     ): Promise<void> {
-      return db
+      await db
         .updateTable("search_usage_reservations")
         .set({ amount, status, updated_at: updatedAt })
         .where("id", "=", id)
-        .executeTakeFirst()
-        .then(() => undefined);
+        .executeTakeFirst();
     },
 
     findByUserAndRange(userId: UserId, range: InstantRange) {
@@ -108,16 +100,15 @@ export function createSearchUsageReservationsRepo(db: Kysely<Database>) {
 
 export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
   return {
-    insert(values: {
+    async insert(values: {
       reservation_id: SearchReservationId;
       amount: number;
       created_at: Date;
     }): Promise<void> {
-      return db
+      await db
         .insertInto("search_usage_commits")
         .values(values)
-        .executeTakeFirstOrThrow()
-        .then(() => undefined);
+        .executeTakeFirstOrThrow();
     },
 
     findByReservation(reservationId: SearchReservationId) {
@@ -143,18 +134,17 @@ export function createSearchUsageCommitsRepo(db: Kysely<Database>) {
 
 export function createLeadCapacityGrantsRepo(db: Kysely<Database>) {
   return {
-    insert(values: {
+    async insert(values: {
       user_id: UserId;
       amount: number;
       reason: string;
       actor_user_id: UserId;
       created_at: Date;
     }): Promise<void> {
-      return db
+      await db
         .insertInto("lead_capacity_grants")
         .values(values)
-        .executeTakeFirstOrThrow()
-        .then(() => undefined);
+        .executeTakeFirstOrThrow();
     },
 
     findByUserAndRange(userId: UserId, range: InstantRange) {
@@ -193,31 +183,29 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    updateStatus(
+    async updateStatus(
       id: LeadReservationId,
       status: "committed" | "cancelled" | "expired",
       updatedAt: Date,
     ): Promise<void> {
-      return db
+      await db
         .updateTable("lead_usage_reservations")
         .set({ status, updated_at: updatedAt })
         .where("id", "=", id)
-        .executeTakeFirst()
-        .then(() => undefined);
+        .executeTakeFirst();
     },
 
-    updateAmountAndStatus(
+    async updateAmountAndStatus(
       id: LeadReservationId,
       amount: number,
       status: "committed" | "cancelled" | "expired",
       updatedAt: Date,
     ): Promise<void> {
-      return db
+      await db
         .updateTable("lead_usage_reservations")
         .set({ amount, status, updated_at: updatedAt })
         .where("id", "=", id)
-        .executeTakeFirst()
-        .then(() => undefined);
+        .executeTakeFirst();
     },
 
     findByUserAndRange(userId: UserId, range: InstantRange) {
@@ -234,16 +222,15 @@ export function createLeadUsageReservationsRepo(db: Kysely<Database>) {
 
 export function createLeadUsageCommitsRepo(db: Kysely<Database>) {
   return {
-    insert(values: {
+    async insert(values: {
       reservation_id: LeadReservationId;
       amount: number;
       created_at: Date;
     }): Promise<void> {
-      return db
+      await db
         .insertInto("lead_usage_commits")
         .values(values)
-        .executeTakeFirstOrThrow()
-        .then(() => undefined);
+        .executeTakeFirstOrThrow();
     },
 
     findByReservation(reservationId: LeadReservationId) {

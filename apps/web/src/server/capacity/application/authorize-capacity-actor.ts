@@ -35,19 +35,16 @@ function canManageExecutiveRecord(
   if (target.role !== "executive") {
     return false;
   }
+
   if (actor.role === "superuser") {
     return true;
   }
+
   if (target.branchId !== actor.branchId) {
     return false;
   }
-  if (actor.role === "admin") {
-    return true;
-  }
-  if (actor.role === "supervisor") {
-    return true;
-  }
-  return false;
+
+  return actor.role === "admin" || actor.role === "supervisor";
 }
 
 export async function canManageExecutive<T extends ManageableCapacityUser>(
@@ -56,6 +53,7 @@ export async function canManageExecutive<T extends ManageableCapacityUser>(
   repos: ExecutiveRepos<T>,
 ): Promise<{ ok: boolean; target: T | null }> {
   const target = await repos.users.findById(targetUserId);
+
   if (!target) {
     return { ok: false, target: null };
   }
@@ -63,6 +61,7 @@ export async function canManageExecutive<T extends ManageableCapacityUser>(
   if (!canManageExecutiveRecord(actor, target)) {
     return { ok: false, target };
   }
+
   return { ok: true, target };
 }
 
@@ -75,16 +74,20 @@ export async function canManageScope(
     if (actor.role !== "superuser" && actor.role !== "admin") {
       return Err(forbidden());
     }
+
     if (actor.branchId !== scope.scopeId) {
       return Err(forbidden());
     }
+
     return Ok(undefined);
   }
 
   const team = await repos.teams.findById(scope.scopeId);
+
   if (!team || team.branchId !== actor.branchId) {
     return Err(fail("team_not_found"));
   }
+
   if (actor.role === "superuser" || actor.role === "admin") {
     return Ok(undefined);
   }
@@ -94,6 +97,7 @@ export async function canManageScope(
       team.branchId,
       actor.userId,
     );
+
     if (isSupervisor) {
       return Ok(undefined);
     }

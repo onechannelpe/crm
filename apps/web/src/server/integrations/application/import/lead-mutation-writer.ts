@@ -57,16 +57,17 @@ async function markImportRowApplied(input: {
 export async function applyLeadMutation(input: {
   executor: Transaction<Database>;
   jobId: IntegrationJobId;
-  actor: { userId: UserId; role: Role };
+  actor: {
+    userId: UserId;
+    role: Role;
+  };
   row: ImportRowInput;
   operationAt: Date;
 }): Promise<LeadMutationResult> {
   const repos = createWorkflowRepos(input.executor);
 
-  // The same answer stamps every live inquiry for the RUC, whether or not a
-  // lead exists: probing executives asked exactly this question. A later lead
-  // failure does not undo the stamp; the answer is valid either way.
-  const { stamped, newlyAnswered } = await createInquiryRepo(
+  // Inquiry answers remain valid even if the lead mutation cannot be applied.
+  const { stamped: stampedInquiries, newlyAnswered } = await createInquiryRepo(
     input.executor,
   ).stampAnswer({
     ruc: input.row.ruc,
@@ -78,11 +79,11 @@ export async function applyLeadMutation(input: {
     answeredAt: input.operationAt,
   });
 
-  async function inquiryOnlyOrFailed(
+  async function finishWithoutLeadMutation(
     reason: string,
     leadId: WorkflowLeadId | null,
   ): Promise<LeadMutationResult> {
-    if (stamped > 0) {
+    if (stampedInquiries > 0) {
       await markImportRowApplied({
         executor: input.executor,
         jobId: input.jobId,
@@ -90,9 +91,13 @@ export async function applyLeadMutation(input: {
         leadId,
         changedAt: input.operationAt,
       });
+
       return {
         ok: true,
-        rowResult: { row: input.row.row, ok: true },
+        rowResult: {
+          row: input.row.row,
+          ok: true,
+        },
         committed: [],
         newlyAnsweredInquiries: newlyAnswered,
       };
@@ -106,9 +111,14 @@ export async function applyLeadMutation(input: {
       leadId,
       changedAt: input.operationAt,
     });
+
     return {
       ok: false,
-      rowResult: { row: input.row.row, ok: false, reason },
+      rowResult: {
+        row: input.row.row,
+        ok: false,
+        reason,
+      },
       newlyAnsweredInquiries: newlyAnswered,
     };
   }
@@ -116,11 +126,11 @@ export async function applyLeadMutation(input: {
   const lead = await repos.leads.findActiveByRuc(input.row.ruc);
 
   if (!lead) {
-    return inquiryOnlyOrFailed("RUC not found", null);
+    return finishWithoutLeadMutation("RUC not found", null);
   }
 
   if (lead.stage !== "QUALIFYING") {
-    return inquiryOnlyOrFailed(
+    return finishWithoutLeadMutation(
       "Lead is not in pending external review stage",
       lead.id,
     );
@@ -128,14 +138,15 @@ export async function applyLeadMutation(input: {
 
   const nextStatus =
     input.row.type === "import_status" ? input.row.status : lead.status;
-  const nextPrioridad =
+
+  const nextPriority =
     input.row.type === "import_prioridad" ? input.row.priority : lead.priority;
 
   const transition = reviewLead(lead, {
     actor: input.actor,
     rowType: input.row.type === "import_status" ? "status" : "priority",
     status: nextStatus,
-    priority: nextPrioridad,
+    priority: nextPriority,
     reason: IMPORT_REASON,
     occurredAt: input.operationAt,
   });
@@ -145,7 +156,8 @@ export async function applyLeadMutation(input: {
       transition.error.code === "invalid_stage"
         ? "Lead is not in pending external review stage"
         : (transition.error.code ?? "Could not apply row");
-    return inquiryOnlyOrFailed(reason, lead.id);
+
+    return finishWithoutLeadMutation(reason, lead.id);
   }
 
   const committed = await commitTransition(input.executor, transition.value);
@@ -155,7 +167,8 @@ export async function applyLeadMutation(input: {
       committed.error.code === "concurrency_conflict"
         ? "Lead changed concurrently"
         : (committed.error.code ?? "Could not apply row");
-    return inquiryOnlyOrFailed(reason, lead.id);
+
+    return finishWithoutLeadMutation(reason, lead.id);
   }
 
   await markImportRowApplied({
@@ -168,7 +181,10 @@ export async function applyLeadMutation(input: {
 
   return {
     ok: true,
-    rowResult: { row: input.row.row, ok: true },
+    rowResult: {
+      row: input.row.row,
+      ok: true,
+    },
     committed: transition.value.events.map((event, index) => ({
       event,
       id: committed.value.eventIds[index],

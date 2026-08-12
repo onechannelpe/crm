@@ -13,9 +13,7 @@ import { evaluatePenalidadActivacion } from "../evaluate-penalidad-activacion";
 import { evaluatePenalidadReversion } from "../evaluate-penalidad-reversion";
 import { getCommissionSchemeAsOf } from "../scheme-repo";
 
-// Same "cohort month = the active snapshot's cut, or now if none yet"
-// convention as executive-portfolio.ts, so the manager dashboard and the
-// executive's "Mis comercios" widget always agree on which month is M0.
+// Use the active GPV snapshot cut as M0, falling back to the operation time.
 export async function getCommissionManagerView(
   db: DatabaseExecutor,
   operation: OperationContext,
@@ -23,7 +21,7 @@ export async function getCommissionManagerView(
   const cutAt = await getActiveGpvSnapshotCut(db);
   const asOfDate = appCalendarDateAt(cutAt ?? operation.operationAt);
   const cohortMonth = calendarMonthFromDate(asOfDate);
-  const rules = await getCommissionSchemeAsOf(db, asOfDate);
+  const scheme = await getCommissionSchemeAsOf(db, asOfDate);
 
   const [
     massMarketCaja1,
@@ -33,17 +31,17 @@ export async function getCommissionManagerView(
     companyCaja3,
     corporateCaja2,
   ] = await Promise.all([
-    evaluateMassMarketCaja1(db, rules.massMarket.caja1, cohortMonth),
-    evaluateMassMarketCaja2(db, rules.massMarket.caja2, cohortMonth),
+    evaluateMassMarketCaja1(db, scheme.massMarket.caja1, cohortMonth),
+    evaluateMassMarketCaja2(db, scheme.massMarket.caja2, cohortMonth),
     evaluatePenalidadReversion(
       db,
-      rules.penalidadReversion.massMarket,
-      rules.massMarket.caja2,
+      scheme.penalidadReversion.massMarket,
+      scheme.massMarket.caja2,
       cohortMonth,
     ),
-    evaluatePenalidadActivacion(db, rules.penalidadActivacion, cohortMonth),
-    evaluateCompanyCaja3(db, rules.company.caja3, cohortMonth),
-    evaluateCorporateCaja2(db, rules.corporate.caja2, cohortMonth),
+    evaluatePenalidadActivacion(db, scheme.penalidadActivacion, cohortMonth),
+    evaluateCompanyCaja3(db, scheme.company.caja3, cohortMonth),
+    evaluateCorporateCaja2(db, scheme.corporate.caja2, cohortMonth),
   ]);
 
   return {

@@ -25,19 +25,6 @@ interface AssignContactsDeps {
   leadUsageReservationPorts: UsageReservationPorts<"lead">;
 }
 
-async function requestAssignableCandidates(input: {
-  command: AssignContactsCommand;
-  requested: number;
-  engine: Pick<EngineClient, "requestCandidates">;
-}) {
-  const candidatesResult = await input.engine.requestCandidates({
-    branchId: input.command.branchId,
-    userId: input.command.actorUserId,
-    amount: input.requested,
-  });
-  return candidatesResult;
-}
-
 export async function assignContacts(
   command: AssignContactsCommand,
   deps: AssignContactsDeps,
@@ -50,6 +37,7 @@ export async function assignContacts(
     repos,
     operation,
   );
+
   if (isErr(plan)) {
     return plan;
   }
@@ -58,7 +46,7 @@ export async function assignContacts(
     return Ok({ requested: 0, assigned: 0 });
   }
 
-  const assignedResult = await executeWithUsageReservation(
+  const assignmentResult = await executeWithUsageReservation(
     {
       kind: "lead",
       actorUserId: command.actorUserId,
@@ -69,34 +57,40 @@ export async function assignContacts(
     leadUsageReservationPorts,
     operation,
     async () => {
-      const candidatesResult = await requestAssignableCandidates({
-        command,
-        requested: plan.value.requested,
-        engine,
+      const candidates = await engine.requestCandidates({
+        branchId: command.branchId,
+        userId: command.actorUserId,
+        amount: plan.value.requested,
       });
-      if (isErr(candidatesResult)) {
-        return candidatesResult;
+
+      if (isErr(candidates)) {
+        return candidates;
       }
 
       const assigned = await createContactAssignmentsFromCandidates({
         actorUserId: command.actorUserId,
-        candidates: candidatesResult.value,
+        candidates: candidates.value,
         operation,
         uow,
       });
+
       if (isErr(assigned)) {
         return assigned;
       }
 
-      return Ok({ value: assigned.value, consumed: assigned.value });
+      return Ok({
+        value: assigned.value,
+        consumed: assigned.value,
+      });
     },
   );
-  if (isErr(assignedResult)) {
-    return assignedResult;
+
+  if (isErr(assignmentResult)) {
+    return assignmentResult;
   }
 
   return Ok({
     requested: plan.value.requested,
-    assigned: assignedResult.value,
+    assigned: assignmentResult.value,
   });
 }

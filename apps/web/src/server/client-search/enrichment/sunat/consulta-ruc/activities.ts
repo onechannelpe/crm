@@ -1,6 +1,9 @@
 import type { SunatEconomicActivity } from "../contracts";
 import { sanitizeField } from "../text";
 
+const ECONOMIC_ACTIVITY_PATTERN =
+  /^(Principal|Secundaria\s+\d+)\s*-\s*([0-9]+)\s*-\s*(.*)$/i;
+
 export function readEconomicActivities(
   value: string | null,
 ): SunatEconomicActivity[] {
@@ -8,30 +11,28 @@ export function readEconomicActivities(
     return [];
   }
 
-  const lines = value.split(/\r?\n/);
-
-  return lines
+  return value
+    .split(/\r?\n/)
     .map((line) => {
-      const match = line.match(
-        /^(Principal|Secundaria\s+\d+)\s*-\s*([0-9]+)\s*-\s*(.*)$/i,
-      );
+      const match = ECONOMIC_ACTIVITY_PATTERN.exec(line);
       if (!match) {
         return null;
       }
 
-      const label = sanitizeField(match[1]);
-      const code = sanitizeField(match[2]);
-      const description = sanitizeField(match[3]);
+      const [, rawLabel, rawCode, rawDescription] = match;
+      const label = sanitizeField(rawLabel);
+      const code = sanitizeField(rawCode);
+      const description = sanitizeField(rawDescription);
+
       if (!label || !code || !description) {
         return null;
       }
 
-      const secondaryMatch = /secundaria\s+(\d+)/i.exec(label);
-      const order = secondaryMatch ? Number(secondaryMatch[1]) : null;
+      const secondary = /secundaria\s+(\d+)/i.exec(label);
 
       return {
-        role: label.toLowerCase() === "principal" ? "principal" : "secondary",
-        order: Number.isFinite(order) ? order : null,
+        role: secondary ? "secondary" : "principal",
+        order: secondary ? Number(secondary[1]) : null,
         label,
         code,
         description,

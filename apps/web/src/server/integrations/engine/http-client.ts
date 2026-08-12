@@ -9,8 +9,8 @@ import { signRequest } from "~/server/integrations/engine/signature";
 import { Err, Ok } from "~/shared/result";
 
 import {
-  decodeSearchResponse,
   decodeRecordCandidatesResponse,
+  decodeSearchResponse,
 } from "./decoder";
 import { mapEngineErrorResponse, mapEngineNetworkError } from "./mapper";
 
@@ -20,15 +20,11 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
     body: string,
     requestId: string,
   ): Promise<Response> {
-    // Deliberately not the operation instant. This timestamp is the replay
-    // window Engine checks against its own clock, so it has to describe when
-    // the request leaves, not when the request or job that triggered it began.
-    // A long-running job inheriting its claim instant would sign a timestamp
-    // minutes stale and get rejected for skew.
+    // Sign with the outbound request time, not the originating operation time.
     const { signature, timestamp } = signRequest(
       body,
       config.hmacSecret,
-      Date.now(), // clock-boundary: outbound Engine request signing
+      Date.now(),
     );
 
     const controller = new AbortController();
@@ -59,6 +55,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       const body = JSON.stringify({ intent, query, limit });
 
       let response: Response;
+
       try {
         response = await post(ENGINE_ENDPOINTS.search, body, requestId);
       } catch (error) {
@@ -66,11 +63,13 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       }
 
       if (!response.ok) {
-        const domainErr = await mapEngineErrorResponse(response, requestId);
-        return Err(domainErr);
+        const error = await mapEngineErrorResponse(response, requestId);
+
+        return Err(error);
       }
 
       let responseJson: unknown;
+
       try {
         responseJson = await response.json();
       } catch {
@@ -84,11 +83,12 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
 
       try {
         const decoded = decodeSearchResponse(responseJson);
+
         return Ok(decoded.results);
-      } catch (err) {
+      } catch (error) {
         return Err(
           external(
-            err instanceof Error ? err.message : "Invalid response shape",
+            error instanceof Error ? error.message : "Invalid response shape",
             {
               code: "engine_response_invalid",
               details: { request_id: requestId },
@@ -110,6 +110,7 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       });
 
       let response: Response;
+
       try {
         response = await post(
           ENGINE_ENDPOINTS.recordCandidates,
@@ -121,11 +122,13 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
       }
 
       if (!response.ok) {
-        const domainErr = await mapEngineErrorResponse(response, requestId);
-        return Err(domainErr);
+        const error = await mapEngineErrorResponse(response, requestId);
+
+        return Err(error);
       }
 
       let responseJson: unknown;
+
       try {
         responseJson = await response.json();
       } catch {
@@ -139,11 +142,12 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
 
       try {
         const decoded = decodeRecordCandidatesResponse(responseJson);
+
         return Ok(decoded.candidates);
-      } catch (err) {
+      } catch (error) {
         return Err(
           external(
-            err instanceof Error ? err.message : "Invalid response shape",
+            error instanceof Error ? error.message : "Invalid response shape",
             {
               code: "engine_response_invalid",
               details: { request_id: requestId },
