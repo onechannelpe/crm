@@ -3,12 +3,12 @@ import { Match, Show, Switch, createEffect } from "solid-js";
 
 import { CloseQuotationSection } from "~/features/record-show/workflow/close-quotation";
 import { isLeadActionStillRelevant } from "~/features/record-show/workflow/next-action";
-import { leadDetailQuery } from "~/features/workflow/data/queries";
 import { FulfillmentPanel } from "~/features/workflow/detail/forms/fulfillment/fulfillment-panel";
 import { ProposeRateSection } from "~/features/workflow/detail/forms/pricing/propose-rate";
 import { RateProposalSection } from "~/features/workflow/detail/forms/pricing/rate-proposal";
 import { ExpiredPanel } from "~/features/workflow/detail/forms/review/expired-panel";
 import { QualifyForm } from "~/features/workflow/detail/forms/review/qualify-form";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
 
 import { SidePanelPage } from "../../components/page";
 import { useSidePanel } from "../../state/use-side-panel";
@@ -60,6 +60,7 @@ export function LeadActionPage() {
                     leadId={detail().lead.id}
                     proposal={proposal()}
                     reservationExpiresAt={detail().lead.reservationExpiresAt}
+                    evaluatedAt={detail().evaluatedAt}
                     rateRevisions={detail().rateRevisions}
                     canAccept={detail().availableActions.includes(
                       "accept-rate",

@@ -1,0 +1,113 @@
+.card {
+  background: var(--t-background-primary);
+  border: 1px solid var(--t-border-color-medium);
+  border-radius: var(--t-border-radius-md);
+  box-shadow: var(--shadow-elevation-2);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 360px;
+}
+
+.header {
+  align-items: center;
+  border-bottom: 1px solid var(--t-border-color-light);
+  box-sizing: border-box;
+  display: flex;
+  gap: var(--t-spacing-2);
+  height: 40px;
+  padding: 0 var(--t-spacing-2);
+}
+
+.headerText {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: var(--t-spacing-1);
+  min-width: 0;
+}
+
+.title {
+  color: var(--t-font-color-primary);
+  font-size: var(--t-font-size-md);
+  font-weight: var(--t-font-weight-semi-bold);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.headerLabel {
+  color: var(--t-font-color-tertiary);
+  flex-shrink: 0;
+  font-size: var(--t-font-size-sm);
+  white-space: nowrap;
+}
+
+.fieldList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-spacing-2);
+  max-height: 50dvh;
+  overflow-y: auto;
+  padding: var(--t-spacing-3);
+}
+
+.fieldRow {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  gap: var(--t-spacing-2);
+  height: 24px;
+}
+
+.fieldLabel {
+  align-items: center;
+  color: var(--t-font-color-tertiary);
+  display: flex;
+  flex-shrink: 0;
+  font-size: var(--t-font-size-md);
+  gap: var(--t-spacing-2);
+  width: 104px;
+}
+
+.fieldLabelText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fieldIcon {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  height: 16px;
+  width: 16px;
+}
+
+.fieldValue {
+  color: var(--t-font-color-primary);
+  font-size: var(--t-font-size-md);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.valueRow {
+  align-items: center;
+  display: flex;
+  gap: var(--t-spacing-1);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.phoneLink {
+  color: var(--t-font-color-primary);
+  text-decoration: none;
+}
+
+.phoneLink:hover {
+  text-decoration: underline;
+}
+
+.fieldEmpty {
+  color: var(--t-font-color-light);
+}

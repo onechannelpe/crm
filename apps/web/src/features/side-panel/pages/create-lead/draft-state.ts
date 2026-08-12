@@ -7,10 +7,13 @@ import {
 export type LeadRecordDraftState = {
   activeTab: RecordTabId;
   ruc: string;
+  // Availability inquiry this draft was opened from, if any.
+  inquiryId: string | null;
 } & CommercialScopeFormValues;
 
 export const DEFAULT_LEAD_RECORD_DRAFT_STATE: LeadRecordDraftState = {
   activeTab: "registro",
   ruc: "",
+  inquiryId: null,
   ...EMPTY_COMMERCIAL_SCOPE_VALUES,
 };

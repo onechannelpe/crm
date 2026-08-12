@@ -20,9 +20,7 @@ export function SearchCompanyPage() {
             <div class={styles.title}>
               {pageState().company.name ?? "Empresa desconocida"}
             </div>
-            <div class={styles.subtitle}>
-              RUC {pageState().company.ruc ?? "-"}
-            </div>
+            <div class={styles.subtitle}>RUC {pageState().company.ruc}</div>
           </div>
         </section>
 

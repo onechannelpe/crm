@@ -1,7 +1,6 @@
+import { clsx } from "clsx";
 import type { JSX, ParentProps } from "solid-js";
-import { Show } from "solid-js";
-
-import { cn } from "~/lib/utils";
+import { children, Show } from "solid-js";
 
 import styles from "./primitives.module.css";
 
@@ -27,6 +26,7 @@ export function ActivitySection(
         </h3>
         {props.action}
       </header>
+
       {props.children}
     </section>
   );
@@ -38,21 +38,23 @@ export function ActivityListCard(props: ParentProps) {
 
 export function ActivityListRow(
   props: ParentProps<{
-    onClick?: JSX.EventHandlerUnion<HTMLElement, MouseEvent>;
+    onClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>;
   }>,
 ) {
+  const content = children(() => props.children);
+
   return (
     <Show
       when={props.onClick}
-      fallback={<div class={styles.listRow}>{props.children}</div>}
+      fallback={<div class={styles.listRow}>{content()}</div>}
     >
       {(onClick) => (
         <button
           type="button"
-          class={cn(styles.listRow, styles.listRowClickable)}
+          class={clsx(styles.listRow, styles.listRowClickable)}
           onClick={onClick()}
         >
-          {props.children}
+          {content()}
         </button>
       )}
     </Show>

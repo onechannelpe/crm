@@ -11,11 +11,12 @@ export function createPollingController(
 ): PollingController {
   const [state, setState] = createSignal<PollingState>("idle");
 
+  // Use a monotonic clock so wall-clock changes do not affect the timeout.
   let startedAt: number | null = null;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let runToken = 0;
 
-  function clearScheduledTick() {
+  function clearTimer() {
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
       timeoutId = null;
@@ -24,25 +25,28 @@ export function createPollingController(
 
   function stop() {
     runToken += 1;
-    clearScheduledTick();
+    clearTimer();
     startedAt = null;
     setState("stopped");
   }
 
   async function tick(currentRunToken: number) {
-    if (currentRunToken !== runToken) return;
+    if (currentRunToken !== runToken) {
+      return;
+    }
+
     if (!options.shouldContinue()) {
       stop();
       return;
     }
 
     if (startedAt === null) {
-      startedAt = Date.now();
+      startedAt = performance.now();
     }
 
-    if (Date.now() - startedAt >= options.timeoutMs) {
+    if (performance.now() - startedAt >= options.timeoutMs) {
       runToken += 1;
-      clearScheduledTick();
+      clearTimer();
       startedAt = null;
       setState("timed_out");
       options.onTimeout?.();
@@ -52,10 +56,13 @@ export function createPollingController(
     try {
       await options.runOnce();
     } catch {
-      // Keep polling on transient failures. The next tick can recover.
+      // Transient failures should not stop polling.
     }
 
-    if (currentRunToken !== runToken) return;
+    if (currentRunToken !== runToken) {
+      return;
+    }
+
     if (!options.shouldContinue()) {
       stop();
       return;
@@ -67,12 +74,15 @@ export function createPollingController(
   }
 
   function start() {
-    if (state() === "running") return;
+    if (state() === "running") {
+      return;
+    }
 
     runToken += 1;
     const currentRunToken = runToken;
-    clearScheduledTick();
-    startedAt = Date.now();
+
+    clearTimer();
+    startedAt = performance.now();
     setState("running");
 
     timeoutId = setTimeout(() => {
@@ -80,9 +90,7 @@ export function createPollingController(
     }, options.intervalMs);
   }
 
-  onCleanup(() => {
-    stop();
-  });
+  onCleanup(stop);
 
   return {
     state,

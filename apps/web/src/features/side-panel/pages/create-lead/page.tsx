@@ -1,11 +1,12 @@
-import { useAction } from "@solidjs/router";
-import { createMemo, createResource, Show } from "solid-js";
+import { createAsync, useAction, useNavigate } from "@solidjs/router";
+import { createMemo, Show } from "solid-js";
 
-import { queryLeadBootstrapPreview } from "~/actions/workflow/queries/records";
+import CircleQuestionMark from "~/components/icons/circle-question-mark";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
 import { createLeadMutation } from "~/features/workflow/data/command-mutations";
+import { leadBootstrapPreviewQuery } from "~/rpc/workflow/lead-bootstrap-preview";
 
 import { SidePanelPage } from "../../components/page";
 import { SidePanelFooter } from "../../components/panel-footer";
@@ -18,11 +19,18 @@ import styles from "../record-page/page.module.css";
 
 export function CreateLeadPage() {
   const { currentUser } = useAuthenticatedSession();
-  const { navigateTo } = useSidePanel();
+  const { navigateTo, closePanel } = useSidePanel();
+  const navigate = useNavigate();
   const createLead = useAction(createLeadMutation);
 
-  const { draftRuc, draftScope, activeTab, setScopeField, setActiveTab } =
-    useCreateLeadPageState();
+  const {
+    draftRuc,
+    draftInquiryId,
+    draftScope,
+    activeTab,
+    setScopeField,
+    setActiveTab,
+  } = useCreateLeadPageState();
 
   const validRuc = createMemo(() => {
     const value = draftRuc().trim();
@@ -30,9 +38,11 @@ export function CreateLeadPage() {
     return /^\d{11}$/.test(value) ? value : null;
   });
 
-  const [bootstrapPreview] = createResource(validRuc, (ruc) =>
-    queryLeadBootstrapPreview(ruc),
-  );
+  const bootstrapPreview = createAsync(() => {
+    const ruc = validRuc();
+
+    return ruc ? leadBootstrapPreviewQuery(ruc) : Promise.resolve(null);
+  });
 
   const latestBootstrapPreview = createMemo(
     () => bootstrapPreview.latest ?? null,
@@ -42,12 +52,9 @@ export function CreateLeadPage() {
     () => latestBootstrapPreview()?.legalName ?? null,
   );
 
-  const previewAddress = createMemo(
-    () => latestBootstrapPreview()?.address ?? null,
-  );
-
   const { errorMessage, submitting, submit } = createCreateLeadController({
     draftRuc,
+    inquiryId: draftInquiryId,
     validRuc,
     previewName: previewLegalName,
     scope: draftScope,
@@ -57,7 +64,7 @@ export function CreateLeadPage() {
       navigateTo(
         createLeadRecordDetailSidePanelPage({
           leadId,
-          title: previewLegalName() || `RUC ${ruc}`,
+          title: previewLegalName() ?? `RUC ${ruc}`,
           subtitle: `RUC ${ruc}`,
         }),
         { resetStack: true },
@@ -74,7 +81,7 @@ export function CreateLeadPage() {
       return "";
     }
 
-    if (bootstrapPreview.loading && preview === null) {
+    if (bootstrapPreview() === undefined && preview === null) {
       return "Buscando...";
     }
 
@@ -87,7 +94,7 @@ export function CreateLeadPage() {
     kind: "draft",
     ruc: draftRuc(),
     legalName: previewLegalName(),
-    address: previewAddress(),
+    address: latestBootstrapPreview()?.address ?? null,
     engineStatus: engineStatus(),
     commercialScope: {
       values: draftScope(),
@@ -105,6 +112,27 @@ export function CreateLeadPage() {
             onClick: () => void submit(),
             disabled: submitting(),
           }}
+          options={
+            draftInquiryId() === null
+              ? [
+                  {
+                    id: "inquiry-fork",
+                    label: "Solo consultar estado",
+                    icon: CircleQuestionMark,
+                    onSelect: () => {
+                      const ruc = draftRuc().trim();
+
+                      closePanel();
+                      navigate(
+                        ruc
+                          ? `/inquiries?ruc=${encodeURIComponent(ruc)}`
+                          : "/inquiries",
+                      );
+                    },
+                  },
+                ]
+              : undefined
+          }
         />
       }
     >

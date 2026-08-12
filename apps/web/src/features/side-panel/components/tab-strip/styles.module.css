@@ -1,13 +1,14 @@
-/* 
+/*
   padding-left is load-bearing: it lines the tab's hover/active box up with
-  the widget grid's own spacing-2 padding below, so the strip and the cards
+  the widget canvas's own spacing-2 padding below, so the strip and the cards
   share a left edge.
 */
 .tabs {
   box-sizing: border-box;
   display: flex;
-  height: var(--spacing-10);
-  padding-left: var(--spacing-2);
+  flex-shrink: 0;
+  height: var(--t-spacing-10);
+  padding-left: var(--t-spacing-2);
   position: relative;
   user-select: none;
   width: 100%;
@@ -17,12 +18,12 @@
   align-items: center;
   display: flex;
   margin-left: auto;
-  padding-right: var(--spacing-2);
+  padding-right: var(--t-spacing-2);
 }
 
 .hiddenMeasure {
   display: flex;
-  gap: var(--spacing-1);
+  gap: var(--t-spacing-1);
   pointer-events: none;
   position: absolute;
   top: -9999px;
@@ -31,14 +32,14 @@
 
 .tabContainer {
   display: flex;
-  gap: var(--spacing-1);
+  gap: var(--t-spacing-1);
   max-width: 100%;
   overflow: hidden;
   position: relative;
 }
 
 .tabs::after {
-  background-color: var(--border);
+  background-color: var(--t-border-color-light);
   bottom: 0;
   content: "";
   height: 1px;
@@ -50,18 +51,18 @@
 .moreTabWrap {
   align-items: center;
   display: flex;
-  height: var(--spacing-10);
-  margin-left: var(--spacing-1);
+  height: var(--t-spacing-10);
+  margin-left: var(--t-spacing-1);
   position: relative;
 }
 
 .moreTab {
   all: unset;
   align-items: center;
-  color: var(--foreground-secondary);
+  color: var(--t-font-color-secondary);
   cursor: pointer;
   display: flex;
-  gap: var(--spacing-1);
+  gap: var(--t-spacing-1);
   justify-content: center;
   position: relative;
   text-decoration: none;
@@ -69,25 +70,22 @@
 }
 
 .moreTabContent {
-  border-radius: var(--radius-md);
+  align-items: center;
+  border-radius: var(--t-border-radius-md);
   display: flex;
-  font-weight: var(--font-weight-medium);
-  gap: var(--spacing-1);
-  padding: var(--spacing-1) var(--spacing-2);
+  font-weight: var(--t-font-weight-medium);
+  gap: var(--t-spacing-1);
+  padding: var(--t-spacing-1) var(--t-spacing-2);
   transition: background var(--motion-fast) ease;
   white-space: nowrap;
 }
 
 .moreTabContent:hover {
-  background: var(--tertiary);
+  background: var(--t-background-tertiary);
 }
 
 .moreTabContent:active {
-  background: var(--quaternary);
-}
-
-.moreTabContent {
-  align-items: center;
+  background: var(--t-background-quaternary);
 }
 
 .moreTab:focus-visible {
@@ -99,11 +97,11 @@
 }
 
 .moreTabActive {
-  color: var(--foreground);
+  color: var(--t-font-color-primary);
 }
 
 .moreTabActive::after {
-  background: var(--foreground);
+  background: var(--t-border-color-inverted);
   bottom: 0;
   content: "";
   height: 1px;
@@ -114,15 +112,15 @@
 }
 
 .moreMenu {
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: var(--t-background-primary);
+  border: 1px solid var(--t-border-color-medium);
+  border-radius: var(--t-border-radius-sm);
   box-shadow: var(--shadow-elevation-2);
   min-width: 160px;
-  padding: var(--spacing-1);
+  padding: var(--t-spacing-1);
   position: absolute;
   right: 0;
-  top: calc(100% + var(--spacing-1));
+  top: calc(100% + var(--t-spacing-1));
   z-index: 2;
 }
 
@@ -130,18 +128,18 @@
   align-items: center;
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
-  color: var(--foreground);
+  border-radius: var(--t-border-radius-sm);
+  color: var(--t-font-color-primary);
   cursor: pointer;
   display: flex;
-  font-size: var(--font-size-body);
+  font-size: var(--t-font-size-md);
   justify-content: flex-start;
-  padding: var(--spacing-1) var(--spacing-2);
+  padding: var(--t-spacing-1) var(--t-spacing-2);
   transition: background var(--motion-fast) ease;
   width: 100%;
 }
 
 .moreMenuItemActive,
 .moreMenuItem:hover {
-  background: var(--secondary);
+  background: var(--t-background-tertiary);
 }

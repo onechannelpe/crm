@@ -9,6 +9,7 @@ import Mail from "~/components/icons/mail";
 import Trash from "~/components/icons/trash";
 import X from "~/components/icons/x";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
+import { actionErrorMessage } from "~/contracts/errors";
 import { createRecordPageController } from "~/features/record-show/record-page-controller";
 import { RecordTabs } from "~/features/record-show/tabs/record-tabs";
 import { useLeadActions } from "~/features/record-show/use-record-actions";
@@ -16,11 +17,8 @@ import {
   nextActionCta,
   type NextActionTarget,
 } from "~/features/record-show/workflow/next-action";
-import {
-  leadDetailQuery,
-  leadListQuery,
-} from "~/features/workflow/data/queries";
-import { actionErrorMessage } from "~/lib/wire-error";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
 
 import { SidePanelPage } from "../../components/page";
 import {

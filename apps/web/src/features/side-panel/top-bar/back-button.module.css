@@ -56,5 +56,5 @@
 }
 
 .dropdownItem:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
 }

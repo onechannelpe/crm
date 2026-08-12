@@ -45,7 +45,7 @@ export function SearchPersonPage() {
                   <div class={styles.rowTitle}>
                     {company.name ?? "Empresa desconocida"}
                   </div>
-                  <div class={styles.rowMeta}>{company.ruc ?? "-"}</div>
+                  <div class={styles.rowMeta}>{company.ruc}</div>
                 </div>
               )}
             </For>
