@@ -1,7 +1,7 @@
 import type { Transaction } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { IntegrationJobId } from "~/server/shared/ids";
+import type { IntegrationJobId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 import type { ImportRowInput } from "./types";
 
@@ -14,7 +14,7 @@ export async function stageImportRows(
     reason: string;
     type: "import_status" | "import_prioridad";
   }>,
-  now: Date,
+  stagedAt: Date,
 ) {
   if (validRows.length > 0) {
     await trx
@@ -31,7 +31,7 @@ export async function stageImportRows(
           state: "staged",
           lead_id: null,
           failure_reason: null,
-          created_at: now,
+          created_at: stagedAt,
           applied_at: null,
         })),
       )
@@ -52,7 +52,7 @@ export async function stageImportRows(
           state: "failed",
           lead_id: null,
           failure_reason: row.reason,
-          created_at: now,
+          created_at: stagedAt,
           applied_at: null,
         })),
       )

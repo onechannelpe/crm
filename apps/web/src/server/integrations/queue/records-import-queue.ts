@@ -1,11 +1,12 @@
-import { createJobQueue } from "~/lib/job-queue/job-queue";
+import { createJobQueue } from "~/server/platform/jobs/job-queue";
+import type { JobContext } from "~/server/platform/operation/context";
 import {
   buildRecordImportProgressEvent,
   publishRecordImportProgress,
 } from "~/server/records/imports/progress-events";
 import { createRecordImportRunner } from "~/server/records/imports/runner";
-import type { IntegrationJobId } from "~/server/shared/ids";
 
+import { createIntegrationJobRepo } from "../infrastructure/integration-job-repo";
 import type {
   ImportJobProcessResult,
   IntegrationJobRow,
@@ -15,7 +16,7 @@ import type {
 interface RecordImportRunner {
   process(
     job: IntegrationJobRow,
-    signal: AbortSignal,
+    context: JobContext,
   ): Promise<ImportJobProcessResult>;
 }
 
@@ -25,61 +26,43 @@ interface RecordsImportQueueDeps {
   runner?: RecordImportRunner;
 }
 
-const RECORD_IMPORT_TYPES = ["import_status", "import_prioridad"] as const;
-
 export function createRecordsImportQueue(
   workerId: string,
   deps: RecordsImportQueueDeps,
 ) {
   const leaseMs = 30_000;
   const { runtime } = deps;
+
   const runner =
     deps.runner ??
     createRecordImportRunner({
-      executor: deps.runtime.executor,
-      now: deps.runtime.now,
+      executor: runtime.executor,
       readFile: deps.readFile,
-      updateProgress: (progress) =>
-        runtime.jobs.updateProgress(progress.jobId, progress),
+      reportProgress: async (jobId, progress) => {
+        await runtime.executor.transaction().execute(async (trx) => {
+          const transactionRepo = createIntegrationJobRepo(trx);
+          const persisted = await transactionRepo.updateProgress(
+            jobId,
+            progress,
+          );
+          await publishRecordImportProgress(
+            trx,
+            buildRecordImportProgressEvent(persisted),
+          );
+        });
+      },
     });
-
-  async function publishImportProgress(
-    id: IntegrationJobId,
-    status: "COMPLETED" | "PENDING" | "FAILED",
-    errorMessage: string | null,
-  ): Promise<void> {
-    const job = await runtime.jobs.findById(id);
-    if (
-      !job ||
-      (job.type !== "import_status" && job.type !== "import_prioridad")
-    ) {
-      return;
-    }
-    publishRecordImportProgress(
-      buildRecordImportProgressEvent({
-        job,
-        status,
-        rowsApplied: job.rows_applied ?? undefined,
-        rowsFailed: job.rows_failed ?? undefined,
-        rowsTotal: job.rows_total ?? undefined,
-        errorMessage,
-      }),
-    );
-  }
 
   return createJobQueue<IntegrationJobRow>({
     name: "records-import",
     leaseMs,
-    now: runtime.now,
     workerId,
     store: runtime.jobs.store,
-    // workflow_integration_jobs stores both import and other jobs; the claim
-    // filter restricts this worker to import types.
-    claimFilter: { column: "type", values: [...RECORD_IMPORT_TYPES] },
-    handle: async (job, signal: AbortSignal) => {
-      const result = await runner.process(job, signal);
-      // status/completed_at ride the store's lifecycle map; only row counts and
-      // results payload need to be in the domain patch.
+
+    handle: async (job, context) => {
+      const result = await runner.process(job, context);
+
+      // The queue store writes queue_state and completed_at.
       return {
         kind: "done",
         patch: {
@@ -90,14 +73,18 @@ export function createRecordsImportQueue(
         },
       };
     },
-    onSettled: async (job, outcome) => {
-      if (outcome.kind === "done") {
-        await publishImportProgress(job.id, "COMPLETED", null);
-      } else if (outcome.kind === "retry") {
-        await publishImportProgress(job.id, "PENDING", null);
-      } else {
-        await publishImportProgress(job.id, "FAILED", outcome.reason);
+
+    onSettled: async (job) => {
+      const settled = await runtime.jobs.findById(job.id);
+
+      if (!settled) {
+        return;
       }
+
+      await publishRecordImportProgress(
+        runtime.executor,
+        buildRecordImportProgressEvent(settled),
+      );
     },
   });
 }

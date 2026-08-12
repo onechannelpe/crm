@@ -1,5 +1,5 @@
-import { isPlainRecord } from "~/lib/type-guards";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
+import { isPlainRecord } from "~/shared/type-guards";
 
 export type KapsoInboundEvent = {
   id: string;
@@ -41,25 +41,35 @@ type MessageFields = {
 };
 
 function parseTimestamp(value: unknown): Date | null {
-  if (typeof value !== "string" && typeof value !== "number") return null;
+  if (typeof value !== "string" && typeof value !== "number") {
+    return null;
+  }
   const text = String(value);
   const milliseconds = /^\d+$/.test(text)
     ? Number(text) * 1_000
     : Date.parse(text);
-  if (!Number.isFinite(milliseconds)) return null;
+  if (!Number.isFinite(milliseconds)) {
+    return null;
+  }
   return new Date(milliseconds);
 }
 
 function parseMessageFields(payload: unknown): MessageFields | null {
-  if (!isPlainRecord(payload)) return null;
+  if (!isPlainRecord(payload)) {
+    return null;
+  }
   const message = isPlainRecord(payload["message"]) ? payload["message"] : null;
   const conversation = isPlainRecord(payload["conversation"])
     ? payload["conversation"]
     : null;
   const kapso =
     message && isPlainRecord(message["kapso"]) ? message["kapso"] : null;
-  if (!message || !conversation || !kapso) return null;
-  if (kapso["direction"] !== "inbound") return null;
+  if (!message || !conversation || !kapso) {
+    return null;
+  }
+  if (kapso["direction"] !== "inbound") {
+    return null;
+  }
 
   const id = message["id"];
   const conversationId = conversation["id"];
@@ -98,7 +108,9 @@ export function parseKapsoEnvelope(
   } catch {
     return Err("invalid-json");
   }
-  if (!isPlainRecord(payload)) return Err("invalid-envelope");
+  if (!isPlainRecord(payload)) {
+    return Err("invalid-envelope");
+  }
 
   const isBatch = payload["batch"] === true;
   const rawEvents = isBatch ? payload["data"] : [payload];
