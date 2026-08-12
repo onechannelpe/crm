@@ -1,8 +1,8 @@
 import { decodeIdToken, Google } from "arctic";
 
-import { googleOAuthConfig } from "~/lib/env";
-import { isPlainRecord } from "~/lib/type-guards";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { googleOAuthConfig } from "~/server/platform/config/env";
+import { Err, Ok, type Result } from "~/shared/result";
+import { isPlainRecord } from "~/shared/type-guards";
 
 let googleOAuth: Google | undefined;
 

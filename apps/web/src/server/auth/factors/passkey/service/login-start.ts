@@ -1,17 +1,20 @@
-import type { AuthContextUser } from "~/lib/auth/context/auth-context";
-import type { InvalidCredentialsError } from "~/lib/auth/errors";
+import type { InvalidCredentialsError } from "~/domain/auth/errors";
 import type {
   PasskeyLoginFlowState,
   PasskeyLoginMode,
-} from "~/lib/auth/passkey/types";
-import { recordAuthEvent } from "~/lib/auth/security/auth-events";
-import { config } from "~/lib/config";
+} from "~/domain/auth/passkey/types";
+import type { UserId } from "~/domain/ids";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import {
+  AUTH_LOGIN_FLOW_TTL_MS,
+  AUTH_WEBAUTHN_CHALLENGE_TTL_MS,
+} from "~/server/auth/config";
+import type { AuthContextUser } from "~/server/auth/context/auth-context";
 import type { WebauthnProvider } from "~/server/auth/factors/passkey-provider";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { recordAuthEvent } from "~/server/auth/security/auth-events";
+import { Err, Ok, type Result } from "~/shared/result";
 
-import type { PasskeyAuthRepos } from "./shared";
+import type { PasskeyAuthReadRepos } from "./shared";
 
 const DISCOVERABLE_PASSKEY_IDENTIFIER = "discoverable";
 
@@ -46,16 +49,16 @@ export type PreparedPasskeyLogin = {
 };
 
 async function prepareDiscoverableLogin(
-  repos: PasskeyAuthRepos,
+  repos: PasskeyAuthReadRepos,
   webauthnProvider: WebauthnProvider,
   input: Extract<PreparePasskeyLoginInput, { mode: "discoverable" }>,
 ): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
   const throttle = await createAuthThrottleService({
     authThrottle: repos.authThrottle,
-    now: () => input.occurredAt,
   }).checkPasskeyChallengeThrottle(
     DISCOVERABLE_PASSKEY_IDENTIFIER,
     input.ipAddress,
+    input.occurredAt,
   );
   if (!throttle.allowed) {
     await recordAuthEvent(repos, {
@@ -84,20 +87,22 @@ async function prepareDiscoverableLogin(
 }
 
 async function prepareIdentifiedLogin(
-  repos: PasskeyAuthRepos,
+  repos: PasskeyAuthReadRepos,
   webauthnProvider: WebauthnProvider,
   input: Extract<PreparePasskeyLoginInput, { mode: "identified" }>,
 ): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
   const identifier = input.identifier.trim();
-  if (!identifier) return Err({ kind: "invalid_credentials" });
+  if (!identifier) {
+    return Err({ kind: "invalid_credentials" });
+  }
 
   const throttleService = createAuthThrottleService({
     authThrottle: repos.authThrottle,
-    now: () => input.occurredAt,
   });
   const throttle = await throttleService.checkPasskeyChallengeThrottle(
     identifier,
     input.ipAddress,
+    input.occurredAt,
   );
   const user =
     input.account.kind === "authenticated"
@@ -122,6 +127,7 @@ async function prepareIdentifiedLogin(
     await throttleService.recordPasskeyChallengeFailure(
       identifier,
       input.ipAddress,
+      input.occurredAt,
     );
     await recordAuthEvent(repos, {
       userId: user?.id ?? null,
@@ -149,7 +155,7 @@ async function prepareIdentifiedLogin(
 }
 
 export function preparePasskeyLogin(
-  repos: PasskeyAuthRepos,
+  repos: PasskeyAuthReadRepos,
   webauthnProvider: WebauthnProvider,
   input: PreparePasskeyLoginInput,
 ): Promise<Result<PreparedPasskeyLogin, InvalidCredentialsError>> {
@@ -159,7 +165,7 @@ export function preparePasskeyLogin(
 }
 
 export async function persistPasskeyLoginFlow(
-  repos: PasskeyAuthRepos,
+  repos: PasskeyAuthReadRepos,
   prepared: PreparedPasskeyLogin,
 ): Promise<PasskeyLoginFlowState> {
   const challengeId = await repos.webauthnChallenges.create({
@@ -167,7 +173,7 @@ export async function persistPasskeyLoginFlow(
     type: "authentication",
     challenge: prepared.options.challenge,
     expires_at: new Date(
-      prepared.occurredAt.getTime() + config.auth.webauthnChallengeTtlMs,
+      prepared.occurredAt.getTime() + AUTH_WEBAUTHN_CHALLENGE_TTL_MS,
     ),
     created_at: prepared.occurredAt,
   });
@@ -178,7 +184,7 @@ export async function persistPasskeyLoginFlow(
     challenge_id: challengeId,
     state: "passkey",
     expires_at: new Date(
-      prepared.occurredAt.getTime() + config.auth.loginFlowTtlMs,
+      prepared.occurredAt.getTime() + AUTH_LOGIN_FLOW_TTL_MS,
     ),
     created_at: prepared.occurredAt,
   });

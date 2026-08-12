@@ -8,11 +8,11 @@ import {
 export function isThrottleWindowExpired(
   endpoint: AuthThrottleEndpoint,
   scope: AuthThrottleScope,
-  now: Date,
+  expiredAsOf: Date,
   startedAt: Date,
 ): boolean {
   return (
-    now.getTime() - startedAt.getTime() >=
+    expiredAsOf.getTime() - startedAt.getTime() >=
     AUTH_THROTTLE_POLICY[endpoint][scope].windowMs
   );
 }

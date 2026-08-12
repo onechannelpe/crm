@@ -1,14 +1,14 @@
 import type { Selectable } from "kysely";
 
-import { recordAuthEvent } from "~/lib/auth/security/auth-events";
-import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
-import { verifyTotpCode } from "~/lib/auth/totp/totp";
-import type { UsersTable } from "~/lib/db/types";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
 import type { createAuthEventsRepo } from "~/server/auth/repos-auth-events";
 import type { createAuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 import type { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { recordAuthEvent } from "~/server/auth/security/auth-events";
+import { decryptTotpSecret } from "~/server/auth/totp/secret-crypto";
+import { verifyTotpCode } from "~/server/auth/totp/totp";
+import type { UsersTable } from "~/server/platform/database/types";
+import { Err, Ok, type Result } from "~/shared/result";
 
 type UserRow = Selectable<UsersTable>;
 
@@ -63,6 +63,7 @@ export async function verifyTotpStepUp(params: {
   const throttle = await throttleService.checkTotpVerifyThrottle(
     identifier,
     ipAddress,
+    params.occurredAt,
   );
   if (!throttle.allowed) {
     await recordAuthEvent(deps, {
@@ -87,7 +88,11 @@ export async function verifyTotpStepUp(params: {
     });
   }
 
-  await throttleService.recordTotpVerifyFailure(identifier, ipAddress);
+  await throttleService.recordTotpVerifyFailure(
+    identifier,
+    ipAddress,
+    params.occurredAt,
+  );
   await recordAuthEvent(deps, {
     userId: user.id,
     identifier,

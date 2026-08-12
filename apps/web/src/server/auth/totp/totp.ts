@@ -10,6 +10,8 @@ import {
   verifyTOTPWithGracePeriod,
 } from "@oslojs/otp";
 
+import { PLATFORM_NAME } from "~/shared/branding";
+
 const SECRET_BYTES = 20; // 160 bits per Copenhagen recommendations
 const PERIOD_SECONDS = 30;
 const DIGITS = 6;
@@ -28,7 +30,7 @@ export function buildTotpProvisioningUri(
   email: string,
 ): string {
   return createTOTPKeyURI(
-    "Culqi360",
+    PLATFORM_NAME,
     email,
     decodeSecret(secretBase32),
     PERIOD_SECONDS,

@@ -1,24 +1,30 @@
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 
-import type { PasskeyEnrollmentChallenge } from "~/lib/auth/passkey/types";
-import { config } from "~/lib/config";
+import { auditEntityId } from "~/domain/audit/entity";
+import type { PasskeyEnrollmentChallenge } from "~/domain/auth/passkey/types";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId, WebauthnChallengeId } from "~/domain/ids";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import { AUTH_WEBAUTHN_CHALLENGE_TTL_MS } from "~/server/auth/config";
 import {
   isPasskeyRequestError,
   type VerifiedRegistrationCredential,
   type WebauthnProvider,
 } from "~/server/auth/factors/passkey-provider";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId, WebauthnChallengeId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
 
-import type { PasskeyAuthRepos } from "./shared";
+import type { PasskeyAuthRepos, PasskeyAuthReadRepos } from "./shared";
 
-type PasskeyEnrollmentRepos = Pick<
-  PasskeyAuthRepos,
-  "authThrottle" | "events" | "passkeys" | "webauthnChallenges"
+type PasskeyEnrollmentReadRepos = Pick<
+  PasskeyAuthReadRepos,
+  "authThrottle" | "passkeys" | "webauthnChallenges"
 >;
+
+type PasskeyEnrollmentRepos = PasskeyEnrollmentReadRepos &
+  Pick<
+    PasskeyAuthRepos,
+    "authThrottle" | "events" | "passkeys" | "webauthnChallenges"
+  >;
 
 interface EnrollmentActor {
   userId: UserId;
@@ -48,12 +54,17 @@ interface PreparedPasskeyEnrollment extends EnrollmentActor {
 }
 
 async function recordVerificationFailure(
-  repos: PasskeyEnrollmentRepos,
+  repos: PasskeyEnrollmentReadRepos,
   input: EnrollmentActor,
+  occurredAt: Date,
 ) {
   await createAuthThrottleService({
     authThrottle: repos.authThrottle,
-  }).recordPasskeyVerifyFailure(`user:${input.userId}`, input.ipAddress);
+  }).recordPasskeyVerifyFailure(
+    `user:${input.userId}`,
+    input.ipAddress,
+    occurredAt,
+  );
 }
 
 export async function persistVerifiedPasskeyEnrollment(
@@ -91,7 +102,7 @@ export async function persistVerifiedPasskeyEnrollment(
 }
 
 export async function preparePasskeyEnrollment(
-  repos: PasskeyEnrollmentRepos,
+  repos: PasskeyEnrollmentReadRepos,
   webauthnProvider: Pick<WebauthnProvider, "getRegistrationOptions">,
   input: BeginPasskeyEnrollmentInput,
 ): Promise<Result<PreparedPasskeyEnrollment, DomainError>> {
@@ -101,6 +112,7 @@ export async function preparePasskeyEnrollment(
   const throttle = await throttleService.checkPasskeyChallengeThrottle(
     `user:${input.userId}`,
     input.ipAddress,
+    input.occurredAt,
   );
   if (!throttle.allowed) {
     return Err(fail("invalid_passkey_request"));
@@ -119,7 +131,7 @@ export async function persistPasskeyEnrollmentChallenge(
     type: "registration",
     challenge: prepared.options.challenge,
     expires_at: new Date(
-      prepared.occurredAt.getTime() + config.auth.webauthnChallengeTtlMs,
+      prepared.occurredAt.getTime() + AUTH_WEBAUTHN_CHALLENGE_TTL_MS,
     ),
     created_at: prepared.occurredAt,
   });
@@ -134,7 +146,7 @@ export async function persistPasskeyEnrollmentChallenge(
 }
 
 export async function verifyPasskeyEnrollment(
-  repos: PasskeyEnrollmentRepos,
+  repos: PasskeyEnrollmentReadRepos,
   webauthnProvider: Pick<WebauthnProvider, "verifyRegistration">,
   input: FinishPasskeyEnrollmentInput,
 ): Promise<Result<VerifiedPasskeyEnrollment, DomainError>> {
@@ -145,6 +157,7 @@ export async function verifyPasskeyEnrollment(
   const throttle = await throttleService.checkPasskeyVerifyThrottle(
     identifier,
     input.ipAddress,
+    input.verifiedAt,
   );
   if (!throttle.allowed) {
     return Err(fail("invalid_passkey_request"));
@@ -156,12 +169,12 @@ export async function verifyPasskeyEnrollment(
     challenge.type !== "registration" ||
     challenge.user_id !== input.userId
   ) {
-    await recordVerificationFailure(repos, input);
+    await recordVerificationFailure(repos, input, input.verifiedAt);
     return Err(fail("invalid_passkey_request"));
   }
   if (challenge.expires_at < input.verifiedAt) {
     await repos.webauthnChallenges.delete(challenge.id);
-    await recordVerificationFailure(repos, input);
+    await recordVerificationFailure(repos, input, input.verifiedAt);
     return Err(fail("invalid_passkey_request"));
   }
 
@@ -172,7 +185,7 @@ export async function verifyPasskeyEnrollment(
       challenge.challenge,
     );
     if (!registration.verified) {
-      await recordVerificationFailure(repos, input);
+      await recordVerificationFailure(repos, input, input.verifiedAt);
       return Err(fail("invalid_passkey_request"));
     }
 
@@ -183,8 +196,10 @@ export async function verifyPasskeyEnrollment(
       credential: registration.credential,
     });
   } catch (error: unknown) {
-    if (!isPasskeyRequestError(error)) throw error;
-    await recordVerificationFailure(repos, input);
+    if (!isPasskeyRequestError(error)) {
+      throw error;
+    }
+    await recordVerificationFailure(repos, input, input.verifiedAt);
     return Err(fail("invalid_passkey_request"));
   }
 }

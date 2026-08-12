@@ -10,10 +10,11 @@ import {
   type AuthenticationResponseJSON,
 } from "@simplewebauthn/server";
 
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
+import { PLATFORM_NAME } from "~/shared/branding";
 
-const rpName = "Culqi360";
+const rpName = PLATFORM_NAME;
 
 const REQUIRED_USER_VERIFICATION = "required";
 
@@ -211,7 +212,9 @@ export function createPasskeyProvider(
       challenge: string,
     ) {
       const passkey = await repos.passkeys.findById(response.id);
-      if (!passkey) throw new PasskeyRequestError("Passkey not found");
+      if (!passkey) {
+        throw new PasskeyRequestError("Passkey not found");
+      }
 
       let verification: VerifiedAuthenticationResponse;
       try {

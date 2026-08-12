@@ -1,9 +1,9 @@
-import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
-import { verifyTotpCode } from "~/lib/auth/totp/totp";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { auditEntityId } from "~/domain/audit/entity";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { decryptTotpSecret } from "~/server/auth/totp/secret-crypto";
+import { verifyTotpCode } from "~/server/auth/totp/totp";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { AuthSetupRepos } from "../infrastructure/setup-context";
 
