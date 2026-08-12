@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 import { resolveAudience } from "../audience";
 import type { NotificationAudience, NotificationChannel } from "../types";
@@ -13,7 +13,10 @@ export interface RecipientRepository {
     userIds: UserId[],
     channel: Exclude<NotificationChannel, "in_app">,
   ): Promise<Map<UserId, string>>;
-  findActiveWhatsAppUsers(userIds: UserId[], now: Date): Promise<Set<UserId>>;
+  findActiveWhatsAppUsers(
+    userIds: UserId[],
+    activeAsOf: Date,
+  ): Promise<Set<UserId>>;
 }
 
 export function createRecipientRepository(
@@ -23,7 +26,9 @@ export function createRecipientRepository(
     resolveAudience: (audience) => resolveAudience(db, audience),
 
     async findVerifiedAddresses(userIds, channel) {
-      if (userIds.length === 0) return new Map();
+      if (userIds.length === 0) {
+        return new Map();
+      }
 
       const rows = await db
         .selectFrom("user_channel_addresses")
@@ -36,7 +41,7 @@ export function createRecipientRepository(
       return new Map(rows.map((row) => [row.user_id, row.address]));
     },
 
-    findActiveWhatsAppUsers: (userIds, now) =>
-      filterUsersWithActiveSession(db, userIds, now),
+    findActiveWhatsAppUsers: (userIds, activeAsOf) =>
+      filterUsersWithActiveSession(db, userIds, activeAsOf),
   };
 }

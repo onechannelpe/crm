@@ -1,15 +1,16 @@
-"use server";
-
 import { randomUUIDv7 } from "bun";
 
-import { isRole } from "~/lib/auth/access/rbac";
+import { isRole } from "~/domain/auth/access/rbac";
+import { invalid, type DomainError } from "~/domain/errors";
+import { NotificationIntentId, TeamId, UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import type { NotificationAudience } from "~/server/notifications/types";
-import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
-import { invalid, type DomainError } from "~/server/shared/domain-error";
-import { NotificationIntentId, TeamId, UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { executeSessionServerFunction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 const AUDIENCE_TYPES = ["user_ids", "global_roles", "team"] as const;
 
@@ -17,35 +18,39 @@ function resolveAudience(
   audienceType: (typeof AUDIENCE_TYPES)[number],
   ref: string,
 ): Result<NotificationAudience, DomainError> {
+  const value = ref.trim();
+
   if (audienceType === "user_ids") {
-    const parsed = UserId.parse(ref.trim());
-    if (isErr(parsed)) {
+    const userId = UserId.parse(value);
+    if (isErr(userId)) {
       return Err(invalid({ code: "invalid_user_audience" }));
     }
 
-    return Ok({ kind: "user_ids", userIds: [parsed.value] });
+    return Ok({ kind: "user_ids", userIds: [userId.value] });
   }
 
   if (audienceType === "team") {
-    const parsed = TeamId.parse(ref.trim());
-    if (isErr(parsed)) {
+    const teamId = TeamId.parse(value);
+    if (isErr(teamId)) {
       return Err(invalid({ code: "invalid_team_audience" }));
     }
 
-    return Ok({ kind: "team_id", teamId: parsed.value });
+    return Ok({ kind: "team_id", teamId: teamId.value });
   }
 
-  if (!isRole(ref)) {
+  if (!isRole(value)) {
     return Err(invalid({ code: "invalid_role_audience" }));
   }
 
-  return Ok({ kind: "global_role", role: ref });
+  return Ok({ kind: "global_role", role: value });
 }
 
 export async function sendBroadcastNotification(
   params: unknown,
 ): Promise<void> {
-  await runAction({
+  "use server";
+
+  await executeSessionServerFunction({
     name: "notifications.broadcast",
     access: { kind: "role", role: "admin" },
 
@@ -56,38 +61,27 @@ export async function sendBroadcastNotification(
         audienceType: r.enum("audienceType", AUDIENCE_TYPES),
         audienceRef: r.str("audienceRef"),
       }));
+      if (isErr(parsed)) return parsed;
 
-      if (isErr(parsed)) {
-        return parsed;
-      }
-
-      const audience = resolveAudience(
-        parsed.value.audienceType,
-        parsed.value.audienceRef,
-      );
-
-      if (isErr(audience)) {
-        return audience;
-      }
+      const { title, bodyText, audienceType, audienceRef } = parsed.value;
+      const audience = resolveAudience(audienceType, audienceRef);
+      if (isErr(audience)) return audience;
 
       return Ok({
-        title: parsed.value.title,
-        bodyText: parsed.value.bodyText,
+        title,
+        bodyText,
         audience: audience.value,
       });
     },
 
-    audit: ({ audience }) => ({ audienceKind: audience.kind }),
+    telemetry: ({ audience }) => ({ audienceKind: audience.kind }),
 
-    execute: async ({ actor }, input) => {
-      const notifications = getServerRuntime().notifications;
-      const now = new Date();
-
-      await notifications.enqueue(
+    execute: async (ctx, input) => {
+      await application.notifications.enqueue(
         [
           {
             id: NotificationIntentId.trust(
-              `broadcast:${actor.userId}:${randomUUIDv7()}`,
+              `broadcast:${ctx.actor.userId}:${randomUUIDv7()}`,
             ),
             eventType: "broadcast.general",
             audience: input.audience,
@@ -98,7 +92,7 @@ export async function sendBroadcastNotification(
             actionUrl: null,
           },
         ],
-        now,
+        ctx,
       );
 
       return Ok(undefined);

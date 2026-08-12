@@ -1,13 +1,16 @@
 import type { NotificationChannel } from "@crm/message-channels";
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import { createJobStore, type JobStore } from "~/lib/job-queue/job-store";
 import type {
   NotificationDeliveryId,
   NotificationIntentId,
   UserId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
+import {
+  createJobStore,
+  type JobStore,
+} from "~/server/platform/jobs/job-store";
 
 export interface PlannedDeliveryRow {
   intent_id: NotificationIntentId;
@@ -36,15 +39,12 @@ const DEFAULT_MAX_ATTEMPTS = 5;
 
 export interface DeliveryRepository {
   store: JobStore<NotificationDeliveryId, DeliveryJob>;
-  insertPlanned(rows: PlannedDeliveryRow[], now: Date): Promise<void>;
+  insertPlanned(rows: PlannedDeliveryRow[], plannedAt: Date): Promise<void>;
 }
 
 export function createDeliveryRepository(
   db: Kysely<Database>,
 ): DeliveryRepository {
-  // sent_at is the only lifecycle mirror column; provider/message/error land
-  // via the dispatch queue's settle patch (see dispatch/queue.ts), in the
-  // same lease-guarded statement as the queue_state transition.
   const store = createJobStore<DeliveryJob, NotificationDeliveryId>(
     db,
     "notification_deliveries",
@@ -64,8 +64,12 @@ export function createDeliveryRepository(
 
   return {
     store,
-    async insertPlanned(rows, now) {
-      if (rows.length === 0) return;
+
+    async insertPlanned(rows, plannedAt) {
+      if (rows.length === 0) {
+        return;
+      }
+
       await db
         .insertInto("notification_deliveries")
         .values(
@@ -80,19 +84,18 @@ export function createDeliveryRepository(
             queue_state: "pending" as const,
             attempt_count: 0,
             max_attempts: DEFAULT_MAX_ATTEMPTS,
-            available_at: now,
+            claimable_at: plannedAt,
             lease_owner: null,
-            lease_until: null,
             provider: null,
             provider_message_id: null,
             error_code: null,
             error_message: null,
-            created_at: now,
-            sent_at: null,
+            created_at: plannedAt,
+            completed_at: null,
           })),
         )
-        .onConflict((oc) =>
-          oc.columns(["intent_id", "user_id", "channel"]).doNothing(),
+        .onConflict((conflict) =>
+          conflict.columns(["intent_id", "user_id", "channel"]).doNothing(),
         )
         .execute();
     },

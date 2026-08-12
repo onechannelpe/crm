@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { NotificationIntentId, UserId } from "~/domain/ids";
 import { createIntentExpander } from "~/server/notifications/expansion/expand-intent";
 import type { RecipientPlan } from "~/server/notifications/expansion/plan-recipients";
 import type { IntentJob } from "~/server/notifications/repos/intent-repo";
-import { NotificationIntentId, UserId } from "~/server/shared/ids";
 
 const NOW = new Date(5_000);
 
@@ -53,7 +53,7 @@ describe("createIntentExpander", () => {
 
     const outcome = await expandIntent(intentJob(), NOW);
 
-    expect(outcome).toEqual({ kind: "expanded", deliveriesPlanned: 1 });
+    expect(outcome).toEqual({ kind: "expanded" });
     expect(createMany).toHaveBeenCalledWith([
       expect.objectContaining({
         user_id: UserId.trust("1"),
@@ -92,7 +92,7 @@ describe("createIntentExpander", () => {
       NOW,
     );
 
-    expect(outcome).toEqual({ kind: "expanded", deliveriesPlanned: 0 });
+    expect(outcome).toEqual({ kind: "expanded" });
     expect(createMany).toHaveBeenCalledOnce();
     expect(insertPlanned).toHaveBeenCalledWith([], NOW);
   });

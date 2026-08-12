@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import { createLogger } from "~/lib/observability/logger";
 import {
   createRecipientPlanner,
   projectIntentForPlanning,
 } from "~/server/notifications/expansion/plan-recipients";
-import { isErr } from "~/server/shared/result";
+import { createLogger } from "~/shared/observability/runtime-logger";
+import { isErr } from "~/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";

@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 import type { ExternalChannel, NotificationCategory } from "../categories";
 
@@ -22,13 +22,13 @@ export interface NotificationOptOutRepo {
     category: NotificationCategory;
     channel: ExternalChannel;
     optedOut: boolean;
-    now: Date;
+    changedAt: Date;
   }): Promise<void>;
   muteChannel(input: {
     userId: UserId;
     channel: ExternalChannel;
     categories: readonly NotificationCategory[];
-    now: Date;
+    changedAt: Date;
   }): Promise<void>;
 }
 
@@ -37,7 +37,9 @@ export function createNotificationOptOutRepo(
 ): NotificationOptOutRepo {
   return {
     async findOptOuts(userIds, category) {
-      if (userIds.length === 0) return new Set();
+      if (userIds.length === 0) {
+        return new Set();
+      }
 
       const rows = await db
         .selectFrom("notification_opt_outs")
@@ -62,7 +64,7 @@ export function createNotificationOptOutRepo(
       }));
     },
 
-    async setOptedOut({ userId, category, channel, optedOut, now }) {
+    async setOptedOut({ userId, category, channel, optedOut, changedAt }) {
       if (!optedOut) {
         await db
           .deleteFrom("notification_opt_outs")
@@ -75,15 +77,17 @@ export function createNotificationOptOutRepo(
 
       await db
         .insertInto("notification_opt_outs")
-        .values({ user_id: userId, category, channel, created_at: now })
+        .values({ user_id: userId, category, channel, created_at: changedAt })
         .onConflict((oc) =>
           oc.columns(["user_id", "category", "channel"]).doNothing(),
         )
         .execute();
     },
 
-    async muteChannel({ userId, channel, categories, now }) {
-      if (categories.length === 0) return;
+    async muteChannel({ userId, channel, categories, changedAt }) {
+      if (categories.length === 0) {
+        return;
+      }
 
       await db
         .insertInto("notification_opt_outs")
@@ -92,7 +96,7 @@ export function createNotificationOptOutRepo(
             user_id: userId,
             category,
             channel,
-            created_at: now,
+            created_at: changedAt,
           })),
         )
         .onConflict((oc) =>

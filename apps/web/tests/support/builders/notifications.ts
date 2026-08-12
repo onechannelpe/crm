@@ -1,14 +1,14 @@
 import type { Insertable } from "kysely";
 
-import type {
-  NotificationDeliveriesTable,
-  NotificationIntentsTable,
-} from "~/lib/db/types";
+import { NotificationIntentId, UserId } from "~/domain/ids";
 import type {
   NotificationAudience,
   NotificationChannel,
 } from "~/server/notifications/types";
-import { NotificationIntentId, UserId } from "~/server/shared/ids";
+import type {
+  NotificationDeliveriesTable,
+  NotificationIntentsTable,
+} from "~/server/platform/database/types";
 
 type IntentRow = Insertable<NotificationIntentsTable>;
 type DeliveryRow = Insertable<NotificationDeliveriesTable>;
@@ -16,10 +16,8 @@ type DeliveryRow = Insertable<NotificationDeliveriesTable>;
 const DEFAULT_NOW = new Date(1_700_000_000_000);
 const DEFAULT_USER_ID = UserId.trust("notification-builder-user");
 
-// Intent row with sane defaults. `audience_json`/`channels_json` are
-// stringified here, matching `enqueueNotifications`. `pg` auto-serializes plain
-// objects for jsonb params but not arrays, so an un-stringified array comes out
-// as a Postgres array literal and fails jsonb validation.
+// Arrays must be stringified for jsonb. Passing them directly makes `pg` send a
+// Postgres array instead of JSON.
 export function anIntentRow(
   overrides: {
     id: string;
@@ -46,19 +44,15 @@ export function anIntentRow(
     queue_state: "pending",
     attempt_count: 0,
     max_attempts: 5,
-    available_at: now,
+    claimable_at: now,
     lease_owner: null,
-    lease_until: null,
-    error: null,
+    error_message: null,
     created_at: now,
-    expanded_at: null,
+    completed_at: null,
     ...rest,
   };
 }
 
-// Delivery work row with sane defaults, for tests that need to seed a specific
-// lifecycle state (e.g. an attempt_count near the ceiling) without going
-// through expansion.
 export function aDeliveryRow(
   overrides: {
     intent_id: NotificationIntentId;
@@ -78,15 +72,14 @@ export function aDeliveryRow(
     queue_state: "pending",
     attempt_count: 0,
     max_attempts: 5,
-    available_at: now,
+    claimable_at: now,
     lease_owner: null,
-    lease_until: null,
     provider: null,
     provider_message_id: null,
     error_code: null,
     error_message: null,
     created_at: now,
-    sent_at: null,
+    completed_at: null,
     ...rest,
   };
 }
