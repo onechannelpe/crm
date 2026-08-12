@@ -1,3 +1,4 @@
+import "~/instrument.server";
 import { startMaintenanceWorker } from "~/server/entrypoints/worker/maintenance-worker";
 
 const worker = startMaintenanceWorker();

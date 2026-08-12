@@ -1,3 +1,5 @@
+import { captureException } from "@sentry/bun";
+
 import { createMaintenanceRuntime } from "~/server/composition/maintenance-runtime";
 import { dbUrl } from "~/server/platform/database/db";
 import {
@@ -46,6 +48,7 @@ function makeWaker(run: () => Promise<void>): QueueWaker {
         logger.error("queue_run_failed", {
           error: error instanceof Error ? error.message : "Unknown error",
         });
+        captureException(error);
       })
       .finally(() => {
         active = null;
@@ -98,6 +101,7 @@ function startScheduledTick(
         tick: label,
         error: error instanceof Error ? error.message : "Unknown error",
       });
+      captureException(error);
     } finally {
       running = false;
       active = null;
