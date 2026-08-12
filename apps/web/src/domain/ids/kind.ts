@@ -43,7 +43,7 @@ export function uuidId<Name extends string>(name: Name) {
   } satisfies IdCodec<BrandedId<Name>>;
 }
 
-export type DerivedKeyParts = {
+type DerivedKeyParts = {
   sourceEventId: string;
   discriminator: string;
 };

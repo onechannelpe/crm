@@ -1,16 +1,17 @@
 import type { FieldChange } from "~/contracts/events";
 import type {
+  CloseReason,
+  Currency,
+  FulfillmentAction,
+  FulfillmentDocKind,
+  FulfillmentStep,
   LeadPriority,
   LeadStage,
   LeadStatus,
-  Currency,
-  CloseReason,
   ProductKind,
-  FulfillmentStep,
-  FulfillmentAction,
-  FulfillmentDocKind,
 } from "~/contracts/workflow/vocabulary";
 import type {
+  BranchId,
   FileAssetId,
   FulfillmentOrderId,
   UserId,
@@ -19,6 +20,8 @@ import type {
   WorkflowRateRevisionId,
   WorkflowVenueId,
 } from "~/domain/ids";
+
+import type { LeadState } from "./state";
 
 export type LeadHistoryEventType =
   | "lead_registered"
@@ -48,39 +51,39 @@ export type LeadHistoryEventType =
   | "note_added"
   | "lead_deleted";
 
-const LEAD_HISTORY_EVENT_TYPES = {
-  lead_registered: true,
-  lead_status_updated: true,
-  lead_priority_updated: true,
-  lead_reviewed: true,
-  workflow_stage_changed: true,
-  lead_assigned: true,
-  lead_reassigned: true,
-  rep_legal_recorded: true,
-  rate_proposed: true,
-  rate_revision_requested: true,
-  rate_accepted: true,
-  rate_proposal_corrected: true,
-  commercial_scope_corrected: true,
-  lead_closed: true,
-  lead_reservation_expired: true,
-  venue_added: true,
-  venue_updated: true,
-  venue_accounts_added: true,
-  fulfillment_started: true,
-  fulfillment_product_chosen: true,
-  fulfillment_step_advanced: true,
-  fulfillment_step_rejected: true,
-  fulfillment_document_uploaded: true,
-  fulfillment_completed: true,
-  note_added: true,
-  lead_deleted: true,
-} satisfies Record<LeadHistoryEventType, true>;
+const LEAD_HISTORY_EVENT_TYPES = [
+  "lead_registered",
+  "lead_status_updated",
+  "lead_priority_updated",
+  "lead_reviewed",
+  "workflow_stage_changed",
+  "lead_assigned",
+  "lead_reassigned",
+  "rep_legal_recorded",
+  "rate_proposed",
+  "rate_revision_requested",
+  "rate_accepted",
+  "rate_proposal_corrected",
+  "commercial_scope_corrected",
+  "lead_closed",
+  "lead_reservation_expired",
+  "venue_added",
+  "venue_updated",
+  "venue_accounts_added",
+  "fulfillment_started",
+  "fulfillment_product_chosen",
+  "fulfillment_step_advanced",
+  "fulfillment_step_rejected",
+  "fulfillment_document_uploaded",
+  "fulfillment_completed",
+  "note_added",
+  "lead_deleted",
+] as const satisfies readonly LeadHistoryEventType[];
 
 export function isLeadHistoryEventType(
   value: string,
 ): value is LeadHistoryEventType {
-  return value in LEAD_HISTORY_EVENT_TYPES;
+  return LEAD_HISTORY_EVENT_TYPES.some((type) => type === value);
 }
 
 export type LeadHistoryPayloadByEvent = {
@@ -197,6 +200,24 @@ export type LeadHistoryPayloadByEvent = {
   lead_deleted: Record<string, never>;
 };
 
+// Computed context for notification policy; unlike `payload`, it is not persisted.
+export type LeadNotificationContext = {
+  ruc: string;
+  executiveId: UserId;
+  branchId: BranchId;
+  paymentUnits?: { label: string; paymentUrl: string | null }[];
+};
+
+export function leadNotificationContext(
+  state: LeadState,
+): LeadNotificationContext {
+  return {
+    ruc: state.ruc,
+    executiveId: state.executiveId,
+    branchId: state.branchId,
+  };
+}
+
 export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =
   {
     leadId: WorkflowLeadId;
@@ -206,6 +227,7 @@ export type LeadHistoryEventDraftFor<TEventType extends LeadHistoryEventType> =
     payload: LeadHistoryPayloadByEvent[TEventType];
     changes: FieldChange[];
     occurredAt: Date;
+    notificationContext?: LeadNotificationContext;
   };
 
 export type LeadHistoryEventDraft = {
@@ -247,6 +269,7 @@ export function createHistoryEvent<
   payload: LeadHistoryPayloadByEvent[TEventType];
   changes?: FieldChange[];
   occurredAt: Date;
+  notificationContext?: LeadNotificationContext;
 }): LeadHistoryEventDraftFor<TEventType> {
   return {
     leadId: input.leadId,
@@ -256,5 +279,6 @@ export function createHistoryEvent<
     payload: input.payload,
     changes: input.changes ?? [],
     occurredAt: input.occurredAt,
+    notificationContext: input.notificationContext,
   };
 }

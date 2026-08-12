@@ -27,4 +27,9 @@ export const QUALITY_ISSUE_COPY: Record<
     detail:
       "La serie de Culqi no coincide con ninguna registrada en la entrega de este cliente.",
   },
+  no_mesa: {
+    label: "Sin mesa",
+    detail:
+      "El comercio facturó este mes, pero la venta no trae mesa asignada -- el esquema de comisiones no puede evaluarla.",
+  },
 };

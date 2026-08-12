@@ -78,6 +78,14 @@ export function createSettingsNavigationSections(
             "/settings/quotation-policies",
           ),
         },
+        {
+          id: "commission-scheme",
+          label: "Esquema de comisiones",
+          href: "/settings/commission-scheme",
+          icon: Settings,
+          section: "operations",
+          isHidden: !canAccessPath(options.role, "/settings/commission-scheme"),
+        },
       ],
     },
     {

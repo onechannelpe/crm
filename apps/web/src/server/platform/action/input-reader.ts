@@ -46,6 +46,11 @@ export interface Reader<E> {
   optCalendarMonth(field: string): CalendarMonth | null;
   obj<T>(field: string, build: (reader: Reader<E>) => T): T;
   optObj<T>(field: string, build: (reader: Reader<E>) => T): T | undefined;
+  list<T>(
+    field: string,
+    build: (reader: Reader<E>) => T,
+    opts?: { min?: number; max?: number },
+  ): T[];
 }
 
 // The sentinel carries unknown because instanceof erases the generic.
@@ -318,6 +323,31 @@ class RecordReader<E> implements Reader<E> {
       this.reject(field, "invalid");
     }
     return build(new RecordReader(value, this.fail, this.pathOf(field)));
+  }
+
+  list<T>(
+    field: string,
+    build: (reader: Reader<E>) => T,
+    opts?: { min?: number; max?: number },
+  ): T[] {
+    const value = this.present(field);
+    if (!Array.isArray(value)) {
+      this.reject(field, "invalid");
+    }
+    const path = this.pathOf(field);
+    const items = value.map((item, index) => {
+      if (!isPlainRecord(item)) {
+        this.reject(field, "invalid");
+      }
+      return build(new RecordReader(item, this.fail, `${path}[${index}]`));
+    });
+    if (opts?.min !== undefined && items.length < opts.min) {
+      this.reject(field, "required");
+    }
+    if (opts?.max !== undefined && items.length > opts.max) {
+      this.reject(field, "invalid");
+    }
+    return items;
   }
 
   private pathOf(field: string): string {

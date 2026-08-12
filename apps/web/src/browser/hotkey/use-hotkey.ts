@@ -29,6 +29,10 @@ interface UseHotkeyOptions {
   allowInInputs?: boolean;
   // Prevent the default browser action when the hotkey fires. Defaults to true.
   preventDefault?: boolean;
+  // Match on the produced character alone. Needed for keys the layout puts
+  // behind a modifier: "/" is Shift+7 on the Latin American layout, so an exact
+  // modifier match would leave the binding dead for those keyboards.
+  ignoreModifiers?: boolean;
   // Return false to skip this event.
   shouldHandleEvent?: (event: KeyboardEvent) => boolean;
 }
@@ -44,6 +48,7 @@ export function useHotkey(
     enabled,
     allowInInputs = false,
     preventDefault = true,
+    ignoreModifiers = false,
     shouldHandleEvent,
   } = options;
   const parsed = parseCombo(combo);
@@ -60,7 +65,7 @@ export function useHotkey(
       if (shouldHandleEvent && !shouldHandleEvent(event)) {
         return;
       }
-      if (!matchesEvent(event, parsed)) {
+      if (!matchesEvent(event, parsed, { ignoreModifiers })) {
         return;
       }
       if (preventDefault) {

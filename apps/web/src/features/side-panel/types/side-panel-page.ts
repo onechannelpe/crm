@@ -24,6 +24,7 @@ export type SidePanelIcon = Component<{
 
 export type SidePanelPageKey =
   | "root"
+  | "search-records"
   | "search-person-detail"
   | "search-company-detail"
   | "create-lead"
@@ -40,6 +41,10 @@ export type SidePanelNavigationEntry = {
 
 export type RootSidePanelPageState = {
   page: "root";
+};
+
+export type SearchRecordsSidePanelPageState = {
+  page: "search-records";
 };
 
 export type SearchPersonDetailSidePanelPageState = {
@@ -93,6 +98,7 @@ export type DataGridDetailSidePanelPageState = {
 
 export type SidePanelPageState =
   | RootSidePanelPageState
+  | SearchRecordsSidePanelPageState
   | SearchPersonDetailSidePanelPageState
   | SearchCompanyDetailSidePanelPageState
   | CreateLeadSidePanelPageState
@@ -125,6 +131,22 @@ export function createRootSidePanelPage(): SidePanelPageDefinition {
     },
     state: {
       page: "root",
+    },
+  };
+}
+
+export function createSearchRecordsSidePanelPage(): SidePanelPageDefinition {
+  const pageId = createSidePanelPageId();
+
+  return {
+    entry: {
+      page: "search-records",
+      pageId,
+      pageTitle: "Búsqueda",
+      pageIcon: Search,
+    },
+    state: {
+      page: "search-records",
     },
   };
 }

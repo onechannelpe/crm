@@ -1,14 +1,13 @@
 import { isValidInviteTokenFormat } from "~/domain/auth/invite/tokens";
 import { fail, type DomainError } from "~/domain/errors";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
+import { isPlainRecord } from "~/shared/type-guards";
 
-export type InviteAcceptanceInput = {
-  token: string;
-  password: string;
-  confirmPassword?: string;
-};
+export function readInviteToken(raw: unknown): Result<string, DomainError> {
+  if (typeof raw !== "string") {
+    return Err(fail("invite_token_malformed"));
+  }
 
-export function readInviteToken(raw: string): Result<string, DomainError> {
   const token = raw.trim();
   if (!token || !isValidInviteTokenFormat(token)) {
     return Err(fail("invite_token_malformed"));
@@ -16,7 +15,11 @@ export function readInviteToken(raw: string): Result<string, DomainError> {
   return Ok(token);
 }
 
-function readStrongPassword(raw: string): Result<string, DomainError> {
+function readStrongPassword(raw: unknown): Result<string, DomainError> {
+  if (typeof raw !== "string") {
+    return Err(fail("invite_password_too_short"));
+  }
+
   if (!raw.trim() || raw.length < 12) {
     return Err(fail("invite_password_too_short"));
   }
@@ -33,13 +36,10 @@ function readStrongPassword(raw: string): Result<string, DomainError> {
 }
 
 export function validateInviteAcceptance(
-  input: InviteAcceptanceInput,
+  input: unknown,
 ): Result<{ token: string; password: string }, DomainError> {
-  if (
-    input.confirmPassword !== undefined &&
-    input.password !== input.confirmPassword
-  ) {
-    return Err(fail("password_mismatch"));
+  if (!isPlainRecord(input)) {
+    return Err(fail("invite_token_malformed"));
   }
 
   const token = readInviteToken(input.token);
@@ -50,6 +50,14 @@ export function validateInviteAcceptance(
   const password = readStrongPassword(input.password);
   if (isErr(password)) {
     return Err(password.error);
+  }
+
+  if (
+    input.confirmPassword !== undefined &&
+    (typeof input.confirmPassword !== "string" ||
+      password.value !== input.confirmPassword)
+  ) {
+    return Err(fail("password_mismatch"));
   }
 
   return Ok({ token: token.value, password: password.value });

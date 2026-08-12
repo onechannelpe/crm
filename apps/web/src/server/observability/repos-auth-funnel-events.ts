@@ -15,7 +15,7 @@ import type { Database } from "~/server/platform/database/types";
 
 type NewAuthFunnelEventRow = Insertable<Database["auth_funnel_events"]>;
 
-export interface AuthFunnelEventFilter {
+interface AuthFunnelEventFilter {
   fromInclusive: Date;
   toInclusive: Date;
   eventName?: AuthFunnelEventName;
@@ -24,7 +24,7 @@ export interface AuthFunnelEventFilter {
   limit: number;
 }
 
-export interface AuthFunnelSummaryFilter {
+interface AuthFunnelSummaryFilter {
   fromInclusive: Date;
   toInclusive: Date;
   eventName?: AuthFunnelEventName;
@@ -114,7 +114,3 @@ export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
     },
   };
 }
-
-export type AuthFunnelEventsRepo = ReturnType<
-  typeof createAuthFunnelEventsRepo
->;

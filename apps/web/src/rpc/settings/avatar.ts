@@ -4,10 +4,6 @@ import { executeSessionServerFunction } from "~/server/platform/action";
 import { toAvatarDomainError } from "~/server/users/avatar-error";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
 
-function avatarUrl(version: number): string {
-  return `/api/me/avatar?v=${version}`;
-}
-
 export async function uploadUserAvatar(formData: FormData): Promise<{
   avatarVersion: number;
   avatarUrl: string;
@@ -40,9 +36,11 @@ export async function uploadUserAvatar(formData: FormData): Promise<{
         return Err(toAvatarDomainError(result.error.code));
       }
 
+      const { avatarVersion } = result.value;
+
       return Ok({
-        avatarVersion: result.value.avatarVersion,
-        avatarUrl: avatarUrl(result.value.avatarVersion),
+        avatarVersion,
+        avatarUrl: `/api/me/avatar?v=${avatarVersion}`,
         message: "Foto de perfil actualizada",
       });
     },

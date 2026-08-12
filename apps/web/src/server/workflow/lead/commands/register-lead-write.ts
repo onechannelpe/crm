@@ -113,6 +113,7 @@ export function createRegisteredLead(input: {
           legalName: organization.legalName,
           address: organization.address,
           executiveId: input.actor.userId,
+          branchId: input.actor.branchId,
           createdBy: input.actor.userId,
           commercialScope: input.commercialScope,
           createdAt: ctx.operationAt,

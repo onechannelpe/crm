@@ -7,7 +7,7 @@ type OrganizationEnrichmentWriter = Pick<
 
 // SUNAT is authoritative: a non-null value always wins. Null/blank fields are
 // dropped so a partial (engine-fallback) result never overwrites known columns.
-export type RegistryProjection = {
+type RegistryProjection = {
   ruc: string;
   legalName: string | null;
   address: string | null;

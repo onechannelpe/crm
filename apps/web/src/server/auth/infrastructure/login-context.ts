@@ -8,8 +8,6 @@ import { createOAuthAccountsRepo } from "~/server/auth/repos-oauth-accounts";
 import { createUserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
 import { createUserTotpFactorsRepo } from "~/server/auth/repos-user-totp-factors";
 import { createEventsWriter } from "~/server/event-logs/events-repo";
-import { enqueueNotifications } from "~/server/notifications/intent/enqueue";
-import type { NotificationIntent } from "~/server/notifications/types";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { Database } from "~/server/platform/database/types";
 import { createExecutorUow } from "~/server/platform/database/uow";
@@ -30,10 +28,6 @@ function createAuthLoginBaseRepos(executor: DatabaseExecutor) {
     userRecoveryCodes: createUserRecoveryCodesRepo(executor),
     passkeys: createPasskeysRepo(executor),
     webauthnChallenges: createWebauthnChallengesRepo(executor),
-    notificationIntents: {
-      enqueue: (intents: NotificationIntent[], occurredAt: Date) =>
-        enqueueNotifications(executor, intents, occurredAt),
-    },
   };
 }
 

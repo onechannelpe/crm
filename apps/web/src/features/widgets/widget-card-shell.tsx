@@ -21,6 +21,7 @@ export type WidgetStatus =
 
 export function WidgetCardShell(props: {
   title: string;
+  count?: number;
   action?: JSX.Element;
   status?: WidgetStatus;
   emptyLabel?: string;
@@ -33,7 +34,7 @@ export function WidgetCardShell(props: {
   return (
     <WidgetCard variant={props.variant ?? "dashboard"}>
       <WidgetCardHeader>
-        <WidgetCardTitle text={props.title} />
+        <WidgetCardTitle text={props.title} count={props.count} />
         <Show when={action()}>
           <WidgetCardHeaderActions>{action()}</WidgetCardHeaderActions>
         </Show>

@@ -15,7 +15,10 @@ import {
   queryUpdates,
   type UpdateFilter,
 } from "~/features/updates/model";
-import { buildUpdateListJsonLd, JsonLd } from "~/features/updates/seo";
+import {
+  buildUpdateListJsonLd,
+  JsonLd,
+} from "~/features/updates/seo/updates-json-ld";
 
 import { UPDATES_PAGE_COPY } from "./updates-page.data";
 
@@ -43,13 +46,9 @@ export default function UpdatesPage() {
       <UpdatesFilters
         active={activeFilter()}
         onChange={(value) =>
-          setSearchParams(
-            value === "all"
-              ? {}
-              : {
-                  filter: value,
-                },
-          )
+          setSearchParams({
+            filter: value === "all" ? undefined : value,
+          })
         }
         options={[
           { label: UPDATES_PAGE_COPY.filters.all, value: "all" },

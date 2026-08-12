@@ -42,6 +42,10 @@ export function AppPage(props: PageProps) {
   );
 }
 
+export function AppPageBody(props: BaseProps) {
+  return <div class={clsx(styles.pageBody, props.class)}>{props.children}</div>;
+}
+
 export function AppPageSection(props: BaseProps) {
   return (
     <section class={clsx(styles.section, props.class)}>

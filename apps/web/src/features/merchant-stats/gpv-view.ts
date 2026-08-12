@@ -4,7 +4,13 @@ import { createMemo, type Accessor } from "solid-js";
 import type { BookFilter } from "~/contracts/merchant-stats/views";
 import { parseCalendarMonth } from "~/domain/time/calendar-date";
 
-const GPV_TAB_IDS = ["rendimiento", "cohortes", "atribucion", "culqi"] as const;
+const GPV_TAB_IDS = [
+  "rendimiento",
+  "cohortes",
+  "atribucion",
+  "culqi",
+  "comisiones",
+] as const;
 
 export type GpvTabId = (typeof GPV_TAB_IDS)[number];
 

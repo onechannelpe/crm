@@ -10,7 +10,7 @@ import type {
   UpdateVisibility,
 } from "~/features/updates/model/types";
 
-export type ValidationIssue = {
+type ValidationIssue = {
   path: string;
   field: string;
   reason: string;

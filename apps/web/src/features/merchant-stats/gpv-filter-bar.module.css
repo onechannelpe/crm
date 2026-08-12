@@ -1,5 +1,11 @@
+/*
+  Chrome, not content: it carries its own bottom rule so the widget canvas
+  below starts on a clean edge, the same way the tab strip above it does.
+*/
 .bar {
-  padding: var(--spacing-2);
+  border-bottom: 1px solid var(--t-border-color-light);
+  flex-shrink: 0;
+  padding: var(--t-spacing-2);
 }
 
 .filter {

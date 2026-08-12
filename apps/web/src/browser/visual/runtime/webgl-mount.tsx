@@ -11,8 +11,9 @@ import {
 import { observeElementVisibility } from "~/browser/dom/observe-element-visibility";
 
 import {
-  subscribeToActiveWebGlContextCount,
-  tryReserveWebGlContextSlot,
+  subscribeToWebGlContextCount,
+  tryAcquireWebGlContextSlot,
+  type WebGlContextHandle,
 } from "./active-webgl-context-budget";
 import { SITE_WEBGL_CONTEXT_LOST_EVENT } from "./create-site-webgl-renderer";
 import { useWebGlPolicy } from "./use-webgl-policy";
@@ -24,9 +25,6 @@ import {
 const NON_PRIORITY_ROOT_MARGIN = "50% 0px 50% 0px";
 const PRIORITY_ROOT_MARGIN = "125% 0px 125% 0px";
 const EAGER_ROOT_MARGIN = "600% 0px 600% 0px";
-
-const OUT_OF_VIEW_DISPOSE_MS = 4_000;
-const PRIORITY_OUT_OF_VIEW_DISPOSE_MS = 1_500;
 
 type WebGlMountLoading = "lazy" | "eager";
 
@@ -41,15 +39,23 @@ type WebGlMountProps = {
 export function WebGlMount(props: WebGlMountProps) {
   const policy = useWebGlPolicy();
 
-  let rootReference: HTMLDivElement | undefined;
+  let rootElement: HTMLDivElement | undefined;
 
+  // Current visibility is used by the context budget for eviction.
   const [isInViewport, setIsInViewport] = createSignal(props.priority ?? false);
+
+  // Once visible, the mount remains eligible for a context.
+  const [hasBeenVisible, setHasBeenVisible] = createSignal(
+    props.priority ?? false,
+  );
+
   const [isMountReady, setIsMountReady] = createSignal(false);
   const [hasContextSlot, setHasContextSlot] = createSignal(false);
   const [contextEpoch, setContextEpoch] = createSignal(0);
 
   onMount(() => {
-    const element = rootReference;
+    const element = rootElement;
+
     if (!element) {
       return;
     }
@@ -58,43 +64,24 @@ export function WebGlMount(props: WebGlMountProps) {
     const priority = props.priority ?? false;
     const isEager = loading === "eager";
 
-    const effectiveDisposeDelayMs =
-      priority || isEager
-        ? PRIORITY_OUT_OF_VIEW_DISPOSE_MS
-        : OUT_OF_VIEW_DISPOSE_MS;
-
-    const effectiveRootMargin = isEager
+    const rootMargin = isEager
       ? EAGER_ROOT_MARGIN
       : priority
         ? PRIORITY_ROOT_MARGIN
         : NON_PRIORITY_ROOT_MARGIN;
 
-    let disposeTimer: ReturnType<typeof setTimeout> | null = null;
-    const clearDisposeTimer = () => {
-      if (disposeTimer !== null) {
-        clearTimeout(disposeTimer);
-        disposeTimer = null;
-      }
-    };
-
     const stopObservingVisibility = observeElementVisibility(
       element,
       (isIntersecting) => {
-        if (isIntersecting) {
-          clearDisposeTimer();
-          setIsInViewport(true);
-          return;
-        }
+        setIsInViewport(isIntersecting);
 
-        clearDisposeTimer();
-        disposeTimer = setTimeout(() => {
-          setIsInViewport(false);
-          disposeTimer = null;
-        }, effectiveDisposeDelayMs);
+        if (isIntersecting) {
+          setHasBeenVisible(true);
+        }
       },
       {
         root: null,
-        rootMargin: effectiveRootMargin,
+        rootMargin,
         threshold: 0,
       },
     );
@@ -108,7 +95,6 @@ export function WebGlMount(props: WebGlMountProps) {
     element.addEventListener(SITE_WEBGL_CONTEXT_LOST_EVENT, handleContextLost);
 
     onCleanup(() => {
-      clearDisposeTimer();
       stopObservingVisibility();
       element.removeEventListener(
         SITE_WEBGL_CONTEXT_LOST_EVENT,
@@ -117,18 +103,19 @@ export function WebGlMount(props: WebGlMountProps) {
     });
   });
 
-  const effectiveMountPriority = createMemo<VisualMountPriority>(() => {
+  const mountPriority = createMemo<VisualMountPriority>(() => {
     const priority = props.priority ?? false;
     const loading = props.loading ?? "lazy";
+
     return priority || loading === "eager" ? "priority" : "normal";
   });
 
-  const wantsScene = createMemo(() => policy().allowed && isInViewport());
+  const wantsScene = createMemo(() => policy().allowed && hasBeenVisible());
   const wantsContextSlot = createMemo(() => wantsScene() && isMountReady());
 
   createEffect(() => {
     contextEpoch();
-    effectiveMountPriority();
+    mountPriority();
 
     setIsMountReady(false);
 
@@ -139,13 +126,11 @@ export function WebGlMount(props: WebGlMountProps) {
     const cancelScheduledMount = scheduleVisualMount(
       () => setIsMountReady(true),
       {
-        priority: effectiveMountPriority(),
+        priority: mountPriority(),
       },
     );
 
-    onCleanup(() => {
-      cancelScheduledMount();
-    });
+    onCleanup(cancelScheduledMount);
   });
 
   createEffect(() => {
@@ -153,43 +138,67 @@ export function WebGlMount(props: WebGlMountProps) {
       return;
     }
 
-    let release: (() => void) | null = null;
+    let handle: WebGlContextHandle | null = null;
     let unsubscribe: (() => void) | null = null;
 
-    const tryAcquire = () => {
-      if (release !== null) {
-        return;
-      }
-
-      const reservation = tryReserveWebGlContextSlot();
-      if (reservation === null) {
-        return;
-      }
-
-      release = reservation;
+    const ensureSubscribed = () => {
       if (unsubscribe !== null) {
-        unsubscribe();
-        unsubscribe = null;
+        return;
       }
 
-      setHasContextSlot(true);
+      unsubscribe = subscribeToWebGlContextCount(tryAcquire);
     };
+
+    function tryAcquire() {
+      if (handle !== null) {
+        return;
+      }
+
+      const acquired = tryAcquireWebGlContextSlot(() => {
+        // Retry on the next registry notification to avoid re-entering it
+        // during the acquisition that evicted this mount.
+        handle = null;
+        setHasContextSlot(false);
+        ensureSubscribed();
+      });
+
+      if (acquired === null) {
+        ensureSubscribed();
+        return;
+      }
+
+      handle = acquired;
+      unsubscribe?.();
+      unsubscribe = null;
+      setHasContextSlot(true);
+    }
 
     tryAcquire();
 
-    if (release === null) {
-      unsubscribe = subscribeToActiveWebGlContextCount(tryAcquire);
-    }
+    createEffect(() => {
+      const inViewport = isInViewport();
+
+      // Re-sync after acquisition as well as viewport changes.
+      hasContextSlot();
+
+      if (!handle) {
+        return;
+      }
+
+      if (inViewport) {
+        handle.markActive();
+      } else {
+        handle.markInactive();
+      }
+    });
 
     onCleanup(() => {
-      if (unsubscribe !== null) {
-        unsubscribe();
-        unsubscribe = null;
-      }
-      if (release !== null) {
-        release();
-        release = null;
-      }
+      unsubscribe?.();
+      unsubscribe = null;
+
+      handle?.release();
+      handle = null;
+
       setHasContextSlot(false);
     });
   });
@@ -197,7 +206,7 @@ export function WebGlMount(props: WebGlMountProps) {
   return (
     <div
       ref={(element) => {
-        rootReference = element;
+        rootElement = element;
       }}
       style={{
         height: "100%",
@@ -208,12 +217,13 @@ export function WebGlMount(props: WebGlMountProps) {
         ...(props.detachFromLayout ? { inset: "0" } : {}),
       }}
     >
-      <Show
-        when={wantsContextSlot() && hasContextSlot()}
-        fallback={props.fallback ?? null}
-      >
+      <Show when={hasContextSlot()} fallback={props.fallback ?? null}>
         <div
-          style={{ "pointer-events": "auto", height: "100%", width: "100%" }}
+          style={{
+            "pointer-events": "auto",
+            height: "100%",
+            width: "100%",
+          }}
         >
           {props.children}
         </div>

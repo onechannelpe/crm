@@ -6,6 +6,14 @@
   min-height: 0;
 }
 
+.pageBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .pageNarrow {
   width: 100%;
   max-width: 640px;

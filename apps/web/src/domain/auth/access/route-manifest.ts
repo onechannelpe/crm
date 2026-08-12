@@ -1,12 +1,12 @@
-import type { Permission } from "./rbac";
+import type { Permission, Role } from "./rbac";
 
 export type AppPath =
-  | "/search"
   | "/settings/security"
   | "/settings/login-protection"
   | "/settings/security-policies"
   | "/settings/capacity-policies"
   | "/settings/quotation-policies"
+  | "/settings/commission-scheme"
   | "/settings/event-logs"
   | "/monitoring"
   | "/settings/members"
@@ -28,21 +28,23 @@ export type AppPath =
 
 export interface RouteConfig {
   permission?: Permission;
+  roles?: readonly Role[];
   landingPriority?: number;
 }
 
 export interface DynamicRouteConfig {
   pattern: RegExp;
   permission?: Permission;
+  roles?: readonly Role[];
 }
 
 export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
-  "/search": { permission: "search:use", landingPriority: 3 },
   "/settings/security": {},
   "/settings/login-protection": { permission: "admin:manage" },
   "/settings/security-policies": { permission: "admin:manage" },
   "/settings/capacity-policies": { permission: "capacity:policy:manage" },
   "/settings/quotation-policies": { permission: "quotation:policy:manage" },
+  "/settings/commission-scheme": { permission: "commission:manage" },
   "/settings/event-logs": { permission: "audit:read" },
   "/monitoring": { permission: "admin:read" },
   "/settings/members": { permission: "team:read" },
@@ -53,7 +55,11 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/inquiries": { permission: "lead:register" },
   "/fulfillment": { permission: "fulfillment:manage" },
   "/rate-simulator": { permission: "lead:rate:simulate", landingPriority: 4 },
-  "/home": { permission: "lead:work", landingPriority: 1 },
+  "/home": {
+    permission: "lead:work",
+    roles: ["executive", "sales_manager"],
+    landingPriority: 1,
+  },
   "/dashboards": { permission: "dashboards:read" },
   "/dashboards/merchant-gpv": { permission: "dashboards:read" },
   "/schedule": {},

@@ -45,11 +45,6 @@ export type EventLogRecord =
   | ActionEventLogRecord
   | AuthEventLogRecord;
 
-export type EventLogRecordFor<T extends EventLogTable> = Extract<
-  EventLogRecord,
-  { table: T }
->;
-
 export interface EventLogPageInfo {
   endCursor: string | null;
   hasNextPage: boolean;

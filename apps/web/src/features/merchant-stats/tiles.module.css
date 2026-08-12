@@ -6,24 +6,41 @@
   width: 100%;
 }
 
+/*
+  The link fills the card body so the whole tile is one tap target. app.css
+  resets link colour and decoration to inherit, so only the box needs stating.
+*/
+.aggregateLink {
+  border-radius: var(--t-border-radius-sm);
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.aggregateLink:focus-visible {
+  box-shadow: var(--focus-ring-shadow);
+  outline: none;
+}
+
 .aggregateBody {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
+  gap: var(--t-spacing-1);
   min-width: 0;
 }
 
 .caption {
-  color: var(--foreground-tertiary);
-  font-size: var(--font-size-caption);
-  line-height: 1.3;
+  color: var(--t-font-color-tertiary);
+  font-size: var(--t-font-size-xs);
+  line-height: var(--t-text-line-height-md);
 }
 
 .aggregateValue {
-  color: var(--foreground);
+  color: var(--t-font-color-primary);
   font-size: var(--t-font-size-xxl);
   font-variant-numeric: tabular-nums;
   font-weight: var(--t-font-weight-semi-bold);
+  line-height: var(--t-text-line-height-md);
 }
 
 .trend {
@@ -33,7 +50,7 @@
 }
 
 .trendValue {
-  color: var(--foreground-secondary);
+  color: var(--t-font-color-secondary);
   font-size: var(--t-font-size-xs);
   font-variant-numeric: tabular-nums;
   font-weight: var(--t-font-weight-regular);

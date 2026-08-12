@@ -3,16 +3,9 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { UserId, WorkflowLeadId } from "~/domain/ids";
+import type { UserId } from "~/domain/ids";
 
 import type { WorkflowActor } from "../../actor";
-
-export type ListAssignableExecutivesInput = {
-  actor: WorkflowActor;
-  leadId: WorkflowLeadId;
-  search?: string;
-  limit?: number;
-};
 
 export type ListLeadsInput = {
   actor: WorkflowActor;

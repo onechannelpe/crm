@@ -1,7 +1,7 @@
 import { createAsync, useNavigate } from "@solidjs/router";
-import { Show, createMemo, createSignal, onMount } from "solid-js";
+import { Show, createMemo, createSignal } from "solid-js";
 
-import { useHotkey } from "~/browser/hotkey/use-hotkey";
+import { useModKeyLabel } from "~/browser/hotkey/use-mod-key-label";
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
 import Heart from "~/components/icons/heart";
@@ -16,9 +16,7 @@ import { actionErrorMessage } from "~/contracts/errors";
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { useLeadActions } from "~/features/record-show/use-record-actions";
 import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
-import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
-import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
-import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-page";
+import { useSidePanelMenu } from "~/features/side-panel/hooks/use-side-panel-menu";
 import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
 import { leadListQuery } from "~/rpc/workflow/lead-list";
 
@@ -116,27 +114,10 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
     return rows[index + 1]?.id ?? null;
   });
 
-  const [modKey, setModKey] = createSignal("Ctrl");
-  const { isOpen, openPanel, closePanel } = useSidePanel();
+  const modKey = useModKeyLabel();
+  const { isSidePanelOpen, toggleSidePanelMenu } = useSidePanelMenu();
 
   const isFavorite = () => detail()?.lead.isFavorite ?? false;
-
-  onMount(() => {
-    if (/Mac/i.test(navigator.platform)) {
-      setModKey("⌘");
-    }
-  });
-
-  const toggleSidePanel = () => {
-    if (isOpen()) {
-      closePanel();
-      return;
-    }
-
-    openPanel(createRootSidePanelPage());
-  };
-
-  useHotkey(SIDE_PANEL_HOTKEY, toggleSidePanel);
 
   const goToLead = (leadId: string | null) => {
     if (!leadId) {
@@ -203,9 +184,9 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
       <RecordShowActionsMenu items={menuItems()} />
 
       <TopBarCommandButton
-        isOpen={isOpen()}
+        isOpen={isSidePanelOpen()}
         modKey={modKey()}
-        onClick={toggleSidePanel}
+        onClick={toggleSidePanelMenu}
         dataClickOutsideId={PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID}
       />
 

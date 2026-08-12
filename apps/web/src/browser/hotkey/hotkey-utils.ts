@@ -1,6 +1,6 @@
 import type { HotkeyCombo, ParsedCombo } from "./types";
 
-function isMac(): boolean {
+export function isMac(): boolean {
   if (typeof navigator === "undefined") {
     return false;
   }
@@ -51,18 +51,21 @@ export function parseCombo(combo: HotkeyCombo): ParsedCombo {
 export function matchesEvent(
   event: KeyboardEvent,
   parsed: ParsedCombo,
+  options: { ignoreModifiers?: boolean } = {},
 ): boolean {
-  if (event.ctrlKey !== parsed.ctrl) {
-    return false;
-  }
-  if (event.shiftKey !== parsed.shift) {
-    return false;
-  }
-  if (event.altKey !== parsed.alt) {
-    return false;
-  }
-  if (event.metaKey !== parsed.meta) {
-    return false;
+  if (!options.ignoreModifiers) {
+    if (event.ctrlKey !== parsed.ctrl) {
+      return false;
+    }
+    if (event.shiftKey !== parsed.shift) {
+      return false;
+    }
+    if (event.altKey !== parsed.alt) {
+      return false;
+    }
+    if (event.metaKey !== parsed.meta) {
+      return false;
+    }
   }
 
   const { key: target } = parsed;

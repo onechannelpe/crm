@@ -5,12 +5,15 @@ import {
   Show,
   Suspense,
   type Accessor,
-  type JSX,
 } from "solid-js";
 
+import { EmptyState } from "~/components/feedback/empty-state/empty";
 import Building2 from "~/components/icons/building-2";
 import CalendarDays from "~/components/icons/calendar-days";
 import ChartColumn from "~/components/icons/chart-column";
+import CircleCheckBig from "~/components/icons/circle-check-big";
+import { AppPageBody } from "~/components/layout/page";
+import { Skeleton } from "~/components/ui/feedback/skeleton";
 import type {
   ExecutiveGpvMerchantView,
   ExecutiveGpvProgressView,
@@ -23,8 +26,6 @@ import {
 import { DataGrid } from "~/features/data-grid/components/grid";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { formatSoles } from "~/features/merchant-stats/format";
-import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
-import { WidgetSkeleton } from "~/features/widgets/widget-skeleton";
 import { executiveGpvProgressQuery } from "~/rpc/merchant-stats/executive-gpv-progress";
 
 import styles from "./executive-gpv-progress.module.css";
@@ -35,13 +36,15 @@ export function ExecutiveGpvProgress() {
   const portfolio = createAsync(() => executiveGpvProgressQuery());
 
   return (
-    <ErrorBoundary fallback={<PortfolioError />}>
-      <Suspense fallback={<WidgetSkeleton />}>
-        <Show when={portfolio()}>
-          {(data) => <PortfolioContent portfolio={data} />}
-        </Show>
-      </Suspense>
-    </ErrorBoundary>
+    <AppPageBody>
+      <ErrorBoundary fallback={<PortfolioError />}>
+        <Suspense fallback={<PortfolioLoading />}>
+          <Show when={portfolio()}>
+            {(data) => <PortfolioContent portfolio={data} />}
+          </Show>
+        </Suspense>
+      </ErrorBoundary>
+    </AppPageBody>
   );
 }
 
@@ -55,74 +58,83 @@ function PortfolioContent(props: {
   const columns = createMemo(() => merchantColumns(portfolio().cutDate));
 
   return (
-    <WidgetCardShell
-      title="Mis comercios"
-      action={
-        <Show
-          when={portfolio().cutDate}
-          fallback={
-            <span class={styles.updated}>GPV pendiente de actualización</span>
-          }
-        >
-          {(cutDate) => (
-            <span class={styles.updated}>
-              Actualizado al {formatCalendarDate(cutDate())}
-            </span>
-          )}
-        </Show>
-      }
-    >
-      <div class={styles.content}>
-        <Show
-          when={portfolio().merchants.length > 0}
-          fallback={<PortfolioEmpty />}
-        >
-          <p class={styles.summary}>
-            {merchantCountLabel(portfolio().merchants.length)}
-          </p>
+    <>
+      <ViewBar
+        count={portfolio().merchants.length}
+        cutDate={portfolio().cutDate}
+      />
 
-          <div class={styles.grid}>
-            <DataGrid
-              ariaLabel="Mis comercios"
-              columns={columns()}
-              emptyState=""
-              rowId={(merchant) => merchant.ruc}
-              rowOpenIndicator="route"
-              source={{
-                status: "ready",
-                rows: portfolio().merchants,
-              }}
-              onRowOpen={(merchant) =>
-                navigate(
-                  merchant.leadId
-                    ? `/records/${merchant.leadId}`
-                    : `/records?query=${encodeURIComponent(merchant.ruc)}`,
-                )
-              }
-            />
-          </div>
-        </Show>
-      </div>
-    </WidgetCardShell>
+      <DataGrid
+        ariaLabel="Mis comercios"
+        columns={columns()}
+        emptyState={
+          <EmptyState
+            title="Aún no tienes comercios asignados."
+            description="Los comercios aparecerán aquí cuando se te asigne su gestión."
+          />
+        }
+        rowId={(merchant) => merchant.ruc}
+        rowOpenIndicator="route"
+        source={{
+          status: "ready",
+          rows: portfolio().merchants,
+        }}
+        onRowOpen={(merchant) =>
+          navigate(
+            merchant.leadId
+              ? `/records/${merchant.leadId}`
+              : `/records?query=${encodeURIComponent(merchant.ruc)}`,
+          )
+        }
+      />
+    </>
   );
 }
 
-function PortfolioEmpty() {
+function ViewBar(props: { count: number; cutDate: CalendarDate | null }) {
   return (
-    <div class={styles.empty}>
-      <p class={styles.emptyTitle}>Aún no tienes comercios asignados.</p>
-      <p class={styles.emptyDescription}>
-        Los comercios aparecerán aquí cuando se te asigne su gestión.
-      </p>
+    <div class={styles.viewBar}>
+      <div class={styles.viewIdentity}>
+        <Building2 size={16} class={styles.viewIcon} />
+        <span class={styles.viewLabel}>Mis comercios</span>
+        <span class={styles.viewMeta}>· {merchantCountLabel(props.count)}</span>
+      </div>
+
+      <Show
+        when={props.cutDate}
+        fallback={
+          <span class={styles.updated}>GPV pendiente de actualización</span>
+        }
+      >
+        {(cutDate) => (
+          <span class={styles.updated}>
+            Actualizado al {formatCalendarDate(cutDate())}
+          </span>
+        )}
+      </Show>
     </div>
   );
 }
 
-function PortfolioError(): JSX.Element {
+function PortfolioLoading() {
   return (
-    <WidgetCardShell title="Mis comercios" status="error">
-      <span />
-    </WidgetCardShell>
+    <>
+      <div class={styles.viewBar}>
+        <Skeleton width={140} height={16} />
+      </div>
+      <div class={styles.loadingBody}>
+        <Skeleton height={280} />
+      </div>
+    </>
+  );
+}
+
+function PortfolioError() {
+  return (
+    <EmptyState
+      title="No se pudo cargar tu portafolio"
+      description="Vuelve a intentarlo en unos segundos."
+    />
   );
 }
 
@@ -169,6 +181,15 @@ function merchantColumns(
       ),
     },
     {
+      key: "activation",
+      label: "Activación",
+      icon: CircleCheckBig,
+      width: 130,
+      renderCell: (merchant) => (
+        <span class={styles.muted}>{activationLabel(merchant.isActive)}</span>
+      ),
+    },
+    {
       key: "lastTransaction",
       label: "Última transacción",
       icon: CalendarDays,
@@ -180,6 +201,14 @@ function merchantColumns(
       ),
     },
   ];
+}
+
+function activationLabel(isActive: boolean | null): string {
+  if (isActive === null) {
+    return "Pendiente";
+  }
+
+  return isActive ? "Activo" : "Inactivo";
 }
 
 function lastTransactionLabel(

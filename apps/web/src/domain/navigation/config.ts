@@ -43,7 +43,7 @@ export interface HeaderDescriptor {
   tileColor?: TileColor;
 }
 
-export interface PageHeaderRule {
+interface PageHeaderRule {
   match: string | RegExp;
   header: HeaderDescriptor;
 }
@@ -69,10 +69,6 @@ export const PAGE_HEADERS = [
   {
     match: "/inquiries",
     header: { label: "Consultas", icon: "search", tileColor: "yellow" },
-  },
-  {
-    match: "/search",
-    header: { label: "Búsqueda", icon: "search" },
   },
   {
     match: "/rate-simulator",

@@ -10,7 +10,7 @@ import {
 import { isErr } from "~/shared/result";
 
 export async function getInviteActivationView(
-  tokenInput: string,
+  tokenInput: unknown,
 ): Promise<InviteActivationView | null> {
   const safeToken = readInviteToken(tokenInput);
   if (isErr(safeToken)) {
@@ -26,11 +26,9 @@ export async function getInviteActivationView(
   return result.value;
 }
 
-export async function acceptInvitePasswordStep(input: {
-  token: string;
-  password: string;
-  confirmPassword?: string;
-}): Promise<{ redirectTo: string }> {
+export async function acceptInvitePasswordStep(
+  input: unknown,
+): Promise<{ redirectTo: string }> {
   const request = getRequestClientMetadata();
 
   const result = await application.auth.invites.acceptPassword(

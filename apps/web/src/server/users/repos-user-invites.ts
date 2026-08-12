@@ -12,7 +12,7 @@ type NewUserInviteRow = Insertable<UserInvitesTable>;
 type InviteStatus = UserInvitesTable["status"];
 type UserRole = UsersTable["role"];
 
-export interface PendingInviteWithUser {
+interface PendingInviteWithUser {
   invite_id: UserInviteId;
   invite_status: InviteStatus;
   invite_expires_at: Date;

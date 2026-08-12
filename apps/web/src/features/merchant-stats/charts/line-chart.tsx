@@ -6,7 +6,7 @@ import type { CalendarMonth } from "~/domain/time/calendar-date";
 
 import { formatMonth, formatSolesCompact } from "../format";
 
-export interface LinePoint {
+interface LinePoint {
   label: CalendarMonth;
   value: number;
 }

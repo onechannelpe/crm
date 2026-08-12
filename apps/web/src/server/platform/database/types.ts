@@ -117,6 +117,7 @@ export interface Database {
   merchant_month_credits: merchantStats.MerchantMonthCreditsTable;
   merchant_month_credit_adjustments: merchantStats.MerchantMonthCreditAdjustmentsTable;
   merchant_gpv_targets: merchantStats.MerchantGpvTargetsTable;
+  commission_scheme_versions: merchantStats.CommissionSchemeVersionsTable;
   merchant_sales: merchantStats.MerchantSalesView;
   merchant_sale_gpv: merchantStats.MerchantSaleGpvView;
   merchant_monthly_gpv: merchantStats.MerchantMonthlyGpvView;

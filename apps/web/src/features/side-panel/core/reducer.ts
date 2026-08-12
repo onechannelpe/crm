@@ -91,8 +91,18 @@ export function reduceSidePanelPatch(
         searchText: "",
       };
 
+    /*
+      The stack outlives the close request so the panel keeps rendering its last
+      page while it slides away. Once that animation is over nothing reads it,
+      so this is where the history and the per-page drafts are dropped.
+    */
     case "close-animation-complete":
-      return { isClosing: false };
+      return {
+        isClosing: false,
+        stack: [],
+        pageStateById: {},
+        searchText: "",
+      };
 
     case "navigate-to": {
       const nextEntry = action.page.entry;

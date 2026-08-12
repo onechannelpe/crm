@@ -8,6 +8,7 @@ import {
   calendarMonthFromDate,
   calendarMonthStart,
 } from "~/domain/time/calendar-date";
+import { getCommissionSchemeAsOf } from "~/server/merchant-stats/commission/scheme-repo";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { OperationContext } from "~/server/platform/operation/context";
 
@@ -30,6 +31,11 @@ export async function loadExecutiveGpvProgress(
     appCalendarDateAt(cutAt ?? operation.operationAt),
   );
   const monthStart = calendarMonthStart(month);
+  const scheme = await getCommissionSchemeAsOf(
+    db,
+    cutDate ?? appCalendarDateAt(operation.operationAt),
+  );
+  const executiveBar = scheme.executiveActivationBar;
   const rows = await db
     .selectFrom("organizations as o")
     .leftJoin(
@@ -85,14 +91,16 @@ export async function loadExecutiveGpvProgress(
   const merchants = rows
     .map((row): ExecutiveGpvMerchantView => {
       const context = merchantContextByRuc.get(row.ruc);
+      const gpv = row.seller_user_id === executiveId ? (row.gpv ?? 0) : 0;
 
       return {
         ruc: row.ruc,
         name: context?.tradeName ?? row.legal_name ?? row.ruc,
-        gpv: row.seller_user_id === executiveId ? (row.gpv ?? 0) : 0,
+        gpv,
         projectedGpv: row.monthly_target_gpv,
         lastTransactionAt: context?.lastTransactionAt ?? null,
         leadId: leadIdByRuc.get(row.ruc) ?? null,
+        isActive: executiveBar ? gpv > executiveBar.minGpvPerSale : null,
       };
     })
     .toSorted(compareMerchants);

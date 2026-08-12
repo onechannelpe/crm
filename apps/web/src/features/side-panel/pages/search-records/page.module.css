@@ -1,0 +1,19 @@
+.content {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: var(--t-spacing-2);
+  width: 100%;
+}
+
+.error {
+  align-items: center;
+  color: var(--t-font-color-danger);
+  display: flex;
+  font-size: var(--t-font-size-md);
+  height: 64px;
+  justify-content: center;
+  margin: 0;
+  text-align: center;
+  white-space: pre-wrap;
+}

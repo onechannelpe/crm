@@ -11,5 +11,6 @@ export function toLeadEventAppend(draft: LeadHistoryEventDraft): EventToAppend {
     payload: draft.payload,
     changes: draft.changes,
     occurredAt: draft.occurredAt,
+    notificationContext: draft.notificationContext,
   };
 }

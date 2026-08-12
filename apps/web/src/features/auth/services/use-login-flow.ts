@@ -1,6 +1,6 @@
 import { createSignal, onMount } from "solid-js";
 
-export type AuthMethod = "google" | "password" | "passkey";
+type AuthMethod = "google" | "password" | "passkey";
 
 const LAST_USED_KEY = "last_auth_method";
 

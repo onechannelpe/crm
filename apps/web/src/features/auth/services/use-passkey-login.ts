@@ -12,8 +12,8 @@ import { trackAuthClientEventMutation } from "~/features/auth/data/analytics-mut
 import { passkeyStartMutation } from "~/features/auth/data/mutations";
 import { finishPasskeyLogin } from "~/rpc/auth/login/passkey";
 
-export type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
-export type PasskeySupportStatus = "unknown" | "supported" | "unsupported";
+type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
+type PasskeySupportStatus = "unknown" | "supported" | "unsupported";
 
 function buildPasskeyStartFormData(
   input:

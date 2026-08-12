@@ -1,3 +1,4 @@
+import { A } from "@solidjs/router";
 import { Show } from "solid-js";
 
 import TrendingDown from "~/components/icons/trending-down";
@@ -20,35 +21,42 @@ export function AggregateTile(props: {
   value: string;
   caption?: string;
   trendPercentage?: number;
+  href?: string;
 }) {
   const trend = () => props.trendPercentage;
+
+  const body = () => (
+    <div class={styles.aggregate}>
+      <div class={styles.aggregateBody}>
+        <span class={styles.aggregateValue}>{props.value}</span>
+        <Show when={props.caption}>
+          {(caption) => <span class={styles.caption}>{caption()}</span>}
+        </Show>
+      </div>
+      <Show when={trend() !== undefined}>
+        <div class={styles.trend}>
+          <span class={styles.trendValue}>{formatTrend(trend() ?? 0)}%</span>
+          <Show
+            when={(trend() ?? 0) >= 0}
+            fallback={<TrendingDown size={16} class={styles.trendIconDown} />}
+          >
+            <TrendingUp size={16} class={styles.trendIconUp} />
+          </Show>
+        </div>
+      </Show>
+    </div>
+  );
 
   return (
     <WidgetGridItem span={props.span}>
       <WidgetCardShell title={props.title}>
-        <div class={styles.aggregate}>
-          <div class={styles.aggregateBody}>
-            <span class={styles.aggregateValue}>{props.value}</span>
-            <Show when={props.caption}>
-              {(caption) => <span class={styles.caption}>{caption()}</span>}
-            </Show>
-          </div>
-          <Show when={trend() !== undefined}>
-            <div class={styles.trend}>
-              <span class={styles.trendValue}>
-                {formatTrend(trend() ?? 0)}%
-              </span>
-              <Show
-                when={(trend() ?? 0) >= 0}
-                fallback={
-                  <TrendingDown size={16} class={styles.trendIconDown} />
-                }
-              >
-                <TrendingUp size={16} class={styles.trendIconUp} />
-              </Show>
-            </div>
-          </Show>
-        </div>
+        <Show when={props.href} fallback={body()}>
+          {(href) => (
+            <A class={styles.aggregateLink} href={href()}>
+              {body()}
+            </A>
+          )}
+        </Show>
       </WidgetCardShell>
     </WidgetGridItem>
   );

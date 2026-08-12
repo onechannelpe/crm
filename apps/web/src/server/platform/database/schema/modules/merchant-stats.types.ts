@@ -3,6 +3,7 @@ import type { ColumnType, Generated } from "kysely";
 import type { Json } from "~/contracts/json";
 import type {
   BranchId,
+  CommissionSchemeVersionId,
   FileAssetId,
   GeneratedId,
   GpvSnapshotId,
@@ -20,7 +21,6 @@ import type {
   GpvSnapshotState,
 } from "~/domain/merchant-stats/snapshot";
 
-export type MerchantProduct = "CULQIFULL" | "CULQILINK" | "CULQIONLINE";
 export type GpvSnapshotIssueSeverity = "warning" | "blocking";
 export type GpvSnapshotIssueStatus = "open" | "resolved";
 
@@ -133,6 +133,14 @@ export interface MerchantMonthCreditAdjustmentsTable {
   reason: string;
   adjusted_by: IdColumn<UserId>;
   adjusted_at: Date;
+}
+
+export interface CommissionSchemeVersionsTable {
+  id: GeneratedId<CommissionSchemeVersionId>;
+  effective_from: string;
+  rules: Json;
+  set_by: IdColumn<UserId>;
+  set_at: Date;
 }
 
 export interface MerchantGpvTargetsTable {

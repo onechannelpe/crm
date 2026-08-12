@@ -16,7 +16,7 @@ export interface PermissionGroupMeta {
   label: string;
 }
 
-export const PERMISSION_GROUPS = [
+const PERMISSION_GROUPS = [
   { id: "clientes", label: "Clientes" },
   { id: "ventas", label: "Ventas" },
   { id: "cotizaciones", label: "Cotizaciones" },
@@ -233,6 +233,16 @@ const PERMISSION_CATALOG: Record<Permission, PermissionMeta> = {
     label: "Gestionar paneles de negocio",
     description:
       "Importar reportes de dealers y resolver la atribución por comercio.",
+    group: "negocio",
+  },
+  "commission:read": {
+    label: "Ver comisiones",
+    description: "Consultar el panel de cajas y penalidades por mesa.",
+    group: "negocio",
+  },
+  "commission:manage": {
+    label: "Gestionar esquema de comisiones",
+    description: "Definir los umbrales, rangos y porcentajes de comisión.",
     group: "negocio",
   },
   "admin:read": {

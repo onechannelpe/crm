@@ -5,7 +5,7 @@ import { loadActiveAuthContextForUser } from "~/server/auth/context/auth-context
 import type { VerifiedPasskeyLogin } from "~/server/auth/factors/passkey/service/login-finish";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
 import { recordAuthEvent } from "~/server/auth/security/auth-events";
-import { enqueueAlertOnNewLoginSource } from "~/server/auth/security/login-source-alert";
+import { recordNewLoginSource } from "~/server/auth/security/login-source-audit";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
 import { createAuditedSessionIssuer } from "~/server/auth/session/session.service";
 import type { OperationContext } from "~/server/platform/operation/context";
@@ -162,7 +162,7 @@ export async function completePendingLogin(
       return consumed;
     }
 
-    await enqueueAlertOnNewLoginSource({
+    await recordNewLoginSource({
       user: context.user,
       ipAddress: input.ipAddress,
       method: `${flow.primary_auth_method}+${input.proof.method}`,

@@ -57,11 +57,7 @@ describe("invite activation", () => {
 
   function acceptInvite(
     kit: ReturnType<typeof createInviteTestKit>,
-    input: {
-      token: string;
-      password: string;
-      confirmPassword?: string;
-    },
+    input: unknown,
   ) {
     return submitInviteAcceptance(
       {
@@ -150,6 +146,44 @@ describe("invite activation", () => {
     );
 
     expect(await kit.expect.inviteStatus(invite.inviteId)).toBe("accepted");
+  });
+
+  it("rejects malformed transport payloads without consuming the invitation", async () => {
+    const { kit, invite } = await createPendingInvite();
+
+    for (const [input, code] of [
+      [null, "invite_token_malformed"],
+      [[], "invite_token_malformed"],
+      [{ token: invite.token, password: null }, "invite_password_too_short"],
+      [
+        {
+          token: invite.token,
+          password: "StrongPassword123",
+          confirmPassword: null,
+        },
+        "password_mismatch",
+      ],
+    ] as const) {
+      const result = await acceptInvite(kit, input);
+
+      expect(isErr(result)).toBe(true);
+      if (!isErr(result)) {
+        throw new Error("expected rejected activation");
+      }
+
+      expect(result.error.code).toBe(code);
+    }
+
+    expect(await kit.expect.inviteStatus(invite.inviteId)).toBe("pending");
+
+    const pendingInvite = await ctx.repos.userInvites.findById(invite.inviteId);
+    if (!pendingInvite) {
+      throw new Error("expected pending invitation");
+    }
+
+    expect(await ctx.repos.sessions.listForUser(pendingInvite.user_id)).toEqual(
+      [],
+    );
   });
 
   it("activates a pending account and starts onboarding", async () => {

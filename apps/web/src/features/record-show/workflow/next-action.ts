@@ -3,7 +3,7 @@ import type { LeadActionKind } from "~/features/record-show/model/lead-action-ki
 import type { RecordTabId } from "~/features/record-show/model/record-tab-id";
 
 // Message stages have no footer action.
-export type NextAction =
+type NextAction =
   | { kind: "message" }
   | { kind: "qualify" }
   | { kind: "propose-rate" }

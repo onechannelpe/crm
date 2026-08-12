@@ -6,7 +6,12 @@ import type {
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
 import { hydrateRuc } from "~/domain/identity/document";
-import type { OrganizationId, UserId, WorkflowLeadId } from "~/domain/ids";
+import type {
+  BranchId,
+  OrganizationId,
+  UserId,
+  WorkflowLeadId,
+} from "~/domain/ids";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { Database } from "~/server/platform/database/types";
 import type {
@@ -40,6 +45,7 @@ type LeadRow = {
   id: WorkflowLeadId;
   organization_id: OrganizationId;
   executive_id: UserId;
+  branch_id: BranchId;
   created_by: UserId;
   updated_by: UserId | null;
   stage: LeadStage;
@@ -71,6 +77,7 @@ function toLead(row: LeadWithOrganizationRow): LeadState {
     district: row.district,
     department: row.department,
     executiveId: row.executive_id,
+    branchId: row.branch_id,
     createdBy: row.created_by,
     updatedBy: row.updated_by ?? null,
     stage: row.stage,
@@ -120,10 +127,12 @@ export function createLeadRepo(db: DatabaseExecutor) {
       "owner.organization_id",
       "lead.organization_id",
     )
+    .innerJoin("users as executive", "executive.id", "owner.executive_id")
     .select([
       "lead.id",
       "lead.organization_id",
       "owner.executive_id",
+      "executive.branch_id",
       "lead.created_by",
       "lead.updated_by",
       "lead.stage",

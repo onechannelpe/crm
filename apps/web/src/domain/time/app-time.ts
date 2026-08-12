@@ -12,7 +12,7 @@ import {
   type CalendarMonth,
 } from "./calendar-date";
 
-export const APP_UTC_OFFSET_MINUTES = -5 * 60;
+const APP_UTC_OFFSET_MINUTES = -5 * 60;
 
 const APP_UTC_OFFSET_MS = APP_UTC_OFFSET_MINUTES * 60_000;
 

@@ -1959,8 +1959,6 @@ export const LEAD_SPECS: LeadSpec[] = [
   },
 ];
 
-export type LeadSeedKey = (typeof LEAD_SPECS)[number]["key"];
-
 function current(
   provider: string,
   debitRate: number,

@@ -3,6 +3,7 @@ import type { Transaction } from "kysely";
 import { fail, type DomainError } from "~/domain/errors";
 import type { GpvSnapshotId, UserId } from "~/domain/ids";
 import { createEventsWriter } from "~/server/event-logs/events-repo";
+import { provisionOrganizationsFromSnapshot } from "~/server/organization/provision-from-snapshot";
 import {
   isTransactionExecutor,
   type DatabaseExecutor,
@@ -75,6 +76,10 @@ export async function activateGpvSnapshotInTransaction(
     return Err(fail("gpv_snapshot_superseded"));
   }
 
+  await provisionOrganizationsFromSnapshot(tx, {
+    snapshotId: snapshot.id,
+    createdAt: input.activatedAt,
+  });
   await freezeUncreditedMerchantMonths(tx, {
     snapshotId: snapshot.id,
     cutAt: snapshot.cut_at,

@@ -7,6 +7,7 @@ import {
 } from "~/contracts/workflow/limits";
 import { hydrateRuc } from "~/domain/identity/document";
 import {
+  BranchId,
   OrganizationId,
   UserId,
   WorkflowLeadId,
@@ -37,6 +38,7 @@ function makeLeadState(overrides: Partial<LeadState> = {}): LeadState {
     district: null,
     department: null,
     executiveId: UserId.trust("1"),
+    branchId: BranchId.trust("1"),
     createdBy: UserId.trust("1"),
     updatedBy: null,
     stage: "PRICING",

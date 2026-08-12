@@ -164,11 +164,6 @@ export type ChooseFulfillmentProductInput = {
   productKind: ProductKind;
 };
 
-export type AttachFulfillmentDocumentInput = {
-  leadId: string;
-  fileId: string;
-};
-
 export type RecordUnitSerialInput = {
   leadId: string;
   unitId: string;
@@ -181,20 +176,10 @@ export type RegisterUnitPaymentLinkInput = {
   paymentUrl: string;
 };
 
-export type UploadUnitPaymentProofInput = {
-  leadId: string;
-  unitId: string;
-  fileId: string;
-};
-
 export type RegisterUnitSaleInput = {
   leadId: string;
   unitId: string;
   serviceRef: string;
-};
-
-export type ValidateFulfillmentPaymentInput = {
-  leadId: string;
 };
 
 export type RejectFulfillmentStepInput = {

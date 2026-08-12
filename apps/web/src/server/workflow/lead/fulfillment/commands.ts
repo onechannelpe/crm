@@ -16,6 +16,7 @@ import { Err, Ok, type Result } from "~/shared/result";
 import { completeFulfillment } from "../domain/decide";
 import {
   createHistoryEvent,
+  leadNotificationContext,
   type LeadHistoryEventDraft,
 } from "../domain/history";
 import { authorizeFulfillmentStep } from "../domain/policy";
@@ -135,6 +136,14 @@ async function advance(
     return Ok({ leadId: loaded.state.id });
   }
 
+  // The link(s) become the notification body, so fetch the freshly written
+  // values here rather than reuse `loaded.details.units`, which was read
+  // before this call wrote the unit that just completed the step.
+  const paymentUnits =
+    to === "AWAITING_PAYMENT"
+      ? await ctx.repos.fulfillment.listUnitPayments(order.id)
+      : undefined;
+
   const facts = await ctx.appendFacts([
     createHistoryEvent({
       leadId: loaded.state.id,
@@ -145,6 +154,10 @@ async function advance(
         from,
         to,
         action: input.action,
+      },
+      notificationContext: {
+        ...leadNotificationContext(loaded.state),
+        ...(paymentUnits ? { paymentUnits } : {}),
       },
       occurredAt: ctx.operationAt,
     }),
@@ -610,6 +623,7 @@ export async function rejectFulfillmentStepCommand(
           to: rule.to,
           reason: input.reason,
         },
+        notificationContext: leadNotificationContext(state),
         occurredAt: ctx.operationAt,
       }),
     ]);
