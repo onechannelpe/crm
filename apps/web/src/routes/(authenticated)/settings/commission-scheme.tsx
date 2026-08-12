@@ -12,7 +12,7 @@ import {
   Show,
   type JSX,
 } from "solid-js";
-import { createStore, reconcile } from "solid-js/store";
+import { createStore, reconcile, unwrap } from "solid-js/store";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import Building2 from "~/components/icons/building-2";
@@ -210,7 +210,9 @@ function CommissionSchemeForm(props: { initial: CommissionSchemeRules }) {
         rules: draft,
       });
 
-      setBaseline(structuredClone(draft));
+      // `draft` is a store Proxy; structuredClone throws DataCloneError on
+      // Proxies in the browser, so clone the unwrapped plain value instead.
+      setBaseline(structuredClone(unwrap(draft)));
       enqueueSuccessSnackBar("Esquema de comisiones actualizado");
     } catch (error) {
       enqueueErrorSnackBar(actionErrorMessage(error));
