@@ -1,7 +1,7 @@
+import { clsx } from "clsx";
 import { Show, type JSX } from "solid-js";
 
 import { AnchoredPopover } from "~/components/ui/overlay/anchored-popover";
-import { cn } from "~/lib/utils";
 
 import menuStyles from "../styles/menu.module.css";
 import styles from "../styles/toolbar.module.css";
@@ -38,7 +38,7 @@ export function RecordIndexToolbarMenu(props: {
           <AnchoredPopover
             id={props.menuId}
             anchor={anchor}
-            class={cn(
+            class={clsx(
               menuStyles.menu,
               menuStyles.menuFloating,
               props.wide && menuStyles.menuWide,

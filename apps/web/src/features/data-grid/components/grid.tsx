@@ -14,11 +14,12 @@ import {
 import type { DataGridProps } from "../model/grid";
 import { DataGridSurface } from "./surface";
 
-export function DataGrid<T extends { id: string }>(props: DataGridProps<T>) {
+export function DataGrid<T>(props: DataGridProps<T>) {
   const rows = createMemo(() => props.source.rows);
   const isInteractive = createDataGridInteractionReady();
   const controller = createDataGridController({
     rows,
+    rowId: props.rowId,
     columns: () => props.columns,
     reorder: props.reorder,
     selection: props.selection,
@@ -52,6 +53,7 @@ export function DataGrid<T extends { id: string }>(props: DataGridProps<T>) {
         onAddColumn={props.onAddColumn}
         onRowOpen={props.onRowOpen}
         pagination={props.pagination}
+        rowId={props.rowId}
         rowOpenIndicator={props.rowOpenIndicator}
         source={props.source}
         stickyColumnIndex={stickyColumnIndex()}

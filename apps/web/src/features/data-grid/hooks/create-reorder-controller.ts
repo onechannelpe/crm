@@ -23,8 +23,9 @@ export type DataGridReorderController = {
   isDropTarget: (rowId: string) => boolean;
 };
 
-export function createDataGridReorderController<T extends { id: string }>(
+export function createDataGridReorderController<T>(
   rows: Accessor<ReadonlyArray<T>>,
+  rowId: (row: T) => string,
   config: DataGridReorderConfig<T>,
 ): DataGridReorderController {
   const [activeRowId, setActiveRowId] = createSignal<string>();
@@ -83,10 +84,14 @@ export function createDataGridReorderController<T extends { id: string }>(
       cancel();
     },
     cancel,
-    isDragged: (rowId) => activeRowId() === rowId && dragging(),
-    isDropTarget(rowId) {
+    isDragged: (id) => activeRowId() === id && dragging(),
+    isDropTarget(id) {
       const index = targetIndex();
-      return index !== undefined && rows()[index]?.id === rowId;
+      if (index === undefined) {
+        return false;
+      }
+      const row = rows()[index];
+      return row !== undefined && rowId(row) === id;
     },
   };
 }

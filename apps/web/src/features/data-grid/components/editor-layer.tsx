@@ -4,8 +4,9 @@ import { useDataGrid } from "../context/instance-context";
 import type { DataGridColumn } from "../model/types";
 import { DataGridCellEditor } from "./cell-editor";
 
-export function DataGridEditorLayer<T extends { id: string }>(props: {
+export function DataGridEditorLayer<T>(props: {
   columns: ReadonlyArray<DataGridColumn<T>>;
+  rowId: (row: T) => string;
   rows: ReadonlyArray<T>;
 }) {
   const { focus } = useDataGrid();
@@ -15,7 +16,9 @@ export function DataGridEditorLayer<T extends { id: string }>(props: {
       return undefined;
     }
 
-    const row = props.rows.find((candidate) => candidate.id === cell.rowId);
+    const row = props.rows.find(
+      (candidate) => props.rowId(candidate) === cell.rowId,
+    );
     const edit = props.columns.find(
       (column) => column.key === cell.columnKey,
     )?.edit;
@@ -30,10 +33,7 @@ export function DataGridEditorLayer<T extends { id: string }>(props: {
           ariaLabel={editor().edit.ariaLabel}
           onClose={focus.closeEditor}
         >
-          {editor().edit.renderEditor({
-            row: editor().row,
-            close: focus.closeEditor,
-          })}
+          {editor().edit.renderEditor(editor().row, focus.closeEditor)}
         </DataGridCellEditor>
       )}
     </Show>

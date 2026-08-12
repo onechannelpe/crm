@@ -15,7 +15,7 @@ import { DataGridLoadingState } from "./loading-state";
 
 import styles from "../styles/table.module.css";
 
-type DataGridSurfaceProps<T extends { id: string }> = Omit<
+type DataGridSurfaceProps<T> = Omit<
   DataGridProps<T>,
   "reorder" | "selection"
 > & {
@@ -31,9 +31,7 @@ function SurfaceMessage(props: { content: JSX.Element }) {
   );
 }
 
-export function DataGridSurface<T extends { id: string }>(
-  props: DataGridSurfaceProps<T>,
-) {
+export function DataGridSurface<T>(props: DataGridSurfaceProps<T>) {
   const grid = useDataGrid();
   const rows = () => props.source.rows;
   const isLoading = () => props.source.status === "pending";
@@ -120,6 +118,7 @@ export function DataGridSurface<T extends { id: string }>(
                     actionRow={props.actionRow}
                     columns={props.columns}
                     onRowOpen={props.onRowOpen}
+                    rowId={props.rowId}
                     rowOpenIndicator={props.rowOpenIndicator}
                     rowIndexOffset={rowIndexOffset()}
                     rows={rows()}
@@ -134,7 +133,11 @@ export function DataGridSurface<T extends { id: string }>(
                 </Show>
               </Show>
             </Show>
-            <DataGridEditorLayer columns={props.columns} rows={rows()} />
+            <DataGridEditorLayer
+              columns={props.columns}
+              rowId={props.rowId}
+              rows={rows()}
+            />
           </section>
         </div>
 

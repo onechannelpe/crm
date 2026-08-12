@@ -38,15 +38,24 @@
 }
 
 .title {
-  color: var(--foreground);
+  align-items: center;
+  color: var(--t-font-color-primary);
   display: flex;
   flex: 1;
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--t-font-size-md);
+  font-weight: var(--t-font-weight-medium);
+  gap: var(--t-spacing-1);
   min-width: 0;
   overflow: hidden;
-  padding-inline: var(--spacing-1);
+  padding-inline: var(--t-spacing-1);
   user-select: none;
+}
+
+.count {
+  color: var(--t-font-color-light);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--t-font-weight-regular);
 }
 
 .card[data-variant="side-column"] .title {

@@ -1,18 +1,17 @@
 import { type RouteDefinition } from "@solidjs/router";
 
-import { getMe } from "~/actions/auth/session";
-import { AppPage } from "~/components/layout/page";
-import { leadListQuery } from "~/features/workflow/data/queries";
 import {
   parseLeadPageIndex,
   resolveLeadListQueryInput,
 } from "~/features/workflow/workspace/lead-list-query";
 import { LeadsWorkspace } from "~/features/workflow/workspace/leads-workspace";
+import { meQuery } from "~/rpc/auth/me";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
 
 // Shared input normalization makes the preload warm the workspace query key.
 export const route = {
   preload: async ({ location }) => {
-    const user = await getMe();
+    const user = await meQuery();
     if (!user) {
       return;
     }
@@ -45,9 +44,5 @@ function firstQueryValue(value: unknown): string | undefined {
 }
 
 export default function RecordsPage() {
-  return (
-    <AppPage>
-      <LeadsWorkspace />
-    </AppPage>
-  );
+  return <LeadsWorkspace />;
 }

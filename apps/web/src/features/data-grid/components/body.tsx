@@ -9,10 +9,11 @@ import type {
 import { DataGridActionRow } from "./action-row";
 import { DataGridRow } from "./row";
 
-export function DataGridBody<T extends { id: string }>(props: {
+export function DataGridBody<T>(props: {
   actionRow?: DataGridActionRowConfig;
   columns: ReadonlyArray<DataGridColumn<T>>;
   onRowOpen?: (row: T) => void;
+  rowId: (row: T) => string;
   rowOpenIndicator?: DataGridRowOpenIndicator;
   rowIndexOffset: number;
   rows: ReadonlyArray<T>;
@@ -21,12 +22,13 @@ export function DataGridBody<T extends { id: string }>(props: {
 }) {
   return (
     <>
-      <Key each={props.rows} by="id">
+      <Key each={props.rows} by={props.rowId}>
         {(row, index) => (
           <DataGridRow
             columns={props.columns}
             onRowOpen={props.onRowOpen}
             row={row()}
+            rowId={props.rowId}
             rowOpenIndicator={props.rowOpenIndicator}
             ariaRowIndex={props.rowIndexOffset + index() + 2}
             rowOrderIndex={index()}

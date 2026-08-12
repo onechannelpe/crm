@@ -45,6 +45,7 @@ export function RecordIndexTableContainer<T extends { id: string }>(props: {
           : undefined
       }
       reorder={props.controller.definition.reorder}
+      rowId={(row) => row.id}
       rowOpenIndicator={props.controller.definition.rowOpenIndicator}
       selection={props.controller.selection}
       source={source()}

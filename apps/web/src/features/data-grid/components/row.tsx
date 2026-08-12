@@ -10,37 +10,37 @@ import { DataGridCell } from "./cell";
 
 import styles from "../styles/table.module.css";
 
-export function DataGridRow<T extends { id: string }>(props: {
+export function DataGridRow<T>(props: {
   columns: ReadonlyArray<DataGridColumn<T>>;
   ariaRowIndex: number;
   onRowOpen?: (row: T) => void;
+  rowId: (row: T) => string;
   rowOrderIndex: number;
   rowOpenIndicator?: DataGridRowOpenIndicator;
   row: T;
   stickyColumnIndex: number;
 }) {
   const grid = useDataGrid();
+  const rowKey = () => props.rowId(props.row);
 
   return (
     <div
       class={styles.bodyRow}
-      data-grid-row-id={props.row.id}
+      data-grid-row-id={rowKey()}
       data-grid-row-index={props.rowOrderIndex}
-      data-selectable-id={grid.selection ? props.row.id : undefined}
+      data-selectable-id={grid.selection ? rowKey() : undefined}
       aria-rowindex={props.ariaRowIndex}
       aria-selected={
         grid.selection
-          ? grid.selection.isSelected(props.row.id)
+          ? grid.selection.isSelected(rowKey())
             ? "true"
             : "false"
           : undefined
       }
-      data-active={grid.focus.isRowActive(props.row.id) ? "true" : "false"}
-      data-dragged={grid.reorder?.isDragged(props.row.id) ? "true" : "false"}
-      data-drop-target={
-        grid.reorder?.isDropTarget(props.row.id) ? "true" : "false"
-      }
-      data-focused={grid.focus.isRowFocused(props.row.id) ? "true" : "false"}
+      data-active={grid.focus.isRowActive(rowKey()) ? "true" : "false"}
+      data-dragged={grid.reorder?.isDragged(rowKey()) ? "true" : "false"}
+      data-drop-target={grid.reorder?.isDropTarget(rowKey()) ? "true" : "false"}
+      data-focused={grid.focus.isRowFocused(rowKey()) ? "true" : "false"}
       role="row"
     >
       <Show when={grid.reorder}>
@@ -61,7 +61,7 @@ export function DataGridRow<T extends { id: string }>(props: {
                 event.stopPropagation();
                 event.currentTarget.setPointerCapture(event.pointerId);
                 reorder().begin({
-                  rowId: props.row.id,
+                  rowId: rowKey(),
                   rowIndex: props.rowOrderIndex,
                   pointerId: event.pointerId,
                   clientY: event.clientY,
@@ -83,14 +83,11 @@ export function DataGridRow<T extends { id: string }>(props: {
           >
             <Checkbox
               aria-label="Seleccionar fila"
-              checked={selection().isSelected(props.row.id)}
+              checked={selection().isSelected(rowKey())}
               disabled={!grid.isInteractive()}
               onClick={(event) => event.stopPropagation()}
               onChange={(event) =>
-                selection().setSelected(
-                  props.row.id,
-                  event.currentTarget.checked,
-                )
+                selection().setSelected(rowKey(), event.currentTarget.checked)
               }
             />
           </div>
@@ -102,6 +99,7 @@ export function DataGridRow<T extends { id: string }>(props: {
             column={column}
             onRowOpen={props.onRowOpen}
             row={props.row}
+            rowId={props.rowId}
             rowOpenIndicator={props.rowOpenIndicator}
             sticky={index() === props.stickyColumnIndex}
           />
@@ -111,14 +109,16 @@ export function DataGridRow<T extends { id: string }>(props: {
   );
 }
 
-function DataGridRowCell<T extends { id: string }>(props: {
+function DataGridRowCell<T>(props: {
   column: DataGridColumn<T>;
   onRowOpen?: (row: T) => void;
   row: T;
+  rowId: (row: T) => string;
   rowOpenIndicator?: DataGridRowOpenIndicator;
   sticky: boolean;
 }) {
   const grid = useDataGrid();
+  const rowKey = () => props.rowId(props.row);
   const editable = () => props.column.edit !== undefined;
   const activatable = () => editable() || props.onRowOpen !== undefined;
   const showOpenHint = () =>
@@ -131,12 +131,12 @@ function DataGridRowCell<T extends { id: string }>(props: {
     }
 
     if (editable()) {
-      grid.focus.openEditor(props.row.id, props.column.key, anchor);
+      grid.focus.openEditor(rowKey(), props.column.key, anchor);
       return;
     }
 
     if (props.onRowOpen) {
-      grid.focus.activateRow(props.row.id);
+      grid.focus.activateRow(rowKey());
       props.onRowOpen(props.row);
     }
   }
@@ -146,13 +146,13 @@ function DataGridRowCell<T extends { id: string }>(props: {
       sticky={props.sticky}
       role="gridcell"
       ref={(element) => {
-        element.dataset.gridRowId = props.row.id;
+        element.dataset.gridRowId = rowKey();
         element.dataset.gridColumnKey = props.column.key;
       }}
       data-grid-focusable-cell="true"
       tabIndex={
         grid.isInteractive()
-          ? grid.focus.getCellTabIndex(props.row.id, props.column.key)
+          ? grid.focus.getCellTabIndex(rowKey(), props.column.key)
           : -1
       }
       onClick={(event) => {
@@ -166,9 +166,9 @@ function DataGridRowCell<T extends { id: string }>(props: {
 
         activateCell(event.currentTarget);
       }}
-      onFocus={() => grid.focus.focusCell(props.row.id, props.column.key)}
+      onFocus={() => grid.focus.focusCell(rowKey(), props.column.key)}
       onKeyDown={(event) => {
-        grid.focus.handleCellKeyDown(event, props.row.id, props.column.key);
+        grid.focus.handleCellKeyDown(event, rowKey(), props.column.key);
         if (
           !grid.isInteractive() ||
           !activatable() ||

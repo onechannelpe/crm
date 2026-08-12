@@ -1,17 +1,28 @@
-.grid {
-  display: grid;
-  gap: var(--spacing-2);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  padding: var(--spacing-2);
+.canvas {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.statGrid {
-  /* Stat tiles need independent rows so charts cannot stretch them. */
+.canvasContent {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-spacing-2);
+  min-height: 100%;
+  padding: var(--t-spacing-2);
+}
+
+/*
+  A fixed four-column track, not auto-fit: a tile's width has to come from its
+  span, so two stat tiles read the same size as four rather than stretching to
+  half the page each.
+*/
+.grid {
   display: grid;
-  gap: var(--spacing-2);
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  padding: var(--spacing-2);
-  padding-bottom: 0;
+  gap: var(--t-spacing-2);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .item {
@@ -58,6 +69,6 @@
 .stack {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2);
+  gap: var(--t-spacing-2);
+  padding: var(--t-spacing-2);
 }
