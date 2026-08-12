@@ -1,33 +1,26 @@
+import { makeAppContext, makeAuthSession } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
+import { BranchId, FileAssetId, UserId } from "~/domain/ids";
 import type { InsertDownloadTokenInput } from "~/server/files/repo/types";
 import { issueDownloadToken } from "~/server/files/service/issue-download-token";
 import { DOWNLOAD_TOKEN_TTL_MS, hashToken } from "~/server/files/token";
 import type { AppContext } from "~/server/platform/action/context";
-import { BranchId, FileAssetId, UserId } from "~/server/shared/ids";
 
 const NOW_MS = 1_700_000_000_000;
 
 function makeContext(): AppContext {
-  return {
-    actor: {
+  return makeAppContext({
+    actor: makeAuthSession({
       id: "sess-1",
       userId: UserId.trust("user-10"),
       branchId: BranchId.trust("branch-1"),
       role: "back_office",
-      sessionClass: "app",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
-      impersonatorUserId: null,
-    },
+    }),
     requestId: "req-1",
     traceId: "trace-1",
-    ipAddress: "127.0.0.1",
-    userAgent: "vitest",
-    publicOrigin: "http://localhost:3000",
-    now: () => new Date(NOW_MS),
-  };
+    operationAt: new Date(NOW_MS),
+  });
 }
 
 describe("issueDownloadToken", () => {
@@ -48,12 +41,13 @@ describe("issueDownloadToken", () => {
     });
 
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
+    if (!result.ok) {
+      return;
+    }
     expect(inserted[0]).toMatchObject({
       fileAssetId,
       requestedByUserId: UserId.trust("user-10"),
       expiresAt: new Date(NOW_MS + DOWNLOAD_TOKEN_TTL_MS),
-      now: new Date(NOW_MS),
     });
     expect(inserted[0]?.tokenHash).toBe(hashToken(result.value.token));
   });

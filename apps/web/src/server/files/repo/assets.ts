@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { FileAssetId } from "~/server/shared/ids";
+import type { FileAssetId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 import { rowToFileAsset } from "./mappers";
 import type { InsertFileAssetInput } from "./types";
@@ -27,7 +27,7 @@ export function createAssetsRepo(db: DB) {
           scan_engine: null,
           scan_reference: null,
           created_by_user_id: input.createdByUserId,
-          created_at: input.now,
+          created_at: input.createdAt,
         })
         .returning("id")
         .executeTakeFirstOrThrow();
@@ -41,6 +41,10 @@ export function createAssetsRepo(db: DB) {
         .where("id", "=", id)
         .executeTakeFirst();
       return row ? rowToFileAsset(row) : null;
+    },
+
+    delete(id: FileAssetId) {
+      return db.deleteFrom("file_assets").where("id", "=", id).execute();
     },
   };
 }

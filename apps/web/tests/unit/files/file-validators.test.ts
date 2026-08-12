@@ -35,6 +35,18 @@ describe("validateUploadFile - extension checks", () => {
     expect(result).toMatchObject({ ok: true });
   });
 
+  it("rejects an extension not allowed for the purpose", () => {
+    const result = validateUploadFile(
+      "records_export",
+      "GPV AL 03-07-2026.xlsx",
+      XLSX_MAGIC,
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      reason: "extension_not_allowed",
+    });
+  });
+
   it("rejects file without extension", () => {
     const result = validateUploadFile("integration_import", "noext", CSV_BYTES);
     expect(result).toMatchObject({ ok: false, reason: "missing_extension" });
@@ -67,7 +79,9 @@ describe("validateUploadFile - filename sanitization", () => {
       "mi archivo@datos.csv",
       CSV_BYTES,
     );
-    if ("reason" in result) throw new Error("Expected success");
+    if ("reason" in result) {
+      throw new Error("Expected success");
+    }
     expect(result.safeDisplayFilename).toBe("mi archivo_datos.csv");
   });
 });
@@ -79,7 +93,9 @@ describe("validateUploadFile - signature checks", () => {
       "import.csv",
       CSV_BYTES,
     );
-    if ("reason" in result) throw new Error("Expected success");
+    if ("reason" in result) {
+      throw new Error("Expected success");
+    }
     expect(result.signatureKind).toBe("csv");
   });
 });
@@ -126,7 +142,9 @@ describe("validateUploadFile - MIME output", () => {
       "data.csv",
       CSV_BYTES,
     );
-    if ("reason" in result) throw new Error("Expected success");
+    if ("reason" in result) {
+      throw new Error("Expected success");
+    }
     expect(result.detectedMime).toBe("text/csv; charset=utf-8");
   });
 });

@@ -4,7 +4,7 @@ import type {
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
 
 import type { FilePurpose, ScanStatus } from "../types";
 
@@ -20,7 +20,7 @@ export interface InsertFileAssetInput {
   signatureKind: string | null;
   scanStatus: ScanStatus;
   createdByUserId: UserId;
-  now: Date;
+  createdAt: Date;
 }
 
 export interface InsertDownloadTokenInput {
@@ -28,7 +28,7 @@ export interface InsertDownloadTokenInput {
   tokenHash: string;
   requestedByUserId: UserId;
   expiresAt: Date;
-  now: Date;
+  createdAt: Date;
 }
 
 export interface SaleProofFileRecord {

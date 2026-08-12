@@ -1,34 +1,27 @@
+import { makeAppContext, makeAuthSession } from "@tests/support/unit/factories";
 import { describe, expect, it } from "vitest";
 
+import { BranchId, FileAssetId, UserId } from "~/domain/ids";
 import type { InsertFileAssetInput } from "~/server/files/repo/types";
 import { storeUploadedFile } from "~/server/files/service/store-uploaded-file";
 import type { FileAsset } from "~/server/files/types";
 import type { AppContext } from "~/server/platform/action/context";
-import { BranchId, FileAssetId, UserId } from "~/server/shared/ids";
 
 const NOW = new Date(1_700_000_123_456);
 const CSV_BYTES = new TextEncoder().encode("id,name\n1,test\n");
 
 function makeContext(): AppContext {
-  return {
-    actor: {
+  return makeAppContext({
+    actor: makeAuthSession({
       id: "sess-1",
       userId: UserId.trust("user-10"),
       branchId: BranchId.trust("branch-1"),
       role: "back_office",
-      sessionClass: "app",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
-      impersonatorUserId: null,
-    },
+    }),
     requestId: "req-1",
     traceId: "trace-1",
-    ipAddress: "127.0.0.1",
-    userAgent: "vitest",
-    publicOrigin: "http://localhost:3000",
-    now: () => NOW,
-  };
+    operationAt: NOW,
+  });
 }
 
 function stream(bytes = CSV_BYTES): ReadableStream<Uint8Array> {
@@ -74,6 +67,7 @@ describe("storeUploadedFile", () => {
               return id;
             },
             findById: async () => asset,
+            delete: async () => [],
           },
         },
         storage: {
@@ -82,7 +76,9 @@ describe("storeUploadedFile", () => {
             const reader = body.getReader();
             for (;;) {
               const chunk = await reader.read();
-              if (chunk.done) break;
+              if (chunk.done) {
+                break;
+              }
               await onChunk?.(chunk.value);
             }
             return { sha256: "abc123", sizeBytes: CSV_BYTES.length };
@@ -101,7 +97,7 @@ describe("storeUploadedFile", () => {
       originalFilename: "import.csv",
       sizeBytes: CSV_BYTES.length,
       createdByUserId: UserId.trust("user-10"),
-      now: NOW,
+      createdAt: NOW,
     });
   });
 
@@ -115,6 +111,7 @@ describe("storeUploadedFile", () => {
             assets: {
               insert: async () => FileAssetId.trust("unused"),
               findById: async () => null,
+              delete: async () => [],
             },
           },
           storage: {

@@ -1,13 +1,13 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
 import type {
   FileAssetId,
   UserId,
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 import type { RateRevisionFileRecord } from "./types";
 
@@ -29,7 +29,7 @@ export function createRateRevisionFilesRepo(db: Kysely<Database>) {
       leadId: WorkflowLeadId;
       fileAssetId: FileAssetId;
       uploadedByUserId: UserId;
-      now: Date;
+      createdAt: Date;
     }): Promise<RateRevisionFileRecord> {
       const { id } = await db
         .insertInto("workflow_rate_revision_files")
@@ -38,7 +38,7 @@ export function createRateRevisionFilesRepo(db: Kysely<Database>) {
           revision_id: null,
           file_asset_id: input.fileAssetId,
           uploaded_by_user_id: input.uploadedByUserId,
-          created_at: input.now,
+          created_at: input.createdAt,
         })
         .returning("id")
         .executeTakeFirstOrThrow();

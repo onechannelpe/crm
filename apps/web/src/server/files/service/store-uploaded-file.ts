@@ -1,6 +1,5 @@
-import type { AppContext } from "~/server/platform/action/context";
-import { fail, invalid, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, invalid, type DomainError } from "~/domain/errors";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { FileAsset } from "../types";
 import {
@@ -8,7 +7,11 @@ import {
   createUploadStreamInspector,
   validateUploadMetadata,
 } from "../validators";
-import type { StoreFileDeps, StoreUploadInput } from "./contracts";
+import type {
+  FileOperationContext,
+  StoreFileDeps,
+  StoreUploadInput,
+} from "./contracts";
 import { buildStorageKey } from "./helpers";
 
 class UploadValidationError extends Error {
@@ -18,11 +21,10 @@ class UploadValidationError extends Error {
 }
 
 export async function storeUploadedFile(
-  ctx: AppContext,
+  ctx: FileOperationContext,
   input: StoreUploadInput,
   deps: StoreFileDeps,
 ): Promise<Result<FileAsset, DomainError>> {
-  const now = ctx.now();
   const staticValidation = validateUploadMetadata(input.purpose, input.name);
   if (!staticValidation.ok) {
     return Err(invalid({ code: staticValidation.reason }));
@@ -30,7 +32,7 @@ export async function storeUploadedFile(
 
   const storageKey = buildStorageKey({
     purpose: input.purpose,
-    now,
+    storedAt: ctx.operationAt,
     extension: staticValidation.extension,
   });
   const inspector = createUploadStreamInspector(
@@ -74,7 +76,7 @@ export async function storeUploadedFile(
       signatureKind: metadata.signatureKind,
       scanStatus: "clean",
       createdByUserId: ctx.actor.userId,
-      now,
+      createdAt: ctx.operationAt,
     });
 
     const fileAsset = await deps.repo.assets.findById(fileAssetId);
