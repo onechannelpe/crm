@@ -46,13 +46,9 @@ export default function UpdatesPage() {
       <UpdatesFilters
         active={activeFilter()}
         onChange={(value) =>
-          setSearchParams(
-            value === "all"
-              ? {}
-              : {
-                  filter: value,
-                },
-          )
+          setSearchParams({
+            filter: value === "all" ? undefined : value,
+          })
         }
         options={[
           { label: UPDATES_PAGE_COPY.filters.all, value: "all" },
