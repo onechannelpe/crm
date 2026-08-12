@@ -5,24 +5,21 @@ import {
   grantMoreLeadRefill,
   grantMoreSearches,
   rejectCapacity,
-} from "~/actions/capacity/approvals";
+} from "~/rpc/capacity/approvals";
+import { capacityPolicyDefaultsQuery } from "~/rpc/capacity/capacity-policy-defaults";
+import { executiveCapacityDetailQuery } from "~/rpc/capacity/executive-capacity-detail";
+import { managedExecutivesQuery } from "~/rpc/capacity/managed-executives";
+import { myContactAssignmentCapacityQuery } from "~/rpc/capacity/my-contact-assignment-capacity";
+import { mySearchAllowanceQuery } from "~/rpc/capacity/my-search-allowance";
+import { pendingCapacityRequestsQuery } from "~/rpc/capacity/pending-capacity-requests";
 import {
   updateExecutivePolicyOverride,
   updateScopePolicy,
-} from "~/actions/capacity/policies";
+} from "~/rpc/capacity/policies";
 import {
   requestMoreLeadRefill,
   requestMoreSearches,
-} from "~/actions/capacity/requests";
-import {
-  capacityPolicyDefaultsQuery,
-  executiveCapacityDetailQuery,
-  managedExecutivesQuery,
-  pendingCapacityRequestsQuery,
-} from "~/lib/queries/capacity";
-import { myContactAssignmentCapacityQuery } from "~/lib/queries/contact-assignment-capacity";
-import { activeContactAssignmentsQuery } from "~/lib/queries/contact-assignments";
-import { mySearchAllowanceQuery } from "~/lib/queries/search";
+} from "~/rpc/capacity/requests";
 
 export const requestMoreSearchesMutation = action(
   async (amount: number, reason: string) => {
@@ -60,7 +57,6 @@ export const approveCapacityRequestMutation = action(
         executiveCapacityDetailQuery.key,
         mySearchAllowanceQuery.key,
         myContactAssignmentCapacityQuery.key,
-        activeContactAssignmentsQuery.key,
       ],
     });
   },

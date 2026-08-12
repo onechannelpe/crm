@@ -1,5 +1,5 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { BranchId, TeamId } from "~/server/shared/ids";
+import type { BranchId, TeamId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import type { CapacityTeam } from "../application/actor-scope";
 

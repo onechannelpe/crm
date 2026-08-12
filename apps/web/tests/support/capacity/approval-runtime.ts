@@ -1,3 +1,6 @@
+import { makeAppContext, makeAuthSession } from "@tests/support/unit/factories";
+
+import type { CapacityRequestId, UserId } from "~/domain/ids";
 import type {
   CapacityGrantTx,
   CapacityManageTx,
@@ -11,9 +14,9 @@ import {
   createSearchCapacityGrantsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
 import type { AppContext } from "~/server/platform/action/context";
-import { createExecutorUow } from "~/server/shared/application/uow";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { CapacityRequestId, UserId } from "~/server/shared/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createExecutorUow } from "~/server/platform/database/uow";
+import { createActionRateLimiter } from "~/server/security/action-rate-limit";
 
 import { TEST_FIXTURES, type TestDbContext } from "../runtime/db";
 
@@ -51,26 +54,18 @@ export function makeApprovalContext(
     Pick<AppContext["actor"], "userId" | "role" | "branchId">
   > = {},
 ): AppContext {
-  return {
-    actor: {
+  return makeAppContext({
+    actor: makeAuthSession({
       id: "test-session",
       userId: overrides.userId ?? SUPERUSER_ID,
       role: overrides.role ?? "superuser",
       branchId:
         overrides.branchId ?? SEEDED_APPROVAL_USERS.superuserBranchTwo.branchId,
-      sessionClass: "app",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
-      impersonatorUserId: null,
-    },
+    }),
     requestId: "req-test",
     traceId: "trace-test",
-    ipAddress: "127.0.0.1",
     userAgent: null,
-    publicOrigin: "http://localhost:3000",
-    now: () => new Date(1_700_000_000_000),
-  };
+  });
 }
 
 export function makeApprovalDeps(
@@ -78,10 +73,7 @@ export function makeApprovalDeps(
   options: { failGrantInsert?: boolean } = {},
 ): CapacityApprovalDeps {
   return {
-    rateLimitDeps: {
-      actionRateLimits: ctx.repos.actionRateLimits,
-      events: ctx.repos.events,
-    },
+    rateLimiter: createActionRateLimiter(ctx.db),
     uow: createExecutorUow<ApprovalTx>(ctx.db, (txDb): ApprovalTx => {
       const repos = bindApprovalRepos(txDb);
       if (!options.failGrantInsert) {

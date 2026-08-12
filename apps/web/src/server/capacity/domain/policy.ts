@@ -1,5 +1,6 @@
-import { config } from "~/lib/config";
-import type { PolicySource } from "~/server/shared/scope";
+import type { PolicySource } from "~/server/capacity/domain/types";
+
+import { CAPACITY_LIMITS } from "./config";
 
 export interface SearchPolicy {
   source: PolicySource;
@@ -47,7 +48,7 @@ export function resolveSearchPolicy(
   }
   return {
     source: "system",
-    monthlyLimit: config.searchAccess.defaultMonthlyLimit,
+    monthlyLimit: CAPACITY_LIMITS.defaultSearchMonthly,
   };
 }
 
@@ -75,7 +76,7 @@ export function resolveLeadPolicy(input: ResolveLeadPolicyInput): LeadPolicy {
   }
   return {
     source: "system",
-    bufferTarget: config.leadAssignment.defaultBufferTarget,
-    dailyLimit: config.leadAssignment.defaultDailyRefillLimit,
+    bufferTarget: CAPACITY_LIMITS.defaultLeadBuffer,
+    dailyLimit: CAPACITY_LIMITS.defaultDailyRefill,
   };
 }

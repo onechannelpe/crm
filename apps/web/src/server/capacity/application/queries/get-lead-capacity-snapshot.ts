@@ -1,3 +1,6 @@
+import type { DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { appCalendarDateAt, appDayRange } from "~/domain/time/app-time";
 import {
   buildLeadCapacitySnapshot,
   type LeadCapacitySnapshot,
@@ -7,10 +10,8 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
-import { currentDailyPeriod } from "~/server/shared/time";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Ok, type Result } from "~/shared/result";
 
 import type { ActorScope } from "../actor-scope";
 import { getEffectiveLeadPolicy } from "../resolve-lead-policy";
@@ -28,22 +29,27 @@ interface SnapshotRepos {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  contactAssignments: { countActiveByUser(userId: UserId): Promise<number> };
+  contactAssignments: {
+    countActiveByUser(userId: UserId, activeAsOf: Date): Promise<number>;
+  };
 }
 
 export async function getLeadCapacitySnapshot(
   userId: UserId,
   repos: SnapshotRepos,
+  operation: OperationContext,
 ): Promise<Result<LeadCapacitySnapshot, DomainError>> {
-  const policyResult = await getEffectiveLeadPolicy(userId, repos);
-  if (!policyResult.ok) return policyResult;
+  const policyResult = await getEffectiveLeadPolicy(userId, repos, operation);
+  if (!policyResult.ok) {
+    return policyResult;
+  }
 
-  const { date } = currentDailyPeriod(new Date());
+  const range = appDayRange(appCalendarDateAt(operation.operationAt));
   const [grants, reservations, commits, activeAssignments] = await Promise.all([
-    repos.leadCapacityGrants.findByUserAndDate(userId, date),
-    repos.leadUsageReservations.findByUserAndDate(userId, date),
-    repos.leadUsageCommits.findByUserAndDate(userId, date),
-    repos.contactAssignments.countActiveByUser(userId),
+    repos.leadCapacityGrants.findByUserAndRange(userId, range),
+    repos.leadUsageReservations.findByUserAndRange(userId, range),
+    repos.leadUsageCommits.findByUserAndRange(userId, range),
+    repos.contactAssignments.countActiveByUser(userId, operation.operationAt),
   ]);
 
   return Ok(

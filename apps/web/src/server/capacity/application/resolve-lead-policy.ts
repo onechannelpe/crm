@@ -1,6 +1,7 @@
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { BranchId, TeamId, UserId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { resolveLeadPolicy, type LeadPolicy } from "../domain/policy";
 import type { ActorScope } from "./actor-scope";
@@ -47,7 +48,7 @@ interface PolicyRepos {
   leadPolicyOverrides: {
     findActiveForUser(
       userId: UserId,
-      now: Date,
+      activeAsOf: Date,
     ): Promise<
       | {
           active_buffer_target: number;
@@ -79,6 +80,7 @@ interface LeadPolicyOverridesWriter {
       effective_from: Date;
       expires_at: Date | null;
       set_by_user_id: UserId;
+      created_at: Date;
     }): Promise<unknown>;
   };
 }
@@ -86,16 +88,16 @@ interface LeadPolicyOverridesWriter {
 export async function getEffectiveLeadPolicy(
   userId: UserId,
   repos: PolicyRepos,
+  operation: OperationContext,
 ): Promise<Result<LeadPolicy, DomainError>> {
   const user = await repos.users.findById(userId);
   if (!user) {
     return Err(fail("user_not_found"));
   }
 
-  const now = new Date();
   const userOverride = await repos.leadPolicyOverrides.findActiveForUser(
     userId,
-    now,
+    operation.operationAt,
   );
   const teamDefault = user.teamId
     ? await repos.leadPolicyDefaults.findForScope("team", user.teamId)
@@ -124,12 +126,14 @@ export async function setLeadScopeDefault(
 export async function setLeadUserOverride(
   command: SetLeadUserOverrideCommand,
   repos: LeadPolicyOverridesWriter,
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   await repos.leadPolicyOverrides.replaceForUser({
     user_id: command.targetUserId,
     active_buffer_target: command.bufferTarget,
     daily_refill_limit: command.dailyLimit,
-    effective_from: new Date(),
+    effective_from: operation.operationAt,
+    created_at: operation.operationAt,
     expires_at: command.expiresAt,
     set_by_user_id: command.actorUserId,
   });

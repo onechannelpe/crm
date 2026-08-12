@@ -1,27 +1,12 @@
-"use server";
+import { CapacityRequestId, UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
+import { executeSessionServerFunction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 
-import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
-import type { DomainError } from "~/server/shared/domain-error";
-import { CapacityRequestId, UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import type { Result } from "~/server/shared/result";
-
-type CapacityDecision = {
-  requestId: CapacityRequestId;
-  note: string | null;
-};
-
-type CapacityGrant = {
-  targetUserId: UserId;
-  amount: number;
-  reason: string;
-};
-
-function parseCapacityDecision(
-  rawRequestId: unknown,
-  rawNote: unknown,
-): Result<CapacityDecision, DomainError> {
+function parseCapacityDecision(rawRequestId: unknown, rawNote: unknown) {
   return parseObject(
     { requestId: rawRequestId, note: rawNote },
     validationFail,
@@ -36,7 +21,7 @@ function parseCapacityGrant(
   rawUserId: unknown,
   rawAmount: unknown,
   rawReason: unknown,
-): Result<CapacityGrant, DomainError> {
+) {
   return parseObject(
     { userId: rawUserId, amount: rawAmount, reason: rawReason },
     validationFail,
@@ -52,27 +37,28 @@ export async function approveCapacity(
   rawRequestId: unknown,
   rawNote?: unknown,
 ) {
-  return runAction({
+  "use server";
+
+  return executeSessionServerFunction({
     name: "capacity.approve",
     access: { kind: "permission", permission: "capacity:approve" },
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
-    audit: (decision) => ({ requestId: decision.requestId }),
+    telemetry: ({ requestId }) => ({ requestId }),
     execute: (ctx, decision) =>
-      getServerRuntime().capacity.useCases.approveCapacityRequest(
-        ctx,
-        decision,
-      ),
+      application.capacity.approveCapacityRequest(ctx, decision),
   });
 }
 
 export async function rejectCapacity(rawRequestId: unknown, rawNote: unknown) {
-  return runAction({
+  "use server";
+
+  return executeSessionServerFunction({
     name: "capacity.reject",
     access: { kind: "permission", permission: "capacity:approve" },
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
-    audit: (decision) => ({ requestId: decision.requestId }),
+    telemetry: ({ requestId }) => ({ requestId }),
     execute: (ctx, decision) =>
-      getServerRuntime().capacity.useCases.rejectCapacityRequest(ctx, decision),
+      application.capacity.rejectCapacityRequest(ctx, decision),
   });
 }
 
@@ -81,20 +67,18 @@ export async function grantMoreSearches(
   rawAmount: unknown,
   rawReason: unknown,
 ) {
-  return runAction({
+  "use server";
+
+  return executeSessionServerFunction({
     name: "capacity.grant_search",
     access: { kind: "permission", permission: "capacity:manage" },
     parse: () => parseCapacityGrant(rawUserId, rawAmount, rawReason),
-    audit: (grant) => ({
-      targetUserId: grant.targetUserId,
-      amount: grant.amount,
+    telemetry: ({ targetUserId, amount }) => ({
+      targetUserId,
+      amount,
     }),
     execute: (ctx, grant) =>
-      getServerRuntime().capacity.useCases.grantSearchCapacityDirect(ctx, {
-        targetUserId: grant.targetUserId,
-        amount: grant.amount,
-        reason: grant.reason,
-      }),
+      application.capacity.grantSearchCapacityDirect(ctx, grant),
   });
 }
 
@@ -103,19 +87,17 @@ export async function grantMoreLeadRefill(
   rawAmount: unknown,
   rawReason: unknown,
 ) {
-  return runAction({
+  "use server";
+
+  return executeSessionServerFunction({
     name: "capacity.grant_lead",
     access: { kind: "permission", permission: "capacity:manage" },
     parse: () => parseCapacityGrant(rawUserId, rawAmount, rawReason),
-    audit: (grant) => ({
-      targetUserId: grant.targetUserId,
-      amount: grant.amount,
+    telemetry: ({ targetUserId, amount }) => ({
+      targetUserId,
+      amount,
     }),
     execute: (ctx, grant) =>
-      getServerRuntime().capacity.useCases.grantLeadCapacityDirect(ctx, {
-        targetUserId: grant.targetUserId,
-        amount: grant.amount,
-        reason: grant.reason,
-      }),
+      application.capacity.grantLeadCapacityDirect(ctx, grant),
   });
 }

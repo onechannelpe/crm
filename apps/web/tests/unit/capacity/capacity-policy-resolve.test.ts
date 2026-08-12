@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { CAPACITY_LIMITS } from "~/server/capacity/domain/config";
 import {
   resolveLeadPolicy,
   resolveSearchPolicy,
@@ -43,13 +44,13 @@ describe("resolveSearchPolicy", () => {
       branchDefault: null,
     });
     expect(policy.source).toBe("system");
-    expect(policy.monthlyLimit).toBe(250);
+    expect(policy.monthlyLimit).toBe(CAPACITY_LIMITS.defaultSearchMonthly);
   });
 
   it("handles empty input by falling back to system", () => {
     const policy = resolveSearchPolicy({});
     expect(policy.source).toBe("system");
-    expect(policy.monthlyLimit).toBe(250);
+    expect(policy.monthlyLimit).toBe(CAPACITY_LIMITS.defaultSearchMonthly);
   });
 });
 
@@ -94,14 +95,14 @@ describe("resolveLeadPolicy", () => {
       branchDefault: null,
     });
     expect(policy.source).toBe("system");
-    expect(policy.bufferTarget).toBe(10); // config.leadAssignment.defaultBufferTarget
-    expect(policy.dailyLimit).toBe(25); // config.leadAssignment.defaultDailyRefillLimit
+    expect(policy.bufferTarget).toBe(CAPACITY_LIMITS.defaultLeadBuffer);
+    expect(policy.dailyLimit).toBe(CAPACITY_LIMITS.defaultDailyRefill);
   });
 
   it("handles empty input by falling back to system", () => {
     const policy = resolveLeadPolicy({});
     expect(policy.source).toBe("system");
-    expect(policy.bufferTarget).toBe(10);
-    expect(policy.dailyLimit).toBe(25);
+    expect(policy.bufferTarget).toBe(CAPACITY_LIMITS.defaultLeadBuffer);
+    expect(policy.dailyLimit).toBe(CAPACITY_LIMITS.defaultDailyRefill);
   });
 });

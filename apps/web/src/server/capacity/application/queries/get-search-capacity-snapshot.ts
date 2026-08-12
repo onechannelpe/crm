@@ -1,3 +1,6 @@
+import type { DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { appMonthRange } from "~/domain/time/app-time";
 import {
   buildSearchCapacitySnapshot,
   type SearchCapacitySnapshot,
@@ -7,10 +10,8 @@ import type {
   SearchUsageCommitsRepo,
   SearchUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
-import { currentMonthlyPeriod } from "~/server/shared/time";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Ok, type Result } from "~/shared/result";
 
 import type { ActorScope } from "../actor-scope";
 import { getEffectiveSearchPolicy } from "../resolve-search-policy";
@@ -33,27 +34,18 @@ interface SnapshotRepos {
 export async function getSearchCapacitySnapshot(
   userId: UserId,
   repos: SnapshotRepos,
+  operation: OperationContext,
 ): Promise<Result<SearchCapacitySnapshot, DomainError>> {
-  const policyResult = await getEffectiveSearchPolicy(userId, repos);
-  if (!policyResult.ok) return policyResult;
+  const policyResult = await getEffectiveSearchPolicy(userId, repos, operation);
+  if (!policyResult.ok) {
+    return policyResult;
+  }
 
-  const { periodStart, periodEnd } = currentMonthlyPeriod(new Date());
+  const range = appMonthRange(operation.operationAt);
   const [grants, reservations, commits] = await Promise.all([
-    repos.searchCapacityGrants.findByUserAndPeriod(
-      userId,
-      periodStart,
-      periodEnd,
-    ),
-    repos.searchUsageReservations.findByUserAndPeriod(
-      userId,
-      periodStart,
-      periodEnd,
-    ),
-    repos.searchUsageCommits.findByUserAndPeriod(
-      userId,
-      periodStart,
-      periodEnd,
-    ),
+    repos.searchCapacityGrants.findByUserAndRange(userId, range),
+    repos.searchUsageReservations.findByUserAndRange(userId, range),
+    repos.searchUsageCommits.findByUserAndRange(userId, range),
   ]);
 
   return Ok(
@@ -62,8 +54,6 @@ export async function getSearchCapacitySnapshot(
       grants,
       reservations,
       commits,
-      periodStart,
-      periodEnd,
     }),
   );
 }

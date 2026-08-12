@@ -1,14 +1,17 @@
-"use server";
-
-import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
-import { BranchId, TeamId, UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
+import { BranchId, TeamId, UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
+import { executeSessionServerFunction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 
 const SCOPE_TYPES = ["branch", "team"] as const;
 
 export async function updateExecutivePolicyOverride(input: unknown) {
-  return runAction({
+  "use server";
+
+  return executeSessionServerFunction({
     name: "capacity.executive_policy_override.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
@@ -21,40 +24,42 @@ export async function updateExecutivePolicyOverride(input: unknown) {
         expiresAt: r.optNum("expiresAt"),
       })),
 
-    audit: ({ userId }) => ({ userId }),
+    telemetry: ({ userId }) => ({ userId }),
 
     execute: (ctx, override) =>
-      getServerRuntime().capacity.useCases.updateExecutivePolicyOverride(
-        ctx,
-        override,
-      ),
+      application.capacity.updateExecutivePolicyOverride(ctx, override),
   });
 }
 
 export async function updateScopePolicy(input: unknown) {
-  return runAction({
+  "use server";
+
+  return executeSessionServerFunction({
     name: "capacity.scope_policy.update",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
     parse: () =>
-      parseObject(input, validationFail, (r) => ({
-        scope: (() => {
-          const kind = r.enum("scopeType", SCOPE_TYPES);
-          return kind === "branch"
+      parseObject(input, validationFail, (r) => {
+        const kind = r.enum("scopeType", SCOPE_TYPES);
+        const scope =
+          kind === "branch"
             ? { kind, scopeId: r.id("scopeId", BranchId) }
             : { kind, scopeId: r.id("scopeId", TeamId) };
-        })(),
-        monthlyLimit: r.posInt("monthlySearchLimit"),
-        bufferTarget: r.posInt("activeBufferTarget"),
-        dailyLimit: r.posInt("dailyRefillLimit"),
-      })),
 
-    audit: ({ scope }) => ({
+        return {
+          scope,
+          monthlyLimit: r.posInt("monthlySearchLimit"),
+          bufferTarget: r.posInt("activeBufferTarget"),
+          dailyLimit: r.posInt("dailyRefillLimit"),
+        };
+      }),
+
+    telemetry: ({ scope }) => ({
       scopeKind: scope.kind,
       scopeId: scope.scopeId,
     }),
 
     execute: (ctx, params) =>
-      getServerRuntime().capacity.useCases.updateScopePolicy(ctx, params),
+      application.capacity.updateScopePolicy(ctx, params),
   });
 }
