@@ -9,12 +9,7 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/docs",
 ];
 
-const PUBLIC_ASSET_PREFIXES = [
-  "/_",
-  "/halftone/",
-  "/illustrations/",
-  "/images/",
-];
+const PUBLIC_ASSET_PREFIXES = ["/_", "/images/"];
 const PUBLIC_EXACT = new Set([
   "/favicon.ico",
   "/privacy",

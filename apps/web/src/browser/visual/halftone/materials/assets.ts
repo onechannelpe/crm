@@ -1,3 +1,4 @@
+import { resolveImageSourceUrl } from "@crm/images";
 import {
   CanvasTexture,
   ClampToEdgeWrapping,
@@ -10,10 +11,12 @@ import {
   Scene,
   SRGBColorSpace,
   Texture,
-  TextureLoader,
   WebGLRenderer,
 } from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+
+import glassEnvironmentSources from "~/assets/images/halftone/glass-environment.jpg?responsive";
+import { loadVisualImage } from "~/browser/visual/runtime";
 
 import { asCanvasImageSource, getTextureImageSize, isMesh } from "./guards";
 
@@ -27,9 +30,6 @@ export type HalftoneMaterialAssets = {
 export const GLASS_TRANSMISSION_BACKGROUND = new Color(0x030303);
 
 const GLASS_ENVIRONMENT_ZOOM = 1.55;
-const GLASS_TEXTURE_URLS = {
-  environment: "/halftone/materials/glass/environment.jpg",
-} as const;
 const MAX_TEXTURE_ANISOTROPY = 8;
 
 function setTextureSampling(texture: Texture, renderer: WebGLRenderer) {
@@ -48,28 +48,15 @@ function disposeEnvironmentScene(scene: Scene) {
       return;
     }
 
-    if (object.geometry) {
-      object.geometry.dispose();
-    }
+    object.geometry?.dispose();
 
     if (Array.isArray(object.material)) {
       object.material.forEach((material) => material.dispose());
       return;
     }
 
-    object.material?.dispose?.();
+    object.material?.dispose();
   });
-}
-
-function createSolidEnvironmentTexture(renderer: WebGLRenderer) {
-  const pmremGenerator = new PMREMGenerator(renderer);
-  const environmentTexture = pmremGenerator.fromScene(
-    new RoomEnvironment(),
-    0.04,
-  ).texture;
-  pmremGenerator.dispose();
-
-  return environmentTexture;
 }
 
 function createZoomedGlassTexture(
@@ -87,6 +74,12 @@ function createZoomedGlassTexture(
     return sourceTexture;
   }
 
+  const imageSource = asCanvasImageSource(sourceTexture.image);
+
+  if (!imageSource) {
+    return sourceTexture;
+  }
+
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -101,11 +94,6 @@ function createZoomedGlassTexture(
   const cropHeight = height / zoom;
   const sourceX = (width - cropWidth) / 2;
   const sourceY = (height - cropHeight) / 2;
-
-  const imageSource = asCanvasImageSource(sourceTexture.image);
-  if (!imageSource) {
-    return sourceTexture;
-  }
 
   context.drawImage(
     imageSource,
@@ -130,89 +118,79 @@ function createZoomedGlassTexture(
 }
 
 function createStudioGlassEnvironmentScene(backdropTexture?: Texture) {
-  const studioScene = new Scene();
-  studioScene.background = backdropTexture ?? GLASS_TRANSMISSION_BACKGROUND;
-  studioScene.backgroundIntensity = backdropTexture ? 1 : 0.4;
+  const scene = new Scene();
+  scene.background = backdropTexture ?? GLASS_TRANSMISSION_BACKGROUND;
+  scene.backgroundIntensity = backdropTexture ? 1 : 0.4;
 
-  return studioScene;
+  return scene;
 }
 
-function createStudioGlassEnvironmentTexture(
-  renderer: WebGLRenderer,
-  backdropTexture?: Texture,
-) {
-  const pmremGenerator = new PMREMGenerator(renderer);
-  const environmentTexture = backdropTexture
-    ? pmremGenerator.fromEquirectangular(backdropTexture).texture
-    : pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
-  pmremGenerator.dispose();
-
-  return environmentTexture;
-}
-
-function loadTexture(
-  url: string,
+function wrapImageElementAsTexture(
+  image: HTMLImageElement,
   renderer: WebGLRenderer,
   colorSpace: ColorSpace,
 ) {
-  const loader = new TextureLoader();
+  const texture = new Texture(image);
+  texture.colorSpace = colorSpace;
+  texture.needsUpdate = true;
+  setTextureSampling(texture, renderer);
 
-  return new Promise<Texture>((resolve, reject) => {
-    loader.load(
-      url,
-      (texture) => {
-        texture.colorSpace = colorSpace;
-        setTextureSampling(texture, renderer);
-        resolve(texture);
-      },
-      undefined,
-      reject,
-    );
-  });
+  return texture;
 }
 
-async function loadGlassEnvironmentAssets(renderer: WebGLRenderer) {
-  const sourceBackgroundTexture = await loadTexture(
-    GLASS_TEXTURE_URLS.environment,
-    renderer,
-    SRGBColorSpace,
-  );
-  const backgroundTexture = createZoomedGlassTexture(
-    sourceBackgroundTexture,
-    renderer,
-    GLASS_ENVIRONMENT_ZOOM,
-  );
-  if (backgroundTexture !== sourceBackgroundTexture) {
-    sourceBackgroundTexture.dispose();
-  }
-  backgroundTexture.mapping = EquirectangularReflectionMapping;
-  backgroundTexture.wrapS = ClampToEdgeWrapping;
-  backgroundTexture.wrapT = ClampToEdgeWrapping;
-  backgroundTexture.needsUpdate = true;
-  const transmissionScene =
-    createStudioGlassEnvironmentScene(backgroundTexture);
-  const environmentTexture = createStudioGlassEnvironmentTexture(
-    renderer,
-    backgroundTexture,
-  );
+async function loadGlassEnvironmentBackgroundTexture(renderer: WebGLRenderer) {
+  const url = await resolveImageSourceUrl(glassEnvironmentSources);
+  const image = await loadVisualImage(url, {
+    label: "halftone glass environment",
+  });
 
-  return {
-    backgroundTexture,
-    environmentTexture,
-    glassTransmissionScene: transmissionScene,
-  };
+  return wrapImageElementAsTexture(image, renderer, SRGBColorSpace);
 }
 
 export async function createHalftoneMaterialAssets(
   renderer: WebGLRenderer,
 ): Promise<HalftoneMaterialAssets> {
-  const solidEnvironmentTexture = createSolidEnvironmentTexture(renderer);
-  const glassEnvironmentAssets = await loadGlassEnvironmentAssets(renderer);
+  const pmremGenerator = new PMREMGenerator(renderer);
+
+  // Warm the equirectangular shader while the background texture loads.
+  const sourceBackgroundTexturePromise =
+    loadGlassEnvironmentBackgroundTexture(renderer);
+
+  pmremGenerator.compileEquirectangularShader();
+
+  const solidEnvironmentTexture = pmremGenerator.fromScene(
+    new RoomEnvironment(),
+    0.04,
+  ).texture;
+
+  const sourceBackgroundTexture = await sourceBackgroundTexturePromise;
+  const backgroundTexture = createZoomedGlassTexture(
+    sourceBackgroundTexture,
+    renderer,
+    GLASS_ENVIRONMENT_ZOOM,
+  );
+
+  if (backgroundTexture !== sourceBackgroundTexture) {
+    sourceBackgroundTexture.dispose();
+  }
+
+  backgroundTexture.mapping = EquirectangularReflectionMapping;
+  backgroundTexture.wrapS = ClampToEdgeWrapping;
+  backgroundTexture.wrapT = ClampToEdgeWrapping;
+  backgroundTexture.needsUpdate = true;
+
+  const glassTransmissionScene =
+    createStudioGlassEnvironmentScene(backgroundTexture);
+
+  const glassEnvironmentTexture =
+    pmremGenerator.fromEquirectangular(backgroundTexture).texture;
+
+  pmremGenerator.dispose();
 
   return {
-    glassBackgroundTexture: glassEnvironmentAssets.backgroundTexture,
-    glassEnvironmentTexture: glassEnvironmentAssets.environmentTexture,
-    glassTransmissionScene: glassEnvironmentAssets.glassTransmissionScene,
+    glassBackgroundTexture: backgroundTexture,
+    glassEnvironmentTexture,
+    glassTransmissionScene,
     solidEnvironmentTexture,
   };
 }
