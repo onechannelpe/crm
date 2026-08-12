@@ -83,7 +83,9 @@ export function AnimatePresence<T>(props: AnimatePresenceProps<T>) {
   });
 
   const handleChildExitComplete = (key: string) => {
-    if (!exitingKeys.has(key)) return;
+    if (!exitingKeys.has(key)) {
+      return;
+    }
     exitingKeys.delete(key);
 
     setRenderedChildren((current) =>

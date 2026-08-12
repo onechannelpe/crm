@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import type { JSX } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import styles from "./field.module.css";
 
@@ -12,7 +11,7 @@ export function InputHint(props: InputHintProps) {
   return (
     <div
       {...props}
-      class={cn(
+      class={clsx(
         styles.hintText,
         props.danger ? styles.hintTextDanger : undefined,
         props.class,

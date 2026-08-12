@@ -13,7 +13,7 @@
 }
 
 .host:focus-visible {
-  outline: 2px solid var(--focus-ring, var(--info));
+  outline: 2px solid var(--color-blue);
   outline-offset: 2px;
 }
 

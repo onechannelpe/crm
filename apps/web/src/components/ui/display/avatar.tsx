@@ -1,12 +1,19 @@
+import { clsx } from "clsx";
 import { Show, createEffect, createSignal, on } from "solid-js";
 
-import { cn } from "~/lib/utils";
+import { avatarPlaceholderColors } from "./avatar-placeholder-color";
 
 import styles from "./avatar.module.css";
+
+type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
+export type AvatarType = "squared" | "rounded";
 
 interface AvatarProps {
   imageUrl: string | null;
   fallback: string;
+  placeholderColorSeed?: string;
+  size?: AvatarSize;
+  type?: AvatarType;
   class?: string;
   imageClass?: string;
   fallbackClass?: string;
@@ -18,20 +25,40 @@ export function Avatar(props: AvatarProps) {
   createEffect(
     on(
       () => props.imageUrl,
-      () => {
-        setHasImageError(false);
-      },
+      () => setHasImageError(false),
     ),
   );
 
   const showImage = () => Boolean(props.imageUrl) && !hasImageError();
 
+  const placeholderStyle = () => {
+    if (props.placeholderColorSeed === undefined) {
+      return undefined;
+    }
+
+    const { background, foreground } = avatarPlaceholderColors(
+      props.placeholderColorSeed,
+    );
+
+    return {
+      "--avatar-background": background,
+      "--avatar-color": foreground,
+    };
+  };
+
   return (
-    <span class={cn(styles.root, props.class)} aria-hidden="true">
+    <span
+      class={clsx(styles.root, props.size && styles[props.size], props.class)}
+      data-type={props.type}
+      aria-hidden="true"
+    >
       <Show
         when={showImage()}
         fallback={
-          <span class={cn(styles.fallback, props.fallbackClass)}>
+          <span
+            class={clsx(styles.fallback, props.fallbackClass)}
+            style={placeholderStyle()}
+          >
             {props.fallback}
           </span>
         }
@@ -39,7 +66,7 @@ export function Avatar(props: AvatarProps) {
         <img
           src={props.imageUrl ?? undefined}
           alt=""
-          class={cn(styles.image, props.imageClass)}
+          class={clsx(styles.image, props.imageClass)}
           onError={() => setHasImageError(true)}
         />
       </Show>

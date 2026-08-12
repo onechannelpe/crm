@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { mergeProps, splitProps, type JSX } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import styles from "./text-input.module.css";
 
@@ -36,7 +35,7 @@ export function TextInput(props: TextInputProps) {
 
   return (
     <input
-      class={cn(
+      class={clsx(
         styles.input,
         SIZE_CLASS[local.sizeVariant],
         local.inheritFontStyles && styles.inheritFont,

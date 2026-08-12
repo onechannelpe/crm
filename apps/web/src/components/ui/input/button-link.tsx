@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { type JSX, mergeProps, splitProps } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import type { ButtonSize, ButtonVariant } from "./button";
 
@@ -25,7 +24,7 @@ export function ButtonLink(props: ButtonLinkProps) {
   return (
     <a
       href={local.href}
-      class={cn(
+      class={clsx(
         buttonStyles.button,
         buttonStyles[local.size],
         buttonStyles[local.variant],

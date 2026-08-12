@@ -1,13 +1,14 @@
+import { clsx } from "clsx";
 import { For } from "solid-js";
 
 import ChevronLeft from "~/components/icons/chevron-left";
 import ChevronRight from "~/components/icons/chevron-right";
-import { cn } from "~/lib/utils";
+import type { CalendarDate } from "~/domain/time/calendar-date";
 
 import {
   DAY_NAMES,
+  MONTH_OPTIONS,
   buildCalendarCells,
-  getMonthOptions,
   getYearOptions,
   type CalendarCell,
   type VisibleMonth,
@@ -17,19 +18,18 @@ import styles from "./date-picker.module.css";
 
 interface DatePickerCalendarProps {
   visibleMonth: VisibleMonth;
-  selectedDate: Date | null;
-  minDate: Date | null;
+  selectedDate: CalendarDate | null;
+  minDate: CalendarDate | null;
   isPreviousMonthDisabled: boolean;
   onMonthChange: (month: number) => void;
   onYearChange: (year: number) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
-  onSelect: (date: Date) => void;
+  onSelect: (date: CalendarDate) => void;
 }
 
 export function DatePickerCalendar(props: DatePickerCalendarProps) {
-  const monthOptions = () => getMonthOptions(props.visibleMonth);
-  const yearOptions = () => getYearOptions(props.minDate);
+  const yearOptions = () => getYearOptions(props.visibleMonth, props.minDate);
   const cells = () =>
     buildCalendarCells(props.visibleMonth, props.selectedDate, props.minDate);
 
@@ -43,7 +43,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
             props.onMonthChange(Number(event.currentTarget.value))
           }
         >
-          <For each={monthOptions()}>
+          <For each={MONTH_OPTIONS}>
             {(option) => (
               <option
                 value={String(option.value)}
@@ -77,7 +77,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
           class={styles.navButton}
           aria-label="Mes anterior"
           disabled={props.isPreviousMonthDisabled}
-          onClick={props.onPreviousMonth}
+          onClick={() => props.onPreviousMonth()}
         >
           <ChevronLeft size={16} />
         </button>
@@ -85,7 +85,7 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
           type="button"
           class={styles.navButton}
           aria-label="Mes siguiente"
-          onClick={props.onNextMonth}
+          onClick={() => props.onNextMonth()}
         >
           <ChevronRight size={16} />
         </button>
@@ -108,12 +108,12 @@ export function DatePickerCalendar(props: DatePickerCalendarProps) {
 
 function CalendarDayButton(props: {
   cell: CalendarCell;
-  onSelect: (date: Date) => void;
+  onSelect: (date: CalendarDate) => void;
 }) {
   return (
     <button
       type="button"
-      class={cn(
+      class={clsx(
         styles.dayButton,
         !props.cell.isCurrentMonth ? styles.dayOutsideMonth : undefined,
         props.cell.isSelected ? styles.daySelected : undefined,

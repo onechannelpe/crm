@@ -3,7 +3,7 @@ import { Show, children, type JSX, type ParentProps } from "solid-js";
 import styles from "./page-card-layout.module.css";
 
 interface PageCardLayoutProps extends ParentProps {
-  header: JSX.Element;
+  header?: JSX.Element;
   secondaryBar?: JSX.Element;
 }
 

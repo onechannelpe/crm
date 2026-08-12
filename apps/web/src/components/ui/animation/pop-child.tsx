@@ -25,7 +25,9 @@ export function PopChild(props: PopChildProps) {
   let styleTag: HTMLStyleElement | undefined;
 
   const removeInjectedStyle = () => {
-    if (containerRef) containerRef.removeAttribute("data-motion-pop-id");
+    if (containerRef) {
+      containerRef.removeAttribute("data-motion-pop-id");
+    }
     if (styleTag && styleTag.parentNode) {
       styleTag.parentNode.removeChild(styleTag);
     }
@@ -33,7 +35,9 @@ export function PopChild(props: PopChildProps) {
   };
 
   const measure = (): Size | null => {
-    if (!containerRef) return null;
+    if (!containerRef) {
+      return null;
+    }
     const parent = containerRef.offsetParent;
     const parentWidth =
       parent instanceof HTMLElement ? parent.offsetWidth || 0 : 0;
@@ -51,16 +55,26 @@ export function PopChild(props: PopChildProps) {
   };
 
   createEffect(() => {
-    if (typeof document === "undefined") return;
-    if (props.pop === false) return;
-    if (!containerRef) return;
+    if (typeof document === "undefined") {
+      return;
+    }
+    if (props.pop === false) {
+      return;
+    }
+    if (!containerRef) {
+      return;
+    }
 
     removeInjectedStyle();
 
-    if (props.isPresent) return;
+    if (props.isPresent) {
+      return;
+    }
 
     const measured = measure();
-    if (!measured || !measured.width || !measured.height) return;
+    if (!measured || !measured.width || !measured.height) {
+      return;
+    }
 
     const isRTL = measured.direction === "rtl";
     const x =

@@ -1,7 +1,7 @@
 import type { JSX } from "solid-js";
 import { ErrorBoundary as SolidErrorBoundary } from "solid-js";
 
-import { createLogger } from "~/lib/observability/logger";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 import { getErrorMessage, reportBoundaryError } from "./boundary-utils";
 import { ErrorState } from "./state";

@@ -21,7 +21,9 @@ export function ImageInput(props: ImageInputProps) {
   const isBusy = () => props.uploading || (props.disabled ?? false);
 
   const openFilePicker = () => {
-    if (props.disabled) return;
+    if (props.disabled) {
+      return;
+    }
     inputRef?.click();
   };
 

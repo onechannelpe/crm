@@ -1,7 +1,7 @@
 import {
   isHydrationMismatchError,
   traceHydrationEvent,
-} from "~/lib/observability/diagnostics/hydration";
+} from "~/browser/observability/diagnostics/hydration";
 
 export function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message.trim().length > 0) {

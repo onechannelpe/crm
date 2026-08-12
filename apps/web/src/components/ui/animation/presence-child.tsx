@@ -1,4 +1,5 @@
 import {
+  children,
   createEffect,
   createMemo,
   createUniqueId,
@@ -25,6 +26,7 @@ interface PresenceChildProps {
 
 export function PresenceChild(props: PresenceChildProps) {
   const id = createUniqueId();
+  const content = children(() => props.children);
   const presenceChildren = new Map<string, boolean>();
 
   const context = createMemo<PresenceContextValue>(() => ({
@@ -35,7 +37,9 @@ export function PresenceChild(props: PresenceChildProps) {
     onExitComplete: (childId: string) => {
       presenceChildren.set(childId, true);
       for (const isComplete of presenceChildren.values()) {
-        if (!isComplete) return;
+        if (!isComplete) {
+          return;
+        }
       }
       props.onExitComplete?.();
     },
@@ -73,10 +77,10 @@ export function PresenceChild(props: PresenceChildProps) {
           anchorY={props.anchorY}
           root={props.root}
         >
-          {props.children}
+          {content()}
         </PopChild>
       ) : (
-        props.children
+        content()
       )}
     </PresenceContext.Provider>
   );

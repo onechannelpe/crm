@@ -1,9 +1,9 @@
 import { onCleanup } from "solid-js";
 import { isServer } from "solid-js/web";
 
-export type ResizablePanelSide = "left" | "right";
+type ResizablePanelSide = "left" | "right";
 
-export type ResizablePanelConstraints = {
+type ResizablePanelConstraints = {
   min: number;
   max: number;
 };

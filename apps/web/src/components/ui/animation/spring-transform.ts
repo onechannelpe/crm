@@ -46,12 +46,20 @@ function animateSpringTransform(
   element: Element,
   transform: string,
 ): CancelAnimation {
-  if (typeof window === "undefined") return noop;
-  if (typeof HTMLElement === "undefined") return noop;
-  if (!(element instanceof HTMLElement)) return noop;
+  if (typeof window === "undefined") {
+    return noop;
+  }
+  if (typeof HTMLElement === "undefined") {
+    return noop;
+  }
+  if (!(element instanceof HTMLElement)) {
+    return noop;
+  }
 
   const target = parseTransformTarget(transform);
-  if (!target) return noop;
+  if (!target) {
+    return noop;
+  }
 
   const activeAnimation = activeAnimations.get(element);
   activeAnimation?.cancel();
@@ -63,7 +71,9 @@ function animateSpringTransform(
   }
 
   const origin = readCurrentTransformValue(element, target.kind);
-  if (origin === target.value) return noop;
+  if (origin === target.value) {
+    return noop;
+  }
 
   const animation = animateSpring({
     origin,
@@ -104,7 +114,9 @@ function readCurrentTransformValue(
   kind: TransformTarget["kind"],
 ): number {
   const transform = getComputedStyle(element).transform;
-  if (transform === "none") return kind === "scale" ? 1 : 0;
+  if (transform === "none") {
+    return kind === "scale" ? 1 : 0;
+  }
 
   const matrix = new DOMMatrixReadOnly(transform);
 
@@ -136,7 +148,9 @@ function animateSpring(input: {
   let rafId: number | undefined;
 
   const tick = (now: DOMHighResTimeStamp) => {
-    if (cancelled) return;
+    if (cancelled) {
+      return;
+    }
 
     const elapsedMs = now - startMs;
     if (elapsedMs >= springDurationMs) {
@@ -153,7 +167,9 @@ function animateSpring(input: {
   return {
     cancel: () => {
       cancelled = true;
-      if (rafId !== undefined) cancelAnimationFrame(rafId);
+      if (rafId !== undefined) {
+        cancelAnimationFrame(rafId);
+      }
     },
   };
 }

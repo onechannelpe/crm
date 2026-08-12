@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import type { JSX } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import styles from "./field.module.css";
 
@@ -13,7 +12,7 @@ type InputLabelProps = Omit<
 
 export function InputLabel(props: InputLabelProps) {
   return (
-    <label for={props.for} class={cn(styles.label, props.class)}>
+    <label for={props.for} class={clsx(styles.label, props.class)}>
       {props.children}
     </label>
   );

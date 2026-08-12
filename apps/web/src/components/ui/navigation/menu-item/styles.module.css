@@ -1,0 +1,115 @@
+.root {
+  --horizontal-padding: var(--t-spacing-1);
+  --vertical-padding: var(--t-spacing-2);
+
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--t-border-radius-md) - var(--t-spacing-1));
+  box-sizing: content-box;
+  color: var(--t-font-color-secondary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  font-family: inherit;
+  font-size: var(--t-font-size-sm);
+  text-align: left;
+  gap: var(--t-spacing-2);
+  height: calc(32px - 2 * var(--vertical-padding));
+  justify-content: space-between;
+  padding: var(--vertical-padding) var(--horizontal-padding);
+  position: relative;
+  transition: background 0.1s ease;
+  user-select: none;
+  width: calc(100% - 2 * var(--horizontal-padding));
+}
+
+/*
+  Cascade order matters: colour resolves disabled over accent over base, and the
+  hover background resolves disabled over danger over base, with the focused row
+  keeping its background even while disabled.
+*/
+.root[data-focused] {
+  background: var(--t-background-transparent-light);
+}
+
+.root[data-accent="danger"] {
+  color: var(--t-font-color-danger);
+}
+
+.root[data-accent="placeholder"] {
+  color: var(--t-font-color-tertiary);
+}
+
+.root:disabled {
+  color: var(--t-font-color-tertiary);
+  cursor: default;
+  transition: none;
+}
+
+.root:hover {
+  background: var(--t-background-transparent-light);
+}
+
+.root[data-accent="danger"]:hover {
+  background: var(--t-background-transparent-danger);
+}
+
+.root:disabled:hover {
+  background: transparent;
+}
+
+.root:disabled[data-focused]:hover {
+  background: var(--t-background-transparent-light);
+}
+
+.leftContent {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: var(--t-spacing-2);
+  min-width: 0;
+  width: 100%;
+}
+
+.leftContent svg {
+  flex-shrink: 0;
+}
+
+.label {
+  display: flex;
+  flex-direction: row;
+  font-size: var(--t-font-size-md);
+  font-weight: var(--t-font-weight-regular);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.mainText {
+  flex-shrink: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contextualText {
+  color: var(--t-font-color-light);
+  flex-shrink: 1;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  overflow: hidden;
+  padding-left: var(--t-spacing-1);
+}
+
+.rightContent {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: var(--t-spacing-2);
+}
+
+.rightContent svg {
+  flex-shrink: 0;
+}

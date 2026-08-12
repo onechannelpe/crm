@@ -1,6 +1,6 @@
 .chip {
   align-items: center;
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   border-radius: var(--t-border-radius-sm-round);
   corner-shape: round;
   display: inline-flex;
@@ -28,7 +28,7 @@
 }
 
 .chip:hover {
-  background: var(--bg-translucent-medium);
+  background: var(--background-transparent-medium);
 }
 
 .avatar {
@@ -76,7 +76,7 @@
 }
 
 .moreButton {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   border: 0;
   border-radius: var(--radius-sm);
   color: var(--foreground-secondary);
@@ -88,5 +88,5 @@
 }
 
 .moreButton:hover {
-  background: var(--bg-translucent-medium);
+  background: var(--background-transparent-medium);
 }
