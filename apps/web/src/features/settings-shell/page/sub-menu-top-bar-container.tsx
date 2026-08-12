@@ -1,3 +1,4 @@
+import { Title } from "@solidjs/meta";
 import type { JSX, ParentProps } from "solid-js";
 
 import { PageCardHeader } from "~/components/ui/layout/page-card/page-card-header";
@@ -17,24 +18,32 @@ interface SubMenuTopBarContainerProps extends ParentProps {
 export function SubMenuTopBarContainer(props: SubMenuTopBarContainerProps) {
   const { isMobile } = useNavigationDrawerState();
 
+  const documentTitle = () => {
+    const current = props.breadcrumbItems.at(-1)?.label;
+    return current ? `${current} - Ajustes` : "Ajustes";
+  };
+
   return (
-    <PageCardLayout
-      header={
-        <PageCardHeader
-          breadcrumb={
-            <Breadcrumb
-              items={props.breadcrumbItems}
-              mobileBackAction={props.mobileBackAction}
-              isMobile={isMobile()}
-            />
-          }
-          title={props.title}
-          actionButton={props.actionButton}
-          centerTitle
-        />
-      }
-    >
-      {props.children}
-    </PageCardLayout>
+    <>
+      <Title>{documentTitle()}</Title>
+      <PageCardLayout
+        header={
+          <PageCardHeader
+            breadcrumb={
+              <Breadcrumb
+                items={props.breadcrumbItems}
+                mobileBackAction={props.mobileBackAction}
+                isMobile={isMobile()}
+              />
+            }
+            title={props.title}
+            actionButton={props.actionButton}
+            centerTitle
+          />
+        }
+      >
+        {props.children}
+      </PageCardLayout>
+    </>
   );
 }

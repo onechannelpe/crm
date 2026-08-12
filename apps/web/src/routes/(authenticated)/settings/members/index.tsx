@@ -5,17 +5,17 @@ import Mail from "~/components/icons/mail";
 import ShieldCheck from "~/components/icons/shield-check";
 import UserRound from "~/components/icons/user-round";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-import { InviteTab } from "~/features/settings-members/invite-tab";
-import { RolesTab } from "~/features/settings-members/roles-tab";
-import { TeamTab } from "~/features/settings-members/team-tab";
+import { hasPermission } from "~/domain/auth/access/rbac";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   TabStrip,
   type TabItem,
 } from "~/features/side-panel/components/tab-strip";
-import { hasPermission } from "~/lib/auth/access/rbac";
+import { InviteTab } from "~/features/team-management/invite-tab";
+import { RolesTab } from "~/features/team-management/roles-tab";
+import { TeamTab } from "~/features/team-management/team-tab";
 
-import styles from "~/features/settings-members/settings-members.module.css";
+import styles from "~/features/team-management/team-management.module.css";
 
 type MembersTabId = "team" | "invite" | "roles";
 
@@ -23,7 +23,7 @@ export default function SettingsMembersPage() {
   const { currentUser } = useAuthenticatedSession();
   const [params, setParams] = useSearchParams();
 
-  // Invite actions require hr:manage, not team:manage.
+  // Invites require `hr:manage`, not `team:manage`.
   const canInvite = createMemo(() =>
     hasPermission(currentUser().role, "hr:manage"),
   );

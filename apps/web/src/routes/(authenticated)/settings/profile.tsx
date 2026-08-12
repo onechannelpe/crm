@@ -1,7 +1,6 @@
-import { useAction, useSubmissions } from "@solidjs/router";
+import { useAction, useSubmission, useSubmissions } from "@solidjs/router";
 import { createSignal, onCleanup } from "solid-js";
 
-import { updateUserProfile } from "~/actions/settings/profile";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
@@ -9,25 +8,25 @@ import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { ImageInput } from "~/components/ui/input/image-input";
 import { Input } from "~/components/ui/input/input";
-import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
+import { actionErrorMessage } from "~/contracts/errors";
+import { shortName } from "~/domain/identity/display-name";
+import { isValidPhone, normalizePhoneInput } from "~/domain/phone/pe-mobile";
 import {
   removeUserAvatarMutation,
+  updateUserProfileMutation,
   uploadUserAvatarMutation,
-} from "~/lib/mutations/profile";
-import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
-import { shortName } from "~/lib/users/display-name";
-import { actionErrorMessage } from "~/lib/wire-error";
+} from "~/features/auth/data/profile-mutations";
+import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 
 import styles from "./settings-page.module.css";
 
 export default function ProfilePage() {
   const { currentUser, updateCurrentUser } = useAuthenticatedSession();
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
-  const user = () => currentUser();
 
-  const [profilePhone, setProfilePhone] = createSignal(user().phone || "");
-  const [savingProfile, setSavingProfile] = createSignal(false);
-  const [avatarUrl, setAvatarUrl] = createSignal(user().avatarUrl);
+  const [profilePhone, setProfilePhone] = createSignal(
+    currentUser().phone || "",
+  );
   const [avatarPreviewUrl, setAvatarPreviewUrl] = createSignal<string | null>(
     null,
   );
@@ -37,62 +36,60 @@ export default function ProfilePage() {
 
   const uploadAvatar = useAction(uploadUserAvatarMutation);
   const removeAvatar = useAction(removeUserAvatarMutation);
+  const updateProfile = useAction(updateUserProfileMutation);
+
+  const profileSubmission = useSubmission(updateUserProfileMutation);
   const uploadSubmissions = useSubmissions(uploadUserAvatarMutation);
   const removeSubmissions = useSubmissions(removeUserAvatarMutation);
 
-  const isUploadingAvatar = () =>
-    uploadSubmissions.some((submission) => submission.pending);
-  const isRemovingAvatar = () =>
+  const avatarMutationPending = () =>
+    uploadSubmissions.some((submission) => submission.pending) ||
     removeSubmissions.some((submission) => submission.pending);
-  const avatarMutationPending = () => isUploadingAvatar() || isRemovingAvatar();
+
   const phoneFormId = "settings-profile-phone-form";
 
   function clearAvatarPreview() {
     const preview = avatarPreviewUrl();
 
-    if (preview) {
-      URL.revokeObjectURL(preview);
-      setAvatarPreviewUrl(null);
+    if (!preview) {
+      return;
     }
+
+    URL.revokeObjectURL(preview);
+    setAvatarPreviewUrl(null);
   }
 
   onCleanup(clearAvatarPreview);
 
-  const savePhone = async (event: SubmitEvent) => {
+  async function savePhone(event: SubmitEvent) {
     event.preventDefault();
 
-    const localPhone = normalizePhoneInput(profilePhone());
-    setProfilePhone(localPhone);
+    const phone = normalizePhoneInput(profilePhone());
+    setProfilePhone(phone);
 
-    if (!isValidPhone(localPhone)) {
+    if (!isValidPhone(phone)) {
       enqueueErrorSnackBar("Ingresa 9 dígitos y que empiece con 9");
       return;
     }
 
-    setSavingProfile(true);
-
     try {
-      const { message } = await updateUserProfile(localPhone);
+      const { message } = await updateProfile(phone);
 
       updateCurrentUser((existing) => ({
         ...existing,
-        phone: localPhone,
+        phone,
       }));
 
       enqueueSuccessSnackBar(message);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
-    } finally {
-      setSavingProfile(false);
     }
-  };
+  }
 
-  const handleAvatarUpload = async (file: File) => {
+  async function handleAvatarUpload(file: File) {
     setAvatarErrorMessage(null);
     clearAvatarPreview();
-
-    const optimisticPreview = URL.createObjectURL(file);
-    setAvatarPreviewUrl(optimisticPreview);
+    setAvatarPreviewUrl(URL.createObjectURL(file));
 
     try {
       const formData = new FormData();
@@ -100,12 +97,12 @@ export default function ProfilePage() {
 
       const updated = await uploadAvatar(formData);
 
-      setAvatarUrl(updated.avatarUrl);
       updateCurrentUser((existing) => ({
         ...existing,
         avatarUrl: updated.avatarUrl,
         avatarVersion: updated.avatarVersion,
       }));
+
       enqueueSuccessSnackBar(updated.message);
       clearAvatarPreview();
     } catch (caught: unknown) {
@@ -115,35 +112,35 @@ export default function ProfilePage() {
       setAvatarErrorMessage(message);
       enqueueErrorSnackBar(message);
     }
-  };
+  }
 
-  const handleAvatarRemove = async () => {
+  async function handleAvatarRemove() {
     setAvatarErrorMessage(null);
     clearAvatarPreview();
 
     try {
       const updated = await removeAvatar();
 
-      setAvatarUrl(updated.avatarUrl);
       updateCurrentUser((existing) => ({
         ...existing,
         avatarUrl: null,
         avatarVersion: updated.avatarVersion,
       }));
+
       enqueueSuccessSnackBar(updated.message);
     } catch (caught: unknown) {
       const message = actionErrorMessage(caught);
       setAvatarErrorMessage(message);
       enqueueErrorSnackBar(message);
     }
-  };
+  }
 
   return (
     <SettingsPageLayout>
       <SettingsSection title="Foto">
         <ImageInput
-          pictureUrl={avatarPreviewUrl() ?? avatarUrl()}
-          initials={getUserInitials(shortName(user()))}
+          pictureUrl={avatarPreviewUrl() ?? currentUser().avatarUrl}
+          initials={getUserInitials(shortName(currentUser()))}
           uploading={avatarMutationPending()}
           errorMessage={avatarErrorMessage()}
           onUpload={handleAvatarUpload}
@@ -160,7 +157,7 @@ export default function ProfilePage() {
             form={phoneFormId}
             size="sm"
             variant="secondary"
-            loading={savingProfile()}
+            loading={Boolean(profileSubmission.pending)}
           >
             Guardar
           </Button>
@@ -189,7 +186,7 @@ export default function ProfilePage() {
         title="Correo electrónico"
         description="El correo asociado a tu cuenta"
       >
-        <Input value={user().email} disabled />
+        <Input value={currentUser().email} disabled />
       </SettingsSection>
     </SettingsPageLayout>
   );

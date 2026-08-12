@@ -8,24 +8,24 @@ import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { Avatar } from "~/components/ui/display/avatar";
 import { Badge } from "~/components/ui/display/badge";
-import { MemberAdminActions } from "~/features/settings-members/member-admin-actions";
-import { MemberCapacityTab } from "~/features/settings-members/member-capacity-tab";
-import { MemberInfoTab } from "~/features/settings-members/member-info-tab";
-import { MemberPermissionsTab } from "~/features/settings-members/member-permissions-tab";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import {
+  getRoleBadgeVariant,
+  getRoleLabel,
+} from "~/domain/auth/access/role-display";
+import { shortName } from "~/domain/identity/display-name";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   TabStrip,
   type TabItem,
 } from "~/features/side-panel/components/tab-strip";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import {
-  getRoleBadgeVariant,
-  getRoleLabel,
-} from "~/lib/auth/access/role-display";
-import { memberDetailQuery } from "~/lib/queries/members";
-import { shortName } from "~/lib/users/display-name";
+import { MemberAdminActions } from "~/features/team-management/member-admin-actions";
+import { MemberCapacityTab } from "~/features/team-management/member-capacity-tab";
+import { MemberInfoTab } from "~/features/team-management/member-info-tab";
+import { MemberPermissionsTab } from "~/features/team-management/member-permissions-tab";
+import { memberDetailQuery } from "~/rpc/team-management/member-detail";
 
-import styles from "~/features/settings-members/settings-members.module.css";
+import styles from "~/features/team-management/team-management.module.css";
 
 type MemberTabId = "info" | "permissions" | "capacity";
 
@@ -35,61 +35,60 @@ export default function SettingsMemberDetailPage() {
   const { currentUser } = useAuthenticatedSession();
   const detail = createAsync(() => memberDetailQuery(params.userId));
 
-  // Match the server permission check and hide capacity for non-executives.
-  const canSeeCapacity = () =>
-    hasPermission(currentUser().role, "capacity:read:team");
-
   const tabs = createMemo<TabItem<MemberTabId>[]>(() => {
-    const record = detail();
-    const list: TabItem<MemberTabId>[] = [
+    const member = detail();
+    const items: TabItem<MemberTabId>[] = [
       { id: "info", label: "Información", icon: Info },
       { id: "permissions", label: "Permisos", icon: ShieldCheck },
     ];
 
-    if (record?.role === "executive" && canSeeCapacity()) {
-      list.push({
+    if (
+      member?.role === "executive" &&
+      hasPermission(currentUser().role, "capacity:read:team")
+    ) {
+      items.push({
         id: "capacity",
         label: "Capacidad",
         icon: Activity,
       });
     }
 
-    return list;
+    return items;
   });
 
   const activeTab = createMemo<MemberTabId>(() => {
     const requested = search.tab;
-    const match = tabs().find((tab) => tab.id === requested);
+    const tab = tabs().find((item) => item.id === requested);
 
-    return match?.id ?? "info";
+    return tab?.id ?? "info";
   });
 
   return (
     <SettingsPageLayout>
       <Show when={detail()}>
-        {(record) => (
-          // Remount tabs when the member changes, but not on revalidation.
-          <Show when={record().id} keyed>
+        {(member) => (
+          // Remount when the member changes, but not on revalidation.
+          <Show when={member().id} keyed>
             {(memberId) => (
               <>
                 <header class={styles.detailHeader}>
                   <Avatar
                     class={styles.detailAvatar}
-                    imageUrl={record().avatarUrl}
-                    fallback={getUserInitials(shortName(record()))}
+                    imageUrl={member().avatarUrl}
+                    fallback={getUserInitials(shortName(member()))}
                   />
 
                   <div class={styles.detailHeaderText}>
-                    <span class={styles.detailName}>{shortName(record())}</span>
-                    <span class={styles.detailEmail}>{record().email}</span>
+                    <span class={styles.detailName}>{shortName(member())}</span>
+                    <span class={styles.detailEmail}>{member().email}</span>
 
                     <div class={styles.headerBadges}>
-                      <Badge variant={getRoleBadgeVariant(record().role)}>
-                        {getRoleLabel(record().role)}
+                      <Badge variant={getRoleBadgeVariant(member().role)}>
+                        {getRoleLabel(member().role)}
                       </Badge>
 
                       <Show
-                        when={record().isActive}
+                        when={member().isActive}
                         fallback={<Badge variant="secondary">Inactivo</Badge>}
                       >
                         <Badge variant="success">Activo</Badge>
@@ -107,12 +106,12 @@ export default function SettingsMemberDetailPage() {
                 <div class={styles.tabPane}>
                   <Switch>
                     <Match when={activeTab() === "info"}>
-                      <MemberInfoTab detail={record()} />
-                      <MemberAdminActions detail={record()} />
+                      <MemberInfoTab detail={member()} />
+                      <MemberAdminActions detail={member()} />
                     </Match>
 
                     <Match when={activeTab() === "permissions"}>
-                      <MemberPermissionsTab detail={record()} />
+                      <MemberPermissionsTab detail={member()} />
                     </Match>
 
                     <Match when={activeTab() === "capacity"}>
