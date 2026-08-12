@@ -1,4 +1,4 @@
-import type { OnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
+import type { OnboardingSnapshot } from "~/contracts/auth";
 
 export type OnboardingStep =
   | "password"
@@ -13,8 +13,17 @@ export function resolveOnboardingStep(
   snapshot: OnboardingSnapshot,
   requestedStep: RequestedSecurityStep,
 ): OnboardingStep {
-  if (snapshot.passwordChangeRequired) return "password";
-  if (!snapshot.user.phone) return "profile";
-  if (requestedStep) return requestedStep;
+  if (snapshot.passwordChangeRequired) {
+    return "password";
+  }
+
+  if (!snapshot.user.phone) {
+    return "profile";
+  }
+
+  if (requestedStep !== null) {
+    return requestedStep;
+  }
+
   return "security";
 }

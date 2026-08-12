@@ -1,9 +1,11 @@
+"use client";
+
 import { Show } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
-import type { Role } from "~/lib/auth/access/rbac";
-import { getRoleLabel } from "~/lib/auth/access/role-display";
-import { isValidPhone, normalizePhoneInput } from "~/lib/phone/pe-mobile";
+import type { Role } from "~/domain/auth/access/rbac";
+import { getRoleLabel } from "~/domain/auth/access/role-display";
+import { isValidPhone, normalizePhoneInput } from "~/domain/phone/pe-mobile";
 
 import { OnboardingStepAnimatedItem } from "./onboarding-step-animated-item";
 import { OnboardingStepHeading } from "./onboarding-step-heading";
@@ -23,8 +25,8 @@ interface OnboardingProfileStepProps {
 }
 
 export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
-  const phoneError = () => props.phone.length > 0 && !isValidPhone(props.phone);
-  const canSubmit = () => isValidPhone(props.phone);
+  const phoneValid = () => isValidPhone(props.phone);
+  const phoneError = () => props.phone.length > 0 && !phoneValid();
 
   return (
     <>
@@ -38,7 +40,10 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
         class={styles.formContents}
         onSubmit={(event) => {
           event.preventDefault();
-          if (canSubmit()) props.onSubmit();
+          if (!phoneValid()) {
+            return;
+          }
+          props.onSubmit();
         }}
       >
         <OnboardingStepAnimatedItem index={2}>
@@ -61,10 +66,12 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
                     <span class={styles.infoValue}>{props.fullName}</span>
                   </div>
                 </Show>
+
                 <div class={styles.infoRow}>
                   <span class={styles.infoKey}>Correo</span>
                   <span class={styles.infoValue}>{props.email}</span>
                 </div>
+
                 <div class={styles.infoRow}>
                   <span class={styles.infoKey}>Rol</span>
                   <span class={styles.infoValue}>
@@ -72,6 +79,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
                   </span>
                 </div>
               </div>
+
               <p class={styles.groupHint}>
                 Estos datos los gestiona el área de Recursos Humanos.
               </p>
@@ -79,6 +87,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
 
             <label class={styles.field}>
               <span class={styles.fieldLabel}>WhatsApp corporativo</span>
+
               <input
                 class={styles.textInput}
                 type="tel"
@@ -92,6 +101,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
                 }
                 required
               />
+
               <Show when={phoneError()}>
                 <p class={styles.fieldError}>
                   Ingresa 9 dígitos y que empiece con 9.
@@ -108,7 +118,7 @@ export function OnboardingProfileStep(props: OnboardingProfileStepProps) {
           form={FORM_ID}
           class={styles.primaryButton}
           loading={props.submitting}
-          disabled={!canSubmit()}
+          disabled={!phoneValid()}
         >
           Continuar
         </Button>

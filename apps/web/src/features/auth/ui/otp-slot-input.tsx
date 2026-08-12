@@ -26,7 +26,9 @@ export function OtpSlotInput(props: OtpSlotInputProps) {
   });
 
   const activeIndex = createMemo(() => {
-    if (!focused()) return null;
+    if (!focused()) {
+      return null;
+    }
     return Math.min(normalizeOtp(props.value).length, SLOT_COUNT - 1);
   });
 

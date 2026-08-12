@@ -1,7 +1,8 @@
-import { getDefaultAppPath } from "~/lib/auth/access/route-policy";
-import { resolveSessionClass } from "~/lib/auth/core/session-contract";
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
-import { parsePhone } from "~/lib/phone/pe-mobile";
+import { auditEntityId } from "~/domain/audit/entity";
+import { getDefaultAppPath } from "~/domain/auth/access/route-policy";
+import { resolveSessionClass } from "~/domain/auth/core/session-contract";
+import { fail, type DomainError } from "~/domain/errors";
+import { parsePhone } from "~/domain/phone/pe-mobile";
 import {
   persistVerifiedPasskeyEnrollment,
   type VerifiedPasskeyEnrollment,
@@ -13,11 +14,10 @@ import {
 import type { AuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
 import { issueRecoveryCodesForEnrollment } from "~/server/auth/recovery/issue-recovery-codes";
+import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
 import { replaceSession } from "~/server/auth/session/replace-session";
 import type { AppContext } from "~/server/platform/action/context";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 export type CompleteOnboardingCommand =
   | { method: "none" }
@@ -42,7 +42,7 @@ export async function completeOnboarding(
     return Err(fail("invalid_input"));
   }
 
-  const completedAt = ctx.now();
+  const completedAt = ctx.operationAt;
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
@@ -152,22 +152,25 @@ export async function completeOnboarding(
       occurredAt: completedAt,
     });
 
-    const sessionToken = await replaceSession(repos, {
-      current: ctx.actor,
-      user: {
-        ...user,
-        onboarding_completed_at: completedAt,
+    const sessionToken = await replaceSession(
+      repos,
+      {
+        current: ctx.actor,
+        user: {
+          ...user,
+          onboarding_completed_at: completedAt,
+        },
+        sessionClass: resolveSessionClass({
+          onboardingCompleted: true,
+          recoveryCodesAcknowledgementRequired: recoveryCodes.length > 0,
+        }),
+        strongAuthMethod,
+        strongAuthAt,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
       },
-      sessionClass: resolveSessionClass({
-        onboardingCompleted: true,
-        recoveryCodesAcknowledgementRequired: recoveryCodes.length > 0,
-      }),
-      strongAuthMethod,
-      strongAuthAt,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
-      issuedAt: completedAt,
-    });
+      ctx,
+    );
 
     return Ok({
       redirectTo: getDefaultAppPath(user.role),

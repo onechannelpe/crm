@@ -1,29 +1,17 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import type { OnboardingSnapshot } from "~/contracts/auth";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { AuthSetupRepos } from "../infrastructure/setup-context";
 
-export interface OnboardingSnapshot {
-  user: {
-    email: string;
-    names: string;
-    firstSurname: string;
-    secondSurname: string;
-    role: Role;
-    phone: string | null;
-  };
-  passwordChangeRequired: boolean;
-  strongAuthRequired: boolean;
-  hasPasskey: boolean;
-  totpEnabled: boolean;
-}
-
 export async function loadOnboardingSnapshot(
-  repos: AuthSetupRepos,
+  repos: Pick<
+    AuthSetupRepos,
+    "users" | "userChannelAddresses" | "passkeys" | "userTotpFactors"
+  >,
   userId: UserId,
 ): Promise<Result<OnboardingSnapshot, DomainError>> {
   const [user, phoneAddress, strongAuth] = await Promise.all([

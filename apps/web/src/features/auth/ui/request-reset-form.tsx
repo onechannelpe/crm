@@ -4,11 +4,11 @@ import { Show } from "solid-js";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
+import { actionErrorMessage } from "~/contracts/errors";
+import { requestPasswordResetMutation } from "~/features/auth/data/mutations";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { LoginFeedback } from "~/features/auth/ui/login-feedback";
-import { requestPasswordResetMutation } from "~/lib/mutations/auth";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";

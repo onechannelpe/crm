@@ -1,7 +1,10 @@
-import { ResponsiveImage } from "@crm/images";
-import { type JSX } from "solid-js";
+"use client";
 
-import logo from "~/assets/images/logo/logo.webp?responsive";
+import { ResponsiveImage } from "@crm/images";
+import { Show, type JSX } from "solid-js";
+
+import { PLATFORM_NAME } from "~/shared/branding";
+import { PLATFORM_LOGO } from "~/shared/branding-logo";
 
 import styles from "./auth-flow-shell.module.css";
 
@@ -18,28 +21,31 @@ export function AuthFlowShell(props: AuthFlowShellProps) {
     <div class={styles.shell}>
       <section class={styles.surface}>
         <div class={styles.content}>
-          {props.topBar !== undefined ? (
+          <Show when={props.topBar}>
             <div class={styles.topBar}>{props.topBar}</div>
-          ) : null}
+          </Show>
+
           <div class={styles.logo}>
             <ResponsiveImage
-              sources={logo}
-              alt="Culqi360"
+              sources={PLATFORM_LOGO}
+              alt={PLATFORM_NAME}
               width="40"
               height="40"
               class={styles.logoImage}
             />
           </div>
+
           <h1 class={styles.title}>{props.title}</h1>
-          {props.description ? (
+
+          <Show when={props.description}>
             <p class={styles.description}>{props.description}</p>
-          ) : null}
+          </Show>
 
           <div class={styles.body}>{props.children}</div>
 
-          {props.footer !== undefined ? (
+          <Show when={props.footer}>
             <footer class={styles.footer}>{props.footer}</footer>
-          ) : null}
+          </Show>
         </div>
       </section>
     </div>
