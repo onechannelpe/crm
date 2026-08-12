@@ -19,12 +19,16 @@ FROM oven/bun:1.3.14 AS build
 
 WORKDIR /app
 
+# Native tools such as Sentry CLI need the system CA bundle.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY . .
 
 RUN bun install --frozen-lockfile
 RUN bun run generate:templates
 
-# These values are needed at build time and must be passed as build args.
+# Required during the web build.
 ARG VITE_SENTRY_DSN
 ARG SENTRY_ORG
 ARG SENTRY_PROJECT
