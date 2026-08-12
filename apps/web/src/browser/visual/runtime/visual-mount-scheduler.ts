@@ -14,7 +14,7 @@ type VisualMountSchedulerHost = {
   setTimeout?: (callback: () => void, delayMs: number) => TimeoutHandle;
 };
 
-export type ScheduleVisualMountOptions = {
+type ScheduleVisualMountOptions = {
   priority?: VisualMountPriority;
   timeoutMs?: number;
 };
