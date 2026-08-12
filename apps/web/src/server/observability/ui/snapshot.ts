@@ -1,15 +1,16 @@
-"use server";
-
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
-import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
-import { parseObject, validationFail } from "~/server/shared/parsing";
-import { Ok } from "~/server/shared/result";
+import { application } from "~/server/composition/application";
+import { executeSessionServerFunction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
+import { Ok } from "~/shared/result";
 
 export async function getObservabilitySnapshot(
   rawParams?: unknown,
 ): Promise<ObservabilitySnapshot> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "admin.observability.snapshot.read",
     access: { kind: "permission", permission: "audit:read" },
 
@@ -26,9 +27,7 @@ export async function getObservabilitySnapshot(
       }));
     },
 
-    execute: (_ctx, input) =>
-      getServerRuntime().observability.observabilityService.getActionSnapshot(
-        input,
-      ),
+    execute: (ctx, input) =>
+      application.observability.getActionSnapshot(input, ctx.operationAt),
   });
 }

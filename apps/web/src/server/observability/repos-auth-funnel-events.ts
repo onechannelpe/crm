@@ -1,21 +1,21 @@
 import type { Insertable, Kysely } from "kysely";
 
-import { notify } from "~/lib/db/notify";
-import type { Database } from "~/lib/db/types";
 import type {
   AuthFunnelEventName,
   AuthFunnelMethod,
   AuthFunnelOutcome,
-} from "~/lib/observability/auth-funnel";
+} from "~/domain/observability/auth-funnel";
 import { mapAuthFunnelEventRow } from "~/server/event-logs/mappers";
 import {
   EVENT_LOGS_STREAM_CHANNEL,
   serializeEventLogStreamPayload,
 } from "~/server/event-logs/stream-contract";
+import { notify } from "~/server/platform/database/notifications/publish";
+import type { Database } from "~/server/platform/database/types";
 
 type NewAuthFunnelEventRow = Insertable<Database["auth_funnel_events"]>;
 
-export interface AuthFunnelEventFilter {
+interface AuthFunnelEventFilter {
   fromInclusive: Date;
   toInclusive: Date;
   eventName?: AuthFunnelEventName;
@@ -24,7 +24,7 @@ export interface AuthFunnelEventFilter {
   limit: number;
 }
 
-export interface AuthFunnelSummaryFilter {
+interface AuthFunnelSummaryFilter {
   fromInclusive: Date;
   toInclusive: Date;
   eventName?: AuthFunnelEventName;
@@ -35,18 +35,22 @@ export interface AuthFunnelSummaryFilter {
 export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
   return {
     async create(values: NewAuthFunnelEventRow) {
-      const row = await db
-        .insertInto("auth_funnel_events")
-        .values(values)
-        .returningAll()
-        .executeTakeFirstOrThrow();
+      return db.transaction().execute(async (trx) => {
+        const row = await trx
+          .insertInto("auth_funnel_events")
+          .values(values)
+          .returningAll()
+          .executeTakeFirstOrThrow();
 
-      const payload = serializeEventLogStreamPayload(
-        mapAuthFunnelEventRow(row),
-      );
-      if (payload) notify(db, EVENT_LOGS_STREAM_CHANNEL, payload);
+        const payload = serializeEventLogStreamPayload(
+          mapAuthFunnelEventRow(row),
+        );
+        if (payload) {
+          await notify(trx, EVENT_LOGS_STREAM_CHANNEL, payload);
+        }
 
-      return row;
+        return row;
+      });
     },
 
     async findRecent(filter: AuthFunnelEventFilter) {
@@ -101,16 +105,12 @@ export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteCreatedBefore(cutoff: Date): Promise<number> {
+    async deleteCreatedBefore(createdBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("auth_funnel_events")
-        .where("created_at", "<", cutoff)
+        .where("created_at", "<", createdBefore)
         .executeTakeFirst();
       return Number(result.numDeletedRows ?? 0);
     },
   };
 }
-
-export type AuthFunnelEventsRepo = ReturnType<
-  typeof createAuthFunnelEventsRepo
->;
