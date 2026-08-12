@@ -1,0 +1,11 @@
+.tabStrip {
+  /* TabStrip pads its own left edge by t-spacing-2 to line up with widget
+     canvases elsewhere; cancel that here so tabs align with this page's
+     container edge instead. */
+  margin-left: calc(var(--t-spacing-2) * -1);
+}
+
+.actionButtons {
+  display: flex;
+  gap: var(--t-spacing-2);
+}
