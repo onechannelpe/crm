@@ -1,23 +1,27 @@
-import { createResource, type Accessor } from "solid-js";
+import { createAsync, revalidate } from "@solidjs/router";
+import type { Accessor } from "solid-js";
 
-import { listLeadSaleProofFiles } from "~/actions/workflow/files";
-import type { LeadSaleProofFileView } from "~/contracts/workflow/results";
+import { leadSaleProofFilesQuery } from "~/rpc/workflow/lead-sale-proof-files";
 
 export function useAttachments(leadId: Accessor<string | null>) {
-  const [attachments, { refetch, mutate }] = createResource<
-    LeadSaleProofFileView[],
-    string | null
-  >(leadId, async (id) => {
+  const attachments = createAsync(async () => {
+    const id = leadId();
     if (!id) {
       return [];
     }
-    return listLeadSaleProofFiles(id);
+
+    return leadSaleProofFilesQuery(id);
   });
 
   return {
     attachments,
-    refetch,
-    mutate,
-    isLoading: () => attachments.loading,
+    refetch: async () => {
+      const id = leadId();
+      if (!id) {
+        return;
+      }
+
+      await revalidate(leadSaleProofFilesQuery.keyFor(id));
+    },
   };
 }

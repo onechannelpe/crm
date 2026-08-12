@@ -17,7 +17,7 @@ import {
   WidgetCardSubsectionChevron,
   WidgetCardSubsectionHeader,
 } from "~/features/widgets/widget-card";
-import { capitalize } from "~/lib/utils";
+import { capitalize } from "~/shared/text";
 
 export function RegistrySection(props: { data: LeadDetailView }) {
   const [isExpanded, setIsExpanded] = createSignal(false);

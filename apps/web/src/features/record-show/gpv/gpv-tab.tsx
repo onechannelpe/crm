@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 
-import { MerchantGpvWidget } from "~/features/dashboards/record-show/merchant-gpv-widget";
+import { MerchantGpvWidget } from "~/features/merchant-stats/record-show/merchant-gpv-widget";
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import { WidgetCardShell } from "~/features/widgets/widget-card-shell";
 import { WidgetStack } from "~/features/widgets/widget-layout";

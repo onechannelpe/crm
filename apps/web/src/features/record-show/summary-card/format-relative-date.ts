@@ -1,74 +1,74 @@
-import { APP_LOCALE } from "~/lib/locale";
+import { appCalendarDateAt } from "~/domain/time/app-time";
+import {
+  calendarDateParts,
+  type CalendarDate,
+} from "~/domain/time/calendar-date";
+import { APP_LOCALE } from "~/shared/locale";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 const RELATIVE_DATE_FORMAT = new Intl.RelativeTimeFormat(APP_LOCALE, {
   numeric: "auto",
 });
 
-function getLocalDayIndex(timestamp: number): number {
-  const date = new Date(timestamp);
-  return Math.floor(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS,
+function getDayIndex(date: CalendarDate): number {
+  const { year, month, day } = calendarDateParts(date);
+
+  return Math.floor(Date.UTC(year, month - 1, day) / DAY_MS);
+}
+
+function getRelativeDayValue(earlier: number, now: number): number {
+  return (
+    getDayIndex(appCalendarDateAt(earlier)) -
+    getDayIndex(appCalendarDateAt(now))
   );
 }
 
-function getDayDistance(timestamp: number, now: number): number {
-  return getLocalDayIndex(timestamp) - getLocalDayIndex(now);
-}
+function getElapsedMonths(earlier: number, now: number): number {
+  const earlierDate = calendarDateParts(appCalendarDateAt(earlier));
+  const nowDate = calendarDateParts(appCalendarDateAt(now));
 
-function getElapsedMonths(earlier: number, later: number): number {
-  const earlierDate = new Date(earlier);
-  const laterDate = new Date(later);
   const monthDiff =
-    (laterDate.getFullYear() - earlierDate.getFullYear()) * 12 +
-    laterDate.getMonth() -
-    earlierDate.getMonth();
+    (nowDate.year - earlierDate.year) * 12 + nowDate.month - earlierDate.month;
 
-  if (laterDate.getDate() < earlierDate.getDate()) {
+  if (nowDate.day < earlierDate.day) {
     return Math.max(0, monthDiff - 1);
   }
 
   return Math.max(0, monthDiff);
 }
 
-function getMonthDistance(timestamp: number, now: number): number {
-  if (timestamp >= now) {
-    return getElapsedMonths(now, timestamp);
-  }
-
-  return -getElapsedMonths(timestamp, now);
-}
-
-function toRelativeDateUnit(
-  timestamp: number,
+function getPastRelativeValue(
+  earlier: number,
   now: number,
 ): {
   value: number;
   unit: Intl.RelativeTimeFormatUnit;
 } {
-  const months = getMonthDistance(timestamp, now);
-  const absoluteMonths = Math.abs(months);
-  if (absoluteMonths >= 12) {
-    return { value: Math.trunc(months / 12), unit: "year" };
-  }
-  if (absoluteMonths >= 1) {
-    return { value: months, unit: "month" };
+  const months = getElapsedMonths(earlier, now);
+
+  if (months >= 12) {
+    return {
+      value: -Math.trunc(months / 12),
+      unit: "year",
+    };
   }
 
-  return { value: getDayDistance(timestamp, now), unit: "day" };
+  if (months >= 1) {
+    return {
+      value: -months,
+      unit: "month",
+    };
+  }
+
+  return {
+    value: getRelativeDayValue(earlier, now),
+    unit: "day",
+  };
 }
 
-export function formatRelativeDate(
-  timestamp: number,
-  now = Date.now(),
-): string {
-  const relative = toRelativeDateUnit(timestamp, now);
+// Future timestamps display as today.
+export function formatPastRelativeDate(timestamp: number, now: number): string {
+  const relative = getPastRelativeValue(Math.min(timestamp, now), now);
+
   return RELATIVE_DATE_FORMAT.format(relative.value, relative.unit);
-}
-
-export function formatPastRelativeDate(
-  timestamp: number,
-  now = Date.now(),
-): string {
-  return formatRelativeDate(Math.min(timestamp, now), now);
 }

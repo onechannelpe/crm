@@ -1,14 +1,16 @@
 import type { Group } from "./group";
 import { groupEventsByMonth } from "./group";
 
+// `openedAt` keeps the synthetic timeline stable across memo recomputations.
 export function buildCreateGroups(props: {
   ruc?: string;
   engineStatus?: string;
+  openedAt: number;
 }): Group[] {
   return groupEventsByMonth([
     {
       id: "create-open",
-      createdAt: Date.now(),
+      createdAt: props.openedAt,
       name: "lead.created",
       author: "Tú",
       action: "abrió el borrador del cliente",
@@ -20,7 +22,7 @@ export function buildCreateGroups(props: {
     },
     {
       id: "create-ruc-state",
-      createdAt: Date.now() - 1_000,
+      createdAt: props.openedAt - 1_000, // Keep this before the open event.
       name: "lead.updated",
       author: "Sistema",
       action: "preparó las validaciones de registro",

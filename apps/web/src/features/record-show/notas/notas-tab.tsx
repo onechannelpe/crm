@@ -2,13 +2,13 @@ import { useAction } from "@solidjs/router";
 import { For, Show, createSignal } from "solid-js";
 
 import { Button } from "~/components/ui/input/button";
+import { actionErrorMessage } from "~/contracts/errors";
 import type { LeadDetailView } from "~/contracts/workflow/views";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import type { RecordContext } from "~/features/record-show/model/record-context";
 import { ActivityTabEmptyState } from "~/features/side-panel/components/activity-tabs/empty-state";
 import { addNoteMutation } from "~/features/workflow/data/command-mutations";
 import { revalidateWorkflowLead } from "~/features/workflow/data/revalidate-workflow";
-import { formatDateTime } from "~/lib/utils";
-import { actionErrorMessage } from "~/lib/wire-error";
 
 import styles from "./notas.module.css";
 
@@ -38,7 +38,9 @@ function NotasView(props: { data: LeadDetailView }) {
   async function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
     const trimmed = body().trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      return;
+    }
 
     setSaving(true);
     setErrorMessage(null);
@@ -101,7 +103,7 @@ function NotasView(props: { data: LeadDetailView }) {
                 <div class={styles.noteHeader}>
                   <span class={styles.noteAuthor}>{note.actorDisplayName}</span>
                   <span class={styles.noteDate}>
-                    {formatDateTime(note.occurredAt)}
+                    {formatAppDateTime(note.occurredAt)}
                   </span>
                 </div>
                 <p class={styles.noteBody}>{note.description}</p>

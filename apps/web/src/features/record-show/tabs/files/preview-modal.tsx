@@ -28,7 +28,9 @@ type PreviewModalProps = {
 
 export function PreviewModal(props: PreviewModalProps) {
   createEffect(() => {
-    if (!props.state) return;
+    if (!props.state) {
+      return;
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         props.onClose();

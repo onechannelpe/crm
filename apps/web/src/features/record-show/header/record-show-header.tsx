@@ -1,34 +1,44 @@
+import { Title } from "@solidjs/meta";
 import { A, createAsync } from "@solidjs/router";
 import { Show, createMemo, type ParentProps } from "solid-js";
 
 import Building2 from "~/components/icons/building-2";
-import LayoutSidebarRightCollapse from "~/components/icons/layout-sidebar-right-collapse";
-import { useNavigationDrawerState } from "~/features/navigation-drawer/state/navigation-drawer-provider";
-import { PageHeader } from "~/features/settings-shell/page/page-header";
-import {
-  leadDetailQuery,
-  leadListQuery,
-} from "~/features/workflow/data/queries";
+import { PageCardHeader } from "~/components/ui/layout/page-card/page-card-header";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
 
 import styles from "./record-show-header.module.css";
 
-type RecordShowHeaderProps = ParentProps<{ leadId: string }>;
-
 const LEAD_NAVIGATION_LIMIT = 200;
 
-export function RecordShowHeader(props: RecordShowHeaderProps) {
-  const { expanded, isMobile, setExpanded } = useNavigationDrawerState();
+export function RecordShowHeader(
+  props: ParentProps<{
+    leadId: string;
+  }>,
+) {
   const data = createAsync(() => leadDetailQuery(props.leadId));
   const leadList = createAsync(() =>
-    leadListQuery({ limit: LEAD_NAVIGATION_LIMIT, offset: 0 }),
+    leadListQuery({
+      limit: LEAD_NAVIGATION_LIMIT,
+      offset: 0,
+    }),
   );
 
+  const lead = createMemo(() => data()?.lead);
+
   const displayName = createMemo(
-    () => data()?.lead.legalName ?? data()?.lead.ruc ?? "—",
+    () => lead()?.legalName ?? lead()?.ruc ?? "Sin nombre",
   );
+
+  const documentTitle = createMemo(() => {
+    const name = lead()?.legalName ?? lead()?.ruc;
+
+    return name ? `${name} - Registro` : "Registro";
+  });
 
   const currentIndex = createMemo(() => {
     const rows = leadList()?.rows;
+
     if (!rows) {
       return -1;
     }
@@ -39,6 +49,7 @@ export function RecordShowHeader(props: RecordShowHeaderProps) {
   const paginationLabel = createMemo(() => {
     const totalCount = leadList()?.totalCount;
     const index = currentIndex();
+
     if (!totalCount || index < 0) {
       return null;
     }
@@ -47,40 +58,34 @@ export function RecordShowHeader(props: RecordShowHeaderProps) {
   });
 
   return (
-    <PageHeader
-      leading={
-        !isMobile() && !expanded() ? (
-          <button
-            type="button"
-            class={styles.drawerExpandButton}
-            onClick={() => setExpanded(true)}
-            aria-label="Expandir barra lateral"
-          >
-            <LayoutSidebarRightCollapse size={14} />
-          </button>
-        ) : undefined
-      }
-      title={
-        <span class={styles.breadcrumb}>
-          <A href="/records" class={styles.breadcrumbLink}>
-            <span class={styles.breadcrumbPrefix}>
-              <span class={styles.objectIconBadge}>
-                <Building2 size={14} />
+    <>
+      <Title>{documentTitle()}</Title>
+
+      <PageCardHeader
+        breadcrumb={
+          <span class={styles.breadcrumb}>
+            <A href="/records" class={styles.breadcrumbLink}>
+              <span class={styles.breadcrumbPrefix}>
+                <span class={styles.objectIconBadge}>
+                  <Building2 size={14} />
+                </span>
+                <span>Registros</span>
               </span>
-              <span>Registros</span>
+            </A>
+
+            <span class={styles.breadcrumbSep}>/</span>
+
+            <span class={styles.breadcrumbCurrent} title={displayName()}>
+              {displayName()}
             </span>
-          </A>
-          <span class={styles.breadcrumbSep}>/</span>
-          <span class={styles.breadcrumbCurrent} title={displayName()}>
-            {displayName()}
+
+            <Show when={paginationLabel()}>
+              {(label) => <span class={styles.paginationInfo}>{label()}</span>}
+            </Show>
           </span>
-          <Show when={paginationLabel()}>
-            {(label) => <span class={styles.paginationInfo}>{label()}</span>}
-          </Show>
-        </span>
-      }
-    >
-      {props.children}
-    </PageHeader>
+        }
+        actionButton={props.children}
+      />
+    </>
   );
 }
