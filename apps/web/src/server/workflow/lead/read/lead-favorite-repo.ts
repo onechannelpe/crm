@@ -1,5 +1,5 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
+import type { UserId, WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 export type LeadFavoriteRepository = {
   isFavoriteForUser(input: {

@@ -4,20 +4,15 @@ import {
   createLeadFixtureWriter,
 } from "@tests/support/database/workflow-fixtures";
 import { proposePendingRate } from "@tests/support/integration/pricing";
-import {
-  workflowCommandPorts,
-  workflowRepos,
-} from "@tests/support/integration/workflow-ports";
+import { operationAt } from "@tests/support/operation";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
 import { expireLapsedReservations } from "~/server/workflow/lead/commands/expire-reservation";
 import { DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS } from "~/server/workflow/lead/domain/pricing";
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 // The hold window is owned by the pricing policy, not hardcoded here, so these stay
 // correct if the default validity changes.
@@ -73,11 +68,14 @@ describe("lead reservation expiry", () => {
 
     const actor = actorBy("execOne");
     const detail = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        {
+          actorUserId: actor.userId,
+          actorRole: actor.role,
+          leadId: lead.id,
+        },
+        operationAt(runtime.now.get()),
+      ),
     );
     expect(detail.lead.stage).toBe("EXPIRED");
     expect(detail.lead.reservationExpiresAt).toBeNull();
@@ -100,13 +98,13 @@ describe("lead reservation expiry", () => {
       new Date(runtime.now.get().getTime() + RESERVATION_WINDOW_MS + 1),
     );
 
-    const result = await acceptRateCommand(
+    const result = await runtime.workflow.commands.acceptRate(
       {
         actor,
         leadId: lead.id,
         proposalId,
       },
-      workflowCommandPorts(runtime),
+      operationAt(runtime.now.get()),
     );
 
     expect(expectErr(result).code).toBe("rate_proposal_expired");

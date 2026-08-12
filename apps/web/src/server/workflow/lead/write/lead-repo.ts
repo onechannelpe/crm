@@ -5,14 +5,15 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { hydrateRuc } from "~/server/shared/document";
+import { hydrateRuc } from "~/domain/identity/document";
 import type {
+  BranchId,
   OrganizationId,
   UserId,
   WorkflowLeadId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import type {
   LeadCommercialScope,
   LeadDraft,
@@ -30,7 +31,7 @@ export type LeadRepository = {
   findByRucMany(rucs: string[]): Promise<LeadState[]>;
   countPendingQuotationDecisions(
     executiveId: UserId,
-    now: Date,
+    activeAsOf: Date,
   ): Promise<number>;
   updateCommercialSnapshot(
     leadId: WorkflowLeadId,
@@ -44,6 +45,7 @@ type LeadRow = {
   id: WorkflowLeadId;
   organization_id: OrganizationId;
   executive_id: UserId;
+  branch_id: BranchId;
   created_by: UserId;
   updated_by: UserId | null;
   stage: LeadStage;
@@ -75,6 +77,7 @@ function toLead(row: LeadWithOrganizationRow): LeadState {
     district: row.district,
     department: row.department,
     executiveId: row.executive_id,
+    branchId: row.branch_id,
     createdBy: row.created_by,
     updatedBy: row.updated_by ?? null,
     stage: row.stage,
@@ -103,7 +106,6 @@ function toCommercialColumns(scope: LeadCommercialScope) {
 function toNewLeadRow(values: LeadDraft): NewLeadRow {
   return {
     organization_id: values.organizationId,
-    executive_id: values.executiveId,
     created_by: values.createdBy,
     updated_by: values.updatedBy ?? undefined,
     stage: values.stage,
@@ -120,10 +122,17 @@ export function createLeadRepo(db: DatabaseExecutor) {
   const selectLeadWithOrganization = db
     .selectFrom("workflow_leads as lead")
     .innerJoin("organizations as org", "org.id", "lead.organization_id")
+    .innerJoin(
+      "organization_current_owners as owner",
+      "owner.organization_id",
+      "lead.organization_id",
+    )
+    .innerJoin("users as executive", "executive.id", "owner.executive_id")
     .select([
       "lead.id",
       "lead.organization_id",
-      "lead.executive_id",
+      "owner.executive_id",
+      "executive.branch_id",
       "lead.created_by",
       "lead.updated_by",
       "lead.stage",
@@ -185,7 +194,9 @@ export function createLeadRepo(db: DatabaseExecutor) {
         .where("deleted_at", "is", null)
         .executeTakeFirst();
 
-      if (!row) return undefined;
+      if (!row) {
+        return undefined;
+      }
       return {
         currentProvider: row.current_provider,
         currentDebitRate: row.current_debit_rate,
@@ -207,7 +218,9 @@ export function createLeadRepo(db: DatabaseExecutor) {
     },
 
     async findByRucMany(rucs: string[]): Promise<LeadState[]> {
-      if (rucs.length === 0) return [];
+      if (rucs.length === 0) {
+        return [];
+      }
       const rows = await selectLeadWithOrganization
         .where("org.ruc", "in", rucs)
         .execute();
@@ -219,32 +232,37 @@ export function createLeadRepo(db: DatabaseExecutor) {
     // close-lead each move the proposal off "pending" or the lead off PRICING.
     async countPendingQuotationDecisions(
       executiveId: UserId,
-      now: Date,
+      activeAsOf: Date,
     ): Promise<number> {
       const row = await db
         .selectFrom("workflow_leads as lead")
+        .innerJoin(
+          "organization_current_owners as owner",
+          "owner.organization_id",
+          "lead.organization_id",
+        )
         .innerJoin("workflow_rate_proposals as proposal", (join) =>
           join
             .onRef("proposal.lead_id", "=", "lead.id")
             .on("proposal.outcome", "=", "pending"),
         )
         .select((eb) => eb.fn.countAll<number>().as("count"))
-        .where("lead.executive_id", "=", executiveId)
+        .where("owner.executive_id", "=", executiveId)
         .where("lead.stage", "=", "PRICING")
         .where("lead.deleted_at", "is", null)
         .where("lead.reservation_expires_at", "is not", null)
-        .where("lead.reservation_expires_at", ">", now)
+        .where("lead.reservation_expires_at", ">", activeAsOf)
         .executeTakeFirst();
 
       return row?.count ?? 0;
     },
 
-    async findLapsedReservations(now: Date): Promise<WorkflowLeadId[]> {
+    async findLapsedReservations(lapsedAsOf: Date): Promise<WorkflowLeadId[]> {
       const rows = await db
         .selectFrom("workflow_leads")
         .select("id")
         .where("reservation_expires_at", "is not", null)
-        .where("reservation_expires_at", "<=", now)
+        .where("reservation_expires_at", "<=", lapsedAsOf)
         .where("deleted_at", "is", null)
         .where("stage", "=", "PRICING")
         .execute();

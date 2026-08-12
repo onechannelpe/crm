@@ -5,15 +5,15 @@ import type {
   FulfillmentStep,
   ProductKind,
 } from "~/contracts/workflow/vocabulary";
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   FileAssetId,
   FulfillmentOrderId,
   UserId,
   WorkflowLeadId,
   WorkflowVenueId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 
 import type { UnitField } from "./steps";
 
@@ -94,7 +94,7 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
       leadId: WorkflowLeadId;
       createdBy: UserId;
       currentStep: FulfillmentStep;
-      now: Date;
+      createdAt: Date;
     }): Promise<FulfillmentOrderId> {
       const row = await db
         .insertInto("lead_fulfillment_orders")
@@ -104,8 +104,8 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
           current_step: input.currentStep,
           service_b_ref: null,
           created_by: input.createdBy,
-          created_at: input.now,
-          updated_at: input.now,
+          created_at: input.createdAt,
+          updated_at: input.createdAt,
         })
         .returning("id")
         .executeTakeFirstOrThrow();
@@ -117,10 +117,12 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         orderId: FulfillmentOrderId;
         venueId: WorkflowVenueId | null;
         label: string;
-        now: Date;
+        createdAt: Date;
       }>,
     ): Promise<void> {
-      if (units.length === 0) return;
+      if (units.length === 0) {
+        return;
+      }
       const rows: Insertable<Database["lead_fulfillment_units"]>[] = units.map(
         (unit) => ({
           order_id: unit.orderId,
@@ -131,7 +133,7 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
           payment_proof_file_asset_id: null,
           payment_validated: false,
           service_a_ref: null,
-          created_at: unit.now,
+          created_at: unit.createdAt,
         }),
       );
       await db.insertInto("lead_fulfillment_units").values(rows).execute();
@@ -145,7 +147,9 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .selectAll()
         .where("lead_id", "=", leadId)
         .executeTakeFirst();
-      if (!orderRow) return null;
+      if (!orderRow) {
+        return null;
+      }
 
       const [unitRows, docRows] = await Promise.all([
         db
@@ -189,11 +193,11 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
     async setProductKind(
       orderId: FulfillmentOrderId,
       productKind: ProductKind,
-      now: Date,
+      updatedAt: Date,
     ): Promise<void> {
       await db
         .updateTable("lead_fulfillment_orders")
-        .set({ product_kind: productKind, updated_at: now })
+        .set({ product_kind: productKind, updated_at: updatedAt })
         .where("id", "=", orderId)
         .execute();
     },
@@ -201,11 +205,11 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
     async setStep(
       orderId: FulfillmentOrderId,
       step: FulfillmentStep,
-      now: Date,
+      updatedAt: Date,
     ): Promise<void> {
       await db
         .updateTable("lead_fulfillment_orders")
-        .set({ current_step: step, updated_at: now })
+        .set({ current_step: step, updated_at: updatedAt })
         .where("id", "=", orderId)
         .execute();
     },
@@ -213,11 +217,11 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
     async setServiceBRef(
       orderId: FulfillmentOrderId,
       ref: string,
-      now: Date,
+      updatedAt: Date,
     ): Promise<void> {
       await db
         .updateTable("lead_fulfillment_orders")
-        .set({ service_b_ref: ref, updated_at: now })
+        .set({ service_b_ref: ref, updated_at: updatedAt })
         .where("id", "=", orderId)
         .execute();
     },
@@ -246,6 +250,21 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
+    async listUnitPayments(
+      orderId: FulfillmentOrderId,
+    ): Promise<{ label: string; paymentUrl: string | null }[]> {
+      const rows = await db
+        .selectFrom("lead_fulfillment_units")
+        .select(["label", "payment_url"])
+        .where("order_id", "=", orderId)
+        .orderBy("created_at", "asc")
+        .execute();
+      return rows.map((row) => ({
+        label: row.label,
+        paymentUrl: row.payment_url,
+      }));
+    },
+
     async markPaymentsValidated(orderId: FulfillmentOrderId): Promise<void> {
       await db
         .updateTable("lead_fulfillment_units")
@@ -259,7 +278,7 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
       docKind: FulfillmentDocKind;
       fileAssetId: FileAssetId;
       uploadedByUserId: UserId;
-      now: Date;
+      createdAt: Date;
     }): Promise<void> {
       await db
         .insertInto("lead_fulfillment_documents")
@@ -268,7 +287,7 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
           doc_kind: input.docKind,
           file_asset_id: input.fileAssetId,
           uploaded_by_user_id: input.uploadedByUserId,
-          created_at: input.now,
+          created_at: input.createdAt,
         })
         .execute();
     },

@@ -1,10 +1,13 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
-import { createEventsRepo } from "~/server/shared/repos-events";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { Transaction } from "kysely";
+
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { createEventsWriter } from "~/server/event-logs/events-repo";
+import { assignOrganizationOwnerInTransaction } from "~/server/organization/ownership";
+import type { Database } from "~/server/platform/database/types";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 import type { LeadState } from "~/server/workflow/lead/domain/state";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { toLeadEventAppend } from "./lead-events";
 
@@ -16,34 +19,11 @@ export type LeadTransition = {
 export type LeadAssignment = {
   toExecutiveId: UserId;
   assignedBy: UserId;
-  at: Date;
+  assignedAt: Date;
 };
 
-async function replaceActiveAssignment(
-  tx: DatabaseExecutor,
-  input: LeadAssignment & { leadId: WorkflowLeadId },
-): Promise<void> {
-  await tx
-    .updateTable("workflow_lead_assignments")
-    .set({ is_active: false })
-    .where("lead_id", "=", input.leadId)
-    .where("is_active", "=", true)
-    .execute();
-
-  await tx
-    .insertInto("workflow_lead_assignments")
-    .values({
-      lead_id: input.leadId,
-      executive_id: input.toExecutiveId,
-      assigned_by: input.assignedBy,
-      is_active: true,
-      assigned_at: input.at,
-    })
-    .execute();
-}
-
 export async function commitTransition(
-  tx: DatabaseExecutor,
+  tx: Transaction<Database>,
   transition: LeadTransition,
   assignment?: LeadAssignment,
 ): Promise<Result<{ eventIds: string[] }, DomainError>> {
@@ -55,7 +35,6 @@ export async function commitTransition(
       stage: next.stage,
       status: next.status,
       priority: next.priority,
-      executive_id: next.executiveId,
       updated_by: next.updatedBy,
       updated_at: next.updatedAt,
       reservation_expires_at: next.reservationExpiresAt,
@@ -71,28 +50,43 @@ export async function commitTransition(
   }
 
   if (assignment) {
-    await replaceActiveAssignment(tx, { ...assignment, leadId: next.id });
+    const assigned = await assignOrganizationOwnerInTransaction(tx, {
+      organizationId: next.organizationId,
+      executiveId: assignment.toExecutiveId,
+      assignedBy: assignment.assignedBy,
+      assignedAt: assignment.assignedAt,
+      reason: "workflow_reassignment",
+    });
+
+    if (!assigned.ok) {
+      return assigned;
+    }
   }
 
-  const eventIds = await createEventsRepo(tx).append(
+  const eventIds = await createEventsWriter(tx).append(
     events.map(toLeadEventAppend),
   );
 
   return Ok({ eventIds });
 }
 
-// Timeline facts avoid the version lock so concurrent activity can coexist.
 export async function appendFacts(
-  tx: DatabaseExecutor,
+  tx: Transaction<Database>,
+  operationAt: Date,
   events: LeadHistoryEventDraft[],
-  now: Date,
 ): Promise<Result<{ eventIds: string[] }, DomainError>> {
   const leadId = events[0]?.leadId;
-  if (!leadId) return Ok({ eventIds: [] });
+
+  if (!leadId) {
+    return Ok({ eventIds: [] });
+  }
 
   const updateResult = await tx
     .updateTable("workflow_leads")
-    .set({ updated_at: now, updated_by: events[0].actorUserId })
+    .set({
+      updated_at: operationAt,
+      updated_by: events[0].actorUserId,
+    })
     .where("id", "=", leadId)
     .where("deleted_at", "is", null)
     .executeTakeFirst();
@@ -101,7 +95,7 @@ export async function appendFacts(
     return Err(fail("lead_not_found"));
   }
 
-  const eventIds = await createEventsRepo(tx).append(
+  const eventIds = await createEventsWriter(tx).append(
     events.map(toLeadEventAppend),
   );
 

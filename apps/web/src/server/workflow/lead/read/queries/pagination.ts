@@ -1,5 +1,5 @@
-import { invalid, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { invalid, type DomainError } from "~/domain/errors";
+import { Err, Ok, type Result } from "~/shared/result";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;

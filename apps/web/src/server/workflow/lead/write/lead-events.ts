@@ -1,4 +1,4 @@
-import type { EventToAppend } from "~/server/shared/repos-events";
+import type { EventToAppend } from "~/server/event-logs/events-repo";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 
 export function toLeadEventAppend(draft: LeadHistoryEventDraft): EventToAppend {
@@ -11,5 +11,6 @@ export function toLeadEventAppend(draft: LeadHistoryEventDraft): EventToAppend {
     payload: draft.payload,
     changes: draft.changes,
     occurredAt: draft.occurredAt,
+    notificationContext: draft.notificationContext,
   };
 }

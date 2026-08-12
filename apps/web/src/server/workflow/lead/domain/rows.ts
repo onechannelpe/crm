@@ -1,5 +1,4 @@
 import type { Currency } from "~/contracts/workflow/vocabulary";
-import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 import type {
   FileAssetId,
   UserId,
@@ -7,7 +6,8 @@ import type {
   WorkflowRateProposalId,
   WorkflowRateRevisionId,
   WorkflowRateRevisionFileId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { SunatEconomicActivity } from "~/server/client-search/enrichment/sunat/contracts";
 
 export type RateProposalOutcome = "pending" | "accepted" | "revision_requested";
 
@@ -44,14 +44,6 @@ export type RateRevision = {
   justification: string;
   requestedBy: UserId;
   requestedAt: Date;
-};
-
-export type RateRevisionFile = {
-  id: WorkflowRateRevisionFileId;
-  revisionId: WorkflowRateRevisionId;
-  fileAssetId: FileAssetId;
-  uploadedByUserId: UserId;
-  createdAt: Date;
 };
 
 export type SubmitReadyRevisionFile = {

@@ -9,7 +9,7 @@ import type {
   LeadPriority,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import { fail, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/domain/errors";
 import type {
   FulfillmentOrderId,
   UserId,
@@ -17,12 +17,16 @@ import type {
   WorkflowRateRevisionId,
   WorkflowRateRevisionFileId,
   WorkflowVenueId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { applyEvents } from "./evolve";
-import { createHistoryEvent, type LeadHistoryEventDraft } from "./history";
+import {
+  createHistoryEvent,
+  leadNotificationContext,
+  type LeadHistoryEventDraft,
+} from "./history";
 import { authorizeLeadAction } from "./policy";
 import { isReservationActive } from "./reservation";
 import { resolveReviewTransition } from "./review";
@@ -38,10 +42,13 @@ function finish(
   state: LeadState,
   events: LeadHistoryEventDraft[],
   actor: Actor,
-  now: Date,
+  occurredAt: Date,
   reservationExpiresAt?: Date | null,
 ): TransitionResult {
-  const next = applyEvents(state, events, { actorUserId: actor.userId, now });
+  const next = applyEvents(state, events, {
+    actorUserId: actor.userId,
+    updatedAt: occurredAt,
+  });
   return Ok({
     next:
       reservationExpiresAt === undefined
@@ -53,10 +60,12 @@ function finish(
 
 export function deleteLead(
   state: LeadState,
-  input: { actor: Actor; now: Date },
+  input: { actor: Actor; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("delete", input.actor, state);
-  if (!authz.ok) return authz;
+  if (!authz.ok) {
+    return authz;
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -64,19 +73,21 @@ export function deleteLead(
       eventType: "lead_deleted",
       actorUserId: input.actor.userId,
       payload: {},
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function reassignLead(
   state: LeadState,
-  input: { actor: Actor; toExecutiveId: UserId; now: Date },
+  input: { actor: Actor; toExecutiveId: UserId; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("reassign", input.actor, state);
-  if (!authz.ok) return authz;
+  if (!authz.ok) {
+    return authz;
+  }
 
   if (state.executiveId === input.toExecutiveId) {
     return Err(fail("same_executive"));
@@ -92,11 +103,11 @@ export function reassignLead(
         fromExecutiveId: state.executiveId,
         toExecutiveId: input.toExecutiveId,
       },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function proposeRate(
@@ -107,12 +118,16 @@ export function proposeRate(
     round: number;
     currency: Currency;
     reservationExpiresAt: Date;
-    now: Date;
+    occurredAt: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("propose-rate", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -124,7 +139,7 @@ export function proposeRate(
         round: input.round,
         currency: input.currency,
       },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ];
 
@@ -132,7 +147,7 @@ export function proposeRate(
     state,
     events,
     input.actor,
-    input.now,
+    input.occurredAt,
     input.reservationExpiresAt,
   );
 }
@@ -144,13 +159,17 @@ export function editRateProposal(
     proposalId: WorkflowRateProposalId;
     round: number;
     changes: FieldChange[];
-    now: Date;
+    occurredAt: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("propose-rate", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
-  if (!isReservationActive(state, input.now)) {
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
+  if (!isReservationActive(state, input.occurredAt)) {
     return Err(fail("rate_proposal_expired"));
   }
 
@@ -164,23 +183,25 @@ export function editRateProposal(
         round: input.round,
       },
       changes: input.changes,
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function editCommercialScope(
   state: LeadState,
-  input: { actor: Actor; changes: FieldChange[]; now: Date },
+  input: { actor: Actor; changes: FieldChange[]; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction(
     "edit-commercial-scope",
     input.actor,
     state,
   );
-  if (!authz.ok) return authz;
+  if (!authz.ok) {
+    return authz;
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -189,11 +210,11 @@ export function editCommercialScope(
       actorUserId: input.actor.userId,
       payload: {},
       changes: input.changes,
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function reviewLead(
@@ -204,17 +225,23 @@ export function reviewLead(
     status: LeadStatus | null;
     priority: LeadPriority | null;
     reason: string;
-    now: Date;
+    occurredAt: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "QUALIFYING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [];
 
   if (input.rowType === "status") {
-    if (input.status === null) return Err(fail("invalid_stage"));
+    if (input.status === null) {
+      return Err(fail("invalid_stage"));
+    }
     events.push(
       createHistoryEvent({
         leadId: state.id,
@@ -225,11 +252,13 @@ export function reviewLead(
           toStatus: input.status,
           reason: input.reason,
         },
-        occurredAt: input.now,
+        occurredAt: input.occurredAt,
       }),
     );
   } else {
-    if (input.priority === null) return Err(fail("invalid_stage"));
+    if (input.priority === null) {
+      return Err(fail("invalid_stage"));
+    }
     events.push(
       createHistoryEvent({
         leadId: state.id,
@@ -240,16 +269,13 @@ export function reviewLead(
           toPrioridad: input.priority,
           reason: input.reason,
         },
-        occurredAt: input.now,
+        occurredAt: input.occurredAt,
       }),
     );
   }
 
   if (input.status !== null && input.priority !== null) {
-    const toStage = resolveReviewTransition({
-      status: input.status,
-      priority: input.priority,
-    });
+    const toStage = resolveReviewTransition(input.status);
     events.push(
       createHistoryEvent({
         leadId: state.id,
@@ -262,19 +288,20 @@ export function reviewLead(
           fromStage: state.stage,
           toStage,
         },
-        occurredAt: input.now,
+        occurredAt: input.occurredAt,
       }),
       createHistoryEvent({
         leadId: state.id,
         eventType: "workflow_stage_changed",
         actorUserId: input.actor.userId,
         payload: { from: state.stage, to: toStage },
-        occurredAt: input.now,
+        notificationContext: leadNotificationContext(state),
+        occurredAt: input.occurredAt,
       }),
     );
   }
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function qualifyLead(
@@ -284,17 +311,18 @@ export function qualifyLead(
     status: LeadStatus;
     priority: LeadPriority;
     reason: string;
-    now: Date;
+    occurredAt: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("review", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "QUALIFYING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "QUALIFYING") {
+    return Err(fail("invalid_stage"));
+  }
 
-  const toStage = resolveReviewTransition({
-    status: input.status,
-    priority: input.priority,
-  });
+  const toStage = resolveReviewTransition(input.status);
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -306,7 +334,7 @@ export function qualifyLead(
         toStatus: input.status,
         reason: input.reason,
       },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
     createHistoryEvent({
       leadId: state.id,
@@ -317,7 +345,7 @@ export function qualifyLead(
         toPrioridad: input.priority,
         reason: input.reason,
       },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
     createHistoryEvent({
       leadId: state.id,
@@ -330,27 +358,32 @@ export function qualifyLead(
         fromStage: state.stage,
         toStage,
       },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
     createHistoryEvent({
       leadId: state.id,
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: toStage },
-      occurredAt: input.now,
+      notificationContext: leadNotificationContext(state),
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function acceptRate(
   state: LeadState,
-  input: { actor: Actor; proposalId: WorkflowRateProposalId; now: Date },
+  input: { actor: Actor; proposalId: WorkflowRateProposalId; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("accept-rate", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -358,18 +391,19 @@ export function acceptRate(
       eventType: "rate_accepted",
       actorUserId: input.actor.userId,
       payload: { proposalId: input.proposalId },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
     createHistoryEvent({
       leadId: state.id,
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: "SETUP" },
-      occurredAt: input.now,
+      notificationContext: leadNotificationContext(state),
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now, null);
+  return finish(state, events, input.actor, input.occurredAt, null);
 }
 
 export function closeLead(
@@ -378,12 +412,16 @@ export function closeLead(
     actor: Actor;
     reason: CloseReason;
     note: string | null;
-    now: Date;
+    occurredAt: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("close-lead", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -395,25 +433,28 @@ export function closeLead(
         note: input.note,
         fromStage: state.stage,
       },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
     createHistoryEvent({
       leadId: state.id,
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: "CLOSED_LOST" },
-      occurredAt: input.now,
+      notificationContext: leadNotificationContext(state),
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now, null);
+  return finish(state, events, input.actor, input.occurredAt, null);
 }
 
 export function expireReservation(
   state: LeadState,
-  input: { now: Date },
+  input: { occurredAt: Date },
 ): TransitionResult {
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -421,13 +462,13 @@ export function expireReservation(
       eventType: "lead_reservation_expired",
       actorUserId: null,
       payload: { fromStage: state.stage },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ];
 
   const next = applyEvents(state, events, {
     actorUserId: null,
-    now: input.now,
+    updatedAt: input.occurredAt,
   });
   return Ok({ next: { ...next, reservationExpiresAt: null }, events });
 }
@@ -435,11 +476,15 @@ export function expireReservation(
 // Reopen pricing without reviving the expired reservation. Back office proposes a replacement.
 export function restartQuotation(
   state: LeadState,
-  input: { actor: Actor; now: Date },
+  input: { actor: Actor; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("restart-quotation", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "EXPIRED") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "EXPIRED") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -447,11 +492,12 @@ export function restartQuotation(
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: "PRICING" },
-      occurredAt: input.now,
+      notificationContext: leadNotificationContext(state),
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function recordRepLegal(
@@ -464,12 +510,16 @@ export function recordRepLegal(
     dni: string;
     telefono: string;
     email: string;
-    now: Date;
+    occurredAt: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("record-rep-legal", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "SETUP") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -484,11 +534,11 @@ export function recordRepLegal(
         telefono: input.telefono,
         email: input.email,
       },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function addVenueAccounts(
@@ -498,12 +548,16 @@ export function addVenueAccounts(
     venueId: WorkflowVenueId;
     totalVenues: number;
     fundedVenues: number;
-    now: Date;
+    occurredAt: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction("add-venue-accounts", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "SETUP") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "SETUP") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -511,7 +565,7 @@ export function addVenueAccounts(
       eventType: "venue_accounts_added",
       actorUserId: input.actor.userId,
       payload: { venueId: input.venueId },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ];
 
@@ -526,21 +580,26 @@ export function addVenueAccounts(
         eventType: "workflow_stage_changed",
         actorUserId: input.actor.userId,
         payload: { from: state.stage, to: "FULFILLMENT" },
-        occurredAt: input.now,
+        notificationContext: leadNotificationContext(state),
+        occurredAt: input.occurredAt,
       }),
     );
   }
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function completeFulfillment(
   state: LeadState,
-  input: { actor: Actor; orderId: FulfillmentOrderId; now: Date },
+  input: { actor: Actor; orderId: FulfillmentOrderId; occurredAt: Date },
 ): TransitionResult {
   const authz = authorizeLeadAction("complete-fulfillment", input.actor, state);
-  if (!authz.ok) return authz;
-  if (state.stage !== "FULFILLMENT") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "FULFILLMENT") {
+    return Err(fail("invalid_stage"));
+  }
 
   const events: LeadHistoryEventDraft[] = [
     createHistoryEvent({
@@ -548,18 +607,20 @@ export function completeFulfillment(
       eventType: "fulfillment_completed",
       actorUserId: input.actor.userId,
       payload: { orderId: input.orderId },
-      occurredAt: input.now,
+      notificationContext: leadNotificationContext(state),
+      occurredAt: input.occurredAt,
     }),
     createHistoryEvent({
       leadId: state.id,
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: "LIVE" },
-      occurredAt: input.now,
+      notificationContext: leadNotificationContext(state),
+      occurredAt: input.occurredAt,
     }),
   ];
 
-  return finish(state, events, input.actor, input.now);
+  return finish(state, events, input.actor, input.occurredAt);
 }
 
 export function requestRateRevision(
@@ -571,7 +632,7 @@ export function requestRateRevision(
     justification: string;
     fileIds: WorkflowRateRevisionFileId[];
     reservationExpiresAt: Date;
-    now: Date;
+    occurredAt: Date;
   },
 ): TransitionResult {
   const authz = authorizeLeadAction(
@@ -579,8 +640,12 @@ export function requestRateRevision(
     input.actor,
     state,
   );
-  if (!authz.ok) return authz;
-  if (state.stage !== "PRICING") return Err(fail("invalid_stage"));
+  if (!authz.ok) {
+    return authz;
+  }
+  if (state.stage !== "PRICING") {
+    return Err(fail("invalid_stage"));
+  }
 
   if (input.round > MAX_RATE_REVISION_ROUNDS) {
     return Err(fail("max_rate_revision_rounds_reached"));
@@ -605,7 +670,7 @@ export function requestRateRevision(
         round: input.round,
         justification: input.justification,
       },
-      occurredAt: input.now,
+      occurredAt: input.occurredAt,
     }),
   ];
 
@@ -613,7 +678,7 @@ export function requestRateRevision(
     state,
     events,
     input.actor,
-    input.now,
+    input.occurredAt,
     input.reservationExpiresAt,
   );
 }

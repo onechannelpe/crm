@@ -1,38 +1,39 @@
 import type { AddLeadNoteInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId } from "~/domain/ids";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { runLeadTransaction } from "~/server/workflow/lead/write/transition";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import { recordNote } from "./domain";
-
-type Ports = {
-  executor: DatabaseExecutor;
-  now: Date;
-};
 
 export async function addLeadNote(
   input: Omit<AddLeadNoteInput, "leadId"> & {
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
   },
-  ports: Ports,
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ interactionId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
-    if (!state) return Err(fail("lead_not_found"));
+    if (!state) {
+      return Err(fail("lead_not_found"));
+    }
 
     const events = recordNote(state, {
       actor: input.actor,
       body: input.body,
-      now: ctx.now,
+      occurredAt: ctx.operationAt,
     });
-    if (isErr(events)) return Err(events.error);
+    if (isErr(events)) {
+      return Err(events.error);
+    }
 
     const appended = await ctx.appendFacts(events.value);
-    if (!appended.ok) return appended;
+    if (!appended.ok) {
+      return appended;
+    }
 
     return Ok({ interactionId: appended.value.eventIds[0] });
   });

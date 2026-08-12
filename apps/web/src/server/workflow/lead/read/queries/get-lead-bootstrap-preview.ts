@@ -1,8 +1,8 @@
 import type { LeadBootstrapPreviewView } from "~/contracts/workflow/views";
+import type { DomainError } from "~/domain/errors";
 import type { OrganizationEnrichment } from "~/server/organization/enrichment";
 import type { OrganizationRepository } from "~/server/organization/organization-repo";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/shared/result";
 
 export async function getLeadBootstrapPreview(
   deps: { organization: OrganizationRepository },

@@ -2,18 +2,16 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
+import type { RecordCandidate } from "~/contracts/engine/record-api.generated";
+import type { SearchResult } from "~/contracts/search/engine-results.generated";
 import type { SearchIntent } from "~/contracts/search/vocabulary";
-import type { DomainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/domain/errors";
+import { BranchId, UserId } from "~/domain/ids";
 import type {
   EngineClient,
   RecordCandidatesRequest,
-} from "~/server/shared/engine/client";
-import type {
-  RecordCandidate,
-  SearchResult,
-} from "~/server/shared/engine/types";
-import { BranchId, UserId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+} from "~/server/integrations/engine/client";
+import { Ok, type Result } from "~/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
 
@@ -127,6 +125,7 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
     await ctx.repos.organization.upsertOrganization({
       ruc: ruc(index),
       legalName: `Bench Org ${index}`,
+      upsertedAt: BENCH_NOW,
     });
 
     await ctx.repos.leadCapacityGrants.insert({
@@ -134,6 +133,7 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
       amount: 5,
       reason: "bench_seed",
       actor_user_id: ACTOR_USER_ID,
+      created_at: BENCH_NOW,
     });
 
     unitIndexByUser.set(userId, index);

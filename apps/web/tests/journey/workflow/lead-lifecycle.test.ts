@@ -2,25 +2,14 @@ import { expectOk } from "@tests/support/_core/assertions";
 import { actorBy } from "@tests/support/database/workflow-fixtures";
 import { withMerchantDefaults } from "@tests/support/database/workflow-seed";
 import { createWorkflowImporter } from "@tests/support/integration/workflow-import";
-import {
-  registerLeadPorts,
-  workflowCommandPorts,
-  workflowRepos,
-} from "@tests/support/integration/workflow-ports";
+import { operationAt } from "@tests/support/operation";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { WorkflowVenueId } from "~/server/shared/ids";
-import { acceptRateCommand } from "~/server/workflow/lead/commands/accept-rate";
-import { proposeRateCommand } from "~/server/workflow/lead/commands/propose-rate";
-import { registerLead } from "~/server/workflow/lead/commands/register-lead";
-import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
-import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
-import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
+import { WorkflowVenueId } from "~/domain/ids";
 
 describe("lead lifecycle journey", () => {
   let runtime: TestRuntime;
@@ -42,14 +31,14 @@ describe("lead lifecycle journey", () => {
     const executive = actorBy("execOne");
     const backOffice = actorBy("backOne");
     const registered = expectOk(
-      await registerLead(
+      await runtime.workflow.commands.registerLead(
         {
           actor: executive,
           ruc: "20987654321",
           lineOfBusiness: "Retail",
           ...withMerchantDefaults(undefined),
         },
-        registerLeadPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
     const lead = {
@@ -69,7 +58,7 @@ describe("lead lifecycle journey", () => {
     });
 
     const proposal = expectOk(
-      await proposeRateCommand(
+      await runtime.workflow.commands.proposeRate(
         {
           actor: backOffice,
           leadId: lead.id,
@@ -80,21 +69,21 @@ describe("lead lifecycle journey", () => {
           paybackPricing: 12,
           currency: "PEN",
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
     expectOk(
-      await acceptRateCommand(
+      await runtime.workflow.commands.acceptRate(
         {
           actor: executive,
           leadId: lead.id,
           proposalId: proposal.proposalId,
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
     expectOk(
-      await saveDigitalPolicyCommand(
+      await runtime.workflow.commands.saveDigitalPolicy(
         {
           actor: executive,
           leadId: lead.id,
@@ -104,11 +93,11 @@ describe("lead lifecycle journey", () => {
           onlineUrl: null,
           onlineCollectionMode: null,
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
     expectOk(
-      await createVenueCommand(
+      await runtime.workflow.commands.createVenue(
         {
           actor: executive,
           leadId: lead.id,
@@ -120,19 +109,22 @@ describe("lead lifecycle journey", () => {
           province: "Lima",
           department: "Lima",
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
 
     const setup = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: executive.userId,
-        actorRole: executive.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        {
+          actorUserId: executive.userId,
+          actorRole: executive.role,
+          leadId: lead.id,
+        },
+        operationAt(runtime.now.get()),
+      ),
     );
     expectOk(
-      await addVenueAccountsCommand(
+      await runtime.workflow.commands.addVenueAccounts(
         {
           actor: executive,
           leadId: lead.id,
@@ -146,16 +138,19 @@ describe("lead lifecycle journey", () => {
             isSettlement: true,
           },
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
 
     const fulfillment = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: executive.userId,
-        actorRole: executive.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        {
+          actorUserId: executive.userId,
+          actorRole: executive.role,
+          leadId: lead.id,
+        },
+        operationAt(runtime.now.get()),
+      ),
     );
     expect(fulfillment.lead.stage).toBe("FULFILLMENT");
     expect(fulfillment.fulfillment?.currentStep).toBe("CHOOSE_PRODUCT");

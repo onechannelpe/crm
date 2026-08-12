@@ -1,10 +1,10 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
 import type {
   UserId,
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type {
   RateRevision,
   SubmitReadyRevisionFile,

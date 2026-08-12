@@ -55,8 +55,12 @@ export function resolveLeadBlockingFields(input: {
       return [];
     case "SETUP": {
       const p = input.digitalPolicy;
-      if (!p) return ["digitalPolicy"];
-      if (p.linkScope === "shared" && !p.linkUrl) return ["digitalPolicy"];
+      if (!p) {
+        return ["digitalPolicy"];
+      }
+      if (p.linkScope === "shared" && !p.linkUrl) {
+        return ["digitalPolicy"];
+      }
       if (
         p.onlineScope === "shared" &&
         (!p.onlineUrl || !p.onlineCollectionMode)

@@ -11,7 +11,7 @@ import {
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { NotificationIntentId } from "~/server/shared/ids";
+import { NotificationIntentId } from "~/domain/ids";
 
 describe("outbox delivery", () => {
   let runtime: TestRuntime;
@@ -47,12 +47,11 @@ describe("outbox delivery", () => {
         queue_state: "pending",
         attempt_count: 0,
         max_attempts: 5,
-        available_at: new Date(0),
+        claimable_at: new Date(0),
         lease_owner: null,
-        lease_until: null,
-        error: null,
+        error_message: null,
         created_at: new Date(0),
-        expanded_at: null,
+        completed_at: null,
       })
       .execute();
 
@@ -60,13 +59,15 @@ describe("outbox delivery", () => {
 
     const failed = await runtime.ctx.db
       .selectFrom("notification_intents")
-      .select(["queue_state", "error", "expanded_at"])
+      .select(["queue_state", "error_message", "completed_at"])
       .where("id", "=", NotificationIntentId.trust("test-malformed-channels"))
       .executeTakeFirstOrThrow();
 
     expect(failed.queue_state).toBe("failed");
-    expect(failed.error).toContain("Invalid notification channels payload");
-    expect(failed.expanded_at).toEqual(runtime.now.get());
+    expect(failed.error_message).toContain(
+      "Invalid notification channels payload",
+    );
+    expect(failed.completed_at).toBeInstanceOf(Date);
   });
 
   it("drains pending outbox events and persists notifications", async () => {

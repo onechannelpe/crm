@@ -1,5 +1,5 @@
-import { invalid, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { invalid, type DomainError } from "~/domain/errors";
+import { Err, Ok, type Result } from "~/shared/result";
 
 function isVocabularyValue<TValue extends string>(
   value: string,

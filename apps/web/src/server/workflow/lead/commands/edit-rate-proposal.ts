@@ -1,13 +1,10 @@
 import { diffFields } from "~/contracts/events";
 import type { EditRateProposalInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type {
-  WorkflowLeadId,
-  WorkflowRateProposalId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId, WorkflowRateProposalId } from "~/domain/ids";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { editRateProposal } from "../../lead/domain/decide";
 import type { RateProposalNumbers } from "../domain/rows";
@@ -28,12 +25,9 @@ export async function editRateProposalCommand(
     leadId: WorkflowLeadId;
     proposalId: WorkflowRateProposalId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ proposalId: WorkflowRateProposalId }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -72,7 +66,7 @@ export async function editRateProposalCommand(
       proposalId: latestProposal.id,
       round: latestProposal.round,
       changes,
-      now: ctx.now,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

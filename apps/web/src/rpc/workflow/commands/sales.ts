@@ -1,5 +1,3 @@
-"use server";
-
 import type {
   AddVenueAccountsInput,
   CreateVenueInput,
@@ -11,20 +9,16 @@ import {
   ACCOUNT_TYPE_KINDS,
   COLLECTION_MODES,
 } from "~/contracts/workflow/vocabulary";
-import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
-import type { DomainError } from "~/server/shared/domain-error";
-import { WorkflowLeadId, WorkflowVenueId } from "~/server/shared/ids";
+import type { DomainError } from "~/domain/errors";
+import { WorkflowLeadId, WorkflowVenueId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
+import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
   validationFail,
   type Reader,
-} from "~/server/shared/parsing";
-import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
-import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
-import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
-
-import { workflowActor } from "./actor";
+} from "~/server/platform/action/input-reader";
+import { workflowActor } from "~/server/workflow/ui/actor";
 
 function venueFields(r: Reader<DomainError>): Omit<
   CreateVenueInput,
@@ -65,25 +59,29 @@ function accountFields<TCurrency extends "PEN" | "USD">(
 }
 
 export async function requestVenueCreation(input: unknown) {
-  return runAction({
-    name: "workflow.create_venue",
+  "use server";
+
+  return executeSessionServerFunction({
+    name: "application.workflow.create_venue",
     access: { kind: "auth" },
 
     parse: () => parseObject(input, validationFail, venueFields),
 
-    audit: ({ leadId }) => ({ leadId }),
+    telemetry: ({ leadId }) => ({ leadId }),
 
-    execute: ({ actor }, payload) =>
-      createVenueCommand(
-        { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+    execute: (ctx, payload) =>
+      application.workflow.commands.createVenue(
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
 
 export async function requestVenueUpdate(input: unknown) {
-  return runAction({
-    name: "workflow.update_venue",
+  "use server";
+
+  return executeSessionServerFunction({
+    name: "application.workflow.update_venue",
     access: { kind: "auth" },
 
     parse: () =>
@@ -101,19 +99,21 @@ export async function requestVenueUpdate(input: unknown) {
         }),
       ),
 
-    audit: ({ leadId, venueId }) => ({ leadId, venueId }),
+    telemetry: ({ leadId, venueId }) => ({ leadId, venueId }),
 
-    execute: ({ actor }, payload) =>
-      updateVenueCommand(
-        { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+    execute: (ctx, payload) =>
+      application.workflow.commands.updateVenue(
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }
 
 export async function requestVenueAccountsAddition(input: unknown) {
-  return runAction({
-    name: "workflow.add_venue_accounts",
+  "use server";
+
+  return executeSessionServerFunction({
+    name: "application.workflow.add_venue_accounts",
     access: { kind: "auth" },
 
     parse: () =>
@@ -135,12 +135,12 @@ export async function requestVenueAccountsAddition(input: unknown) {
         }),
       ),
 
-    audit: ({ leadId, venueId }) => ({ leadId, venueId }),
+    telemetry: ({ leadId, venueId }) => ({ leadId, venueId }),
 
-    execute: ({ actor }, payload) =>
-      addVenueAccountsCommand(
-        { actor: workflowActor(actor), ...payload },
-        getServerRuntime().workflow.ports(),
+    execute: (ctx, payload) =>
+      application.workflow.commands.addVenueAccounts(
+        { actor: workflowActor(ctx.actor), ...payload },
+        ctx,
       ),
   });
 }

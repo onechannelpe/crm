@@ -1,7 +1,7 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import { WorkflowVenueId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import { WorkflowVenueId } from "~/domain/ids";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
+import { Ok, type Result } from "~/shared/result";
 
 import {
   toCommercialScopeCorrectedEntry,
@@ -41,7 +41,9 @@ export function toHistoryEntry(
   row: HistoryEventRow,
 ): Result<LeadHistoryEntry, DomainError> {
   const payload = parsePayload(row);
-  if (!payload.ok) return payload;
+  if (!payload.ok) {
+    return payload;
+  }
 
   switch (row.event_type) {
     case "lead_registered":
@@ -80,7 +82,9 @@ export function toHistoryEntry(
       return toVenueUpdatedEntry(row, payload.value);
     case "venue_accounts_added": {
       const venueId = requireString(payload.value, "venueId", row);
-      if (!venueId.ok) return venueId;
+      if (!venueId.ok) {
+        return venueId;
+      }
       return Ok({
         ...toHistoryEntryBase(row),
         eventType: "venue_accounts_added",

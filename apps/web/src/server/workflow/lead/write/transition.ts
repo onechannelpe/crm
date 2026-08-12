@@ -1,12 +1,15 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, type Result } from "~/server/shared/result";
+import type { Transaction } from "kysely";
+
+import { type DomainError } from "~/domain/errors";
+import type { Database } from "~/server/platform/database/types";
 import { enqueueLeadEffects } from "~/server/workflow/effects/enqueue-lead-effects";
 import type { LeadHistoryEventDraft } from "~/server/workflow/lead/domain/history";
 import {
   createWorkflowRepos,
   type WorkflowRepos,
 } from "~/server/workflow/repos";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, isErr, type Result } from "~/shared/result";
 
 import {
   appendFacts,
@@ -18,9 +21,9 @@ import {
 export type CommittedLeadEvent = { event: LeadHistoryEventDraft; id: string };
 
 export type LeadTransaction = {
-  tx: DatabaseExecutor;
+  tx: Transaction<Database>;
   repos: WorkflowRepos;
-  now: Date;
+  operationAt: Date;
   commitTransition(
     transition: LeadTransition,
     assignment?: LeadAssignment,
@@ -44,18 +47,24 @@ function zip(
 }
 
 export function runLeadTransaction<O>(
-  ports: { executor: DatabaseExecutor; now: Date },
+  scope: WorkflowWriteContext,
   body: (ctx: LeadTransaction) => Promise<Result<O, DomainError>>,
 ): Promise<Result<O, DomainError>> {
-  return ports.executor
+  return scope.executor
     .transaction()
     .execute(async (tx): Promise<Result<O, DomainError>> => {
       const committed: CommittedLeadEvent[] = [];
+      // The transaction's own write context: same operation instant, executor
+      // swapped for the transaction handle.
+      const txScope: WorkflowWriteContext = {
+        executor: tx,
+        operationAt: scope.operationAt,
+      };
 
       const result = await body({
         tx,
         repos: createWorkflowRepos(tx),
-        now: ports.now,
+        operationAt: scope.operationAt,
         commitTransition: async (transition, assignment) => {
           const outcome = await commitTransition(tx, transition, assignment);
           if (outcome.ok) {
@@ -64,21 +73,26 @@ export function runLeadTransaction<O>(
           return outcome;
         },
         appendFacts: async (events) => {
-          const outcome = await appendFacts(tx, events, ports.now);
-          if (outcome.ok)
+          const outcome = await appendFacts(tx, scope.operationAt, events);
+          if (outcome.ok) {
             committed.push(...zip(events, outcome.value.eventIds));
+          }
           return outcome;
         },
       });
 
-      if (isErr(result)) throw new LeadTransactionRollback(result.error);
+      if (isErr(result)) {
+        throw new LeadTransactionRollback(result.error);
+      }
 
       // Effects share the transaction with source events: no orphaned delivery.
-      await enqueueLeadEffects(tx, committed, ports.now);
+      await enqueueLeadEffects(txScope, committed);
       return result;
     })
     .catch((error: unknown) => {
-      if (error instanceof LeadTransactionRollback) return Err(error.error);
+      if (error instanceof LeadTransactionRollback) {
+        return Err(error.error);
+      }
       throw error;
     });
 }

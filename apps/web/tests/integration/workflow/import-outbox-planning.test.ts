@@ -60,13 +60,13 @@ describe("import outbox planning", () => {
       intents.filter(({ queue_state }) => queue_state === "pending"),
     ).toHaveLength(2);
     expect(
-      intents.map(({ available_at, created_at }) => ({
-        available_at,
+      intents.map(({ claimable_at, created_at }) => ({
+        claimable_at,
         created_at,
       })),
     ).toEqual([
-      { available_at: new Date(2_000), created_at: new Date(2_000) },
-      { available_at: new Date(2_000), created_at: new Date(2_000) },
+      { claimable_at: new Date(2_000), created_at: new Date(2_000) },
+      { claimable_at: new Date(2_000), created_at: new Date(2_000) },
     ]);
   });
 });

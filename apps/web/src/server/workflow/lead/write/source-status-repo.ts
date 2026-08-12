@@ -1,15 +1,15 @@
+import type { Ruc } from "~/domain/identity/document";
 import type { Overlay } from "~/server/client-search/model";
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
 import { createEnrichmentQuery } from "~/server/client-search/status";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { Ruc } from "~/server/shared/document";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type {
   LeadSourceStatus,
   SunatSourceStatus,
 } from "~/server/workflow/lead/domain/rows";
 
 export type SourceStatusRepository = {
-  findByRuc(ruc: Ruc): Promise<LeadSourceStatus>;
+  findByRuc(ruc: Ruc, freshAsOf: Date): Promise<LeadSourceStatus>;
 };
 
 function toPipelineSunatStatus(input: {
@@ -70,11 +70,11 @@ export function createSourceStatusRepo(
   const enrichmentQuery = createEnrichmentQuery(enrichmentRepo);
 
   return {
-    async findByRuc(ruc) {
-      const enrichmentStatus = await enrichmentQuery.getStatus({
-        kind: "ruc",
-        value: ruc,
-      });
+    async findByRuc(ruc, freshAsOf) {
+      const enrichmentStatus = await enrichmentQuery.getStatus(
+        { kind: "ruc", value: ruc },
+        freshAsOf,
+      );
       const overlay = toPipelineOverlay(enrichmentStatus.overlay);
 
       return {

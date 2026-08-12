@@ -4,14 +4,12 @@ import {
   actorWithRole,
   createLeadFixtureWriter,
 } from "@tests/support/database/workflow-fixtures";
-import { workflowRepos } from "@tests/support/integration/workflow-ports";
+import { operationAt } from "@tests/support/operation";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
 
 describe("workflow read access", () => {
   let runtime: TestRuntime;
@@ -37,11 +35,14 @@ describe("workflow read access", () => {
     });
 
     const actor = actorBy("backOne");
-    const result = await getLeadDetail(workflowRepos(runtime), {
-      actorUserId: actor.userId,
-      actorRole: actor.role,
-      leadId: lead.id,
-    });
+    const result = await runtime.workflow.queries.getLeadDetail(
+      {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
+        leadId: lead.id,
+      },
+      operationAt(runtime.now.get()),
+    );
 
     const value = expectOk(result);
     expect(value.lead.id).toBe(lead.id);
@@ -59,11 +60,14 @@ describe("workflow read access", () => {
       });
 
       const actor = actorWithRole("backOne", role);
-      const result = await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      });
+      const result = await runtime.workflow.queries.getLeadDetail(
+        {
+          actorUserId: actor.userId,
+          actorRole: actor.role,
+          leadId: lead.id,
+        },
+        operationAt(runtime.now.get()),
+      );
 
       const value = expectOk(result);
       expect(value.lead.id).toBe(lead.id);
@@ -78,11 +82,14 @@ describe("workflow read access", () => {
     });
 
     const actor = actorBy("execTwo");
-    const result = await getLeadDetail(workflowRepos(runtime), {
-      actorUserId: actor.userId,
-      actorRole: actor.role,
-      leadId: lead.id,
-    });
+    const result = await runtime.workflow.queries.getLeadDetail(
+      {
+        actorUserId: actor.userId,
+        actorRole: actor.role,
+        leadId: lead.id,
+      },
+      operationAt(runtime.now.get()),
+    );
 
     const error = expectErr(result);
     expect(error.kind).toBe("forbidden");

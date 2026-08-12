@@ -1,13 +1,18 @@
+import { fail, type DomainError } from "~/domain/errors";
 import type { OrganizationEnrichmentQueue } from "~/server/organization/enrichment";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { authorizeLeadAction } from "~/server/workflow/lead/domain/policy";
 import type { LeadReader } from "~/server/workflow/lead/read/ports";
+import { Err, Ok, type Result } from "~/shared/result";
 
 export async function requestSunatRefresh(
   input: { actor: WorkflowActor; leadId: string },
-  ports: { leads: LeadReader; enrichmentQueue: OrganizationEnrichmentQueue },
+  ports: {
+    leads: LeadReader;
+    enrichmentQueue: OrganizationEnrichmentQueue;
+  },
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   const lead = await ports.leads.findById(input.leadId);
   if (!lead) {
@@ -22,6 +27,7 @@ export async function requestSunatRefresh(
   await ports.enrichmentQueue.enqueueRucVerification(
     lead.ruc,
     input.actor.userId,
+    operation,
   );
 
   return Ok(void 0);

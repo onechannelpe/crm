@@ -3,20 +3,14 @@ import {
   actorBy,
   createLeadFixtureWriter,
 } from "@tests/support/database/workflow-fixtures";
-import {
-  workflowCommandPorts,
-  workflowRepos,
-} from "@tests/support/integration/workflow-ports";
+import { operationAt } from "@tests/support/operation";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { WorkflowVenueId } from "~/server/shared/ids";
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
-import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
-import { updateVenueCommand } from "~/server/workflow/lead/venue/update-venue";
+import { WorkflowVenueId } from "~/domain/ids";
 
 describe("update venue", () => {
   let runtime: TestRuntime;
@@ -42,7 +36,7 @@ describe("update venue", () => {
     });
 
     expectOk(
-      await createVenueCommand(
+      await runtime.workflow.commands.createVenue(
         {
           actor,
           leadId: lead.id,
@@ -54,20 +48,23 @@ describe("update venue", () => {
           province: "Lima",
           department: "Lima",
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
 
     const seeded = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        {
+          actorUserId: actor.userId,
+          actorRole: actor.role,
+          leadId: lead.id,
+        },
+        operationAt(runtime.now.get()),
+      ),
     );
     const venueId = WorkflowVenueId.trust(seeded.venues[0].id);
 
-    const result = await updateVenueCommand(
+    const result = await runtime.workflow.commands.updateVenue(
       {
         actor,
         leadId: lead.id,
@@ -80,16 +77,19 @@ describe("update venue", () => {
         province: "Lima",
         department: "Lima",
       },
-      workflowCommandPorts(runtime),
+      operationAt(runtime.now.get()),
     );
     expectOk(result);
 
     const updated = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        {
+          actorUserId: actor.userId,
+          actorRole: actor.role,
+          leadId: lead.id,
+        },
+        operationAt(runtime.now.get()),
+      ),
     );
     expect(updated.venues[0]).toMatchObject({
       tradeName: "Local corregido",
@@ -108,17 +108,20 @@ describe("update venue", () => {
     const venueId = lead.venueIds[0];
 
     const detail = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        {
+          actorUserId: actor.userId,
+          actorRole: actor.role,
+          leadId: lead.id,
+        },
+        operationAt(runtime.now.get()),
+      ),
     );
     expect(detail.lead.stage).toBe("LIVE");
     expect(detail.availableActions).not.toContain("update-venue");
     const originalTradeName = detail.venues[0].tradeName;
 
-    const result = await updateVenueCommand(
+    const result = await runtime.workflow.commands.updateVenue(
       {
         actor,
         leadId: lead.id,
@@ -131,18 +134,21 @@ describe("update venue", () => {
         province: "Lima",
         department: "Lima",
       },
-      workflowCommandPorts(runtime),
+      operationAt(runtime.now.get()),
     );
 
     const error = expectErr(result);
     expect(error.code).toBe("invalid_stage");
 
     const after = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        {
+          actorUserId: actor.userId,
+          actorRole: actor.role,
+          leadId: lead.id,
+        },
+        operationAt(runtime.now.get()),
+      ),
     );
     expect(after.venues[0].tradeName).toBe(originalTradeName);
   });

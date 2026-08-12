@@ -4,13 +4,13 @@ import type {
   OrganizationId,
   UserId,
   WorkflowLeadId,
-} from "~/server/shared/ids";
-import { registerLead as workflowRegisterLead } from "~/server/workflow/lead/commands/register-lead";
+} from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 import { actorBy } from "../database/workflow-fixtures";
 import { withMerchantDefaults } from "../database/workflow-seed";
+import { DEFAULT_OPERATION } from "../operation";
 import type { TestRuntime } from "../runtime/app";
-import { registerLeadPorts } from "./workflow-ports";
 
 export type RegisteredLeadSnapshot = {
   id: WorkflowLeadId;
@@ -50,16 +50,17 @@ export async function registerLead(input: {
   lineOfBusiness?: string | null;
   settlementBank?: SettlementBank;
   posCount?: number;
+  operation?: OperationContext;
 }): Promise<RegisterLeadResult> {
   const actor = input.actor ?? actorBy("execOne");
-  const result = await workflowRegisterLead(
+  const result = await input.runtime.workflow.commands.registerLead(
     {
       actor,
       ruc: input.ruc,
       ...withMerchantDefaults(input),
       lineOfBusiness: input.lineOfBusiness ?? "Retail",
     },
-    registerLeadPorts(input.runtime),
+    input.operation ?? DEFAULT_OPERATION,
   );
 
   if (!result.ok) {
@@ -121,6 +122,7 @@ export async function registerLead(input: {
 export async function registerLeadAndLoadSnapshot(input: {
   runtime: TestRuntime;
   ruc: string;
+  operation?: OperationContext;
 }): Promise<RegisteredLeadSnapshot> {
   const registered = await registerLead(input);
   return registered.snapshot;

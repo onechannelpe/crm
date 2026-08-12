@@ -1,7 +1,8 @@
 import type { LeadListView } from "~/contracts/workflow/views";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import type { BranchId, UserId } from "~/domain/ids";
+import { appCalendarDateAt, appDayRange } from "~/domain/time/app-time";
+import type { OperationContext } from "~/server/platform/operation/context";
 import {
   requireCapability,
   resolveLeadListExecutiveScope,
@@ -11,6 +12,7 @@ import type {
   LeadListFilters,
   LeadQueries,
 } from "~/server/workflow/lead/read/lead-queries";
+import { Ok, type Result } from "~/shared/result";
 
 import type { ListLeadsInput } from "../inputs";
 import { parsePageParams } from "./pagination";
@@ -23,7 +25,7 @@ type LeadListQueryDeps = {
 };
 
 function normalizeLeadAnyFieldSearch(value: string | undefined) {
-  return value?.trim().toLowerCase() || undefined;
+  return value?.trim() || undefined;
 }
 
 export async function listLeads(
@@ -34,6 +36,7 @@ export async function listLeads(
     actorBranchId: BranchId;
     filters: ListLeadsInput["filters"];
   },
+  operation: OperationContext,
 ): Promise<Result<LeadListView, DomainError>> {
   const canRead = requireCapability("view", { role: input.actorRole });
   if (!canRead.ok) {
@@ -49,6 +52,9 @@ export async function listLeads(
   const sortDirection: LeadSortDirection =
     input.filters.sortDirection ?? "desc";
 
+  const updatedRange = input.filters.updatedToday
+    ? appDayRange(appCalendarDateAt(operation.operationAt))
+    : undefined;
   const filters: LeadListFilters = {
     actorUserId: input.actorUserId,
     actorRole: input.actorRole,
@@ -62,14 +68,8 @@ export async function listLeads(
     status: input.filters.status,
     priority: input.filters.priority,
     anyFieldSearch: normalizeLeadAnyFieldSearch(input.filters.anyFieldSearch),
-    updatedSince:
-      input.filters.updatedSinceMs === undefined
-        ? undefined
-        : new Date(input.filters.updatedSinceMs),
-    updatedUntil:
-      input.filters.updatedUntilMs === undefined
-        ? undefined
-        : new Date(input.filters.updatedUntilMs),
+    updatedSince: updatedRange?.start,
+    updatedUntil: updatedRange?.endExclusive,
     sortBy,
     sortDirection,
     limit: page.value.limit,
