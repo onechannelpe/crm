@@ -1,11 +1,12 @@
+import { type DomainError } from "~/domain/errors";
+import { LeadReservationId } from "~/domain/ids";
 import {
   executeWithUsageReservation,
   type UsageReservationPorts,
 } from "~/server/capacity/application/usage/ledger";
-import { type DomainError } from "~/server/shared/domain-error";
-import type { EngineClient } from "~/server/shared/engine/client";
-import { LeadReservationId } from "~/server/shared/ids";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import type { EngineClient } from "~/server/integrations/engine/client";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 import {
   planContactAssignments,
@@ -40,13 +41,22 @@ async function requestAssignableCandidates(input: {
 export async function assignContacts(
   command: AssignContactsCommand,
   deps: AssignContactsDeps,
+  operation: OperationContext,
 ): Promise<Result<AssignContactsResult, DomainError>> {
   const { repos, uow, engine, leadUsageReservationPorts } = deps;
 
-  const plan = await planContactAssignments(command.actorUserId, repos);
-  if (isErr(plan)) return plan;
+  const plan = await planContactAssignments(
+    command.actorUserId,
+    repos,
+    operation,
+  );
+  if (isErr(plan)) {
+    return plan;
+  }
 
-  if (plan.value.requested === 0) return Ok({ requested: 0, assigned: 0 });
+  if (plan.value.requested === 0) {
+    return Ok({ requested: 0, assigned: 0 });
+  }
 
   const assignedResult = await executeWithUsageReservation(
     {
@@ -57,6 +67,7 @@ export async function assignContacts(
       brand: LeadReservationId.trust,
     },
     leadUsageReservationPorts,
+    operation,
     async () => {
       const candidatesResult = await requestAssignableCandidates({
         command,
@@ -70,6 +81,7 @@ export async function assignContacts(
       const assigned = await createContactAssignmentsFromCandidates({
         actorUserId: command.actorUserId,
         candidates: candidatesResult.value,
+        operation,
         uow,
       });
       if (isErr(assigned)) {

@@ -1,3 +1,5 @@
+import type { DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import type { ActorScope } from "~/server/capacity/application/actor-scope";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import type {
@@ -9,9 +11,8 @@ import type {
   LeadUsageCommitsRepo,
   LeadUsageReservationsRepo,
 } from "~/server/capacity/infrastructure/usage-repo";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 import { computeNeededAssignments } from "../domain/assignment-demand";
 
@@ -24,7 +25,9 @@ export type AssignmentPlanRepos = {
   leadCapacityGrants: LeadCapacityGrantsRepo;
   leadUsageReservations: LeadUsageReservationsRepo;
   leadUsageCommits: LeadUsageCommitsRepo;
-  contactAssignments: { countActiveByUser(userId: UserId): Promise<number> };
+  contactAssignments: {
+    countActiveByUser(userId: UserId, activeAsOf: Date): Promise<number>;
+  };
 };
 
 export type ContactAssignmentPlan = {
@@ -34,8 +37,13 @@ export type ContactAssignmentPlan = {
 export async function planContactAssignments(
   actorUserId: UserId,
   repos: AssignmentPlanRepos,
+  operation: OperationContext,
 ): Promise<Result<ContactAssignmentPlan, DomainError>> {
-  const snapshotResult = await getLeadCapacitySnapshot(actorUserId, repos);
+  const snapshotResult = await getLeadCapacitySnapshot(
+    actorUserId,
+    repos,
+    operation,
+  );
   if (isErr(snapshotResult)) {
     return snapshotResult;
   }

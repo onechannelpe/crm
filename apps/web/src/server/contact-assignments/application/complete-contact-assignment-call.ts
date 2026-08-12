@@ -1,8 +1,9 @@
+import { fail, type DomainError } from "~/domain/errors";
 import type { ContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
-import type { AppUow } from "~/server/shared/application/uow";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { InteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { InteractionLogsRepo } from "~/server/contact-assignments/infrastructure/interaction-logs-repo";
+import type { AppUow } from "~/server/platform/database/uow";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type {
   CompleteContactAssignmentCallCommand,
@@ -20,10 +21,12 @@ type CompleteContactAssignmentCallTxRepos = {
 async function completeAssignmentInteraction(
   input: CompleteContactAssignmentCallCommand,
   repos: CompleteContactAssignmentCallTxRepos,
+  operation: OperationContext,
 ): Promise<Result<CompleteContactAssignmentCallResult, DomainError>> {
   const assignment = await repos.contactAssignments.findActiveByIdForUser(
     input.assignmentId,
     input.actorUserId,
+    operation.operationAt,
   );
   if (!assignment || assignment.contact_id !== input.contactId) {
     return Err(fail("assignment_inactive"));
@@ -39,7 +42,7 @@ async function completeAssignmentInteraction(
     outcome: input.outcome,
     notes: input.notes,
     duration_seconds: null,
-    created_at: new Date(),
+    created_at: operation.operationAt,
   });
 
   return Ok({ success: true });
@@ -48,6 +51,9 @@ async function completeAssignmentInteraction(
 export function completeContactAssignmentCall(
   input: CompleteContactAssignmentCallCommand,
   uow: AppUow<CompleteContactAssignmentCallTxRepos>,
+  operation: OperationContext,
 ): Promise<Result<CompleteContactAssignmentCallResult, DomainError>> {
-  return uow.run((repos) => completeAssignmentInteraction(input, repos));
+  return uow.run((repos) =>
+    completeAssignmentInteraction(input, repos, operation),
+  );
 }

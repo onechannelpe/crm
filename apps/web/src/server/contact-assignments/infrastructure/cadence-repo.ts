@@ -1,12 +1,12 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { OrganizationPersonId, UserId } from "~/server/shared/ids";
+import type { OrganizationPersonId, UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 // Last-contacted timestamp + cooldown window per membership. Owned by
 // contact-assignments (not the organization identity row). Read by
 // canContactNow; written by touch.
-export type CadenceSnapshot = {
+type CadenceSnapshot = {
   organizationPersonId: OrganizationPersonId;
   lastContactedAt: Date | null;
   cooldownUntil: Date | null;
@@ -16,7 +16,9 @@ export function createContactCadenceRepo(db: Kysely<Database>) {
   const findMany = async (
     organizationPersonIds: OrganizationPersonId[],
   ): Promise<Map<OrganizationPersonId, CadenceSnapshot>> => {
-    if (organizationPersonIds.length === 0) return new Map();
+    if (organizationPersonIds.length === 0) {
+      return new Map();
+    }
     const rows = await db
       .selectFrom("contact_cadence")
       .selectAll()

@@ -1,17 +1,19 @@
-"use server";
-
 import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignments/vocabulary";
-import { completeContactAssignmentCall as completeContactAssignmentCallUseCase } from "~/server/contact-assignments/application/complete-contact-assignment-call";
+import { ContactAssignmentId, OrganizationPersonId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
-import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
-import { ContactAssignmentId, OrganizationPersonId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
+import { executeSessionServerFunction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 
 export async function completeContactAssignmentCall(
   input: unknown,
 ): Promise<CompleteContactAssignmentCallResult> {
-  return runAction({
+  "use server";
+
+  return executeSessionServerFunction({
     name: "contact_assignments.complete_call",
     access: { kind: "permission", permission: "lead:work" },
 
@@ -23,21 +25,21 @@ export async function completeContactAssignmentCall(
         notes: r.optStr("notes") ?? null,
       })),
 
-    audit: ({ assignmentId, contactId }) => ({
+    telemetry: ({ assignmentId, contactId }) => ({
       assignmentId,
       contactId,
     }),
 
-    execute: ({ actor }, command) =>
-      completeContactAssignmentCallUseCase(
+    execute: (ctx, command) =>
+      application.contactAssignments.completeCall(
         {
-          actorUserId: actor.userId,
+          actorUserId: ctx.actor.userId,
           assignmentId: command.assignmentId,
           contactId: command.contactId,
           outcome: command.outcome,
           notes: command.notes,
         },
-        getServerRuntime().contactAssignments.interactionUow,
+        ctx,
       ),
   });
 }

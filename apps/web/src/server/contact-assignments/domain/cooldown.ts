@@ -4,15 +4,17 @@ export type ContactCooldownSnapshot = {
 
 function isInCooldown(
   contact: ContactCooldownSnapshot,
-  now: Date = new Date(),
+  availableAsOf: Date,
 ): boolean {
-  if (!contact.cooldown_until) return false;
-  return now < contact.cooldown_until;
+  if (!contact.cooldown_until) {
+    return false;
+  }
+  return availableAsOf < contact.cooldown_until;
 }
 
 export function canContactNow(
   contact: ContactCooldownSnapshot,
-  now: Date = new Date(),
+  availableAsOf: Date,
 ): boolean {
-  return !isInCooldown(contact, now);
+  return !isInCooldown(contact, availableAsOf);
 }
