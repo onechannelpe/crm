@@ -7,11 +7,16 @@ import type {
   QualitySummary,
 } from "~/contracts/merchant-stats/views";
 import type { QualityIssue } from "~/contracts/merchant-stats/vocabulary";
+import {
+  calendarMonthStart,
+  type CalendarMonth,
+} from "~/domain/time/calendar-date";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { Database } from "~/server/platform/database/types";
 
 import { monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";
+import { getLatestGpvMonth } from "./options";
 import { targetAsOfMonth } from "./target-as-of";
 
 type SaleContext = ExpressionBuilder<
@@ -29,7 +34,7 @@ function fulfilledSerials(eb: SaleContext) {
     .whereRef("org.ruc", "=", "s.ruc");
 }
 
-// Flag a serial only when the RUC has fulfillment serials to contradict it.
+// Only flag a mismatch when the RUC has fulfillment serials to compare against.
 function serialMismatched(eb: SaleContext): Expression<SqlBool> {
   return eb.and([
     eb("s.serial_number", "is not", null),
@@ -49,6 +54,17 @@ function serialMismatched(eb: SaleContext): Expression<SqlBool> {
 export async function getQualitySummary(
   db: DatabaseExecutor,
 ): Promise<QualitySummary> {
+  const month = await getLatestGpvMonth(db);
+
+  if (!month) {
+    return {
+      no_owner: 0,
+      no_target: 0,
+      serial_mismatch: 0,
+      no_mesa: 0,
+    };
+  }
+
   const [noOwner, noTarget, serialMismatch, noMesa] = await Promise.all([
     db
       .selectFrom("merchant_monthly_gpv as m")
@@ -57,12 +73,14 @@ export async function getQualitySummary(
           .onRef("credit.ruc", "=", "m.ruc")
           .onRef("credit.month", "=", "m.month"),
       )
+      .where("m.month", "=", calendarMonthStart(month))
       .where("credit.ruc", "is", null)
       .select((eb) => eb.fn.countAll<number>().as("count"))
       .executeTakeFirst(),
     db
       .selectFrom("merchant_monthly_gpv as m")
       .leftJoinLateral(targetAsOfMonth, (join) => join.onTrue())
+      .where("m.month", "=", calendarMonthStart(month))
       .where("t.monthly_target_gpv", "is", null)
       .select((eb) => eb.fn.countAll<number>().as("count"))
       .executeTakeFirst(),
@@ -78,18 +96,12 @@ export async function getQualitySummary(
       .executeTakeFirst(),
   ]);
 
-  const counts: QualitySummary = {
+  return {
     no_owner: noOwner?.count ?? 0,
-    no_target: 0,
-    serial_mismatch: 0,
-    no_mesa: 0,
+    no_target: noTarget?.count ?? 0,
+    serial_mismatch: serialMismatch?.count ?? 0,
+    no_mesa: noMesa?.count ?? 0,
   };
-
-  counts.no_target = noTarget?.count ?? 0;
-  counts.serial_mismatch = serialMismatch?.count ?? 0;
-  counts.no_mesa = noMesa?.count ?? 0;
-
-  return counts;
 }
 
 export async function getQualityRows(
@@ -100,18 +112,28 @@ export async function getQualityRows(
   if (issue === "serial_mismatch") {
     return serialMismatchRows(db, page);
   }
-  if (issue === "no_target") {
-    return noTargetRows(db, page);
-  }
+
   if (issue === "no_mesa") {
     return noMesaRows(db, page);
   }
-  return noOwnerRows(db, page);
+
+  const month = await getLatestGpvMonth(db);
+
+  if (!month) {
+    return [];
+  }
+
+  if (issue === "no_target") {
+    return noTargetRows(db, page, month);
+  }
+
+  return noOwnerRows(db, page, month);
 }
 
 async function noOwnerRows(
   db: DatabaseExecutor,
   page: Page,
+  month: CalendarMonth,
 ): Promise<QualityRow[]> {
   const rows = await db
     .selectFrom("merchant_monthly_gpv as m")
@@ -130,6 +152,7 @@ async function noOwnerRows(
           .as("s"),
       (join) => join.onTrue(),
     )
+    .where("m.month", "=", calendarMonthStart(month))
     .where("a.ruc", "is", null)
     .select([
       "m.ruc",
@@ -162,6 +185,7 @@ async function noOwnerRows(
 async function noTargetRows(
   db: DatabaseExecutor,
   page: Page,
+  month: CalendarMonth,
 ): Promise<QualityRow[]> {
   const rows = await db
     .selectFrom("merchant_monthly_gpv as m")
@@ -182,6 +206,7 @@ async function noTargetRows(
           .as("s"),
       (join) => join.onTrue(),
     )
+    .where("m.month", "=", calendarMonthStart(month))
     .where("t.monthly_target_gpv", "is", null)
     .select([
       "m.ruc",
