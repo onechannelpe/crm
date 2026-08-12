@@ -1,11 +1,11 @@
-import type { DomainError } from "~/domain/errors";
+import { fail, type DomainError } from "~/domain/errors";
 import type { GpvSnapshotId, GpvSnapshotJobId, UserId } from "~/domain/ids";
 import type { StoreFileDeps } from "~/server/files/service/contracts";
 import { storeUploadedFile } from "~/server/files/service/store-uploaded-file";
 import type { FileStorage } from "~/server/files/storage";
 import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { OperationContext } from "~/server/platform/operation/context";
-import { Ok, type Result } from "~/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { acceptGpvSnapshot } from "./accept";
 
@@ -63,6 +63,17 @@ export async function submitGpvSnapshot(
   if (accepted.kind === "duplicate") {
     await deps.files.repo.assets.delete(file.value.id);
     await deps.files.storage.delete(file.value.storageKey);
+  }
+
+  if (accepted.kind === "stale") {
+    await deps.files.repo.assets.delete(file.value.id);
+    await deps.files.storage.delete(file.value.storageKey);
+
+    return Err(
+      fail("gpv_snapshot_superseded", {
+        details: { activeCutAt: accepted.activeCutAt.toISOString() },
+      }),
+    );
   }
 
   return Ok({

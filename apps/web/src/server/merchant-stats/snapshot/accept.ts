@@ -9,13 +9,6 @@ import { createGpvSnapshotJobRepo } from "./repo";
 
 const MAX_IMPORT_ATTEMPTS = 3;
 
-export interface AcceptGpvSnapshotInput {
-  fileAssetId: FileAssetId;
-  contentSha256: string;
-  cutAt: Date;
-  uploadedAt: Date;
-}
-
 export type AcceptGpvSnapshotResult =
   | {
       kind: "accepted";
@@ -25,11 +18,20 @@ export type AcceptGpvSnapshotResult =
   | {
       kind: "duplicate";
       snapshotId: GpvSnapshotId;
+    }
+  | {
+      kind: "stale";
+      activeCutAt: Date;
     };
 
 export async function acceptGpvSnapshot(
   db: DatabaseExecutor,
-  input: AcceptGpvSnapshotInput,
+  input: {
+    fileAssetId: FileAssetId;
+    contentSha256: string;
+    cutAt: Date;
+    uploadedAt: Date;
+  },
 ): Promise<AcceptGpvSnapshotResult> {
   return db.transaction().execute(async (tx) => {
     await tx
@@ -47,7 +49,24 @@ export async function acceptGpvSnapshot(
       .executeTakeFirst();
 
     if (duplicate) {
-      return { kind: "duplicate", snapshotId: duplicate.id };
+      return {
+        kind: "duplicate",
+        snapshotId: duplicate.id,
+      };
+    }
+
+    const active = await tx
+      .selectFrom("gpv_snapshots")
+      .select("cut_at")
+      .where("state", "=", "active")
+      .executeTakeFirst();
+
+    // Older cuts can never replace the active snapshot.
+    if (active && input.cutAt < active.cut_at) {
+      return {
+        kind: "stale",
+        activeCutAt: active.cut_at,
+      };
     }
 
     const latestRevision = await tx
@@ -55,6 +74,7 @@ export async function acceptGpvSnapshot(
       .select((eb) => eb.fn.max<number>("revision").as("revision"))
       .where("cut_at", "=", input.cutAt)
       .executeTakeFirst();
+
     const snapshot = await tx
       .insertInto("gpv_snapshots")
       .values({
@@ -65,6 +85,7 @@ export async function acceptGpvSnapshot(
       })
       .returning("id")
       .executeTakeFirstOrThrow();
+
     const jobId = await createGpvSnapshotJobRepo(tx).insert({
       snapshotId: snapshot.id,
       maxAttempts: MAX_IMPORT_ATTEMPTS,
