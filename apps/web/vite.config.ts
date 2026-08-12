@@ -17,7 +17,7 @@ import {
 
 const requestTraceConfig = resolveRequestTraceConfig(process.env);
 
-function uploadsSourceMaps(command: string): boolean {
+function shouldUploadSourceMaps(command: string): boolean {
   return (
     command === "build" &&
     Boolean(
@@ -28,109 +28,115 @@ function uploadsSourceMaps(command: string): boolean {
   );
 }
 
-export default defineConfig(({ command }) => ({
-  // Dev and E2E use separate Vite caches.
-  cacheDir: process.env.VITE_CACHE_DIR,
+export default defineConfig(({ command }) => {
+  const uploadSourceMaps = shouldUploadSourceMaps(command);
 
-  build: {
-    sourcemap: uploadsSourceMaps(command),
-  },
+  return {
+    cacheDir: process.env.VITE_CACHE_DIR,
 
-  optimizeDeps: {
-    include: ["@solid-primitives/keyed"],
-  },
-
-  resolve: {
-    dedupe: ["solid-js", "solid-js/web"],
-  },
-
-  // Keep `server-only` inside Vite so SolidStart can replace it.
-  ssr: {
-    noExternal: ["server-only"],
-  },
-
-  server: {
-    // Initialize the CSS-module cache for cold SSR renders.
-    // See vitejs/vite#19606.
-    perEnvironmentStartEndDuringDev: true,
-
-    // Uploaded files must not restart the dev server.
-    watch: {
-      ignored: ["**/.local-storage/**"],
-    },
-  },
-
-  plugins: [
-    ...createRequestTracePlugin(requestTraceConfig),
-
-    {
-      enforce: "pre",
-      ...mdx({
-        include: /\.mdx?$/,
-        jsx: true,
-        jsxImportSource: "solid-js",
-        providerImportSource: "solid-mdx",
-        remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
-      }),
+    build: {
+      sourcemap: uploadSourceMaps,
     },
 
-    solidStart({
-      middleware: "./src/middleware.ts",
-      extensions: ["md", "mdx"],
-      serialization: {
-        mode: "json",
+    optimizeDeps: {
+      include: ["@solid-primitives/keyed"],
+    },
+
+    resolve: {
+      dedupe: ["solid-js", "solid-js/web"],
+    },
+
+    // SolidStart replaces `server-only` during Vite processing.
+    ssr: {
+      noExternal: ["server-only"],
+    },
+
+    server: {
+      // Initialize the CSS-module cache for cold SSR renders.
+      // See vitejs/vite#19606.
+      perEnvironmentStartEndDuringDev: true,
+
+      watch: {
+        ignored: ["**/.local-storage/**"],
       },
-      serverFunctions: {
-        filter: {
-          include: ["src/rpc/**/*.ts"],
+    },
+
+    plugins: [
+      ...createRequestTracePlugin(requestTraceConfig),
+
+      {
+        enforce: "pre",
+        ...mdx({
+          include: /\.mdx?$/,
+          jsx: true,
+          jsxImportSource: "solid-js",
+          providerImportSource: "solid-mdx",
+          remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
+        }),
+      },
+
+      solidStart({
+        middleware: "./src/middleware.ts",
+        extensions: ["md", "mdx"],
+        serialization: {
+          mode: "json",
         },
-        onError: "./src/server-function-error.ts",
-      },
-    }),
+        serverFunctions: {
+          filter: {
+            include: ["src/rpc/**/*.ts"],
+          },
+          onError: "./src/server-function-error.ts",
+        },
+      }),
 
-    nitro({
-      alias: { ...appAlias },
-      plugins: ["./src/server/entrypoints/nitro/realtime-lifecycle.ts"],
-      rollupConfig: {
-        external: [/^@node-rs\/argon2/],
-      },
-      prerender: {
-        autoSubfolderIndex: true,
-        routes: [
-          "/legal/privacy",
-          "/legal/terms",
-          "/updates",
-          "/docs/",
-          "/docs/getting-started",
-        ],
-      },
-      preset: "bun",
-    }),
+      nitro({
+        alias: { ...appAlias },
+        plugins: ["./src/server/entrypoints/nitro/realtime-lifecycle.ts"],
 
-    visualizer(),
-    bundleAnalyzerPlugin({ format: "md" }),
-    responsiveImagesPlugin(),
+        // Nitro does not inherit Vite's sourcemap setting.
+        sourcemap: uploadSourceMaps,
 
-    ...(uploadsSourceMaps(command)
-      ? [
-          sentryVitePlugin({
-            authToken: process.env.SENTRY_AUTH_TOKEN,
-            org: process.env.SENTRY_ORG,
-            project: process.env.SENTRY_PROJECT,
+        rollupConfig: {
+          external: [/^@node-rs\/argon2/],
+        },
+        prerender: {
+          autoSubfolderIndex: true,
+          routes: [
+            "/legal/privacy",
+            "/legal/terms",
+            "/updates",
+            "/docs/",
+            "/docs/getting-started",
+          ],
+        },
+        preset: "bun",
+      }),
 
-            // Debug IDs map stack traces without creating Sentry releases.
-            release: { create: false },
+      visualizer(),
+      bundleAnalyzerPlugin({ format: "md" }),
+      responsiveImagesPlugin(),
 
-            sourcemaps: {
-              filesToDeleteAfterUpload: ["**/*.map"],
-            },
-            telemetry: false,
-          }),
-        ]
-      : []),
-  ],
+      ...(uploadSourceMaps
+        ? [
+            sentryVitePlugin({
+              authToken: process.env.SENTRY_AUTH_TOKEN,
+              org: process.env.SENTRY_ORG,
+              project: process.env.SENTRY_PROJECT,
 
-  esbuild: {
-    target: "es2022",
-  },
-}));
+              // Debug IDs map stack traces without creating a release.
+              release: { create: false },
+
+              sourcemaps: {
+                filesToDeleteAfterUpload: ["**/*.map"],
+              },
+              telemetry: false,
+            }),
+          ]
+        : []),
+    ],
+
+    esbuild: {
+      target: "es2022",
+    },
+  };
+});
