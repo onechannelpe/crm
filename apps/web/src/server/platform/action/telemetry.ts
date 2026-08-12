@@ -1,25 +1,25 @@
-import type { WireError } from "~/lib/wire-error";
+import type { WireError } from "~/contracts/errors";
 import type { RecordActionObservationInput } from "~/server/observability/service";
 
 import type { AppContext } from "./context";
 
 // Scalar identifiers only (lead ids, venue ids, counts, flags). Raw request
 // payloads (which may carry PII or bank data) cannot be assigned here.
-export type AuditFields = Record<string, string | number | boolean | null>;
+export type TelemetryFields = Record<string, string | number | boolean | null>;
 
 export type TelemetryRow = RecordActionObservationInput;
 
 export type TelemetryContext = {
   actionName: string;
   ctx: AppContext;
-  startedAt: Date;
-  audit: AuditFields;
+  /** Monotonic reading from `performance.now()`, taken when the action began. */
+  startedTicks: number;
+  telemetry: TelemetryFields;
 };
 
 function baseRow(
   t: TelemetryContext,
 ): Omit<TelemetryRow, "status" | "errorCode" | "errorMessage"> {
-  const at = t.ctx.now();
   return {
     traceId: t.ctx.traceId,
     requestId: t.ctx.requestId,
@@ -28,9 +28,13 @@ function baseRow(
     actionName: t.actionName,
     actorUserId: t.ctx.actor.userId,
     actorRole: t.ctx.actor.role,
-    durationMs: at.getTime() - t.startedAt.getTime(),
-    input: t.audit,
-    createdAt: at,
+    // Elapsed time comes from the monotonic timer so an NTP step mid-request
+    // cannot produce a negative or absurd duration. The row itself is stamped
+    // with the operation instant, which keeps every row from one request
+    // correlated on a single timestamp.
+    durationMs: Math.round(performance.now() - t.startedTicks),
+    input: t.telemetry,
+    createdAt: t.ctx.operationAt,
   };
 }
 
