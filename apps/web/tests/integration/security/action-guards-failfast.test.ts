@@ -1,21 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { getUserLoginRetryReport } from "~/actions/admin/auth-security";
-import { listUserSessions } from "~/actions/admin/sessions/read";
-import { revokeUserSession } from "~/actions/admin/sessions/revoke";
-import { acceptInvitePasswordStep } from "~/actions/auth/invite";
+import { ActionError } from "~/contracts/errors";
+import { getUserLoginRetryReport } from "~/rpc/admin/auth-security";
+import { listUserSessions } from "~/rpc/admin/sessions/read";
+import { revokeUserSession } from "~/rpc/admin/sessions/revoke";
 import {
   createTeamInvite,
   resendTeamInvite,
   revokeTeamInvite,
-} from "~/actions/team/invites";
-import { ActionError } from "~/lib/wire-error";
+} from "~/rpc/team/invites";
 
 async function rejectionCode(run: Promise<unknown>): Promise<unknown> {
   try {
     await run;
   } catch (error) {
-    if (error instanceof ActionError) return error.wire.code;
+    if (error instanceof ActionError) {
+      return error.wire.code;
+    }
     return undefined;
   }
   throw new Error("expected the action to reject");
@@ -57,16 +58,6 @@ describe("action guards fail fast", () => {
         }),
       ),
     ).toBe("invalid_role");
-    await expect(
-      acceptInvitePasswordStep({
-        token: "invalid",
-        password: "Password123",
-      }),
-    ).resolves.toEqual({
-      ok: false,
-      code: "invalid_token",
-      message: "El enlace de invitación no es válido.",
-    });
   });
 
   it("rejects invalid range/count values before auth", async () => {

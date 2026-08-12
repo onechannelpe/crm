@@ -1,11 +1,12 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { operationAt } from "@tests/support/operation";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { AuthLoginFlowId } from "~/domain/ids";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
-import { AuthLoginFlowId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 describe("privileged password login", () => {
   const scenario = createAuthScenario("privileged-password-login");
@@ -36,7 +37,9 @@ describe("privileged password login", () => {
       requestMeta,
     );
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) throw new Error("expected strong auth requirement");
+    if (!isErr(result)) {
+      throw new Error("expected strong auth requirement");
+    }
     expect(result.error.kind).toBe("strong_auth_required");
   });
 
@@ -94,6 +97,7 @@ describe("privileged password login", () => {
       AuthLoginFlowId.trust(result.value.flow.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
+      operationAt(new Date()),
     );
     expect(flow?.state).toBe("passkey");
   });
@@ -125,7 +129,9 @@ describe("privileged password login", () => {
     const flowId = AuthLoginFlowId.trust(passwordResult.value.flow.id);
     const result = await scenario.loginTotp(flowId, code, requestMeta);
     expect(isErr(result)).toBe(false);
-    if (isErr(result)) throw new Error("expected successful totp login");
+    if (isErr(result)) {
+      throw new Error("expected successful totp login");
+    }
 
     const sessions = await scenario.ctx.repos.sessions.listForUser(user.userId);
     expect(sessions[0]?.session_class).toBe("app");
@@ -162,7 +168,9 @@ describe("privileged password login", () => {
       requestMeta,
     );
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) throw new Error("expected invalid totp");
+    if (!isErr(result)) {
+      throw new Error("expected invalid totp");
+    }
     expect(result.error.kind).toBe("invalid_totp");
   });
 

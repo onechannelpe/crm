@@ -1,4 +1,4 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
 
 const STRONG_AUTH_ROLES: ReadonlySet<Role> = new Set([
   "sales_manager",

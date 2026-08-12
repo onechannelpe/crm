@@ -1,31 +1,28 @@
-import { buildThrottleKeys } from "~/lib/auth/password/throttle-keys";
+import { buildThrottleKeys } from "~/server/auth/password/throttle-keys";
 import {
   AUTH_THROTTLE_POLICY,
   AUTH_THROTTLE_SCOPES,
   type AuthThrottleEndpoint,
-} from "~/lib/auth/password/throttle-policy";
+} from "~/server/auth/password/throttle-policy";
 import {
   calculateBlockMs,
   isThrottleWindowExpired,
-} from "~/lib/auth/password/throttle-state";
+} from "~/server/auth/password/throttle-state";
 import type { AuthThrottleRepo } from "~/server/auth/repos-auth-throttle";
 
 type CheckResult = { allowed: true } | { allowed: false; retryAfterMs: number };
 
 export interface AuthThrottleServiceDeps {
   authThrottle: AuthThrottleRepo;
-  now?: () => Date;
 }
 
 export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
-  const now = deps.now ?? (() => new Date());
-
   async function checkThrottle(
     endpoint: AuthThrottleEndpoint,
     identifier: string,
     ipAddress: string,
+    attemptedAt: Date,
   ): Promise<CheckResult> {
-    const nowTs = now();
     const keyMap = buildThrottleKeys(endpoint, identifier, ipAddress);
 
     const rows = await Promise.all(
@@ -38,14 +35,19 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
       const scope = AUTH_THROTTLE_SCOPES[index];
       if (
         !row ||
-        isThrottleWindowExpired(endpoint, scope, nowTs, row.window_started_at)
+        isThrottleWindowExpired(
+          endpoint,
+          scope,
+          attemptedAt,
+          row.window_started_at,
+        )
       ) {
         continue;
       }
-      if (row.blocked_until && row.blocked_until > nowTs) {
+      if (row.blocked_until && row.blocked_until > attemptedAt) {
         return {
           allowed: false,
-          retryAfterMs: row.blocked_until.getTime() - nowTs.getTime(),
+          retryAfterMs: row.blocked_until.getTime() - attemptedAt.getTime(),
         };
       }
     }
@@ -57,8 +59,8 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
     endpoint: AuthThrottleEndpoint,
     identifier: string,
     ipAddress: string,
+    failedAt: Date,
   ): Promise<void> {
-    const nowTs = now();
     const keyMap = buildThrottleKeys(endpoint, identifier, ipAddress);
 
     const rows = await Promise.all(
@@ -74,7 +76,7 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
           isThrottleWindowExpired(
             endpoint,
             scope,
-            nowTs,
+            failedAt,
             row.window_started_at,
           );
         const failures = reset ? 1 : row.failure_count + 1;
@@ -82,16 +84,16 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
           failures > AUTH_THROTTLE_POLICY[endpoint][scope].threshold;
         const blockedUntil = block
           ? new Date(
-              nowTs.getTime() + calculateBlockMs(endpoint, scope, failures),
+              failedAt.getTime() + calculateBlockMs(endpoint, scope, failures),
             )
           : null;
         return deps.authThrottle.upsert({
           scope,
           key_hash: keyMap[scope],
-          window_started_at: reset ? nowTs : row.window_started_at,
+          window_started_at: reset ? failedAt : row.window_started_at,
           failure_count: failures,
           blocked_until: blockedUntil,
-          updated_at: nowTs,
+          updated_at: failedAt,
         });
       }),
     );
@@ -111,12 +113,20 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
   }
 
   return {
-    checkLoginThrottle(email: string, ipAddress: string): Promise<CheckResult> {
-      return checkThrottle("password_login", email, ipAddress);
+    checkLoginThrottle(
+      email: string,
+      ipAddress: string,
+      attemptedAt: Date,
+    ): Promise<CheckResult> {
+      return checkThrottle("password_login", email, ipAddress, attemptedAt);
     },
 
-    recordLoginFailure(email: string, ipAddress: string): Promise<void> {
-      return recordFailure("password_login", email, ipAddress);
+    recordLoginFailure(
+      email: string,
+      ipAddress: string,
+      failedAt: Date,
+    ): Promise<void> {
+      return recordFailure("password_login", email, ipAddress, failedAt);
     },
 
     clearLoginFailureState(email: string, ipAddress: string): Promise<void> {
@@ -126,29 +136,48 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
     checkPasskeyChallengeThrottle(
       identifier: string,
       ipAddress: string,
+      attemptedAt: Date,
     ): Promise<CheckResult> {
-      return checkThrottle("passkey_challenge", identifier, ipAddress);
+      return checkThrottle(
+        "passkey_challenge",
+        identifier,
+        ipAddress,
+        attemptedAt,
+      );
     },
 
     recordPasskeyChallengeFailure(
       identifier: string,
       ipAddress: string,
+      failedAt: Date,
     ): Promise<void> {
-      return recordFailure("passkey_challenge", identifier, ipAddress);
+      return recordFailure(
+        "passkey_challenge",
+        identifier,
+        ipAddress,
+        failedAt,
+      );
     },
 
     checkPasskeyVerifyThrottle(
       identifier: string,
       ipAddress: string,
+      attemptedAt: Date,
     ): Promise<CheckResult> {
-      return checkThrottle("passkey_verify", identifier, ipAddress);
+      return checkThrottle(
+        "passkey_verify",
+        identifier,
+        ipAddress,
+        attemptedAt,
+      );
     },
 
     recordPasskeyVerifyFailure(
       identifier: string,
       ipAddress: string,
+      failedAt: Date,
     ): Promise<void> {
-      return recordFailure("passkey_verify", identifier, ipAddress);
+      return recordFailure("passkey_verify", identifier, ipAddress, failedAt);
     },
 
     clearPasskeyVerifyFailureState(
@@ -161,15 +190,17 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
     checkTotpVerifyThrottle(
       identifier: string,
       ipAddress: string,
+      attemptedAt: Date,
     ): Promise<CheckResult> {
-      return checkThrottle("totp_verify", identifier, ipAddress);
+      return checkThrottle("totp_verify", identifier, ipAddress, attemptedAt);
     },
 
     recordTotpVerifyFailure(
       identifier: string,
       ipAddress: string,
+      failedAt: Date,
     ): Promise<void> {
-      return recordFailure("totp_verify", identifier, ipAddress);
+      return recordFailure("totp_verify", identifier, ipAddress, failedAt);
     },
 
     clearTotpVerifyFailureState(
@@ -182,15 +213,22 @@ export function createAuthThrottleService(deps: AuthThrottleServiceDeps) {
     checkRecoveryVerifyThrottle(
       identifier: string,
       ipAddress: string,
+      attemptedAt: Date,
     ): Promise<CheckResult> {
-      return checkThrottle("recovery_verify", identifier, ipAddress);
+      return checkThrottle(
+        "recovery_verify",
+        identifier,
+        ipAddress,
+        attemptedAt,
+      );
     },
 
     recordRecoveryVerifyFailure(
       identifier: string,
       ipAddress: string,
+      failedAt: Date,
     ): Promise<void> {
-      return recordFailure("recovery_verify", identifier, ipAddress);
+      return recordFailure("recovery_verify", identifier, ipAddress, failedAt);
     },
 
     clearRecoveryVerifyFailureState(

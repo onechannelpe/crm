@@ -4,15 +4,15 @@ import { createMemo, createSignal, Show, Suspense } from "solid-js";
 import { Loader } from "~/components/feedback/loading/loader";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
-import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
+import { codeIs } from "~/contracts/error-codes";
+import { parseWireError } from "~/contracts/errors";
+import { parseLoginFlowId } from "~/domain/auth/login-flow/parse-id";
+import { totpLoginMutation } from "~/features/auth/data/mutations";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
 import { OtpSlotInput } from "~/features/auth/ui/otp-slot-input";
-import { totpLoginMutation } from "~/lib/mutations/auth";
-import { loginFlowQuery } from "~/lib/queries/auth";
-import { parseWireError } from "~/lib/wire-error";
-import { codeIs } from "~/lib/wire-error-codes";
+import { loginFlowQuery } from "~/rpc/auth/login-flow";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";
@@ -41,8 +41,12 @@ export default function LoginVerifyPage() {
 
   const totpFlow = createMemo(() => {
     const flow = loginFlow();
-    if (flow === undefined && flowId()) return undefined;
-    if (flowExpiredAtSubmit()) return null;
+    if (flow === undefined && flowId()) {
+      return undefined;
+    }
+    if (flowExpiredAtSubmit()) {
+      return null;
+    }
     return flow?.state === "totp" ? flow : null;
   });
 

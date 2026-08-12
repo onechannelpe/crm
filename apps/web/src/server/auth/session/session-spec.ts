@@ -1,17 +1,17 @@
 import type { Selectable } from "kysely";
 
-import type { Role } from "~/lib/auth/access/rbac";
-import type { AuthSession } from "~/lib/auth/access/session-types";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { AuthSession } from "~/domain/auth/access/session-types";
 import type {
   PrimaryAuthMethod,
   SessionClass,
   StrongAuthMethod,
-} from "~/lib/auth/core/session-contract";
-import type { UserSessionRow } from "~/lib/auth/types";
-import type { UsersTable } from "~/lib/db/types";
-import type { Logger } from "~/lib/observability/logger-shared";
-import type { BranchId, UserId } from "~/server/shared/ids";
-import type { EventsRepo } from "~/server/shared/repos-events";
+} from "~/domain/auth/core/session-contract";
+import type { BranchId, UserId } from "~/domain/ids";
+import type { UserSessionRow } from "~/server/auth/types";
+import type { EventsWriter } from "~/server/event-logs/events-repo";
+import type { UsersTable } from "~/server/platform/database/types";
+import type { Logger } from "~/shared/observability/logger";
 
 type UserRow = Selectable<UsersTable>;
 
@@ -33,7 +33,10 @@ export interface SessionSpec {
   strongAuthMethod: StrongAuthMethod | null;
   strongAuthAt: Date | null;
   impersonatorUserId?: UserId | null;
-  auditAction?: "login" | "login_passkey";
+}
+
+export interface AuditedSessionSpec extends SessionSpec {
+  auditAction: "login" | "login_passkey";
 }
 
 export interface IssuedSession {
@@ -68,7 +71,6 @@ export interface SessionRepositoryPort {
   extendExpiry(id: string, expiresAt: Date): Promise<void>;
   delete(id: string): Promise<void>;
   deleteAllForUser(userId: UserId): Promise<void>;
-  deleteOtherForUser(userId: UserId, retainedSessionId: string): Promise<void>;
 }
 
 export interface SessionUsersPort {
@@ -77,21 +79,26 @@ export interface SessionUsersPort {
   ): Promise<
     { id: UserId; is_active: boolean; expires_at: Date | null } | undefined
   >;
-  deactivateIfExpired(userId: UserId, now: Date): Promise<boolean>;
 }
 
 export interface SessionEventPort {
   // Service does not read the return; adapters can return void, an id, or an
   // event count without breaking the contract.
-  append(event: Parameters<EventsRepo["append"]>[0]): Promise<unknown>;
+  append(event: Parameters<EventsWriter["append"]>[0]): Promise<unknown>;
 }
 
-export interface SessionServiceDeps {
+export interface SessionAuthenticatorDeps {
   sessions: SessionRepositoryPort;
   users: SessionUsersPort;
-  events: SessionEventPort;
-  now?: () => Date;
   logger?: Pick<Logger, "error">;
+}
+
+export interface SessionIssuerDeps {
+  sessions: Pick<SessionRepositoryPort, "create">;
+}
+
+export interface AuditedSessionIssuerDeps extends SessionIssuerDeps {
+  events: SessionEventPort;
 }
 
 export type { AuthSession };

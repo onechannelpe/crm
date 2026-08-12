@@ -6,6 +6,7 @@ import {
   setIdentityPassword,
   type SeededIdentityName,
 } from "@tests/support/identities/api";
+import { operationAt } from "@tests/support/operation";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import {
   cleanupTestDb,
@@ -15,14 +16,14 @@ import {
 } from "@tests/support/runtime/db";
 import { vi } from "vitest";
 
-import { decryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
-import { generateCurrentTotpCode } from "~/lib/auth/totp/totp";
+import type { AuthLoginFlowId } from "~/domain/ids";
 import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
 import { submitPasswordLogin } from "~/server/auth/flows/submit-password-login";
 import { verifyTotpLoginProof } from "~/server/auth/flows/verify-pending-login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import type { AuthLoginFlowId } from "~/server/shared/ids";
-import { Err, isErr, Ok } from "~/server/shared/result";
+import { decryptTotpSecret } from "~/server/auth/totp/secret-crypto";
+import { generateCurrentTotpCode } from "~/server/auth/totp/totp";
+import { Err, isErr, Ok } from "~/shared/result";
 
 interface RequestMeta {
   ipAddress: string;
@@ -124,6 +125,7 @@ export function createAuthScenario(
         },
         login,
         createTestPasskeyProvider(login.repos),
+        operationAt(new Date()),
       );
     },
 
@@ -143,6 +145,7 @@ export function createAuthScenario(
         },
         login,
         createTestPasskeyProvider(login.repos),
+        operationAt(new Date()),
       );
     },
 
@@ -152,21 +155,29 @@ export function createAuthScenario(
       meta: RequestMeta,
     ) {
       const login = createAuthLoginContext(ctx.db);
-      const occurredAt = login.now();
-      const verified = await verifyTotpLoginProof(login, {
-        flowId,
-        totpCode,
-        ipAddress: meta.ipAddress,
-        occurredAt,
-      });
-      if (isErr(verified)) return verified;
+      const operation = operationAt(new Date());
+      const verified = await verifyTotpLoginProof(
+        login,
+        {
+          flowId,
+          totpCode,
+          ipAddress: meta.ipAddress,
+        },
+        operation,
+      );
+      if (isErr(verified)) {
+        return verified;
+      }
 
-      const completed = await completePendingLogin(login, {
-        proof: verified.value,
-        occurredAt,
-        ipAddress: meta.ipAddress,
-        userAgent: meta.userAgent,
-      });
+      const completed = await completePendingLogin(
+        login,
+        {
+          proof: verified.value,
+          ipAddress: meta.ipAddress,
+          userAgent: meta.userAgent,
+        },
+        operation,
+      );
       return isErr(completed)
         ? Err({ kind: "flow_expired" } as const)
         : Ok(completed.value);

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createAuthSetupContext } from "~/server/auth/infrastructure/setup-context";
 import { issueRecoveryCodesForEnrollment } from "~/server/auth/recovery/issue-recovery-codes";
-import { isErr, Ok } from "~/server/shared/result";
+import { isErr, Ok } from "~/shared/result";
 
 function runSeries(count: number, task: () => Promise<void>): Promise<void> {
   let sequence = Promise.resolve();
@@ -48,7 +48,9 @@ describe("password login service", () => {
       requestMeta,
     );
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) throw new Error("expected invalid credentials");
+    if (!isErr(result)) {
+      throw new Error("expected invalid credentials");
+    }
     expect(result.error.kind).toBe("invalid_credentials");
     const user = scenario.identity(identity);
 
@@ -103,7 +105,9 @@ describe("password login service", () => {
     );
 
     expect(isErr(result)).toBe(true);
-    if (!isErr(result)) throw new Error("expected invalid credentials");
+    if (!isErr(result)) {
+      throw new Error("expected invalid credentials");
+    }
     expect(result.error.kind).toBe("invalid_credentials");
   });
 

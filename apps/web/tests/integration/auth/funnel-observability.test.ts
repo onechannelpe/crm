@@ -11,38 +11,29 @@ import {
 } from "vitest";
 
 import { createObservabilityService } from "~/server/observability/service";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
+
+const BASE_TIME_MS = 1_700_000_000_000;
 
 describe("auth funnel observability snapshot", () => {
   const scenario = createAuthScenario("auth-funnel-observability");
 
-  beforeAll(async () => {
-    await scenario.setup();
-  });
-
-  afterAll(async () => {
-    await scenario.teardown();
-  });
+  beforeAll(() => scenario.setup());
+  afterAll(() => scenario.teardown());
 
   beforeEach(async () => {
     await scenario.reset();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(BASE_TIME_MS + 2));
   });
 
-  // `getAuthFunnelSnapshot` windows off the real clock (see
-  // `parseAuthFunnelSnapshotFilter`). Freeze time here so fixed `createdAt`
-  // seeds land inside the query window.
-  afterEach(() => {
-    vi.useRealTimers();
-  });
+  afterEach(() => vi.useRealTimers());
 
   it("stores funnel events and projects them in summary and recent", async () => {
     const service = createObservabilityService({
       actionObservations: scenario.ctx.repos.actionObservations,
       authFunnelEvents: scenario.ctx.repos.authFunnelEvents,
     });
-    const baseTimeMs = 1_700_000_000_000;
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(baseTimeMs + 2));
 
     await service.recordAuthFunnelEvent({
       traceId: "trace-view",
@@ -54,7 +45,7 @@ describe("auth funnel observability snapshot", () => {
       method: null,
       outcome: "viewed",
       code: null,
-      createdAt: new Date(baseTimeMs),
+      createdAt: new Date(BASE_TIME_MS),
     });
 
     await service.recordAuthFunnelEvent({
@@ -67,7 +58,7 @@ describe("auth funnel observability snapshot", () => {
       method: "password",
       outcome: "totp_required",
       code: null,
-      createdAt: new Date(baseTimeMs + 1),
+      createdAt: new Date(BASE_TIME_MS + 1),
     });
 
     await service.recordAuthFunnelEvent({
@@ -80,15 +71,19 @@ describe("auth funnel observability snapshot", () => {
       method: "password_totp",
       outcome: "failed",
       code: "invalid_totp",
-      createdAt: new Date(baseTimeMs + 2),
+      createdAt: new Date(BASE_TIME_MS + 2),
     });
 
-    const snapshotResult = await service.getAuthFunnelSnapshot({
-      windowMinutes: 60,
-    });
+    const snapshotResult = await service.getAuthFunnelSnapshot(
+      { windowMinutes: 60 },
+      new Date(),
+    );
 
     expect(isErr(snapshotResult)).toBe(false);
-    if (isErr(snapshotResult)) return;
+    if (isErr(snapshotResult)) {
+      return;
+    }
+
     const snapshot = snapshotResult.value;
 
     expect(snapshot.recent).toHaveLength(3);

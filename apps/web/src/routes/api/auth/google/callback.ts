@@ -1,13 +1,15 @@
 import {
   appendClearedGoogleOAuthCookies,
   readGoogleOAuthCookies,
-} from "~/lib/auth/google/google-oauth-cookies";
-import { getClientIp } from "~/lib/auth/password/client-ip";
-import { appendSessionCookie } from "~/lib/auth/session/cookies";
-import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
-import { createRequestPasskeyProvider } from "~/server/auth/infrastructure/request-passkey-provider";
-import { getServerRuntime } from "~/server/platform/container";
-import { isErr } from "~/server/shared/result";
+} from "~/server/auth/google/google-oauth-cookies";
+import { getClientIp } from "~/server/auth/password/client-ip";
+import { appendSessionCookie } from "~/server/auth/session/cookies";
+import { application } from "~/server/composition/application";
+import {
+  getRequestContext,
+  getRequestOperation,
+} from "~/server/platform/http/request-context-storage";
+import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";
 
@@ -33,8 +35,7 @@ export async function GET(event: ApiRequestEvent): Promise<Response> {
 
   const ipAddress = getClientIp(event.request.headers);
   const userAgent = event.request.headers.get("user-agent") ?? null;
-  const runtime = getServerRuntime().auth.login;
-  const result = await completeGoogleOAuthCallback(
+  const result = await application.auth.login.completeGoogleOAuth(
     {
       code,
       state,
@@ -43,8 +44,8 @@ export async function GET(event: ApiRequestEvent): Promise<Response> {
       ipAddress,
       userAgent,
     },
-    runtime,
-    createRequestPasskeyProvider(runtime.repos),
+    getRequestContext().publicOrigin,
+    getRequestOperation(),
   );
   if (isErr(result)) {
     if (result.error.kind === "bad_request") {

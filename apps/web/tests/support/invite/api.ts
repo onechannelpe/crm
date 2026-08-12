@@ -1,14 +1,17 @@
+import { operationAt } from "@tests/support/operation";
+
+import { createEventsWriter } from "~/server/event-logs/events-repo";
 import { createInviteService } from "~/server/invites/application/invite-service";
 import type {
-  InviteDeps,
   InviteService,
+  InviteBaseRepos,
 } from "~/server/invites/application/types";
-import { runResultTransaction } from "~/server/shared/application/uow";
+import { createExecutorUow } from "~/server/platform/database/uow";
 
 import type { TestDbContext } from "../runtime/db";
 import { createTestRepositories } from "../runtime/repos";
 
-type InviteTestRepoFactory = (db: TestDbContext["db"]) => InviteDeps;
+type InviteTestRepoFactory = (db: TestDbContext["db"]) => InviteBaseRepos;
 
 export function createInviteTestKit(
   ctx: TestDbContext,
@@ -20,10 +23,18 @@ export function createInviteTestKit(
 ): {
   service: InviteService;
   commands: {
-    create: InviteService["createInvite"];
-    accept: InviteService["acceptInvite"];
-    redeliver: InviteService["redeliverInvite"];
-    revoke: InviteService["revokeInvite"];
+    create: (
+      input: Parameters<InviteService["createInvite"]>[0],
+    ) => ReturnType<InviteService["createInvite"]>;
+    accept: (
+      input: Parameters<InviteService["acceptInvite"]>[0],
+    ) => ReturnType<InviteService["acceptInvite"]>;
+    redeliver: (
+      input: Parameters<InviteService["redeliverInvite"]>[0],
+    ) => ReturnType<InviteService["redeliverInvite"]>;
+    revoke: (
+      input: Parameters<InviteService["revokeInvite"]>[0],
+    ) => ReturnType<InviteService["revokeInvite"]>;
   };
   expect: {
     inviteStatus(
@@ -38,22 +49,13 @@ export function createInviteTestKit(
 } {
   const createRepos = options.createRepos ?? createTestRepositories;
   const baseRepos = createRepos(ctx.db);
+  const resolveNow = options.now ?? (() => new Date());
 
   const service = createInviteService(baseRepos, {
-    uow: {
-      run(work) {
-        return runResultTransaction(
-          (operation) =>
-            ctx.db
-              .transaction()
-              .execute((transactionDb) =>
-                operation(createRepos(transactionDb)),
-              ),
-          work,
-        );
-      },
-    },
-    now: options.now,
+    uow: createExecutorUow(ctx.db, (tx) => ({
+      ...createRepos(tx),
+      events: createEventsWriter(tx),
+    })),
     hashPassword: options.hashPassword,
   });
 
@@ -61,10 +63,11 @@ export function createInviteTestKit(
     service,
 
     commands: {
-      create: (input) => service.createInvite(input),
-      accept: (input) => service.acceptInvite(input),
-      redeliver: (input) => service.redeliverInvite(input),
-      revoke: (input) => service.revokeInvite(input),
+      create: (input) => service.createInvite(input, operationAt(resolveNow())),
+      accept: (input) => service.acceptInvite(input, operationAt(resolveNow())),
+      redeliver: (input) =>
+        service.redeliverInvite(input, operationAt(resolveNow())),
+      revoke: (input) => service.revokeInvite(input, operationAt(resolveNow())),
     },
 
     expect: {

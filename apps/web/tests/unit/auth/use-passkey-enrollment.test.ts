@@ -1,8 +1,8 @@
 import { createRoot } from "solid-js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ActionError } from "~/contracts/errors";
 import { usePasskeyEnrollment } from "~/features/auth/security/use-passkey-enrollment";
-import { ActionError } from "~/lib/wire-error";
 
 const {
   beginPasskeyEnrollment,
@@ -20,12 +20,12 @@ const {
   isPasskeyRegistrationSupported: vi.fn<() => boolean>(),
 }));
 
-vi.mock("~/actions/auth/security/passkey", () => ({
+vi.mock("~/rpc/auth/security/passkey", () => ({
   beginPasskeyEnrollment,
   finishPasskeyEnrollment,
 }));
 
-vi.mock("~/lib/auth/passkey/registration-client", () => ({
+vi.mock("~/browser/auth/passkey/registration-client", () => ({
   createRegistrationResponse,
   isPasskeyRegistrationSupported,
 }));

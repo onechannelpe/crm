@@ -1,4 +1,4 @@
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import type { BranchId, TeamId, UserId } from "~/domain/ids";
 
 export function makeMockRepos(
   overrides: {

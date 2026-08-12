@@ -1,6 +1,6 @@
-import { hashPassword } from "~/lib/auth/password/password";
-import { encryptTotpSecret } from "~/lib/auth/totp/secret-crypto";
-import { generateTotpSecret } from "~/lib/auth/totp/totp";
+import { hashPassword } from "~/server/auth/password/password";
+import { encryptTotpSecret } from "~/server/auth/totp/secret-crypto";
+import { generateTotpSecret } from "~/server/auth/totp/totp";
 
 import {
   getSeededIdentity,

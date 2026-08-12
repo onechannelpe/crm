@@ -4,14 +4,43 @@ import { describe, expect, it } from "vitest";
 import {
   enforceCsrfRequestPolicy,
   enforceAuthRequest,
-} from "~/lib/auth/access/request-auth";
+} from "~/server/platform/http/request-auth";
+import { verifyCsrf } from "~/server/platform/security/csrf";
 
 const LOCAL_ORIGIN = "http://localhost:3000";
+
+describe("verifyCsrf", () => {
+  it("accepts a header token matching the expected token", () => {
+    const request = new Request("http://localhost:3000/home", {
+      headers: { "x-csrf-token": "expected-token" },
+    });
+    expect(verifyCsrf(request, "expected-token")).toBe(true);
+  });
+
+  it("rejects a header token of the same length that doesn't match", () => {
+    const request = new Request("http://localhost:3000/home", {
+      headers: { "x-csrf-token": "wrong-toroken" },
+    });
+    expect(verifyCsrf(request, "expected-token")).toBe(false);
+  });
+
+  it("rejects a header token of a different length", () => {
+    const request = new Request("http://localhost:3000/home", {
+      headers: { "x-csrf-token": "short" },
+    });
+    expect(verifyCsrf(request, "expected-token")).toBe(false);
+  });
+
+  it("rejects a request with no CSRF header at all", () => {
+    const request = new Request("http://localhost:3000/home");
+    expect(verifyCsrf(request, "expected-token")).toBe(false);
+  });
+});
 
 describe("auth middleware csrf policy", () => {
   it("allows same-origin unsafe requests via fetch metadata", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { "sec-fetch-site": "same-origin" },
       }),
@@ -22,7 +51,7 @@ describe("auth middleware csrf policy", () => {
 
   it("rejects cross-site unsafe requests via fetch metadata", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { "sec-fetch-site": "cross-site" },
       }),
@@ -33,7 +62,7 @@ describe("auth middleware csrf policy", () => {
 
   it("rejects same-site unsafe requests via fetch metadata", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { "sec-fetch-site": "same-site" },
       }),
@@ -44,7 +73,7 @@ describe("auth middleware csrf policy", () => {
 
   it("rejects requests with no fetch metadata context (none)", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { "sec-fetch-site": "none" },
       }),
@@ -55,7 +84,7 @@ describe("auth middleware csrf policy", () => {
 
   it("accepts a request whose origin matches the target origin", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { Origin: LOCAL_ORIGIN },
       }),
@@ -66,7 +95,7 @@ describe("auth middleware csrf policy", () => {
 
   it("falls back to strict origin matching when fetch metadata is absent", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { Origin: "http://evil.local" },
       }),
@@ -77,7 +106,7 @@ describe("auth middleware csrf policy", () => {
 
   it("derives the source origin from the referer when Origin is absent", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", {
+      new Request("http://localhost:3000/home", {
         method: "POST",
         headers: { Referer: "http://evil.local/some/path" },
       }),
@@ -88,7 +117,7 @@ describe("auth middleware csrf policy", () => {
 
   it("fails closed when fetch metadata and origin headers are absent", () => {
     const error = enforceCsrfRequestPolicy(
-      new Request("http://localhost:3000/dashboard", { method: "POST" }),
+      new Request("http://localhost:3000/home", { method: "POST" }),
       LOCAL_ORIGIN,
     );
     expect(error).toBe("CSRF validation failed (Origin missing)");
@@ -106,6 +135,23 @@ describe("auth middleware csrf policy", () => {
       },
     });
     expect(decision.kind).toBe("reject");
+  });
+
+  it("allows an unsafe request carrying a matching synchronizer token", async () => {
+    const decision = await enforceAuthRequest({
+      request: new Request("http://localhost:3000/login", {
+        method: "POST",
+        headers: {
+          origin: "http://localhost:3000",
+          "x-csrf-token": "csrf-token",
+        },
+      }),
+      locals: {
+        nonce: "nonce",
+        requestContext: createRequestContext(null, "csrf-token"),
+      },
+    });
+    expect(decision.kind).toBe("allow");
   });
 
   it("allows GET requests even when Origin does not match Host", async () => {
@@ -144,7 +190,9 @@ describe("auth middleware csrf policy", () => {
     });
 
     expect(decision.kind).toBe("reject");
-    if (decision.kind !== "reject") throw new Error("Expected reject");
+    if (decision.kind !== "reject") {
+      throw new Error("Expected reject");
+    }
     expect(decision.response.status).toBe(403);
   });
 
@@ -155,7 +203,9 @@ describe("auth middleware csrf policy", () => {
     });
 
     expect(decision.kind).toBe("reject");
-    if (decision.kind !== "reject") throw new Error("Expected reject");
+    if (decision.kind !== "reject") {
+      throw new Error("Expected reject");
+    }
     expect(decision.response.status).toBe(403);
   });
 
@@ -169,7 +219,9 @@ describe("auth middleware csrf policy", () => {
     });
 
     expect(decision.kind).toBe("reject");
-    if (decision.kind !== "reject") throw new Error("Expected reject");
+    if (decision.kind !== "reject") {
+      throw new Error("Expected reject");
+    }
     expect(decision.response.status).toBe(403);
   });
 });

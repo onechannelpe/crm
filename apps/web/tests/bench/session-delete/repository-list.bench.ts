@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, bench, describe } from "vitest";
 
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
 
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SESSIONS_PER_USER, seedBenchUser, setUserSessions } from "./fixtures";

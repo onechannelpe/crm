@@ -1,5 +1,5 @@
-import { buildThrottleKeys } from "~/lib/auth/password/throttle-keys";
-import type { AuthThrottleEndpoint } from "~/lib/auth/password/throttle-policy";
+import { buildThrottleKeys } from "~/server/auth/password/throttle-keys";
+import type { AuthThrottleEndpoint } from "~/server/auth/password/throttle-policy";
 import type { AuthThrottleScope } from "~/server/auth/repos-auth-throttle";
 
 import { createAuthScenario } from "./scenario";

@@ -1,10 +1,11 @@
+import { createAccessSecurityTx } from "~/server/auth/infrastructure/session-revocation-context";
 import { createPasswordResetTokensRepo } from "~/server/auth/repos-password-reset";
 import type { MessagingGateway } from "~/server/notifications/channels/messaging-gateway";
-import { createExecutorUow } from "~/server/shared/application/uow";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createExecutorUow } from "~/server/platform/database/uow";
 import { createUsersRepo } from "~/server/users/repos-users";
 
-type PasswordResetRepos = {
+type PasswordResetReadRepos = {
   users: ReturnType<typeof createUsersRepo>;
   passwordResetTokens: ReturnType<typeof createPasswordResetTokensRepo>;
 };
@@ -15,20 +16,17 @@ interface PasswordResetContextDeps {
 }
 
 export function createPasswordResetContext(deps: PasswordResetContextDeps) {
-  const repos: PasswordResetRepos = {
+  const repos: PasswordResetReadRepos = {
     users: createUsersRepo(deps.executor),
     passwordResetTokens: createPasswordResetTokensRepo(deps.executor),
   };
 
   return {
     repos,
-    uow: createExecutorUow(
-      deps.executor,
-      (txDb): PasswordResetRepos => ({
-        users: createUsersRepo(txDb),
-        passwordResetTokens: createPasswordResetTokensRepo(txDb),
-      }),
-    ),
+    uow: createExecutorUow(deps.executor, (txDb) => ({
+      ...createAccessSecurityTx(txDb),
+      passwordResetTokens: createPasswordResetTokensRepo(txDb),
+    })),
     messaging: deps.messaging,
   };
 }

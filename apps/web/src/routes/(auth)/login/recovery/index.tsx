@@ -5,13 +5,13 @@ import { Loader } from "~/components/feedback/loading/loader";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
 import { Input } from "~/components/ui/input/input";
-import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
+import { codeIs } from "~/contracts/error-codes";
+import { parseWireError } from "~/contracts/errors";
+import { parseLoginFlowId } from "~/domain/auth/login-flow/parse-id";
+import { recoveryLoginMutation } from "~/features/auth/data/mutations";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
 import { LegalFooter } from "~/features/auth/ui/legal-footer";
-import { recoveryLoginMutation } from "~/lib/mutations/auth";
-import { loginFlowQuery } from "~/lib/queries/auth";
-import { parseWireError } from "~/lib/wire-error";
-import { codeIs } from "~/lib/wire-error-codes";
+import { loginFlowQuery } from "~/rpc/auth/login-flow";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";
@@ -43,11 +43,21 @@ export default function LoginRecoveryPage() {
   // has no user for recovery-code redemption.
   const recoveryFlow = createMemo(() => {
     const flow = loginFlow();
-    if (flow === undefined && flowId()) return undefined;
-    if (flowExpiredAtSubmit()) return null;
-    if (!flow) return null;
-    if (flow.state === "totp") return flow;
-    if (flow.state === "passkey" && flow.mode === "identified") return flow;
+    if (flow === undefined && flowId()) {
+      return undefined;
+    }
+    if (flowExpiredAtSubmit()) {
+      return null;
+    }
+    if (!flow) {
+      return null;
+    }
+    if (flow.state === "totp") {
+      return flow;
+    }
+    if (flow.state === "passkey" && flow.mode === "identified") {
+      return flow;
+    }
     return null;
   });
 

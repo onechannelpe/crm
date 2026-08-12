@@ -1,4 +1,5 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { operationAt } from "@tests/support/operation";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import {
   afterAll,
@@ -12,20 +13,22 @@ import {
 
 import { completeGoogleOAuthCallback } from "~/server/auth/flows/google-callback-login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { Err, Ok, isErr } from "~/server/shared/result";
+import { Err, Ok, isErr } from "~/shared/result";
 
 const mocks = vi.hoisted(() => ({
   authenticateGoogleAuthorizationCode: vi.fn<() => Promise<unknown>>(),
 }));
 
-vi.mock("~/lib/auth/google/google-oauth", () => ({
+vi.mock("~/server/auth/google/google-oauth", () => ({
   authenticateGoogleAuthorizationCode:
     mocks.authenticateGoogleAuthorizationCode,
 }));
+
 describe("google oauth callback login", () => {
   const scenario = createAuthScenario("google-oauth-callback-login", {
     freezeAtMs: 1_700_000_000_000,
   });
+
   const request = {
     code: "google-code-1",
     state: "expected-state",
@@ -34,6 +37,15 @@ describe("google oauth callback login", () => {
     ipAddress: "198.51.100.41",
     userAgent: "vitest-agent",
   };
+
+  function runCallback(input = request) {
+    return completeGoogleOAuthCallback(
+      input,
+      createAuthLoginContext(scenario.ctx.db),
+      createTestPasskeyProvider(scenario.ctx.repos),
+      operationAt(new Date()),
+    );
+  }
 
   beforeAll(async () => {
     await scenario.setup();
@@ -45,23 +57,19 @@ describe("google oauth callback login", () => {
 
   beforeEach(async () => {
     await scenario.reset();
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it("returns bad_request when callback state does not match", async () => {
-    const result = await completeGoogleOAuthCallback(
-      {
-        ...request,
-        state: "wrong-state",
-      },
-      createAuthLoginContext(scenario.ctx.db),
-      createTestPasskeyProvider(scenario.ctx.repos),
-    );
+    const result = await runCallback({
+      ...request,
+      state: "wrong-state",
+    });
 
-    expect(isErr(result)).toBe(true);
     if (!isErr(result)) {
       throw new Error("expected bad_request result");
     }
+
     expect(result.error).toEqual({ kind: "bad_request" });
     expect(mocks.authenticateGoogleAuthorizationCode).not.toHaveBeenCalled();
   });
@@ -75,16 +83,12 @@ describe("google oauth callback login", () => {
       }),
     );
 
-    const result = await completeGoogleOAuthCallback(
-      request,
-      createAuthLoginContext(scenario.ctx.db),
-      createTestPasskeyProvider(scenario.ctx.repos),
-    );
+    const result = await runCallback();
 
-    expect(isErr(result)).toBe(true);
     if (!isErr(result)) {
       throw new Error("expected redirect_to_login result");
     }
+
     expect(result.error).toEqual({
       kind: "redirect_to_login",
       error: "google_not_linked",
@@ -102,16 +106,12 @@ describe("google oauth callback login", () => {
       }),
     );
 
-    const result = await completeGoogleOAuthCallback(
-      request,
-      createAuthLoginContext(scenario.ctx.db),
-      createTestPasskeyProvider(scenario.ctx.repos),
-    );
+    const result = await runCallback();
 
-    expect(isErr(result)).toBe(true);
     if (!isErr(result)) {
       throw new Error("expected redirect_to_login result");
     }
+
     expect(result.error).toEqual({
       kind: "redirect_to_login",
       error: "strong_auth_required",
@@ -120,6 +120,7 @@ describe("google oauth callback login", () => {
 
   it("issues an app session for linked non-privileged users", async () => {
     const identity = scenario.identity("backOne");
+
     await scenario.linkGoogleAccount("backOne", "google-sub-back-1");
 
     mocks.authenticateGoogleAuthorizationCode.mockResolvedValue(
@@ -130,22 +131,19 @@ describe("google oauth callback login", () => {
       }),
     );
 
-    const result = await completeGoogleOAuthCallback(
-      request,
-      createAuthLoginContext(scenario.ctx.db),
-      createTestPasskeyProvider(scenario.ctx.repos),
-    );
+    const result = await runCallback();
 
-    expect(isErr(result)).toBe(false);
     if (isErr(result)) {
       throw new Error("expected successful callback result");
     }
+
     expect(result.value.redirectPath).toBe("/records");
     expect(result.value.sessionToken).toBeTruthy();
 
     const sessions = await scenario.ctx.repos.sessions.listForUser(
       identity.userId,
     );
+
     expect(sessions[0]?.session_class).toBe("app");
     expect(sessions[0]?.ip_address).toBe(request.ipAddress);
     expect(sessions[0]?.user_agent).toBe(request.userAgent);
@@ -153,6 +151,7 @@ describe("google oauth callback login", () => {
 
   it("issues a pre-auth session and onboarding redirect when onboarding is incomplete", async () => {
     const identity = scenario.identity("backOne");
+
     await scenario.setOnboarding("backOne", false);
     await scenario.linkGoogleAccount("backOne", "google-sub-back-2");
 
@@ -164,22 +163,19 @@ describe("google oauth callback login", () => {
       }),
     );
 
-    const result = await completeGoogleOAuthCallback(
-      request,
-      createAuthLoginContext(scenario.ctx.db),
-      createTestPasskeyProvider(scenario.ctx.repos),
-    );
+    const result = await runCallback();
 
-    expect(isErr(result)).toBe(false);
     if (isErr(result)) {
       throw new Error("expected successful callback result");
     }
+
     expect(result.value.redirectPath).toBe("/onboarding");
     expect(result.value.sessionToken).toBeTruthy();
 
     const sessions = await scenario.ctx.repos.sessions.listForUser(
       identity.userId,
     );
+
     expect(sessions[0]?.session_class).toBe("pre_auth");
   });
 
@@ -188,16 +184,12 @@ describe("google oauth callback login", () => {
       Err({ kind: "invalid_google_callback" }),
     );
 
-    const result = await completeGoogleOAuthCallback(
-      request,
-      createAuthLoginContext(scenario.ctx.db),
-      createTestPasskeyProvider(scenario.ctx.repos),
-    );
+    const result = await runCallback();
 
-    expect(isErr(result)).toBe(true);
     if (!isErr(result)) {
       throw new Error("expected bad_request result");
     }
+
     expect(result.error).toEqual({ kind: "bad_request" });
   });
 });

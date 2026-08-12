@@ -1,7 +1,7 @@
 import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 type AuthEventRow = Selectable<Database["auth_events"]>;
 type NewAuthEventRow = Insertable<Database["auth_events"]>;
@@ -66,10 +66,10 @@ export function createAuthEventsRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    deleteCreatedBefore(timestamp: Date) {
+    deleteCreatedBefore(createdBefore: Date) {
       return db
         .deleteFrom("auth_events")
-        .where("created_at", "<", timestamp)
+        .where("created_at", "<", createdBefore)
         .executeTakeFirst()
         .then((result) => Number(result.numDeletedRows ?? 0));
     },

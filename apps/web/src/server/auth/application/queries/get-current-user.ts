@@ -1,10 +1,10 @@
 import type { CurrentUserView } from "~/contracts/auth";
-import { resolveWorkspaceContext } from "~/lib/auth/access/workspace-context";
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import { resolveWorkspaceContext } from "~/domain/auth/access/workspace-context";
+import type { DomainError } from "~/domain/errors";
 import { requiresStrongAuthRole } from "~/server/auth/policy/rules/role";
+import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/shared/result";
 
 import type { AuthSessionReadContext } from "../../infrastructure/session-context";
 
@@ -16,7 +16,9 @@ export async function getCurrentUser(
     ctx.actor;
 
   const user = await deps.repos.users.findById(userId);
-  if (!user) return Ok(null);
+  if (!user) {
+    return Ok(null);
+  }
 
   const [strongAuthStatus, whatsappAddr] = await Promise.all([
     getStrongAuthStatus(userId, deps.repos),

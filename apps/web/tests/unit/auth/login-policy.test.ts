@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { UserId } from "~/domain/ids";
 import {
   evaluateLoginPolicy,
   type LoginPolicyInput,
 } from "~/server/auth/policy/engine";
-import { UserId } from "~/server/shared/ids";
+
+const NOW = new Date(1_700_000_000_000);
 
 function createInput(overrides?: {
   proof?: LoginPolicyInput["proof"];
@@ -31,6 +33,7 @@ function createInput(overrides?: {
       recoveryCodesAcknowledgementRequired:
         overrides?.recoveryCodesAcknowledgementRequired ?? false,
     },
+    provedAt: NOW,
   };
 }
 
@@ -108,7 +111,7 @@ describe("login policy", () => {
       kind: "issue_session",
       sessionClass: "app",
       strongAuthMethod: "federated",
-      strongAuthAt: expect.any(Date),
+      strongAuthAt: NOW,
     });
   });
 

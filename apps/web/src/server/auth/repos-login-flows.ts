@@ -1,11 +1,11 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
 import type {
   AuthLoginFlowId,
   UserId,
   WebauthnChallengeId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 export function createLoginFlowsRepo(db: Kysely<Database>) {
   return {
@@ -57,10 +57,10 @@ export function createLoginFlowsRepo(db: Kysely<Database>) {
       await db.deleteFrom("login_flows").where("id", "=", id).execute();
     },
 
-    async deleteExpired(now = new Date()): Promise<number> {
+    async deleteExpired(expiredBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("login_flows")
-        .where("expires_at", "<", now)
+        .where("expires_at", "<", expiredBefore)
         .executeTakeFirst();
 
       return Number(result.numDeletedRows ?? 0);
