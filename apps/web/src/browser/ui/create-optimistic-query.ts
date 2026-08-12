@@ -3,9 +3,7 @@ import { createEffect, createSignal, on } from "solid-js";
 
 interface UpdateOptions<T, TResult> {
   optimistic: (current: T) => T;
-  // commit should be a useAction(mutation) call: SolidStart revalidates the
-  // query on the action's json({ revalidate }) return, which triggers the
-  // effect that clears the overlay.
+  // The action must revalidate the query so fresh data clears the overlay.
   commit: () => Promise<TResult>;
 }
 
@@ -20,10 +18,9 @@ export function createOptimisticQuery<T>(
   options: { initialValue: T },
 ): OptimisticQueryResult<T> {
   const asyncData = createAsync(query, { initialValue: options.initialValue });
-  const [overlay, setOverlay] = createSignal<T | undefined>(undefined);
+  const [overlay, setOverlay] = createSignal<T>();
 
-  // Clear the overlay when fresh data arrives, so the UI shows confirmed
-  // server state rather than a stuck optimistic value.
+  // Fresh server data replaces the optimistic value.
   createEffect(
     on(
       asyncData,
@@ -36,7 +33,8 @@ export function createOptimisticQuery<T>(
     ),
   );
 
-  const data = () => overlay() ?? asyncData();
+  // .latest keeps the previous value without suspending.
+  const data = () => overlay() ?? asyncData.latest ?? options.initialValue;
 
   const invalidate = async () => {
     await revalidateQuery(query.key);
@@ -48,7 +46,9 @@ export function createOptimisticQuery<T>(
     commit,
   }: UpdateOptions<T, TResult>) => {
     const previous = data();
+
     setOverlay(() => optimistic(previous));
+
     try {
       return await commit();
     } catch (error) {

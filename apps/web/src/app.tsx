@@ -1,6 +1,9 @@
+import { MetaProvider, Title } from "@solidjs/meta";
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
+
+import { PLATFORM_NAME } from "~/shared/branding";
 
 import { AppErrorBoundary } from "./components/feedback/error/boundary";
 import { SnackBarProvider } from "./components/feedback/snack-bar-manager/snack-bar-provider";
@@ -13,7 +16,14 @@ export default function App() {
     <ThemeProvider>
       <SnackBarProvider>
         <AppErrorBoundary>
-          <Router root={(props) => <Suspense>{props.children}</Suspense>}>
+          <Router
+            root={(props) => (
+              <MetaProvider>
+                <Title>{PLATFORM_NAME}</Title>
+                <Suspense>{props.children}</Suspense>
+              </MetaProvider>
+            )}
+          >
             <FileRoutes />
           </Router>
         </AppErrorBoundary>

@@ -4,6 +4,7 @@ import { For, createSignal, onCleanup, onMount } from "solid-js";
 
 import { ThemeToggle } from "~/components/ui/theme/theme-toggle";
 import { PUBLIC_MENU_ITEMS } from "~/features/public/menu/data";
+import { PLATFORM_NAME } from "~/shared/branding";
 
 import styles from "./(public).module.css";
 
@@ -28,7 +29,7 @@ export default function PublicLayout(props: RouteSectionProps) {
         <div class={styles.headerContainer}>
           <div class={styles.navSurface}>
             <A href="/" class={styles.logo}>
-              Culqi360
+              {PLATFORM_NAME}
             </A>
             <nav class={styles.nav} aria-label="Público">
               <For each={PUBLIC_MENU_ITEMS}>

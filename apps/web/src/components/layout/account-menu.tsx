@@ -1,4 +1,5 @@
 import { useNavigate } from "@solidjs/router";
+import { clsx } from "clsx";
 import { Show, createSignal } from "solid-js";
 
 import ChevronDown from "~/components/icons/chevron-down";
@@ -10,7 +11,6 @@ import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { Avatar } from "~/components/ui/display/avatar";
 import { useTheme } from "~/components/ui/theme/theme-context";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { cn } from "~/lib/utils";
 
 import styles from "./account-menu.module.css";
 
@@ -46,7 +46,7 @@ export function AccountMenu(props: AccountMenuProps) {
         aria-haspopup="menu"
         aria-expanded={open()}
         onClick={() => setOpen((prev) => !prev)}
-        class={cn(styles.trigger, props.collapsed && styles.triggerCollapsed)}
+        class={clsx(styles.trigger, props.collapsed && styles.triggerCollapsed)}
       >
         <Avatar
           imageUrl={props.avatarUrl ?? null}
@@ -59,7 +59,7 @@ export function AccountMenu(props: AccountMenuProps) {
         </Show>
         <Show when={!props.collapsed}>
           <ChevronDown
-            class={cn(styles.chevron, open() && styles.chevronOpen)}
+            class={clsx(styles.chevron, open() && styles.chevronOpen)}
             size={16}
           />
         </Show>
@@ -93,7 +93,7 @@ export function AccountMenu(props: AccountMenuProps) {
           <hr class={styles.separator} />
           <button
             type="button"
-            class={cn(styles.item, styles.danger)}
+            class={clsx(styles.item, styles.danger)}
             onClick={() => {
               setOpen(false);
               void props

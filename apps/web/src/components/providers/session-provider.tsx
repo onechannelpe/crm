@@ -1,8 +1,15 @@
-import { createContext, type ParentProps, useContext } from "solid-js";
-import { createResource } from "solid-js";
+import { createAsync, revalidate } from "@solidjs/router";
+import {
+  createContext,
+  createEffect,
+  createSignal,
+  on,
+  type ParentProps,
+  useContext,
+} from "solid-js";
 
-import { getMe } from "~/actions/auth/session";
 import type { CurrentUserView } from "~/contracts/auth";
+import { meQuery } from "~/rpc/auth/me";
 
 interface SessionContextValue {
   user: () => CurrentUserView | null | undefined;
@@ -15,14 +22,21 @@ interface SessionContextValue {
 const SessionContext = createContext<SessionContextValue>();
 
 export function SessionProvider(props: ParentProps) {
-  const [user, { mutate, refetch }] = createResource(getMe);
+  const remote = createAsync(() => meQuery());
+  const [overlay, setOverlay] = createSignal<CurrentUserView>();
+
+  // Drop the optimistic overlay once authoritative session data arrives.
+  createEffect(on(remote, () => setOverlay(undefined), { defer: true }));
+
+  const user = () => overlay() ?? remote();
 
   const updateCurrentUser = (
     update: (current: CurrentUserView) => CurrentUserView,
   ) => {
-    mutate((existing: CurrentUserView | null | undefined) =>
-      existing ? update(existing) : existing,
-    );
+    const current = overlay() ?? remote.latest;
+    if (current) {
+      setOverlay(update(current));
+    }
   };
 
   return (
@@ -30,7 +44,10 @@ export function SessionProvider(props: ParentProps) {
       value={{
         user,
         updateCurrentUser,
-        refreshCurrentUser: async () => refetch(),
+        refreshCurrentUser: async () => {
+          await revalidate(meQuery.key);
+          return user();
+        },
       }}
     >
       {props.children}

@@ -1,8 +1,7 @@
-import { notificationsConfig } from "~/lib/env";
-import { createLogger } from "~/lib/observability/logger";
 import type { ApiRequestEvent } from "~/routes/api/request-event";
-import { receiveKapsoWebhook } from "~/server/integrations/kapso/webhooks/receive-webhook";
-import { getServerRuntime } from "~/server/platform/container";
+import { application } from "~/server/composition/application";
+import { getRequestOperation } from "~/server/platform/http/request-context-storage";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 const logger = createLogger("whatsapp-webhook");
 
@@ -11,12 +10,12 @@ export function GET(event: ApiRequestEvent): Response {
   const mode = url.searchParams.get("hub.mode");
   const token = url.searchParams.get("hub.verify_token");
   const challenge = url.searchParams.get("hub.challenge");
-  const { whatsappWebhookVerifyToken } = notificationsConfig();
-
   if (
-    mode === "subscribe" &&
     challenge &&
-    token === whatsappWebhookVerifyToken
+    application.notifications.webhooks.verifyWhatsAppSubscription({
+      mode,
+      token,
+    })
   ) {
     return new Response(challenge, {
       status: 200,
@@ -29,14 +28,15 @@ export function GET(event: ApiRequestEvent): Response {
 
 export async function POST(event: ApiRequestEvent): Promise<Response> {
   try {
-    const { infra } = getServerRuntime();
-    const result = await receiveKapsoWebhook(infra.db, {
-      idempotencyKey: event.request.headers.get("x-idempotency-key"),
-      eventType: event.request.headers.get("x-webhook-event"),
-      payloadVersion: event.request.headers.get("x-webhook-payload-version"),
-      rawBody: await event.request.text(),
-      now: infra.now(),
-    });
+    const result = await application.notifications.webhooks.receiveKapso(
+      {
+        idempotencyKey: event.request.headers.get("x-idempotency-key"),
+        eventType: event.request.headers.get("x-webhook-event"),
+        payloadVersion: event.request.headers.get("x-webhook-payload-version"),
+        rawBody: await event.request.text(),
+      },
+      getRequestOperation(),
+    );
 
     if (!result.ok) {
       logger.warn("whatsapp_webhook_rejected", { reason: result.error });

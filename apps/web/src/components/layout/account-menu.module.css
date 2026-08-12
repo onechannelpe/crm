@@ -4,20 +4,24 @@
 }
 
 .trigger {
-  width: 100%;
-  height: 28px;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  height: var(--spacing-7);
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   background: transparent;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 4px;
+  gap: var(--spacing-2);
+  padding: calc(var(--spacing-1) - 1px);
   color: var(--foreground);
+  box-sizing: border-box;
 }
 
 .trigger:hover {
-  background: var(--bg-translucent-subtle);
+  background: var(--background-transparent-lighter);
+  border-color: var(--border-medium);
 }
 
 .triggerCollapsed {
@@ -26,8 +30,8 @@
 }
 
 .avatar {
-  width: 16px;
-  height: 16px;
+  width: var(--spacing-4);
+  height: var(--spacing-4);
   border-radius: 2px;
   background: var(--avatar-bg);
   color: var(--avatar-fg);
@@ -61,13 +65,13 @@
 .menu {
   position: absolute;
   left: 0;
-  top: calc(100% + 8px);
+  top: calc(100% + var(--spacing-2));
   width: 220px;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--overlay);
   box-shadow: var(--shadow-elevation-2);
-  padding: 4px;
+  padding: var(--spacing-1);
   z-index: 40;
 }
 
@@ -76,19 +80,19 @@
   border: 0;
   background: transparent;
   color: var(--foreground);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   text-align: left;
   height: 30px;
-  padding: 0 8px;
+  padding: 0 var(--spacing-2);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-2);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
 }
 
 .item:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
 }
 
 .separator {

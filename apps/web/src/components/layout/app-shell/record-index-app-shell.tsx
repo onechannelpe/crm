@@ -1,20 +1,16 @@
 import type { RouteSectionProps } from "@solidjs/router";
+import { Suspense } from "solid-js";
 
-import { MainContainerWithSidePanel } from "~/features/side-panel/shell/main-container-with-side-panel";
-import { SidePanelProvider } from "~/features/side-panel/state/use-side-panel";
+import { PageCardLayout } from "~/components/ui/layout/page-card/page-card-layout";
 
-import shellStyles from "../shell.module.css";
+import { RecordIndexShellSkeleton } from "./skeletons/record-index-shell-skeleton";
 
 export function RecordIndexAppShell(props: RouteSectionProps) {
   return (
-    <SidePanelProvider>
-      <div class={shellStyles.main}>
-        <main class={shellStyles.fixedBody}>
-          <MainContainerWithSidePanel>
-            {props.children}
-          </MainContainerWithSidePanel>
-        </main>
-      </div>
-    </SidePanelProvider>
+    <PageCardLayout>
+      <Suspense fallback={<RecordIndexShellSkeleton />}>
+        {props.children}
+      </Suspense>
+    </PageCardLayout>
   );
 }

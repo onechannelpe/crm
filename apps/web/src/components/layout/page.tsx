@@ -1,7 +1,6 @@
+import { clsx } from "clsx";
 import type { JSX } from "solid-js";
 import { Show } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import styles from "./page.module.css";
 
@@ -32,7 +31,7 @@ interface SectionTitleProps {
 export function AppPage(props: PageProps) {
   return (
     <div
-      class={cn(
+      class={clsx(
         styles.page,
         props.width ? WIDTH_CLASS[props.width] : undefined,
         props.class,
@@ -43,9 +42,13 @@ export function AppPage(props: PageProps) {
   );
 }
 
+export function AppPageBody(props: BaseProps) {
+  return <div class={clsx(styles.pageBody, props.class)}>{props.children}</div>;
+}
+
 export function AppPageSection(props: BaseProps) {
   return (
-    <section class={cn(styles.section, props.class)}>
+    <section class={clsx(styles.section, props.class)}>
       <div class={styles.sectionBody}>{props.children}</div>
     </section>
   );
@@ -53,7 +56,7 @@ export function AppPageSection(props: BaseProps) {
 
 export function AppPageSectionTitle(props: SectionTitleProps) {
   return (
-    <div class={cn(styles.sectionTitle, props.class)}>
+    <div class={clsx(styles.sectionTitle, props.class)}>
       <div>
         <h2 class={styles.title}>{props.title}</h2>
         <Show when={props.description}>
