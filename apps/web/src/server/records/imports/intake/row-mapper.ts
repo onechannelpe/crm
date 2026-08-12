@@ -1,8 +1,8 @@
+import type { RecordImportType } from "~/contracts/records/imports";
 import {
   LEAD_PRIORITIES,
   LEAD_STATUSES,
 } from "~/contracts/workflow/vocabulary";
-import type { RecordImportType } from "~/features/records-imports/contracts";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
 import { parseOptionalVocabularyValue } from "~/server/workflow/lead/domain/parse";
 

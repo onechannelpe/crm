@@ -1,6 +1,6 @@
 import { read, utils } from "xlsx";
 
-import type { RecordImportType } from "~/features/records-imports/contracts";
+import type { RecordImportType } from "~/contracts/records/imports";
 
 import {
   normalizeHeader,
@@ -47,7 +47,9 @@ function detectImportType(normalized: string[]): RecordImportType | null {
 export function fromXlsx(buffer: ArrayBuffer): ExtractedRows {
   const wb = read(buffer, { type: "array" });
   const ws = wb.Sheets[wb.SheetNames[0]];
-  if (!ws) throw new Error("Workbook has no sheets");
+  if (!ws) {
+    throw new Error("Workbook has no sheets");
+  }
 
   const allRows = utils.sheet_to_json<string[]>(ws, {
     header: 1,
