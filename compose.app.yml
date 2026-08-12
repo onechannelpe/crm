@@ -3,6 +3,11 @@ x-app: &app
   build:
     context: .
     dockerfile: Dockerfile
+    args:
+      VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+      SENTRY_ORG: ${SENTRY_ORG:-}
+      SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+      SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN:-}
   restart: unless-stopped
   env_file:
     - .env
@@ -43,6 +48,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+        SENTRY_ORG: ${SENTRY_ORG:-}
+        SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+        SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN:-}
     restart: "no"
     env_file:
       - .env
@@ -53,8 +63,7 @@ services:
       - /bin/sh
       - -c
       - >-
-        bun run migrate:prod &&
-        bun run provision:prod
+        bun run migrate:prod && bun run provision:prod
     depends_on:
       postgres:
         condition: service_healthy

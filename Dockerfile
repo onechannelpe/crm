@@ -20,8 +20,21 @@ FROM oven/bun:1.3.14 AS build
 WORKDIR /app
 
 COPY . .
+
 RUN bun install --frozen-lockfile
 RUN bun run generate:templates
+
+# These values are needed at build time and must be passed as build args.
+ARG VITE_SENTRY_DSN
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+ARG SENTRY_AUTH_TOKEN
+
+ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN \
+    SENTRY_ORG=$SENTRY_ORG \
+    SENTRY_PROJECT=$SENTRY_PROJECT \
+    SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
+
 RUN bun run --cwd apps/web build:container
 
 FROM oven/bun:1.3.14 AS runtime
@@ -41,6 +54,7 @@ COPY --from=build --chown=bun:bun /app/apps/web/tsconfig.json ./apps/web/tsconfi
 COPY --from=build --chown=bun:bun /app/packages ./packages
 
 WORKDIR /app/apps/web
+
 USER bun
 
 EXPOSE 3000
