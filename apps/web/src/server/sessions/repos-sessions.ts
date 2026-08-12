@@ -1,8 +1,8 @@
 import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type { Role } from "~/lib/auth/access/rbac";
-import type { Database } from "~/lib/db/types";
-import type { UserId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 type UserSessionRow = Selectable<Database["user_sessions"]>;
 type NewUserSessionRow = Insertable<Database["user_sessions"]>;
@@ -67,18 +67,10 @@ export function createSessionRepository(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteOtherForUser(userId: UserId, currentSessionId: string) {
-      await db
-        .deleteFrom("user_sessions")
-        .where("user_id", "=", userId)
-        .where("id", "!=", currentSessionId)
-        .execute();
-    },
-
-    async deleteExpired(): Promise<number> {
+    async deleteExpired(expiredBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("user_sessions")
-        .where("expires_at", "<", new Date())
+        .where("expires_at", "<", expiredBefore)
         .executeTakeFirst();
 
       return Number(result.numDeletedRows ?? 0);
@@ -93,17 +85,17 @@ export function createSessionRepository(db: Kysely<Database>) {
         .execute();
     },
 
-    async countActive(): Promise<number> {
+    async countActive(activeAsOf: Date): Promise<number> {
       const result = await db
         .selectFrom("user_sessions")
         .select((eb) => eb.fn.count<number>("id").as("count"))
-        .where("expires_at", ">", new Date())
+        .where("expires_at", ">", activeAsOf)
         .executeTakeFirst();
 
       return result?.count ?? 0;
     },
 
-    async listAllActive(): Promise<
+    async listAllActive(activeAsOf: Date): Promise<
       Array<{
         id: string;
         userId: UserId;
@@ -136,7 +128,7 @@ export function createSessionRepository(db: Kysely<Database>) {
           "user_sessions.last_activity as lastActivity",
           "user_sessions.expires_at as expiresAt",
         ])
-        .where("user_sessions.expires_at", ">", new Date())
+        .where("user_sessions.expires_at", ">", activeAsOf)
         .orderBy("user_sessions.last_activity", "desc")
         .execute();
 
