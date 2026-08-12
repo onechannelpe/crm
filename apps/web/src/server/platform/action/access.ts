@@ -1,14 +1,15 @@
-import type { Permission, Role } from "~/lib/auth/access/rbac";
+import type { Permission, Role } from "~/domain/auth/access/rbac";
+import type { AuthSession } from "~/domain/auth/access/session-types";
+import { type DomainError } from "~/domain/errors";
+import { checkRecentStrongAuth } from "~/server/auth/security/step-up";
 import {
   authenticate,
   authenticateSession,
   authorizePermission,
   authorizeRole,
-} from "~/lib/auth/access/session";
-import type { AuthSession } from "~/lib/auth/access/session-types";
-import { checkRecentStrongAuth } from "~/lib/auth/security/step-up";
-import { type DomainError } from "~/server/shared/domain-error";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+} from "~/server/platform/action/session";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 export type ActionAccess =
   | { kind: "permission"; permission: Permission }
@@ -49,13 +50,18 @@ export function authorizeAccess(
   actor: AuthSession,
   access: ActionAccess,
   stepUp: ActionStepUpRequirement["stepUp"],
+  operation: OperationContext,
 ): Result<AuthSession, DomainError> {
   const authorized = authorizeFor(actor, access);
-  if (isErr(authorized)) return authorized;
+  if (isErr(authorized)) {
+    return authorized;
+  }
 
   if (stepUp === "recent_strong_auth") {
-    const strong = checkRecentStrongAuth(actor);
-    if (isErr(strong)) return strong;
+    const strong = checkRecentStrongAuth(actor, operation.operationAt);
+    if (isErr(strong)) {
+      return strong;
+    }
   }
 
   return Ok(actor);

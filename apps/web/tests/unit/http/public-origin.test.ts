@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { resolvePublicOrigin } from "~/lib/http/public-origin";
+import { resolvePublicOrigin } from "~/server/platform/http/public-origin";
 
 const FORWARDED_ORIGIN =
   "https://5173-firebase-crm-1772279181549.cluster-zhw3w37rxzgkutusbbhib6qhra.cloudworkstations.dev";
 
 describe("resolvePublicOrigin", () => {
   it("uses x-forwarded headers when the proxy is trusted", () => {
-    const request = new Request("http://127.0.0.1:3000/dashboard", {
+    const request = new Request("http://127.0.0.1:3000/home", {
       headers: {
         "x-forwarded-proto": "https",
         "x-forwarded-host":
@@ -21,7 +21,7 @@ describe("resolvePublicOrigin", () => {
   });
 
   it("parses the standard Forwarded header when the proxy is trusted", () => {
-    const request = new Request("http://127.0.0.1:3000/dashboard", {
+    const request = new Request("http://127.0.0.1:3000/home", {
       headers: { forwarded: 'proto=https;host="example.dev"' },
     });
 
@@ -31,7 +31,7 @@ describe("resolvePublicOrigin", () => {
   });
 
   it("takes the first hop from comma-separated x-forwarded values", () => {
-    const request = new Request("http://127.0.0.1:3000/dashboard", {
+    const request = new Request("http://127.0.0.1:3000/home", {
       headers: {
         "x-forwarded-proto": "https,http",
         "x-forwarded-host": "public.dev,internal.local",
@@ -44,7 +44,7 @@ describe("resolvePublicOrigin", () => {
   });
 
   it("falls back to the request origin when Forwarded lacks a host", () => {
-    const request = new Request("http://127.0.0.1:3000/dashboard", {
+    const request = new Request("http://127.0.0.1:3000/home", {
       headers: { forwarded: "proto=https" },
     });
 
@@ -54,7 +54,7 @@ describe("resolvePublicOrigin", () => {
   });
 
   it("ignores forwarded headers when the proxy is untrusted", () => {
-    const request = new Request("http://127.0.0.1:3000/dashboard", {
+    const request = new Request("http://127.0.0.1:3000/home", {
       headers: {
         "x-forwarded-proto": "https",
         "x-forwarded-host": "evil.dev",
@@ -67,7 +67,7 @@ describe("resolvePublicOrigin", () => {
   });
 
   it("falls back to the request origin when forwarded headers are absent", () => {
-    const request = new Request("http://127.0.0.1:3000/dashboard");
+    const request = new Request("http://127.0.0.1:3000/home");
 
     expect(resolvePublicOrigin(request, { trustedProxy: true })).toBe(
       "http://127.0.0.1:3000",

@@ -1,21 +1,19 @@
-import type { AuthSession } from "~/lib/auth/access/session-types";
-import { getRequestContext } from "~/lib/http/request-context";
-import { getActionRequestContext } from "~/lib/observability/context";
+import type { AuthSession } from "~/domain/auth/access/session-types";
+import { getRequestContext } from "~/server/platform/http/request-context-storage";
+import { getActionRequestContext } from "~/server/platform/observability/context";
+import type { OperationContext } from "~/server/platform/operation/context";
 
-export interface AppContext {
+/** One server function call. Its `operationAt` is the request's instant. */
+export interface AppContext extends OperationContext {
   actor: AuthSession;
-  requestId: string;
   traceId: string;
+  requestId: string;
   ipAddress: string;
   userAgent: string | null;
   publicOrigin: string;
-  now: () => Date;
 }
 
-export function createAppContext(
-  actor: AuthSession,
-  now: () => Date,
-): AppContext {
+export function createAppContext(actor: AuthSession): AppContext {
   const request = getRequestContext();
   const action = getActionRequestContext();
   return {
@@ -25,6 +23,8 @@ export function createAppContext(
     ipAddress: request.clientIp,
     userAgent: request.userAgent,
     publicOrigin: request.publicOrigin,
-    now,
+    // Inherited, not read. A server function runs inside an HTTP request, so
+    // the action's instant is the request's instant.
+    operationAt: request.startedAt,
   };
 }
