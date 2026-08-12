@@ -58,7 +58,7 @@ export interface RecordActionObservationInput {
   createdAt: Date;
 }
 
-export interface RecordAuthFunnelEventInput {
+interface RecordAuthFunnelEventInput {
   traceId: string;
   requestId: string;
   routePath: string | null;

@@ -250,6 +250,21 @@ export function createFulfillmentRepo(db: DatabaseExecutor) {
         .execute();
     },
 
+    async listUnitPayments(
+      orderId: FulfillmentOrderId,
+    ): Promise<{ label: string; paymentUrl: string | null }[]> {
+      const rows = await db
+        .selectFrom("lead_fulfillment_units")
+        .select(["label", "payment_url"])
+        .where("order_id", "=", orderId)
+        .orderBy("created_at", "asc")
+        .execute();
+      return rows.map((row) => ({
+        label: row.label,
+        paymentUrl: row.payment_url,
+      }));
+    },
+
     async markPaymentsValidated(orderId: FulfillmentOrderId): Promise<void> {
       await db
         .updateTable("lead_fulfillment_units")

@@ -68,7 +68,7 @@ export const FULFILLMENT_ACTIONS = [
   "register_sale",
 ] as const;
 
-export const INQUIRY_STATES = ["PENDING", "ANSWERED", "CONVERTED"] as const;
+const INQUIRY_STATES = ["PENDING", "ANSWERED", "CONVERTED"] as const;
 
 export const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;
 

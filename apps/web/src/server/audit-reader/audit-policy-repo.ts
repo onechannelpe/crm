@@ -4,7 +4,7 @@ import type { AuditPolicyRiskLevel } from "~/contracts/audit-reader/policy";
 import type { UserId } from "~/domain/ids";
 import type { Database } from "~/server/platform/database/types";
 
-export interface UpsertAuditActionPolicyInput {
+interface UpsertAuditActionPolicyInput {
   action: string;
   risk_level: AuditPolicyRiskLevel;
   is_active: boolean;
@@ -58,6 +58,4 @@ export function createAuditActionPoliciesRepo(db: Kysely<Database>) {
   };
 }
 
-export type AuditActionPoliciesRepo = ReturnType<
-  typeof createAuditActionPoliciesRepo
->;
+type AuditActionPoliciesRepo = ReturnType<typeof createAuditActionPoliciesRepo>;

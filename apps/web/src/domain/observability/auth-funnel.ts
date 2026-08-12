@@ -108,7 +108,7 @@ export type AuthFunnelServerEvent = {
 
 export type AuthFunnelEvent = AuthFunnelClientEvent | AuthFunnelServerEvent;
 
-export function isAuthFunnelScreen(value: unknown): value is AuthFunnelScreen {
+function isAuthFunnelScreen(value: unknown): value is AuthFunnelScreen {
   return (
     typeof value === "string" &&
     AUTH_FUNNEL_SCREENS.some((screen) => screen === value)

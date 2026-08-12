@@ -166,6 +166,4 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
   };
 }
 
-export type UserChannelAddressRepo = ReturnType<
-  typeof createUserChannelAddressRepo
->;
+type UserChannelAddressRepo = ReturnType<typeof createUserChannelAddressRepo>;

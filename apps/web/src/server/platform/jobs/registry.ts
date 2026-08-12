@@ -11,7 +11,7 @@ export const JOB_TABLE_CHANNELS = {
 } as const;
 
 export type JobTableName = keyof typeof JOB_TABLE_CHANNELS;
-export type JobChannel = (typeof JOB_TABLE_CHANNELS)[JobTableName];
+type JobChannel = (typeof JOB_TABLE_CHANNELS)[JobTableName];
 
 // Postgres does not allow parameters in index predicates.
 export const CLAIMABLE_STATES = sql<SqlBool>`queue_state in ('pending', 'processing')`;

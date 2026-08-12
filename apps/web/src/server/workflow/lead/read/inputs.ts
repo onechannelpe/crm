@@ -7,13 +7,6 @@ import type { UserId, WorkflowLeadId } from "~/domain/ids";
 
 import type { WorkflowActor } from "../../actor";
 
-export type ListAssignableExecutivesInput = {
-  actor: WorkflowActor;
-  leadId: WorkflowLeadId;
-  search?: string;
-  limit?: number;
-};
-
 export type ListLeadsInput = {
   actor: WorkflowActor;
   filters: {

@@ -11,25 +11,23 @@ export type VisualRenderLoop = {
   stop: () => void;
 };
 
-export type VisualRenderLoopErrorHandler = (error: unknown) => void;
+type VisualRenderLoopErrorHandler = (error: unknown) => void;
 
-export type VisualRenderLoopDocument = {
+type VisualRenderLoopDocument = {
   addEventListener: Document["addEventListener"];
   hidden: boolean;
   removeEventListener: Document["removeEventListener"];
 };
 
-export type VisualRenderLoopScheduler = (
-  callback: FrameRequestCallback,
-) => number;
+type VisualRenderLoopScheduler = (callback: FrameRequestCallback) => number;
 
-export type VisualRenderLoopCanceller = (handle: number) => void;
-export type VisualRenderLoopFrame = {
+type VisualRenderLoopCanceller = (handle: number) => void;
+type VisualRenderLoopFrame = {
   deltaSeconds: number;
   elapsedSeconds: number;
   timestamp: DOMHighResTimeStamp;
 };
-export type VisualRenderLoopFrameRenderer = (
+type VisualRenderLoopFrameRenderer = (
   timestamp: DOMHighResTimeStamp,
   frame: VisualRenderLoopFrame,
 ) => boolean | void;

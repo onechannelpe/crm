@@ -1,13 +1,11 @@
-import type { DomainError } from "~/domain/errors";
-import type { FileAssetId, UserId } from "~/domain/ids";
-import type { Result } from "~/shared/result";
+import type { UserId } from "~/domain/ids";
 
 import type { createAssetsRepo } from "../repo/assets";
 import type { createRateRevisionFilesRepo } from "../repo/rate-revision";
 import type { createSalesRepo } from "../repo/sales";
 import type { createTokensRepo } from "../repo/tokens";
 import type { FileStorage } from "../storage";
-import type { DownloadReady, FileAsset, FilePurpose } from "../types";
+import type { FilePurpose } from "../types";
 
 export interface FileRepos {
   assets: ReturnType<typeof createAssetsRepo>;
@@ -46,27 +44,4 @@ export interface DownloadTokenDeps {
 export interface ExecuteDownloadDeps {
   repo: Pick<FileRepos, "tokens" | "assets">;
   storage: FileStorage;
-}
-
-export interface FileServiceApi {
-  storeUploadedFile: (
-    ctx: FileOperationContext,
-    input: StoreUploadInput,
-    deps: StoreFileDeps,
-  ) => Promise<Result<FileAsset, DomainError>>;
-  storeGeneratedFile: (
-    ctx: FileOperationContext,
-    input: StoreGeneratedFileInput,
-    deps: StoreFileDeps,
-  ) => Promise<Result<FileAsset, DomainError>>;
-  issueDownloadToken: (
-    ctx: FileOperationContext,
-    fileAssetId: FileAssetId,
-    deps: DownloadTokenDeps,
-  ) => Promise<Result<{ token: string }, DomainError>>;
-  executeDownload: (
-    tokenRaw: string,
-    deps: ExecuteDownloadDeps,
-    activeAsOf: Date,
-  ) => Promise<Result<DownloadReady, DomainError>>;
 }

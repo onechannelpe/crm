@@ -43,7 +43,7 @@ export interface HeaderDescriptor {
   tileColor?: TileColor;
 }
 
-export interface PageHeaderRule {
+interface PageHeaderRule {
   match: string | RegExp;
   header: HeaderDescriptor;
 }

@@ -5,7 +5,7 @@ import { avatarPlaceholderColors } from "./avatar-placeholder-color";
 
 import styles from "./avatar.module.css";
 
-export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
+type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type AvatarType = "squared" | "rounded";
 
 interface AvatarProps {

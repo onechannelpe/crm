@@ -101,9 +101,3 @@ export function internal(
     cause: opts?.cause,
   };
 }
-
-export function unexpectedFault(cause: unknown): DomainError {
-  return internal(cause instanceof Error ? cause.message : String(cause), {
-    cause,
-  });
-}

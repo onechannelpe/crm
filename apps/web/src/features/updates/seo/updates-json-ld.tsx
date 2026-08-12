@@ -1,6 +1,6 @@
 import type { UpdateEntry } from "~/features/updates/model/types";
 
-export type JsonLdValue =
+type JsonLdValue =
   | boolean
   | number
   | string

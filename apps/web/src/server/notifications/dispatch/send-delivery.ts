@@ -11,7 +11,7 @@ import { formatWhatsAppNotificationBody } from "./format-message";
 
 // The queue writes these fields with queue_state in one lease-guarded update.
 // A worker with an expired lease cannot overwrite a newer worker's result.
-export interface DeliveryProviderFields {
+interface DeliveryProviderFields {
   provider: DeliveryProviderId | null;
   provider_message_id: string | null;
   error_code: string | null;
@@ -20,7 +20,7 @@ export interface DeliveryProviderFields {
 
 // Retry means the provider may succeed later. Failed means the address or message
 // cannot succeed. The queue converts these outcomes into its state values.
-export type DeliveryOutcome =
+type DeliveryOutcome =
   | { kind: "sent"; fields: DeliveryProviderFields }
   | { kind: "retry"; reason: string; fields: DeliveryProviderFields }
   | { kind: "failed"; reason: string; fields: DeliveryProviderFields };

@@ -16,7 +16,7 @@ type NewActionObservationRow = Insertable<Database["action_observations"]>;
 
 type ObservationStatus = ActionObservationsTable["status"];
 
-export interface ActionObservationFilter {
+interface ActionObservationFilter {
   fromInclusive: Date;
   toInclusive: Date;
   actionName?: string;
@@ -25,7 +25,7 @@ export interface ActionObservationFilter {
   limit: number;
 }
 
-export interface ActionObservationSummaryFilter {
+interface ActionObservationSummaryFilter {
   fromInclusive: Date;
   toInclusive: Date;
   actionName?: string;
@@ -116,6 +116,4 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
   };
 }
 
-export type ActionObservationsRepo = ReturnType<
-  typeof createActionObservationsRepo
->;
+type ActionObservationsRepo = ReturnType<typeof createActionObservationsRepo>;

@@ -11,7 +11,7 @@ import {
 
 // This function only resolves expand vs terminally invalid. Throws bubble to
 // the queue, which decides retry vs fail.
-export type ExpansionOutcome =
+type ExpansionOutcome =
   | { kind: "expanded" }
   | { kind: "invalid"; reason: string };
 

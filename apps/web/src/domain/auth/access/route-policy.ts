@@ -9,8 +9,6 @@ import {
 } from "./route-manifest";
 
 export type { Role, Permission } from "./rbac";
-export type { AppPath } from "./route-manifest";
-
 const ROLE_DEFAULT_PATHS: Partial<Record<Role, AppPath>> = {
   back_office: "/records",
   supervisor: "/records",

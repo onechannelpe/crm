@@ -17,7 +17,7 @@ function initial(name: string): string {
   return (name.trim().charAt(0) || "-").toUpperCase();
 }
 
-export type ChipShape = "round" | "square";
+type ChipShape = "round" | "square";
 
 interface RecordChipProps {
   name: string;

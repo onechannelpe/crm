@@ -46,7 +46,7 @@ export type RateRevision = {
   requestedAt: Date;
 };
 
-export type RateRevisionFile = {
+type RateRevisionFile = {
   id: WorkflowRateRevisionFileId;
   revisionId: WorkflowRateRevisionId;
   fileAssetId: FileAssetId;

@@ -9,7 +9,7 @@ interface LeadReservationMaintenanceDeps {
   executor: DatabaseExecutor;
 }
 
-export async function runReservationSweepTick(
+async function runReservationSweepTick(
   deps: LeadReservationMaintenanceDeps,
   context: OperationContext,
 ) {

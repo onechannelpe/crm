@@ -6,7 +6,10 @@ import type { WorkflowWriteContext } from "~/server/workflow/types";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { addVenueAccounts } from "../../lead/domain/decide";
-import { createHistoryEvent } from "../../lead/domain/history";
+import {
+  createHistoryEvent,
+  leadNotificationContext,
+} from "../../lead/domain/history";
 import { INITIAL_FULFILLMENT_STEP } from "../fulfillment/steps";
 import { runLeadTransaction } from "../write/transition";
 import { buildVenueAccounts } from "./domain";
@@ -91,6 +94,7 @@ export async function addVenueAccountsCommand(
           eventType: "fulfillment_started",
           actorUserId: input.actor.userId,
           payload: { orderId, unitCount: 0 },
+          notificationContext: leadNotificationContext(state),
           occurredAt: ctx.operationAt,
         }),
       ]);

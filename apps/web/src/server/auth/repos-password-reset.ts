@@ -55,7 +55,3 @@ export function createPasswordResetTokensRepo(db: Kysely<Database>) {
     },
   };
 }
-
-export type PasswordResetTokensRepo = ReturnType<
-  typeof createPasswordResetTokensRepo
->;

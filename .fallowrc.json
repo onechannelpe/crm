@@ -30,14 +30,25 @@
   "ignorePatterns": [
     "**/*.generated.ts",
     "**/*.generated.tsx",
+    "**/*.module.css",
     "**/public/**",
     "**/.output/**",
     "**/content/**"
   ],
+  "ignoreExports": [
+    {
+      "file": "apps/web/src/domain/ids/registry.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "apps/web/src/features/updates/components/index.ts",
+      "exports": ["Collapsible", "UpdateLabel"]
+    }
+  ],
   "rules": {
     "unused-files": "warn",
     "unused-exports": "warn",
-    "unused-types": "off",
+    "unused-types": "warn",
     "unused-dependencies": "warn",
     "unused-dev-dependencies": "warn",
     "unused-optional-dependencies": "warn",

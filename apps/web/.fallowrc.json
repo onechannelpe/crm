@@ -66,7 +66,7 @@
   "rules": {
     "unused-files": "warn",
     "unused-exports": "warn",
-    "unused-types": "off",
+    "unused-types": "warn",
     "unused-dependencies": "warn",
     "unused-dev-dependencies": "warn",
     "unused-class-members": "off",

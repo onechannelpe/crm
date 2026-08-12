@@ -16,7 +16,7 @@ export interface PermissionGroupMeta {
   label: string;
 }
 
-export const PERMISSION_GROUPS = [
+const PERMISSION_GROUPS = [
   { id: "clientes", label: "Clientes" },
   { id: "ventas", label: "Ventas" },
   { id: "cotizaciones", label: "Cotizaciones" },

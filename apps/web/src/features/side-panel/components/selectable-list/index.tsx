@@ -77,13 +77,3 @@ export function SelectableList(props: SelectableListProps) {
     </SelectableListContext.Provider>
   );
 }
-
-export function useSelectableList(): SelectableListContextValue {
-  const context = useContext(SelectableListContext);
-
-  if (context === undefined) {
-    throw new Error("useSelectableList must be used within a SelectableList");
-  }
-
-  return context;
-}

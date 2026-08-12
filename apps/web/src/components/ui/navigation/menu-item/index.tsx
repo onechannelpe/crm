@@ -5,7 +5,7 @@ import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-toolt
 
 import styles from "./styles.module.css";
 
-export type MenuItemAccent = "default" | "danger" | "placeholder";
+type MenuItemAccent = "default" | "danger" | "placeholder";
 
 type MenuItemProps = {
   text: string;

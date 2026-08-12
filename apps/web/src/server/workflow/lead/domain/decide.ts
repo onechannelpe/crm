@@ -22,7 +22,11 @@ import type { WorkflowActor } from "~/server/workflow/actor";
 import { Err, Ok, type Result } from "~/shared/result";
 
 import { applyEvents } from "./evolve";
-import { createHistoryEvent, type LeadHistoryEventDraft } from "./history";
+import {
+  createHistoryEvent,
+  leadNotificationContext,
+  type LeadHistoryEventDraft,
+} from "./history";
 import { authorizeLeadAction } from "./policy";
 import { isReservationActive } from "./reservation";
 import { resolveReviewTransition } from "./review";
@@ -291,6 +295,7 @@ export function reviewLead(
         eventType: "workflow_stage_changed",
         actorUserId: input.actor.userId,
         payload: { from: state.stage, to: toStage },
+        notificationContext: leadNotificationContext(state),
         occurredAt: input.occurredAt,
       }),
     );
@@ -360,6 +365,7 @@ export function qualifyLead(
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: toStage },
+      notificationContext: leadNotificationContext(state),
       occurredAt: input.occurredAt,
     }),
   ];
@@ -392,6 +398,7 @@ export function acceptRate(
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: "SETUP" },
+      notificationContext: leadNotificationContext(state),
       occurredAt: input.occurredAt,
     }),
   ];
@@ -433,6 +440,7 @@ export function closeLead(
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: "CLOSED_LOST" },
+      notificationContext: leadNotificationContext(state),
       occurredAt: input.occurredAt,
     }),
   ];
@@ -484,6 +492,7 @@ export function restartQuotation(
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: "PRICING" },
+      notificationContext: leadNotificationContext(state),
       occurredAt: input.occurredAt,
     }),
   ];
@@ -571,6 +580,7 @@ export function addVenueAccounts(
         eventType: "workflow_stage_changed",
         actorUserId: input.actor.userId,
         payload: { from: state.stage, to: "FULFILLMENT" },
+        notificationContext: leadNotificationContext(state),
         occurredAt: input.occurredAt,
       }),
     );
@@ -597,6 +607,7 @@ export function completeFulfillment(
       eventType: "fulfillment_completed",
       actorUserId: input.actor.userId,
       payload: { orderId: input.orderId },
+      notificationContext: leadNotificationContext(state),
       occurredAt: input.occurredAt,
     }),
     createHistoryEvent({
@@ -604,6 +615,7 @@ export function completeFulfillment(
       eventType: "workflow_stage_changed",
       actorUserId: input.actor.userId,
       payload: { from: state.stage, to: "LIVE" },
+      notificationContext: leadNotificationContext(state),
       occurredAt: input.occurredAt,
     }),
   ];

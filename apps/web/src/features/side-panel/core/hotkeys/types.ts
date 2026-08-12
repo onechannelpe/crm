@@ -12,7 +12,7 @@ export type ScopedHotkeyOptions = {
   preventDefault?: boolean;
 };
 
-export type ScopedHotkeySpec = {
+type ScopedHotkeySpec = {
   combo: HotkeyCombo;
   handler: (event: KeyboardEvent) => void;
   options?: ScopedHotkeyOptions;

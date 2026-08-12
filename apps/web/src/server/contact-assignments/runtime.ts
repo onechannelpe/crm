@@ -23,7 +23,7 @@ import { isErr, Ok } from "~/shared/result";
 import { assignContacts } from "./application/assign-contacts";
 import { completeContactAssignmentCall } from "./application/complete-contact-assignment-call";
 
-export type ContactAssignmentRepos = {
+type ContactAssignmentRepos = {
   users: ReturnType<typeof createCapacityUsersRepo>;
   leadPolicyDefaults: ReturnType<typeof createLeadPolicyDefaultsRepo>;
   leadPolicyOverrides: ReturnType<typeof createLeadPolicyOverridesRepo>;
@@ -109,6 +109,6 @@ export function createContactAssignmentsRuntime(
   };
 }
 
-export type ContactAssignmentsRuntime = ReturnType<
+type ContactAssignmentsRuntime = ReturnType<
   typeof createContactAssignmentsRuntime
 >;

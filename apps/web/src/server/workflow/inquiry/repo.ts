@@ -197,5 +197,3 @@ export function createInquiryRepo(db: DatabaseExecutor) {
     },
   };
 }
-
-export type InquiryRepository = ReturnType<typeof createInquiryRepo>;

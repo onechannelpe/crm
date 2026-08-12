@@ -13,7 +13,6 @@ export type {
   SidebarEntry,
   SidebarChild,
   HeaderDescriptor,
-  RouteIcon,
   SidebarSection,
 } from "./config";
 

@@ -6,7 +6,7 @@ import type { Database } from "~/server/platform/database/types";
 // Last-contacted timestamp + cooldown window per membership. Owned by
 // contact-assignments (not the organization identity row). Read by
 // canContactNow; written by touch.
-export type CadenceSnapshot = {
+type CadenceSnapshot = {
   organizationPersonId: OrganizationPersonId;
   lastContactedAt: Date | null;
   cooldownUntil: Date | null;
