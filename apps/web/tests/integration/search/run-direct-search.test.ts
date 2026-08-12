@@ -11,13 +11,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { SearchResult } from "~/contracts/search/engine-results.generated";
 import { external, type DomainError } from "~/domain/errors";
 import { appMonthRange } from "~/domain/time/app-time";
+import { CAPACITY_LIMITS } from "~/server/capacity/domain/config";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { runDirectSearch } from "~/server/search-workflow/run-search";
 import { createSearchUsageReservationPorts } from "~/server/search/infrastructure/search-usage-reservation-ports";
 import { Err, Ok, type Result } from "~/shared/result";
 
 const ACTOR_ID = TEST_FIXTURES.users.execOne.id;
-const MONTHLY_LIMIT = 250; // config.searchAccess.defaultMonthlyLimit
+const MONTHLY_LIMIT = CAPACITY_LIMITS.defaultSearchMonthly;
 
 const foundResult: SearchResult = {
   kind: "document",

@@ -41,7 +41,10 @@ describe("route permissions", () => {
     expect(getDefaultAppPath("executive")).toBe("/home");
     expect(getDefaultAppPath("logistics")).toBe("/inventory");
     expect(getDefaultAppPath("hr")).toBe("/team");
-    expect(getDefaultAppPath("admin")).toBe("/home");
+    expect(getDefaultAppPath("back_office")).toBe("/records");
+    expect(getDefaultAppPath("supervisor")).toBe("/records");
+    expect(getDefaultAppPath("admin")).toBe("/records");
+    expect(getDefaultAppPath("superuser")).toBe("/records");
   });
 });
 
