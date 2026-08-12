@@ -1,16 +1,10 @@
 import {
   parseEventLogRecordText,
   type EventLogRecord,
-  type EventLogTable,
 } from "~/contracts/event-logs/event-log";
 
 export const EVENT_LOGS_STREAM_CHANNEL = "event_logs_stream";
 const MAX_STREAM_PAYLOAD_BYTES = 7_500;
-const TOPIC_PREFIX = "event-logs:";
-
-export function eventLogTopic(table: EventLogTable): string {
-  return `${TOPIC_PREFIX}${table}`;
-}
 
 export function serializeEventLogStreamPayload(
   record: EventLogRecord,

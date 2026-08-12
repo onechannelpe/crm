@@ -1,25 +1,40 @@
+import { createEffect, createSignal } from "solid-js";
+
 import { DatePicker } from "~/components/ui/date-picker/date-picker-field";
 import {
-  formatIsoDate,
-  parseIsoDate,
-} from "~/components/ui/date-picker/date-picker-model";
+  parseCalendarDate,
+  type CalendarDate,
+} from "~/domain/time/calendar-date";
 
 type EventLogDatePickerInputProps = {
   label?: string;
-  value: Date | undefined;
+  value: CalendarDate | undefined;
   placeholder?: string;
-  onChange: (date: Date | undefined) => void;
+  onChange: (date: CalendarDate | undefined) => void;
 };
 
 export function EventLogDatePickerInput(props: EventLogDatePickerInputProps) {
+  const [draft, setDraft] = createSignal(props.value ?? "");
+
+  createEffect(() => setDraft(props.value ?? ""));
+
   return (
     <DatePicker
       label={props.label}
       placeholder={props.placeholder}
-      value={props.value ? formatIsoDate(props.value) : ""}
-      onInput={(iso) =>
-        props.onChange(iso ? (parseIsoDate(iso) ?? undefined) : undefined)
-      }
+      value={draft()}
+      onInput={(value) => {
+        setDraft(value);
+        if (!value) {
+          props.onChange(undefined);
+          return;
+        }
+
+        const date = parseCalendarDate(value);
+        if (date) {
+          props.onChange(date);
+        }
+      }}
     />
   );
 }

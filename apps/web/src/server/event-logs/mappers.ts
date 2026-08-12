@@ -8,7 +8,7 @@ import type {
 } from "~/contracts/event-logs/event-log";
 import { parseFieldChanges } from "~/contracts/events";
 import type { Json } from "~/contracts/json";
-import type { Database } from "~/lib/db/types";
+import type { Database } from "~/server/platform/database/types";
 
 type EventRow = {
   id: string;
@@ -22,8 +22,12 @@ type EventRow = {
 };
 
 function toProperties(value: Json | null): JsonObject {
-  if (value === null) return {};
-  if (typeof value === "object" && !Array.isArray(value)) return value;
+  if (value === null) {
+    return {};
+  }
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
   return { value };
 }
 

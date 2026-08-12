@@ -14,8 +14,8 @@ import type {
   EventLogTable,
 } from "~/contracts/event-logs/event-log";
 import { summarizeFieldChanges } from "~/contracts/events";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import type { DataGridIcon } from "~/features/data-grid/model/types";
-import { formatDateTime } from "~/lib/utils";
 
 import { EventLogJsonCell } from "../components/event-log-json-cell";
 
@@ -49,7 +49,7 @@ const timestampColumn: EventLogColumn = {
   icon: CalendarDays,
   minWidth: 120,
   defaultWidth: 180,
-  renderCell: (record) => formatDateTime(record.timestamp),
+  renderCell: (record) => formatAppDateTime(record.timestamp),
 };
 
 const detailsColumn: EventLogColumn = {
@@ -85,7 +85,7 @@ const domainSource = {
       renderCell: (record) =>
         record.table === "DOMAIN_EVENT"
           ? `${record.entity.type}#${record.entity.id}`
-          : "-",
+          : null,
     },
     {
       id: "actor",
@@ -96,7 +96,7 @@ const domainSource = {
       renderCell: (record) =>
         record.table === "DOMAIN_EVENT"
           ? (record.actorUserId ?? "Sistema")
-          : "-",
+          : null,
     },
     {
       id: "changes",
@@ -107,7 +107,7 @@ const domainSource = {
       renderCell: (record) =>
         record.table === "DOMAIN_EVENT" && record.changes.length > 0
           ? summarizeFieldChanges(record.changes)
-          : "-",
+          : null,
     },
     detailsColumn,
   ],
@@ -139,9 +139,7 @@ const actionSource = {
           <Badge variant={record.status === "ok" ? "success" : "destructive"}>
             {record.status}
           </Badge>
-        ) : (
-          "-"
-        ),
+        ) : null,
     },
     {
       id: "duration",
@@ -150,7 +148,7 @@ const actionSource = {
       minWidth: 90,
       defaultWidth: 110,
       renderCell: (record) =>
-        record.table === "ACTION_LOG" ? `${record.durationMs} ms` : "-",
+        record.table === "ACTION_LOG" ? `${record.durationMs} ms` : null,
     },
     {
       id: "actor",
@@ -159,7 +157,9 @@ const actionSource = {
       minWidth: 100,
       defaultWidth: 150,
       renderCell: (record) =>
-        record.table === "ACTION_LOG" ? (record.actorUserId ?? "Sistema") : "-",
+        record.table === "ACTION_LOG"
+          ? (record.actorUserId ?? "Sistema")
+          : null,
     },
     detailsColumn,
   ],
@@ -187,7 +187,7 @@ const authSource = {
       minWidth: 120,
       defaultWidth: 160,
       renderCell: (record) =>
-        record.table === "AUTH_EVENT" ? (record.screen ?? "-") : "-",
+        record.table === "AUTH_EVENT" ? record.screen : null,
     },
     {
       id: "method",
@@ -196,7 +196,7 @@ const authSource = {
       minWidth: 110,
       defaultWidth: 150,
       renderCell: (record) =>
-        record.table === "AUTH_EVENT" ? (record.method ?? "-") : "-",
+        record.table === "AUTH_EVENT" ? record.method : null,
     },
     {
       id: "outcome",
@@ -217,9 +217,7 @@ const authSource = {
           >
             {record.outcome}
           </Badge>
-        ) : (
-          "-"
-        ),
+        ) : null,
     },
     detailsColumn,
   ],

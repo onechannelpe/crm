@@ -26,14 +26,6 @@ export function EventLogFilters(props: {
   const patch = (partial: Partial<Filters>) =>
     props.onChange({ ...props.value, ...partial });
   const range = () => props.value.dateRange;
-  const startDate = () => {
-    const start = range()?.start;
-    return start === undefined ? undefined : new Date(start);
-  };
-  const endDate = () => {
-    const end = range()?.end;
-    return end === undefined ? undefined : new Date(end);
-  };
 
   return (
     <div class={styles.grid}>
@@ -77,17 +69,13 @@ export function EventLogFilters(props: {
           <div class={styles.periodRow}>
             <EventLogDatePickerInput
               placeholder="Fecha inicial"
-              value={startDate()}
-              onChange={(date) =>
-                patch({ dateRange: { ...range(), start: date?.getTime() } })
-              }
+              value={range()?.start}
+              onChange={(start) => patch({ dateRange: { ...range(), start } })}
             />
             <EventLogDatePickerInput
               placeholder="Fecha final"
-              value={endDate()}
-              onChange={(date) =>
-                patch({ dateRange: { ...range(), end: date?.getTime() } })
-              }
+              value={range()?.end}
+              onChange={(end) => patch({ dateRange: { ...range(), end } })}
             />
           </div>
         </div>

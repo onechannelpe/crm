@@ -1,4 +1,4 @@
-import { createMemo, createSignal, type Accessor } from "solid-js";
+import { createMemo, createSignal, Show, type Accessor } from "solid-js";
 
 import Pause from "~/components/icons/pause";
 import Play from "~/components/icons/play";
@@ -56,9 +56,21 @@ export function SettingsLogs(props: {
         </div>
       </Card>
       <div class={styles.results}>
-        <span class={styles.recordCount}>
-          {query.records().length} de {query.totalCount()}
-        </span>
+        <div class={styles.statusRow}>
+          <Show when={query.connection() === "offline"}>
+            <span class={styles.offlineNotice}>
+              Sin conexión. Intentando reconectar...
+            </span>
+          </Show>
+          <Show when={query.connection() === "denied"}>
+            <span class={styles.deniedNotice}>
+              Se perdió la conexión. Recarga la página.
+            </span>
+          </Show>
+          <span class={styles.recordCount}>
+            {query.records().length} de {query.totalCount()}
+          </span>
+        </div>
         <EventLogResultsTable
           columns={source().columns}
           records={query.records()}
