@@ -1,0 +1,16 @@
+import { createLogger } from "~/shared/observability/runtime-logger";
+
+import { db } from "./db";
+import { migrateToLatest } from "./migrate";
+
+const logger = createLogger("db-migrate-cli");
+
+migrateToLatest(db)
+  .then(() => {
+    logger.info("migration_complete");
+    process.exit(0);
+  })
+  .catch((err) => {
+    logger.error("migration_failed", { error: err });
+    process.exit(1);
+  });
