@@ -1,7 +1,7 @@
-import { Show } from "solid-js";
+import { clsx } from "clsx";
+import { Show, createEffect } from "solid-js";
 
 import X from "~/components/icons/x";
-import { cn } from "~/lib/utils";
 
 import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
 import { useSidePanel } from "../state/use-side-panel";
@@ -16,40 +16,86 @@ export function TopBar(props: { isMobile: boolean }) {
     navigationStack,
     currentEntry,
     closePanel,
+    goBack,
     searchText,
     setSearchText,
   } = useSidePanel();
 
+  let inputRef: HTMLInputElement | undefined;
+
   const showBackButton = () => navigationStack().length > 1;
   const showCloseButton = () => !(props.isMobile && showBackButton());
+
   const showSearch = () => {
     const entry = currentEntry();
-    if (!entry) return false;
+
+    if (!entry) {
+      return false;
+    }
 
     return SIDE_PANEL_PAGES_CONFIG[entry.page].showsSearch;
   };
 
-  return (
-    <div class={cn(styles.topBar, props.isMobile && styles.topBarMobile)}>
-      <div class={styles.content}>
-        <div class={styles.leftControls}>
-          <BackButton visible={showBackButton()} />
-        </div>
+  createEffect(() => {
+    const entry = currentEntry();
 
-        <div class={styles.rightSlot}>
-          <Show when={showSearch()} fallback={<PageInfo />}>
-            <input
-              type="text"
-              class={styles.searchInput}
-              placeholder="Buscar o escribir un comando..."
-              value={searchText()}
-              onInput={(e) => setSearchText(e.currentTarget.value)}
-            />
-          </Show>
-        </div>
+    if (!entry || !SIDE_PANEL_PAGES_CONFIG[entry.page].showsSearch) {
+      return;
+    }
+
+    // Re-focus when the same search page is opened again.
+    void entry.pageId;
+    inputRef?.focus();
+  });
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.isComposing) {
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (searchText() !== "") {
+        setSearchText("");
+        return;
+      }
+
+      goBack();
+      return;
+    }
+
+    if (event.key === "Backspace" && searchText() === "" && showBackButton()) {
+      event.preventDefault();
+      event.stopPropagation();
+      goBack();
+    }
+  }
+
+  return (
+    <div class={clsx(styles.topBar, props.isMobile && styles.topBarMobile)}>
+      <div class={styles.content}>
+        <BackButton visible={showBackButton()} />
+
+        <Show when={showSearch()} fallback={<PageInfo />}>
+          <input
+            ref={(element) => {
+              inputRef = element;
+            }}
+            type="text"
+            class={styles.searchInput}
+            placeholder="Buscar o escribir un comando..."
+            value={searchText()}
+            onInput={(event) => setSearchText(event.currentTarget.value)}
+            onKeyDown={handleKeyDown}
+          />
+        </Show>
       </div>
+
       <div class={styles.rightControls}>
         <TopBarActions />
+
         <Show when={showCloseButton()}>
           <button
             type="button"

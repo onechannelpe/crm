@@ -15,7 +15,10 @@ export function useLeadRecordPageState() {
 
   function setActiveTab(activeTab: RecordTabId) {
     updatePageState(pageId(), (state) => {
-      if (state.page !== "view-record") return state;
+      if (state.page !== "view-record") {
+        return state;
+      }
+
       return { ...state, activeTab };
     });
   }
@@ -26,13 +29,11 @@ export function useLeadRecordPageState() {
     resolveActiveRecordTabId(pageState().activeTab, "lead"),
   );
 
-  const label = createMemo(() => subtitle());
-
   return {
     pageState,
     leadId,
     activeTab,
-    label,
+    label: subtitle,
     setActiveTab,
     setSubtitle,
   };

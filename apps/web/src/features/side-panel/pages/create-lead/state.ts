@@ -19,7 +19,10 @@ export function useCreateLeadPageState() {
 
   function patchDraft(patch: Partial<LeadRecordDraftState>) {
     updatePageState(pageId(), (state) => {
-      if (state.page !== "create-lead") return state;
+      if (state.page !== "create-lead") {
+        return state;
+      }
+
       return { ...state, draft: { ...state.draft, ...patch } };
     });
   }
@@ -35,8 +38,11 @@ export function useCreateLeadPageState() {
   }
 
   const draftRuc = createMemo(() => pageState().draft.ruc);
+  const draftInquiryId = createMemo(() => pageState().draft.inquiryId);
+
   const draftScope = createMemo<CommercialScopeFormValues>(() => {
     const draft = pageState().draft;
+
     return {
       currentProvider: draft.currentProvider,
       currentDebitRate: draft.currentDebitRate,
@@ -48,13 +54,16 @@ export function useCreateLeadPageState() {
       posCount: draft.posCount,
     };
   });
+
   const activeTab = createMemo<RecordTabId>(() =>
     resolveActiveRecordTabId(pageState().draft.activeTab, "draft"),
   );
+
   const label = createMemo(() => recordTabDisplayLabel(activeTab()));
 
   return {
     draftRuc,
+    draftInquiryId,
     draftScope,
     activeTab,
     label,

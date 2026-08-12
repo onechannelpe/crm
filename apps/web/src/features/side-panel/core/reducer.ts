@@ -28,16 +28,20 @@ function isSameNavigationEntry(
   return left.page === right.page && left.pageId === right.pageId;
 }
 
-function retainPageStateByNavigationStack(
+function retainPageStateForStack(
   pageStateById: Record<string, SidePanelPageState>,
   stack: SidePanelNavigationEntry[],
 ) {
   const retained: Record<string, SidePanelPageState> = {};
 
   for (const entry of stack) {
-    const state = pageStateById[entry.pageId];
-    if (!state) continue;
-    retained[entry.pageId] = state;
+    const pageState = pageStateById[entry.pageId];
+
+    if (!pageState) {
+      continue;
+    }
+
+    retained[entry.pageId] = pageState;
   }
 
   return retained;
@@ -75,6 +79,7 @@ export function reduceSidePanelPatch(
         },
       };
     }
+
     case "close-panel":
       if (!state.isOpen && !state.isClosing) {
         return null;
@@ -85,17 +90,27 @@ export function reduceSidePanelPatch(
         isClosing: true,
         searchText: "",
       };
+
+    // Keep the current page mounted until the close animation finishes.
     case "close-animation-complete":
-      return { isClosing: false };
-    case "navigate-to":
+      return {
+        isClosing: false,
+        stack: [],
+        pageStateById: {},
+        searchText: "",
+      };
+
+    case "navigate-to": {
+      const nextEntry = action.page.entry;
+      const nextState = action.page.state;
+
       if (action.resetStack) {
-        const nextEntry = action.page.entry;
         return {
           isOpen: true,
           isClosing: false,
           stack: [nextEntry],
           pageStateById: {
-            [nextEntry.pageId]: action.page.state,
+            [nextEntry.pageId]: nextState,
           },
         };
       }
@@ -103,13 +118,15 @@ export function reduceSidePanelPatch(
       return {
         isOpen: true,
         isClosing: false,
-        stack: [...state.stack, action.page.entry],
+        stack: [...state.stack, nextEntry],
         pageStateById: {
           ...state.pageStateById,
-          [action.page.entry.pageId]: action.page.state,
+          [nextEntry.pageId]: nextState,
         },
       };
-    case "go-back":
+    }
+
+    case "go-back": {
       if (state.stack.length <= 1) {
         return {
           isOpen: false,
@@ -118,13 +135,14 @@ export function reduceSidePanelPatch(
         };
       }
 
+      const nextStack = state.stack.slice(0, -1);
+
       return {
-        stack: state.stack.slice(0, -1),
-        pageStateById: retainPageStateByNavigationStack(
-          state.pageStateById,
-          state.stack.slice(0, -1),
-        ),
+        stack: nextStack,
+        pageStateById: retainPageStateForStack(state.pageStateById, nextStack),
       };
+    }
+
     case "navigate-to-stack-index": {
       const boundedIndex = Math.max(
         0,
@@ -134,14 +152,13 @@ export function reduceSidePanelPatch(
 
       return {
         stack: nextStack,
-        pageStateById: retainPageStateByNavigationStack(
-          state.pageStateById,
-          nextStack,
-        ),
+        pageStateById: retainPageStateForStack(state.pageStateById, nextStack),
       };
     }
+
     case "set-search-text":
       return { searchText: action.text };
+
     default: {
       const exhaustive: never = action;
       throw new Error(`Unhandled side panel action: ${String(exhaustive)}`);

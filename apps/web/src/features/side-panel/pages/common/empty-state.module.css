@@ -1,6 +1,10 @@
 .emptyState {
-  color: var(--foreground-tertiary);
-  font-size: var(--font-size-body);
-  padding: 24px 16px;
+  align-items: center;
+  color: var(--t-font-color-light);
+  display: flex;
+  font-size: var(--t-font-size-md);
+  height: 64px;
+  justify-content: center;
   text-align: center;
+  white-space: pre-wrap;
 }

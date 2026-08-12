@@ -1,7 +1,6 @@
+import { clsx } from "clsx";
 import { type ParentProps, Show, onCleanup, onMount } from "solid-js";
 import { Portal } from "solid-js/web";
-
-import { cn } from "~/lib/utils";
 
 import { SIDE_PANEL_CLICK_OUTSIDE_ID } from "../constants/side-panel-click-outside-id";
 import { useSidePanel } from "../state/use-side-panel";
@@ -24,7 +23,9 @@ export function MobileShell(props: MobileShellProps) {
         ? styles.variantClosedFullScreen
         : styles.variantClosed;
     }
-    if (props.targetVariant === "fullScreen") return styles.variantFullScreen;
+    if (props.targetVariant === "fullScreen") {
+      return styles.variantFullScreen;
+    }
     return styles.variantNormal;
   };
 
@@ -36,7 +37,9 @@ export function MobileShell(props: MobileShellProps) {
 
   onMount(() => {
     function handlePointerDown(e: PointerEvent) {
-      if (!isOpen()) return;
+      if (!isOpen()) {
+        return;
+      }
       if (
         containerRef &&
         e.target instanceof Node &&
@@ -60,7 +63,7 @@ export function MobileShell(props: MobileShellProps) {
             containerRef = el;
           }}
           data-click-outside-id={SIDE_PANEL_CLICK_OUTSIDE_ID}
-          class={cn(styles.container, variantClass())}
+          class={clsx(styles.container, variantClass())}
           onTransitionEnd={handleTransitionEnd}
         >
           {props.children}

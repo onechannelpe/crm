@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { type JSX, Show, onCleanup, onMount } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import {
   SIDE_PANEL_CLICK_OUTSIDE_ID,
@@ -29,15 +28,23 @@ export function PanelShell(props: PanelShellProps) {
 
   onMount(() => {
     function handlePointerDown(e: PointerEvent) {
-      if (props.isInteractive === false) return;
-      if (!isOpen()) return;
+      if (props.isInteractive === false) {
+        return;
+      }
+      if (!isOpen()) {
+        return;
+      }
       const path = e.composedPath();
       const isExcluded = path.some((el) => {
-        if (!(el instanceof Element)) return false;
+        if (!(el instanceof Element)) {
+          return false;
+        }
         // A data-grid row is the panel's own navigator: clicking another record
         // swaps the panel content in place, so it must not count as "outside"
         // (otherwise the panel closes and immediately reopens).
-        if (el.hasAttribute("data-grid-row-id")) return true;
+        if (el.hasAttribute("data-grid-row-id")) {
+          return true;
+        }
         const id = el.getAttribute("data-click-outside-id");
         return (
           id !== null && SIDE_PANEL_EXCLUDED_CLICK_OUTSIDE_IDS.includes(id)
@@ -56,7 +63,7 @@ export function PanelShell(props: PanelShellProps) {
 
   return (
     <div
-      class={cn(
+      class={clsx(
         styles.wrapper,
         isOpen() && styles.wrapperOpen,
         props.isResizing && styles.wrapperResizing,
