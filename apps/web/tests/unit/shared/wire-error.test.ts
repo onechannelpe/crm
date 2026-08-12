@@ -1,7 +1,7 @@
 import { deserialize, serialize } from "seroval";
 import { describe, expect, it } from "vitest";
 
-import { ActionError, parseWireError } from "~/lib/wire-error";
+import { ActionError, parseWireError } from "~/contracts/errors";
 
 describe("parseWireError", () => {
   it("preserves an ActionError", () => {

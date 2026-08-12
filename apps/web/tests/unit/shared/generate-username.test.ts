@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { generateUsername } from "~/lib/users/generate-username";
+import { generateUsername } from "~/domain/identity/generate-username";
 
 describe("generateUsername", () => {
   it("produces first.firstsurname when no conflict", async () => {

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { parseObject, validationFail } from "~/server/shared/parsing";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 
 function expectErrCode(
   result:
@@ -9,7 +12,9 @@ function expectErrCode(
   code: string,
 ) {
   expect(result.ok).toBe(false);
-  if (result.ok) throw new Error("expected err");
+  if (result.ok) {
+    throw new Error("expected err");
+  }
   expect(result.error.code).toBe(code);
 }
 
@@ -22,7 +27,9 @@ describe("parseObject", () => {
     );
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected ok");
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
     expect(result.value.reason).toBe("Reviewed by executive");
   });
 
@@ -32,6 +39,29 @@ describe("parseObject", () => {
     }));
 
     expectErrCode(result, "reason_required");
+  });
+
+  it.each(["a", "a".repeat(121)])(
+    "reports a string outside the min/max bounds as invalid",
+    (query) => {
+      const result = parseObject({ query }, validationFail, (r) => ({
+        query: r.str("query", { min: 2, max: 120 }),
+      }));
+
+      expectErrCode(result, "invalid_query");
+    },
+  );
+
+  it("accepts a string within the min/max bounds", () => {
+    const result = parseObject({ query: "ab" }, validationFail, (r) => ({
+      query: r.str("query", { min: 2, max: 120 }),
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
+    expect(result.value.query).toBe("ab");
   });
 
   it("reports a non-finite number as invalid, not missing", () => {
@@ -61,8 +91,33 @@ describe("parseObject", () => {
     }));
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected ok");
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
     expect(result.value.amount).toBe(1);
+  });
+
+  it.each([999, Number.NaN])(
+    "reports %s as below the numAtLeast floor",
+    (gpv) => {
+      const result = parseObject({ gpv }, validationFail, (r) => ({
+        gpv: r.numAtLeast("gpv", 1000),
+      }));
+
+      expectErrCode(result, "invalid_gpv");
+    },
+  );
+
+  it("accepts a number at or above the numAtLeast floor", () => {
+    const result = parseObject({ gpv: 1000 }, validationFail, (r) => ({
+      gpv: r.numAtLeast("gpv", 1000),
+    }));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
+    expect(result.value.gpv).toBe(1000);
   });
 
   it("reports a present wrong-typed field as invalid", () => {

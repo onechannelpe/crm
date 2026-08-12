@@ -1,11 +1,11 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { WorkspaceScopeType } from "~/lib/auth/access/workspace-scope";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { WorkspaceScopeType } from "~/domain/auth/access/workspace-scope";
 import type {
   PrimaryAuthMethod,
   SessionClass,
   StrongAuthMethod,
-} from "~/lib/auth/core/session-contract";
-import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
+} from "~/domain/auth/core/session-contract";
+import type { PasskeyLoginFlowState } from "~/domain/auth/passkey/types";
 
 export interface CurrentUserView {
   id: string;
@@ -35,6 +35,21 @@ export interface CurrentUserView {
   impersonating: boolean;
 }
 
+export interface OnboardingSnapshot {
+  user: {
+    email: string;
+    names: string;
+    firstSurname: string;
+    secondSurname: string;
+    role: Role;
+    phone: string | null;
+  };
+  passwordChangeRequired: boolean;
+  strongAuthRequired: boolean;
+  hasPasskey: boolean;
+  totpEnabled: boolean;
+}
+
 export type PasswordLoginSubmissionResult = {
   nextStep: "passkey";
   flow: PasskeyLoginFlowState;
@@ -56,4 +71,10 @@ export interface SessionInfo {
   createdAt: number;
   lastActivity: number;
   expiresAt: number;
+}
+
+export interface InviteActivationView {
+  fullName: string;
+  username: string;
+  email: string;
 }
