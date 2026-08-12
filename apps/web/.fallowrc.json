@@ -1,5 +1,6 @@
 {
   "$schema": "https://schema.fallow.tools/.fallowrc.json",
+  "extends": "../../.fallowrc.json",
   "entry": [
     "src/app.tsx",
     "src/entry-client.tsx",
@@ -7,7 +8,10 @@
     "src/middleware.ts",
     "src/workers/maintenance-runner.ts",
     "src/routes/**/*.{ts,tsx}",
-    "src/actions/**/*.{ts,tsx}",
+    "src/rpc/**/*.{ts,tsx}",
+    "src/server/platform/database/migrate-cli.ts",
+    "src/server/platform/database/seed.ts",
+    "tools/e2e/prepare.ts",
     "vite.config.ts",
     "tracer.ts",
     "vitest.bench.config.ts"
@@ -15,26 +19,421 @@
   "ignorePatterns": [
     "**/*.generated.ts",
     "**/*.generated.tsx",
+    "**/*.module.css",
     "public/**",
     ".output/**",
     "stats.html",
     "content/**"
   ],
+  "ignoreExports": [
+    {
+      "file": "src/domain/ids/registry.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "src/features/updates/components/index.ts",
+      "exports": ["Collapsible", "UpdateLabel"]
+    },
+    {
+      "file": "src/server/entrypoints/nitro/realtime-lifecycle.ts",
+      "exports": ["default"]
+    },
+    {
+      "file": "src/routes/api/extension/**/*.ts",
+      "exports": ["POST"]
+    },
+    {
+      "file": "src/server/platform/database/schema/modules/*.ts",
+      "exports": ["createTables"]
+    }
+  ],
   "ignoreUnresolvedImports": [
     "~/*",
+    "@/*",
     "@tests/*",
     "virtual:*",
     "@solidjs/start/*"
   ],
+  "dynamicallyLoaded": ["src/server/entrypoints/nitro/realtime-lifecycle.ts"],
   "ignoreDependencies": [
     "@crm/contracts",
     "@crm/email-composer",
     "@crm/message-channels",
+    "crossws",
+    "srvx",
     "solid-mdx"
   ],
   "rules": {
     "unused-files": "warn",
     "unused-exports": "warn",
-    "unused-types": "warn"
+    "unused-types": "warn",
+    "unused-dependencies": "warn",
+    "unused-dev-dependencies": "warn",
+    "unused-class-members": "off",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "error",
+    "duplicate-exports": "warn",
+    "circular-dependencies": "warn",
+    "boundary-violation": "warn",
+    "type-only-dependencies": "warn",
+    "test-only-dependencies": "warn",
+    "stale-suppressions": "warn"
+  },
+  "duplicates": {
+    "mode": "mild",
+    "minTokens": 80,
+    "minLines": 8,
+    "skipLocal": true,
+    "ignoreImports": true
+  },
+  "health": {
+    "ignore": [
+      "**/tests/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx",
+      "**/*.bench.ts",
+      "**/*.bench.tsx"
+    ]
+  },
+  "boundaries": {
+    "zones": [
+      {
+        "name": "contracts",
+        "patterns": ["src/contracts/**"]
+      },
+      {
+        "name": "shared",
+        "patterns": ["src/shared/**"]
+      },
+      {
+        "name": "domain",
+        "patterns": ["src/domain/**"]
+      },
+      {
+        "name": "browser",
+        "patterns": ["src/browser/**"]
+      },
+      {
+        "name": "server",
+        "autoDiscover": ["src/server"]
+      },
+      {
+        "name": "rpc",
+        "patterns": ["src/rpc/**"]
+      },
+      {
+        "name": "features",
+        "patterns": ["src/features/**"]
+      },
+      {
+        "name": "components",
+        "patterns": ["src/components/**"]
+      },
+      {
+        "name": "routes",
+        "patterns": ["src/routes/**"]
+      }
+    ],
+    "rules": [
+      {
+        "from": "contracts",
+        "allow": ["contracts", "domain", "shared"]
+      },
+      {
+        "from": "shared",
+        "allow": ["shared"]
+      },
+      {
+        "from": "domain",
+        "allow": ["domain", "shared"]
+      },
+      {
+        "from": "browser",
+        "allow": ["browser", "contracts", "domain", "shared"]
+      },
+      {
+        "from": "server",
+        "allow": ["contracts", "domain", "server/platform", "shared"]
+      },
+      {
+        "from": "server/composition",
+        "allow": ["contracts", "domain", "server", "shared"]
+      },
+      {
+        "from": "server/entrypoints",
+        "allow": ["server/composition", "server/platform", "shared"]
+      },
+      {
+        "from": "server/auth",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/event-logs",
+          "server/extension",
+          "server/invites",
+          "server/notifications",
+          "server/observability",
+          "server/security",
+          "server/sessions",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/capacity",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/security",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/contact-assignments",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/capacity",
+          "server/integrations",
+          "server/organization",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/event-logs",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/realtime",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/extension",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/contact-assignments",
+          "server/organization",
+          "server/sessions",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/integrations",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/notifications",
+          "server/records",
+          "server/users",
+          "server/workflow",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/invites",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/auth",
+          "server/event-logs",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/merchant-stats",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/csv",
+          "server/event-logs",
+          "server/files",
+          "server/realtime",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/observability",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/event-logs",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/organization",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/integrations",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/platform",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/audit-reader",
+          "server/auth",
+          "server/capacity",
+          "server/client-search",
+          "server/contact-assignments",
+          "server/event-logs",
+          "server/extension",
+          "server/files",
+          "server/integrations",
+          "server/invites",
+          "server/merchant-stats",
+          "server/notifications",
+          "server/observability",
+          "server/organization",
+          "server/records",
+          "server/security",
+          "server/sessions",
+          "server/team",
+          "server/users",
+          "server/workflow",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/records",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/csv",
+          "server/integrations",
+          "server/realtime",
+          "server/workflow",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/search-workflow",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/capacity",
+          "server/integrations",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/security",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/auth",
+          "server/event-logs",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/team",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/event-logs",
+          "server/invites",
+          "server/notifications",
+          "server/security",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/users",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/auth",
+          "server/csv",
+          "server/invites",
+          "server/notifications",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "server/workflow",
+        "allow": [
+          "contracts",
+          "domain",
+          "server/client-search",
+          "server/event-logs",
+          "server/files",
+          "server/integrations",
+          "server/notifications",
+          "server/organization",
+          "server/users",
+          "server/platform",
+          "shared"
+        ]
+      },
+      {
+        "from": "rpc",
+        "allow": ["rpc", "contracts", "domain", "server", "shared"]
+      },
+      {
+        "from": "features",
+        "allow": [
+          "rpc",
+          "browser",
+          "components",
+          "contracts",
+          "domain",
+          "features",
+          "shared"
+        ]
+      },
+      {
+        "from": "components",
+        "allow": [
+          "rpc",
+          "browser",
+          "components",
+          "contracts",
+          "domain",
+          "features",
+          "shared"
+        ]
+      },
+      {
+        "from": "routes",
+        "allow": [
+          "rpc",
+          "browser",
+          "components",
+          "contracts",
+          "domain",
+          "features",
+          "routes",
+          "server",
+          "shared"
+        ]
+      }
+    ]
   }
 }

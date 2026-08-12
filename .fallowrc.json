@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": [
+    "apps/web/src/app.tsx",
+    "apps/web/src/entry-client.tsx",
+    "apps/web/src/entry-server.tsx",
+    "apps/web/src/middleware.ts",
+    "apps/web/src/workers/maintenance-runner.ts",
+    "apps/web/src/routes/**/*.{ts,tsx}",
+    "apps/web/src/rpc/**/*.{ts,tsx}",
+    "apps/web/src/server/platform/database/migrate-cli.ts",
+    "apps/web/src/server/platform/database/seed.ts",
+    "apps/web/tools/e2e/prepare.ts",
+    "apps/web/vite.config.ts",
+    "apps/web/tracer.ts",
+    "apps/web/vitest.bench.config.ts",
+    "apps/extension/entrypoints/**/*.{ts,tsx}",
+    "packages/email-composer/scripts/build-emails.ts",
+    "packages/fetch-refs/src/cli.ts",
+    "tools/codegen/bin/**/*.ts"
+  ],
+  "publicPackages": [
+    "@crm/contracts",
+    "@crm/email-composer",
+    "@crm/fetch-refs",
+    "@crm/images",
+    "@crm/message-channels",
+    "@crm/solid-motion"
+  ],
+  "ignorePatterns": [
+    "**/*.generated.ts",
+    "**/*.generated.tsx",
+    "**/*.module.css",
+    "**/public/**",
+    "**/.output/**",
+    "**/content/**"
+  ],
+  "ignoreExports": [
+    {
+      "file": "apps/web/src/domain/ids/registry.ts",
+      "exports": ["*"]
+    },
+    {
+      "file": "apps/web/src/features/updates/components/index.ts",
+      "exports": ["Collapsible", "UpdateLabel"]
+    }
+  ],
+  "rules": {
+    "unused-files": "warn",
+    "unused-exports": "warn",
+    "unused-types": "warn",
+    "unused-dependencies": "warn",
+    "unused-dev-dependencies": "warn",
+    "unused-optional-dependencies": "warn",
+    "unused-class-members": "off",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "error",
+    "duplicate-exports": "warn",
+    "circular-dependencies": "warn",
+    "boundary-violation": "warn",
+    "type-only-dependencies": "warn",
+    "test-only-dependencies": "warn",
+    "stale-suppressions": "warn"
+  },
+  "duplicates": {
+    "mode": "mild",
+    "minTokens": 80,
+    "minLines": 8,
+    "skipLocal": true,
+    "ignoreImports": true
+  },
+  "health": {
+    "ignore": [
+      "**/tests/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx",
+      "**/*.bench.ts",
+      "**/*.bench.tsx"
+    ]
+  }
+}
