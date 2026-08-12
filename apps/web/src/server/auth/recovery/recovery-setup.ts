@@ -7,11 +7,6 @@ import { Err, Ok, type Result } from "~/shared/result";
 
 import { regenerateRecoveryCodes } from "./issue-recovery-codes";
 
-interface RecoverySetupTransition {
-  redirectTo: string;
-  sessionToken: string;
-}
-
 export function regenerateRecoverySetup(
   ctx: AppContext,
   deps: AuthSetupContext,
@@ -22,6 +17,7 @@ export function regenerateRecoverySetup(
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
+
     if (!user?.onboarding_completed_at) {
       return Err(fail("invalid_input"));
     }
@@ -31,6 +27,7 @@ export function regenerateRecoverySetup(
       user.id,
       regeneratedAt,
     );
+
     const sessionToken = await replaceSession(
       repos,
       {
@@ -55,14 +52,16 @@ export function regenerateRecoverySetup(
 export async function acknowledgeRecoverySetup(
   ctx: AppContext,
   deps: AuthSetupContext,
-): Promise<Result<RecoverySetupTransition, DomainError>> {
+): Promise<Result<{ redirectTo: string; sessionToken: string }, DomainError>> {
   if (ctx.actor.sessionClass !== "recovery_setup") {
     return Err(fail("invalid_input"));
   }
+
   const acknowledgedAt = ctx.operationAt;
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
+
     if (!user?.onboarding_completed_at) {
       return Err(fail("invalid_input"));
     }
@@ -71,6 +70,7 @@ export async function acknowledgeRecoverySetup(
       user.id,
       acknowledgedAt,
     );
+
     if (!acknowledged) {
       return Err(fail("invalid_input"));
     }

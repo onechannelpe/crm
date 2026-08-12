@@ -21,12 +21,14 @@ async function loadPendingLogin(
   occurredAt: Date,
 ): Promise<Result<PendingLogin, { kind: "flow_expired" }>> {
   const flow = await deps.repos.loginFlows.findById(flowId);
+
   if (!flow || flow.expires_at < occurredAt || !flow.user_id) {
     await deleteLoginFlow(flow, deps.repos);
     return Err({ kind: "flow_expired" });
   }
 
   const user = await deps.repos.users.findById(flow.user_id);
+
   if (!user?.is_active) {
     await deps.repos.loginFlows.delete(flow.id);
     return Err({ kind: "flow_expired" });
@@ -58,29 +60,34 @@ export async function verifyTotpLoginProof(
     input.flowId,
     operation.operationAt,
   );
+
   if (isErr(pending)) {
     return pending;
   }
-  if (pending.value.flow.state !== "totp") {
-    await deps.repos.loginFlows.delete(pending.value.flow.id);
+
+  const { flow, user } = pending.value;
+
+  if (flow.state !== "totp") {
+    await deps.repos.loginFlows.delete(flow.id);
     return Err({ kind: "flow_expired" });
   }
 
   const verified = await verifyTotpStepUp({
-    user: pending.value.user,
+    user,
     ipAddress: input.ipAddress,
     totpCode: input.totpCode,
     deps: deps.repos,
     occurredAt: operation.operationAt,
   });
+
   if (isErr(verified)) {
     return verified;
   }
 
   return Ok({
     method: "totp",
-    flowId: pending.value.flow.id,
-    userId: pending.value.user.id,
+    flowId: flow.id,
+    userId: user.id,
     secretEncrypted: verified.value.secretEncrypted,
   });
 }
@@ -111,17 +118,21 @@ export async function verifyRecoveryLoginProof(
     input.flowId,
     operation.operationAt,
   );
+
   if (isErr(pending)) {
     return pending;
   }
 
+  const { flow, user } = pending.value;
+
   const verified = await verifyRecoveryCode({
-    user: pending.value.user,
+    user,
     ipAddress: input.ipAddress,
     recoveryCode: input.recoveryCode,
     deps: deps.repos,
     occurredAt: operation.operationAt,
   });
+
   if (isErr(verified)) {
     return verified;
   }
@@ -129,7 +140,7 @@ export async function verifyRecoveryLoginProof(
   return Ok({
     method: "recovery",
     codeHash: verified.value.codeHash,
-    flowId: pending.value.flow.id,
-    userId: pending.value.user.id,
+    flowId: flow.id,
+    userId: user.id,
   });
 }

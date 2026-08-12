@@ -30,9 +30,8 @@ export interface ExecutiveGpvMerchantView {
   projectedGpv: number | null;
   lastTransactionAt: CalendarDate | null;
   leadId: string | null;
-  // Infinity Pay's own uniform >2,000/sale bar, evaluated on this month's
-  // gpv -- not Culqi's mesa-based criteria. null when the commission scheme
-  // hasn't set that threshold yet.
+
+  // Null means the commission scheme has not defined the threshold yet.
   isActive: boolean | null;
 }
 
@@ -54,7 +53,6 @@ export interface AttainmentRow {
   label: string;
   sublabel: string | null;
   gpv: number;
-  // Null means no attributed RUC has a target this month; zero is an explicit target.
   projectedGpv: number | null;
   rucCount: number;
   deviceCount: number;

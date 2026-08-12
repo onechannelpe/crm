@@ -33,30 +33,30 @@ export async function verifyPasswordLoginCredentials(
   repos: Deps,
   operation: OperationContext,
 ): Promise<Result<UserRow, InvalidCredentialsError>> {
-  const safeUsername = input.username.trim();
-  const safePassword = input.password;
+  const username = input.username.trim();
   const occurredAt = operation.operationAt;
-  if (safeUsername.length === 0 || safePassword.length === 0) {
+
+  if (!username || !input.password) {
     return Err({ kind: "invalid_credentials" });
   }
+
   const throttleService = createAuthThrottleService({
     authThrottle: repos.authThrottle,
   });
+
   const throttle = await throttleService.checkLoginThrottle(
-    safeUsername,
+    username,
     input.ipAddress,
     occurredAt,
   );
 
   if (!throttle.allowed) {
-    // Resolve the user even on the blocked path so lockout events stay
-    // attributable in per-user security analytics
-    // (findRecentLoginRetriesByUser); the identifier hash alone cannot be
-    // grouped by account.
-    const blockedUser = await repos.users.findByUsername(safeUsername);
+    // Resolve the account so throttled attempts remain attributable per user.
+    const user = await repos.users.findByUsername(username);
+
     await recordAuthEvent(repos, {
-      userId: blockedUser?.id ?? null,
-      identifier: safeUsername,
+      userId: user?.id ?? null,
+      identifier: username,
       ipAddress: input.ipAddress,
       method: "password",
       stage: "login",
@@ -64,21 +64,24 @@ export async function verifyPasswordLoginCredentials(
       reason: "threshold_exceeded",
       occurredAt,
     });
+
     return Err({ kind: "invalid_credentials" });
   }
 
-  const user = await repos.users.findByUsername(safeUsername);
+  const user = await repos.users.findByUsername(username);
 
   if (!user || !user.is_active) {
-    await verifyPassword(await DUMMY_HASH, safePassword);
+    await verifyPassword(await DUMMY_HASH, input.password);
+
     await throttleService.recordLoginFailure(
-      safeUsername,
+      username,
       input.ipAddress,
       occurredAt,
     );
+
     await recordAuthEvent(repos, {
       userId: user?.id ?? null,
-      identifier: safeUsername,
+      identifier: username,
       ipAddress: input.ipAddress,
       method: "password",
       stage: "login",
@@ -86,18 +89,25 @@ export async function verifyPasswordLoginCredentials(
       reason: user ? "inactive_user" : "user_not_found",
       occurredAt,
     });
+
     return Err({ kind: "invalid_credentials" });
   }
 
-  if (!(await verifyPassword(user.password_hash, safePassword))) {
+  const passwordMatches = await verifyPassword(
+    user.password_hash,
+    input.password,
+  );
+
+  if (!passwordMatches) {
     await throttleService.recordLoginFailure(
-      safeUsername,
+      username,
       input.ipAddress,
       occurredAt,
     );
+
     await recordAuthEvent(repos, {
       userId: user.id,
-      identifier: safeUsername,
+      identifier: username,
       ipAddress: input.ipAddress,
       method: "password",
       stage: "login",
@@ -105,6 +115,7 @@ export async function verifyPasswordLoginCredentials(
       reason: "invalid_password",
       occurredAt,
     });
+
     return Err({ kind: "invalid_credentials" });
   }
 

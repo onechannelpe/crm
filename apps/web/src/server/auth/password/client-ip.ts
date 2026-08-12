@@ -2,26 +2,25 @@ import { securityConfig } from "~/server/platform/config/env";
 
 export function getClientIp(
   headers: Headers,
-  trustedProxy = isTrustedProxyEnabled(),
+  trustedProxy = securityConfig().trustedProxy === "true",
 ): string {
   if (!trustedProxy) {
     return "127.0.0.1";
   }
 
-  const cfIp = cleanIp(headers.get("cf-connecting-ip"));
+  const cfIp = normalizeIp(headers.get("cf-connecting-ip"));
   if (cfIp) {
     return cfIp;
   }
 
-  const forwarded = headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = cleanIp(forwarded.split(",")[0] ?? "");
-    if (first) {
-      return first;
-    }
+  const forwardedIp = normalizeIp(
+    headers.get("x-forwarded-for")?.split(",", 1)[0],
+  );
+  if (forwardedIp) {
+    return forwardedIp;
   }
 
-  const realIp = cleanIp(headers.get("x-real-ip"));
+  const realIp = normalizeIp(headers.get("x-real-ip"));
   if (realIp) {
     return realIp;
   }
@@ -29,17 +28,7 @@ export function getClientIp(
   return "127.0.0.1";
 }
 
-function isTrustedProxyEnabled(): boolean {
-  return securityConfig().trustedProxy === "true";
-}
-
-function cleanIp(value: string | null | undefined): string | null {
-  if (!value) {
-    return null;
-  }
-  const normalized = value.trim().toLowerCase();
-  if (!normalized) {
-    return null;
-  }
-  return normalized.slice(0, 64);
+function normalizeIp(value: string | null | undefined): string | null {
+  const normalized = value?.trim().toLowerCase();
+  return normalized ? normalized.slice(0, 64) : null;
 }

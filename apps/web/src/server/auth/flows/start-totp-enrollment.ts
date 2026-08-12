@@ -23,7 +23,11 @@ export async function startTotpEnrollment(
     DomainError
   >
 > {
-  const user = await deps.repos.users.findById(ctx.actor.userId);
+  const userId = ctx.actor.userId;
+  const changedAt = ctx.operationAt;
+
+  const user = await deps.repos.users.findById(userId);
+
   if (!user) {
     return Err(forbidden());
   }
@@ -32,15 +36,16 @@ export async function startTotpEnrollment(
   const encrypted = await encryptTotpSecret(secret);
   const otpauthUri = buildTotpProvisioningUri(secret, user.email);
   const qrCodeDataUrl = await QRCode.toDataURL(otpauthUri);
-  const changedAt = ctx.operationAt;
 
-  const persisted = await deps.uow.run(async (repos) => {
-    const lockedUser = await repos.users.findByIdForUpdate(ctx.actor.userId);
+  const result = await deps.uow.run(async (repos) => {
+    const lockedUser = await repos.users.findByIdForUpdate(userId);
+
     if (!lockedUser) {
       return Err(forbidden());
     }
 
     const existing = await repos.userTotpFactors.findByUserId(lockedUser.id);
+
     if (existing?.is_enabled) {
       return Err(fail("totp_already_enabled"));
     }
@@ -53,8 +58,9 @@ export async function startTotpEnrollment(
 
     return Ok(undefined);
   });
-  if (isErr(persisted)) {
-    return persisted;
+
+  if (isErr(result)) {
+    return result;
   }
 
   return Ok({ otpauthUri, qrCodeDataUrl });

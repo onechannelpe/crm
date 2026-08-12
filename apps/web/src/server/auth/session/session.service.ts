@@ -39,9 +39,6 @@ const noopLogger = {
 
 export function createSessionAuthenticator(deps: SessionAuthenticatorDeps) {
   const logger = deps.logger ?? noopLogger;
-  const revokeSession = async (sessionId: string): Promise<void> => {
-    await deps.sessions.delete(sessionId);
-  };
 
   return {
     async resolve(
@@ -53,41 +50,47 @@ export function createSessionAuthenticator(deps: SessionAuthenticatorDeps) {
       }
 
       const sessionId = hashSessionToken(token);
-
       const dbSession = await deps.sessions.findById(sessionId);
+
       if (!dbSession) {
         return null;
       }
 
       if (!isRole(dbSession.role)) {
-        await revokeSession(sessionId);
+        await deps.sessions.delete(sessionId);
         return null;
       }
+
       if (!isSessionClass(dbSession.session_class)) {
-        await revokeSession(sessionId);
+        await deps.sessions.delete(sessionId);
         return null;
       }
+
       if (!isPrimaryAuthMethod(dbSession.primary_auth_method)) {
-        await revokeSession(sessionId);
+        await deps.sessions.delete(sessionId);
         return null;
       }
+
       if (
         dbSession.strong_auth_method !== null &&
         !isStrongAuthMethod(dbSession.strong_auth_method)
       ) {
-        await revokeSession(sessionId);
+        await deps.sessions.delete(sessionId);
         return null;
       }
+
       if (dbSession.expires_at < operation.operationAt) {
-        await revokeSession(sessionId);
+        await deps.sessions.delete(sessionId);
         return null;
       }
 
       const user = await deps.users.findById(dbSession.user_id);
+
       if (!user || !user.is_active) {
-        await revokeSession(sessionId);
+        await deps.sessions.delete(sessionId);
         return null;
       }
+
       if (
         user.expires_at !== null &&
         user.expires_at <= operation.operationAt
@@ -114,21 +117,21 @@ export function createSessionAuthenticator(deps: SessionAuthenticatorDeps) {
           operation.operationAt,
           SESSION_DURATION,
         );
+
         deps.sessions
           .extendExpiry(sessionId, newExpiry)
           .catch((error: unknown) => {
             logger.error("extend_expiry_failed", { sessionId, error });
           });
+
         dbSession.expires_at = newExpiry;
       }
 
-      const authSession = mapUserSessionRowToAuthSession(sessionId, dbSession);
-
-      return authSession;
+      return mapUserSessionRowToAuthSession(sessionId, dbSession);
     },
 
     async revoke(sessionId: string): Promise<void> {
-      await revokeSession(sessionId);
+      await deps.sessions.delete(sessionId);
     },
   };
 }
@@ -192,6 +195,7 @@ export function createAuditedSessionIssuer(deps: AuditedSessionIssuerDeps) {
       operation: OperationContext,
     ): Promise<Result<IssuedSession, DomainError>> {
       const issued = await issuer.establish(spec, operation);
+
       if (!issued.ok) {
         return issued;
       }

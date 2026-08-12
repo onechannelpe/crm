@@ -25,11 +25,12 @@ export async function startPasskeyEnrollment(
       occurredAt: input.occurredAt,
     },
   );
+
   if (isErr(prepared)) {
     return prepared;
   }
 
-  return deps.uow.run((repos) =>
-    persistPasskeyEnrollmentChallenge(repos, prepared.value),
+  return deps.uow.run((transactionRepos) =>
+    persistPasskeyEnrollmentChallenge(transactionRepos, prepared.value),
   );
 }

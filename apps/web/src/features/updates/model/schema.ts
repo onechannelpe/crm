@@ -88,7 +88,7 @@ function normalizeTags(value: unknown): string[] | null {
   return tags;
 }
 
-function parseModule(path: string, module: UpdateModule) {
+function parseUpdateModule(path: string, module: UpdateModule) {
   const issues: ValidationIssue[] = [];
 
   const titleValue = getFrontmatterValue(module.frontmatter, "title");
@@ -240,7 +240,7 @@ export function parseAndValidateUpdates(
   const issues: ValidationIssue[] = [];
 
   const entries = Object.entries(modules)
-    .map(([path, module]) => parseModule(path, module))
+    .map(([path, module]) => parseUpdateModule(path, module))
     .flatMap((result) => {
       issues.push(...result.issues);
       return result.entry ? [result.entry] : [];

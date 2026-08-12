@@ -13,9 +13,8 @@ import { setLeadUserOverride } from "../resolve-lead-policy";
 import { setSearchUserOverride } from "../resolve-search-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
-// The override form sets a user's search and lead limits together. Both writes
-// share one uow.run and one manage-executive check so an executive's override
-// never lands half-applied.
+// Search and lead overrides are written in one transaction so they cannot
+// become partially applied.
 export async function updateExecutivePolicyOverride(
   ctx: AppContext,
   deps: CapacityPolicyDeps,
@@ -28,24 +27,31 @@ export async function updateExecutivePolicyOverride(
   },
 ): Promise<Result<{ success: true }, DomainError>> {
   const monthlyLimit = validateSearchLimit(input.monthlyLimit);
+
   if (!monthlyLimit.ok) {
     return monthlyLimit;
   }
+
   const leadValues = validateLeadPolicyValues(input);
+
   if (!leadValues.ok) {
     return leadValues;
   }
+
   const expiresAt = validateOverrideExpiry(input.expiresAt, ctx.operationAt);
+
   if (!expiresAt.ok) {
     return expiresAt;
   }
 
   return deps.uow.run(async (tx) => {
-    const access = await canManageExecutive(ctx.actor, input.userId, tx);
-    if (!access.target) {
+    const authorization = await canManageExecutive(ctx.actor, input.userId, tx);
+
+    if (!authorization.target) {
       return Err(fail("executive_not_found"));
     }
-    if (!access.ok) {
+
+    if (!authorization.ok) {
       return Err(fail("cannot_manage_executive"));
     }
 
@@ -59,6 +65,7 @@ export async function updateExecutivePolicyOverride(
       tx,
       ctx,
     );
+
     if (isErr(searchWrite)) {
       return searchWrite;
     }
@@ -74,6 +81,7 @@ export async function updateExecutivePolicyOverride(
       tx,
       ctx,
     );
+
     if (isErr(leadWrite)) {
       return leadWrite;
     }

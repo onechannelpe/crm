@@ -43,31 +43,30 @@ export function getSidebarGrouped(
   role: Role,
   section: SidebarSection,
 ): SidebarGroup[] {
-  const entries = getSidebarEntries(role, section);
-  const groups: SidebarGroup[] = [];
-  const seen = new Map<string | undefined, SidebarEntry[]>();
+  const groups = new Map<string | undefined, SidebarEntry[]>();
 
-  for (const entry of entries) {
-    const key = entry.group;
-    const groupItems = seen.get(key);
-    if (!groupItems) {
-      const newItems: SidebarEntry[] = [];
-      seen.set(key, newItems);
-      groups.push({ label: key, items: newItems });
-      newItems.push(entry);
-      continue;
+  for (const entry of getSidebarEntries(role, section)) {
+    const items = groups.get(entry.group);
+
+    if (items) {
+      items.push(entry);
+    } else {
+      groups.set(entry.group, [entry]);
     }
-    groupItems.push(entry);
   }
 
-  return groups;
+  return Array.from(groups, ([label, items]) => ({
+    label,
+    items,
+  }));
 }
 
 export function getSidebarChildren(
   role: Role,
   entryId: string,
 ): SidebarChild[] {
-  const entry = SIDEBAR_ENTRIES.find((e) => e.id === entryId);
+  const entry = SIDEBAR_ENTRIES.find((entry) => entry.id === entryId);
+
   if (!entry?.children) {
     return [];
   }
@@ -85,15 +84,15 @@ export function getNavigableRoutes(role: Role): SidebarEntry[] {
 
 export function getHeaderRoute(pathname: string): HeaderDescriptor {
   for (const rule of PAGE_HEADERS) {
-    if (typeof rule.match === "string") {
-      if (pathname === rule.match) {
-        return rule.header;
-      }
-    } else {
-      if (rule.match.test(pathname)) {
-        return rule.header;
-      }
+    const matches =
+      typeof rule.match === "string"
+        ? pathname === rule.match
+        : rule.match.test(pathname);
+
+    if (matches) {
+      return rule.header;
     }
   }
+
   return HEADER_FALLBACK;
 }

@@ -4,12 +4,7 @@ import type { AccessSecurityDeps } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/platform/action/context";
 import { Ok, type Result } from "~/shared/result";
 
-/**
- * Revokes the session and its downstream state. Clearing the caller's session
- * cookie is deliberately not done here: it is a transport effect that needs a
- * request, and this flow also runs from the background worker, which has none.
- * HTTP callers clear the cookie themselves after this resolves.
- */
+// Cookie clearing stays in the HTTP layer because this flow also runs in workers.
 export async function logoutUser(
   ctx: AppContext,
   deps: AccessSecurityDeps,
@@ -32,6 +27,7 @@ export async function logoutUser(
       actorUserId: userId,
       occurredAt: now,
     });
+
     return Ok(undefined);
   });
 }

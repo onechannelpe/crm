@@ -22,25 +22,28 @@ export async function submitInviteAcceptance(
   input: unknown,
   operation: OperationContext,
 ): Promise<Result<{ sessionToken: string; redirectTo: string }, DomainError>> {
-  const validated = validateInviteAcceptance(input);
-  if (isErr(validated)) {
-    return validated;
+  const validation = validateInviteAcceptance(input);
+
+  if (isErr(validation)) {
+    return validation;
   }
 
-  const accepted = await deps.inviteService.acceptInvite(
-    validated.value,
+  const acceptance = await deps.inviteService.acceptInvite(
+    validation.value,
     operation,
   );
-  if (isErr(accepted)) {
-    return accepted;
+
+  if (isErr(acceptance)) {
+    return acceptance;
   }
 
-  const user = await deps.repos.users.findById(accepted.value.userId);
+  const user = await deps.repos.users.findById(acceptance.value.userId);
+
   if (!user) {
     throw new Error("No se pudo activar la cuenta");
   }
 
-  const issued = await createSessionIssuer({
+  const session = await createSessionIssuer({
     sessions: deps.repos.sessions,
   }).establish(
     {
@@ -53,12 +56,13 @@ export async function submitInviteAcceptance(
     },
     operation,
   );
-  if (isErr(issued)) {
-    return issued;
+
+  if (isErr(session)) {
+    return session;
   }
 
   return Ok({
-    sessionToken: issued.value.token,
+    sessionToken: session.value.token,
     redirectTo: "/onboarding",
   });
 }

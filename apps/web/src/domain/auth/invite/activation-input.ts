@@ -9,13 +9,15 @@ export function readInviteToken(raw: unknown): Result<string, DomainError> {
   }
 
   const token = raw.trim();
+
   if (!token || !isValidInviteTokenFormat(token)) {
     return Err(fail("invite_token_malformed"));
   }
+
   return Ok(token);
 }
 
-function readStrongPassword(raw: unknown): Result<string, DomainError> {
+function validateStrongPassword(raw: unknown): Result<string, DomainError> {
   if (typeof raw !== "string") {
     return Err(fail("invite_password_too_short"));
   }
@@ -23,15 +25,19 @@ function readStrongPassword(raw: unknown): Result<string, DomainError> {
   if (!raw.trim() || raw.length < 12) {
     return Err(fail("invite_password_too_short"));
   }
+
   if (!/[A-Z]/.test(raw)) {
     return Err(fail("invite_password_missing_uppercase"));
   }
+
   if (!/[a-z]/.test(raw)) {
     return Err(fail("invite_password_missing_lowercase"));
   }
+
   if (!/[0-9]/.test(raw)) {
     return Err(fail("invite_password_missing_number"));
   }
+
   return Ok(raw);
 }
 
@@ -43,11 +49,13 @@ export function validateInviteAcceptance(
   }
 
   const token = readInviteToken(input.token);
+
   if (isErr(token)) {
     return Err(token.error);
   }
 
-  const password = readStrongPassword(input.password);
+  const password = validateStrongPassword(input.password);
+
   if (isErr(password)) {
     return Err(password.error);
   }
@@ -60,5 +68,8 @@ export function validateInviteAcceptance(
     return Err(fail("password_mismatch"));
   }
 
-  return Ok({ token: token.value, password: password.value });
+  return Ok({
+    token: token.value,
+    password: password.value,
+  });
 }

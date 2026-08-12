@@ -38,7 +38,7 @@ export interface MemberDetail {
   onboardingCompleted: boolean;
   avatarUrl: string | null;
   expiresOn: CalendarDate | null;
-  permissions: Permission[];
+  permissions: readonly Permission[];
   // Affordances derived from the acting administrator's role and identity, so
   // the client renders only the controls the server will actually authorize.
   assignableRoles: RoleOption[];

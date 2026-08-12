@@ -10,11 +10,6 @@ import type { SearchViewModel } from "./search-view-model";
 
 type FieldIcon = typeof Info;
 
-/*
-  How the preview renders a value. Phones become dial links because the audience
-  reads results on a phone; everything multi-valued becomes chips so a long list
-  clips at the row edge instead of wrapping the card open.
-*/
 export type SearchResultFieldKind = "text" | "chips" | "phones";
 
 export interface SearchResultField {
@@ -31,7 +26,6 @@ export type SearchResultSource =
 export interface SearchResultItem {
   id: string;
   label: string;
-  /* Names the kind of record, rendered after the label as "· Persona". */
   objectLabel: string;
   avatarType: AvatarType;
   fields: SearchResultField[];
@@ -69,7 +63,7 @@ function personItem(person: PersonGroup): SearchResultItem {
         label: "Alias",
         icon: Users,
         kind: "chips",
-        // The display name already heads the card, so only the others add anything.
+        // The display name is already shown as the card label.
         values: person.aliases.filter((alias) => alias !== person.displayName),
       },
     ],
@@ -107,11 +101,6 @@ function companyItem(company: CompanyGroup): SearchResultItem {
   };
 }
 
-/*
-  One flat result list, the way the command menu presents a mixed search: the
-  object type rides along on each row instead of splitting the list into
-  per-type sections the user has to scan twice.
-*/
 export function toSearchResultItems(
   model: SearchViewModel,
 ): SearchResultItem[] {

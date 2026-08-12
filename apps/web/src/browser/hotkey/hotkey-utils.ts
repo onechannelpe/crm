@@ -18,7 +18,9 @@ export function parseCombo(combo: HotkeyCombo): ParsedCombo {
   let meta = false;
 
   for (let i = 0; i < parts.length - 1; i++) {
-    switch (parts[i].toLowerCase()) {
+    const modifier = parts[i].toLowerCase();
+
+    switch (modifier) {
       case "mod":
         if (isMac()) {
           meta = true;
@@ -26,16 +28,20 @@ export function parseCombo(combo: HotkeyCombo): ParsedCombo {
           ctrl = true;
         }
         break;
+
       case "control":
       case "ctrl":
         ctrl = true;
         break;
+
       case "shift":
         shift = true;
         break;
+
       case "alt":
         alt = true;
         break;
+
       case "meta":
         meta = true;
         break;
@@ -70,8 +76,8 @@ export function matchesEvent(
       return true;
     }
 
-    // macOS Option+letter may report "Dead"; event.code still identifies the key.
-    if (event.key === "Dead" && event.code?.startsWith("Key")) {
+    // macOS Option+letter may report "Dead"; `code` still identifies the key.
+    if (event.key === "Dead" && event.code.startsWith("Key")) {
       return event.code.slice(3).toUpperCase() === target;
     }
 

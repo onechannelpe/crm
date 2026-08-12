@@ -48,16 +48,14 @@ export function formatInteger(value: number): string {
 
 export function formatMonth(value: CalendarMonth): string {
   const [year, month] = value.split("-").map(Number);
-  const label = MONTHS_ES[month - 1];
 
-  return `${label} ${String(year).slice(2)}`;
+  return `${MONTHS_ES[month - 1]} ${String(year).slice(2)}`;
 }
 
 export function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
-// "MESA 2" is the raw DB value (free-text column); render it as "Mesa 2".
 export function formatMesa(mesa: Mesa): string {
   return mesa.charAt(0) + mesa.slice(1).toLowerCase();
 }
@@ -68,5 +66,6 @@ export function formatRatio(numerator: number, denominator: number): string {
   }
 
   const ratio = (numerator / denominator) * 100;
+
   return `${Number(ratio.toFixed(1))}%`;
 }

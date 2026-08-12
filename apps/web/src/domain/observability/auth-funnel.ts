@@ -1,8 +1,6 @@
 import { isPlainRecord } from "~/shared/type-guards";
 
-const AUTH_FUNNEL_SOURCES = ["client", "server"] as const;
-
-export type AuthFunnelSource = (typeof AUTH_FUNNEL_SOURCES)[number];
+export type AuthFunnelSource = "client" | "server";
 
 const AUTH_FUNNEL_EVENT_NAMES = [
   "screen_viewed",
@@ -123,7 +121,10 @@ export function readAuthFunnelClientEvent(
   }
 
   if (input.kind === "screen_viewed" && isAuthFunnelScreen(input.screen)) {
-    return { kind: "screen_viewed", screen: input.screen };
+    return {
+      kind: "screen_viewed",
+      screen: input.screen,
+    };
   }
 
   if (

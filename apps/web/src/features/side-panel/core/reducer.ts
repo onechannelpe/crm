@@ -28,20 +28,20 @@ function isSameNavigationEntry(
   return left.page === right.page && left.pageId === right.pageId;
 }
 
-function retainPageStateByNavigationStack(
+function retainPageStateForStack(
   pageStateById: Record<string, SidePanelPageState>,
   stack: SidePanelNavigationEntry[],
 ) {
   const retained: Record<string, SidePanelPageState> = {};
 
   for (const entry of stack) {
-    const state = pageStateById[entry.pageId];
+    const pageState = pageStateById[entry.pageId];
 
-    if (!state) {
+    if (!pageState) {
       continue;
     }
 
-    retained[entry.pageId] = state;
+    retained[entry.pageId] = pageState;
   }
 
   return retained;
@@ -91,11 +91,7 @@ export function reduceSidePanelPatch(
         searchText: "",
       };
 
-    /*
-      The stack outlives the close request so the panel keeps rendering its last
-      page while it slides away. Once that animation is over nothing reads it,
-      so this is where the history and the per-page drafts are dropped.
-    */
+    // Keep the current page mounted until the close animation finishes.
     case "close-animation-complete":
       return {
         isClosing: false,
@@ -143,10 +139,7 @@ export function reduceSidePanelPatch(
 
       return {
         stack: nextStack,
-        pageStateById: retainPageStateByNavigationStack(
-          state.pageStateById,
-          nextStack,
-        ),
+        pageStateById: retainPageStateForStack(state.pageStateById, nextStack),
       };
     }
 
@@ -159,10 +152,7 @@ export function reduceSidePanelPatch(
 
       return {
         stack: nextStack,
-        pageStateById: retainPageStateByNavigationStack(
-          state.pageStateById,
-          nextStack,
-        ),
+        pageStateById: retainPageStateForStack(state.pageStateById, nextStack),
       };
     }
 

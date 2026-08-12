@@ -10,24 +10,30 @@ import { loadOnboardingSnapshot } from "./snapshot";
 
 export function saveOnboardingProfile(
   deps: AuthSetupContext,
-  input: { userId: UserId; phone: Phone },
+  input: {
+    userId: UserId;
+    phone: Phone;
+  },
   operation: OperationContext,
 ): Promise<Result<OnboardingSnapshot, DomainError>> {
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(input.userId);
+
     if (!user) {
       return Err(fail("user_not_found"));
     }
+
     if (user.onboarding_completed_at) {
       return Err(fail("invalid_input"));
     }
 
-    const claimed = await repos.userChannelAddresses.claimWhatsAppAddress({
+    const claim = await repos.userChannelAddresses.claimWhatsAppAddress({
       userId: input.userId,
       address: input.phone,
       claimedAt: operation.operationAt,
     });
-    if (claimed.kind === "already_claimed") {
+
+    if (claim.kind === "already_claimed") {
       return Err(fail("phone_in_use"));
     }
 

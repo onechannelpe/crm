@@ -64,9 +64,9 @@ export const ROLES = [
   "hr",
   "admin",
   "superuser",
-] as const satisfies ReadonlyArray<Role>;
+] as const satisfies readonly Role[];
 
-const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   executive: [
     "lead:note:add",
     "lead:rate:simulate",
@@ -84,6 +84,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "fulfillment:client-step",
     "dashboards:read:own",
   ],
+
   supervisor: [
     "lead:note:add",
     "lead:delete",
@@ -108,6 +109,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "dashboards:read:own",
     "dashboards:manage",
   ],
+
   back_office: [
     "lead:note:add",
     "lead:rate:simulate",
@@ -126,6 +128,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "dashboards:read:own",
     "dashboards:manage",
   ],
+
   sales_manager: [
     "lead:note:add",
     "lead:delete",
@@ -156,8 +159,11 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "commission:read",
     "commission:manage",
   ],
+
   logistics: ["inventory:read", "inventory:manage"],
+
   hr: ["hr:read", "hr:manage", "team:read"],
+
   admin: [
     "lead:note:add",
     "lead:delete",
@@ -198,6 +204,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "commission:read",
     "commission:manage",
   ],
+
   superuser: [
     "lead:note:add",
     "lead:delete",
@@ -251,29 +258,26 @@ export function hasPermission(role: string, permission: Permission): boolean {
   if (!isRole(role)) {
     return false;
   }
-  const perms = ROLE_PERMISSIONS[role];
-  if (!perms) {
-    return false;
-  }
-  return perms.includes(permission);
+
+  return ROLE_PERMISSIONS[role].includes(permission);
 }
 
-export function getPermissions(role: string): Permission[] {
+export function getPermissions(role: string): readonly Permission[] {
   if (!isRole(role)) {
     return [];
   }
-  return ROLE_PERMISSIONS[role] ?? [];
+
+  return ROLE_PERMISSIONS[role];
 }
 
 export function canAssignRole(actorRole: Role, targetRole: Role): boolean {
-  if (actorRole === "superuser") {
+  if (actorRole === "admin" || actorRole === "superuser") {
     return targetRole !== "superuser";
   }
-  if (actorRole === "admin") {
-    return targetRole !== "superuser";
-  }
+
   if (actorRole === "hr") {
     return targetRole !== "admin" && targetRole !== "superuser";
   }
+
   return false;
 }

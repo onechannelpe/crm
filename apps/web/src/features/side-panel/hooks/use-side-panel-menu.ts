@@ -4,16 +4,10 @@ import {
   createSearchRecordsSidePanelPage,
 } from "../types/side-panel-page";
 
-/*
-  One owner for every way into the command menu: the drawer button, the mobile
-  bar, the page header button and the hotkeys. Each entry point lands on a fresh
-  page instead of reusing whatever the panel last showed, so pressing search
-  while the panel is already open still resets the stack and hands the caret
-  back to the top bar input.
-*/
 export function useSidePanelMenu() {
   const { isOpen, openPanel, closePanel } = useSidePanel();
 
+  // Always open a fresh page so repeated entry points reset the panel stack.
   const openSidePanelMenu = () => openPanel(createRootSidePanelPage());
 
   const openSearchRecordsPage = () =>

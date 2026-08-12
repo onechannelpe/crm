@@ -10,7 +10,10 @@ import type { CapacityApprovalDeps } from "./shared";
 export async function rejectCapacityRequest(
   ctx: AppContext,
   deps: CapacityApprovalDeps,
-  input: { requestId: CapacityRequestId; note: string | null },
+  input: {
+    requestId: CapacityRequestId;
+    note: string | null;
+  },
 ): Promise<Result<{ success: true }, DomainError>> {
   await deps.rateLimiter.enforce(
     "capacity.reject",
@@ -21,33 +24,43 @@ export async function rejectCapacityRequest(
 
   return deps.uow.run(async (tx) => {
     const note = normalizeDecisionNote(input.note);
+
     if (!note) {
       return Err(fail("decision_note_required"));
     }
 
     const request = await tx.capacityRequests.findById(input.requestId);
+
     if (!request) {
       return Err(fail("request_not_found"));
     }
+
     if (request.status !== "pending") {
       return Err(fail("request_not_pending"));
     }
 
-    const managed = await canManageExecutive(ctx.actor, request.user_id, tx);
-    if (!managed.target) {
+    const authorization = await canManageExecutive(
+      ctx.actor,
+      request.user_id,
+      tx,
+    );
+
+    if (!authorization.target) {
       return Err(fail("request_target_not_found"));
     }
-    if (!managed.ok) {
+
+    if (!authorization.ok) {
       return Err(forbidden());
     }
 
-    const rejectedResult = await tx.capacityRequests.markRejected(
+    const result = await tx.capacityRequests.markRejected(
       request.id,
       ctx.actor.userId,
       note,
       ctx.operationAt,
     );
-    if (!rejectedResult?.numUpdatedRows) {
+
+    if (!result?.numUpdatedRows) {
       return Err(fail("request_not_pending"));
     }
 

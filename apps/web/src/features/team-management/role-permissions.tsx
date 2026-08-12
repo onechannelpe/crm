@@ -31,7 +31,7 @@ const GROUP_ICON: Record<PermissionGroupId, typeof Activity> = {
   administracion: Settings,
 };
 
-export function RolePermissions(props: { granted: Permission[] }) {
+export function RolePermissions(props: { granted: readonly Permission[] }) {
   const sections = () => groupPermissions(props.granted);
 
   return (
