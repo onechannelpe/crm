@@ -1,14 +1,11 @@
+import type { IntegrationJobId, UserId, WorkflowLeadId } from "~/domain/ids";
 import { applyImportRows } from "~/server/integrations/application/import/apply-service";
 import type { ImportRowInput } from "~/server/integrations/application/import/types";
-import type {
-  IntegrationJobId,
-  UserId,
-  WorkflowLeadId,
-} from "~/server/shared/ids";
 
 import type { TestActorKey } from "../database/workflow-fixtures";
 import { actorBy } from "../database/workflow-fixtures";
 import { seedImportJob } from "../database/workflow-seed";
+import { operationAt } from "../operation";
 import type { TestRuntime } from "../runtime/app";
 
 type ImportLeadRef = {
@@ -69,8 +66,8 @@ export function createWorkflowImporter(input: {
         },
         {
           executor: runtime.integrations.executor,
-          now: runtime.integrations.now(),
         },
+        operationAt(runtime.now.get()),
       );
     },
 
@@ -88,8 +85,8 @@ export function createWorkflowImporter(input: {
         },
         {
           executor: runtime.integrations.executor,
-          now: runtime.integrations.now(),
         },
+        operationAt(runtime.now.get()),
       );
     },
   };

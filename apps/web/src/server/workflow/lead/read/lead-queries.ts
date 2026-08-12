@@ -3,9 +3,9 @@ import type {
   LeadStage,
   LeadStatus,
 } from "~/contracts/workflow/vocabulary";
-import type { Role } from "~/lib/auth/access/rbac";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { BranchId, UserId, WorkflowLeadId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { BranchId, UserId, WorkflowLeadId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { applyLeadListFilters, applyLeadVisibility } from "./lead-list-filters";
 
@@ -83,7 +83,12 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
     async list(filters) {
       const base = db
         .selectFrom("workflow_leads as lead")
-        .innerJoin("users as executive", "executive.id", "lead.executive_id");
+        .innerJoin(
+          "organization_current_owners as owner",
+          "owner.organization_id",
+          "lead.organization_id",
+        )
+        .innerJoin("users as executive", "executive.id", "owner.executive_id");
 
       let q = applyLeadVisibility(base, filters)
         .innerJoin("users as creator", "creator.id", "lead.created_by")
@@ -93,7 +98,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "org.ruc",
           "org.legal_name",
           "org.address",
-          "lead.executive_id",
+          "owner.executive_id",
           "executive.names as executive_names",
           "executive.first_surname as executive_first_surname",
           "lead.created_by",
@@ -108,15 +113,17 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
 
       q = applyLeadListFilters(q, filters);
 
-      if (filters.sortBy === "createdAt")
+      if (filters.sortBy === "createdAt") {
         q = q.orderBy("lead.created_at", filters.sortDirection);
-      else if (filters.sortBy === "updatedAt")
+      } else if (filters.sortBy === "updatedAt") {
         q = q.orderBy("lead.updated_at", filters.sortDirection);
-      else if (filters.sortBy === "registeredBy") {
+      } else if (filters.sortBy === "registeredBy") {
         q = q
           .orderBy("creator.names", filters.sortDirection)
           .orderBy("creator.first_surname", filters.sortDirection);
-      } else q = q.orderBy("org.ruc", filters.sortDirection);
+      } else {
+        q = q.orderBy("org.ruc", filters.sortDirection);
+      }
 
       const rows = await q
         .orderBy("lead.id", "desc")
@@ -148,7 +155,12 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
       let q = applyLeadVisibility(
         db
           .selectFrom("workflow_leads as lead")
-          .innerJoin("users as executive", "executive.id", "lead.executive_id")
+          .innerJoin(
+            "organization_current_owners as owner",
+            "owner.organization_id",
+            "lead.organization_id",
+          )
+          .innerJoin("users as executive", "executive.id", "owner.executive_id")
           .innerJoin("users as creator", "creator.id", "lead.created_by")
           .innerJoin("organizations as org", "org.id", "lead.organization_id")
           .select((eb) => eb.fn.countAll<number>().as("count")),
@@ -164,7 +176,12 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
     async export(filters) {
       const base = db
         .selectFrom("workflow_leads as lead")
-        .innerJoin("users as executive", "executive.id", "lead.executive_id");
+        .innerJoin(
+          "organization_current_owners as owner",
+          "owner.organization_id",
+          "lead.organization_id",
+        )
+        .innerJoin("users as executive", "executive.id", "owner.executive_id");
       let q = applyLeadVisibility(base, filters)
         .innerJoin("organizations as org", "org.id", "lead.organization_id")
         // Latest rate proposal per lead (MAX(round) keeps one row even when
@@ -191,7 +208,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
           "org.ruc",
           "org.legal_name",
           "org.address",
-          "lead.executive_id",
+          "owner.executive_id",
           "executive.names as executive_names",
           "executive.first_surname as executive_first_surname",
           "lead.stage",
@@ -207,7 +224,7 @@ export function createLeadQueries(db: DatabaseExecutor): LeadQueries {
         ]);
 
       if (filters.executiveId !== undefined) {
-        q = q.where("lead.executive_id", "=", filters.executiveId);
+        q = q.where("owner.executive_id", "=", filters.executiveId);
       }
 
       const rows = await q.orderBy("lead.created_at", "desc").execute();

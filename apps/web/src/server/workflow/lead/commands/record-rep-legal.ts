@@ -1,10 +1,10 @@
 import type { RecordRepLegalInput } from "~/contracts/workflow/inputs";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId } from "~/domain/ids";
 import { LEGAL_REPRESENTATIVE_ROLE } from "~/server/organization/organization-repo";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { recordRepLegal } from "../../lead/domain/decide";
 import { runLeadTransaction } from "../write/transition";
@@ -14,12 +14,9 @@ export async function recordRepLegalCommand(
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -34,7 +31,7 @@ export async function recordRepLegalCommand(
       dni: input.dni,
       telefono: input.telefono,
       email: input.email,
-      now: ctx.now,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -52,11 +49,13 @@ export async function recordRepLegalCommand(
       },
       phone: input.telefono,
       email: input.email,
+      upsertedAt: ctx.operationAt,
     });
     await ctx.repos.organization.setPrimaryRole({
       organizationId: state.organizationId,
       organizationPersonId: membership.id,
       role: LEGAL_REPRESENTATIVE_ROLE,
+      effectiveAt: ctx.operationAt,
     });
 
     const committed = await ctx.commitTransition(transition.value);

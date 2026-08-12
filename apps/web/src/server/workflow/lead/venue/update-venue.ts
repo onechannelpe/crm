@@ -1,13 +1,13 @@
 import type { UpdateVenueInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId, WorkflowVenueId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId, WorkflowVenueId } from "~/domain/ids";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
   parseVenueDigitalFields,
   toVenueDigitalInsert,
 } from "~/server/workflow/lead/digital-policy/domain";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { runLeadTransaction } from "../write/transition";
 import { updateVenue } from "./domain";
@@ -18,12 +18,9 @@ export async function updateVenueCommand(
     leadId: WorkflowLeadId;
     venueId: WorkflowVenueId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -60,7 +57,7 @@ export async function updateVenueCommand(
       actor: input.actor,
       venueId: input.venueId,
       tradeName: input.tradeName,
-      now: ctx.now,
+      occurredAt: ctx.operationAt,
     });
 
     if (!venueEvents.ok) {

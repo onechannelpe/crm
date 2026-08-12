@@ -1,14 +1,15 @@
 import type { LeadDetailView } from "~/contracts/workflow/views";
-import type { Role } from "~/lib/auth/access/rbac";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { DomainError } from "~/domain/errors";
+import type { UserId, WorkflowLeadId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import {
   authorizeLeadAction,
   canRevealFullTimeline,
   resolveAvailableActions,
 } from "~/server/workflow/lead/domain/policy";
 import { isReservationActive } from "~/server/workflow/lead/domain/reservation";
+import { Ok, type Result } from "~/shared/result";
 
 import { presentLeadDetail } from "../presenters/lead-detail";
 import {
@@ -23,11 +24,13 @@ export async function getLeadDetail(
     actorRole: Role;
     leadId: WorkflowLeadId;
   },
+  operation: OperationContext,
 ): Promise<Result<LeadDetailView, DomainError>> {
-  const loaded = await loadLeadDetailSections(deps, {
-    leadId: input.leadId,
-    actorUserId: input.actorUserId,
-  });
+  const loaded = await loadLeadDetailSections(
+    deps,
+    { leadId: input.leadId, actorUserId: input.actorUserId },
+    operation,
+  );
   if (!loaded.ok) {
     return loaded;
   }
@@ -38,7 +41,9 @@ export async function getLeadDetail(
     { userId: input.actorUserId, role: input.actorRole },
     lead,
   );
-  if (!canAccess.ok) return canAccess;
+  if (!canAccess.ok) {
+    return canAccess;
+  }
 
   const userMap = new Map(loaded.value.userRows.map((u) => [u.id, u.fullName]));
   const executiveName = userMap.get(lead.executiveId) ?? "Desconocido";
@@ -48,14 +53,14 @@ export async function getLeadDetail(
     : null;
 
   const latestProposal = loaded.value.rateProposals.at(-1);
-  const now = new Date();
   const canRevealTimeline = canRevealFullTimeline(input.actorRole);
   const availableActions = resolveAvailableActions(
     { userId: input.actorUserId, role: input.actorRole },
     lead,
     {
       hasActivePendingProposal:
-        latestProposal?.outcome === "pending" && isReservationActive(lead, now),
+        latestProposal?.outcome === "pending" &&
+        isReservationActive(lead, operation.operationAt),
       rateRevisionCount: loaded.value.rateRevisionRows.length,
       fulfillmentStep: loaded.value.fulfillment?.order.currentStep ?? null,
     },

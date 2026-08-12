@@ -4,15 +4,15 @@ import {
   type LeadStatus,
   type SettlementBank,
 } from "~/contracts/workflow/vocabulary";
-import type { Ruc } from "~/server/shared/document";
-import { parseRuc } from "~/server/shared/document";
-import type { DomainError } from "~/server/shared/domain-error";
+import type { DomainError } from "~/domain/errors";
+import { parseRuc, type Ruc } from "~/domain/identity/document";
 import type {
+  BranchId,
   OrganizationId,
   UserId,
   WorkflowLeadId,
-} from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
+import { Ok, type Result } from "~/shared/result";
 
 export type LeadCommercialScope = {
   currentProvider: string;
@@ -33,6 +33,8 @@ export type LeadState = {
   district: string | null;
   department: string | null;
   executiveId: UserId;
+  // Denormalized from the assigned executive; ownership guarantees it exists.
+  branchId: BranchId;
   createdBy: UserId;
   updatedBy: UserId | null;
   stage: LeadStage;
@@ -45,9 +47,6 @@ export type LeadState = {
   version: number;
 };
 
-// deletedAt is set only by the delete command, so a freshly created lead
-// never carries it. The draft also carries the commercial scope, which the
-// INSERT writes alongside the lifecycle columns.
 export type LeadDraft = Omit<LeadState, "id" | "version" | "deletedAt"> &
   LeadCommercialScope;
 
@@ -57,28 +56,33 @@ export function createLeadDraft(input: {
   legalName: string | null;
   address: string | null;
   executiveId: UserId;
+  branchId: BranchId;
   createdBy: UserId;
   commercialScope: LeadCommercialScope;
-  now: Date;
+  createdAt: Date;
 }): Result<LeadDraft, DomainError> {
-  const ruc = parseRuc(input.ruc);
-  if (!ruc.ok) return ruc;
+  const parsedRuc = parseRuc(input.ruc);
+
+  if (!parsedRuc.ok) {
+    return parsedRuc;
+  }
 
   return Ok({
     organizationId: input.organizationId,
-    ruc: ruc.value,
+    ruc: parsedRuc.value,
     legalName: input.legalName,
     address: input.address,
     district: null,
     department: null,
     executiveId: input.executiveId,
+    branchId: input.branchId,
     createdBy: input.createdBy,
     updatedBy: null,
     stage: "QUALIFYING",
     status: null,
     priority: null,
-    createdAt: input.now,
-    updatedAt: input.now,
+    createdAt: input.createdAt,
+    updatedAt: input.createdAt,
     reservationExpiresAt: null,
     ...input.commercialScope,
   });

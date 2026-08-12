@@ -1,15 +1,15 @@
 import { randomUUIDv7 } from "bun";
 
 import type { RequestRateRevisionInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/domain/errors";
 import {
   WorkflowRateRevisionId,
   type WorkflowLeadId,
   type WorkflowRateRevisionFileId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { requestRateRevision } from "../../lead/domain/decide";
 import { resolveRateProposalPolicy } from "../../lead/domain/pricing";
@@ -26,12 +26,9 @@ export async function requestRateRevisionCommand(
     leadId: WorkflowLeadId;
     fileIds: WorkflowRateRevisionFileId[];
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -48,7 +45,7 @@ export async function requestRateRevisionCommand(
       return Err(fail("rate_proposal_not_pending"));
     }
 
-    if (!isReservationActive(state, ctx.now)) {
+    if (!isReservationActive(state, ctx.operationAt)) {
       return Err(fail("rate_proposal_expired"));
     }
 
@@ -59,7 +56,7 @@ export async function requestRateRevisionCommand(
     });
 
     const reservationExpiresAt = computeReservationExpiry({
-      now: ctx.now,
+      reservedAt: ctx.operationAt,
       validityDays: policy.validityDays,
     });
 
@@ -101,7 +98,7 @@ export async function requestRateRevisionCommand(
       justification: input.justification,
       fileIds: input.fileIds,
       reservationExpiresAt,
-      now: ctx.now,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -111,7 +108,7 @@ export async function requestRateRevisionCommand(
     await ctx.repos.rateProposals.markOutcome(
       proposal.id,
       "revision_requested",
-      ctx.now,
+      ctx.operationAt,
     );
 
     await ctx.repos.rateRevisions.insert({
@@ -121,7 +118,7 @@ export async function requestRateRevisionCommand(
       round,
       justification: input.justification,
       requestedBy: input.actor.userId,
-      requestedAt: ctx.now,
+      requestedAt: ctx.operationAt,
     });
 
     await Promise.all(

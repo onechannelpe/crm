@@ -1,9 +1,10 @@
-import { hasPermission } from "~/lib/auth/access/rbac";
-import { forbidden, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import { forbidden, type DomainError } from "~/domain/errors";
+import type { BranchId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { validateRateProposalValidityDays } from "~/server/workflow/lead/domain/pricing";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { RateProposalPolicyRepository } from "../rate-proposal-policy-repo";
 
@@ -12,10 +13,8 @@ export async function updateRateProposalPolicy(
     actor: WorkflowActor;
     validityDays: number;
   },
-  ports: {
-    rateProposalPolicies: RateProposalPolicyRepository;
-    now: Date;
-  },
+  rateProposalPolicies: RateProposalPolicyRepository,
+  operation: OperationContext,
 ): Promise<Result<{ branchId: BranchId; validityDays: number }, DomainError>> {
   if (!hasPermission(input.actor.role, "quotation:policy:manage")) {
     return Err(forbidden());
@@ -29,10 +28,10 @@ export async function updateRateProposalPolicy(
     return parsedValidityDays;
   }
 
-  await ports.rateProposalPolicies.upsert({
+  await rateProposalPolicies.upsert({
     branchId: input.actor.branchId,
     validityDays: parsedValidityDays.value,
-    updatedAt: ports.now,
+    updatedAt: operation.operationAt,
     updatedByUserId: input.actor.userId,
   });
 

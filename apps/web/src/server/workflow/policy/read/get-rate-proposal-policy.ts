@@ -1,11 +1,11 @@
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { forbidden, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { hasPermission, type Role } from "~/domain/auth/access/rbac";
+import { forbidden, type DomainError } from "~/domain/errors";
+import type { BranchId } from "~/domain/ids";
 import {
   DEFAULT_RATE_PROPOSAL_VALIDITY_DAYS,
   resolveRateProposalPolicy,
 } from "~/server/workflow/lead/domain/pricing";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { RateProposalPolicyRepository } from "../rate-proposal-policy-repo";
 

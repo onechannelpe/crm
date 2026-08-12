@@ -1,9 +1,9 @@
 import type { ReviewLeadInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId } from "~/domain/ids";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { qualifyLead } from "../../lead/domain/decide";
 import { runLeadTransaction } from "../write/transition";
@@ -13,12 +13,9 @@ export async function reviewLeadCommand(
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -30,7 +27,7 @@ export async function reviewLeadCommand(
       status: input.status,
       priority: input.priority,
       reason: input.reason,
-      now: ctx.now,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {

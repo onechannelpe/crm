@@ -1,13 +1,17 @@
 import type { CreateLeadInput } from "~/contracts/workflow/inputs";
+import { fail, type DomainError } from "~/domain/errors";
+import { parseRuc } from "~/domain/identity/document";
+import type { WorkflowInquiryId, WorkflowLeadId } from "~/domain/ids";
 import type { OrganizationEnrichment } from "~/server/organization/enrichment";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { parseRuc } from "~/server/shared/document";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import type { Result } from "~/server/shared/result";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import {
+  createInquiryRepo,
+  type InquiryRow,
+} from "~/server/workflow/inquiry/repo";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 import { createWorkflowRepos } from "~/server/workflow/repos";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, type Result } from "~/shared/result";
 
 import { requireCapability } from "../../lead/domain/policy";
 import { isReservationLapsed } from "../../lead/domain/reservation";
@@ -24,16 +28,14 @@ import {
 export async function registerLead(
   input: CreateLeadInput & {
     actor: WorkflowActor;
+    inquiryId?: WorkflowInquiryId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-    identity: OrganizationEnrichment;
-  },
+  scope: WorkflowWriteContext,
+  deps: { identity: OrganizationEnrichment },
 ): Promise<Result<{ leadId: WorkflowLeadId }, DomainError>> {
   const actor = input.actor;
-  const now = ports.now;
-  const repos = createWorkflowRepos(ports.executor);
+  const now = scope.operationAt;
+  const repos = createWorkflowRepos(scope.executor);
 
   const canRegister = requireCapability("register", { role: actor.role });
 
@@ -45,6 +47,28 @@ export async function registerLead(
 
   if (!ruc.ok) {
     return ruc;
+  }
+
+  // A registration born from an inquiry converts it in the same transaction;
+  // validate the link up front so a bad reference fails before any write.
+  let inquiry: InquiryRow | undefined;
+  if (input.inquiryId !== undefined) {
+    const found = await createInquiryRepo(scope.executor).findById(
+      input.inquiryId,
+    );
+    if (!found) {
+      return Err(fail("inquiry_not_found"));
+    }
+    if (found.executiveId !== actor.userId) {
+      return Err(fail("inquiry_not_owned"));
+    }
+    if (found.state === "CONVERTED") {
+      return Err(fail("inquiry_converted"));
+    }
+    if (found.ruc !== ruc.value) {
+      return Err(fail("inquiry_ruc_mismatch"));
+    }
+    inquiry = found;
   }
 
   const activeExecutive = await ensureActiveExecutive({
@@ -63,7 +87,7 @@ export async function registerLead(
 
   if (heldLead && isReservationLapsed(heldLead, now)) {
     const released = await expireLeadReservation(
-      ports.executor,
+      scope.executor,
       heldLead.id,
       now,
     );
@@ -90,7 +114,8 @@ export async function registerLead(
     return reassignRegisteredLead({
       leadId: resolution.value.lead.id,
       actor,
-      ports: { executor: ports.executor, now },
+      inquiry,
+      scope: { executor: scope.executor, operationAt: now },
     });
   }
 
@@ -109,7 +134,7 @@ export async function registerLead(
     posCount: input.posCount,
   };
 
-  const overlay = await ports.identity.enrichByRuc(ruc.value);
+  const overlay = await deps.identity.enrichByRuc(ruc.value);
 
   return createRegisteredLead({
     command: input,
@@ -117,6 +142,7 @@ export async function registerLead(
     ruc: ruc.value,
     commercialScope,
     enrichment: overlay,
-    ports: { executor: ports.executor, now },
+    inquiry,
+    scope: { executor: scope.executor, operationAt: now },
   });
 }

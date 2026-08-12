@@ -1,22 +1,27 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function computeReservationExpiry(input: {
-  now: Date;
+  reservedAt: Date;
   validityDays: number;
 }): Date {
-  return new Date(input.now.getTime() + input.validityDays * DAY_MS);
+  return new Date(input.reservedAt.getTime() + input.validityDays * DAY_MS);
 }
 
 export function isReservationActive(
   lead: { reservationExpiresAt: Date | null },
-  now: Date,
+  activeAsOf: Date,
 ): boolean {
-  return lead.reservationExpiresAt !== null && lead.reservationExpiresAt > now;
+  return (
+    lead.reservationExpiresAt !== null && lead.reservationExpiresAt > activeAsOf
+  );
 }
 
 export function isReservationLapsed(
   lead: { reservationExpiresAt: Date | null },
-  now: Date,
+  lapsedAsOf: Date,
 ): boolean {
-  return lead.reservationExpiresAt !== null && lead.reservationExpiresAt <= now;
+  return (
+    lead.reservationExpiresAt !== null &&
+    lead.reservationExpiresAt <= lapsedAsOf
+  );
 }

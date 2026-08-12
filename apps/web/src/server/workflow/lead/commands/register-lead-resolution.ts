@@ -1,8 +1,8 @@
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import type { WorkflowUserRepository } from "~/server/workflow/lead/read/users-repo";
 import type { LeadRepository } from "~/server/workflow/lead/write/lead-repo";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import {
   decideRegistrationConflict,

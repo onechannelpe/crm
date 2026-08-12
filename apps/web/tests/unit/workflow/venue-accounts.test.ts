@@ -32,7 +32,9 @@ describe("buildVenueAccounts", () => {
     });
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("expected err");
+    if (result.ok) {
+      throw new Error("expected err");
+    }
     expect(result.error.code).toBe("invalid_settlement_account");
   });
 
@@ -43,7 +45,9 @@ describe("buildVenueAccounts", () => {
     });
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("expected err");
+    if (result.ok) {
+      throw new Error("expected err");
+    }
     expect(result.error.code).toBe("invalid_settlement_account");
   });
 
@@ -53,7 +57,9 @@ describe("buildVenueAccounts", () => {
     });
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("expected err");
+    if (result.ok) {
+      throw new Error("expected err");
+    }
     expect(result.error.code).toBe("missing_cci_soles");
   });
 
@@ -64,7 +70,9 @@ describe("buildVenueAccounts", () => {
     });
 
     expect(result.ok).toBe(false);
-    if (result.ok) throw new Error("expected err");
+    if (result.ok) {
+      throw new Error("expected err");
+    }
     expect(result.error.code).toBe("missing_cci_dolares");
   });
 
@@ -74,7 +82,9 @@ describe("buildVenueAccounts", () => {
     });
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected ok");
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
     expect(result.value.solesAccount.cci).toBeUndefined();
   });
 
@@ -84,7 +94,9 @@ describe("buildVenueAccounts", () => {
     });
 
     expect(result.ok).toBe(true);
-    if (!result.ok) throw new Error("expected ok");
+    if (!result.ok) {
+      throw new Error("expected ok");
+    }
     expect(result.value.solesAccount.cci).toBe("00212345678901234567");
   });
 });

@@ -1,14 +1,13 @@
-import { createLogger } from "~/lib/observability/logger";
-import type { OrganizationRepository } from "~/server/organization/organization-repo";
-import { fail, type DomainError } from "~/server/shared/domain-error";
+import { fail, type DomainError } from "~/domain/errors";
 import type {
   FileAssetId,
   UserId,
   WorkflowLeadId,
   WorkflowRateRevisionFileId,
   WorkflowRateRevisionId,
-} from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+} from "~/domain/ids";
+import type { OrganizationRepository } from "~/server/organization/organization-repo";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { DigitalPolicyRepository } from "~/server/workflow/lead/digital-policy/repo";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
 import type {
@@ -39,6 +38,8 @@ import type {
   LeadVenue,
   LeadVenueRepository,
 } from "~/server/workflow/lead/venue/repo";
+import { createLogger } from "~/shared/observability/runtime-logger";
+import { Err, Ok, type Result } from "~/shared/result";
 
 const logger = createLogger("workflow-get-lead-detail");
 
@@ -114,6 +115,7 @@ export type LeadDetailLoadedSections = {
 export async function loadLeadDetailSections(
   deps: LeadDetailQueryDeps,
   input: { leadId: WorkflowLeadId; actorUserId: UserId },
+  operation: OperationContext,
 ): Promise<Result<LeadDetailLoadedSections, DomainError>> {
   const lead = await deps.leads.findById(input.leadId);
   if (!lead) {
@@ -147,7 +149,7 @@ export async function loadLeadDetailSections(
     deps.leadVenues.listByLeadId(input.leadId),
     deps.rateRevisions.listByLeadId(input.leadId),
     deps.leadHistory.listByLeadId(input.leadId),
-    deps.sourceStatuses.findByRuc(lead.ruc),
+    deps.sourceStatuses.findByRuc(lead.ruc, operation.operationAt),
     deps.users.findByIds([
       lead.executiveId,
       lead.createdBy,

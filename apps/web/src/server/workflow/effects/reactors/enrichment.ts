@@ -1,6 +1,6 @@
 import type { EnrichmentRequest } from "~/server/client-search/ports";
 import { createCompanyRegistryRepo } from "~/server/client-search/repository";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import type { CommittedLeadEvent } from "~/server/workflow/lead/write/transition";
 
 // On lead registration, writes the SUNAT request in the same transaction;
@@ -13,7 +13,9 @@ export async function reactToRegistration(
   const requestsByRuc = new Map<string, EnrichmentRequest>();
 
   for (const { event } of committed) {
-    if (event.eventType !== "lead_registered") continue;
+    if (event.eventType !== "lead_registered") {
+      continue;
+    }
 
     requestsByRuc.set(event.payload.ruc, {
       documentType: "ruc",

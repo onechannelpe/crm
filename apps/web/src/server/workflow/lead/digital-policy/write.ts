@@ -1,14 +1,14 @@
 import type { SaveDigitalPolicyInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { WorkflowLeadId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { WorkflowLeadId } from "~/domain/ids";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import {
   parseDigitalPolicy,
   toDigitalPolicyFields,
   validateDigitalAggregate,
 } from "~/server/workflow/lead/digital-policy/domain";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { authorizeLeadAction } from "../../lead/domain/policy";
 import { runLeadTransaction } from "../write/transition";
@@ -18,12 +18,9 @@ export async function saveDigitalPolicyCommand(
     actor: WorkflowActor;
     leadId: WorkflowLeadId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
+  return runLeadTransaction(scope, async (ctx) => {
     const state = await ctx.repos.leads.findById(input.leadId);
 
     if (!state) {
@@ -74,7 +71,7 @@ export async function saveDigitalPolicyCommand(
     await ctx.repos.digitalPolicies.upsert({
       leadId: state.id,
       fields: toDigitalPolicyFields(parsedPolicy.value),
-      updatedAt: ctx.now,
+      updatedAt: ctx.operationAt,
       updatedBy: input.actor.userId,
     });
 

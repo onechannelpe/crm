@@ -1,7 +1,7 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import { UserId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import { UserId } from "~/domain/ids";
 import type { LeadHistoryEntry } from "~/server/workflow/lead/domain/history";
+import { Ok, type Result } from "~/shared/result";
 
 import { toHistoryEntryBase, type HistoryEventRow } from "./history-event-row";
 import {
@@ -20,7 +20,9 @@ export function toRegisteredEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const ruc = requireString(payload, "ruc", row);
-  if (!ruc.ok) return ruc;
+  if (!ruc.ok) {
+    return ruc;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -34,19 +36,29 @@ export function toReviewedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const status = requireLeadStatus(payload, "status", row);
-  if (!status.ok) return status;
+  if (!status.ok) {
+    return status;
+  }
 
   const priority = requireLeadPriority(payload, "priority", row);
-  if (!priority.ok) return priority;
+  if (!priority.ok) {
+    return priority;
+  }
 
   const reason = requireString(payload, "reason", row);
-  if (!reason.ok) return reason;
+  if (!reason.ok) {
+    return reason;
+  }
 
   const fromStage = requireLeadStage(payload, "fromStage", row);
-  if (!fromStage.ok) return fromStage;
+  if (!fromStage.ok) {
+    return fromStage;
+  }
 
   const toStage = requireLeadStage(payload, "toStage", row);
-  if (!toStage.ok) return toStage;
+  if (!toStage.ok) {
+    return toStage;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -76,7 +88,9 @@ export function toReservationExpiredEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const fromStage = requireLeadStage(payload, "fromStage", row);
-  if (!fromStage.ok) return fromStage;
+  if (!fromStage.ok) {
+    return fromStage;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -90,13 +104,19 @@ export function toLeadClosedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const reason = requireCloseReason(payload, "reason", row);
-  if (!reason.ok) return reason;
+  if (!reason.ok) {
+    return reason;
+  }
 
   const note = optionalString(payload, "note", row);
-  if (!note.ok) return note;
+  if (!note.ok) {
+    return note;
+  }
 
   const fromStage = requireLeadStage(payload, "fromStage", row);
-  if (!fromStage.ok) return fromStage;
+  if (!fromStage.ok) {
+    return fromStage;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -114,13 +134,19 @@ export function toStatusUpdatedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const toStatus = requireLeadStatus(payload, "toStatus", row);
-  if (!toStatus.ok) return toStatus;
+  if (!toStatus.ok) {
+    return toStatus;
+  }
 
   const reason = requireString(payload, "reason", row);
-  if (!reason.ok) return reason;
+  if (!reason.ok) {
+    return reason;
+  }
 
   const fromStatus = optionalLeadStatus(payload, "fromStatus", row);
-  if (!fromStatus.ok) return fromStatus;
+  if (!fromStatus.ok) {
+    return fromStatus;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -138,13 +164,19 @@ export function toPriorityUpdatedEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const toPrioridad = requireLeadPriority(payload, "toPrioridad", row);
-  if (!toPrioridad.ok) return toPrioridad;
+  if (!toPrioridad.ok) {
+    return toPrioridad;
+  }
 
   const reason = requireString(payload, "reason", row);
-  if (!reason.ok) return reason;
+  if (!reason.ok) {
+    return reason;
+  }
 
   const fromPrioridad = optionalLeadPriority(payload, "fromPrioridad", row);
-  if (!fromPrioridad.ok) return fromPrioridad;
+  if (!fromPrioridad.ok) {
+    return fromPrioridad;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -162,10 +194,14 @@ export function toStageChangeEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const from = requireLeadStage(payload, "from", row);
-  if (!from.ok) return from;
+  if (!from.ok) {
+    return from;
+  }
 
   const to = requireLeadStage(payload, "to", row);
-  if (!to.ok) return to;
+  if (!to.ok) {
+    return to;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -179,10 +215,14 @@ export function toAssignmentEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const executiveId = requireString(payload, "executiveId", row);
-  if (!executiveId.ok) return executiveId;
+  if (!executiveId.ok) {
+    return executiveId;
+  }
 
   const reason = optionalString(payload, "reason", row);
-  if (!reason.ok) return reason;
+  if (!reason.ok) {
+    return reason;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),
@@ -199,13 +239,19 @@ export function toReassignmentEntry(
   payload: Record<string, unknown> | null,
 ): Result<LeadHistoryEntry, DomainError> {
   const fromExecutiveId = requireString(payload, "fromExecutiveId", row);
-  if (!fromExecutiveId.ok) return fromExecutiveId;
+  if (!fromExecutiveId.ok) {
+    return fromExecutiveId;
+  }
 
   const toExecutiveId = requireString(payload, "toExecutiveId", row);
-  if (!toExecutiveId.ok) return toExecutiveId;
+  if (!toExecutiveId.ok) {
+    return toExecutiveId;
+  }
 
   const reason = optionalString(payload, "reason", row);
-  if (!reason.ok) return reason;
+  if (!reason.ok) {
+    return reason;
+  }
 
   return Ok({
     ...toHistoryEntryBase(row),

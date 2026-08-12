@@ -1,13 +1,10 @@
-import { hasPermission } from "~/lib/auth/access/rbac";
-import {
-  fail,
-  forbidden,
-  type DomainError,
-} from "~/server/shared/domain-error";
-import type { BranchId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import { fail, forbidden, type DomainError } from "~/domain/errors";
+import type { BranchId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { WorkflowActor } from "~/server/workflow/actor";
 import { validatePendingQuotationLimit } from "~/server/workflow/lead/domain/pending-quotation";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { PendingQuotationPolicyRepository } from "../pending-quotation-policy-repo";
 
@@ -15,10 +12,8 @@ export async function updatePendingQuotationPolicy(
   input: {
     actor: WorkflowActor;
   } & ({ enabled: false } | { enabled: true; limit: number }),
-  ports: {
-    pendingQuotationPolicies: PendingQuotationPolicyRepository;
-    now: Date;
-  },
+  pendingQuotationPolicies: PendingQuotationPolicyRepository,
+  operation: OperationContext,
 ): Promise<Result<{ branchId: BranchId; clientLimit: number }, DomainError>> {
   if (!hasPermission(input.actor.role, "quotation:policy:manage")) {
     return Err(forbidden());
@@ -36,10 +31,10 @@ export async function updatePendingQuotationPolicy(
     return validatedLimit;
   }
 
-  await ports.pendingQuotationPolicies.upsert({
+  await pendingQuotationPolicies.upsert({
     branchId: input.actor.branchId,
     clientLimit: validatedLimit.value,
-    updatedAt: ports.now,
+    updatedAt: operation.operationAt,
     updatedByUserId: input.actor.userId,
   });
 

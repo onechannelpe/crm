@@ -1,11 +1,8 @@
 import type { Insertable, Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type {
-  WorkflowLeadId,
-  WorkflowRateProposalId,
-} from "~/server/shared/ids";
+import type { WorkflowLeadId, WorkflowRateProposalId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 import type {
   RateProposal,
   RateProposalNumbers,

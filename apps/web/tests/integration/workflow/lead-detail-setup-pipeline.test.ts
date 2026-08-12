@@ -3,21 +3,14 @@ import {
   actorBy,
   createLeadFixtureWriter,
 } from "@tests/support/database/workflow-fixtures";
-import {
-  workflowCommandPorts,
-  workflowRepos,
-} from "@tests/support/integration/workflow-ports";
+import { operationAt } from "@tests/support/operation";
 import {
   createTestRuntime,
   type TestRuntime,
 } from "@tests/support/runtime/app";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { WorkflowVenueId } from "~/server/shared/ids";
-import { saveDigitalPolicyCommand } from "~/server/workflow/lead/digital-policy/write";
-import { getLeadDetail } from "~/server/workflow/lead/read/queries/get-lead-detail";
-import { addVenueAccountsCommand } from "~/server/workflow/lead/venue/add-venue-accounts";
-import { createVenueCommand } from "~/server/workflow/lead/venue/create-venue";
+import { WorkflowVenueId } from "~/domain/ids";
 
 describe("lead detail setup pipeline", () => {
   let runtime: TestRuntime;
@@ -57,11 +50,10 @@ describe("lead detail setup pipeline", () => {
     });
 
     const initialDetail = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        { actorUserId: actor.userId, actorRole: actor.role, leadId: lead.id },
+        operationAt(runtime.now.get()),
+      ),
     );
     expect(initialDetail.lead).toMatchObject({
       ruc: lead.organization.ruc,
@@ -84,7 +76,7 @@ describe("lead detail setup pipeline", () => {
     });
     expect(initialDetail.blockingFields).toEqual(["digitalPolicy"]);
 
-    const policyResult = await saveDigitalPolicyCommand(
+    const policyResult = await runtime.workflow.commands.saveDigitalPolicy(
       {
         actor,
         leadId: lead.id,
@@ -94,16 +86,15 @@ describe("lead detail setup pipeline", () => {
         onlineUrl: null,
         onlineCollectionMode: null,
       },
-      workflowCommandPorts(runtime),
+      operationAt(runtime.now.get()),
     );
     expectOk(policyResult);
 
     const afterPolicy = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        { actorUserId: actor.userId, actorRole: actor.role, leadId: lead.id },
+        operationAt(runtime.now.get()),
+      ),
     );
     expect(afterPolicy.profile).toMatchObject({
       linkScope: "per_venue",
@@ -124,7 +115,7 @@ describe("lead detail setup pipeline", () => {
     });
 
     expectOk(
-      await saveDigitalPolicyCommand(
+      await runtime.workflow.commands.saveDigitalPolicy(
         {
           actor,
           leadId: lead.id,
@@ -134,12 +125,12 @@ describe("lead detail setup pipeline", () => {
           onlineUrl: null,
           onlineCollectionMode: null,
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
 
     expectOk(
-      await createVenueCommand(
+      await runtime.workflow.commands.createVenue(
         {
           actor,
           leadId: lead.id,
@@ -156,16 +147,15 @@ describe("lead detail setup pipeline", () => {
           province: "Lima",
           department: "Lima",
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
 
     const withVenue = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        { actorUserId: actor.userId, actorRole: actor.role, leadId: lead.id },
+        operationAt(runtime.now.get()),
+      ),
     );
     expect(withVenue.venues).toHaveLength(1);
     expect(withVenue.venues[0]).toMatchObject({
@@ -177,7 +167,7 @@ describe("lead detail setup pipeline", () => {
     expect(withVenue.blockingFields).toEqual(["venueAccounts"]);
 
     expectOk(
-      await addVenueAccountsCommand(
+      await runtime.workflow.commands.addVenueAccounts(
         {
           actor,
           leadId: lead.id,
@@ -191,16 +181,15 @@ describe("lead detail setup pipeline", () => {
             isSettlement: true,
           },
         },
-        workflowCommandPorts(runtime),
+        operationAt(runtime.now.get()),
       ),
     );
 
     const completed = expectOk(
-      await getLeadDetail(workflowRepos(runtime), {
-        actorUserId: actor.userId,
-        actorRole: actor.role,
-        leadId: lead.id,
-      }),
+      await runtime.workflow.queries.getLeadDetail(
+        { actorUserId: actor.userId, actorRole: actor.role, leadId: lead.id },
+        operationAt(runtime.now.get()),
+      ),
     );
     expect(completed.lead.stage).toBe("FULFILLMENT");
     expect(completed.blockingFields).toEqual([]);

@@ -1,7 +1,6 @@
 import { createRateRevisionFilesRepo } from "~/server/files/repo/rate-revision";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { createEventsRepo } from "~/server/shared/repos-events";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 import { createDigitalPolicyRepo } from "./lead/digital-policy/repo";
 import { createFulfillmentRepo } from "./lead/fulfillment/repo";
@@ -10,7 +9,6 @@ import { createLeadFavoriteRepo } from "./lead/read/lead-favorite-repo";
 import { createLeadQueries } from "./lead/read/lead-queries";
 import { createWorkflowUsersRepo } from "./lead/read/users-repo";
 import { createLeadVenueRepo } from "./lead/venue/repo";
-import { createAssignmentRepo } from "./lead/write/assignment-repo";
 import { createLeadRepo } from "./lead/write/lead-repo";
 import { createRateProposalRepo } from "./lead/write/rate-proposal-repo";
 import { createRateRevisionRepo } from "./lead/write/rate-revision-repo";
@@ -24,10 +22,8 @@ export function createWorkflowRepos(executor: DatabaseExecutor) {
     leads: createLeadRepo(executor),
     leadQueries: createLeadQueries(executor),
     leadFavorites: createLeadFavoriteRepo(executor),
-    leadAssignments: createAssignmentRepo(executor),
     digitalPolicies: createDigitalPolicyRepo(executor),
     leadHistory: createHistoryRepo(executor),
-    events: createEventsRepo(executor),
     rateProposals: createRateProposalRepo(executor),
     rateProposalPolicies: createRateProposalPolicyRepo(executor),
     pendingQuotationPolicies: createPendingQuotationPolicyRepo(executor),

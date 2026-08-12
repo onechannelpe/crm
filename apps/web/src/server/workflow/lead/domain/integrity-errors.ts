@@ -1,5 +1,5 @@
-import { external, type DomainError } from "~/server/shared/domain-error";
-import { Err, type Result } from "~/server/shared/result";
+import { external, type DomainError } from "~/domain/errors";
+import { Err, type Result } from "~/shared/result";
 
 function integrityError(
   code: string,

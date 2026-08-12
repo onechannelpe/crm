@@ -1,9 +1,9 @@
 import type { ReassignLeadInput } from "~/contracts/workflow/inputs";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId, WorkflowLeadId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId, WorkflowLeadId } from "~/domain/ids";
 import type { WorkflowActor } from "~/server/workflow/actor";
+import type { WorkflowWriteContext } from "~/server/workflow/types";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { reassignLead } from "../../lead/domain/decide";
 import { resolveAssignableExecutivesScope } from "../../lead/domain/policy";
@@ -15,23 +15,20 @@ export async function reassignLeadCommand(
     leadId: WorkflowLeadId;
     toExecutiveId: UserId;
   },
-  ports: {
-    executor: DatabaseExecutor;
-    now: Date;
-  },
+  scope: WorkflowWriteContext,
 ): Promise<Result<{ leadId: string }, DomainError>> {
-  return runLeadTransaction(ports, async (ctx) => {
-    const scope = resolveAssignableExecutivesScope({
+  return runLeadTransaction(scope, async (ctx) => {
+    const assignable = resolveAssignableExecutivesScope({
       actorRole: input.actor.role,
       actorBranchId: input.actor.branchId,
     });
 
-    if (!scope.ok) {
-      return scope;
+    if (!assignable.ok) {
+      return assignable;
     }
 
     const isAssignable = await ctx.repos.users.isExecutiveAssignable(
-      scope.value,
+      assignable.value,
       input.toExecutiveId,
     );
 
@@ -48,7 +45,7 @@ export async function reassignLeadCommand(
     const transition = reassignLead(state, {
       actor: input.actor,
       toExecutiveId: input.toExecutiveId,
-      now: ctx.now,
+      occurredAt: ctx.operationAt,
     });
 
     if (!transition.ok) {
@@ -58,7 +55,7 @@ export async function reassignLeadCommand(
     const committed = await ctx.commitTransition(transition.value, {
       toExecutiveId: input.toExecutiveId,
       assignedBy: input.actor.userId,
-      at: ctx.now,
+      assignedAt: ctx.operationAt,
     });
 
     if (!committed.ok) {

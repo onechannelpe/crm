@@ -1,5 +1,5 @@
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import { Err, Ok, type Result } from "~/shared/result";
 
 const MAX_PENDING_QUOTATION_LIMIT = 50;
 

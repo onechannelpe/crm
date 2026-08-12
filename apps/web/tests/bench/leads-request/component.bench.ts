@@ -1,12 +1,8 @@
 import { bench, describe } from "vitest";
 
+import { OrganizationId, OrganizationPersonId, UserId } from "~/domain/ids";
 import { createAssignment } from "~/server/contact-assignments/domain/assignment";
 import { canContactNow } from "~/server/contact-assignments/domain/cooldown";
-import {
-  OrganizationId,
-  OrganizationPersonId,
-  UserId,
-} from "~/server/shared/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 
@@ -18,7 +14,7 @@ const ORGANIZATION_ID = OrganizationId.trust(
 
 describe("lead assignment component benchmark", () => {
   bench("component path: build lead assignment payload", () => {
-    const assignment = createAssignment(USER_ID, CONTACT_ID, 24);
+    const assignment = createAssignment(USER_ID, CONTACT_ID, BENCH_NOW);
     if (
       assignment.user_id !== USER_ID ||
       assignment.contact_id !== CONTACT_ID

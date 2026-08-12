@@ -3,20 +3,22 @@ import type {
   FulfillmentQueueView,
 } from "~/contracts/workflow/views";
 import type { FulfillmentStep } from "~/contracts/workflow/vocabulary";
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { shortName } from "~/lib/users/display-name";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { forbidden, type DomainError } from "~/server/shared/domain-error";
-import type { BranchId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { hasPermission, type Role } from "~/domain/auth/access/rbac";
+import { forbidden, type DomainError } from "~/domain/errors";
+import { shortName } from "~/domain/identity/display-name";
+import type { BranchId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 import {
   backOfficeQueueSteps,
   pendingOwnerForStep,
 } from "~/server/workflow/lead/fulfillment/steps";
+import { Err, Ok, type Result } from "~/shared/result";
 
 // Back office sees everything pending an internal action, scoped to their branch.
 function queueStepsForRole(role: Role): FulfillmentStep[] | null {
-  if (hasPermission(role, "fulfillment:manage")) return backOfficeQueueSteps();
+  if (hasPermission(role, "fulfillment:manage")) {
+    return backOfficeQueueSteps();
+  }
   return null;
 }
 
@@ -25,14 +27,23 @@ export async function listFulfillmentQueue(
   input: { actorRole: Role; actorBranchId: BranchId },
 ): Promise<Result<FulfillmentQueueView, DomainError>> {
   const steps = queueStepsForRole(input.actorRole);
-  if (steps === null) return Err(forbidden());
-  if (steps.length === 0) return Ok({ rows: [] });
+  if (steps === null) {
+    return Err(forbidden());
+  }
+  if (steps.length === 0) {
+    return Ok({ rows: [] });
+  }
 
   const rows = await db
     .selectFrom("lead_fulfillment_orders as order")
     .innerJoin("workflow_leads as lead", "lead.id", "order.lead_id")
     .innerJoin("organizations as org", "org.id", "lead.organization_id")
-    .innerJoin("users as executive", "executive.id", "lead.executive_id")
+    .innerJoin(
+      "organization_current_owners as owner",
+      "owner.organization_id",
+      "lead.organization_id",
+    )
+    .innerJoin("users as executive", "executive.id", "owner.executive_id")
     .select([
       "order.lead_id as leadId",
       "order.current_step as currentStep",
@@ -52,21 +63,19 @@ export async function listFulfillmentQueue(
     .execute();
 
   return Ok({
-    rows: rows.map(
-      (row): FulfillmentQueueRowView => ({
-        leadId: row.leadId,
-        ruc: row.ruc,
-        legalName: row.legalName,
-        executiveName: shortName({
-          names: row.names,
-          first_surname: row.firstSurname,
-          second_surname: row.secondSurname,
-        }),
-        productKind: row.productKind,
-        currentStep: row.currentStep,
-        pendingOwner: pendingOwnerForStep(row.currentStep),
-        waitingSince: row.waitingSince.getTime(),
+    rows: rows.map((row): FulfillmentQueueRowView => ({
+      leadId: row.leadId,
+      ruc: row.ruc,
+      legalName: row.legalName,
+      executiveName: shortName({
+        names: row.names,
+        first_surname: row.firstSurname,
+        second_surname: row.secondSurname,
       }),
-    ),
+      productKind: row.productKind,
+      currentStep: row.currentStep,
+      pendingOwner: pendingOwnerForStep(row.currentStep),
+      waitingSince: row.waitingSince.getTime(),
+    })),
   });
 }

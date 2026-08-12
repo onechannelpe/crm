@@ -9,8 +9,8 @@ import type {
   IntegrationJobId,
   WorkflowLeadId,
   WorkflowRateProposalId,
-} from "~/server/shared/ids";
-import { BranchId, OrganizationId, UserId } from "~/server/shared/ids";
+} from "~/domain/ids";
+import { BranchId, OrganizationId, UserId } from "~/domain/ids";
 import type { LeadCommercialScope } from "~/server/workflow/lead/domain/state";
 
 import type { TestRuntime } from "../runtime/app";
@@ -107,7 +107,6 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
     .values({
       id: input.id,
       organization_id: organizationId,
-      executive_id: input.executiveId,
       stage: input.stage,
       status: input.status,
       priority: input.priority,
@@ -124,6 +123,19 @@ export async function seedLead(runtime: TestRuntime, input: LeadSeed) {
       settlement_bank: commercial.settlementBank,
       pos_count: commercial.posCount,
       reservation_expires_at: input.reservationExpiresAt ?? null,
+    })
+    .execute();
+
+  await runtime.ctx.db
+    .insertInto("organization_owner_assignments")
+    .values({
+      organization_id: organizationId,
+      executive_id: input.executiveId,
+      valid_from: createdAt,
+      valid_until: null,
+      assigned_by: input.createdBy ?? input.executiveId,
+      reason: "test_seed",
+      created_at: createdAt,
     })
     .execute();
 }
@@ -249,7 +261,6 @@ export async function seedImportJob(
     .insertInto("workflow_integration_jobs")
     .values({
       type: "import_status",
-      status: "PROCESSING",
       queue_state: "processing",
       requested_by_user_id: UserId.trust(
         "01974fd5-f261-7a7d-93f5-2f3d0f961005",
@@ -261,10 +272,9 @@ export async function seedImportJob(
       rows_failed: null,
       results_json: null,
       lease_owner: "test-worker",
-      lease_until: new Date(now.getTime() + 30_000),
       attempt_count: 1,
       max_attempts: 3,
-      available_at: now,
+      claimable_at: new Date(now.getTime() + 30_000),
       created_at: now,
       completed_at: null,
     })
