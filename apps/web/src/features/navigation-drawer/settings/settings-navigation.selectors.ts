@@ -1,5 +1,5 @@
 import UserIcon from "~/components/icons/user";
-import type { Role } from "~/lib/auth/access/route-policy";
+import type { Role } from "~/domain/auth/access/route-policy";
 
 import { createSettingsNavigationSections } from "./settings-navigation-config";
 import { settingsItemMatchesPath } from "./settings-navigation-path-match";

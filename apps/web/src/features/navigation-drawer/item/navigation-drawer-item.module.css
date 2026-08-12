@@ -7,27 +7,26 @@
 .itemGroup {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 .item {
   width: calc(
-    var(--item-width-base, 100%) - 6px + 4px + var(--item-padding-right, 4px)
+    var(--item-width-base, 100%) - var(--item-width-offset, 6px) +
+      var(--spacing-1) + var(--item-padding-right, var(--spacing-1))
   );
-  height: 28px;
-  padding-bottom: 4px;
-  padding-left: 4px;
-  padding-right: var(--item-padding-right, 4px);
-  padding-top: 4px;
+  height: var(--spacing-7);
+  padding-bottom: var(--spacing-1);
+  padding-left: var(--spacing-1);
+  padding-right: var(--item-padding-right, var(--spacing-1));
+  padding-top: var(--spacing-1);
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   background: transparent;
   text-decoration: none;
   color: var(--foreground-secondary);
   font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
   text-align: left;
   box-sizing: border-box;
 }
@@ -45,16 +44,19 @@
 .iconWrap {
   align-items: center;
   display: flex;
-  margin-right: 8px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  justify-content: center;
+  margin-right: var(--spacing-2);
 }
 
 .item:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }
 
 .itemActive {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }
 
@@ -62,12 +64,23 @@
   color: var(--foreground-tertiary);
 }
 
-.itemLabel {
+.itemLabelParent {
+  align-items: center;
+  display: flex;
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  white-space: nowrap;
   text-overflow: clip;
+  white-space: nowrap;
+}
+
+.itemLabel {
+  font-weight: var(--font-weight-medium);
+}
+
+.itemSecondaryLabel {
+  color: var(--foreground-light);
+  font-weight: var(--font-weight-regular);
 }
 
 .itemLabelCollapsed {
@@ -86,7 +99,8 @@
   margin-inline-start: auto;
   display: inline-flex;
   align-items: center;
-  height: 24px;
+  border-radius: var(--radius-md);
+  height: var(--spacing-6);
   justify-content: center;
 }
 
@@ -96,7 +110,7 @@
   height: 1px;
   opacity: 0;
   overflow: hidden;
-  padding-left: 8px;
+  padding-left: var(--spacing-2);
   position: absolute;
   transition: opacity var(--motion-fast) var(--ease-standard);
   white-space: nowrap;
@@ -124,9 +138,9 @@
 .subItemBreadcrumb {
   display: inline-block;
   width: 9px;
-  height: 28px;
+  height: var(--spacing-7);
   margin-left: 7.5px;
-  margin-right: 8px;
+  margin-right: var(--spacing-2);
   flex-shrink: 0;
   position: relative;
 }
@@ -137,11 +151,11 @@
   height: 2px;
   position: relative;
   top: -2px;
-  background: color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+  background: var(--primary-border-40);
 }
 
 .subItemBreadcrumbGap[data-darker="true"] {
-  background: var(--foreground-secondary);
+  background: var(--foreground-tertiary);
 }
 
 .subItemBreadcrumbElbow {
@@ -150,34 +164,41 @@
   height: 14px;
   position: relative;
   top: -2px;
-  border-left: 1px solid
-    color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
-  border-bottom: 1px solid
-    color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+  border-left: 1px solid var(--primary-border-40);
+  border-bottom: 1px solid var(--primary-border-40);
   border-bottom-left-radius: 4px;
 }
 
 .subItemBreadcrumbElbow[data-darker="true"] {
-  border-left-color: var(--foreground-secondary);
-  border-bottom-color: var(--foreground-secondary);
+  border-left-color: var(--foreground-tertiary);
+  border-bottom-color: var(--foreground-tertiary);
+  z-index: 1;
 }
 
 .subItemBreadcrumbVertical {
   display: block;
   width: 1px;
-  height: 28px;
+  height: calc(var(--spacing-7) + 1px);
   position: relative;
   top: -17px;
-  background: color-mix(in oklab, var(--foreground-tertiary) 55%, transparent);
+  background: var(--primary-border-40);
 }
 
 .subItemBreadcrumbVertical[data-darker="true"] {
-  background: var(--foreground-secondary);
+  background: var(--foreground-tertiary);
 }
 
 @media (max-width: 768px) {
   .item {
-    height: 32px;
+    height: var(--spacing-8);
+  }
+
+  .subItemBreadcrumb {
+    height: var(--spacing-8);
+  }
+
+  .subItemBreadcrumbVertical {
+    height: calc(var(--spacing-8) + 1px);
   }
 
   .itemLabelCollapsed {

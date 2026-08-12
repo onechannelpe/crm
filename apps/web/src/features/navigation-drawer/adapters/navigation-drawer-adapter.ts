@@ -1,11 +1,11 @@
 import { ICON_BY_ROUTE } from "~/components/layout/route-icons";
-import type { Role } from "~/lib/auth/access/route-policy";
+import type { Role } from "~/domain/auth/access/route-policy";
 import {
   getSidebarChildren,
   getSidebarEntries,
   getSidebarGrouped,
   type SidebarEntry,
-} from "~/lib/nav/policy";
+} from "~/domain/navigation/policy";
 
 export interface DrawerNavChild {
   href: string;

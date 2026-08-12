@@ -1,20 +1,14 @@
 .drawerHost {
-  position: relative;
-  inset: auto;
   flex-shrink: 0;
-  height: 100%;
-  z-index: 20;
-  pointer-events: auto;
 }
 
 .drawer {
-  display: flex;
   height: 100%;
   max-height: 100%;
   overflow: hidden;
   position: relative;
   width: var(--nav-drawer-collapsed-width);
-  transition: width var(--motion-normal) var(--ease-standard);
+  transition: width var(--motion-normal) ease;
 }
 
 .drawerExpandedDesktop {
@@ -31,38 +25,41 @@
 
 .drawerInner {
   box-sizing: border-box;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 8px 0 16px 8px;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) 0 var(--spacing-4) var(--spacing-2);
+}
+
+.drawerExpandedDesktop .drawerInner {
+  width: var(--navigation-drawer-width);
 }
 
 .drawerSettings .drawerInner {
-  padding: 8px 0 16px 0;
+  padding: var(--spacing-2) 0 var(--spacing-4) 0;
 }
 
 .header {
-  min-height: 32px;
+  min-height: var(--spacing-8);
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding-right: 8px;
+  gap: 0;
+  padding-right: var(--spacing-2);
+  user-select: none;
 }
 
 .headerCollapsed {
   align-items: flex-start;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-4);
 }
 
 .headerCollapsed .headerActions {
   align-self: flex-end;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-1);
   margin-left: 0;
 }
 
@@ -73,52 +70,38 @@
   gap: 2px;
 }
 
-.searchButton,
-.collapseButton {
-  width: 28px;
-  height: 28px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--foreground-secondary);
-  background: transparent;
-  transition: opacity var(--motion-fast) var(--ease-standard);
-}
-
-.searchButton:hover,
-.collapseButton:hover {
-  background: var(--bg-translucent);
-  color: var(--foreground);
+.collapseButtonContainer > * {
+  height: var(--spacing-6);
+  padding-right: 0;
+  width: var(--spacing-6);
 }
 
 .settingsBackHeader {
-  min-height: 32px;
+  min-height: var(--spacing-8);
   display: flex;
   align-items: center;
-  padding-left: 20px;
-  padding-right: 8px;
+  padding-left: var(--spacing-5);
+  padding-right: var(--spacing-2);
 }
 
 .settingsBackButton {
   width: 100%;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--foreground-secondary);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 28px;
-  padding: 0 4px;
+  gap: var(--spacing-2);
+  height: var(--spacing-7);
+  padding: 0 var(--spacing-1);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-medium);
   text-align: left;
 }
 
 .settingsBackButton:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }
 
@@ -129,29 +112,28 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-right: 8px;
+  gap: var(--spacing-3);
 }
 
 .scrollableSettings {
-  padding-left: 20px;
-  padding-right: 32px;
+  padding-left: var(--spacing-5);
+  padding-right: var(--spacing-8);
 }
 
 .fixedContent {
-  padding-right: 8px;
+  flex-shrink: 0;
 }
 
 .fixedContentSettings {
-  padding-left: 20px;
-  padding-right: 32px;
+  padding-left: var(--spacing-5);
+  padding-right: var(--spacing-8);
 }
 
 .resizeHandle {
   position: absolute;
   top: 0;
   right: -4px;
-  width: 8px;
+  width: var(--spacing-2);
   height: 100vh;
   cursor: col-resize;
 }
@@ -173,11 +155,6 @@
 }
 
 @media (max-width: 768px) {
-  .drawerHost {
-    width: 0;
-    z-index: 25;
-  }
-
   .drawer {
     width: 0;
   }
@@ -186,13 +163,7 @@
     width: 100vw;
   }
 
-  .drawerClosedMobile {
-    pointer-events: none;
-  }
-
   .drawerInner {
-    background-image: var(--background-noisy);
-    background-blend-mode: overlay;
     gap: var(--spacing-4);
     height: 100%;
     padding-left: var(--spacing-2);
@@ -211,8 +182,9 @@
     padding-right: var(--spacing-5);
   }
 
-  .collapseButton {
-    width: var(--spacing-8);
+  .collapseButtonContainer > * {
     height: var(--spacing-8);
+    padding-right: 0;
+    width: var(--spacing-8);
   }
 }

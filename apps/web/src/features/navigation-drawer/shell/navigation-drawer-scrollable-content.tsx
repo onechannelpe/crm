@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { type ParentProps } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import { useIsSettingsDrawer } from "../hooks/use-is-settings-drawer";
 
@@ -11,7 +10,7 @@ export function NavigationDrawerScrollableContent(props: ParentProps) {
 
   return (
     <div
-      class={cn(
+      class={clsx(
         styles.scrollable,
         isSettingsDrawer() && styles.scrollableSettings,
       )}

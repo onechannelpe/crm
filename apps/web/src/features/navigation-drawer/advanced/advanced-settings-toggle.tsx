@@ -1,7 +1,7 @@
+import { clsx } from "clsx";
 import { createUniqueId } from "solid-js";
 
 import Point from "~/components/icons/point";
-import { cn } from "~/lib/utils";
 
 import styles from "./advanced-settings-toggle.module.css";
 
@@ -32,7 +32,7 @@ export function AdvancedSettingsToggle(props: AdvancedSettingsToggleProps) {
         role="switch"
         aria-labelledby={labelId}
         aria-checked={props.isAdvancedModeEnabled}
-        class={cn(
+        class={clsx(
           styles.switch,
           props.isAdvancedModeEnabled && styles.switchChecked,
         )}
