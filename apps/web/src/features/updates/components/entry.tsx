@@ -1,4 +1,4 @@
-import type { UpdateEntry } from "~/lib/updates";
+import type { UpdateEntry } from "~/features/updates/model";
 
 import { formatUpdateDisplayDate } from "./format-update-display-date";
 import { UpdateMarkdown } from "./update-markdown";

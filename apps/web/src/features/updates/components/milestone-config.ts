@@ -1,13 +1,15 @@
-import type { HalftoneImageFit } from "~/lib/halftone/footprint";
-import { normalizeHalftoneStudioSettings } from "~/lib/halftone/state";
-import type { HalftonePose } from "~/lib/halftone/state";
-import type { HalftoneStudioSettings } from "~/lib/halftone/state";
-import type { HalftoneStudioSettingsOverrides } from "~/lib/halftone/state";
+import type { ImageSource } from "@crm/images";
+
+import milestoneSources from "~/assets/images/updates/milestone.jpg?responsive";
+import { normalizeHalftoneStudioSettings } from "~/browser/visual/halftone/state";
+import type { HalftonePose } from "~/browser/visual/halftone/state";
+import type { HalftoneStudioSettings } from "~/browser/visual/halftone/state";
+import type { HalftoneStudioSettingsOverrides } from "~/browser/visual/halftone/state";
 
 export type MilestoneSettingsOverrides = HalftoneStudioSettingsOverrides;
 
-export const MILESTONE_IMAGE_URL = "/illustrations/generated/milestone.jpg";
-export const MILESTONE_IMAGE_FIT: HalftoneImageFit = "cover";
+export const MILESTONE_IMAGE_SOURCES: ImageSource = milestoneSources;
+export const MILESTONE_IMAGE_FIT = "cover";
 export const MILESTONE_PREVIEW_DISTANCE = 4;
 
 export const MILESTONE_INITIAL_POSE: HalftonePose = {
