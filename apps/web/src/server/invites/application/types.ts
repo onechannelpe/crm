@@ -1,20 +1,16 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
-import type { AppUow } from "~/server/shared/application/uow";
-import type { DomainError } from "~/server/shared/domain-error";
-import type {
-  BranchId,
-  TeamId,
-  UserId,
-  UserInviteId,
-} from "~/server/shared/ids";
-import type { EventsRepo } from "~/server/shared/repos-events";
-import type { Result } from "~/server/shared/result";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { DomainError } from "~/domain/errors";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import type { BranchId, TeamId, UserId, UserInviteId } from "~/domain/ids";
+import type { EventsWriter } from "~/server/event-logs/events-repo";
+import type { AppUow } from "~/server/platform/database/uow";
+import type { OperationContext } from "~/server/platform/operation/context";
 import type { TeamsRepo } from "~/server/users/repos-teams";
 import type { UserInvitesRepo } from "~/server/users/repos-user-invites";
 import type { UsersRepo } from "~/server/users/repos-users";
+import type { Result } from "~/shared/result";
 
-export interface InviteDeps {
+export interface InviteBaseRepos {
   users: Pick<
     UsersRepo,
     | "findById"
@@ -36,20 +32,21 @@ export interface InviteDeps {
     | "markAccepted"
     | "markDelivered"
   >;
-  events: Pick<EventsRepo, "append">;
+}
+
+export interface InviteTransactionRepos extends InviteBaseRepos {
+  events: EventsWriter;
 }
 
 export interface InviteServiceDeps {
   inviteTtlMs?: number;
-  now?: () => Date;
-  uow: AppUow<InviteDeps>;
+  uow: AppUow<InviteTransactionRepos>;
   hashPassword?: (password: string) => Promise<string>;
 }
 
 export interface InviteRuntime {
-  now: () => Date;
   inviteTtlMs: number;
-  uow: AppUow<InviteDeps>;
+  uow: AppUow<InviteTransactionRepos>;
   hashPassword: (password: string) => Promise<string>;
 }
 
@@ -78,7 +75,7 @@ export interface CreateInviteInput {
   secondSurname: string;
   email: string;
   role: Role;
-  executiveCategory?: ExecutiveCategoryValue | null;
+  executiveCategory?: ExecutiveCategory | null;
   teamId: TeamId | null;
   expiresAt?: Date | null;
 }
@@ -126,19 +123,27 @@ export interface InviteAcceptedResult {
 export interface InviteService {
   listPendingInvites(
     branchId: BranchId,
+    operation: OperationContext,
   ): Promise<Result<PendingBranchInvite[], DomainError>>;
   createInvite(
     input: CreateInviteInput,
+    operation: OperationContext,
   ): Promise<Result<InviteIssueResult, DomainError>>;
   redeliverInvite(
     input: RedeliverInviteInput,
+    operation: OperationContext,
   ): Promise<Result<InviteIssueResult, DomainError>>;
-  revokeInvite(input: RevokeInviteInput): Promise<Result<void, DomainError>>;
+  revokeInvite(
+    input: RevokeInviteInput,
+    operation: OperationContext,
+  ): Promise<Result<void, DomainError>>;
   markInviteDelivered(
     inviteId: UserInviteId,
+    operation: OperationContext,
   ): Promise<Result<void, DomainError>>;
   acceptInvite(
     input: AcceptInviteInput,
+    operation: OperationContext,
   ): Promise<Result<InviteAcceptedResult, DomainError>>;
 }
 

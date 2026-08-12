@@ -1,6 +1,6 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import { hashPassword } from "~/lib/auth/password/password";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { BranchId, UserId } from "~/domain/ids";
+import { hashPassword } from "~/server/auth/password/password";
 
 import type {
   InviteAcceptedResult,
@@ -12,7 +12,6 @@ const DEFAULT_INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function createInviteRuntime(deps: InviteServiceDeps): InviteRuntime {
   return {
-    now: deps.now ?? (() => new Date()),
     inviteTtlMs: deps.inviteTtlMs ?? DEFAULT_INVITE_TTL_MS,
     hashPassword: deps.hashPassword ?? hashPassword,
     uow: deps.uow,

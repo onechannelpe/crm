@@ -1,16 +1,20 @@
-import type { DomainError } from "~/server/shared/domain-error";
-import type { UserInviteId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import type { UserInviteId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Ok, type Result } from "~/shared/result";
 
-import type { InviteDeps, InviteRuntime } from "./types";
+import type { InviteRuntime } from "./types";
 
 export async function markInviteDelivered(
-  repos: InviteDeps,
   runtime: InviteRuntime,
   inviteId: UserInviteId,
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
-    await transactionRepos.userInvites.markDelivered(inviteId, runtime.now());
+    await transactionRepos.userInvites.markDelivered(
+      inviteId,
+      operation.operationAt,
+    );
     return Ok(undefined);
   });
 }

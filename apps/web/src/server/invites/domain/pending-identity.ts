@@ -1,11 +1,8 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import { generateInviteToken } from "~/lib/auth/invite/tokens";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
-import type { BranchId, TeamId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import { generateInviteToken } from "~/domain/auth/invite/tokens";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import type { BranchId, TeamId } from "~/domain/ids";
 
-// Placeholder password hash for pending invites: avoids Argon2id cost on
-// create. Acceptance replaces the hash and flips is_active to 1, gating
-// authentication.
 const PENDING_INVITE_PASSWORD_PLACEHOLDER = `pending:${generateInviteToken()}`;
 
 export function normalizeInviteEmail(email: string): string {
@@ -21,9 +18,11 @@ export function buildPendingIdentity(input: {
   names: string;
   firstSurname: string;
   secondSurname: string;
-  executiveCategory?: ExecutiveCategoryValue | null;
+  executiveCategory?: ExecutiveCategory | null;
+  createdAt: Date;
 }) {
   return {
+    created_at: input.createdAt,
     branch_id: input.branchId,
     team_id: input.teamId,
     username: input.username,

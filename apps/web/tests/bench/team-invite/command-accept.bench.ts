@@ -1,9 +1,8 @@
+import { operationAt } from "@tests/support/operation";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
-import { createInviteService } from "~/server/invites/application/invite-service";
 import type { InviteService } from "~/server/invites/application/types";
-import { bindInviteRepos } from "~/server/invites/infrastructure/invite-service-factory";
-import { createExecutorUow } from "~/server/shared/application/uow";
+import { createInviteServiceForExecutor } from "~/server/invites/infrastructure/invite-service-factory";
 
 import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
@@ -12,17 +11,16 @@ import { seedPendingInvite } from "./fixtures";
 
 describe("team invite accept command benchmark", () => {
   const db = createBenchDbFixture("bench-team-invite-accept-command");
-  let inviteAccept!: InviteService["acceptInvite"];
+  let inviteAccept!: (
+    input: Parameters<InviteService["acceptInvite"]>[0],
+  ) => ReturnType<InviteService["acceptInvite"]>;
   let token = "";
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    const inviteService = createInviteService(bindInviteRepos(ctx.db), {
-      uow: createExecutorUow(ctx.db, bindInviteRepos),
-      now: () => BENCH_NOW,
-      hashPassword: async () => "bench-password-hash",
-    });
-    inviteAccept = (input) => inviteService.acceptInvite(input);
+    const inviteService = createInviteServiceForExecutor(ctx.db);
+    inviteAccept = (input) =>
+      inviteService.acceptInvite(input, operationAt(BENCH_NOW));
   });
 
   beforeEach(async () => {

@@ -5,32 +5,36 @@ import { markInviteDelivered } from "./mark-invite-delivered";
 import { redeliverInvite } from "./redeliver-invite";
 import { revokeInvite } from "./revoke-invite";
 import { createInviteRuntime } from "./runtime";
-import type { InviteDeps, InviteService, InviteServiceDeps } from "./types";
+import type {
+  InviteBaseRepos,
+  InviteService,
+  InviteServiceDeps,
+} from "./types";
 
 export function createInviteService(
-  deps: InviteDeps,
+  repos: InviteBaseRepos,
   runtimeOverrides: InviteServiceDeps,
 ): InviteService {
   const runtime = createInviteRuntime(runtimeOverrides);
 
   return {
-    listPendingInvites(branchId) {
-      return listPendingInvites(deps, runtime, branchId);
+    listPendingInvites(branchId, operation) {
+      return listPendingInvites(repos, branchId, operation);
     },
-    createInvite(input) {
-      return createInvite(deps, runtime, input);
+    createInvite(input, operation) {
+      return createInvite(runtime, input, operation);
     },
-    redeliverInvite(input) {
-      return redeliverInvite(deps, runtime, input);
+    redeliverInvite(input, operation) {
+      return redeliverInvite(runtime, input, operation);
     },
-    revokeInvite(input) {
-      return revokeInvite(deps, runtime, input);
+    revokeInvite(input, operation) {
+      return revokeInvite(runtime, input, operation);
     },
-    markInviteDelivered(inviteId) {
-      return markInviteDelivered(deps, runtime, inviteId);
+    markInviteDelivered(inviteId, operation) {
+      return markInviteDelivered(runtime, inviteId, operation);
     },
-    acceptInvite(input) {
-      return acceptInvite(deps, runtime, input);
+    acceptInvite(input, operation) {
+      return acceptInvite(runtime, input, operation);
     },
   };
 }

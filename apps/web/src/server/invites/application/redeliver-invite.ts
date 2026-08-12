@@ -1,25 +1,23 @@
-import { canAssignRole } from "~/lib/auth/access/rbac";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
-import { addMilliseconds, epochMilliseconds } from "~/server/shared/time";
+import { auditEntityId } from "~/domain/audit/entity";
+import { canAssignRole } from "~/domain/auth/access/rbac";
+import { fail, type DomainError } from "~/domain/errors";
+import { addMilliseconds, epochMilliseconds } from "~/domain/time/clock";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type {
   InviteIssueResult,
-  InviteDeps,
   InviteRuntime,
   RedeliverInviteInput,
 } from "./types";
 
 // Reuses the existing token. Only revoke-and-reissue rotates it.
 export async function redeliverInvite(
-  repos: InviteDeps,
   runtime: InviteRuntime,
   input: RedeliverInviteInput,
+  operation: OperationContext,
 ): Promise<Result<InviteIssueResult, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
-    const now = runtime.now();
-
     const invite = await transactionRepos.userInvites.findById(input.inviteId);
     if (!invite) {
       return Err(fail("invite_not_found"));
@@ -29,7 +27,10 @@ export async function redeliverInvite(
       return Err(fail("cross_branch_forbidden"));
     }
 
-    if (invite.status !== "pending" || invite.expires_at <= now) {
+    if (
+      invite.status !== "pending" ||
+      invite.expires_at <= operation.operationAt
+    ) {
       return Err(fail("invite_not_pending"));
     }
 
@@ -47,7 +48,10 @@ export async function redeliverInvite(
       return Err(fail("role_not_assignable"));
     }
 
-    const expiresAt = addMilliseconds(now, runtime.inviteTtlMs);
+    const expiresAt = addMilliseconds(
+      operation.operationAt,
+      runtime.inviteTtlMs,
+    );
 
     await transactionRepos.userInvites.refreshExpiry(invite.id, expiresAt);
 
@@ -60,7 +64,7 @@ export async function redeliverInvite(
         inviteId: invite.id,
         expiresAt: epochMilliseconds(expiresAt),
       },
-      occurredAt: now,
+      occurredAt: operation.operationAt,
     });
 
     return Ok({
