@@ -6,7 +6,7 @@ import {
 import { sql } from "kysely";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { migrateToLatest } from "~/lib/db/migrate";
+import { migrateToLatest } from "~/server/platform/database/migrate";
 
 describe("schema baseline", () => {
   let ctx: FreshDbContext | null = null;

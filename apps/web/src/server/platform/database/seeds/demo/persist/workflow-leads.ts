@@ -1,0 +1,78 @@
+import type { Kysely } from "kysely";
+
+import type { Database } from "../../../types";
+import type { CompiledLead } from "../compiler";
+import type { OrganizationsByRuc } from "./organizations";
+
+export async function persistWorkflowLeadsAndAssignments(
+  db: Kysely<Database>,
+  anchorMs: number,
+  day: number,
+  orgIdByRuc: OrganizationsByRuc,
+  leads: readonly CompiledLead[],
+): Promise<void> {
+  await db
+    .insertInto("workflow_leads")
+    .values(leads.map((lead) => leadRow(lead, anchorMs, day, orgIdByRuc)))
+    .execute();
+
+  await db
+    .insertInto("organization_owner_assignments")
+    .values(
+      leads.map((lead) => ({
+        id: lead.assignmentId,
+        organization_id: organizationIdFor(orgIdByRuc, lead.spec.org.ruc),
+        executive_id: lead.spec.executiveId,
+        assigned_by: lead.spec.createdBy,
+        valid_from: new Date(anchorMs - lead.spec.createdOffsetDays * day),
+        valid_until: null,
+        reason: "demo_seed",
+        created_at: new Date(anchorMs - lead.spec.createdOffsetDays * day),
+      })),
+    )
+    .execute();
+}
+
+function leadRow(
+  lead: CompiledLead,
+  anchorMs: number,
+  day: number,
+  orgIdByRuc: OrganizationsByRuc,
+) {
+  const { spec } = lead;
+  const organizationId = organizationIdFor(orgIdByRuc, spec.org.ruc);
+  return {
+    id: lead.leadId,
+    organization_id: organizationId,
+    stage: lead.projection.stage,
+    status: lead.projection.status,
+    priority: lead.projection.priority,
+    created_by: spec.createdBy,
+    updated_by: spec.updatedBy,
+    created_at: new Date(anchorMs - spec.createdOffsetDays * day),
+    updated_at: new Date(anchorMs - lead.projection.updatedOffsetDays * day),
+    reservation_expires_at:
+      spec.reservationOffsetDays === undefined
+        ? null
+        : new Date(anchorMs + spec.reservationOffsetDays * day),
+    current_provider: spec.current.provider,
+    current_debit_rate: spec.current.debitRate,
+    current_credit_rate: spec.current.creditRate,
+    gpv: spec.current.gpv,
+    ticket: spec.current.ticket,
+    settlement_bank: spec.current.settlementBank,
+    pos_count: spec.current.posCount,
+  };
+}
+
+function organizationIdFor(
+  orgIdByRuc: OrganizationsByRuc,
+  ruc: string,
+): NonNullable<ReturnType<OrganizationsByRuc["get"]>> {
+  const organizationId = orgIdByRuc.get(ruc);
+  if (!organizationId) {
+    throw new Error(`missing_seed_organization_id:${ruc}`);
+  }
+
+  return organizationId;
+}
