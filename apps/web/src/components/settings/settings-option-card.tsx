@@ -27,3 +27,24 @@ export function SettingsOptionCardRow(props: {
     </div>
   );
 }
+
+export function SettingsOptionCardWideRow(
+  props: ParentProps<{
+    title: string;
+    description?: string;
+  }>,
+) {
+  return (
+    <div class={clsx(styles.row, styles.wideRow)}>
+      <div class={styles.text}>
+        <span class={styles.title}>{props.title}</span>
+        <Show when={props.description}>
+          {(description) => (
+            <span class={styles.description}>{description()}</span>
+          )}
+        </Show>
+      </div>
+      {props.children}
+    </div>
+  );
+}

@@ -55,3 +55,9 @@
   flex-shrink: 0;
   margin-left: auto;
 }
+
+.wideRow {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--t-spacing-3);
+}
