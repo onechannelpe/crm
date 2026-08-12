@@ -29,11 +29,11 @@ export interface SunatRucData {
 }
 
 export type DniApiResult =
-  | { ok: true; data: SunatDniData }
+  | { ok: true; data: SunatDniData; observedAt: Date }
   | { ok: false; error: EnrichmentError };
 
 export type RucApiResult =
-  | { ok: true; data: SunatRucData }
+  | { ok: true; data: SunatRucData; observedAt: Date }
   | { ok: false; error: EnrichmentError };
 
 export interface SunatScraperClient {

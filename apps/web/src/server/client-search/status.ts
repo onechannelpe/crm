@@ -1,27 +1,27 @@
-import type { Document } from "~/server/shared/document";
+import type { Document } from "~/domain/identity/document";
 
 import type { SunatEconomicActivity } from "./enrichment/sunat/contracts";
 import type { EnrichmentStatus, Overlay } from "./model";
 import type { CompanyRegistryPort, RegistryRow } from "./ports";
 
 export interface EnrichmentQuery {
-  getStatus(document: Document, now?: Date): Promise<EnrichmentStatus>;
+  getStatus(document: Document, freshAsOf: Date): Promise<EnrichmentStatus>;
 }
 
 export function createEnrichmentQuery(
   repo: CompanyRegistryPort,
 ): EnrichmentQuery {
   return {
-    async getStatus(document, now = new Date()) {
+    async getStatus(document, freshAsOf) {
       const record = await repo.getRecord(document.kind, document.value);
 
       return {
         documentType: document.kind,
         documentValue: document.value,
         lifecycle: resolveLifecycle(record),
-        freshness: resolveFreshness(record, now),
+        freshness: resolveFreshness(record, freshAsOf),
         overlay: toOverlay(record),
-        lastError: record?.last_error ?? null,
+        lastError: record?.error_message ?? null,
         requestedAt: record?.requested_at ?? null,
       };
     },
@@ -30,12 +30,13 @@ export function createEnrichmentQuery(
 
 function resolveFreshness(
   record: RegistryRow | null | undefined,
-  now: Date,
+  freshAsOf: Date,
 ): EnrichmentStatus["freshness"] {
   if (!record || record.expires_at === null) {
     return "none";
   }
-  return record.expires_at > now ? "fresh" : "stale";
+
+  return record.expires_at > freshAsOf ? "fresh" : "stale";
 }
 
 function resolveLifecycle(
@@ -60,8 +61,6 @@ function resolveLifecycle(
   }
 }
 
-// No result exists until a provider fills the record: queue may be pending or
-// processing with all result columns null.
 function toOverlay(record: RegistryRow | null | undefined): Overlay | null {
   if (
     !record ||
@@ -92,20 +91,24 @@ function toOverlay(record: RegistryRow | null | undefined): Overlay | null {
   };
 }
 
-// jsonb auto-parses on read; narrow defensively at this boundary rather than
-// trusting the stored shape.
+// Validate the stored JSON before exposing it as typed data.
 function normalizeEconomicActivities(value: unknown): SunatEconomicActivity[] {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    return [];
+  }
 
   return value
     .map((entry): SunatEconomicActivity | null => {
-      if (typeof entry !== "object" || entry === null) return null;
+      if (typeof entry !== "object" || entry === null) {
+        return null;
+      }
 
       const role = Reflect.get(entry, "role");
       const order = Reflect.get(entry, "order");
       const label = Reflect.get(entry, "label");
       const code = Reflect.get(entry, "code");
       const description = Reflect.get(entry, "description");
+
       if (
         (role !== "principal" && role !== "secondary") ||
         (order !== null && typeof order !== "number") ||

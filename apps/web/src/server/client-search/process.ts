@@ -1,5 +1,5 @@
-import type { DomainPatch } from "~/lib/job-queue/job-store";
-import { isPlainRecord } from "~/lib/type-guards";
+import type { DomainPatch } from "~/server/platform/jobs/job-store";
+import { isPlainRecord } from "~/shared/type-guards";
 
 import type { SunatScraperClient } from "./enrichment/sunat/contracts";
 import { sanitizeField } from "./enrichment/sunat/text";
@@ -12,9 +12,7 @@ export async function processEnrichmentJob(
   job: RegistryRow,
   scraper: SunatScraperClient,
   signal: AbortSignal,
-  now: Date = new Date(),
 ): Promise<ProcessResult> {
-  const expiresAt = new Date(now.getTime() + OVERLAY_TTL_MS);
   if (job.document_type === "dni") {
     const result = await scraper.fetchDni(job.document_value, signal);
 
@@ -41,8 +39,8 @@ export async function processEnrichmentJob(
       contributorCondition: null,
       economicActivities: [],
       source: "sunat",
-      fetchedAt: now,
-      expiresAt,
+      fetchedAt: result.observedAt,
+      expiresAt: new Date(result.observedAt.getTime() + OVERLAY_TTL_MS),
       payload: result.data.payload,
     };
     return { ok: true, overlay };
@@ -68,8 +66,8 @@ export async function processEnrichmentJob(
     contributorCondition: result.data.contributorCondition,
     economicActivities: result.data.economicActivities,
     source: "sunat",
-    fetchedAt: now,
-    expiresAt,
+    fetchedAt: result.observedAt,
+    expiresAt: new Date(result.observedAt.getTime() + OVERLAY_TTL_MS),
     payload: result.data.payload,
   };
   return { ok: true, overlay };
