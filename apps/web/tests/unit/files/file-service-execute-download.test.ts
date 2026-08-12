@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { FileAssetId, FileDownloadTokenId, UserId } from "~/domain/ids";
 import { executeDownload } from "~/server/files/service/execute-download";
 import type { FileAsset } from "~/server/files/types";
-import { FileAssetId, FileDownloadTokenId, UserId } from "~/server/shared/ids";
+
+import { operationAt } from "../../support/operation";
 
 const fileAsset: FileAsset = {
   id: FileAssetId.trust("file-20"),
@@ -42,6 +44,7 @@ describe("executeDownload", () => {
           assets: {
             findById: async () => fileAsset,
             insert: async () => fileAsset.id,
+            delete: async () => [],
           },
         },
         storage: {
@@ -51,11 +54,13 @@ describe("executeDownload", () => {
           delete: async () => {},
         },
       },
-      new Date(1_700_000_000_000),
+      operationAt(1_700_000_000_000),
     );
 
     expect(result.ok).toBe(false);
-    if (result.ok) return;
+    if (result.ok) {
+      return;
+    }
     expect(result.error.code).toBe("token_already_used");
   });
 });

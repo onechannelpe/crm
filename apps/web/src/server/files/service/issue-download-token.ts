@@ -1,31 +1,33 @@
-import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { FileAssetId } from "~/server/shared/ids";
-import { Ok, type Result } from "~/server/shared/result";
+import type { DomainError } from "~/domain/errors";
+import type { FileAssetId } from "~/domain/ids";
+import { Ok, type Result } from "~/shared/result";
 
 import {
   DOWNLOAD_TOKEN_TTL_MS,
   generateDownloadToken,
   hashToken,
 } from "../token";
-import type { DownloadTokenDeps } from "./contracts";
+import type { DownloadTokenDeps, FileOperationContext } from "./contracts";
 
 export async function issueDownloadToken(
-  ctx: AppContext,
+  ctx: FileOperationContext,
   fileAssetId: FileAssetId,
   deps: DownloadTokenDeps,
 ): Promise<Result<{ token: string }, DomainError>> {
-  const now = ctx.now();
   const rawToken = generateDownloadToken();
   const tokenHash = hashToken(rawToken);
-  const expiresAt = new Date(now.getTime() + DOWNLOAD_TOKEN_TTL_MS);
+
+  // The TTL runs from the stored creation stamp, so the two columns always
+  // agree on when the window opened.
+  const createdAt = ctx.operationAt;
+  const expiresAt = new Date(createdAt.getTime() + DOWNLOAD_TOKEN_TTL_MS);
 
   await deps.repo.tokens.insert({
     fileAssetId,
     tokenHash,
     requestedByUserId: ctx.actor.userId,
     expiresAt,
-    now,
+    createdAt,
   });
 
   return Ok({ token: rawToken });

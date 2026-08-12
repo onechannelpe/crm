@@ -1,10 +1,10 @@
 import type { APIEvent } from "@solidjs/start/server";
 
+import { application } from "~/server/composition/application";
 import { buildFileDownloadHeaders } from "~/server/files/headers";
-import { executeDownload } from "~/server/files/service/execute-download";
-import { getServerRuntime } from "~/server/platform/container";
-import { toWire } from "~/server/shared/domain-error";
-import { isErr } from "~/server/shared/result";
+import { toWire } from "~/server/platform/action/domain-error";
+import { getRequestOperation } from "~/server/platform/http/request-context-storage";
+import { isErr } from "~/shared/result";
 
 export async function GET(
   event: Pick<APIEvent, "params" | "request">,
@@ -15,10 +15,9 @@ export async function GET(
       return new Response("Invalid token", { status: 400 });
     }
 
-    const { repo, storage } = getServerRuntime().files;
-    const now = new Date();
+    const now = getRequestOperation();
 
-    const result = await executeDownload(token, { repo, storage }, now);
+    const result = await application.files.download(token, now);
 
     if (isErr(result)) {
       const kind = result.error.kind;

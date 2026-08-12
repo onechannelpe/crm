@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { Database } from "~/server/platform/database/types";
 
 import type { InsertDownloadTokenInput } from "./types";
 
@@ -17,7 +17,7 @@ export function createTokensRepo(db: DB) {
           requested_by_user_id: input.requestedByUserId,
           expires_at: input.expiresAt,
           used_at: null,
-          created_at: input.now,
+          created_at: input.createdAt,
         })
         .execute();
     },
@@ -35,7 +35,9 @@ export function createTokensRepo(db: DB) {
         .where("token_hash", "=", tokenHash)
         .executeTakeFirst();
 
-      if (!row) return null;
+      if (!row) {
+        return null;
+      }
 
       return {
         id: row.id,

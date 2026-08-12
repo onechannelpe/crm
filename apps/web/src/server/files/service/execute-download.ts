@@ -1,5 +1,6 @@
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { hashToken } from "../token";
 import type { DownloadReady } from "../types";
@@ -8,7 +9,7 @@ import type { ExecuteDownloadDeps } from "./contracts";
 export async function executeDownload(
   tokenRaw: string,
   deps: ExecuteDownloadDeps,
-  now: Date,
+  operation: OperationContext,
 ): Promise<Result<DownloadReady, DomainError>> {
   const { repo, storage } = deps;
   const tokenHash = hashToken(tokenRaw);
@@ -22,7 +23,7 @@ export async function executeDownload(
     return Err(fail("token_already_used"));
   }
 
-  if (tokenRow.expiresAt < now) {
+  if (tokenRow.expiresAt < operation.operationAt) {
     return Err(fail("token_expired"));
   }
 
@@ -38,7 +39,10 @@ export async function executeDownload(
     return Err(fail("file_storage_missing"));
   }
 
-  const tokenConsumed = await repo.tokens.markUsed(tokenHash, now);
+  const tokenConsumed = await repo.tokens.markUsed(
+    tokenHash,
+    operation.operationAt,
+  );
   if (!tokenConsumed) {
     return Err(fail("token_already_used"));
   }

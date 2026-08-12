@@ -1,7 +1,9 @@
-import type { FileAssetId, UserId } from "~/server/shared/ids";
+import type { FileAssetId, UserId } from "~/domain/ids";
 
-export const FILE_PURPOSES = [
+const FILE_PURPOSES = [
   "records_export",
+  "merchant_gpv_export",
+  "merchant_gpv_snapshot",
   "integration_import",
   "sale_proof",
   "rate_revision_file",

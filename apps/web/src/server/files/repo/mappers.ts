@@ -1,6 +1,6 @@
 import type { Selectable } from "kysely";
 
-import type { FileAssetsTable } from "~/lib/db/types";
+import type { FileAssetsTable } from "~/server/platform/database/types";
 
 import type { FileAsset } from "../types";
 
