@@ -1,7 +1,7 @@
 import type { Insertable, Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { OrganizationPersonId } from "~/server/shared/ids";
+import type { OrganizationPersonId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 type NewInteractionLogRow = Insertable<Database["interaction_logs"]>;
 

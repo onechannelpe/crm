@@ -12,14 +12,18 @@ import {
 } from "~/server/capacity/infrastructure/usage-repo";
 import { createContactAssignmentsRepo } from "~/server/contact-assignments/infrastructure/assignment-repo";
 import { createContactCadenceRepo } from "~/server/contact-assignments/infrastructure/cadence-repo";
+import { createInteractionLogsRepo } from "~/server/contact-assignments/infrastructure/interaction-logs-repo";
+import type { EngineClient } from "~/server/integrations/engine/client";
 import { createOrganizationRepo } from "~/server/organization/organization-repo";
-import { createExecutorUow } from "~/server/shared/application/uow";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { EngineClient } from "~/server/shared/engine/client";
-import { createInteractionLogsRepo } from "~/server/shared/repos-interaction-logs";
-import { isErr, Ok } from "~/server/shared/result";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { createExecutorUow } from "~/server/platform/database/uow";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { isErr, Ok } from "~/shared/result";
 
-export type ContactAssignmentRepos = {
+import { assignContacts } from "./application/assign-contacts";
+import { completeContactAssignmentCall } from "./application/complete-contact-assignment-call";
+
+type ContactAssignmentRepos = {
   users: ReturnType<typeof createCapacityUsersRepo>;
   leadPolicyDefaults: ReturnType<typeof createLeadPolicyDefaultsRepo>;
   leadPolicyOverrides: ReturnType<typeof createLeadPolicyOverridesRepo>;
@@ -31,7 +35,7 @@ export type ContactAssignmentRepos = {
   cadence: ReturnType<typeof createContactCadenceRepo>;
 };
 
-interface ContactAssignmentsContextDeps {
+interface ContactAssignmentsRuntimeDeps {
   executor: DatabaseExecutor;
   engine: Pick<EngineClient, "requestCandidates">;
 }
@@ -55,12 +59,15 @@ function buildLeadUsageReservationPorts(
 ): UsageReservationPorts<"lead"> {
   return {
     executor,
-    async checkRemaining(trx, actorUserId) {
+    async checkRemaining(trx, actorUserId, operation) {
       const snapshot = await getLeadCapacitySnapshot(
         actorUserId,
         buildRepos(trx),
+        operation,
       );
-      if (isErr(snapshot)) return snapshot;
+      if (isErr(snapshot)) {
+        return snapshot;
+      }
       return Ok(snapshot.value.remaining);
     },
     reservations: createLeadUsageReservationsRepo,
@@ -68,23 +75,36 @@ function buildLeadUsageReservationPorts(
   };
 }
 
-export function createContactAssignmentsContext(
-  deps: ContactAssignmentsContextDeps,
+export function createContactAssignmentsRuntime(
+  deps: ContactAssignmentsRuntimeDeps,
 ) {
   const { executor, engine } = deps;
 
+  const repos = buildRepos(executor);
+  const interactionUow = createExecutorUow(executor, (txDb) => ({
+    contactAssignments: createContactAssignmentsRepo(txDb),
+    interactionLogs: createInteractionLogsRepo(txDb),
+  }));
+  const uow = createExecutorUow(executor, buildRepos);
+  const leadUsageReservationPorts = buildLeadUsageReservationPorts(executor);
+
   return {
-    repos: buildRepos(executor),
-    engine,
-    interactionUow: createExecutorUow(executor, (txDb) => ({
-      contactAssignments: createContactAssignmentsRepo(txDb),
-      interactionLogs: createInteractionLogsRepo(txDb),
-    })),
-    uow: createExecutorUow(executor, buildRepos),
-    leadUsageReservationPorts: buildLeadUsageReservationPorts(executor),
+    getCapacity: (
+      actorUserId: Parameters<typeof getLeadCapacitySnapshot>[0],
+      operation: OperationContext,
+    ) => getLeadCapacitySnapshot(actorUserId, repos, operation),
+    assign: (
+      command: Parameters<typeof assignContacts>[0],
+      operation: OperationContext,
+    ) =>
+      assignContacts(
+        command,
+        { repos, uow, engine, leadUsageReservationPorts },
+        operation,
+      ),
+    completeCall: (
+      command: Parameters<typeof completeContactAssignmentCall>[0],
+      operation: OperationContext,
+    ) => completeContactAssignmentCall(command, interactionUow, operation),
   };
 }
-
-export type ContactAssignmentsContext = ReturnType<
-  typeof createContactAssignmentsContext
->;
