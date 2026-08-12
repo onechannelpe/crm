@@ -1,8 +1,8 @@
-import { createLogger } from "~/lib/observability/logger";
-import type { BlobStore } from "~/server/shared/blob-store";
-import type { UserId } from "~/server/shared/ids";
-import type { Result } from "~/server/shared/result";
-import { Err, Ok } from "~/server/shared/result";
+import type { UserId } from "~/domain/ids";
+import type { BlobStore } from "~/server/platform/files/blob-store";
+import { createLogger } from "~/shared/observability/runtime-logger";
+import type { Result } from "~/shared/result";
+import { Err, Ok } from "~/shared/result";
 
 const MAX_PROFILE_PICTURE_BYTES = 10 * 1024 * 1024;
 const MIME_TO_EXTENSION: Record<string, string> = {
@@ -45,9 +45,11 @@ export interface AvatarService {
   upload(
     userId: UserId,
     file: File,
+    updatedAt: Date,
   ): Promise<Result<{ avatarVersion: number }, AvatarDomainError>>;
   remove(
     userId: UserId,
+    updatedAt: Date,
   ): Promise<Result<{ avatarVersion: number }, AvatarDomainError>>;
   get(userId: UserId): Promise<Result<AvatarRecord, AvatarDomainError>>;
 }
@@ -92,7 +94,7 @@ export function createAvatarService(
   blobStore: BlobStore,
 ): AvatarService {
   return {
-    async upload(userId: UserId, file: File) {
+    async upload(userId: UserId, file: File, updatedAt: Date) {
       const validation = validateFile(file);
       if (!validation.ok) {
         return validation;
@@ -117,7 +119,6 @@ export function createAvatarService(
       const storageKey = `${userId}/${crypto.randomUUID()}.${extension}`;
       const content = new Uint8Array(await file.arrayBuffer());
       const nextVersion = currentAvatar.avatar_version + 1;
-      const updatedAt = new Date();
 
       try {
         await blobStore.putBytes(storageKey, content);
@@ -158,7 +159,7 @@ export function createAvatarService(
       return Ok({ avatarVersion: nextVersion });
     },
 
-    async remove(userId: UserId) {
+    async remove(userId: UserId, updatedAt: Date) {
       let currentAvatar: AvatarMetaRow | null | undefined;
       try {
         currentAvatar = await repos.users.findAvatarMetaById(userId);
@@ -174,7 +175,7 @@ export function createAvatarService(
 
       try {
         await repos.users.clearAvatar(userId, {
-          updated_at: new Date(),
+          updated_at: updatedAt,
           version: nextVersion,
         });
       } catch {

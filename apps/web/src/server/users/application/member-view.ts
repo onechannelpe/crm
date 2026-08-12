@@ -1,6 +1,5 @@
 import type { MemberListItem } from "~/contracts/members";
-import type { UserId } from "~/server/shared/ids";
-import { epochMilliseconds } from "~/server/shared/time";
+import type { UserId } from "~/domain/ids";
 import type { MemberRosterRow } from "~/server/users/repos-users";
 
 // Other members' avatars are served through a dedicated, permission-gated route
@@ -31,6 +30,5 @@ export function toMemberListItem(row: MemberRosterRow): MemberListItem {
       row.avatar_storage_key !== null,
       row.avatar_version,
     ),
-    expiresAt: row.expires_at ? epochMilliseconds(row.expires_at) : null,
   };
 }

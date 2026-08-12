@@ -1,11 +1,17 @@
-import type { Role } from "~/lib/auth/access/rbac";
+import type { Role } from "~/domain/auth/access/rbac";
+import { fail, type DomainError } from "~/domain/errors";
 import {
-  isExecutiveCategoryValue,
-  type ExecutiveCategoryValue,
-} from "~/lib/db/types";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { TeamId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+  isExecutiveCategory,
+  type ExecutiveCategory,
+} from "~/domain/identity/executive-category";
+import type { TeamId } from "~/domain/ids";
+import { appCalendarDateAt, appDayRange } from "~/domain/time/app-time";
+import {
+  addCalendarDays,
+  type CalendarDate,
+} from "~/domain/time/calendar-date";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import type { CreateTeamInviteCommand } from "../application/contracts";
 
@@ -20,15 +26,43 @@ export type TeamInviteShape = {
   role: Role;
   executiveCategory: string | null;
   teamId: TeamId | null;
-  expiresAt: number | null;
+  expiresOn: CalendarDate | null;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_EXPIRY_OFFSET_MS = 7 * 24 * 60 * 60 * 1000;
+const MIN_EXPIRY_DAYS = 7;
 
 export function validateTeamInviteInput(
   input: TeamInviteShape,
+  operation: OperationContext,
 ): Result<CreateTeamInviteCommand, DomainError> {
+  const shape = validateTeamInviteShape(input);
+  if (!shape.ok) {
+    return shape;
+  }
+
+  const expiresAt = validateExpiry(input.expiresOn, operation.operationAt);
+
+  if (!expiresAt.ok) {
+    return expiresAt;
+  }
+
+  return Ok({
+    names: input.names,
+    firstSurname: input.firstSurname,
+    secondSurname: input.secondSurname,
+    email: input.email,
+    role: input.role,
+    executiveCategory: shape.value,
+    teamId: input.teamId,
+    expiresAt: expiresAt.value,
+  });
+}
+
+/** Validates an invite independently of the request instant. */
+export function validateTeamInviteShape(
+  input: TeamInviteShape,
+): Result<ExecutiveCategory | null, DomainError> {
   if (!EMAIL_PATTERN.test(input.email)) {
     return Err(fail("invalid_email"));
   }
@@ -46,22 +80,7 @@ export function validateTeamInviteInput(
     return Err(fail("invalid_team_id"));
   }
 
-  const expiresAt = validateExpiry(input.expiresAt);
-
-  if (!expiresAt.ok) {
-    return expiresAt;
-  }
-
-  return Ok({
-    names: input.names,
-    firstSurname: input.firstSurname,
-    secondSurname: input.secondSurname,
-    email: input.email,
-    role: input.role,
-    executiveCategory: category.value,
-    teamId: input.teamId,
-    expiresAt: expiresAt.value,
-  });
+  return Ok(category.value);
 }
 
 // Category applies only to executives; for other roles it is dropped so a
@@ -69,12 +88,12 @@ export function validateTeamInviteInput(
 function resolveExecutiveCategory(
   role: Role,
   executiveCategory: string | null,
-): Result<ExecutiveCategoryValue | null, DomainError> {
+): Result<ExecutiveCategory | null, DomainError> {
   if (role !== "executive") {
     return Ok(null);
   }
 
-  if (!executiveCategory || !isExecutiveCategoryValue(executiveCategory)) {
+  if (!executiveCategory || !isExecutiveCategory(executiveCategory)) {
     return Err(fail("invalid_executive_category"));
   }
 
@@ -82,19 +101,20 @@ function resolveExecutiveCategory(
 }
 
 function validateExpiry(
-  expiresAt: number | null,
+  expiresOn: CalendarDate | null,
+  requestedAt: Date,
 ): Result<Date | null, DomainError> {
-  if (expiresAt === null) {
+  if (expiresOn === null) {
     return Ok(null);
   }
 
-  if (!Number.isInteger(expiresAt) || expiresAt < 1) {
-    return Err(fail("invalid_expires_at"));
+  const minimum = addCalendarDays(
+    appCalendarDateAt(requestedAt),
+    MIN_EXPIRY_DAYS,
+  );
+  if (expiresOn < minimum) {
+    return Err(fail("expires_on_too_soon"));
   }
 
-  if (expiresAt <= Date.now() + MIN_EXPIRY_OFFSET_MS) {
-    return Err(fail("expires_at_too_soon"));
-  }
-
-  return Ok(new Date(expiresAt));
+  return Ok(appDayRange(expiresOn).endExclusive);
 }

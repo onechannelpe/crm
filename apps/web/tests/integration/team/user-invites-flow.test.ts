@@ -10,6 +10,8 @@ import {
 import { createTestRepositories } from "@tests/support/runtime/repos";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+const NOW = new Date(1_700_000_000_000);
+
 describe("user invite lifecycle", () => {
   let ctx: TestDbContext;
 
@@ -27,7 +29,7 @@ describe("user invite lifecycle", () => {
 
   it("creates and accepts an invite for a new user", async () => {
     const kit = createInviteTestKit(ctx, {
-      now: () => new Date(1_700_000_000_000),
+      now: () => NOW,
     });
 
     const created = expectOk(
@@ -58,7 +60,7 @@ describe("user invite lifecycle", () => {
 
   it("can revoke a pending invite", async () => {
     const kit = createInviteTestKit(ctx, {
-      now: () => new Date(1_700_000_000_000),
+      now: () => NOW,
     });
 
     const created = expectOk(
@@ -89,26 +91,29 @@ describe("user invite lifecycle", () => {
 
   it("recovers the invite when a concurrent insert wins the email race", async () => {
     let raceTriggered = false;
+
     const kit = createInviteTestKit(ctx, {
-      now: () => new Date(1_700_000_000_000),
+      now: () => NOW,
       createRepos(db) {
         const repos = createTestRepositories(db);
+
         return {
           ...repos,
           users: {
             ...repos.users,
-            // Simulate a concurrent transaction: the first create wins the
-            // insert, then this one fails on the unique email. Production must
-            // recover by reusing the row the competitor just inserted.
             async create(values) {
-              if (raceTriggered) {
-                return repos.users.create(values);
+              if (!raceTriggered) {
+                raceTriggered = true;
+
+                // Insert through the outer connection so this transaction loses
+                // the real unique-email race.
+                await ctx.repos.users.create({
+                  ...values,
+                  username: `competitor.${values.username}`,
+                });
               }
-              raceTriggered = true;
-              await repos.users.create(values);
-              throw new Error(
-                "SQLITE_CONSTRAINT_UNIQUE: UNIQUE constraint failed: users.email",
-              );
+
+              return repos.users.create(values);
             },
           },
         };
@@ -133,10 +138,20 @@ describe("user invite lifecycle", () => {
     expect(raceTriggered).toBe(true);
 
     const racedUser = await ctx.repos.users.findByEmail("race-user@test.local");
+
     expect(racedUser?.is_active).toBe(false);
     expect(racedUser?.branch_id).toBe(TEST_FIXTURES.branches.norte.id);
 
+    const rows = await ctx.db
+      .selectFrom("users")
+      .select("id")
+      .where("email", "=", "race-user@test.local")
+      .execute();
+
+    expect(rows).toHaveLength(1);
+
     const invite = await ctx.repos.userInvites.findById(created.inviteId);
+
     expect(invite?.status).toBe("pending");
     expect(invite?.user_id).toBe(racedUser?.id);
   });

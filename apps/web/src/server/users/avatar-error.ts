@@ -1,8 +1,4 @@
-import {
-  external,
-  invalid,
-  type DomainError,
-} from "~/server/shared/domain-error";
+import { external, invalid, type DomainError } from "~/domain/errors";
 import type { AvatarDomainErrorCode } from "~/server/users/avatar-service";
 
 type ValidationAvatarErrorCode = Extract<

@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { UserId, WebauthnChallengeId } from "~/server/shared/ids";
+import type { UserId, WebauthnChallengeId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 export function createWebauthnChallengesRepo(db: Kysely<Database>) {
   return {
@@ -42,10 +42,10 @@ export function createWebauthnChallengesRepo(db: Kysely<Database>) {
       return deleted !== undefined;
     },
 
-    async deleteExpired(now = new Date()): Promise<number> {
+    async deleteExpired(expiredBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("webauthn_challenges")
-        .where("expires_at", "<", now)
+        .where("expires_at", "<", expiredBefore)
         .executeTakeFirst();
 
       return Number(result.numDeletedRows ?? 0);

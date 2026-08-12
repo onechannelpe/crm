@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { BranchId, UserId } from "~/server/shared/ids";
+import type { BranchId, UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 export function createBranchSupervisorsRepo(db: Kysely<Database>) {
   return {
@@ -27,13 +27,13 @@ export function createBranchSupervisorsRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async assign(branchId: BranchId, userId: UserId, now: Date) {
+    async assign(branchId: BranchId, userId: UserId, assignedAt: Date) {
       await db
         .insertInto("branch_supervisors")
         .values({
           branch_id: branchId,
           user_id: userId,
-          created_at: now,
+          created_at: assignedAt,
         })
         .onConflict((oc) => oc.doNothing())
         .execute();

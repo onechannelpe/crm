@@ -3,14 +3,14 @@ import {
   canDeleteMember,
   canImpersonateMember,
   canManageMember,
-} from "~/lib/auth/access/member-management";
-import { getPermissions } from "~/lib/auth/access/rbac";
-import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
+} from "~/domain/auth/access/member-management";
+import { getPermissions } from "~/domain/auth/access/rbac";
+import { getAssignableRoleOptions } from "~/domain/auth/access/role-display";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { appCalendarDateBefore } from "~/domain/time/app-time";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
-import { epochMilliseconds } from "~/server/shared/time";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { memberAvatarUrl } from "../member-view";
 import type { MemberReadDeps } from "../ports";
@@ -18,9 +18,9 @@ import type { MemberReadDeps } from "../ports";
 export async function getMemberDetail(
   ctx: AppContext,
   deps: MemberReadDeps,
-  input: { userId: UserId },
+  userId: UserId,
 ): Promise<Result<MemberDetail, DomainError>> {
-  const user = await deps.users.findById(input.userId);
+  const user = await deps.users.findById(userId);
   if (!user || user.branch_id !== ctx.actor.branchId) {
     return Err(fail("user_not_found"));
   }
@@ -52,7 +52,7 @@ export async function getMemberDetail(
       user.avatar_storage_key !== null,
       user.avatar_version,
     ),
-    expiresAt: user.expires_at ? epochMilliseconds(user.expires_at) : null,
+    expiresOn: user.expires_at ? appCalendarDateBefore(user.expires_at) : null,
     permissions: getPermissions(user.role),
     assignableRoles: getAssignableRoleOptions(actorRole),
     teams: branchTeams.map((branchTeam) => ({

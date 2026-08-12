@@ -1,10 +1,10 @@
-import { personDisplayName } from "~/lib/users/display-name";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { personDisplayName } from "~/domain/identity/display-name";
 import type {
   OrganizationId,
   OrganizationPersonId,
   PersonId,
-} from "~/server/shared/ids";
+} from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 export const LEGAL_REPRESENTATIVE_ROLE = "LEGAL_REPRESENTATIVE";
 
@@ -55,6 +55,8 @@ export type OrganizationRepository = {
     address?: string | null;
     district?: string | null;
     department?: string | null;
+    /** Operation instant that stamps the row. */
+    upsertedAt: Date;
   }): Promise<OrganizationProfile>;
   updateCommercialProfile(input: {
     organizationId: OrganizationId;
@@ -72,6 +74,8 @@ export type OrganizationRepository = {
     person: PersonIdentity;
     phone: string | null;
     email: string | null;
+    /** Operation instant that stamps the row. */
+    upsertedAt: Date;
   }): Promise<Membership>;
   findMembership(input: {
     organizationId: OrganizationId;
@@ -82,6 +86,8 @@ export type OrganizationRepository = {
     organizationId: OrganizationId;
     organizationPersonId: OrganizationPersonId;
     role: string;
+    /** Instant the new primary interval opens and the old one closes. */
+    effectiveAt: Date;
   }): Promise<void>;
   findPrimaryRepresentative(
     organizationId: OrganizationId,
@@ -172,8 +178,10 @@ export function createOrganizationRepo(
         "people.email as person_email",
       ]);
 
-  async function upsertPerson(person: PersonIdentity): Promise<PersonId> {
-    const now = new Date();
+  async function upsertPerson(
+    person: PersonIdentity,
+    upsertedAt: Date,
+  ): Promise<PersonId> {
     await db
       .insertInto("people")
       .values({
@@ -182,8 +190,8 @@ export function createOrganizationRepo(
         first_surname: person.firstSurname,
         second_surname: person.secondSurname,
         email: person.email,
-        created_at: now,
-        updated_at: now,
+        created_at: upsertedAt,
+        updated_at: upsertedAt,
       })
       // Preserve existing details when an incoming record only supplies a display name.
       .onConflict((oc) =>
@@ -201,7 +209,7 @@ export function createOrganizationRepo(
             eb.ref("excluded.email"),
             eb.ref("people.email"),
           ),
-          updated_at: now,
+          updated_at: upsertedAt,
         })),
       )
       .execute();
@@ -243,7 +251,7 @@ export function createOrganizationRepo(
           address: input.address ?? null,
           district: input.district ?? null,
           department: input.department ?? null,
-          created_at: new Date(),
+          created_at: input.upsertedAt,
         })
         .onConflict((oc) => oc.column("ruc").doNothing())
         .execute();
@@ -271,11 +279,21 @@ export function createOrganizationRepo(
         district?: string;
         department?: string;
       } = {};
-      if (input.legalName !== undefined) patch.legal_name = input.legalName;
-      if (input.address !== undefined) patch.address = input.address;
-      if (input.district !== undefined) patch.district = input.district;
-      if (input.department !== undefined) patch.department = input.department;
-      if (Object.keys(patch).length === 0) return;
+      if (input.legalName !== undefined) {
+        patch.legal_name = input.legalName;
+      }
+      if (input.address !== undefined) {
+        patch.address = input.address;
+      }
+      if (input.district !== undefined) {
+        patch.district = input.district;
+      }
+      if (input.department !== undefined) {
+        patch.department = input.department;
+      }
+      if (Object.keys(patch).length === 0) {
+        return;
+      }
 
       await db
         .updateTable("organizations")
@@ -285,8 +303,7 @@ export function createOrganizationRepo(
     },
 
     async upsertMembership(input) {
-      const now = new Date();
-      const personId = await upsertPerson(input.person);
+      const personId = await upsertPerson(input.person, input.upsertedAt);
 
       await db
         .insertInto("organization_people")
@@ -295,8 +312,8 @@ export function createOrganizationRepo(
           organization_id: input.organizationId,
           phone: input.phone,
           email: input.email,
-          created_at: now,
-          updated_at: now,
+          created_at: input.upsertedAt,
+          updated_at: input.upsertedAt,
         })
         .onConflict((oc) =>
           oc.columns(["organization_id", "person_id"]).doUpdateSet((eb) => ({
@@ -308,7 +325,7 @@ export function createOrganizationRepo(
               eb.ref("excluded.email"),
               eb.ref("organization_people.email"),
             ),
-            updated_at: now,
+            updated_at: input.upsertedAt,
           })),
         )
         .execute();
@@ -336,7 +353,6 @@ export function createOrganizationRepo(
     },
 
     async setPrimaryRole(input) {
-      const now = new Date();
       const memberIds = (
         await db
           .selectFrom("organization_people")
@@ -350,7 +366,7 @@ export function createOrganizationRepo(
       if (memberIds.length > 0) {
         await db
           .updateTable("organization_person_roles")
-          .set({ effective_to: now, is_primary: false })
+          .set({ effective_to: input.effectiveAt, is_primary: false })
           .where("role", "=", input.role)
           .where("is_primary", "=", true)
           .where("organization_person_id", "in", memberIds)
@@ -363,7 +379,7 @@ export function createOrganizationRepo(
           organization_person_id: input.organizationPersonId,
           role: input.role,
           is_primary: true,
-          effective_from: now,
+          effective_from: input.effectiveAt,
         })
         .onConflict((oc) =>
           oc

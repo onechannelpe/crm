@@ -1,0 +1,23 @@
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.searchRow {
+  display: flex;
+  padding: var(--spacing-2) var(--spacing-2);
+}
+
+.searchRow > * {
+  max-width: 360px;
+}
+
+.executiveName {
+  color: var(--foreground);
+  font-weight: var(--font-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
