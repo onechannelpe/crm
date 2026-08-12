@@ -9,13 +9,12 @@ import {
 } from "@crm/message-channels";
 import type { Kysely } from "kysely";
 
-import { notify } from "~/lib/db/notify";
-import type { Database } from "~/lib/db/types";
-import type { AppConfig, NotificationsConfig } from "~/lib/env";
-import { JOB_TABLE_CHANNELS } from "~/lib/job-queue/registry";
-import type { QueueRunner } from "~/lib/job-queue/types";
-import { createLogger } from "~/lib/observability/logger";
-import type { Logger } from "~/lib/observability/logger-shared";
+import type { AppNotificationId, UserId } from "~/domain/ids";
+import { receiveKapsoWebhook } from "~/server/integrations/kapso/webhooks/receive-webhook";
+import type {
+  ExternalChannel,
+  NotificationCategory,
+} from "~/server/notifications/categories";
 import {
   createMessagingGateway,
   type MessagingGateway,
@@ -30,34 +29,79 @@ import { createOutboundWhatsAppQueue } from "~/server/notifications/outbound/que
 import { createAppNotificationRepo } from "~/server/notifications/repos/app-notification";
 import { createDeliveryRepository } from "~/server/notifications/repos/delivery-repo";
 import { createIntentRepository } from "~/server/notifications/repos/intent-repo";
-import {
-  createNotificationOptOutRepo,
-  type NotificationOptOutRepo,
-} from "~/server/notifications/repos/opt-out-repo";
+import { createNotificationOptOutRepo } from "~/server/notifications/repos/opt-out-repo";
+import { createUserChannelAddressRepo } from "~/server/notifications/repos/user-channel-address";
 import type { NotificationIntent } from "~/server/notifications/types";
 import { createWhatsAppInboundQueue } from "~/server/notifications/whatsapp-inbound/queue";
-
-import type { ServerInfra } from "./infra";
+import type {
+  AppConfig,
+  NotificationsConfig,
+} from "~/server/platform/config/env";
+import type { Database } from "~/server/platform/database/types";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
+import type { QueueRunner } from "~/server/platform/jobs/types";
+import type { OperationContext } from "~/server/platform/operation/context";
+import type { Logger } from "~/shared/observability/logger";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 export interface NotificationPipelineDeps {
   db: Kysely<Database>;
   messaging: MessagingGateway;
-  clock: () => Date;
   publicOrigin: string;
   logger: Logger;
+  whatsappWebhookVerifyToken: string;
 }
 
 export interface NotificationPipeline {
   messaging: MessagingGateway;
-  appNotifications: ReturnType<typeof createAppNotificationRepo>;
-  preferences: NotificationOptOutRepo;
+  getHeader(
+    userId: UserId,
+    limit: number,
+  ): Promise<{
+    unreadCount: number;
+    notifications: Awaited<
+      ReturnType<ReturnType<typeof createAppNotificationRepo>["listByUser"]>
+    >;
+  }>;
+  markRead(
+    userId: UserId,
+    notificationId: AppNotificationId,
+    operation: OperationContext,
+  ): Promise<void>;
+  markAllRead(userId: UserId, operation: OperationContext): Promise<void>;
+  listPreferences(userId: UserId): Promise<{
+    optOuts: Awaited<
+      ReturnType<ReturnType<typeof createNotificationOptOutRepo>["listForUser"]>
+    >;
+    verifiedChannels: ExternalChannel[];
+  }>;
+  setPreference(input: {
+    userId: UserId;
+    category: NotificationCategory;
+    channel: ExternalChannel;
+    optedOut: boolean;
+    operation: OperationContext;
+  }): Promise<void>;
   createQueues(workerId: string): {
     expansion: QueueRunner;
     dispatch: QueueRunner;
     whatsappInbound: QueueRunner;
     outboundWhatsApp: QueueRunner;
   };
-  enqueue(intents: NotificationIntent[], now?: Date): Promise<void>;
+  enqueue(
+    intents: NotificationIntent[],
+    operation: OperationContext,
+  ): Promise<void>;
+  webhooks: {
+    verifyWhatsAppSubscription(input: {
+      mode: string | null;
+      token: string | null;
+    }): boolean;
+    receiveKapso: (
+      input: Parameters<typeof receiveKapsoWebhook>[1],
+      operation: OperationContext,
+    ) => ReturnType<typeof receiveKapsoWebhook>;
+  };
 }
 
 export function assembleNotificationPipeline(
@@ -67,6 +111,7 @@ export function assembleNotificationPipeline(
   const deliveries = createDeliveryRepository(deps.db);
   const appNotifications = createAppNotificationRepo(deps.db);
   const preferences = createNotificationOptOutRepo(deps.db);
+  const channelAddresses = createUserChannelAddressRepo(deps.db);
 
   const expand = createIntentExpander({
     planRecipients: createRecipientPlanner(deps.db, deps.logger),
@@ -82,43 +127,75 @@ export function assembleNotificationPipeline(
 
   return {
     messaging: deps.messaging,
-    appNotifications,
-    preferences,
+    async getHeader(userId, limit) {
+      const [unreadCount, notifications] = await Promise.all([
+        appNotifications.countUnreadByUser(userId),
+        appNotifications.listByUser(userId, limit),
+      ]);
+      return { unreadCount, notifications };
+    },
+    async markRead(userId, notificationId, operation) {
+      await appNotifications.markRead(
+        userId,
+        notificationId,
+        operation.operationAt,
+      );
+    },
+    async markAllRead(userId, operation) {
+      await appNotifications.markAllRead(userId, operation.operationAt);
+    },
+    async listPreferences(userId) {
+      const [optOuts, verifiedChannels] = await Promise.all([
+        preferences.listForUser(userId),
+        channelAddresses.listVerifiedChannels(userId),
+      ]);
+      return { optOuts, verifiedChannels };
+    },
+    async setPreference({ operation, ...preference }) {
+      await preferences.setOptedOut({
+        ...preference,
+        changedAt: operation.operationAt,
+      });
+    },
     createQueues(workerId) {
       return {
         expansion: createIntentExpansionQueue(workerId, {
           intents,
           expand,
-          clock: deps.clock,
-          onExpanded: () =>
-            notify(deps.db, JOB_TABLE_CHANNELS.notification_deliveries),
         }),
         dispatch: createDeliveryDispatchQueue(workerId, {
           deliveries,
           send,
-          clock: deps.clock,
         }),
-        whatsappInbound: createWhatsAppInboundQueue(
-          deps.db,
-          workerId,
-          deps.clock,
-        ),
+        whatsappInbound: createWhatsAppInboundQueue(deps.db, workerId),
         outboundWhatsApp: createOutboundWhatsAppQueue(
           deps.db,
           deps.messaging,
           workerId,
-          deps.clock,
         ),
       };
     },
-    enqueue(intentsToEnqueue, now = deps.clock()) {
-      return enqueueNotifications(deps.db, intentsToEnqueue, now);
+    enqueue(intentsToEnqueue, operation) {
+      return enqueueNotifications(
+        deps.db,
+        intentsToEnqueue,
+        operation.operationAt,
+      );
+    },
+    webhooks: {
+      verifyWhatsAppSubscription({ mode, token }) {
+        return (
+          mode === "subscribe" && token === deps.whatsappWebhookVerifyToken
+        );
+      },
+      receiveKapso: (input, operation) =>
+        receiveKapsoWebhook(deps.db, input, operation),
     },
   };
 }
 
 export function createNotificationsRuntime(
-  infra: ServerInfra,
+  serverInfrastructure: ServerInfrastructure,
   config: NotificationsConfig,
   app: AppConfig,
 ): NotificationPipeline {
@@ -164,10 +241,10 @@ export function createNotificationsRuntime(
   });
 
   return assembleNotificationPipeline({
-    db: infra.db,
+    db: serverInfrastructure.db,
     messaging,
-    clock: () => new Date(),
     publicOrigin: app.publicOrigin,
     logger,
+    whatsappWebhookVerifyToken: config.whatsappWebhookVerifyToken,
   });
 }

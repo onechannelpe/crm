@@ -7,7 +7,11 @@ export function classifyInboundMessage(
   body: string | null,
 ): InboundWhatsAppCommand {
   const normalized = body?.trim().toLowerCase() ?? "";
-  if (OPT_OUT_COMMANDS.has(normalized)) return "opt-out";
-  if (normalized === VERIFY_COMMAND) return "verify";
+  if (OPT_OUT_COMMANDS.has(normalized)) {
+    return "opt-out";
+  }
+  if (normalized === VERIFY_COMMAND) {
+    return "verify";
+  }
   return "activity";
 }

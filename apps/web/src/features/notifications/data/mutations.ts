@@ -3,12 +3,10 @@ import { action, json } from "@solidjs/router";
 import {
   markAllNotificationsRead,
   markNotificationRead,
-} from "~/actions/app-notifications";
-import { setNotificationPreference } from "~/actions/settings/notifications";
-import {
-  headerNotificationsQuery,
-  notificationPreferencesQuery,
-} from "~/lib/queries/notifications";
+} from "~/rpc/app-notifications";
+import { headerNotificationsQuery } from "~/rpc/notifications/header-notifications";
+import { notificationPreferencesQuery } from "~/rpc/notifications/notification-preferences";
+import { setNotificationPreference } from "~/rpc/settings/notifications";
 
 export const markNotificationReadMutation = action(
   async (notificationId: string) => {

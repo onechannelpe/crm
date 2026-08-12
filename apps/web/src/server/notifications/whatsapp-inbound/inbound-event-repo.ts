@@ -1,7 +1,10 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import { createJobStore, type JobStore } from "~/lib/job-queue/job-store";
+import type { Database } from "~/server/platform/database/types";
+import {
+  createJobStore,
+  type JobStore,
+} from "~/server/platform/jobs/job-store";
 
 export type WhatsAppInboundEventJob = {
   id: string;

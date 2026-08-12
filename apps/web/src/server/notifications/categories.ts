@@ -18,9 +18,10 @@ export const EXTERNAL_CHANNELS = [
   "whatsapp",
 ] as const satisfies readonly ExternalChannel[];
 
-export const EVENT_CATEGORY = {
+const EVENT_CATEGORY = {
   "lead.ready_for_quotation": "lead_handoffs",
   "lead.ready_for_sale": "lead_handoffs",
+  "inquiry.answered": "lead_handoffs",
   "lead.fulfillment_handoff": "fulfillment",
   "lead.fulfillment_completed": "fulfillment",
   "security.privileged_login": "security",

@@ -73,7 +73,7 @@
 }
 
 .markAll:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }
 
@@ -104,11 +104,15 @@
 }
 
 .itemUnread {
-  background: color-mix(in oklab, var(--bg-translucent) 90%, transparent);
+  background: color-mix(
+    in oklab,
+    var(--background-transparent-light) 90%,
+    transparent
+  );
 }
 
 .item:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
 }
 
 .title {
@@ -145,6 +149,6 @@
 }
 
 .readBtn:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }

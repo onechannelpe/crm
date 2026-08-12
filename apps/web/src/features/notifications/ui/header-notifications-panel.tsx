@@ -1,29 +1,20 @@
 import { useAction } from "@solidjs/router";
+import { clsx } from "clsx";
 import { createSignal, For, Show } from "solid-js";
 
+import { createOptimisticQuery } from "~/browser/ui/create-optimistic-query";
 import Bell from "~/components/icons/bell";
 import { TopBarActionButton } from "~/components/layout/top-bar-action-button";
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
 import { useDismissibleLayer } from "~/components/ui/utilities/use-dismissible-layer";
-import { APP_LOCALE } from "~/lib/locale";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import {
   markAllNotificationsReadMutation,
   markNotificationReadMutation,
-} from "~/lib/mutations/notifications";
-import { headerNotificationsQuery } from "~/lib/queries/notifications";
-import { createOptimisticQuery } from "~/lib/ui/create-optimistic-query";
-import { cn } from "~/lib/utils";
+} from "~/features/notifications/data/mutations";
+import { headerNotificationsQuery } from "~/rpc/notifications/header-notifications";
 
 import styles from "./header-notifications-panel.module.css";
-
-function formatTimestamp(value: number): string {
-  return new Date(value).toLocaleString(APP_LOCALE, {
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export function HeaderNotificationsPanel() {
   const [open, setOpen] = createSignal(false);
@@ -35,54 +26,57 @@ export function HeaderNotificationsPanel() {
   const markAllRead = useAction(markAllNotificationsReadMutation);
 
   let containerRef: HTMLDivElement | undefined;
+
   useDismissibleLayer({
     enabled: open,
     onDismiss: () => setOpen(false),
     getContainer: () => containerRef,
   });
 
-  const handleMarkRead = async (notificationId: string) => {
+  async function handleMarkRead(notificationId: string) {
+    const readAt = Date.now();
+
     try {
       await updateFeed({
-        optimistic: (prev) => ({
+        optimistic: (previous) => ({
           unreadCount: Math.max(
             0,
-            prev.unreadCount -
-              (prev.notifications.some(
+            previous.unreadCount -
+              (previous.notifications.some(
                 (item) => item.id === notificationId && item.readAt === null,
               )
                 ? 1
                 : 0),
           ),
-          notifications: prev.notifications.map((item) =>
-            item.id === notificationId ? { ...item, readAt: Date.now() } : item,
+          notifications: previous.notifications.map((item) =>
+            item.id === notificationId ? { ...item, readAt } : item,
           ),
         }),
-        commit: async () => {
-          await markRead(notificationId);
-        },
+        commit: () => markRead(notificationId),
       });
     } catch {
-      // update() rolls back the optimistic value on failure.
+      // The optimistic update is rolled back automatically.
     }
-  };
+  }
 
-  const handleMarkAllRead = async () => {
+  async function handleMarkAllRead() {
+    const readAt = Date.now();
+
     try {
       await updateFeed({
-        optimistic: (prev) => ({
+        optimistic: (previous) => ({
           unreadCount: 0,
-          notifications: prev.notifications.map((item) => ({
+          notifications: previous.notifications.map((item) => ({
             ...item,
-            readAt: item.readAt ?? Date.now(),
+            readAt: item.readAt ?? readAt,
           })),
         }),
-        commit: async () => {
-          await markAllRead();
-        },
+        commit: () => markAllRead(),
       });
-    } catch {}
-  };
+    } catch {
+      // The optimistic update is rolled back automatically.
+    }
+  }
 
   return (
     <div
@@ -103,6 +97,7 @@ export function HeaderNotificationsPanel() {
             <span class={styles.icon}>
               <Bell size={14} />
             </span>
+
             <Show when={feed().unreadCount > 0}>
               <span class={styles.badge}>
                 {Math.min(feed().unreadCount, 99)}
@@ -116,6 +111,7 @@ export function HeaderNotificationsPanel() {
         <div class={styles.panel}>
           <div class={styles.panelHeader}>
             <p class={styles.panelTitle}>Notificaciones</p>
+
             <button
               type="button"
               class={styles.markAll}
@@ -134,24 +130,26 @@ export function HeaderNotificationsPanel() {
               <For each={feed().notifications}>
                 {(item) => (
                   <article
-                    class={cn(
+                    class={clsx(
                       styles.item,
                       item.readAt === null && styles.itemUnread,
                     )}
                   >
                     <p class={styles.title}>{item.title}</p>
                     <p class={styles.body}>{item.bodyText}</p>
+
                     <div class={styles.meta}>
                       <span class={styles.time}>
-                        {formatTimestamp(item.createdAt)}
+                        {formatAppDateTime(item.createdAt)}
                       </span>
+
                       <Show when={item.readAt === null}>
                         <button
                           type="button"
                           class={styles.readBtn}
                           onClick={() => void handleMarkRead(item.id)}
                         >
-                          Mark read
+                          Marcar como leída
                         </button>
                       </Show>
                     </div>

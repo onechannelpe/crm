@@ -1,11 +1,11 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { Phone } from "~/lib/phone/pe-mobile";
-import { parsePhone } from "~/lib/phone/pe-mobile";
+import type { Phone } from "~/domain/phone/pe-mobile";
+import { parsePhone } from "~/domain/phone/pe-mobile";
 import { categoriesControllableOn } from "~/server/notifications/categories";
 import { openSession } from "~/server/notifications/whatsapp-session";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { Database } from "~/server/platform/database/types";
 
 import { classifyInboundMessage } from "./classify-message";
 import type { WhatsAppInboundEventJob } from "./inbound-event-repo";
@@ -14,6 +14,7 @@ const VERIFY_REPLY_BODY = [
   "Listo, este número queda verificado para recibir notificaciones de la plataforma.",
   "Te avisaremos por WhatsApp cuando un cliente acepte una tarifa o quede listo para afiliación.",
 ].join("\n");
+
 const OPT_OUT_REPLY_BODY = [
   "Listo, no recibirás más notificaciones por WhatsApp.",
   "Puedes volver a activarlas cuando quieras desde Configuración > Notificaciones.",
@@ -28,8 +29,6 @@ export type InboundEventOutcome =
   | "unknown-sender"
   | "invalid-sender";
 
-// Only verification or opt-out inserts an outbound row. enqueuedReply tells the
-// caller whether to notify that queue.
 export type InboundEventResult = {
   outcome: InboundEventOutcome;
   enqueuedReply: boolean;
@@ -41,8 +40,8 @@ async function enqueueReply(
   kind: "verification" | "opt-out",
   recipient: Phone,
   body: string,
-  now: Date,
-) {
+  enqueuedAt: Date,
+): Promise<void> {
   await db
     .insertInto("outbound_whatsapp_messages")
     .values({
@@ -52,15 +51,14 @@ async function enqueueReply(
       queue_state: "pending",
       attempt_count: 0,
       max_attempts: 5,
-      available_at: now,
+      claimable_at: enqueuedAt,
       lease_owner: null,
-      lease_until: null,
       provider: null,
       provider_message_id: null,
       error_code: null,
       error_message: null,
-      created_at: now,
-      sent_at: null,
+      created_at: enqueuedAt,
+      completed_at: null,
     })
     .onConflict((oc) => oc.column("id").doNothing())
     .execute();
@@ -69,10 +67,13 @@ async function enqueueReply(
 export async function processInboundWhatsAppEvent(
   db: Kysely<Database>,
   event: WhatsAppInboundEventJob,
-  now: Date,
+  receivedAt: Date,
 ): Promise<InboundEventResult> {
   const sender = parsePhone(event.sender_address);
-  if (!sender) return { outcome: "invalid-sender", enqueuedReply: false };
+
+  if (!sender) {
+    return { outcome: "invalid-sender", enqueuedReply: false };
+  }
 
   return db.transaction().execute(async (trx) => {
     const claim = await trx
@@ -81,12 +82,16 @@ export async function processInboundWhatsAppEvent(
       .where("channel", "=", "whatsapp")
       .where("address", "=", sender)
       .executeTakeFirst();
-    if (!claim) return { outcome: "unknown-sender", enqueuedReply: false };
+
+    if (!claim) {
+      return { outcome: "unknown-sender", enqueuedReply: false };
+    }
 
     const command = classifyInboundMessage(event.body);
 
     if (command === "opt-out") {
       const categories = categoriesControllableOn("whatsapp");
+
       const inserted =
         categories.length > 0
           ? await trx
@@ -96,7 +101,7 @@ export async function processInboundWhatsAppEvent(
                   user_id: claim.user_id,
                   category,
                   channel: "whatsapp" as const,
-                  created_at: now,
+                  created_at: receivedAt,
                 })),
               )
               .onConflict((oc) =>
@@ -105,7 +110,9 @@ export async function processInboundWhatsAppEvent(
               .returning("id")
               .execute()
           : [];
+
       const changed = inserted.length > 0;
+
       if (changed) {
         await enqueueReply(
           trx,
@@ -113,23 +120,30 @@ export async function processInboundWhatsAppEvent(
           "opt-out",
           sender,
           OPT_OUT_REPLY_BODY,
-          now,
+          receivedAt,
         );
       }
+
       return { outcome: "opted-out", enqueuedReply: changed };
     }
 
     if (command === "verify" && !claim.is_verified) {
       const won = await trx
         .updateTable("user_channel_addresses")
-        .set({ is_verified: true, verified_at: now, updated_at: now })
+        .set({
+          is_verified: true,
+          verified_at: receivedAt,
+          updated_at: receivedAt,
+        })
         .where("user_id", "=", claim.user_id)
         .where("channel", "=", "whatsapp")
         .where("address", "=", claim.address)
         .where("is_verified", "=", false)
         .returning("user_id")
         .executeTakeFirst();
+
       await openSession(trx, claim.user_id, event.provider_timestamp);
+
       if (won) {
         await enqueueReply(
           trx,
@@ -137,10 +151,12 @@ export async function processInboundWhatsAppEvent(
           "verification",
           sender,
           VERIFY_REPLY_BODY,
-          now,
+          receivedAt,
         );
+
         return { outcome: "verified", enqueuedReply: true };
       }
+
       return { outcome: "already-verified", enqueuedReply: false };
     }
 
@@ -149,6 +165,7 @@ export async function processInboundWhatsAppEvent(
     }
 
     await openSession(trx, claim.user_id, event.provider_timestamp);
+
     return {
       outcome: command === "verify" ? "already-verified" : "session-opened",
       enqueuedReply: false,

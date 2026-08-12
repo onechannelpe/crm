@@ -1,8 +1,8 @@
 import type { Insertable } from "kysely";
 
-import type { AppNotificationsTable } from "~/lib/db/types";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { AppNotificationId, UserId } from "~/server/shared/ids";
+import type { AppNotificationId, UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { AppNotificationsTable } from "~/server/platform/database/types";
 
 type NewAppNotificationRow = Insertable<AppNotificationsTable>;
 
@@ -29,7 +29,9 @@ export function createAppNotificationRepo(db: DatabaseExecutor) {
     },
 
     async createMany(values: NewAppNotificationRow[]): Promise<void> {
-      if (values.length === 0) return;
+      if (values.length === 0) {
+        return;
+      }
       await db
         .insertInto("app_notifications")
         .values(values)
