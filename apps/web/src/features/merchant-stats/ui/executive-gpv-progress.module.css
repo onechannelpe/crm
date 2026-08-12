@@ -1,0 +1,78 @@
+.viewBar {
+  align-items: center;
+  border-bottom: 1px solid var(--t-border-color-light);
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--t-spacing-3);
+  height: var(--topbar-height);
+  justify-content: space-between;
+  margin-left: var(--t-spacing-3);
+  padding-right: var(--t-spacing-2);
+}
+
+.viewIdentity {
+  align-items: center;
+  color: var(--t-font-color-secondary);
+  display: flex;
+  gap: var(--t-spacing-1);
+  min-width: 0;
+}
+
+.viewIcon {
+  color: var(--t-font-color-tertiary);
+  flex-shrink: 0;
+}
+
+.viewLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewMeta {
+  color: var(--t-font-color-tertiary);
+  flex-shrink: 0;
+}
+
+.updated {
+  color: var(--t-font-color-tertiary);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.loadingBody {
+  padding: var(--t-spacing-3);
+}
+
+.merchant {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.merchantName {
+  color: var(--t-font-color-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ruc,
+.muted {
+  color: var(--t-font-color-tertiary);
+  font-size: var(--t-font-size-xs);
+}
+
+.progress {
+  align-items: baseline;
+  display: flex;
+  gap: var(--t-spacing-1);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .updated {
+    display: none;
+  }
+}
