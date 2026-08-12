@@ -1,10 +1,10 @@
-import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
-import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
-import { createSessionService } from "~/server/auth/session/session.service";
+import type { SearchResult } from "~/contracts/search/engine-results.generated";
+import { createFilesRuntime } from "~/server/files/runtime";
+import type { EngineClient } from "~/server/integrations/engine/client";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
-import type { EngineClient } from "~/server/shared/engine/client";
-import type { SearchResult } from "~/server/shared/engine/types";
-import { createEventsRepo } from "~/server/shared/repos-events";
+import { createOrganizationEnrichment } from "~/server/organization/enrichment";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
+import { createWorkflowRuntime } from "~/server/workflow/runtime";
 
 import {
   cleanupTestDb,
@@ -25,7 +25,9 @@ function createFakeEngine() {
 
   const client: EngineClient = {
     async search(intent, query) {
-      if (intent !== "companies") return { ok: true, value: [] };
+      if (intent !== "companies") {
+        return { ok: true, value: [] };
+      }
       const overlay = companies.get(query);
       const value = overlay ? [companyResult(query, overlay)] : [];
       return { ok: true, value };
@@ -74,28 +76,27 @@ function companyResult(ruc: string, overlay: CompanyOverlay): SearchResult {
 
 export interface TestRuntime {
   ctx: TestDbContext;
+  // Transitional test data needed by fixtures that model time passing. New
+  // operation calls receive an explicit OperationContext instead.
   now: {
     get(): Date;
     set(value: Date): void;
   };
-  auth: {
-    sessionService: ReturnType<typeof createSessionService>;
-  };
   integrations: ReturnType<typeof createIntegrationRuntime>;
+  workflow: ReturnType<typeof createWorkflowRuntime>;
   engine: {
     client: EngineClient;
     company(ruc: string, overlay: CompanyOverlay): void;
   };
-  // Restores the shared database to its seeded baseline and resets the clock
-  // to a fresh `new Date()`. Call this in `beforeEach`; the runtime itself is
-  // built once per file in `beforeAll`.
+  // Restores the shared database to its seeded baseline and resets fixture
+  // time. Call this in `beforeEach`; the runtime itself is built once per
+  // file in `beforeAll`.
   reset(): Promise<void>;
   dispose(): Promise<void>;
 }
 
 export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
   const ctx = await createIsolatedTestDb(prefix);
-
   let currentNow = new Date();
 
   const now = {
@@ -110,27 +111,29 @@ export async function createTestRuntime(prefix: string): Promise<TestRuntime> {
     error() {},
   };
 
-  const auth = {
-    sessionService: createSessionService({
-      sessions: createAuthSessionRepo(ctx.db),
-      users: createAuthUsersRepo(ctx.db),
-      events: createEventsRepo(ctx.db),
-      now: now.get,
-      logger,
-    }),
-  };
-
   const engine = createFakeEngine();
+  const infrastructure: ServerInfrastructure = {
+    db: ctx.db,
+    logger,
+  };
+  const files = createFilesRuntime(infrastructure, {
+    storageRoot: ctx.storageRoot,
+  });
+  const workflow = createWorkflowRuntime(
+    infrastructure,
+    files,
+    createOrganizationEnrichment(engine.client),
+    { enqueueRucVerification: async () => {} },
+  );
   const integrations = createIntegrationRuntime({
     executor: ctx.db,
-    now: now.get,
   });
 
   return {
     ctx,
     now,
-    auth,
     integrations,
+    workflow,
     engine: {
       client: engine.client,
       company: (ruc, overlay) => engine.company(ruc, overlay),

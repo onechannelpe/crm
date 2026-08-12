@@ -1,6 +1,6 @@
-import type { AuthSession } from "~/lib/auth/access/session-types";
+import type { AuthSession } from "~/domain/auth/access/session-types";
+import { BranchId, UserId } from "~/domain/ids";
 import type { AppContext } from "~/server/platform/action/context";
-import { BranchId, UserId } from "~/server/shared/ids";
 
 export function makeAuthSession(
   overrides: Partial<AuthSession> = {},
@@ -31,7 +31,7 @@ export function makeAppContext(
     ipAddress: "127.0.0.1",
     userAgent: "vitest",
     publicOrigin: "http://localhost:3000",
-    now: () => new Date(1_700_000_000_000),
+    operationAt: new Date(1_700_000_000_000),
     ...overrides,
   };
 }
