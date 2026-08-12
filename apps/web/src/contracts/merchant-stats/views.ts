@@ -30,6 +30,8 @@ export interface ExecutiveGpvMerchantView {
   projectedGpv: number | null;
   lastTransactionAt: CalendarDate | null;
   leadId: string | null;
+
+  // Null means the commission scheme has not defined the threshold yet.
   isActive: boolean | null;
 }
 
