@@ -13,12 +13,18 @@ export default defineConfig({
     runner: "./tests/bench/runner.ts",
     environment: "node",
     fileParallelism: false,
+    server: {
+      deps: {
+        inline: ["@solidjs/start"],
+      },
+    },
   },
   resolve: {
     alias: {
       "~": path.resolve(__dirname, "./src"),
       "@tests": path.resolve(__dirname, "./tests"),
       bun: path.resolve(__dirname, "./tests/mocks/bun.ts"),
+      "server-only": path.resolve(__dirname, "./tests/mocks/server-only.ts"),
     },
   },
 });

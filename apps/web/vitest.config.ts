@@ -9,6 +9,7 @@ import {
 const alias = {
   "~": path.resolve(__dirname, "./src"),
   "@tests": path.resolve(__dirname, "./tests"),
+  "server-only": path.resolve(__dirname, "./tests/mocks/server-only.ts"),
 };
 
 function databaseProject(namespace: string) {
@@ -65,6 +66,11 @@ export default defineConfig({
     reporters: process.env.GITHUB_ACTIONS
       ? ["dot", "github-actions"]
       : ["default", "github-actions"],
+    server: {
+      deps: {
+        inline: ["@solidjs/start"],
+      },
+    },
     projects,
   },
   resolve: { alias },

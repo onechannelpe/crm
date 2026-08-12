@@ -7,6 +7,7 @@ import { solidStart } from "@solidjs/start/config";
 import { nitro } from "nitro/vite";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
+import { bundleAnalyzerPlugin } from "rolldown/experimental";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 
@@ -14,8 +15,8 @@ import { createRequestTracePlugin, resolveRequestTraceConfig } from "./tracer";
 
 const requestTraceConfig = resolveRequestTraceConfig(process.env);
 
-export default defineConfig({
-  // Dev and E2E use different env files, so they must not share a Vite cache.
+export default defineConfig(({ command }) => ({
+  // Dev and E2E use different env files and cannot share a Vite cache.
   cacheDir: process.env.VITE_CACHE_DIR,
 
   optimizeDeps: {
@@ -26,19 +27,20 @@ export default defineConfig({
     dedupe: ["solid-js", "solid-js/web"],
   },
 
+  // Nitro imports external SSR dependencies outside Vite's plugin pipeline.
+  // Keep `server-only` inside Vite so SolidStart can replace it safely.
+  ssr: {
+    noExternal: ["server-only"],
+  },
+
   server: {
-    // Initialize Vite's CSS-module cache for SSR environments too.
-    // Without this, a cold SSR render can fail with vitejs/vite#19606.
+    // Initialize the CSS-module cache for cold SSR renders.
+    // See vitejs/vite#19606.
     perEnvironmentStartEndDuringDev: true,
 
-    // Register server functions that may only be reached from client events.
-    // Without warmup, they may be called before their modules are imported.
-    warmup: {
-      ssrFiles: [
-        "./src/actions/**/*.ts",
-        "./src/server/auth/infrastructure/request-passkey-provider.ts",
-        "./src/server/team/infrastructure/invite-delivery.ts",
-      ],
+    // Uploaded files are runtime data and must not restart the route handler.
+    watch: {
+      ignored: ["**/.local-storage/**"],
     },
   },
 
@@ -57,11 +59,21 @@ export default defineConfig({
     solidStart({
       middleware: "./src/middleware.ts",
       extensions: ["md", "mdx"],
+      serialization: {
+        mode: "json",
+      },
+      serverFunctions: {
+        filter: {
+          include: ["src/rpc/**/*.ts"],
+        },
+        onError: "./src/server-function-error.ts",
+      },
     }),
     nitro({
       alias: {
         "~": resolve(process.cwd(), "src"),
       },
+      plugins: ["./src/server/entrypoints/nitro/realtime-lifecycle.ts"],
       rollupConfig: {
         external: [/^@node-rs\/argon2/],
       },
@@ -78,14 +90,21 @@ export default defineConfig({
       preset: "bun",
     }),
     visualizer(),
+    bundleAnalyzerPlugin({ format: "md" }),
     responsiveImagesPlugin(),
-    sentryVitePlugin({
-      org: process.env.SENTRY_ORG,
-      project: process.env.SENTRY_PROJECT,
-    }),
+    // Sourcemap upload and release telemetry only matter for shipped builds;
+    // skip it in dev to avoid noise and pointless network calls.
+    ...(command === "build"
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+          }),
+        ]
+      : []),
   ],
 
   esbuild: {
     target: "es2022",
   },
-});
+}));
