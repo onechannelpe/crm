@@ -14,10 +14,10 @@ import type {
   CapacityPolicyDefaultsView,
   CapacityPolicyTeamDefaultsView,
 } from "~/contracts/capacity";
+import { actionErrorMessage } from "~/contracts/errors";
+import { updateScopePolicyMutation } from "~/features/capacity/data/mutations";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
-import { updateScopePolicyMutation } from "~/lib/mutations/capacity";
-import { capacityPolicyDefaultsQuery } from "~/lib/queries/capacity";
-import { actionErrorMessage } from "~/lib/wire-error";
+import { capacityPolicyDefaultsQuery } from "~/rpc/capacity/capacity-policy-defaults";
 
 import styles from "./settings-page.module.css";
 
@@ -39,7 +39,9 @@ function TeamPolicyRow(props: {
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
   const [draft, setDraft] = createStore<CapacityLimitsDraft>({
     searchLimit: String(
-      initialTeam.searchLimit ?? initialBranchDefaults.branchSearchLimit ?? 250,
+      initialTeam.searchLimit ??
+        initialBranchDefaults.branchSearchLimit ??
+        2_000,
     ),
     bufferTarget: String(
       initialTeam.activeBufferTarget ??
@@ -114,7 +116,7 @@ function CapacityPoliciesEditor(props: {
   const branchFormId = createUniqueId();
 
   const [branchDraft, setBranchDraft] = createStore<CapacityLimitsDraft>({
-    searchLimit: String(initialSnapshot.branchSearchLimit ?? 250),
+    searchLimit: String(initialSnapshot.branchSearchLimit ?? 2_000),
     bufferTarget: String(initialSnapshot.branchActiveBufferTarget ?? 10),
     dailyRefillLimit: String(initialSnapshot.branchDailyRefillLimit ?? 25),
   });

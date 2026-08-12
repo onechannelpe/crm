@@ -16,17 +16,15 @@ import {
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { Toggle } from "~/components/ui/input/toggle";
+import { actionErrorMessage } from "~/contracts/errors";
+import { formatAppDateTime } from "~/domain/time/app-time";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
 import {
   updatePendingQuotationPolicyMutation,
   updateRateProposalPolicyMutation,
-} from "~/lib/mutations/workflow-settings";
-import {
-  pendingQuotationPolicyQuery,
-  rateProposalPolicyQuery,
-} from "~/lib/queries/workflow-settings";
-import { formatDateTime } from "~/lib/utils";
-import { actionErrorMessage } from "~/lib/wire-error";
+} from "~/features/workflow/data/settings-mutations";
+import { pendingQuotationPolicyQuery } from "~/rpc/workflow/pending-quotation-policy";
+import { rateProposalPolicyQuery } from "~/rpc/workflow/rate-proposal-policy";
 
 import styles from "./settings-page.module.css";
 
@@ -110,7 +108,7 @@ function RateProposalPolicyEditor(props: {
         <Show when={props.snapshot().updatedAt}>
           {(updatedAt) => (
             <p class={styles.helperText}>
-              Última actualización: {formatDateTime(updatedAt())}.
+              Última actualización: {formatAppDateTime(updatedAt())}.
             </p>
           )}
         </Show>
@@ -209,7 +207,7 @@ function PendingQuotationPolicyEditor(props: {
         <Show when={props.snapshot().updatedAt}>
           {(updatedAt) => (
             <p class={styles.helperText}>
-              Última actualización: {formatDateTime(updatedAt())}.
+              Última actualización: {formatAppDateTime(updatedAt())}.
             </p>
           )}
         </Show>

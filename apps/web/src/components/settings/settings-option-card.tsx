@@ -1,6 +1,5 @@
+import { clsx } from "clsx";
 import { Show, type JSX, type ParentProps } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import styles from "./settings-option-card.module.css";
 
@@ -15,7 +14,7 @@ export function SettingsOptionCardRow(props: {
   interactive?: boolean;
 }) {
   return (
-    <div class={cn(styles.row, props.interactive && styles.rowInteractive)}>
+    <div class={clsx(styles.row, props.interactive && styles.rowInteractive)}>
       <div class={styles.text}>
         <span class={styles.title}>{props.title}</span>
         <Show when={props.description}>

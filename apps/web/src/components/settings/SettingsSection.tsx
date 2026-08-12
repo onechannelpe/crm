@@ -1,4 +1,4 @@
-import { Show, type JSX, type ParentProps } from "solid-js";
+import { Show, children, type JSX, type ParentProps } from "solid-js";
 
 import styles from "./settings-section.module.css";
 
@@ -9,6 +9,8 @@ interface SettingsSectionProps extends ParentProps {
 }
 
 export function SettingsSection(props: SettingsSectionProps) {
+  const actions = children(() => props.actions);
+
   return (
     <section class={styles.block}>
       <div class={styles.sectionHeader}>
@@ -22,9 +24,9 @@ export function SettingsSection(props: SettingsSectionProps) {
         </div>
         <div
           class={styles.sectionActions}
-          data-empty={props.actions ? undefined : "true"}
+          data-empty={actions() ? undefined : "true"}
         >
-          {props.actions ?? null}
+          {actions()}
         </div>
       </div>
       <div class={styles.sectionContent}>{props.children}</div>
