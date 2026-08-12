@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { BranchId } from "~/server/shared/ids";
+import type { BranchId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 export function createBranchesRepo(db: Kysely<Database>) {
   return {

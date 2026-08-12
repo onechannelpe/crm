@@ -1,5 +1,6 @@
-import type { Ruc } from "~/server/shared/document";
-import type { EngineClient } from "~/server/shared/engine/client";
+import type { Ruc } from "~/domain/identity/document";
+import type { EngineClient } from "~/server/integrations/engine/client";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 // Resolves legal name and address from the external registry by RUC. One port
 // shared by lead registration and the bootstrap preview.
@@ -12,7 +13,11 @@ export type OrganizationEnrichment = {
 
 // Enqueues a RUC verification for the enrichment worker to process later.
 export type OrganizationEnrichmentQueue = {
-  enqueueRucVerification(ruc: Ruc, requestedByUserId: string): Promise<void>;
+  enqueueRucVerification(
+    ruc: Ruc,
+    requestedByUserId: string,
+    operation: OperationContext,
+  ): Promise<void>;
 };
 
 export function createOrganizationEnrichment(

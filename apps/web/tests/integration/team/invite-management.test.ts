@@ -7,6 +7,7 @@ import {
   TEST_FIXTURES,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import { makeAppContext, makeAuthSession } from "@tests/support/unit/factories";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { AppContext } from "~/server/platform/action/context";
@@ -19,25 +20,18 @@ const NOW = new Date("2026-07-15T12:00:00.000Z");
 const CONFIGURED_ORIGIN = "https://crm.example.test";
 
 function makeHrContext(): AppContext {
-  return {
-    actor: {
+  return makeAppContext({
+    actor: makeAuthSession({
       id: "hr-session",
       userId: TEST_FIXTURES.users.backOne.id,
       role: "hr",
       branchId: HR_BRANCH_ID,
-      sessionClass: "app",
-      primaryAuthMethod: "password",
-      strongAuthMethod: null,
-      strongAuthAt: null,
-      impersonatorUserId: null,
-    },
+    }),
     requestId: "req-test",
     traceId: "trace-test",
-    ipAddress: "127.0.0.1",
     userAgent: null,
-    publicOrigin: "http://localhost:3000",
-    now: () => NOW,
-  };
+    operationAt: NOW,
+  });
 }
 
 async function seedTeam(ctx: TestDbContext, branchId: string, name: string) {

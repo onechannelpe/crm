@@ -1,19 +1,18 @@
 import type { Insertable, Kysely } from "kysely";
 
-import type { Database, UserInvitesTable, UsersTable } from "~/lib/db/types";
+import type { BranchId, TeamId, UserId, UserInviteId } from "~/domain/ids";
 import type {
-  BranchId,
-  TeamId,
-  UserId,
-  UserInviteId,
-} from "~/server/shared/ids";
+  Database,
+  UserInvitesTable,
+  UsersTable,
+} from "~/server/platform/database/types";
 
 type NewUserInviteRow = Insertable<UserInvitesTable>;
 
 type InviteStatus = UserInvitesTable["status"];
 type UserRole = UsersTable["role"];
 
-export interface PendingInviteWithUser {
+interface PendingInviteWithUser {
   invite_id: UserInviteId;
   invite_status: InviteStatus;
   invite_expires_at: Date;
@@ -45,7 +44,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
 
     async findLatestPendingByBranch(
       branchId: BranchId,
-      now: Date,
+      activeAsOf: Date,
     ): Promise<PendingInviteWithUser[]> {
       return db
         .selectFrom("user_invites")
@@ -70,7 +69,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         ])
         .where("user_invites.branch_id", "=", branchId)
         .where("user_invites.status", "=", "pending")
-        .where("user_invites.expires_at", ">", now)
+        .where("user_invites.expires_at", ">", activeAsOf)
         .orderBy("user_invites.created_at", "desc")
         .execute();
     },
@@ -83,7 +82,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         .executeTakeFirst();
     },
 
-    findPendingByToken(token: string, now: Date) {
+    findPendingByToken(token: string, activeAsOf: Date) {
       return db
         .selectFrom("user_invites")
         .innerJoin("users", "users.id", "user_invites.user_id")
@@ -106,7 +105,7 @@ export function createUserInvitesRepo(db: Kysely<Database>) {
         ])
         .where("user_invites.token", "=", token)
         .where("user_invites.status", "=", "pending")
-        .where("user_invites.expires_at", ">", now)
+        .where("user_invites.expires_at", ">", activeAsOf)
         .executeTakeFirst();
     },
 

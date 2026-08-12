@@ -7,7 +7,7 @@ type OrganizationEnrichmentWriter = Pick<
 
 // SUNAT is authoritative: a non-null value always wins. Null/blank fields are
 // dropped so a partial (engine-fallback) result never overwrites known columns.
-export type RegistryProjection = {
+type RegistryProjection = {
   ruc: string;
   legalName: string | null;
   address: string | null;
@@ -16,7 +16,9 @@ export type RegistryProjection = {
 };
 
 function present(value: string | null): string | undefined {
-  if (value === null) return undefined;
+  if (value === null) {
+    return undefined;
+  }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }

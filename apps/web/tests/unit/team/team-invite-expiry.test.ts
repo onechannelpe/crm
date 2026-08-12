@@ -1,18 +1,23 @@
 import { describe, expect, it } from "vitest";
 
+import { appInstantAt } from "~/domain/time/app-time";
+import { calendarDateFromParts } from "~/domain/time/calendar-date";
 import {
   getInviteExpiryFieldError,
   getMinInviteExpiryDate,
   INVITE_EXPIRY_ERROR_TEXT,
-  INVALID_INVITE_EXPIRY_ERROR_TEXT,
   parseInviteExpiryDate,
-} from "~/features/settings-members/team-invite-expiry";
+} from "~/features/team-management/team-invite-expiry";
 
 describe("team invite expiry helpers", () => {
-  const fixedNow = new Date(2026, 2, 24, 12, 0, 0, 0).getTime();
+  // Pin the fixture to the business calendar, not the host timezone.
+  const fixedNow = appInstantAt(
+    calendarDateFromParts({ year: 2026, month: 3, day: 24 }),
+    12,
+  ).getTime();
 
   it("computes the minimum selectable invite date", () => {
-    expect(getMinInviteExpiryDate(new Date(fixedNow))).toBe("2026-03-31");
+    expect(getMinInviteExpiryDate(fixedNow)).toBe("2026-03-31");
   });
 
   it("accepts an empty expiry value", () => {
@@ -25,11 +30,12 @@ describe("team invite expiry helpers", () => {
   it("rejects malformed dates", () => {
     expect(parseInviteExpiryDate("2026-03", fixedNow)).toEqual({
       isErr: true,
-      error: INVALID_INVITE_EXPIRY_ERROR_TEXT,
+      error: "Ingresa una fecha válida.",
     });
+
     expect(parseInviteExpiryDate("2026-02-31", fixedNow)).toEqual({
       isErr: true,
-      error: INVALID_INVITE_EXPIRY_ERROR_TEXT,
+      error: "Ingresa una fecha válida.",
     });
   });
 
@@ -41,15 +47,15 @@ describe("team invite expiry helpers", () => {
   });
 
   it("accepts a date at the end of the seventh day", () => {
-    const result = parseInviteExpiryDate("2026-03-31", fixedNow);
-
-    expect(result.isErr).toBe(false);
-    if (result.isErr) throw new Error("Expected success");
-    expect(result.value).toBe(new Date(2026, 2, 31, 23, 59, 59, 999).getTime());
+    expect(parseInviteExpiryDate("2026-03-31", fixedNow)).toEqual({
+      isErr: false,
+      value: "2026-03-31",
+    });
   });
 
   it("only shows inline field errors after a full date is present", () => {
     expect(getInviteExpiryFieldError("2026-03", fixedNow)).toBeUndefined();
+
     expect(getInviteExpiryFieldError("2026-03-30", fixedNow)).toBe(
       INVITE_EXPIRY_ERROR_TEXT,
     );

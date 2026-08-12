@@ -1,12 +1,12 @@
 import type { Selectable } from "kysely";
 
-import { canManageMember } from "~/lib/auth/access/member-management";
-import type { UsersTable } from "~/lib/db/types";
+import { canManageMember } from "~/domain/auth/access/member-management";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import type { UsersTable } from "~/server/platform/database/types";
 import type { UsersRepo } from "~/server/users/repos-users";
+import { Err, Ok, type Result } from "~/shared/result";
 
 export type MemberRow = Selectable<UsersTable>;
 

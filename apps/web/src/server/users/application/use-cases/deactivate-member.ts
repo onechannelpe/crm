@@ -1,8 +1,10 @@
+import { auditEntityId } from "~/domain/audit/entity";
+import { type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { revokeUserAccess } from "~/server/auth/session/revoke-user-access";
 import type { AppContext } from "~/server/platform/action/context";
-import { type DomainError } from "~/server/shared/domain-error";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/shared/result";
 
-import type { MemberIdCommand } from "../contracts";
 import type { MemberWriteDeps } from "../ports";
 import { authorizeMemberManagement } from "./authorize-member-management";
 
@@ -11,17 +13,24 @@ import { authorizeMemberManagement } from "./authorize-member-management";
 export async function deactivateMember(
   ctx: AppContext,
   deps: MemberWriteDeps,
-  command: MemberIdCommand,
+  userId: UserId,
 ): Promise<Result<void, DomainError>> {
-  const target = await authorizeMemberManagement(
-    ctx,
-    deps.users,
-    command.userId,
-  );
-  if (isErr(target)) return target;
+  return deps.lifecycle.run(async (tx) => {
+    const target = await authorizeMemberManagement(ctx, tx.users, userId);
+    if (isErr(target)) {
+      return target;
+    }
 
-  await deps.users.setActive(command.userId, false);
-  await deps.sessions.revokeAllForUser(command.userId);
-
-  return Ok(undefined);
+    await tx.users.setActive(userId, false);
+    await revokeUserAccess(tx, userId, ctx.operationAt);
+    await tx.events.append({
+      type: "member_deactivated",
+      entityType: "user",
+      entityId: auditEntityId("user", userId),
+      actorUserId: ctx.actor.userId,
+      subjectUserId: userId,
+      occurredAt: ctx.operationAt,
+    });
+    return Ok(undefined);
+  });
 }

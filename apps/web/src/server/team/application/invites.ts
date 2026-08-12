@@ -1,15 +1,16 @@
 import type { BulkImportSetup, InviteManagement } from "~/contracts/team";
-import type { Role } from "~/lib/auth/access/rbac";
-import { getAssignableRoleOptions } from "~/lib/auth/access/role-display";
-import { createLogger } from "~/lib/observability/logger";
-import { shortName } from "~/lib/users/display-name";
+import type { Role } from "~/domain/auth/access/rbac";
+import { getAssignableRoleOptions } from "~/domain/auth/access/role-display";
+import { fail, type DomainError } from "~/domain/errors";
+import { shortName } from "~/domain/identity/display-name";
+import type { UserInviteId } from "~/domain/ids";
+import { epochMilliseconds } from "~/domain/time/clock";
 import type { InviteService } from "~/server/invites/application/types";
 import { inviteLink } from "~/server/invites/domain/invite-link";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserInviteId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
-import { epochMilliseconds } from "~/server/shared/time";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { createLogger } from "~/shared/observability/runtime-logger";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type {
   TeamInviteCreateContext,
@@ -17,7 +18,6 @@ import type {
   TeamInviteRepos,
   TeamInviteResendContext,
 } from "../infrastructure/invite-context";
-import { sendInviteEmail } from "../infrastructure/invite-delivery";
 import type { CreateTeamInviteCommand, InviteInfo } from "./contracts";
 import type { InviteManagementQueryPort } from "./ports";
 
@@ -31,6 +31,7 @@ export interface CreateTeamInviteResult {
 }
 
 async function deliverInviteEmail(
+  delivery: TeamInviteCreateContext["delivery"],
   inviteService: Pick<InviteService, "markInviteDelivered">,
   params: {
     inviteId: UserInviteId;
@@ -40,8 +41,9 @@ async function deliverInviteEmail(
     inviteUrl: string;
     expiresAt: Date;
   },
+  operation: OperationContext,
 ): Promise<boolean> {
-  const sent = await sendInviteEmail({
+  const sent = await delivery.send({
     email: params.email,
     fullName: params.fullName,
     role: params.role,
@@ -58,7 +60,10 @@ async function deliverInviteEmail(
     return false;
   }
 
-  const marked = await inviteService.markInviteDelivered(params.inviteId);
+  const marked = await inviteService.markInviteDelivered(
+    params.inviteId,
+    operation,
+  );
 
   if (isErr(marked)) {
     logger.error("invite.mark_delivered_failed", {
@@ -74,10 +79,11 @@ async function deliverInviteEmail(
 export async function getInviteInfo(input: {
   token: string;
   repos: TeamInviteRepos;
+  operation: OperationContext;
 }): Promise<Result<InviteInfo | null, DomainError>> {
   const invite = await input.repos.userInvites.findPendingByToken(
     input.token,
-    new Date(),
+    input.operation.operationAt,
   );
 
   if (!invite) {
@@ -98,7 +104,7 @@ export async function getInviteManagement(
 ): Promise<Result<InviteManagement, DomainError>> {
   const [teams, pendingInvites] = await Promise.all([
     port.listTeamsByBranch(ctx.actor.branchId),
-    port.listPendingInvites(ctx.actor.branchId),
+    port.listPendingInvites(ctx.actor.branchId, ctx),
   ]);
 
   if (isErr(pendingInvites)) {
@@ -140,21 +146,24 @@ export async function createTeamInvite(
   deps: TeamInviteCreateContext,
   input: CreateTeamInviteCommand,
 ): Promise<Result<CreateTeamInviteResult, DomainError>> {
-  await deps.enforceInviteCreateRateLimit(ctx.actor.userId);
+  await deps.enforceInviteCreateRateLimit(ctx.actor.userId, ctx);
 
-  const created = await deps.inviteService.createInvite({
-    actorUserId: ctx.actor.userId,
-    actorRole: ctx.actor.role,
-    branchId: ctx.actor.branchId,
-    names: input.names,
-    firstSurname: input.firstSurname,
-    secondSurname: input.secondSurname,
-    email: input.email,
-    role: input.role,
-    executiveCategory: input.executiveCategory,
-    teamId: input.teamId,
-    expiresAt: input.expiresAt,
-  });
+  const created = await deps.inviteService.createInvite(
+    {
+      actorUserId: ctx.actor.userId,
+      actorRole: ctx.actor.role,
+      branchId: ctx.actor.branchId,
+      names: input.names,
+      firstSurname: input.firstSurname,
+      secondSurname: input.secondSurname,
+      email: input.email,
+      role: input.role,
+      executiveCategory: input.executiveCategory,
+      teamId: input.teamId,
+      expiresAt: input.expiresAt,
+    },
+    ctx,
+  );
 
   if (isErr(created)) {
     return created;
@@ -162,18 +171,23 @@ export async function createTeamInvite(
 
   const inviteUrl = inviteLink(deps.publicOrigin, created.value.token);
 
-  const delivered = await deliverInviteEmail(deps.inviteService, {
-    inviteId: created.value.inviteId,
-    email: input.email,
-    fullName: shortName({
-      names: input.names,
-      firstSurname: input.firstSurname,
-      secondSurname: input.secondSurname,
-    }),
-    role: input.role,
-    inviteUrl,
-    expiresAt: created.value.expiresAt,
-  });
+  const delivered = await deliverInviteEmail(
+    deps.delivery,
+    deps.inviteService,
+    {
+      inviteId: created.value.inviteId,
+      email: input.email,
+      fullName: shortName({
+        names: input.names,
+        firstSurname: input.firstSurname,
+        secondSurname: input.secondSurname,
+      }),
+      role: input.role,
+      inviteUrl,
+      expiresAt: created.value.expiresAt,
+    },
+    ctx,
+  );
 
   return Ok({
     inviteId: created.value.inviteId,
@@ -188,12 +202,15 @@ export async function resendTeamInvite(
   deps: TeamInviteResendContext,
   input: { inviteId: UserInviteId },
 ): Promise<Result<{ delivered: boolean }, DomainError>> {
-  const redelivered = await deps.inviteService.redeliverInvite({
-    actorUserId: ctx.actor.userId,
-    actorRole: ctx.actor.role,
-    branchId: ctx.actor.branchId,
-    inviteId: input.inviteId,
-  });
+  const redelivered = await deps.inviteService.redeliverInvite(
+    {
+      actorUserId: ctx.actor.userId,
+      actorRole: ctx.actor.role,
+      branchId: ctx.actor.branchId,
+      inviteId: input.inviteId,
+    },
+    ctx,
+  );
 
   if (isErr(redelivered)) {
     return redelivered;
@@ -209,14 +226,19 @@ export async function resendTeamInvite(
     return Err(fail("invite_target_missing"));
   }
 
-  const delivered = await deliverInviteEmail(deps.inviteService, {
-    inviteId: redelivered.value.inviteId,
-    email: user.email,
-    fullName: shortName(user),
-    role: user.role,
-    inviteUrl: inviteLink(deps.publicOrigin, redelivered.value.token),
-    expiresAt: redelivered.value.expiresAt,
-  });
+  const delivered = await deliverInviteEmail(
+    deps.delivery,
+    deps.inviteService,
+    {
+      inviteId: redelivered.value.inviteId,
+      email: user.email,
+      fullName: shortName(user),
+      role: user.role,
+      inviteUrl: inviteLink(deps.publicOrigin, redelivered.value.token),
+      expiresAt: redelivered.value.expiresAt,
+    },
+    ctx,
+  );
 
   return Ok({ delivered });
 }
@@ -226,10 +248,13 @@ export async function revokeTeamInvite(
   deps: TeamInviteProvisioningContext,
   input: { inviteId: UserInviteId },
 ): Promise<Result<void, DomainError>> {
-  return deps.inviteService.revokeInvite({
-    actorUserId: ctx.actor.userId,
-    actorRole: ctx.actor.role,
-    branchId: ctx.actor.branchId,
-    inviteId: input.inviteId,
-  });
+  return deps.inviteService.revokeInvite(
+    {
+      actorUserId: ctx.actor.userId,
+      actorRole: ctx.actor.role,
+      branchId: ctx.actor.branchId,
+      inviteId: input.inviteId,
+    },
+    ctx,
+  );
 }

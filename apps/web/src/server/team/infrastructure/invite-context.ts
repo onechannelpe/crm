@@ -1,43 +1,51 @@
-import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import type { Kysely } from "kysely";
+
+import type { UserId } from "~/domain/ids";
 import type {
   InviteService,
   TeamInviteReadRepos,
 } from "~/server/invites/application/types";
 import {
-  bindInviteRepos,
+  bindInviteBaseRepos,
   createInviteServiceForExecutor,
 } from "~/server/invites/infrastructure/invite-service-factory";
-import { createActionRateLimitsRepo } from "~/server/security/repos-action-rate-limits";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import type { UserId } from "~/server/shared/ids";
+import type { AppContext } from "~/server/platform/action/context";
+import type { Database } from "~/server/platform/database/types";
+import { createActionRateLimiter } from "~/server/security/action-rate-limit";
+
+import type { InviteDelivery } from "../application/ports";
 
 interface TeamInviteContext {
   repos: TeamInviteReadRepos;
   inviteService: InviteService;
+  delivery: InviteDelivery;
   publicOrigin: string;
-  enforceInviteCreateRateLimit(userId: UserId): Promise<void>;
+  enforceInviteCreateRateLimit(
+    userId: UserId,
+    context: AppContext,
+  ): Promise<void>;
 }
 
 export function createTeamInviteContext(
-  executor: DatabaseExecutor,
+  executor: Kysely<Database>,
   publicOrigin: string,
+  delivery: InviteDelivery,
 ): TeamInviteContext {
-  const repos = bindInviteRepos(executor);
   const inviteService = createInviteServiceForExecutor(executor);
+  const rateLimiter = createActionRateLimiter(executor);
 
   return {
-    repos: {
-      teams: repos.teams,
-      userInvites: repos.userInvites,
-      users: repos.users,
-    },
+    repos: bindInviteBaseRepos(executor),
     inviteService,
+    delivery,
     publicOrigin,
-    async enforceInviteCreateRateLimit(userId: UserId) {
-      await checkActionRateLimit("team.invite.create", userId, {
-        actionRateLimits: createActionRateLimitsRepo(executor),
-        events: repos.events,
-      });
+    async enforceInviteCreateRateLimit(userId: UserId, context: AppContext) {
+      await rateLimiter.enforce(
+        "team.invite.create",
+        userId,
+        context,
+        context.ipAddress,
+      );
     },
   };
 }
@@ -49,13 +57,13 @@ export type TeamInviteProvisioningContext = Pick<
 >;
 export type TeamInviteCreateContext = Pick<
   TeamInviteContext,
-  "inviteService" | "enforceInviteCreateRateLimit" | "publicOrigin"
+  "delivery" | "inviteService" | "enforceInviteCreateRateLimit" | "publicOrigin"
 >;
 export type TeamInviteResendContext = Pick<
   TeamInviteContext,
-  "repos" | "inviteService" | "publicOrigin"
+  "delivery" | "repos" | "inviteService" | "publicOrigin"
 >;
 export type TeamBulkImportContext = Pick<
   TeamInviteContext,
-  "inviteService" | "publicOrigin"
+  "delivery" | "inviteService" | "publicOrigin"
 >;

@@ -1,6 +1,6 @@
+import { type DomainError } from "~/domain/errors";
 import type { AppContext } from "~/server/platform/action/context";
-import { type DomainError } from "~/server/shared/domain-error";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 import type { UpdateMemberProfileCommand } from "../contracts";
 import type { MemberWriteDeps } from "../ports";
@@ -18,7 +18,9 @@ export async function updateMemberProfile(
     deps.users,
     command.userId,
   );
-  if (isErr(target)) return target;
+  if (isErr(target)) {
+    return target;
+  }
 
   await deps.users.updateProfile(command.userId, {
     names: command.names,
