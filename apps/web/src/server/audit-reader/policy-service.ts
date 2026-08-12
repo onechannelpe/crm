@@ -3,7 +3,8 @@ import type {
   AuditPolicyRiskLevel,
   AuditPolicySnapshot,
 } from "~/contracts/audit-reader/policy";
-import type { UserId } from "~/server/shared/ids";
+import type { UserId } from "~/domain/ids";
+import type { OperationContext } from "~/server/platform/operation/context";
 
 interface AuditPolicyServiceDeps {
   auditActionPolicies: {
@@ -36,7 +37,7 @@ interface AuditPolicyServiceDeps {
       is_active: boolean;
       is_protected: boolean;
       updated_by_user_id: UserId | null;
-      now: Date;
+      updatedAt: Date;
     }) => Promise<unknown>;
   };
 }
@@ -92,7 +93,10 @@ export function createAuditPolicyService(deps: AuditPolicyServiceDeps) {
       };
     },
 
-    async upsertPolicy(input: UpsertAuditPolicyInput): Promise<void> {
+    async upsertPolicy(
+      input: UpsertAuditPolicyInput,
+      operation: OperationContext,
+    ): Promise<void> {
       const action = normalizeAction(input.action);
       const riskLevel = parseRiskLevel(input.riskLevel);
       const isActive = input.isActive;
@@ -111,14 +115,13 @@ export function createAuditPolicyService(deps: AuditPolicyServiceDeps) {
         }
       }
 
-      const now = new Date();
       await deps.auditActionPolicies.upsert({
         action,
         risk_level: riskLevel,
         is_active: isActive,
         is_protected: existing?.is_protected ?? false,
         updated_by_user_id: input.actorUserId,
-        now,
+        updatedAt: operation.operationAt,
       });
     },
   };

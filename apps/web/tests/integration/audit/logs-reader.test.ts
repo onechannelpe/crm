@@ -1,3 +1,4 @@
+import { expectOk } from "@tests/support/_core/assertions";
 import { seedEvent } from "@tests/support/audit/builders";
 import {
   cleanupTestDb,
@@ -7,8 +8,13 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import type { DomainEventLogRecord } from "~/contracts/event-logs/event-log";
+import { calendarDateFromParts } from "~/domain/time/calendar-date";
+import { createEventLogsService } from "~/server/event-logs/service";
+
 const EXEC_USER_ID = TEST_FIXTURES.users.execOne.id;
 const SUPERUSER_ID = TEST_FIXTURES.users.superUser.id;
+const BASE_TIME_MS = 1_700_000_000_000;
 
 describe("audit logs reader repository", () => {
   let ctx: Awaited<ReturnType<typeof createIsolatedTestDb>>;
@@ -25,16 +31,39 @@ describe("audit logs reader repository", () => {
     await resetTestDb(ctx);
   });
 
-  it("filters recent entries and high-risk actions", async () => {
-    const baseTimeMs = 1_700_000_000_000;
+  async function domainEvents(filters: {
+    eventType?: string;
+    actorUserId?: string;
+    onlyHighRisk?: boolean;
+  }): Promise<DomainEventLogRecord[]> {
+    const { records } = expectOk(
+      await createEventLogsService(ctx.db).getEventLogs({
+        table: "DOMAIN_EVENT",
+        first: 10,
+        filters: {
+          ...filters,
+          dateRange: {
+            start: calendarDateFromParts({ year: 2023, month: 11, day: 14 }),
+            end: calendarDateFromParts({ year: 2023, month: 11, day: 14 }),
+          },
+        },
+      }),
+    );
 
+    return records.filter(
+      (record): record is DomainEventLogRecord =>
+        record.table === "DOMAIN_EVENT",
+    );
+  }
+
+  it("filters high-risk events using the current action policy", async () => {
     await seedEvent(ctx, {
       actorUserId: SUPERUSER_ID,
       type: "product_updated",
       entityType: "product",
       entityId: "018f63e2-4300-7000-8000-000000000101",
       payload: { field: "price" },
-      occurredAt: new Date(baseTimeMs),
+      occurredAt: new Date(BASE_TIME_MS),
     });
     await seedEvent(ctx, {
       actorUserId: EXEC_USER_ID,
@@ -42,7 +71,7 @@ describe("audit logs reader repository", () => {
       entityType: "lead_assignment",
       entityId: "018f63e2-4300-7000-8000-000000000001",
       payload: { requested: 4, assigned: 4 },
-      occurredAt: new Date(baseTimeMs + 1),
+      occurredAt: new Date(BASE_TIME_MS + 1),
     });
     await seedEvent(ctx, {
       actorUserId: SUPERUSER_ID,
@@ -50,19 +79,15 @@ describe("audit logs reader repository", () => {
       entityType: "user_session",
       entityId: "018f63e2-4300-7000-8000-000000000005",
       payload: { reason: "security" },
-      occurredAt: new Date(baseTimeMs + 2),
+      occurredAt: new Date(BASE_TIME_MS + 2),
     });
 
-    const highRiskDefault = await ctx.repos.events.listRecent({
-      fromInclusive: new Date(baseTimeMs - 1000),
-      toInclusive: new Date(baseTimeMs + 1000),
-      limit: 10,
-      onlyHighRisk: true,
-    });
-    expect(highRiskDefault).toHaveLength(3);
-    expect(highRiskDefault[0]?.type).toBe("all_sessions_revoked");
-    expect(highRiskDefault[1]?.type).toBe("leads_requested");
-    expect(highRiskDefault[2]?.type).toBe("product_updated");
+    const beforePolicy = await domainEvents({ onlyHighRisk: true });
+    expect(beforePolicy.map((record) => record.event)).toEqual([
+      "all_sessions_revoked",
+      "leads_requested",
+      "product_updated",
+    ]);
 
     await ctx.repos.auditActionPolicies.upsert({
       action: "leads_requested",
@@ -70,34 +95,73 @@ describe("audit logs reader repository", () => {
       is_active: true,
       is_protected: false,
       updated_by_user_id: EXEC_USER_ID,
-      now: new Date(baseTimeMs + 3),
+      updatedAt: new Date(BASE_TIME_MS + 3),
     });
 
-    const highRiskAfterPolicy = await ctx.repos.events.listRecent({
-      fromInclusive: new Date(baseTimeMs - 1000),
-      toInclusive: new Date(baseTimeMs + 1000),
-      limit: 10,
-      onlyHighRisk: true,
-    });
-    expect(highRiskAfterPolicy).toHaveLength(2);
-    expect(highRiskAfterPolicy[0]?.type).toBe("all_sessions_revoked");
-    expect(highRiskAfterPolicy[1]?.type).toBe("product_updated");
+    const afterPolicy = await domainEvents({ onlyHighRisk: true });
+    expect(afterPolicy.map((record) => record.event)).toEqual([
+      "all_sessions_revoked",
+      "product_updated",
+    ]);
+  });
 
-    const byAction = await ctx.repos.events.listRecent({
-      fromInclusive: new Date(baseTimeMs - 1000),
-      toInclusive: new Date(baseTimeMs + 1000),
-      limit: 10,
-      action: "leads_requested",
+  it("filters events by type", async () => {
+    await seedEvent(ctx, {
+      actorUserId: EXEC_USER_ID,
+      type: "leads_requested",
+      entityType: "lead_assignment",
+      entityId: "018f63e2-4300-7000-8000-000000000001",
+      payload: { requested: 4, assigned: 4 },
+      occurredAt: new Date(BASE_TIME_MS),
     });
-    expect(byAction).toHaveLength(1);
-    expect(byAction[0]?.entity_type).toBe("lead_assignment");
-
-    const byActor = await ctx.repos.events.listRecent({
-      fromInclusive: new Date(baseTimeMs - 1000),
-      toInclusive: new Date(baseTimeMs + 1000),
-      limit: 10,
+    await seedEvent(ctx, {
       actorUserId: SUPERUSER_ID,
+      type: "product_updated",
+      entityType: "product",
+      entityId: "018f63e2-4300-7000-8000-000000000101",
+      payload: { field: "price" },
+      occurredAt: new Date(BASE_TIME_MS + 1),
     });
-    expect(byActor).toHaveLength(2);
+
+    const events = await domainEvents({ eventType: "leads_requested" });
+
+    expect(events).toHaveLength(1);
+    expect(events[0]?.event).toBe("leads_requested");
+    expect(events[0]?.entity.type).toBe("lead_assignment");
+  });
+
+  it("filters events by actor", async () => {
+    await seedEvent(ctx, {
+      actorUserId: SUPERUSER_ID,
+      type: "product_updated",
+      entityType: "product",
+      entityId: "018f63e2-4300-7000-8000-000000000101",
+      payload: { field: "price" },
+      occurredAt: new Date(BASE_TIME_MS),
+    });
+    await seedEvent(ctx, {
+      actorUserId: EXEC_USER_ID,
+      type: "leads_requested",
+      entityType: "lead_assignment",
+      entityId: "018f63e2-4300-7000-8000-000000000001",
+      payload: { requested: 4, assigned: 4 },
+      occurredAt: new Date(BASE_TIME_MS + 1),
+    });
+    await seedEvent(ctx, {
+      actorUserId: SUPERUSER_ID,
+      type: "all_sessions_revoked",
+      entityType: "user_session",
+      entityId: "018f63e2-4300-7000-8000-000000000005",
+      payload: { reason: "security" },
+      occurredAt: new Date(BASE_TIME_MS + 2),
+    });
+
+    const events = await domainEvents({ actorUserId: SUPERUSER_ID });
+
+    expect(events).toHaveLength(2);
+    expect(events.map((record) => record.event)).toEqual([
+      "all_sessions_revoked",
+      "product_updated",
+    ]);
   });
 });
