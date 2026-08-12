@@ -30,9 +30,9 @@ export const DELIVERY_PROVIDER_IDS = Object.keys(
 ) as DeliveryProviderId[];
 
 type ProviderForChannel<C extends NotificationChannel> = {
-  [Provider in DeliveryProviderId]: (typeof DELIVERY_PROVIDER_CHANNELS)[Provider] extends C
-    ? Provider
-    : never;
+  [
+    Provider in DeliveryProviderId
+  ]: (typeof DELIVERY_PROVIDER_CHANNELS)[Provider] extends C ? Provider : never;
 }[DeliveryProviderId];
 
 export type NotificationRoutes = Partial<{

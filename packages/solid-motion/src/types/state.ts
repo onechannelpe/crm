@@ -59,10 +59,12 @@ type WithMotionPath<T> = T extends any
   ? Omit<T, "path"> & { path?: MotionPath }
   : never;
 export type MotionStyleProps = Partial<{
-  [K in keyof Omit<
-    VariantType & TransformPropertiesWithoutTransition,
-    "attrX" | "attrY" | "attrScale"
-  >]: string | number | undefined | MotionValue;
+  [
+    K in keyof Omit<
+      VariantType & TransformPropertiesWithoutTransition,
+      "attrX" | "attrY" | "attrScale"
+    >
+  ]: string | number | undefined | MotionValue;
 }>;
 
 export interface Options<T = any>

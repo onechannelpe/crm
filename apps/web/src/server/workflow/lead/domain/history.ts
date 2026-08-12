@@ -256,7 +256,9 @@ export type LeadHistoryEntryFor<
 };
 
 export type LeadHistoryEntry = {
-  [TEventType in keyof LeadHistoryPayloadByEvent]: LeadHistoryEntryFor<TEventType>;
+  [
+    TEventType in keyof LeadHistoryPayloadByEvent
+  ]: LeadHistoryEntryFor<TEventType>;
 }[keyof LeadHistoryPayloadByEvent];
 
 export function createHistoryEvent<
