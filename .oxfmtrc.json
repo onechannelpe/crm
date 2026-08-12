@@ -17,7 +17,6 @@
   "ignorePatterns": [
     "apps/web/content/**/*.md",
     "apps/web/content/**/*.mdx",
-    "apps/web/src/server/shared/engine/contract.ts",
     "apps/web/test-results/**",
     "apps/web/playwright-report/**",
     "packages/email-composer/src/templates/**/*.mjml"
