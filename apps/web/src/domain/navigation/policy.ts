@@ -65,7 +65,7 @@ export function getSidebarChildren(
   role: Role,
   entryId: string,
 ): SidebarChild[] {
-  const entry = SIDEBAR_ENTRIES.find((entry) => entry.id === entryId);
+  const entry = SIDEBAR_ENTRIES.find((candidate) => candidate.id === entryId);
 
   if (!entry?.children) {
     return [];
