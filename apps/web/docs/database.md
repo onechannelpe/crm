@@ -43,9 +43,9 @@ files.
 ## Change the schema
 
 Schema modules live in
-[`src/lib/db/schema/modules/`](../src/lib/db/schema/modules/). Each module has a
-matching `*.types.ts` file. The ordered schema plan is
-[`plan.ts`](../src/lib/db/schema/plan.ts).
+[`src/server/platform/database/schema/modules/`](../src/server/platform/database/schema/modules/).
+Each module has a matching `*.types.ts` file. The ordered schema plan is
+[`plan.ts`](../src/server/platform/database/schema/plan.ts).
 
 After changing a schema module:
 
@@ -55,9 +55,10 @@ After changing a schema module:
 4. Run the focused tests for the changed domain.
 5. Run `bun run check` for contract, generation, or cross-subsystem changes.
 
-[`migrate.ts`](../src/lib/db/migrate.ts) hashes the schema and reference-data
-modules. Startup returns immediately when the stored hash matches. It stops with
-an error when a non-empty database contains a different hash.
+[`migrate.ts`](../src/server/platform/database/migrate.ts) hashes the schema and
+reference-data modules. Startup returns immediately when the stored hash
+matches. It stops with an error when a non-empty database contains a different
+hash.
 
 ## Run database commands directly
 
