@@ -1,14 +1,20 @@
-import { createSignal, onCleanup } from "solid-js";
-import type { Accessor } from "solid-js";
+import { createSignal, onCleanup, type Accessor } from "solid-js";
 
-import { isPlainRecord } from "~/lib/type-guards";
+import { isPlainRecord } from "~/shared/type-guards";
 
-import { getExtensionId, isRuntimeResponse } from "./runtime";
-import type { ExecutiveStateSnapshot } from "./runtime";
+import {
+  getExtensionId,
+  isRuntimeResponse,
+  type ExecutiveStateSnapshot,
+} from "./runtime";
 
 interface ChromePort {
-  onMessage: { addListener(callback: (message: unknown) => void): void };
-  onDisconnect: { addListener(callback: () => void): void };
+  onMessage: {
+    addListener(callback: (message: unknown) => void): void;
+  };
+  onDisconnect: {
+    addListener(callback: () => void): void;
+  };
   disconnect(): void;
 }
 
@@ -25,9 +31,17 @@ function isChromeRuntimeConnectApi(
 
 function getChromeRuntimeConnectApi(): ChromeRuntimeConnectApi | null {
   const chromeValue = Reflect.get(globalThis, "chrome");
-  if (!isPlainRecord(chromeValue)) return null;
+
+  if (!isPlainRecord(chromeValue)) {
+    return null;
+  }
+
   const runtimeValue = Reflect.get(chromeValue, "runtime");
-  if (!isChromeRuntimeConnectApi(runtimeValue)) return null;
+
+  if (!isChromeRuntimeConnectApi(runtimeValue)) {
+    return null;
+  }
+
   return runtimeValue;
 }
 
@@ -41,41 +55,56 @@ export function createExtensionPortConnection(): ExtensionPortConnection {
   const [state, setState] = createSignal<ExecutiveStateSnapshot | null>(null);
   const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
   const [isAvailable, setIsAvailable] = createSignal(false);
-  let hasReceivedState = false;
+
+  const connection = {
+    state,
+    errorMessage,
+    isAvailable,
+  };
 
   const extensionId = getExtensionId();
+
   if (!extensionId) {
-    return { state, errorMessage, isAvailable };
+    return connection;
   }
 
   const runtime = getChromeRuntimeConnectApi();
+
   if (!runtime) {
-    return { state, errorMessage, isAvailable };
+    return connection;
   }
 
-  setIsAvailable(true);
   let port: ChromePort;
+
   try {
     port = runtime.connect(extensionId, { name: "web" });
   } catch {
-    setIsAvailable(false);
-    return { state, errorMessage, isAvailable };
+    return connection;
   }
 
-  port.onMessage.addListener((message: unknown) => {
-    if (!isRuntimeResponse(message)) return;
+  setIsAvailable(true);
+
+  let hasReceivedState = false;
+
+  port.onMessage.addListener((message) => {
+    if (!isRuntimeResponse(message)) {
+      return;
+    }
+
     if (message.ok) {
       hasReceivedState = true;
       setState(message.executiveState);
       setErrorMessage(null);
-    } else {
-      setState(message.executiveState ?? null);
-      setErrorMessage(message.error);
+      return;
     }
+
+    setState(message.executiveState ?? null);
+    setErrorMessage(message.error);
   });
 
   port.onDisconnect.addListener(() => {
     setState(null);
+
     if (!hasReceivedState) {
       setErrorMessage(null);
       return;
@@ -86,5 +115,5 @@ export function createExtensionPortConnection(): ExtensionPortConnection {
 
   onCleanup(() => port.disconnect());
 
-  return { state, errorMessage, isAvailable };
+  return connection;
 }

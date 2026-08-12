@@ -1,19 +1,27 @@
-import { authorizeRoutePermission } from "~/lib/auth/access/route-access";
-import { getServerRuntime } from "~/server/platform/container";
-import { toWire } from "~/server/shared/domain-error";
-import { isErr } from "~/server/shared/result";
+import { application } from "~/server/composition/application";
+import { toWire } from "~/server/platform/action/domain-error";
+import { getRequestOperation } from "~/server/platform/http/request-context-storage";
+import { authorizeRoutePermission } from "~/server/platform/http/route-access";
+import { isErr } from "~/shared/result";
 
 export async function GET(): Promise<Response> {
   const auth = await authorizeRoutePermission("team:read");
-  if (isErr(auth)) return auth.error;
-  const session = auth.value;
 
-  const { extensionService } = getServerRuntime().extension;
-  const result = await extensionService.listTeamExecutiveStatuses({
-    role: session.role,
-    userId: session.userId,
-    branchId: session.branchId,
-  });
+  if (isErr(auth)) {
+    return auth.error;
+  }
+
+  const { role, userId, branchId } = auth.value;
+
+  const result = await application.extension.listTeamExecutiveStatuses(
+    {
+      role,
+      userId,
+      branchId,
+    },
+    getRequestOperation(),
+  );
+
   if (isErr(result)) {
     return Response.json(
       { error: toWire(result.error).message },

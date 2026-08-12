@@ -1,6 +1,7 @@
 import { expectOk } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
 import { createExtensionFixture } from "@tests/support/extension/fixture";
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   resetTestDb,
@@ -8,9 +9,9 @@ import {
 } from "@tests/support/runtime/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { EventId } from "~/server/shared/ids";
+import { EventId } from "~/domain/ids";
 
-describe("extension runtime projection ordering", () => {
+describe("extension runtime projection", () => {
   let ctx: TestDbContext;
 
   beforeAll(async () => {
@@ -58,10 +59,13 @@ describe("extension runtime projection ordering", () => {
     const current = await ctx.repos.extensionRuntime.findCurrentStatusByUser(
       execOne.id,
     );
-    expect(current?.presence_status).toBe("active");
-    expect(current?.presence_updated_at).toEqual(newerAt);
-    expect(current?.call_session_id).toBe("call-new");
-    expect(current?.source_event_sequence).toBe(2);
+
+    expect(current).toMatchObject({
+      presence_status: "active",
+      presence_updated_at: newerAt,
+      call_session_id: "call-new",
+      source_event_sequence: 2,
+    });
   });
 
   it("breaks equal timestamp ties by higher source sequence", async () => {
@@ -96,9 +100,12 @@ describe("extension runtime projection ordering", () => {
     const current = await ctx.repos.extensionRuntime.findCurrentStatusByUser(
       execOne.id,
     );
-    expect(current?.presence_status).toBe("active");
-    expect(current?.call_session_id).toBe("call-high");
-    expect(current?.source_event_sequence).toBe(2);
+
+    expect(current).toMatchObject({
+      presence_status: "active",
+      call_session_id: "call-high",
+      source_event_sequence: 2,
+    });
   });
 
   it("keeps shared sync ok when heartbeat freshness is recent", async () => {
@@ -107,6 +114,7 @@ describe("extension runtime projection ordering", () => {
     const scenario = createExtensionScenario(ctx, () => fixedNow);
     const { execOne, backOne } = ctx.fixtures.users;
     const { lima } = ctx.fixtures.branches;
+
     await ctx.db
       .insertInto("extension_executive_statuses")
       .values({
@@ -124,15 +132,21 @@ describe("extension runtime projection ordering", () => {
       })
       .execute();
 
-    const result = await scenario.service.listTeamExecutiveStatuses({
-      role: "sales_manager",
-      userId: backOne.id,
-      branchId: lima.id,
-    });
+    const result = await scenario.service.listTeamExecutiveStatuses(
+      {
+        role: "sales_manager",
+        userId: backOne.id,
+        branchId: lima.id,
+      },
+      operationAt(fixedNow),
+    );
 
     const value = expectOk(result);
-    expect(value[0]?.presenceStatus).toBe("offline");
-    expect(value[0]?.syncHealth).toBe("ok");
+
+    expect(value[0]).toMatchObject({
+      presenceStatus: "offline",
+      syncHealth: "ok",
+    });
   });
 
   it("marks shared sync stale when heartbeat freshness expires", async () => {
@@ -141,6 +155,7 @@ describe("extension runtime projection ordering", () => {
     const scenario = createExtensionScenario(ctx, () => fixedNow);
     const { execOne, backOne } = ctx.fixtures.users;
     const { lima } = ctx.fixtures.branches;
+
     await ctx.db
       .insertInto("extension_executive_statuses")
       .values({
@@ -158,14 +173,20 @@ describe("extension runtime projection ordering", () => {
       })
       .execute();
 
-    const result = await scenario.service.listTeamExecutiveStatuses({
-      role: "sales_manager",
-      userId: backOne.id,
-      branchId: lima.id,
-    });
+    const result = await scenario.service.listTeamExecutiveStatuses(
+      {
+        role: "sales_manager",
+        userId: backOne.id,
+        branchId: lima.id,
+      },
+      operationAt(fixedNow),
+    );
 
     const value = expectOk(result);
-    expect(value[0]?.presenceStatus).toBe("ready");
-    expect(value[0]?.syncHealth).toBe("stale");
+
+    expect(value[0]).toMatchObject({
+      presenceStatus: "ready",
+      syncHealth: "stale",
+    });
   });
 });

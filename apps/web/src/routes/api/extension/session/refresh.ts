@@ -1,7 +1,8 @@
+import { application } from "~/server/composition/application";
 import { isRefreshExtensionSessionRequest } from "~/server/extension/contracts";
-import { getServerRuntime } from "~/server/platform/container";
-import { toWire } from "~/server/shared/domain-error";
-import { isErr } from "~/server/shared/result";
+import { toWire } from "~/server/platform/action/domain-error";
+import { getRequestOperation } from "~/server/platform/http/request-context-storage";
+import { isErr } from "~/shared/result";
 
 import type { ApiRequestEvent } from "../../request-event";
 import { readJsonBody } from "../json-body";
@@ -20,10 +21,10 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
       );
     }
 
-    const result =
-      await getServerRuntime().extension.extensionService.refreshInstallationSession(
-        body,
-      );
+    const result = await application.extension.refreshInstallationSession(
+      body,
+      getRequestOperation(),
+    );
     if (isErr(result)) {
       const status =
         result.error.code === "installation_invalid"

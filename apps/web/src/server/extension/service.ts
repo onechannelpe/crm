@@ -1,3 +1,5 @@
+import type { OperationContext } from "~/server/platform/operation/context";
+
 import {
   ingestRuntimeEvent,
   listTeamExecutiveStatuses,
@@ -8,8 +10,6 @@ import {
 } from "./service/handoff";
 import { refreshInstallationSession } from "./service/session";
 import type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
-
-export type { ExtensionRepos, ExtensionServiceDeps } from "./service/shared";
 
 type CreateHandoffTokenInput = Parameters<typeof createHandoffToken>[1];
 type ClaimInstallationSessionInput = Parameters<
@@ -27,54 +27,68 @@ export function createExtensionService(
   repos: ExtensionRepos,
   deps: ExtensionServiceDeps,
 ) {
-  const now = deps.now ?? (() => new Date());
   const uow = deps.uow;
 
   return {
-    createHandoffToken: (input: CreateHandoffTokenInput) =>
+    createHandoffToken: (
+      input: CreateHandoffTokenInput,
+      operation: OperationContext,
+    ) =>
       createHandoffToken(
         {
           repos,
-          now,
           uow,
+          operationAt: operation.operationAt,
         },
         input,
       ),
 
-    claimInstallationSession: (input: ClaimInstallationSessionInput) =>
+    claimInstallationSession: (
+      input: ClaimInstallationSessionInput,
+      operation: OperationContext,
+    ) =>
       claimInstallationSession(
         {
           repos,
-          now,
           uow,
+          operationAt: operation.operationAt,
         },
         input,
       ),
 
-    refreshInstallationSession: (input: RefreshInstallationSessionInput) =>
+    refreshInstallationSession: (
+      input: RefreshInstallationSessionInput,
+      operation: OperationContext,
+    ) =>
       refreshInstallationSession(
         {
           repos,
-          now,
+          operationAt: operation.operationAt,
         },
         input,
       ),
 
-    ingestRuntimeEvent: (input: IngestRuntimeEventInput) =>
+    ingestRuntimeEvent: (
+      input: IngestRuntimeEventInput,
+      operation: OperationContext,
+    ) =>
       ingestRuntimeEvent(
         {
           repos,
-          now,
           uow,
+          operationAt: operation.operationAt,
         },
         input,
       ),
 
-    listTeamExecutiveStatuses: (input: ListTeamExecutiveStatusesInput) =>
+    listTeamExecutiveStatuses: (
+      input: ListTeamExecutiveStatusesInput,
+      operation: OperationContext,
+    ) =>
       listTeamExecutiveStatuses(
         {
           repos,
-          now,
+          operationAt: operation.operationAt,
         },
         input,
       ),

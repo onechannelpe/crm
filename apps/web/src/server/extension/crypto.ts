@@ -1,4 +1,4 @@
-import { extensionConfig } from "~/lib/env";
+import { extensionConfig } from "~/server/platform/config/env";
 
 import type {
   ExtensionHandoffClaims,
