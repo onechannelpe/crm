@@ -1,22 +1,22 @@
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import { auditEntityId } from "~/domain/audit/entity";
+import { fail, type DomainError } from "~/domain/errors";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { mapAcceptedInviteResult } from "./runtime";
 import type {
   AcceptInviteInput,
   InviteAcceptedResult,
-  InviteDeps,
   InviteRuntime,
 } from "./types";
 
 export async function acceptInvite(
-  repos: InviteDeps,
   runtime: InviteRuntime,
   input: AcceptInviteInput,
+  operation: OperationContext,
 ): Promise<Result<InviteAcceptedResult, DomainError>> {
   return runtime.uow.run(async (transactionRepos) => {
-    const currentTime = runtime.now();
+    const currentTime = operation.operationAt;
 
     const invite = await transactionRepos.userInvites.findPendingByToken(
       input.token,

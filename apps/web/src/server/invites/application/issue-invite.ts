@@ -1,20 +1,20 @@
-import { generateInviteToken } from "~/lib/auth/invite/tokens";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { addMilliseconds, epochMilliseconds } from "~/server/shared/time";
+import { auditEntityId } from "~/domain/audit/entity";
+import { generateInviteToken } from "~/domain/auth/invite/tokens";
+import { addMilliseconds, epochMilliseconds } from "~/domain/time/clock";
 
 import type {
-  InviteDeps,
   InviteIssueResult,
   InviteRuntime,
+  InviteTransactionRepos,
   IssueInviteInput,
 } from "./types";
 
 export async function issueInvite(
-  repos: InviteDeps,
+  repos: Pick<InviteTransactionRepos, "userInvites" | "events">,
   runtime: InviteRuntime,
   input: IssueInviteInput,
+  issuedAt: Date,
 ): Promise<InviteIssueResult> {
-  const issuedAt = runtime.now();
   const expiresAt =
     input.expiresAt ?? addMilliseconds(issuedAt, runtime.inviteTtlMs);
 
