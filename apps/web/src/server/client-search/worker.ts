@@ -1,4 +1,3 @@
-import { createJobQueue } from "~/lib/job-queue/job-queue";
 import type { SunatScraperClient } from "~/server/client-search/enrichment/sunat/contracts";
 import type { Overlay } from "~/server/client-search/model";
 import type {
@@ -10,6 +9,7 @@ import {
   processEnrichmentJob,
   overlayToPatch,
 } from "~/server/client-search/process";
+import { createJobQueue } from "~/server/platform/jobs/job-queue";
 
 // SUNAT-unreachable fallback: supplies legal name + address only. The
 // degraded record expires quickly so the next refresh re-attempts the
@@ -23,7 +23,6 @@ type EnrichmentWorkerDeps = {
   scraper: SunatScraperClient;
   engineFallback: EngineFallback;
   projectOrganization: (input: OrganizationProjection) => Promise<void>;
-  now?: () => Date;
 };
 
 const DEGRADED_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -33,10 +32,11 @@ export function createEnrichmentQueue(
   deps: EnrichmentWorkerDeps,
 ) {
   const { registry, scraper, engineFallback, projectOrganization } = deps;
-  const now = deps.now ?? (() => new Date());
 
   async function project(overlay: Overlay): Promise<void> {
-    if (overlay.documentType !== "ruc") return;
+    if (overlay.documentType !== "ruc") {
+      return;
+    }
     await projectOrganization({
       ruc: overlay.documentValue,
       legalName: overlay.legalName,
@@ -47,10 +47,17 @@ export function createEnrichmentQueue(
   }
 
   async function fallbackOverlay(job: RegistryRow): Promise<Overlay | null> {
-    if (job.document_type !== "ruc") return null;
+    if (job.document_type !== "ruc") {
+      return null;
+    }
     const hit = await engineFallback(job.document_value);
-    if (!hit) return null;
-    const fetchedAt = now();
+    if (!hit) {
+      return null;
+    }
+    // The Engine response is an external observation, not a consequence of
+    // claiming this job. Its freshness window starts when that response is
+    // received, so a slow fallback cannot be stored as already stale.
+    const fetchedAt = new Date(); // clock-boundary: external engine observation
     return {
       documentType: "ruc",
       documentValue: job.document_value,
@@ -73,11 +80,14 @@ export function createEnrichmentQueue(
     name: "enrichment",
     leaseMs: 30_000,
     maxConcurrency: 3,
-    now,
     workerId,
     store: registry.store,
-    handle: async (job, signal) => {
-      const result = await processEnrichmentJob(job, scraper, signal, now());
+    handle: async (job, context) => {
+      const result = await processEnrichmentJob(
+        job,
+        scraper,
+        context.abortSignal,
+      );
 
       if (result.ok) {
         // Result columns ride the engine's settle. The org projection is an

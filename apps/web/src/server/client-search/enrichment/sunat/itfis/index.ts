@@ -1,4 +1,4 @@
-import { isPlainRecord } from "~/lib/type-guards";
+import { isPlainRecord } from "~/shared/type-guards";
 
 import type { SunatDniData } from "../contracts";
 import { sanitizeField } from "../text";
@@ -6,7 +6,9 @@ import { sanitizeField } from "../text";
 function firstListaEntry(
   payload: Record<string, unknown>,
 ): Record<string, unknown> | null {
-  if (!Array.isArray(payload.lista) || payload.lista.length < 1) return null;
+  if (!Array.isArray(payload.lista) || payload.lista.length < 1) {
+    return null;
+  }
   const first = payload.lista[0];
   return isPlainRecord(first) ? first : null;
 }
@@ -80,7 +82,9 @@ export function readDni(dni: string, payload: unknown): SunatDniData | null {
     sanitizeField(payload.apeMatSoli) ??
     sanitizeField(payload.apellido_mat);
 
-  if (!nombres && !apellidoPaterno && !apellidoMaterno) return null;
+  if (!nombres && !apellidoPaterno && !apellidoMaterno) {
+    return null;
+  }
 
   return {
     dni,
@@ -102,12 +106,18 @@ export function readRuc(
   department: string | null;
   payload: unknown;
 } | null {
-  if (!isPlainRecord(payload)) return null;
+  if (!isPlainRecord(payload)) {
+    return null;
+  }
   const lista = firstListaEntry(payload);
-  if (!lista) return null;
+  if (!lista) {
+    return null;
+  }
 
   const legalName = sanitizeField(lista.apenomdenunciado);
-  if (!legalName) return null;
+  if (!legalName) {
+    return null;
+  }
 
   return {
     ruc,

@@ -1,13 +1,14 @@
 import type { SearchDirectResult } from "~/contracts/search/results";
 import type { SearchIntent } from "~/contracts/search/vocabulary";
+import { type DomainError } from "~/domain/errors";
+import { SearchReservationId, type UserId } from "~/domain/ids";
 import {
   executeWithUsageReservation,
   type UsageReservationPorts,
 } from "~/server/capacity/application/usage/ledger";
-import { type DomainError } from "~/server/shared/domain-error";
-import type { EngineClient } from "~/server/shared/engine/client";
-import { SearchReservationId, type UserId } from "~/server/shared/ids";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import type { EngineClient } from "~/server/integrations/engine/client";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 export interface RunDirectSearchCommand {
   actorUserId: UserId;
@@ -20,6 +21,7 @@ export async function runDirectSearch(
   command: RunDirectSearchCommand,
   usageReservationPorts: UsageReservationPorts<"search">,
   engine: Pick<EngineClient, "search">,
+  operation: OperationContext,
 ): Promise<Result<SearchDirectResult, DomainError>> {
   return executeWithUsageReservation(
     {
@@ -30,13 +32,16 @@ export async function runDirectSearch(
       brand: SearchReservationId.trust,
     },
     usageReservationPorts,
+    operation,
     async () => {
       const searchResult = await engine.search(
         command.intent,
         command.query,
         command.limit,
       );
-      if (isErr(searchResult)) return searchResult;
+      if (isErr(searchResult)) {
+        return searchResult;
+      }
       return Ok({ value: { rows: searchResult.value }, consumed: 1 });
     },
   );
