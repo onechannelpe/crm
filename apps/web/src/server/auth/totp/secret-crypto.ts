@@ -1,6 +1,6 @@
 import { createHash, randomBytes, webcrypto } from "node:crypto";
 
-import { totpConfig } from "~/lib/env";
+import { totpConfig } from "~/server/platform/config/env";
 
 const IV_BYTES = 12;
 const ALGORITHM = "AES-GCM";

@@ -1,8 +1,7 @@
-import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
-import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
+import type { PasskeyLoginFlowState } from "~/domain/auth/passkey/types";
+import type { UserId } from "~/domain/ids";
+import { deleteLoginFlow } from "~/server/auth/login-flow/shared";
 import type { createLoginFlowsRepo } from "~/server/auth/repos-login-flows";
-import type { UserId } from "~/server/shared/ids";
-import type { createEventsRepo } from "~/server/shared/repos-events";
 import type { createPasskeysRepo } from "~/server/users/repos-passkeys";
 import type { createWebauthnChallengesRepo } from "~/server/users/repos-webauthn-challenges";
 
@@ -10,7 +9,6 @@ type PasskeyLoginStateRepos = {
   loginFlows: ReturnType<typeof createLoginFlowsRepo>;
   webauthnChallenges: ReturnType<typeof createWebauthnChallengesRepo>;
   passkeys: ReturnType<typeof createPasskeysRepo>;
-  events: ReturnType<typeof createEventsRepo>;
 };
 
 type PasskeyFlowRecord = Awaited<
@@ -32,6 +30,7 @@ export function createPasskeyLoginStateService(
 ) {
   async function hydrateLoginFlow(
     flow: PasskeyFlowRecord,
+    activeAsOf: Date,
   ): Promise<PasskeyLoginFlowState | null> {
     if (
       !flow ||
@@ -43,7 +42,7 @@ export function createPasskeyLoginStateService(
       return null;
     }
 
-    if (flow.expires_at < new Date()) {
+    if (flow.expires_at < activeAsOf) {
       await deleteLoginFlow(flow, repos);
       return null;
     }
@@ -55,7 +54,7 @@ export function createPasskeyLoginStateService(
       !challenge ||
       challenge.type !== "authentication" ||
       challenge.user_id !== flow.user_id ||
-      challenge.expires_at < new Date()
+      challenge.expires_at < activeAsOf
     ) {
       await deleteLoginFlow(flow, repos);
       return null;
