@@ -1,0 +1,21 @@
+/*
+  Chrome, not content: it carries its own bottom rule so the widget canvas
+  below starts on a clean edge, the same way the tab strip above it does.
+*/
+.bar {
+  border-bottom: 1px solid var(--t-border-color-light);
+  flex-shrink: 0;
+  padding: var(--t-spacing-2);
+}
+
+.filter {
+  /* Keep long option labels intact; wrap filters when the row runs out of room. */
+  flex: 0 0 auto;
+}
+
+@media (max-width: 768px) {
+  .filter {
+    flex-basis: 100%;
+    width: 100%;
+  }
+}
