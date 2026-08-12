@@ -1,11 +1,9 @@
 import { type LeadListRowView } from "~/contracts/workflow/views";
 
-import type { OptimisticLeadRow } from "./optimistic-leads";
-
 export function mergeLeadRows(
-  serverRows: LeadListRowView[],
-  optimisticRows: OptimisticLeadRow[],
-): LeadListRowView[] {
+  serverRows: readonly LeadListRowView[],
+  optimisticRows: readonly LeadListRowView[],
+): readonly LeadListRowView[] {
   if (optimisticRows.length === 0) {
     return serverRows;
   }

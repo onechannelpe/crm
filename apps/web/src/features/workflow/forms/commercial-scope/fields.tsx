@@ -5,6 +5,7 @@ import Moneybag from "~/components/icons/moneybag";
 import Package from "~/components/icons/package";
 import Target from "~/components/icons/target";
 import { TextInput } from "~/components/ui/input/text-input";
+import { MIN_GPV } from "~/contracts/workflow/limits";
 import { SETTLEMENT_BANKS } from "~/contracts/workflow/vocabulary";
 import { FieldInputValue, FieldRow } from "~/features/widgets/field-table";
 
@@ -26,6 +27,7 @@ export function CommercialScopeFields(props: {
             value={props.values.currentProvider}
             onChange={(value) => props.onChange("currentProvider", value)}
             required
+            aria-label="Proveedor actual"
           />
         </FieldInputValue>
       </FieldRow>
@@ -39,6 +41,7 @@ export function CommercialScopeFields(props: {
             value={props.values.currentDebitRate}
             onChange={(value) => props.onChange("currentDebitRate", value)}
             required
+            aria-label="Tasa débito actual"
           />
         </FieldInputValue>
       </FieldRow>
@@ -52,6 +55,7 @@ export function CommercialScopeFields(props: {
             value={props.values.currentCreditRate}
             onChange={(value) => props.onChange("currentCreditRate", value)}
             required
+            aria-label="Tasa crédito actual"
           />
         </FieldInputValue>
       </FieldRow>
@@ -61,10 +65,11 @@ export function CommercialScopeFields(props: {
             sizeVariant="sm"
             type="number"
             step="0.01"
-            min="0"
+            min={MIN_GPV}
             value={props.values.gpv}
             onChange={(value) => props.onChange("gpv", value)}
             required
+            aria-label="GPV"
           />
         </FieldInputValue>
       </FieldRow>
@@ -78,6 +83,7 @@ export function CommercialScopeFields(props: {
             value={props.values.ticket}
             onChange={(value) => props.onChange("ticket", value)}
             required
+            aria-label="Ticket"
           />
         </FieldInputValue>
       </FieldRow>
@@ -88,6 +94,7 @@ export function CommercialScopeFields(props: {
             value={props.values.lineOfBusiness}
             onChange={(value) => props.onChange("lineOfBusiness", value)}
             required
+            aria-label="Giro de negocio"
           />
         </FieldInputValue>
       </FieldRow>
@@ -102,6 +109,7 @@ export function CommercialScopeFields(props: {
               )
             }
             required
+            aria-label="Banco de abono"
           >
             <option value="">Seleccionar banco...</option>
             <For each={SETTLEMENT_BANKS}>
@@ -120,6 +128,7 @@ export function CommercialScopeFields(props: {
             value={props.values.posCount}
             onChange={(value) => props.onChange("posCount", value)}
             required
+            aria-label="Cantidad de POS"
           />
         </FieldInputValue>
       </FieldRow>

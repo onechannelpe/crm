@@ -12,14 +12,15 @@ import {
   RecordLinkChip,
 } from "~/components/ui/record-chip/record-chip";
 import type { LeadListRowView } from "~/contracts/workflow/views";
+import { hasPermission, type Role } from "~/domain/auth/access/rbac";
+import { formatAppDate } from "~/domain/time/app-time";
 import type { DataGridColumn } from "~/features/data-grid/model/types";
 import { ExecutivePicker } from "~/features/workflow/detail/actions/executive-picker";
 import {
   leadNextStepLabel,
   leadStageLabel,
 } from "~/features/workflow/presentation/lead-display";
-import { hasPermission, type Role } from "~/lib/auth/access/rbac";
-import { capitalize, formatDate } from "~/lib/utils";
+import { capitalize } from "~/shared/text";
 
 import styles from "./styles.module.css";
 
@@ -109,7 +110,7 @@ const COMMON_COLUMNS: ReadonlyArray<DataGridColumn<LeadListRowView>> = [
     icon: CalendarDays,
     width: 140,
     renderCell: (lead) => (
-      <span class={styles.mutedCellText}>{formatDate(lead.updatedAt)}</span>
+      <span class={styles.mutedCellText}>{formatAppDate(lead.updatedAt)}</span>
     ),
   },
 ];
@@ -137,12 +138,12 @@ function executiveColumn(
     edit: canReassign
       ? {
           ariaLabel: "Reasignar ejecutivo",
-          renderEditor: (editor) => (
+          renderEditor: (row, close) => (
             <ExecutivePicker
-              leadId={editor.row.id}
-              currentUserId={editor.row.executiveId}
-              onSelect={editor.close}
-              onClose={editor.close}
+              leadId={row.id}
+              currentUserId={row.executiveId}
+              onSelect={close}
+              onClose={close}
             />
           ),
         }

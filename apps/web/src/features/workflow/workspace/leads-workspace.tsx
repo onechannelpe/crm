@@ -1,22 +1,20 @@
 import { createAsync } from "@solidjs/router";
 
-import { requestWorkflowLeadsExportDownloadToken } from "~/actions/workflow/files";
+import { downloadWithToken } from "~/browser/files/client";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import Building2 from "~/components/icons/building-2";
 import List from "~/components/icons/list";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import type { LeadListRowView } from "~/contracts/workflow/views";
-import type { DataGridSource } from "~/features/data-grid/model/source";
+import { hasPermission } from "~/domain/auth/access/rbac";
+import { createGridSource } from "~/features/data-grid/model/create-grid-source";
 import { RecordIndexScreen } from "~/features/record-index/components/screen";
 import type { RecordIndexDefinition } from "~/features/record-index/model/definition";
 import { mergeLeadRows } from "~/features/workflow/data/merge-lead-rows";
 import { getOptimisticLeadRows } from "~/features/workflow/data/optimistic-leads";
-import {
-  leadListQuery,
-  pendingQuotationCountQuery,
-} from "~/features/workflow/data/queries";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import { downloadWithToken } from "~/lib/files/client";
+import { requestWorkflowLeadsExportDownloadToken } from "~/rpc/workflow/files";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
+import { pendingQuotationCountQuery } from "~/rpc/workflow/pending-quotation-count";
 
 import { workspaceColumnsForRole } from "./columns";
 import { useCreateLeadRecordAction } from "./create-action";
@@ -33,6 +31,7 @@ import styles from "./styles.module.css";
 
 async function handleLeadsExport() {
   const { token } = await requestWorkflowLeadsExportDownloadToken();
+
   downloadWithToken(token);
 }
 
@@ -40,76 +39,81 @@ export function LeadsWorkspace() {
   const { currentUser } = useAuthenticatedSession();
   const user = currentUser();
 
-  const available = viewsForRole(user.role);
-  const defaultViewId = defaultViewIdForRole(user.role);
+  const canRegister = hasPermission(user.role, "lead:register");
+  const canManageIntegrations = hasPermission(user.role, "integration:manage");
+
+  const availableViews = viewsForRole(user.role);
   const route = useLeadIndexRoute({
-    availableViews: available,
-    defaultViewId,
+    availableViews,
+    defaultViewId: defaultViewIdForRole(user.role),
   });
-  const leads = createAsync(() =>
-    leadListQuery(
-      resolveLeadListQueryInput(
-        {
-          view: route.view.value(),
-          filter: route.filter.value(),
-          sort: route.sort.value(),
-          search: route.search.query(),
-          pageIndex: route.page.index(),
-        },
-        { id: user.id, role: user.role },
+
+  const leads = createGridSource(
+    () =>
+      leadListQuery(
+        resolveLeadListQueryInput(
+          {
+            view: route.view.value(),
+            filter: route.filter.value(),
+            sort: route.sort.value(),
+            search: route.search.query(),
+            pageIndex: route.page.index(),
+          },
+          {
+            id: user.id,
+            role: user.role,
+          },
+        ),
       ),
-    ),
+    (data) => ({
+      rows: data.rows,
+      totalCount: data.totalCount,
+    }),
+    {
+      overlay: (rows) =>
+        mergeLeadRows(rows, getOptimisticLeadRows(route.activeView().id)),
+    },
   );
 
-  const totalCount = () => leads.latest?.totalCount ?? 0;
+  const totalCount = () => leads.data()?.totalCount ?? 0;
   const hasPreviousPage = () => route.page.index() > 0;
   const hasNextPage = () =>
     (route.page.index() + 1) * LEAD_PAGE_SIZE < totalCount();
 
-  const source = (): DataGridSource<LeadListRowView> => {
-    const data = leads.latest;
-    const serverRows = data?.rows ?? [];
-    const rows = mergeLeadRows(
-      serverRows,
-      getOptimisticLeadRows(route.activeView().id),
-    );
-
-    if (data === undefined && rows.length === 0) {
-      return { status: "pending", rows: [] };
-    }
-
-    return {
-      status: "ready",
-      rows,
-      totalCount: data?.totalCount ?? rows.length,
-    };
-  };
-
   const openLeadRecord = useOpenLeadRecord();
   const { enqueueWarningSnackBar } = useSnackBar();
 
-  const canRegister = hasPermission(user.role, "lead:register");
   const pendingQuotations = createAsync(
     () =>
       canRegister
         ? pendingQuotationCountQuery()
         : Promise.resolve({ count: 0, limit: null }),
-    { initialValue: { count: 0, limit: null } },
+    {
+      initialValue: {
+        count: 0,
+        limit: null,
+      },
+    },
   );
+
   const isRegistrationBlocked = () => {
-    const limit = pendingQuotations().limit;
-    return limit !== null && pendingQuotations().count >= limit;
+    const { count, limit } = pendingQuotations();
+
+    return limit !== null && count >= limit;
   };
 
   const createAction = useCreateLeadRecordAction({
     isBlocked: isRegistrationBlocked,
-    onBlocked: () =>
+    onBlocked: () => {
+      const { count } = pendingQuotations();
+
       enqueueWarningSnackBar(
-        `Tienes ${pendingQuotations().count} cotizaciones pendientes de decisión. Acéptalas, solicita revisión o ciérralas para registrar nuevos clientes.`,
-      ),
+        `Tienes ${count} cotizaciones pendientes de decisión. Acéptalas, solicita revisión o ciérralas para registrar nuevos clientes.`,
+      );
+    },
   });
+
   const recordImport = useRecordsImport();
-  const canManageIntegrations = hasPermission(user.role, "integration:manage");
 
   const recordIndex = {
     id: "leads-workspace",
@@ -117,18 +121,22 @@ export function LeadsWorkspace() {
     ariaLabel: "Clientes",
     class: styles.page,
     pickerIcon: List,
+
     object: {
       label: "Registros",
       icon: Building2,
       color: "blue",
     },
+
     columns: workspaceColumnsForRole(user.role),
-    source,
+    source: leads.source,
+
     search: {
       value: route.search.value,
       placeholder: "RUC, cliente, dirección o ejecutivo",
       set: route.search.set,
     },
+
     pagination: {
       currentPage: route.page.index,
       pageSize: LEAD_PAGE_SIZE,
@@ -144,18 +152,25 @@ export function LeadsWorkspace() {
         }
       },
     },
+
     onRowOpen: openLeadRecord,
     rowOpenIndicator: "panel",
+
     emptyState: {
       icon: Building2,
       title: "No hay clientes",
       description: "No hay clientes que coincidan con los filtros actuales.",
     },
+
     createAction: canRegister ? createAction : undefined,
+
     views: {
-      catalog: { available },
+      catalog: {
+        available: availableViews,
+      },
       control: route.view,
     },
+
     actions: canManageIntegrations
       ? [
           {
@@ -168,10 +183,12 @@ export function LeadsWorkspace() {
           },
         ]
       : undefined,
+
     filter: {
       catalog: LEAD_WORKSPACE_FILTER,
       control: route.filter,
     },
+
     sort: {
       catalog: LEAD_WORKSPACE_SORT,
       control: route.sort,
@@ -190,6 +207,7 @@ export function LeadsWorkspace() {
         style={{ display: "none" }}
         onChange={recordImport.onFileInputChange}
       />
+
       <RecordIndexScreen definition={recordIndex} />
     </ImportDropzone>
   );

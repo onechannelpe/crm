@@ -36,7 +36,7 @@
 }
 
 .progressItem[data-state="done"]::before {
-  background: var(--green, #16a34a);
+  background: var(--success);
 }
 
 .progressItem[data-state="current"] {
@@ -45,7 +45,7 @@
 }
 
 .progressItem[data-state="current"]::before {
-  background: var(--blue, #2563eb);
+  background: var(--color-blue);
 }
 
 .statusLine {
@@ -82,7 +82,7 @@
   padding: var(--spacing-3, 12px);
   border: 1px dashed var(--border, #e5e7eb);
   border-radius: var(--radius-md, 8px);
-  background: var(--background-transparent-light, rgba(0, 0, 0, 0.02));
+  background: var(--background-transparent-light);
   color: var(--foreground-secondary, #374151);
   font-size: var(--font-size-sm, 13px);
   line-height: 1.4;
@@ -140,7 +140,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--font-size-sm, 13px);
-  color: var(--blue, #2563eb);
+  color: var(--color-blue);
   text-decoration: none;
 }
 
@@ -211,11 +211,11 @@
 }
 
 .matrix tr:hover td {
-  background: var(--background-transparent-light, rgba(0, 0, 0, 0.02));
+  background: var(--background-transparent-light);
 }
 
 .matrix tr[data-state="done"] td:last-child {
-  color: var(--green, #16a34a);
+  color: var(--success);
   font-weight: var(--font-weight-medium, 500);
 }
 
@@ -236,7 +236,7 @@
   font-size: var(--font-size-sm, 13px);
   padding: var(--spacing-2, 8px);
   border-radius: var(--radius-sm, 4px);
-  background: var(--background-transparent-light, rgba(0, 0, 0, 0.02));
+  background: var(--background-transparent-light);
 }
 
 .errorText {

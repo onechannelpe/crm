@@ -1,6 +1,5 @@
-import { type ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import type { Permission } from "~/lib/auth/access/rbac";
+import type { ListLeadsFiltersInput } from "~/contracts/workflow/inputs";
+import { hasPermission, type Permission } from "~/domain/auth/access/rbac";
 
 export type WorkspaceView = {
   readonly id: string;
@@ -9,30 +8,30 @@ export type WorkspaceView = {
   readonly permission?: Permission;
 };
 
-const WORKSPACE_VIEWS: ReadonlyArray<WorkspaceView> = [
+const WORKSPACE_VIEWS: readonly WorkspaceView[] = [
   {
     id: "mine",
     label: "Mis clientes",
-    filters: (userId: string): ListLeadsFiltersInput => ({
+    filters: (userId) => ({
       executiveId: userId,
     }),
   },
   {
     id: "review",
     label: "Revisión",
-    filters: (): ListLeadsFiltersInput => ({ stage: "QUALIFYING" }),
+    filters: () => ({ stage: "QUALIFYING" }),
     permission: "lead:review",
   },
   {
     id: "pricing",
     label: "Tarifa",
-    filters: (): ListLeadsFiltersInput => ({ stage: "PRICING" }),
+    filters: () => ({ stage: "PRICING" }),
     permission: "quotation:create",
   },
   {
     id: "all",
     label: "Todos",
-    filters: (): ListLeadsFiltersInput => ({}),
+    filters: () => ({}),
     permission: "lead:view:all",
   },
 ];
@@ -47,28 +46,40 @@ const DEFAULT_VIEW_BY_ROLE: Partial<Record<string, string>> = {
 
 export function viewsForRole(role: string): WorkspaceView[] {
   return WORKSPACE_VIEWS.filter(
-    (v) => !v.permission || hasPermission(role, v.permission),
+    (view) => !view.permission || hasPermission(role, view.permission),
   );
 }
 
 export function defaultViewIdForRole(role: string): string {
   const views = viewsForRole(role);
   const configured = DEFAULT_VIEW_BY_ROLE[role];
-  if (configured && views.some((v) => v.id === configured)) return configured;
-  return views[0].id;
+
+  if (configured && views.some((view) => view.id === configured)) {
+    return configured;
+  }
+
+  const defaultView = views[0];
+
+  if (!defaultView) {
+    throw new Error("The lead index requires at least one available view");
+  }
+
+  return defaultView.id;
 }
 
 export function resolveWorkspaceView(
-  available: ReadonlyArray<WorkspaceView>,
+  available: readonly WorkspaceView[],
   defaultViewId: string,
   viewParam: string | undefined,
 ): WorkspaceView {
   const match =
-    available.find((v) => v.id === viewParam) ??
-    available.find((v) => v.id === defaultViewId) ??
+    available.find((view) => view.id === viewParam) ??
+    available.find((view) => view.id === defaultViewId) ??
     available[0];
+
   if (!match) {
     throw new Error("The lead index requires at least one available view");
   }
+
   return match;
 }

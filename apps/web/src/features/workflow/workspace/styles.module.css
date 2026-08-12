@@ -30,7 +30,7 @@
   background: var(--background);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-elevation-2);
   max-width: 420px;
   padding: 18px 22px;
   text-align: center;

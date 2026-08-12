@@ -2,13 +2,9 @@ import { createStore } from "solid-js/store";
 
 import type { LeadListRowView } from "~/contracts/workflow/views";
 
-export type OptimisticLeadRow = LeadListRowView & {
-  optimisticClientKey: string;
-};
+const [state, setState] = createStore<Record<string, LeadListRowView[]>>({});
 
-const [state, setState] = createStore<Record<string, OptimisticLeadRow[]>>({});
-
-let nextOptimisticLeadId = -1;
+let nextOptimisticLeadId = 1;
 
 export function createOptimisticLeadRow(input: {
   ruc: string;
@@ -18,12 +14,10 @@ export function createOptimisticLeadRow(input: {
   executiveName: string;
   createdBy: string;
   createdByName: string;
-  now?: number;
-}): OptimisticLeadRow {
-  const now = input.now ?? Date.now();
-
+  createdAt: number;
+}): LeadListRowView {
   return {
-    id: `optimistic-${nextOptimisticLeadId--}`,
+    id: `optimistic-${nextOptimisticLeadId++}`,
     ruc: input.ruc,
     legalName: input.legalName,
     address: input.address,
@@ -35,20 +29,18 @@ export function createOptimisticLeadRow(input: {
     status: null,
     priority: null,
     nextStep: "NO_ACTION",
-    createdAt: now,
-    updatedAt: now,
-    optimisticClientKey: `new:${input.ruc}:${now}`,
+    createdAt: input.createdAt,
+    updatedAt: input.createdAt,
   };
 }
 
-// Reactive read for source() and other tracking contexts.
-export function getOptimisticLeadRows(key: string): OptimisticLeadRow[] {
+export function getOptimisticLeadRows(key: string): LeadListRowView[] {
   return state[key] ?? [];
 }
 
 export function addOptimisticLead(
   keys: string[],
-  row: OptimisticLeadRow,
+  row: LeadListRowView,
 ): () => void {
   for (const key of keys) {
     setState(key, (current) => [row, ...(current ?? [])]);
@@ -57,10 +49,7 @@ export function addOptimisticLead(
   return () => {
     for (const key of keys) {
       setState(key, (current) =>
-        (current ?? []).filter(
-          (candidate) =>
-            candidate.optimisticClientKey !== row.optimisticClientKey,
-        ),
+        (current ?? []).filter((candidate) => candidate.id !== row.id),
       );
     }
   };

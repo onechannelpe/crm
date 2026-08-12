@@ -1,46 +1,12 @@
-import { action } from "@solidjs/router";
+import { action, json } from "@solidjs/router";
 
-import {
-  chooseFulfillmentProduct,
-  recordFulfillmentSerial,
-  registerFulfillmentPaymentLink,
-  registerFulfillmentSale,
-  rejectFulfillmentStep,
-  uploadFulfillmentDocument,
-  uploadFulfillmentPaymentProof,
-  validateFulfillmentPayment,
-} from "~/actions/workflow/commands/fulfillment";
-import { addLeadNote } from "~/actions/workflow/commands/interactions";
-import {
-  requestRateAcceptance,
-  requestRateProposal,
-  requestLeadClosure,
-  requestRateProposalEdit,
-  requestRateRevision,
-} from "~/actions/workflow/commands/rate";
-import {
-  requestAddLeadToFavorites,
-  requestEditCommercialScope,
-  requestLeadCreation,
-  requestLeadDeletion,
-  requestLeadReassignment,
-  requestLeadReview,
-  requestQuotationRestart,
-  requestRecordRepLegal,
-  requestRemoveLeadFromFavorites,
-  requestSaveDigitalPolicy,
-} from "~/actions/workflow/commands/records";
-import {
-  requestVenueAccountsAddition,
-  requestVenueCreation,
-  requestVenueUpdate,
-} from "~/actions/workflow/commands/sales";
 import type {
   AcceptRateInput,
   AddLeadNoteInput,
   AddVenueAccountsInput,
   ChooseFulfillmentProductInput,
   CloseLeadInput,
+  CreateInquiryInput,
   CreateLeadInput,
   CreateVenueInput,
   EditCommercialScopeInput,
@@ -58,10 +24,57 @@ import type {
   SaveDigitalPolicyInput,
   UpdateVenueInput,
 } from "~/contracts/workflow/inputs";
+import {
+  chooseFulfillmentProduct,
+  recordFulfillmentSerial,
+  registerFulfillmentPaymentLink,
+  registerFulfillmentSale,
+  rejectFulfillmentStep,
+  uploadFulfillmentDocument,
+  uploadFulfillmentPaymentProof,
+  validateFulfillmentPayment,
+} from "~/rpc/workflow/commands/fulfillment";
+import { requestInquiryCreation } from "~/rpc/workflow/commands/inquiries";
+import { addLeadNote } from "~/rpc/workflow/commands/interactions";
+import {
+  requestRateAcceptance,
+  requestRateProposal,
+  requestLeadClosure,
+  requestRateProposalEdit,
+  requestRateRevision,
+} from "~/rpc/workflow/commands/rate";
+import {
+  requestAddLeadToFavorites,
+  requestEditCommercialScope,
+  requestLeadCreation,
+  requestLeadDeletion,
+  requestLeadReassignment,
+  requestLeadReview,
+  requestQuotationRestart,
+  requestRecordRepLegal,
+  requestRemoveLeadFromFavorites,
+  requestSaveDigitalPolicy,
+} from "~/rpc/workflow/commands/records";
+import {
+  requestVenueAccountsAddition,
+  requestVenueCreation,
+  requestVenueUpdate,
+} from "~/rpc/workflow/commands/sales";
+import { inquiryListQuery } from "~/rpc/workflow/inquiry-list";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
 
-export const createLeadMutation = action(
-  (input: CreateLeadInput) => requestLeadCreation(input),
-  "workflow.createLead",
+export const createLeadMutation = action(async (input: CreateLeadInput) => {
+  const result = await requestLeadCreation(input);
+  const revalidate = input.inquiryId
+    ? [leadListQuery.key, inquiryListQuery.key]
+    : leadListQuery.key;
+
+  return json(result, { revalidate });
+}, "workflow.createLead");
+
+export const createInquiryMutation = action(
+  (input: CreateInquiryInput) => requestInquiryCreation(input),
+  "workflow.createInquiry",
 );
 
 export const addNoteMutation = action(
