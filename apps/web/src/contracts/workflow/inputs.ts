@@ -1,14 +1,14 @@
 import type { SaleVenueAccount, VenueDigitalConfig } from "./primitives";
 import type {
-  SettlementBank,
+  CloseReason,
+  CollectionMode,
+  Currency,
   LeadPriority,
   LeadStage,
   LeadStatus,
-  CollectionMode,
-  Currency,
-  CloseReason,
-  ProductScope,
   ProductKind,
+  ProductScope,
+  SettlementBank,
 } from "./vocabulary";
 
 export type ListLeadsFiltersInput = {
@@ -17,8 +17,7 @@ export type ListLeadsFiltersInput = {
   priority?: LeadPriority;
   executiveId?: string;
   anyFieldSearch?: string;
-  updatedSinceMs?: number;
-  updatedUntilMs?: number;
+  updatedToday?: boolean;
   sortBy?: "createdAt" | "updatedAt" | "registeredBy" | "ruc";
   sortDirection?: "asc" | "desc";
   limit?: number;
@@ -42,9 +41,18 @@ export type CommercialScope = {
   posCount: number;
 };
 
-export type CreateLeadInput = { ruc: string } & CommercialScope;
+export type CreateLeadInput = {
+  ruc: string;
+  inquiryId?: string;
+} & CommercialScope;
 
-export type EditCommercialScopeInput = { leadId: string } & CommercialScope;
+export type CreateInquiryInput = {
+  ruc: string;
+};
+
+export type EditCommercialScopeInput = {
+  leadId: string;
+} & CommercialScope;
 
 export type ReassignLeadInput = {
   leadId: string;
@@ -137,8 +145,12 @@ export type UpdateVenueInput = CreateVenueInput & {
 export type AddVenueAccountsInput = {
   leadId: string;
   venueId: string;
-  solesAccount: SaleVenueAccount & { currency: "PEN" };
-  dollarAccount?: SaleVenueAccount & { currency: "USD" };
+  solesAccount: SaleVenueAccount & {
+    currency: "PEN";
+  };
+  dollarAccount?: SaleVenueAccount & {
+    currency: "USD";
+  };
 };
 
 export type RequestRateRevisionInput = {
@@ -150,11 +162,6 @@ export type RequestRateRevisionInput = {
 export type ChooseFulfillmentProductInput = {
   leadId: string;
   productKind: ProductKind;
-};
-
-export type AttachFulfillmentDocumentInput = {
-  leadId: string;
-  fileId: string;
 };
 
 export type RecordUnitSerialInput = {
@@ -169,20 +176,10 @@ export type RegisterUnitPaymentLinkInput = {
   paymentUrl: string;
 };
 
-export type UploadUnitPaymentProofInput = {
-  leadId: string;
-  unitId: string;
-  fileId: string;
-};
-
 export type RegisterUnitSaleInput = {
   leadId: string;
   unitId: string;
   serviceRef: string;
-};
-
-export type ValidateFulfillmentPaymentInput = {
-  leadId: string;
 };
 
 export type RejectFulfillmentStepInput = {

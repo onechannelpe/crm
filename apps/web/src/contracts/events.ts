@@ -10,7 +10,7 @@ export type FieldChange = {
   to: FieldChangeValue;
 };
 
-export function isFieldChangeValue(value: unknown): value is FieldChangeValue {
+function isFieldChangeValue(value: unknown): value is FieldChangeValue {
   return (
     value === null ||
     typeof value === "string" ||
@@ -53,7 +53,9 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 function toChangeValue(value: unknown): FieldChangeValue {
-  if (value === null || value === undefined) return null;
+  if (value === null || value === undefined) {
+    return null;
+  }
   if (
     typeof value === "string" ||
     typeof value === "number" ||
@@ -81,8 +83,12 @@ export function diffFields<T>(
 }
 
 function formatChangeValue(value: FieldChangeValue): string {
-  if (value === null || value === "") return "—";
-  if (typeof value === "boolean") return value ? "Sí" : "No";
+  if (value === null || value === "") {
+    return "Vacío";
+  }
+  if (typeof value === "boolean") {
+    return value ? "Sí" : "No";
+  }
   return String(value);
 }
 
@@ -102,15 +108,21 @@ export function serializeFieldChanges(
 }
 
 export function parseFieldChanges(raw: unknown): FieldChange[] {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw.filter(isFieldChange);
+  if (!raw) {
+    return [];
+  }
+  if (Array.isArray(raw)) {
+    return raw.filter(isFieldChange);
+  }
   return [];
 }
 
 // Event payloads are schemaless. Consumers validate the fields they read;
 // this boundary preserves JSON-shaped form and provider data without narrowing it.
 export function serializeEventPayload(payload?: unknown): Json | null {
-  if (payload === null || payload === undefined) return null;
+  if (payload === null || payload === undefined) {
+    return null;
+  }
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return payload as Json;
 }

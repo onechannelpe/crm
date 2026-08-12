@@ -1,7 +1,3 @@
-export type LeadCommandResult = {
-  leadId: string;
-};
-
 export type LeadSaleProofFileView = {
   id: string;
   fileId: string;

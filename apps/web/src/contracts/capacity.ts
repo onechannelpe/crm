@@ -1,4 +1,4 @@
-export type ExecutiveCategoryValue = "elite" | "corporativa";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
 
 export type PolicySource = "system" | "branch" | "team" | "user";
 
@@ -19,8 +19,6 @@ export type SearchCapacitySnapshot = {
   committed: number;
   pending: number;
   remaining: number;
-  periodStart: string;
-  periodEnd: string;
 };
 
 export type LeadCapacitySnapshot = {
@@ -78,7 +76,7 @@ export type ManagedExecutiveView = {
   fullName: string;
   email: string;
   teamId: string | null;
-  executiveCategory: ExecutiveCategoryValue | null;
+  executiveCategory: ExecutiveCategory | null;
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;
 };
@@ -89,7 +87,7 @@ export type ExecutiveCapacityDetailView = {
     fullName: string;
     email: string;
     teamId: string | null;
-    executiveCategory: ExecutiveCategoryValue | null;
+    executiveCategory: ExecutiveCategory | null;
   };
   searchStatus: SearchCapacitySnapshot;
   leadStatus: LeadCapacitySnapshot;

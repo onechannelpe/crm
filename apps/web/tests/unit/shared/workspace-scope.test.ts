@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getWorkspaceScopeForRole } from "~/lib/auth/access/workspace-scope";
+import { getWorkspaceScopeForRole } from "~/domain/auth/access/workspace-scope";
 
 describe("workspace scope policy", () => {
   it("maps team-scoped roles", () => {

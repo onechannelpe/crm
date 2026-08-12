@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getClientIp } from "~/lib/auth/password/client-ip";
+import { getClientIp } from "~/server/auth/password/client-ip";
 
 describe("client ip resolution", () => {
   describe("with trusted proxy enabled", () => {

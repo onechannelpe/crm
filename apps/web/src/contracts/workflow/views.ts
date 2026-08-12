@@ -2,6 +2,7 @@ import type { FieldChange } from "../events";
 import type { SaleVenueAccount } from "./primitives";
 import type {
   SettlementBank,
+  InquiryState,
   LeadNextStep,
   LeadPriority,
   LeadStage,
@@ -63,6 +64,23 @@ export type LeadListRowView = {
 export type LeadListView = {
   rows: LeadListRowView[];
   totalCount: number;
+};
+
+export type InquiryListRowView = {
+  id: string;
+  ruc: string;
+  legalName: string | null;
+  state: InquiryState;
+  status: LeadStatus | null;
+  priority: LeadPriority | null;
+  createdAt: number;
+  answeredAt: number | null;
+  convertedLeadId: string | null;
+  registrable: boolean;
+};
+
+export type InquiryListView = {
+  rows: InquiryListRowView[];
 };
 
 export type LeadTimelineItem = {

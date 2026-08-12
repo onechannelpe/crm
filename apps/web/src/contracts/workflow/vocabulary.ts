@@ -9,10 +9,7 @@ export const LEAD_STAGES = [
   "CLOSED_LOST",
 ] as const;
 
-// Reasons an executive closes a quotation as lost. Recorded on the lead_closed
-// history event so the business can report on why deals fall through at pricing.
-// Distinct from DISQUALIFIED, which is a back-office availability call at
-// qualifying, not an executive commercial loss.
+// Commercial loss reasons recorded during pricing.
 export const CLOSE_REASONS = [
   "RATE",
   "CULQI_REFERENCES",
@@ -31,20 +28,21 @@ export const PRODUCT_KINDS = [
 
 export const FULFILLMENT_STEPS = [
   "CHOOSE_PRODUCT",
-  // Refurbished branch: back office uploads the transactions report, then
-  // a signed addendum, then compiles the PDF, then records the serials.
+
+  // Refurbished POS
   "AWAITING_TRANSACTIONS_REPORT",
   "AWAITING_ADDENDUM",
   "AWAITING_SIGNATURE",
   "AWAITING_PDF_COMPILE",
   "AWAITING_SERIALS",
-  // New-POS branch: back office records the serial back from the field, then
-  // generates a payment link, then waits for payment and validation.
+
+  // New POS
   "AWAITING_SERIAL_ENTRY",
   "AWAITING_PAYMENT_LINK",
   "AWAITING_PAYMENT",
   "AWAITING_PAYMENT_VALIDATION",
-  // Shared tail: register the sale, then close.
+
+  // Shared
   "AWAITING_SALE_REGISTRATION",
   "COMPLETED",
 ] as const;
@@ -70,14 +68,19 @@ export const FULFILLMENT_ACTIONS = [
   "register_sale",
 ] as const;
 
+const INQUIRY_STATES = ["PENDING", "ANSWERED", "CONVERTED"] as const;
+
 export const PRODUCT_SCOPES = ["none", "shared", "per_venue"] as const;
+
 export const LEAD_STATUSES = [
   "DISPONIBLE",
   "SIN RESULTADO",
   "CARTERIZADO",
   "STOCK",
 ] as const;
+
 export const LEAD_PRIORITIES = ["P1", "P2", "SIN RESULTADO"] as const;
+
 const LEAD_NEXT_STEPS = [
   "NO_ACTION",
   "PROPOSE_RATE",
@@ -86,7 +89,9 @@ const LEAD_NEXT_STEPS = [
   "REGISTER_VENUE_ACCOUNTS",
   "COMPLETE_FULFILLMENT",
 ] as const;
+
 export const CURRENCIES = ["PEN", "USD"] as const;
+
 export const SETTLEMENT_BANKS = [
   "BCP",
   "BBVA",
@@ -96,13 +101,16 @@ export const SETTLEMENT_BANKS = [
   "BANBIF",
   "MI BANCO",
 ] as const;
+
 export const COLLECTION_MODES = [
   "SUSCRIPCIONES",
   "ONE_CLIC",
   "CARGO_UNICO",
 ] as const;
+
 export const ACCOUNT_TYPE_KINDS = ["AHORROS", "CORRIENTE"] as const;
 
+export type InquiryState = (typeof INQUIRY_STATES)[number];
 export type ProductScope = (typeof PRODUCT_SCOPES)[number];
 export type LeadStage = (typeof LEAD_STAGES)[number];
 export type CloseReason = (typeof CLOSE_REASONS)[number];
