@@ -1,6 +1,7 @@
 import { createAsync, useNavigate } from "@solidjs/router";
-import { Show, createMemo, createSignal, onMount } from "solid-js";
+import { Show, createMemo, createSignal } from "solid-js";
 
+import { useModKeyLabel } from "~/browser/hotkey/use-mod-key-label";
 import ChevronDown from "~/components/icons/chevron-down";
 import ChevronUp from "~/components/icons/chevron-up";
 import Heart from "~/components/icons/heart";
@@ -11,18 +12,13 @@ import { TopBarCommandButton } from "~/components/layout/top-bar-command-button"
 import { TopBarTooltip } from "~/components/layout/top-bar-tooltip";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { ConfirmDialog } from "~/components/ui/confirm-dialog";
+import { actionErrorMessage } from "~/contracts/errors";
+import { hasPermission } from "~/domain/auth/access/rbac";
 import { useLeadActions } from "~/features/record-show/use-record-actions";
 import { PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID } from "~/features/side-panel/constants/side-panel-click-outside-id";
-import { SIDE_PANEL_HOTKEY } from "~/features/side-panel/constants/side-panel-hotkey";
-import { useSidePanel } from "~/features/side-panel/state/use-side-panel";
-import { createRootSidePanelPage } from "~/features/side-panel/types/side-panel-page";
-import {
-  leadDetailQuery,
-  leadListQuery,
-} from "~/features/workflow/data/queries";
-import { hasPermission } from "~/lib/auth/access/rbac";
-import { useHotkey } from "~/lib/hotkey/use-hotkey";
-import { actionErrorMessage } from "~/lib/wire-error";
+import { useSidePanelMenu } from "~/features/side-panel/hooks/use-side-panel-menu";
+import { leadDetailQuery } from "~/rpc/workflow/lead-detail";
+import { leadListQuery } from "~/rpc/workflow/lead-list";
 
 import {
   RecordShowActionsMenu,
@@ -31,22 +27,20 @@ import {
 
 import styles from "./record-show-header.module.css";
 
-type RecordShowHeaderActionsProps = {
-  leadId: string;
-};
-
 const LEAD_NAVIGATION_LIMIT = 200;
 
-export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
+export function RecordShowHeaderActions(props: { leadId: string }) {
   const navigate = useNavigate();
   const detail = createAsync(() => leadDetailQuery(props.leadId));
   const leadList = createAsync(() =>
     leadListQuery({ limit: LEAD_NAVIGATION_LIMIT, offset: 0 }),
   );
+
   const { favoriteBusy, setFavorite, deleteBusy, deleteLead } =
     useLeadActions();
   const { currentUser } = useAuthenticatedSession();
-  const user = currentUser();
+  const { isSidePanelOpen, toggleSidePanelMenu } = useSidePanelMenu();
+  const modKey = useModKeyLabel();
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = createSignal(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = createSignal<
@@ -54,7 +48,9 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
   >(null);
 
   const canDelete = createMemo(
-    () => detail()?.lead != null && hasPermission(user.role, "lead:delete"),
+    () =>
+      detail()?.lead != null &&
+      hasPermission(currentUser().role, "lead:delete"),
   );
 
   const menuItems = createMemo<RecordShowMenuItem[]>(() => {
@@ -77,6 +73,52 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
     return items;
   });
 
+  const currentIndex = createMemo(() => {
+    const rows = leadList()?.rows;
+
+    if (!rows) {
+      return -1;
+    }
+
+    return rows.findIndex((row) => row.id === props.leadId);
+  });
+
+  const previousLeadId = createMemo(() => {
+    const rows = leadList()?.rows;
+    const index = currentIndex();
+
+    if (!rows || index <= 0) {
+      return null;
+    }
+
+    return rows[index - 1]?.id ?? null;
+  });
+
+  const nextLeadId = createMemo(() => {
+    const rows = leadList()?.rows;
+    const index = currentIndex();
+
+    if (!rows || index < 0 || index >= rows.length - 1) {
+      return null;
+    }
+
+    return rows[index + 1]?.id ?? null;
+  });
+
+  const isFavorite = () => detail()?.lead.isFavorite ?? false;
+
+  const goToLead = (leadId: string | null) => {
+    if (!leadId) {
+      return;
+    }
+
+    navigate(`/records/${leadId}`);
+  };
+
+  const toggleFavorite = () => {
+    void setFavorite(props.leadId, isFavorite());
+  };
+
   async function handleConfirmDelete() {
     setDeleteErrorMessage(null);
 
@@ -88,67 +130,6 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
       setDeleteErrorMessage(actionErrorMessage(caught));
     }
   }
-
-  const currentIndex = createMemo(() => {
-    const rows = leadList()?.rows;
-    if (!rows) {
-      return -1;
-    }
-
-    return rows.findIndex((row) => row.id === props.leadId);
-  });
-
-  const previousLeadId = createMemo(() => {
-    const rows = leadList()?.rows;
-    const index = currentIndex();
-    if (!rows || index <= 0) {
-      return null;
-    }
-
-    return rows[index - 1]?.id ?? null;
-  });
-
-  const nextLeadId = createMemo(() => {
-    const rows = leadList()?.rows;
-    const index = currentIndex();
-    if (!rows || index < 0 || index >= rows.length - 1) {
-      return null;
-    }
-
-    return rows[index + 1]?.id ?? null;
-  });
-
-  const [modKey, setModKey] = createSignal("Ctrl");
-  const { isOpen, openPanel, closePanel } = useSidePanel();
-
-  const isFavorite = () => detail()?.lead.isFavorite ?? false;
-
-  onMount(() => {
-    if (/Mac/i.test(navigator.platform)) {
-      setModKey("⌘");
-    }
-  });
-
-  const toggleSidePanel = () => {
-    if (isOpen()) {
-      closePanel();
-      return;
-    }
-
-    openPanel(createRootSidePanelPage());
-  };
-
-  useHotkey(SIDE_PANEL_HOTKEY, toggleSidePanel);
-
-  const goToLead = (leadId: string | null) => {
-    if (!leadId) {
-      return;
-    }
-
-    navigate(`/records/${leadId}`);
-  };
-
-  const toggleFavorite = () => void setFavorite(props.leadId, isFavorite());
 
   return (
     <>
@@ -205,9 +186,9 @@ export function RecordShowHeaderActions(props: RecordShowHeaderActionsProps) {
       <RecordShowActionsMenu items={menuItems()} />
 
       <TopBarCommandButton
-        isOpen={isOpen()}
+        isOpen={isSidePanelOpen()}
         modKey={modKey()}
-        onClick={toggleSidePanel}
+        onClick={toggleSidePanelMenu}
         dataClickOutsideId={PAGE_HEADER_SIDE_PANEL_BUTTON_CLICK_OUTSIDE_ID}
       />
 

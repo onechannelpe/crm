@@ -1,6 +1,6 @@
 import { createSignal, type Accessor } from "solid-js";
 
-import { uploadLeadSaleProofFile } from "~/actions/workflow/files";
+import { uploadLeadSaleProofFile } from "~/rpc/workflow/files";
 
 type UseUploadAttachmentFileParams = {
   leadId: Accessor<string | null>;
