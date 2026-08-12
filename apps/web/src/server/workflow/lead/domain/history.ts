@@ -51,7 +51,7 @@ export type LeadHistoryEventType =
   | "note_added"
   | "lead_deleted";
 
-const LEAD_HISTORY_EVENT_TYPES = new Set<LeadHistoryEventType>([
+const LEAD_HISTORY_EVENT_TYPES = [
   "lead_registered",
   "lead_status_updated",
   "lead_priority_updated",
@@ -78,12 +78,12 @@ const LEAD_HISTORY_EVENT_TYPES = new Set<LeadHistoryEventType>([
   "fulfillment_completed",
   "note_added",
   "lead_deleted",
-]);
+] as const satisfies readonly LeadHistoryEventType[];
 
 export function isLeadHistoryEventType(
   value: string,
 ): value is LeadHistoryEventType {
-  return LEAD_HISTORY_EVENT_TYPES.has(value as LeadHistoryEventType);
+  return LEAD_HISTORY_EVENT_TYPES.some((type) => type === value);
 }
 
 export type LeadHistoryPayloadByEvent = {

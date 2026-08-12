@@ -115,5 +115,3 @@ export function createActionObservationsRepo(db: Kysely<Database>) {
     },
   };
 }
-
-type ActionObservationsRepo = ReturnType<typeof createActionObservationsRepo>;

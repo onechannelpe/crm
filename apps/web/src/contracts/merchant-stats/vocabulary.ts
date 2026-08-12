@@ -17,8 +17,6 @@ export type AttributionMethod = (typeof ATTRIBUTION_METHODS)[number];
 const ATTRIBUTION_CONFIDENCES = ["exact", "none"] as const;
 export type AttributionConfidence = (typeof ATTRIBUTION_CONFIDENCES)[number];
 
-const SETTLED_CONFIDENCES = new Set<AttributionConfidence>(["exact"]);
-
 export const QUALITY_ISSUES = [
   "no_owner",
   "no_target",

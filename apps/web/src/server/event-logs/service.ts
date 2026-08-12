@@ -375,5 +375,3 @@ export function createEventLogsService(db: Kysely<Database>) {
     },
   };
 }
-
-type EventLogsService = ReturnType<typeof createEventLogsService>;

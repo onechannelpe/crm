@@ -46,14 +46,6 @@ export type RateRevision = {
   requestedAt: Date;
 };
 
-type RateRevisionFile = {
-  id: WorkflowRateRevisionFileId;
-  revisionId: WorkflowRateRevisionId;
-  fileAssetId: FileAssetId;
-  uploadedByUserId: UserId;
-  createdAt: Date;
-};
-
 export type SubmitReadyRevisionFile = {
   fileId: WorkflowRateRevisionFileId;
   fileAssetId: FileAssetId;

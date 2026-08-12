@@ -21,7 +21,6 @@ import type {
   GpvSnapshotState,
 } from "~/domain/merchant-stats/snapshot";
 
-type MerchantProduct = "CULQIFULL" | "CULQILINK" | "CULQIONLINE";
 export type GpvSnapshotIssueSeverity = "warning" | "blocking";
 export type GpvSnapshotIssueStatus = "open" | "resolved";
 

@@ -165,5 +165,3 @@ export function createUserChannelAddressRepo(db: Kysely<Database>) {
     markWhatsAppVerified,
   };
 }
-
-type UserChannelAddressRepo = ReturnType<typeof createUserChannelAddressRepo>;

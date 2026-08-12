@@ -57,5 +57,3 @@ export function createAuditActionPoliciesRepo(db: Kysely<Database>) {
     },
   };
 }
-
-type AuditActionPoliciesRepo = ReturnType<typeof createAuditActionPoliciesRepo>;

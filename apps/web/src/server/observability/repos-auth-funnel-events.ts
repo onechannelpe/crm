@@ -114,5 +114,3 @@ export function createAuthFunnelEventsRepo(db: Kysely<Database>) {
     },
   };
 }
-
-type AuthFunnelEventsRepo = ReturnType<typeof createAuthFunnelEventsRepo>;

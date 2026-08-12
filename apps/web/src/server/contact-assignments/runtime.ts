@@ -108,7 +108,3 @@ export function createContactAssignmentsRuntime(
     ) => completeContactAssignmentCall(command, interactionUow, operation),
   };
 }
-
-type ContactAssignmentsRuntime = ReturnType<
-  typeof createContactAssignmentsRuntime
->;
