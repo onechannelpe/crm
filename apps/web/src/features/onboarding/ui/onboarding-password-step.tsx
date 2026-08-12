@@ -43,7 +43,9 @@ export function OnboardingPasswordStep(props: OnboardingPasswordStepProps) {
         class={styles.formContents}
         onSubmit={(event) => {
           event.preventDefault();
-          if (canSubmit()) props.onSubmit();
+          if (canSubmit()) {
+            props.onSubmit();
+          }
         }}
       >
         <input

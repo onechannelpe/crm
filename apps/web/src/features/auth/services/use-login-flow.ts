@@ -1,17 +1,20 @@
 import { createSignal, onMount } from "solid-js";
 
-export type AuthMethod = "google" | "password" | "passkey";
-export type LastUsedMethod = AuthMethod | null;
+type AuthMethod = "google" | "password" | "passkey";
 
 const LAST_USED_KEY = "last_auth_method";
 
-function readLastUsed(): LastUsedMethod {
+function readLastUsed(): AuthMethod | null {
   try {
-    const v = localStorage.getItem(LAST_USED_KEY);
-    if (v === "google" || v === "password" || v === "passkey") return v;
+    const value = localStorage.getItem(LAST_USED_KEY);
+
+    if (value === "google" || value === "password" || value === "passkey") {
+      return value;
+    }
   } catch {
     // localStorage throws in SSR and sandboxed contexts
   }
+
   return null;
 }
 
@@ -24,8 +27,9 @@ function persistLastUsed(method: AuthMethod): void {
 }
 
 export function useLoginFlow() {
-  const [lastUsedMethod, setLastUsedMethod] =
-    createSignal<LastUsedMethod>(null);
+  const [lastUsedMethod, setLastUsedMethod] = createSignal<AuthMethod | null>(
+    null,
+  );
 
   onMount(() => {
     setLastUsedMethod(readLastUsed());

@@ -1,19 +1,19 @@
 import { useAction, useNavigate } from "@solidjs/router";
 import { createMemo, createSignal, onMount } from "solid-js";
 
-import { finishPasskeyLogin } from "~/actions/auth/login/passkey";
 import {
   createAuthenticationResponse,
   isPasskeyAuthenticationSupported,
-} from "~/lib/auth/passkey/authentication-client";
-import type { PasskeyLoginFlowState } from "~/lib/auth/passkey/types";
-import { passkeyStartMutation } from "~/lib/mutations/auth";
-import { trackAuthClientEventMutation } from "~/lib/mutations/auth-analytics";
-import { actionErrorMessage, parseWireError } from "~/lib/wire-error";
-import { codeIs } from "~/lib/wire-error-codes";
+} from "~/browser/auth/passkey/authentication-client";
+import { codeIs } from "~/contracts/error-codes";
+import { actionErrorMessage, parseWireError } from "~/contracts/errors";
+import type { PasskeyLoginFlowState } from "~/domain/auth/passkey/types";
+import { trackAuthClientEventMutation } from "~/features/auth/data/analytics-mutations";
+import { passkeyStartMutation } from "~/features/auth/data/mutations";
+import { finishPasskeyLogin } from "~/rpc/auth/login/passkey";
 
-export type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
-export type PasskeySupportStatus = "unknown" | "supported" | "unsupported";
+type PasskeyLoginPhase = "idle" | "starting" | "device" | "verifying";
+type PasskeySupportStatus = "unknown" | "supported" | "unsupported";
 
 function buildPasskeyStartFormData(
   input:

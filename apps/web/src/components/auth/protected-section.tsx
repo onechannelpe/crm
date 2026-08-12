@@ -2,8 +2,7 @@ import type { JSX } from "solid-js";
 import { Show } from "solid-js";
 
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
-
-import { hasPermission, type Permission } from "./rbac";
+import { hasPermission, type Permission } from "~/domain/auth/access/rbac";
 
 interface ProtectedSectionProps {
   permission: Permission;

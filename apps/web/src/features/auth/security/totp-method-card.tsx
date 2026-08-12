@@ -37,7 +37,9 @@ function getSetupKey(otpauthUri: string): string {
 export function TotpMethodCard(props: TotpMethodCardProps) {
   const setupKey = () => {
     const currentEnrollment = props.enrollment;
-    if (!currentEnrollment) return "";
+    if (!currentEnrollment) {
+      return "";
+    }
     return getSetupKey(currentEnrollment.otpauthUri);
   };
 
