@@ -1,5 +1,5 @@
 import { createAsync } from "@solidjs/router";
-import { ErrorBoundary, Index, Show, Suspense } from "solid-js";
+import { createMemo, ErrorBoundary, Index, Show, Suspense } from "solid-js";
 
 import { EmptyState } from "~/components/feedback/empty-state/empty";
 import type { GpvPerformanceView } from "~/contracts/merchant-stats/views";
@@ -75,11 +75,12 @@ function PerformanceContent(props: {
 }) {
   const monthLabel = () => formatMonth(props.view.month);
 
-  const projectedGpvTotal = () =>
+  const projectedGpvTotal = createMemo(() =>
     props.view.attainment.sellers.reduce(
       (sum, seller) => sum + (seller.projectedGpv ?? 0),
       0,
-    );
+    ),
+  );
 
   return (
     <WidgetCanvas>
