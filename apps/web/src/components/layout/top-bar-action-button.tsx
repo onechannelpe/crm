@@ -1,7 +1,6 @@
 import { A } from "@solidjs/router";
+import { clsx } from "clsx";
 import { Show, splitProps, type JSX } from "solid-js";
-
-import { cn } from "~/lib/utils";
 
 import styles from "./top-bar-action-button.module.css";
 
@@ -58,13 +57,13 @@ export function TopBarActionButton(props: TopBarActionButtonProps) {
   );
 
   return (
-    <div class={cn(styles.root, local.class)}>
+    <div class={clsx(styles.root, local.class)}>
       <Show
         when={local.href}
         fallback={
           <button
             type={local.type ?? "button"}
-            class={cn(
+            class={clsx(
               styles.control,
               local.iconOnly && styles.iconOnly,
               local.buttonClass,
@@ -83,7 +82,7 @@ export function TopBarActionButton(props: TopBarActionButtonProps) {
         {(href) => (
           <A
             href={href()}
-            class={cn(
+            class={clsx(
               styles.control,
               local.iconOnly && styles.iconOnly,
               local.buttonClass,

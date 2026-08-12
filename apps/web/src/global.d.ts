@@ -1,4 +1,4 @@
-import type { RequestContext } from "~/lib/http/request-context";
+import type { RequestContext } from "~/server/platform/http/request-context-storage";
 
 declare namespace App {
   interface RequestObservabilityContext {
@@ -6,7 +6,6 @@ declare namespace App {
     requestId: string;
     routePath: string | null;
     httpMethod: string | null;
-    requestStartedAt: number;
   }
 
   interface RequestEventLocals {

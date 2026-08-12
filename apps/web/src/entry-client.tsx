@@ -1,5 +1,5 @@
 // @refresh reload
-import { init, replayIntegration } from "@sentry/solid";
+import { addIntegration, init } from "@sentry/solid";
 import { solidRouterBrowserTracingIntegration } from "@sentry/solid/solidrouter";
 import { mount, StartClient } from "@solidjs/start/client";
 
@@ -7,35 +7,40 @@ import {
   isHydrationDiagnosticsEnabled,
   isHydrationMismatchError,
   traceHydrationEvent,
-} from "./lib/observability/diagnostics/hydration";
-import { sentryDefaultDataCollection } from "./lib/observability/sentry";
-import { setupCsrfInterceptor } from "./lib/security/csrf-client";
+} from "./browser/observability/diagnostics/hydration";
+import { setupBrowserRequestSecurity } from "./browser/security/csrf-client";
+import { sentryDefaultDataCollection } from "./shared/observability/sentry";
 
-init({
-  dsn: import.meta.env.VITE_SENTRY_DSN,
-  integrations: [solidRouterBrowserTracingIntegration(), replayIntegration()],
-  tracesSampleRate: Number(
-    import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? "0.1",
-  ),
-  replaysSessionSampleRate: Number(
-    import.meta.env.VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE ?? "0.05",
-  ),
-  replaysOnErrorSampleRate: Number(
-    import.meta.env.VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE ?? "1.0",
-  ),
-  dataCollection: sentryDefaultDataCollection(),
-});
+if (import.meta.env.PROD) {
+  init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    integrations: [solidRouterBrowserTracingIntegration()],
+    tracesSampleRate: Number(
+      import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE ?? "0.1",
+    ),
+    replaysSessionSampleRate: Number(
+      import.meta.env.VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE ?? "0.05",
+    ),
+    replaysOnErrorSampleRate: Number(
+      import.meta.env.VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE ?? "1.0",
+    ),
+    dataCollection: sentryDefaultDataCollection(),
+  });
+}
 
-setupCsrfInterceptor();
+setupBrowserRequestSecurity();
 
 const HYDRATION_SCOPE = "entry-client";
+const hydrationDiagnosticsEnabled =
+  isHydrationDiagnosticsEnabled(HYDRATION_SCOPE);
 
 const app = document.getElementById("app");
+
 if (!app) {
   throw new Error("Missing #app root element");
 }
 
-if (isHydrationDiagnosticsEnabled(HYDRATION_SCOPE)) {
+if (hydrationDiagnosticsEnabled) {
   traceHydrationEvent(HYDRATION_SCOPE, "mount_start", {
     path: window.location.pathname,
     search: window.location.search,
@@ -60,9 +65,17 @@ if (isHydrationDiagnosticsEnabled(HYDRATION_SCOPE)) {
 
 mount(() => <StartClient />, app);
 
-queueMicrotask(() => {
-  traceHydrationEvent(HYDRATION_SCOPE, "mount_complete", {
-    path: window.location.pathname,
-    search: window.location.search,
+if (hydrationDiagnosticsEnabled) {
+  queueMicrotask(() => {
+    traceHydrationEvent(HYDRATION_SCOPE, "mount_complete", {
+      path: window.location.pathname,
+      search: window.location.search,
+    });
   });
-});
+}
+
+if (import.meta.env.PROD) {
+  void import("@sentry/solid").then(({ replayIntegration }) =>
+    addIntegration(replayIntegration()),
+  );
+}

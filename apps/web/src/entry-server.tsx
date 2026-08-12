@@ -6,20 +6,18 @@ import { getRequestEvent } from "solid-js/web";
 
 import favicon from "~/assets/images/logo/logo.ico";
 
-import { CSRF_CONFIG } from "./lib/security/csrf-config";
+import { CSRF_CONFIG } from "./shared/csrf-config";
 
-function RequestMeta() {
+function requestCsrfToken(): string | null {
   const event = getRequestEvent();
-  const csrfToken = event?.locals?.requestContext?.csrfToken;
-
-  // eslint-disable-next-line solid/components-return-once
-  return csrfToken ? (
-    <meta name={CSRF_CONFIG.META_NAME} content={csrfToken} />
-  ) : null;
+  const csrf = event?.locals?.requestContext?.csrf;
+  return csrf?.kind === "available" ? csrf.token : null;
 }
 
 export default createHandler(
   () => {
+    const csrfToken = requestCsrfToken();
+
     return (
       <StartServer
         document={({ assets, children, scripts }: DocumentComponentProps) => (
@@ -30,8 +28,9 @@ export default createHandler(
                 name="viewport"
                 content="width=device-width, initial-scale=1"
               />
-              <RequestMeta />
-              <title>Culqi360</title>
+              {csrfToken ? (
+                <meta name={CSRF_CONFIG.META_NAME} content={csrfToken} />
+              ) : null}
               <link rel="icon" type="image/x-icon" href={favicon} />
               {assets}
             </head>

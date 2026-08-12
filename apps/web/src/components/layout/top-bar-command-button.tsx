@@ -1,4 +1,4 @@
-import { cn } from "~/lib/utils";
+import { clsx } from "clsx";
 
 import { TopBarActionButton } from "./top-bar-action-button";
 import { TopBarTooltip } from "./top-bar-tooltip";
@@ -27,7 +27,7 @@ export function TopBarCommandButton(props: TopBarCommandButtonProps) {
         dataClickOutsideId={props.dataClickOutsideId}
       >
         <svg
-          class={cn(styles.icon, props.isOpen ? styles.open : styles.closed)}
+          class={clsx(styles.icon, props.isOpen ? styles.open : styles.closed)}
           xmlns="http://www.w3.org/2000/svg"
           width="14"
           height="14"
@@ -44,18 +44,23 @@ export function TopBarCommandButton(props: TopBarCommandButtonProps) {
             cx="12"
             cy="12"
             r="1"
-            class={cn(styles.dot, styles.centerDot)}
+            class={clsx(styles.dot, styles.centerDot)}
           />
           <path d="M12 12 L6 6" class={styles.line} />
           <path d="M12 12 L18 6" class={styles.line} />
           <path d="M12 12 L6 18" class={styles.line} />
           <path d="M12 12 L18 18" class={styles.line} />
-          <circle cx="12" cy="5" r="1" class={cn(styles.dot, styles.topDot)} />
+          <circle
+            cx="12"
+            cy="5"
+            r="1"
+            class={clsx(styles.dot, styles.topDot)}
+          />
           <circle
             cx="12"
             cy="19"
             r="1"
-            class={cn(styles.dot, styles.bottomDot)}
+            class={clsx(styles.dot, styles.bottomDot)}
           />
         </svg>
       </TopBarActionButton>

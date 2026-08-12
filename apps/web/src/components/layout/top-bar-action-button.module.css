@@ -8,7 +8,7 @@
 .control {
   align-items: center;
   background: transparent;
-  border: 1px solid var(--bg-translucent);
+  border: 1px solid var(--background-transparent-light);
   border-radius: var(--radius-sm);
   color: var(--foreground-secondary);
   cursor: pointer;
@@ -35,7 +35,7 @@
 }
 
 .control:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   color: var(--foreground);
 }
 

@@ -1,0 +1,37 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.viewBar {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  box-sizing: border-box;
+  display: flex;
+  height: 39px;
+  justify-content: space-between;
+  padding: 0 var(--spacing-3);
+}
+
+.viewBarActions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.table {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 var(--spacing-3);
+}
+
+.row {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  box-sizing: border-box;
+  display: flex;
+  gap: var(--spacing-6);
+  min-height: 36px;
+}

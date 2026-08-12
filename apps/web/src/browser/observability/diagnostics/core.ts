@@ -1,5 +1,5 @@
-import { createLogger } from "../logger";
-import { readRuntimeEnv } from "../runtime-env";
+import { readRuntimeEnv } from "~/shared/observability/runtime-env";
+import { createLogger } from "~/shared/observability/runtime-logger";
 
 const DIAGNOSTIC_CHANNELS = ["ssr", "hydration"] as const;
 
@@ -9,7 +9,9 @@ export type DiagnosticMeta = Record<string, unknown>;
 const loggerByScope = new Map<string, ReturnType<typeof createLogger>>();
 
 function parseCsv(raw: string | undefined): Set<string> {
-  if (!raw) return new Set();
+  if (!raw) {
+    return new Set();
+  }
 
   return new Set(
     raw
@@ -71,7 +73,9 @@ function getDiagnosticRuntime(): "server" | "client" {
 
 function getLogger(scope: string) {
   const cached = loggerByScope.get(scope);
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
 
   const logger = createLogger(`diagnostic:${scope}`);
   loggerByScope.set(scope, logger);
@@ -82,8 +86,12 @@ export function isDiagnosticEnabled(
   channel: DiagnosticChannel,
   scope: string,
 ): boolean {
-  if (!enabledChannels.has(channel)) return false;
-  if (scopeFilter.size === 0) return true;
+  if (!enabledChannels.has(channel)) {
+    return false;
+  }
+  if (scopeFilter.size === 0) {
+    return true;
+  }
 
   const normalizedScope = scope.toLowerCase();
   return (
@@ -98,7 +106,9 @@ export function traceDiagnostic(
   event: string,
   meta: DiagnosticMeta = {},
 ) {
-  if (!isDiagnosticEnabled(channel, scope)) return;
+  if (!isDiagnosticEnabled(channel, scope)) {
+    return;
+  }
 
   getLogger(scope).info(
     event,
