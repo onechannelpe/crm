@@ -1,11 +1,11 @@
 import type { ManagedExecutiveView } from "~/contracts/capacity";
-import { longName } from "~/lib/users/display-name";
+import type { DomainError } from "~/domain/errors";
+import { longName } from "~/domain/identity/display-name";
+import type { BranchId, UserId } from "~/domain/ids";
 import { getLeadCapacitySnapshot } from "~/server/capacity/application/queries/get-lead-capacity-snapshot";
 import { getSearchCapacitySnapshot } from "~/server/capacity/application/queries/get-search-capacity-snapshot";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import type { BranchId, UserId } from "~/server/shared/ids";
-import { isErr, Ok, type Result } from "~/server/shared/result";
+import { isErr, Ok, type Result } from "~/shared/result";
 
 import type { CapacityUser } from "../actor-scope";
 import { canManageExecutive } from "../authorize-capacity-actor";
@@ -33,13 +33,17 @@ export async function listManagedExecutives(
   const summaries = await Promise.all(
     users.map(async (user) => {
       const managed = await canManageExecutive(ctx.actor, user.id, deps.repos);
-      if (!managed.ok) return null;
+      if (!managed.ok) {
+        return null;
+      }
 
       const [searchStatus, leadStatus] = await Promise.all([
-        getSearchCapacitySnapshot(user.id, deps.repos),
-        getLeadCapacitySnapshot(user.id, deps.repos),
+        getSearchCapacitySnapshot(user.id, deps.repos, ctx),
+        getLeadCapacitySnapshot(user.id, deps.repos, ctx),
       ]);
-      if (isErr(searchStatus) || isErr(leadStatus)) return null;
+      if (isErr(searchStatus) || isErr(leadStatus)) {
+        return null;
+      }
 
       return {
         id: user.id,

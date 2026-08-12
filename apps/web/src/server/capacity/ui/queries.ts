@@ -1,32 +1,32 @@
-"use server";
-
 import type {
   CapacityPolicyDefaultsView,
   ExecutiveCapacityDetailView,
   ManagedExecutiveView,
   PendingCapacityRequestView,
 } from "~/contracts/capacity";
-import { runAction } from "~/server/platform/action";
-import { getServerRuntime } from "~/server/platform/container";
-import { UserId } from "~/server/shared/ids";
-import { parseObject, validationFail } from "~/server/shared/parsing";
+import { UserId } from "~/domain/ids";
+import { application } from "~/server/composition/application";
+import { executeSessionServerFunction } from "~/server/platform/action";
+import {
+  parseObject,
+  validationFail,
+} from "~/server/platform/action/input-reader";
 
 export async function getManagedExecutivesList(): Promise<
   ManagedExecutiveView[]
 > {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.managed_executives.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.listManagedExecutives(ctx),
+    execute: (ctx) => application.capacity.listManagedExecutives(ctx),
   });
 }
 
 export async function getExecutiveDetail(
   userId: string,
 ): Promise<ExecutiveCapacityDetailView> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.executive_detail.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
@@ -36,31 +36,29 @@ export async function getExecutiveDetail(
         return { userId: parsedUserId };
       }),
 
-    audit: (params) => ({ userId: params.userId }),
+    telemetry: (params) => ({ userId: params.userId }),
 
     execute: (ctx, params) =>
-      getServerRuntime().capacity.useCases.getExecutiveDetail(ctx, params),
+      application.capacity.getExecutiveDetail(ctx, params),
   });
 }
 
 export async function getPendingRequests(): Promise<
   PendingCapacityRequestView[]
 > {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.pending_requests.read",
     access: { kind: "permission", permission: "capacity:read:team" },
 
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.listPendingRequests(ctx),
+    execute: (ctx) => application.capacity.listPendingRequests(ctx),
   });
 }
 
 export async function getPolicyDefaults(): Promise<CapacityPolicyDefaultsView> {
-  return runAction({
+  return executeSessionServerFunction({
     name: "capacity.policy_defaults.read",
     access: { kind: "permission", permission: "capacity:policy:manage" },
 
-    execute: (ctx) =>
-      getServerRuntime().capacity.useCases.getPolicyDefaults(ctx),
+    execute: (ctx) => application.capacity.getPolicyDefaults(ctx),
   });
 }

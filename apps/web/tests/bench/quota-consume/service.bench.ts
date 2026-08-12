@@ -1,13 +1,14 @@
+import { operationAt } from "@tests/support/operation";
 import { afterAll, beforeAll, beforeEach, bench, describe } from "vitest";
 
+import type { UserId } from "~/domain/ids";
+import { SearchReservationId } from "~/domain/ids";
 import { executeWithUsageReservation } from "~/server/capacity/application/usage/ledger";
 import type { UsageReservationPorts } from "~/server/capacity/application/usage/ledger";
-import { createServerInfra } from "~/server/platform/container/infra";
-import { createSearchRuntime } from "~/server/platform/container/search-runtime";
-import type { UserId } from "~/server/shared/ids";
-import { SearchReservationId } from "~/server/shared/ids";
-import { Ok } from "~/server/shared/result";
+import { createSearchUsageReservationPorts } from "~/server/search/infrastructure/search-usage-reservation-ports";
+import { Ok } from "~/shared/result";
 
+import { BENCH_NOW } from "../_shared/constants";
 import { createBenchDbFixture } from "../_shared/fixture";
 import { SINGLE_CALL } from "../_shared/options";
 import { resetQuotaUsage, seedQuotaUser } from "./fixtures";
@@ -19,9 +20,7 @@ describe("search capacity consume service benchmark", () => {
 
   beforeAll(async () => {
     const ctx = await db.setup();
-    usageReservationPorts = createSearchRuntime(
-      createServerInfra(ctx.db),
-    ).usageReservationPorts;
+    usageReservationPorts = createSearchUsageReservationPorts(ctx.db);
     userId = await seedQuotaUser(ctx);
   });
 
@@ -45,6 +44,7 @@ describe("search capacity consume service benchmark", () => {
           brand: SearchReservationId.trust,
         },
         usageReservationPorts,
+        operationAt(BENCH_NOW),
         async () => Ok({ value: undefined, consumed: 1 }),
       );
       if (!result.ok) {

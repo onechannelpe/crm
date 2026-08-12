@@ -1,8 +1,9 @@
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
-import { withAdvisoryLock } from "~/server/shared/db-lock";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { withAdvisoryLock } from "~/server/platform/database/advisory-lock";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type {
   CapacityKind,
@@ -24,6 +25,7 @@ export interface UsageReservationPorts<K extends CapacityKind> {
   checkRemaining(
     trx: DatabaseExecutor,
     actorUserId: UserId,
+    operation: OperationContext,
   ): Promise<Result<number, DomainError>>;
   reservations(trx: DatabaseExecutor): UsageReservationsRepo<K>;
   commits(trx: DatabaseExecutor): UsageCommitsRepo<K>;
@@ -48,12 +50,19 @@ async function reserveUsage<K extends CapacityKind>(
     UsageReservationPorts<K>,
     "executor" | "checkRemaining" | "reservations"
   >,
+  operation: OperationContext,
 ): Promise<Result<UsageReservationId<K>, DomainError>> {
   const lockKey = `usage:${command.kind}:${command.actorUserId}`;
   return ports.executor.transaction().execute((trx) =>
     withAdvisoryLock(trx, lockKey, async () => {
-      const remaining = await ports.checkRemaining(trx, command.actorUserId);
-      if (isErr(remaining)) return remaining;
+      const remaining = await ports.checkRemaining(
+        trx,
+        command.actorUserId,
+        operation,
+      );
+      if (isErr(remaining)) {
+        return remaining;
+      }
 
       if (remaining.value < command.amount) {
         return Err(fail(EXHAUSTED_CODE[command.kind]));
@@ -63,6 +72,8 @@ async function reserveUsage<K extends CapacityKind>(
         user_id: command.actorUserId,
         amount: command.amount,
         reason: command.reason,
+        created_at: operation.operationAt,
+        updated_at: operation.operationAt,
       });
       return Ok(command.brand(row.id));
     }),
@@ -78,6 +89,7 @@ async function commitUsage<K extends CapacityKind>(
     UsageReservationPorts<K>,
     "executor" | "reservations" | "commits"
   >,
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   const reservations = ports.reservations(ports.executor);
   const reservation = await reservations.findById(reservationId);
@@ -87,21 +99,32 @@ async function commitUsage<K extends CapacityKind>(
   await ports.commits(ports.executor).insert({
     reservation_id: reservationId,
     amount,
+    created_at: operation.operationAt,
   });
-  await reservations.updateAmountAndStatus(reservationId, amount, "committed");
+  await reservations.updateAmountAndStatus(
+    reservationId,
+    amount,
+    "committed",
+    operation.operationAt,
+  );
   return Ok(undefined);
 }
 
 async function cancelUsage<K extends CapacityKind>(
   reservationId: UsageReservationId<K>,
   ports: Pick<UsageReservationPorts<K>, "executor" | "reservations">,
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   const reservations = ports.reservations(ports.executor);
   const reservation = await reservations.findById(reservationId);
   if (!reservation) {
     return Err(fail("reservation_not_found"));
   }
-  await reservations.updateStatus(reservationId, "cancelled");
+  await reservations.updateStatus(
+    reservationId,
+    "cancelled",
+    operation.operationAt,
+  );
   return Ok(undefined);
 }
 
@@ -116,6 +139,7 @@ export interface ExecuteWithUsageReservationCommand<K extends CapacityKind> {
 export async function executeWithUsageReservation<K extends CapacityKind, T>(
   command: ExecuteWithUsageReservationCommand<K>,
   ports: UsageReservationPorts<K>,
+  operation: OperationContext,
   run: (
     reservationId: UsageReservationId<K>,
   ) => Promise<Result<{ value: T; consumed: number }, DomainError>>,
@@ -129,6 +153,7 @@ export async function executeWithUsageReservation<K extends CapacityKind, T>(
       brand: command.brand,
     },
     ports,
+    operation,
   );
   if (isErr(reservationResult)) {
     return reservationResult;
@@ -140,27 +165,32 @@ export async function executeWithUsageReservation<K extends CapacityKind, T>(
   try {
     runResult = await run(reservationId);
   } catch (error) {
-    await cancelUsage(reservationId, ports);
+    await cancelUsage(reservationId, ports, operation);
     throw error;
   }
 
   if (isErr(runResult)) {
-    await cancelUsage(reservationId, ports);
+    await cancelUsage(reservationId, ports, operation);
     return runResult;
   }
 
   const consumed = runResult.value.consumed;
   if (consumed < 0 || consumed > command.requested) {
-    await cancelUsage(reservationId, ports);
+    await cancelUsage(reservationId, ports, operation);
     return Err(fail("invalid_consumed_amount"));
   }
 
   if (consumed === 0) {
-    await cancelUsage(reservationId, ports);
+    await cancelUsage(reservationId, ports, operation);
     return Ok(runResult.value.value);
   }
 
-  const commitResult = await commitUsage(reservationId, consumed, ports);
+  const commitResult = await commitUsage(
+    reservationId,
+    consumed,
+    ports,
+    operation,
+  );
   if (isErr(commitResult)) {
     return commitResult;
   }
@@ -171,12 +201,14 @@ export async function executeWithUsageReservation<K extends CapacityKind, T>(
 export async function grantUsageCapacity<K extends CapacityKind>(
   command: GrantUsageCapacityCommand<K>,
   repos: Pick<UsageLedgerRepos<K>, "grants">,
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   await repos.grants.insert({
     user_id: command.targetUserId,
     amount: command.amount,
     reason: command.reason,
     actor_user_id: command.actorUserId,
+    created_at: operation.operationAt,
   });
   return Ok(undefined);
 }

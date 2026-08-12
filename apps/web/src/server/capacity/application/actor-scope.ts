@@ -1,6 +1,6 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { ExecutiveCategoryValue } from "~/lib/db/types";
-import type { BranchId, TeamId, UserId } from "~/server/shared/ids";
+import type { Role } from "~/domain/auth/access/rbac";
+import type { ExecutiveCategory } from "~/domain/identity/executive-category";
+import type { BranchId, TeamId, UserId } from "~/domain/ids";
 
 export type ActorScope = {
   teamId: TeamId | null;
@@ -17,7 +17,7 @@ export type CapacityUser = ManageableCapacityUser & {
   names: string;
   firstSurname: string;
   secondSurname: string;
-  executiveCategory: ExecutiveCategoryValue | null;
+  executiveCategory: ExecutiveCategory | null;
 };
 
 export type CapacityTeam = {

@@ -55,8 +55,6 @@ describe("buildSearchCapacitySnapshot", () => {
         { amount: 7, status: "cancelled" },
         { amount: 3, status: "expired" },
       ],
-      periodStart: "2026-03-01",
-      periodEnd: "2026-03-31",
     });
 
     expect(snapshot.policy).toBe(mockPolicy);
@@ -73,8 +71,6 @@ describe("buildSearchCapacitySnapshot", () => {
       grants: [],
       commits: [{ amount: 50 }],
       reservations: [],
-      periodStart: "2026-03-01",
-      periodEnd: "2026-03-31",
     });
     expect(snapshot.remaining).toBe(0);
   });

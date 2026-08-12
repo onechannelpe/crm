@@ -2,7 +2,7 @@ import type { TestDbContext } from "@tests/support/runtime/db";
 import { TEST_FIXTURES } from "@tests/support/runtime/db";
 import { randomUUIDv7 } from "bun";
 
-import { BranchId, UserId } from "~/server/shared/ids";
+import { BranchId, UserId } from "~/domain/ids";
 
 import { BENCH_NOW } from "../_shared/constants";
 
@@ -37,6 +37,7 @@ export async function seedQuotaUser(ctx: TestDbContext): Promise<UserId> {
     actor_user_id: ACTOR_USER_ID,
     amount: 2,
     reason: "bench_seed",
+    created_at: BENCH_NOW,
   });
 
   return id;

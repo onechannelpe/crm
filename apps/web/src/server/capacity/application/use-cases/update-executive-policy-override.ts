@@ -1,7 +1,7 @@
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import {
   validateLeadPolicyValues,
@@ -13,9 +13,8 @@ import { setLeadUserOverride } from "../resolve-lead-policy";
 import { setSearchUserOverride } from "../resolve-search-policy";
 import type { CapacityPolicyDeps } from "./shared";
 
-// The override form sets a user's search and lead limits together. Both writes
-// share one uow.run and one manage-executive check so an executive's override
-// never lands half-applied.
+// Search and lead overrides are written in one transaction so they cannot
+// become partially applied.
 export async function updateExecutivePolicyOverride(
   ctx: AppContext,
   deps: CapacityPolicyDeps,
@@ -28,16 +27,33 @@ export async function updateExecutivePolicyOverride(
   },
 ): Promise<Result<{ success: true }, DomainError>> {
   const monthlyLimit = validateSearchLimit(input.monthlyLimit);
-  if (!monthlyLimit.ok) return monthlyLimit;
+
+  if (!monthlyLimit.ok) {
+    return monthlyLimit;
+  }
+
   const leadValues = validateLeadPolicyValues(input);
-  if (!leadValues.ok) return leadValues;
-  const expiresAt = validateOverrideExpiry(input.expiresAt);
-  if (!expiresAt.ok) return expiresAt;
+
+  if (!leadValues.ok) {
+    return leadValues;
+  }
+
+  const expiresAt = validateOverrideExpiry(input.expiresAt, ctx.operationAt);
+
+  if (!expiresAt.ok) {
+    return expiresAt;
+  }
 
   return deps.uow.run(async (tx) => {
-    const access = await canManageExecutive(ctx.actor, input.userId, tx);
-    if (!access.target) return Err(fail("executive_not_found"));
-    if (!access.ok) return Err(fail("cannot_manage_executive"));
+    const authorization = await canManageExecutive(ctx.actor, input.userId, tx);
+
+    if (!authorization.target) {
+      return Err(fail("executive_not_found"));
+    }
+
+    if (!authorization.ok) {
+      return Err(fail("cannot_manage_executive"));
+    }
 
     const searchWrite = await setSearchUserOverride(
       {
@@ -47,8 +63,12 @@ export async function updateExecutivePolicyOverride(
         expiresAt: expiresAt.value,
       },
       tx,
+      ctx,
     );
-    if (isErr(searchWrite)) return searchWrite;
+
+    if (isErr(searchWrite)) {
+      return searchWrite;
+    }
 
     const leadWrite = await setLeadUserOverride(
       {
@@ -59,8 +79,12 @@ export async function updateExecutivePolicyOverride(
         expiresAt: expiresAt.value,
       },
       tx,
+      ctx,
     );
-    if (isErr(leadWrite)) return leadWrite;
+
+    if (isErr(leadWrite)) {
+      return leadWrite;
+    }
 
     return Ok({ success: true });
   });

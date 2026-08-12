@@ -1,0 +1,51 @@
+.status {
+  align-items: baseline;
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.statusValue {
+  color: var(--foreground);
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.statusCaption {
+  color: var(--foreground-tertiary);
+  font-size: var(--font-size-caption);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
+}
+
+.formFields {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.amountField {
+  width: 120px;
+}
+
+.reasonField {
+  flex: 1;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .formFields {
+    flex-direction: column;
+  }
+
+  .amountField {
+    width: 100%;
+  }
+}

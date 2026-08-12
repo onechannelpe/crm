@@ -1,7 +1,6 @@
-import { checkActionRateLimit } from "~/lib/security/action-rate-limit";
+import type { DomainError } from "~/domain/errors";
 import type { AppContext } from "~/server/platform/action/context";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/shared/result";
 
 import { validateRequestAmount } from "../../domain/limits";
 import { toDbCapacityRequestKind } from "../../domain/request-policy";
@@ -13,14 +12,18 @@ export async function requestCapacity(
   deps: CapacityRequestDeps,
   input: { kind: CapacityRequestKind; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
-  const amount = validateRequestAmount(input.amount);
-  if (!amount.ok) return amount;
-
-  await checkActionRateLimit(
+  await deps.rateLimiter.enforce(
     "capacity.request",
     ctx.actor.userId,
-    deps.rateLimitDeps,
+    ctx,
+    ctx.ipAddress,
   );
+
+  const amount = validateRequestAmount(input.amount);
+  if (!amount.ok) {
+    return amount;
+  }
+
   return deps.uow.run(async (tx) => {
     await tx.capacityRequests.create({
       user_id: ctx.actor.userId,
@@ -28,6 +31,8 @@ export async function requestCapacity(
       status: "pending",
       requested_amount: amount.value,
       reason: input.reason,
+      created_at: ctx.operationAt,
+      updated_at: ctx.operationAt,
     });
     return Ok({ success: true });
   });

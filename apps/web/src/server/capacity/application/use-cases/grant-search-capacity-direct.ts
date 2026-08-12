@@ -1,8 +1,8 @@
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
 import { grantUsageCapacity } from "~/server/capacity/application/usage/ledger";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import { validateRequestAmount } from "../../domain/limits";
 import { canManageExecutive } from "../authorize-capacity-actor";
@@ -14,7 +14,9 @@ export async function grantSearchCapacityDirect(
   input: { targetUserId: UserId; amount: number; reason: string },
 ): Promise<Result<{ success: true }, DomainError>> {
   const amount = validateRequestAmount(input.amount);
-  if (!amount.ok) return amount;
+  if (!amount.ok) {
+    return amount;
+  }
 
   return deps.uow.run(async (tx) => {
     const check = await canManageExecutive(ctx.actor, input.targetUserId, tx);
@@ -34,8 +36,11 @@ export async function grantSearchCapacityDirect(
         reason: input.reason,
       },
       { grants: tx.searchCapacityGrants },
+      ctx,
     );
-    if (isErr(result)) return result;
+    if (isErr(result)) {
+      return result;
+    }
     return Ok({ success: true });
   });
 }

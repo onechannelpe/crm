@@ -1,7 +1,7 @@
 import type { Kysely } from "kysely";
 
-import type { Database } from "~/lib/db/types";
-import type { BranchId, CapacityRequestId, UserId } from "~/server/shared/ids";
+import type { BranchId, CapacityRequestId, UserId } from "~/domain/ids";
+import type { Database } from "~/server/platform/database/types";
 
 export function createCapacityRequestsRepo(db: Kysely<Database>) {
   return {
@@ -11,16 +11,15 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
       status: "pending";
       requested_amount: number;
       reason: string;
+      created_at: Date;
+      updated_at: Date;
     }) {
-      const now = new Date();
       return db
         .insertInto("capacity_requests")
         .values({
           ...values,
           decision_note: null,
           reviewer_user_id: null,
-          created_at: now,
-          updated_at: now,
           decided_at: null,
         })
         .executeTakeFirstOrThrow();
@@ -75,16 +74,16 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
       id: CapacityRequestId,
       reviewerUserId: UserId,
       decisionNote: string | null,
+      decidedAt: Date,
     ) {
-      const now = new Date();
       return db
         .updateTable("capacity_requests")
         .set({
           status: "approved",
           reviewer_user_id: reviewerUserId,
           decision_note: decisionNote,
-          decided_at: now,
-          updated_at: now,
+          decided_at: decidedAt,
+          updated_at: decidedAt,
         })
         .where("id", "=", id)
         .where("status", "=", "pending")
@@ -95,16 +94,16 @@ export function createCapacityRequestsRepo(db: Kysely<Database>) {
       id: CapacityRequestId,
       reviewerUserId: UserId,
       decisionNote: string | null,
+      decidedAt: Date,
     ) {
-      const now = new Date();
       return db
         .updateTable("capacity_requests")
         .set({
           status: "rejected",
           reviewer_user_id: reviewerUserId,
           decision_note: decisionNote,
-          decided_at: now,
-          updated_at: now,
+          decided_at: decidedAt,
+          updated_at: decidedAt,
         })
         .where("id", "=", id)
         .where("status", "=", "pending")
