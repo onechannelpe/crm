@@ -1,4 +1,4 @@
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -10,7 +10,7 @@ export async function saveRateProposalPolicy(input: { validityDays: number }) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.update_rate_proposal_policy",
+    name: "getApplication().workflow.update_rate_proposal_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
     parse: () =>
       parseObject(input, validationFail, (reader) => ({
@@ -18,7 +18,7 @@ export async function saveRateProposalPolicy(input: { validityDays: number }) {
       })),
     telemetry: ({ validityDays }) => ({ validityDays }),
     execute: (ctx, { validityDays }) =>
-      application.workflow.commands.updateRateProposalPolicy(
+      getApplication().workflow.commands.updateRateProposalPolicy(
         {
           actor: workflowActor(ctx.actor),
           validityDays,

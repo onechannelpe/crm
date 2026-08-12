@@ -1,6 +1,6 @@
 import { CONTACT_ASSIGNMENT_CALL_OUTCOMES } from "~/contracts/contact-assignments/vocabulary";
 import { ContactAssignmentId, OrganizationPersonId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import type { CompleteContactAssignmentCallResult } from "~/server/contact-assignments/application/contracts";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
@@ -31,7 +31,7 @@ export async function completeContactAssignmentCall(
     }),
 
     execute: (ctx, command) =>
-      application.contactAssignments.completeCall(
+      getApplication().contactAssignments.completeCall(
         {
           actorUserId: ctx.actor.userId,
           assignmentId: command.assignmentId,

@@ -7,7 +7,7 @@ import {
   QUALITY_ISSUES,
   type QualityIssue,
 } from "~/contracts/merchant-stats/vocabulary";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -39,6 +39,11 @@ export async function getQualityRows(raw: {
     telemetry: (input) => ({ issue: input.issue }),
 
     execute: async (_ctx, input) =>
-      Ok(await application.merchantStats.quality.rows(input.issue, input.page)),
+      Ok(
+        await getApplication().merchantStats.quality.rows(
+          input.issue,
+          input.page,
+        ),
+      ),
   });
 }

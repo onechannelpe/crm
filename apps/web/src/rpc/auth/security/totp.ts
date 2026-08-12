@@ -1,6 +1,6 @@
 import { fail } from "~/domain/errors";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { Err, Ok } from "~/shared/result";
 
@@ -14,7 +14,7 @@ export async function beginTotpEnrollment(): Promise<{
     name: "auth.totp.begin",
     access: { kind: "session" },
 
-    execute: (ctx) => application.auth.security.startTotpEnrollment(ctx),
+    execute: (ctx) => getApplication().auth.security.startTotpEnrollment(ctx),
   });
 }
 
@@ -37,7 +37,7 @@ export async function finishTotpEnrollment(rawCode: unknown): Promise<{
     },
 
     execute: (ctx, { code }) =>
-      application.auth.security.finishTotpEnrollment(ctx, code),
+      getApplication().auth.security.finishTotpEnrollment(ctx, code),
   });
 
   setSessionCookie(result.sessionToken);

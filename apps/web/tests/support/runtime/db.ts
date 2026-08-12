@@ -317,7 +317,7 @@ async function buildTemplate(): Promise<void> {
       await client.query(`CREATE DATABASE "${TEMPLATE_DB_NAME}"`);
 
       try {
-        const db = createDb(databaseUrl(TEMPLATE_DB_NAME));
+        const db = createDb(() => databaseUrl(TEMPLATE_DB_NAME));
         try {
           await migrateToLatest(db);
           await seedFixtures(db);
@@ -374,7 +374,7 @@ export async function createIsolatedTestDb(
     ".vitest-files",
     `${prefix}-${runId}`,
   );
-  const db = createDb(databaseUrl(dbName));
+  const db = createDb(() => databaseUrl(dbName));
   const repos = createTestRepositories(db);
 
   return {
@@ -452,7 +452,7 @@ export async function createFreshDb(prefix: string): Promise<FreshDbContext> {
     await client.query(`CREATE DATABASE "${dbName}"`);
   });
 
-  return { dbName, db: createDb(databaseUrl(dbName)) };
+  return { dbName, db: createDb(() => databaseUrl(dbName)) };
 }
 
 export async function cleanupFreshDb(

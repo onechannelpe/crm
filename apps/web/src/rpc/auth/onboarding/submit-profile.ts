@@ -1,7 +1,7 @@
 import type { OnboardingSnapshot } from "~/contracts/auth";
 import { fail } from "~/domain/errors";
 import { parsePhone } from "~/domain/phone/pe-mobile";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { Err, Ok } from "~/shared/result";
 
@@ -22,6 +22,6 @@ export async function submitOnboardingProfile(input: {
     },
 
     execute: (ctx, phone) =>
-      application.auth.onboarding.saveProfile(ctx, phone),
+      getApplication().auth.onboarding.saveProfile(ctx, phone),
   });
 }

@@ -3,7 +3,7 @@ import { createMiddleware } from "@solidjs/start/middleware";
 import type { FetchEvent } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";
 
-import { application } from "./server/composition/application";
+import { getApplication } from "./server/composition/application";
 import { middlewareConfig } from "./server/platform/config/middleware-config";
 import { enforceAuthRequest } from "./server/platform/http/request-auth";
 import {
@@ -113,7 +113,7 @@ const resolveSession: StartMiddleware = async (_event, next) => {
       startedTicks: current.startedTicks,
       nonce: current.nonce,
     },
-    application.http.requestContext,
+    getApplication().http.requestContext,
     trustedProxy,
   );
 

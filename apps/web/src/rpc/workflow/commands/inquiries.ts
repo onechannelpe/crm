@@ -1,4 +1,4 @@
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -10,7 +10,7 @@ export async function requestInquiryCreation(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.create_inquiry",
+    name: "getApplication().workflow.create_inquiry",
     access: { kind: "auth" },
 
     parse: () =>
@@ -19,7 +19,7 @@ export async function requestInquiryCreation(input: unknown) {
       })),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.createInquiry(
+      getApplication().workflow.commands.createInquiry(
         { ruc: payload.ruc, actor: workflowActor(ctx.actor) },
         ctx,
       ),

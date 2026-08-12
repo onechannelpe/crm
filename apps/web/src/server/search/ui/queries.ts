@@ -1,4 +1,4 @@
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 
 export async function getMySearchAllowance() {
@@ -6,6 +6,7 @@ export async function getMySearchAllowance() {
     name: "search.allowance.read",
     access: { kind: "permission", permission: "capacity:read:self" },
 
-    execute: (ctx) => application.search.getAllowance(ctx.actor.userId, ctx),
+    execute: (ctx) =>
+      getApplication().search.getAllowance(ctx.actor.userId, ctx),
   });
 }

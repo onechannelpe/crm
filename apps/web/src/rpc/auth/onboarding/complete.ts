@@ -4,7 +4,7 @@ import { isRegistrationResponse } from "~/domain/auth/passkey/credential-respons
 import { fail, type DomainError } from "~/domain/errors";
 import { WebauthnChallengeId } from "~/domain/ids";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
 import { isPlainRecord } from "~/shared/type-guards";
@@ -71,13 +71,16 @@ export async function completeOnboardingAction(input: unknown): Promise<{
     execute: (ctx, command) => {
       switch (command.method) {
         case "none":
-          return application.auth.onboarding.completeWithoutFactor(ctx);
+          return getApplication().auth.onboarding.completeWithoutFactor(ctx);
 
         case "passkey":
-          return application.auth.onboarding.completeWithPasskey(ctx, command);
+          return getApplication().auth.onboarding.completeWithPasskey(
+            ctx,
+            command,
+          );
 
         case "totp":
-          return application.auth.onboarding.completeWithTotp(
+          return getApplication().auth.onboarding.completeWithTotp(
             ctx,
             command.code,
           );

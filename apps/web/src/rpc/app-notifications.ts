@@ -1,5 +1,5 @@
 import { AppNotificationId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -24,7 +24,7 @@ export async function markNotificationRead(
     telemetry: (command) => ({ notificationId: command.notificationId }),
 
     execute: async (ctx, command) => {
-      await application.notifications.markRead(
+      await getApplication().notifications.markRead(
         ctx.actor.userId,
         command.notificationId,
         ctx,
@@ -43,7 +43,7 @@ export async function markAllNotificationsRead(): Promise<void> {
     access: { kind: "auth" },
 
     execute: async (ctx) => {
-      await application.notifications.markAllRead(ctx.actor.userId, ctx);
+      await getApplication().notifications.markAllRead(ctx.actor.userId, ctx);
 
       return Ok(undefined);
     },

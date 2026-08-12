@@ -6,7 +6,7 @@ import {
   setImpersonatorCookie,
   setSessionCookie,
 } from "~/server/auth/session/cookies";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -34,7 +34,10 @@ export async function startImpersonation(
       // Capture the original session before replacing it.
       const originalSessionToken = getSessionCookie();
 
-      const result = await application.auth.impersonation.start(ctx, command);
+      const result = await getApplication().auth.impersonation.start(
+        ctx,
+        command,
+      );
 
       if (isErr(result)) {
         return result;
@@ -59,7 +62,7 @@ export async function stopImpersonation(): Promise<{ message: string }> {
     access: { kind: "auth" },
 
     execute: async (ctx) => {
-      const result = await application.auth.impersonation.stop(ctx);
+      const result = await getApplication().auth.impersonation.stop(ctx);
 
       if (isErr(result)) {
         return result;

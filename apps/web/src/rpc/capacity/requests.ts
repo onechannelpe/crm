@@ -1,5 +1,5 @@
 import type { DomainError } from "~/domain/errors";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -34,7 +34,7 @@ export async function requestMoreSearches(
     telemetry: (input) => ({ amount: input.amount }),
 
     execute: (ctx, input) =>
-      application.capacity.requestCapacity(ctx, {
+      getApplication().capacity.requestCapacity(ctx, {
         kind: "search_extra",
         amount: input.amount,
         reason: input.reason,
@@ -55,7 +55,7 @@ export async function requestMoreLeadRefill(
     telemetry: (input) => ({ amount: input.amount }),
 
     execute: (ctx, input) =>
-      application.capacity.requestCapacity(ctx, {
+      getApplication().capacity.requestCapacity(ctx, {
         kind: "lead_refill",
         amount: input.amount,
         reason: input.reason,

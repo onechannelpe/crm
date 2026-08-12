@@ -1,5 +1,5 @@
 import type { UpsertAuditPolicyInput } from "~/server/audit-reader/policy-service";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -24,7 +24,7 @@ export async function upsertAuditPolicy(input: unknown): Promise<void> {
     telemetry: ({ action, isActive }) => ({ action, isActive }),
 
     execute: async (ctx, fields) => {
-      await application.admin.upsertPolicy(
+      await getApplication().admin.upsertPolicy(
         {
           action: fields.action,
           riskLevel: fields.riskLevel,

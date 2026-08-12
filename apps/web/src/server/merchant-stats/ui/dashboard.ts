@@ -8,7 +8,7 @@ import type {
   PublishedPage,
 } from "~/contracts/merchant-stats/views";
 import type { DomainError } from "~/domain/errors";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -58,7 +58,7 @@ export async function getGpvPerformance(raw: {
 
     execute: async (ctx, input) =>
       Ok(
-        await application.merchantStats.dashboard.performance(
+        await getApplication().merchantStats.dashboard.performance(
           input.filter,
           ctx,
         ),
@@ -79,7 +79,7 @@ export async function getGpvCulqi(raw: {
       })),
 
     execute: async (_ctx, input) =>
-      Ok(await application.merchantStats.dashboard.culqi(input.filter)),
+      Ok(await getApplication().merchantStats.dashboard.culqi(input.filter)),
   });
 }
 
@@ -99,7 +99,7 @@ export async function getCohortRows(raw: {
 
     execute: async (_ctx, input) =>
       Ok(
-        await application.merchantStats.dashboard.cohorts(
+        await getApplication().merchantStats.dashboard.cohorts(
           input.filter,
           input.page,
         ),
@@ -114,6 +114,6 @@ export async function getFilterOptions(): Promise<FilterOptions> {
     parse: () => Ok(undefined),
 
     execute: async () =>
-      Ok(await application.merchantStats.dashboard.filterOptions()),
+      Ok(await getApplication().merchantStats.dashboard.filterOptions()),
   });
 }

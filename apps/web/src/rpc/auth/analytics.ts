@@ -1,5 +1,5 @@
 import { readAuthFunnelClientEvent } from "~/domain/observability/auth-funnel";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { getRequestOperation } from "~/server/platform/http/request-context-storage";
 import { getActionRequestContext } from "~/server/platform/observability/context";
 
@@ -11,7 +11,7 @@ export async function trackAuthClientEvent(input: unknown): Promise<void> {
     return;
   }
 
-  await application.auth.analytics(
+  await getApplication().auth.analytics(
     {
       source: "client",
       ...event,

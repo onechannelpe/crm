@@ -1,5 +1,5 @@
 import { ContactAssignmentId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { isCreateExtensionHandoffTokenRequest } from "~/server/extension/contracts";
 import { toWire } from "~/server/platform/action/domain-error";
 import { getRequestOperation } from "~/server/platform/http/request-context-storage";
@@ -41,7 +41,7 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
   const session = auth.value;
   const origin = event.request.headers.get("origin") ?? "";
 
-  const result = await application.extension.createHandoffToken(
+  const result = await getApplication().extension.createHandoffToken(
     {
       userId: session.userId,
       authSessionId: session.id,

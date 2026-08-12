@@ -1,4 +1,4 @@
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { isClaimExtensionSessionRequest } from "~/server/extension/contracts";
 import { toWire } from "~/server/platform/action/domain-error";
 import { getRequestOperation } from "~/server/platform/http/request-context-storage";
@@ -21,7 +21,7 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
       );
     }
 
-    const result = await application.extension.claimInstallationSession(
+    const result = await getApplication().extension.claimInstallationSession(
       body,
       getRequestOperation(),
     );

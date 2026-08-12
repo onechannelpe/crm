@@ -1,5 +1,5 @@
 import { longName } from "~/domain/identity/display-name";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -42,7 +42,7 @@ export async function getUserLoginRetryReport(
       })),
 
     execute: async (ctx, input) => {
-      const report = await application.auth.admin.loginRetries(
+      const report = await getApplication().auth.admin.loginRetries(
         input.username,
         ctx,
       );

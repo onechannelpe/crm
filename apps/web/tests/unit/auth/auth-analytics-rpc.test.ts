@@ -8,11 +8,11 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("~/server/composition/application", () => ({
-  application: {
+  getApplication: () => ({
     auth: {
       analytics: mocks.analytics,
     },
-  },
+  }),
 }));
 
 vi.mock("~/server/platform/http/request-context-storage", () => ({

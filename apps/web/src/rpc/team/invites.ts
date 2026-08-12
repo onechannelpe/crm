@@ -1,6 +1,6 @@
 import { ROLES } from "~/domain/auth/access/rbac";
 import { TeamId, UserInviteId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -60,7 +60,7 @@ export async function createTeamInvite(input: unknown): Promise<{
     }),
 
     execute: async (ctx, command) => {
-      const result = await application.team.invites.create(ctx, command);
+      const result = await getApplication().team.invites.create(ctx, command);
 
       if (isErr(result)) {
         return result;
@@ -92,7 +92,7 @@ export async function resendTeamInvite(
     telemetry: ({ inviteId }) => ({ inviteId }),
 
     execute: async (ctx, command) => {
-      const result = await application.team.invites.resend(ctx, command);
+      const result = await getApplication().team.invites.resend(ctx, command);
 
       if (isErr(result)) {
         return result;
@@ -124,7 +124,7 @@ export async function revokeTeamInvite(
     telemetry: ({ inviteId }) => ({ inviteId }),
 
     execute: async (ctx, command) => {
-      const result = await application.team.invites.revoke(ctx, command);
+      const result = await getApplication().team.invites.revoke(ctx, command);
 
       if (isErr(result)) {
         return result;

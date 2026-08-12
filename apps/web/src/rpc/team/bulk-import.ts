@@ -3,7 +3,7 @@ import type {
   BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
 import { ROLES } from "~/domain/auth/access/rbac";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -55,7 +55,7 @@ export async function applyBulkImport(
     telemetry: (input) => ({ role: input.role }),
 
     execute: (ctx, input) =>
-      application.team.invites.applyBulkImport(ctx, {
+      getApplication().team.invites.applyBulkImport(ctx, {
         csvContent: input.csvContent,
         role: input.role,
       }),

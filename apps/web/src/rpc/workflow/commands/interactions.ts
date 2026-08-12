@@ -1,5 +1,5 @@
 import { WorkflowLeadId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -11,7 +11,7 @@ export async function addLeadNote(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.add_note",
+    name: "getApplication().workflow.add_note",
     access: { kind: "auth" },
 
     parse: () =>
@@ -23,7 +23,7 @@ export async function addLeadNote(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.addLeadNote(
+      getApplication().workflow.commands.addLeadNote(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),

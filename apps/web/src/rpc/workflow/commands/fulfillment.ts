@@ -5,7 +5,7 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import { fail, invalid, type DomainError } from "~/domain/errors";
 import { FileAssetId, WorkflowLeadId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -118,7 +118,7 @@ export async function chooseFulfillmentProduct(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.choose_fulfillment_product",
+    name: "getApplication().workflow.choose_fulfillment_product",
     access: { kind: "auth" },
 
     parse: () =>
@@ -133,7 +133,7 @@ export async function chooseFulfillmentProduct(input: unknown) {
     }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.chooseFulfillmentProduct(
+      getApplication().workflow.commands.chooseFulfillmentProduct(
         {
           actor: workflowActor(ctx.actor),
           ...payload,
@@ -147,7 +147,7 @@ export async function uploadFulfillmentDocument(formData: FormData) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.upload_fulfillment_document",
+    name: "getApplication().workflow.upload_fulfillment_document",
     access: { kind: "auth" },
 
     parse: () => parseFulfillmentDocumentUpload(formData),
@@ -160,7 +160,7 @@ export async function uploadFulfillmentDocument(formData: FormData) {
     }),
 
     execute: (ctx, { leadId, action, file }) =>
-      application.workflow.files.uploadFulfillmentDocument({
+      getApplication().workflow.files.uploadFulfillmentDocument({
         ctx,
         leadId,
         action,
@@ -173,7 +173,7 @@ export async function recordFulfillmentSerial(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.record_fulfillment_serial",
+    name: "getApplication().workflow.record_fulfillment_serial",
     access: { kind: "auth" },
 
     parse: () =>
@@ -189,7 +189,7 @@ export async function recordFulfillmentSerial(input: unknown) {
     }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.recordFulfillmentSerial(
+      getApplication().workflow.commands.recordFulfillmentSerial(
         {
           actor: workflowActor(ctx.actor),
           ...payload,
@@ -203,7 +203,7 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.register_fulfillment_payment_link",
+    name: "getApplication().workflow.register_fulfillment_payment_link",
     access: { kind: "auth" },
 
     parse: () =>
@@ -219,7 +219,7 @@ export async function registerFulfillmentPaymentLink(input: unknown) {
     }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.registerFulfillmentPaymentLink(
+      getApplication().workflow.commands.registerFulfillmentPaymentLink(
         {
           actor: workflowActor(ctx.actor),
           ...payload,
@@ -233,7 +233,7 @@ export async function uploadFulfillmentPaymentProof(formData: FormData) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.upload_fulfillment_payment_proof",
+    name: "getApplication().workflow.upload_fulfillment_payment_proof",
     access: { kind: "auth" },
 
     parse: () => parseFulfillmentPaymentProofUpload(formData),
@@ -246,7 +246,7 @@ export async function uploadFulfillmentPaymentProof(formData: FormData) {
     }),
 
     execute: (ctx, { leadId, unitId, file }) =>
-      application.workflow.files.uploadFulfillmentPaymentProof({
+      getApplication().workflow.files.uploadFulfillmentPaymentProof({
         ctx,
         leadId,
         unitId,
@@ -259,7 +259,7 @@ export async function validateFulfillmentPayment(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.validate_fulfillment_payment",
+    name: "getApplication().workflow.validate_fulfillment_payment",
     access: { kind: "auth" },
 
     parse: () =>
@@ -270,7 +270,7 @@ export async function validateFulfillmentPayment(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, { leadId }) =>
-      application.workflow.commands.validateFulfillmentPayment(
+      getApplication().workflow.commands.validateFulfillmentPayment(
         {
           actor: workflowActor(ctx.actor),
           leadId,
@@ -284,7 +284,7 @@ export async function rejectFulfillmentStep(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.reject_fulfillment_step",
+    name: "getApplication().workflow.reject_fulfillment_step",
     access: { kind: "auth" },
 
     parse: () =>
@@ -296,7 +296,7 @@ export async function rejectFulfillmentStep(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.rejectFulfillmentStep(
+      getApplication().workflow.commands.rejectFulfillmentStep(
         {
           actor: workflowActor(ctx.actor),
           ...payload,
@@ -310,7 +310,7 @@ export async function registerFulfillmentSale(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.register_fulfillment_sale",
+    name: "getApplication().workflow.register_fulfillment_sale",
     access: { kind: "auth" },
 
     parse: () =>
@@ -326,7 +326,7 @@ export async function registerFulfillmentSale(input: unknown) {
     }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.registerFulfillmentSale(
+      getApplication().workflow.commands.registerFulfillmentSale(
         {
           actor: workflowActor(ctx.actor),
           ...payload,
@@ -340,7 +340,7 @@ export async function requestFulfillmentDownloadToken(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.request_fulfillment_download_token",
+    name: "getApplication().workflow.request_fulfillment_download_token",
     access: { kind: "auth" },
 
     parse: () =>
@@ -355,7 +355,7 @@ export async function requestFulfillmentDownloadToken(input: unknown) {
     }),
 
     execute: (ctx, { leadId, fileAssetId }) =>
-      application.workflow.files.requestFulfillmentDownloadToken({
+      getApplication().workflow.files.requestFulfillmentDownloadToken({
         ctx,
         leadId,
         fileAssetId,

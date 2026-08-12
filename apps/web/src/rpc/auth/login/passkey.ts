@@ -3,7 +3,7 @@ import { isAuthenticationResponse } from "~/domain/auth/passkey/credential-respo
 import { fail } from "~/domain/errors";
 import { AuthLoginFlowId } from "~/domain/ids";
 import { setSessionCookie } from "~/server/auth/session/cookies";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { throwDomain } from "~/server/platform/action/domain-error";
 import {
   getRequestClientMetadata,
@@ -32,7 +32,7 @@ export async function finishPasskeyLogin(
     throwDomain(fail("invalid_credentials"));
   }
 
-  const verified = await application.auth.login.verifyPasskey(
+  const verified = await getApplication().auth.login.verifyPasskey(
     {
       flowId: parsedFlowId.value,
       response,
@@ -43,7 +43,7 @@ export async function finishPasskeyLogin(
   );
 
   if (isErr(verified)) {
-    await application.auth.analytics(
+    await getApplication().auth.analytics(
       {
         source: "server",
         kind: "passkey_result",
@@ -57,7 +57,7 @@ export async function finishPasskeyLogin(
     throwDomain(fail(verified.error.kind));
   }
 
-  const completed = await application.auth.login.complete(
+  const completed = await getApplication().auth.login.complete(
     {
       proof: verified.value,
       ipAddress: clientMetadata.ipAddress,
@@ -76,7 +76,7 @@ export async function finishPasskeyLogin(
     );
   }
 
-  await application.auth.analytics(
+  await getApplication().auth.analytics(
     {
       source: "server",
       kind: "passkey_result",

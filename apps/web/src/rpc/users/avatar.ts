@@ -1,6 +1,6 @@
 import { fail, type DomainError } from "~/domain/errors";
 import { UserId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -37,7 +37,10 @@ export async function uploadMemberAvatar(
     telemetry: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await application.users.members.uploadAvatar(ctx, command);
+      const result = await getApplication().users.members.uploadAvatar(
+        ctx,
+        command,
+      );
       if (isErr(result)) {
         return result;
       }
@@ -63,7 +66,7 @@ export async function removeMemberAvatar(
     telemetry: (command) => ({ userId: command.userId }),
 
     execute: async (ctx, command) => {
-      const result = await application.users.members.removeAvatar(
+      const result = await getApplication().users.members.removeAvatar(
         ctx,
         command.userId,
       );

@@ -1,13 +1,16 @@
 import { definePlugin } from "nitro";
 
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 
-// Nitro discovers this plugin by the path registered in vite.config.ts.
 export default definePlugin((nitroApp) => {
   if (import.meta.prerender) {
     return;
   }
 
+  // Build the application at startup and keep it for shutdown.
+  const application = getApplication();
+
   application.realtime.start();
+
   nitroApp.hooks.hook("close", () => application.realtime.stop());
 });

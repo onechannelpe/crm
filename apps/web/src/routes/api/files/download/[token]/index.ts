@@ -1,6 +1,6 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { buildFileDownloadHeaders } from "~/server/files/headers";
 import { toWire } from "~/server/platform/action/domain-error";
 import { getRequestOperation } from "~/server/platform/http/request-context-storage";
@@ -17,7 +17,7 @@ export async function GET(
 
     const now = getRequestOperation();
 
-    const result = await application.files.download(token, now);
+    const result = await getApplication().files.download(token, now);
 
     if (isErr(result)) {
       const kind = result.error.kind;

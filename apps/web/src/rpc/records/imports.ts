@@ -1,6 +1,6 @@
 import type { RecordImportType } from "~/contracts/records/imports";
 import { fail, invalid, type DomainError } from "~/domain/errors";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { throwDomain } from "~/server/platform/action/domain-error";
@@ -85,7 +85,7 @@ export async function uploadRecordImportFile(formData: FormData): Promise<{
         JSON.stringify({ validRows, invalidRows }),
       );
 
-      const job = await application.integration.records.create({
+      const job = await getApplication().integration.records.create({
         type: importType,
         requestedByUserId: ctx.actor.userId,
         rowsTotal,

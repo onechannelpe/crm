@@ -1,5 +1,5 @@
 import type { ObservabilitySnapshot } from "~/contracts/observability/snapshot";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -28,6 +28,6 @@ export async function getObservabilitySnapshot(
     },
 
     execute: (ctx, input) =>
-      application.observability.getActionSnapshot(input, ctx.operationAt),
+      getApplication().observability.getActionSnapshot(input, ctx.operationAt),
   });
 }

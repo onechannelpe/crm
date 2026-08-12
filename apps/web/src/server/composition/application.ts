@@ -44,7 +44,6 @@ function createApplication(infrastructure: ServerInfrastructure) {
   );
 
   const users = createUsersRuntime(infrastructure, uploadsConfig());
-  const requestSessions = createRequestSessionsRepo(db);
 
   const realtime = createRealtimeService({
     channels: [
@@ -53,8 +52,8 @@ function createApplication(infrastructure: ServerInfrastructure) {
       createRecordImportChannel(shared.recordImports),
     ],
     databaseUrl: dbUrl,
-    resolveSession: (h3Event) =>
-      resolveSessionFromEvent(h3Event, auth.sessions.resolve),
+    resolveSession: (event) =>
+      resolveSessionFromEvent(event, auth.sessions.resolve),
   });
 
   return {
@@ -76,7 +75,7 @@ function createApplication(infrastructure: ServerInfrastructure) {
     http: {
       requestContext: {
         resolveAuthSession: auth.sessions.resolve,
-        requestSessions,
+        requestSessions: createRequestSessionsRepo(db),
       },
     },
     integration: {
@@ -111,4 +110,13 @@ function createApplication(infrastructure: ServerInfrastructure) {
   };
 }
 
-export const application = createApplication(serverInfrastructure);
+type Application = ReturnType<typeof createApplication>;
+
+let application: Application | undefined;
+
+// Build lazily so importing server modules does not require full runtime config.
+export function getApplication(): Application {
+  application ??= createApplication(serverInfrastructure);
+
+  return application;
+}

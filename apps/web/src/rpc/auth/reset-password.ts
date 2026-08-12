@@ -1,4 +1,4 @@
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { throwDomain } from "~/server/platform/action/domain-error";
 import {
   getRequestContext,
@@ -15,7 +15,7 @@ export async function requestPasswordReset(
   const email = typeof rawEmail === "string" ? rawEmail : "";
   const { publicOrigin } = getRequestContext();
 
-  const result = await application.auth.passwordReset.request(
+  const result = await getApplication().auth.passwordReset.request(
     { email, origin: publicOrigin },
     getRequestOperation(),
   );
@@ -39,7 +39,7 @@ export async function resetPassword(formData: FormData): Promise<{ ok: true }> {
   const confirmPassword =
     typeof rawConfirmPassword === "string" ? rawConfirmPassword : "";
 
-  const result = await application.auth.passwordReset.reset(
+  const result = await getApplication().auth.passwordReset.reset(
     { token, password, confirmPassword },
     getRequestOperation(),
   );

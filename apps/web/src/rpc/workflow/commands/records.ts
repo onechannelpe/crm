@@ -7,7 +7,7 @@ import {
   LEAD_PRIORITIES,
 } from "~/contracts/workflow/vocabulary";
 import { UserId, WorkflowInquiryId, WorkflowLeadId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -26,7 +26,7 @@ export async function requestLeadCreation(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.register_lead",
+    name: "getApplication().workflow.register_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -44,7 +44,7 @@ export async function requestLeadCreation(input: unknown) {
       })),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.registerLead(
+      getApplication().workflow.commands.registerLead(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -55,7 +55,7 @@ export async function requestEditCommercialScope(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.edit_commercial_scope",
+    name: "getApplication().workflow.edit_commercial_scope",
     access: { kind: "auth" },
 
     parse: () =>
@@ -74,7 +74,7 @@ export async function requestEditCommercialScope(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.editCommercialScope(
+      getApplication().workflow.commands.editCommercialScope(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -85,7 +85,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.save_digital_policy",
+    name: "getApplication().workflow.save_digital_policy",
     access: { kind: "auth" },
 
     parse: () =>
@@ -102,7 +102,7 @@ export async function requestSaveDigitalPolicy(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.saveDigitalPolicy(
+      getApplication().workflow.commands.saveDigitalPolicy(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -113,7 +113,7 @@ export async function requestRecordRepLegal(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.record_rep_legal",
+    name: "getApplication().workflow.record_rep_legal",
     access: { kind: "auth" },
 
     parse: () =>
@@ -130,7 +130,7 @@ export async function requestRecordRepLegal(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.recordRepLegal(
+      getApplication().workflow.commands.recordRepLegal(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -141,7 +141,7 @@ export async function requestLeadReview(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.review_lead",
+    name: "getApplication().workflow.review_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -155,7 +155,7 @@ export async function requestLeadReview(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.reviewLead(
+      getApplication().workflow.commands.reviewLead(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -166,13 +166,13 @@ export async function requestQuotationRestart(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.restart_quotation",
+    name: "getApplication().workflow.restart_quotation",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, { leadId }) =>
-      application.workflow.commands.restartQuotation(
+      getApplication().workflow.commands.restartQuotation(
         { actor: workflowActor(ctx.actor), leadId },
         ctx,
       ),
@@ -183,7 +183,7 @@ export async function requestLeadReassignment(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.reassign_lead",
+    name: "getApplication().workflow.reassign_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -195,7 +195,7 @@ export async function requestLeadReassignment(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.reassignLead(
+      getApplication().workflow.commands.reassignLead(
         {
           actor: workflowActor(ctx.actor),
           leadId: payload.leadId,
@@ -210,13 +210,13 @@ export async function requestAddLeadToFavorites(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.add_lead_to_favorites",
+    name: "getApplication().workflow.add_lead_to_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: async (ctx, { leadId }) => {
-      const result = await application.workflow.commands.addToFavorites(
+      const result = await getApplication().workflow.commands.addToFavorites(
         {
           actor: workflowActor(ctx.actor),
           leadId,
@@ -237,19 +237,20 @@ export async function requestRemoveLeadFromFavorites(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.remove_lead_from_favorites",
+    name: "getApplication().workflow.remove_lead_from_favorites",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: async (ctx, { leadId }) => {
-      const result = await application.workflow.commands.removeFromFavorites(
-        {
-          actor: workflowActor(ctx.actor),
-          leadId,
-        },
-        ctx,
-      );
+      const result =
+        await getApplication().workflow.commands.removeFromFavorites(
+          {
+            actor: workflowActor(ctx.actor),
+            leadId,
+          },
+          ctx,
+        );
 
       if (isErr(result)) {
         return result;
@@ -264,13 +265,13 @@ export async function requestLeadDeletion(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.delete_lead",
+    name: "getApplication().workflow.delete_lead",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, { leadId }) =>
-      application.workflow.commands.deleteLead(
+      getApplication().workflow.commands.deleteLead(
         {
           actor: workflowActor(ctx.actor),
           leadId,
@@ -284,13 +285,13 @@ export async function requestLeadSunatRefresh(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.request_sunat_refresh",
+    name: "getApplication().workflow.request_sunat_refresh",
     access: { kind: "auth" },
     parse: () => parseLeadRef(input),
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, { leadId }) =>
-      application.workflow.commands.requestSunatRefresh(
+      getApplication().workflow.commands.requestSunatRefresh(
         {
           actor: workflowActor(ctx.actor),
           leadId,

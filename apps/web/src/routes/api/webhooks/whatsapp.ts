@@ -1,5 +1,5 @@
 import type { ApiRequestEvent } from "~/routes/api/request-event";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { getRequestOperation } from "~/server/platform/http/request-context-storage";
 import { createLogger } from "~/shared/observability/runtime-logger";
 
@@ -12,7 +12,7 @@ export function GET(event: ApiRequestEvent): Response {
   const challenge = url.searchParams.get("hub.challenge");
   if (
     challenge &&
-    application.notifications.webhooks.verifyWhatsAppSubscription({
+    getApplication().notifications.webhooks.verifyWhatsAppSubscription({
       mode,
       token,
     })
@@ -28,7 +28,7 @@ export function GET(event: ApiRequestEvent): Response {
 
 export async function POST(event: ApiRequestEvent): Promise<Response> {
   try {
-    const result = await application.notifications.webhooks.receiveKapso(
+    const result = await getApplication().notifications.webhooks.receiveKapso(
       {
         idempotencyKey: event.request.headers.get("x-idempotency-key"),
         eventType: event.request.headers.get("x-webhook-event"),

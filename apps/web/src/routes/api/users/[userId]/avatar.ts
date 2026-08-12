@@ -2,7 +2,7 @@ import type { APIEvent } from "@solidjs/start/server";
 
 import { hasPermission } from "~/domain/auth/access/rbac";
 import { UserId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { getSession } from "~/server/platform/action/session";
 import type { AvatarDomainErrorCode } from "~/server/users/avatar-service";
 import { isErr } from "~/shared/result";
@@ -41,7 +41,7 @@ export async function GET(event: APIEvent): Promise<Response> {
     }
     const userId = parsedUserId.value;
 
-    const avatarResult = await application.users.avatars.get(userId);
+    const avatarResult = await getApplication().users.avatars.get(userId);
     if (!avatarResult.ok) {
       return new Response("Profile picture unavailable", {
         status: mapAvatarErrorStatus(avatarResult.error.code),

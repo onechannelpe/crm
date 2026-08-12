@@ -1,5 +1,5 @@
 import type { ExecutiveGpvProgressView } from "~/contracts/merchant-stats/views";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { Ok } from "~/shared/result";
 
@@ -10,7 +10,7 @@ export async function getExecutiveGpvProgress(): Promise<ExecutiveGpvProgressVie
 
     execute: async (ctx) =>
       Ok(
-        await application.merchantStats.executive.progress(
+        await getApplication().merchantStats.executive.progress(
           ctx.actor.userId,
           ctx,
         ),

@@ -10,19 +10,13 @@ const logger = createLogger("db-client");
 function createPoolTypes(): TypeOverrides {
   const poolTypes = new TypeOverrides();
 
-  // node-postgres returns `numeric` as string to preserve precision; this pool
-  // accepts JS floating-point precision for all `numeric` values.
+  // Accept floating-point precision for `numeric` columns.
   poolTypes.setTypeParser(types.builtins.NUMERIC, Number.parseFloat);
 
-  // node-postgres returns `int8` as string because values can exceed
-  // Number.MAX_SAFE_INTEGER. All `int8` values returned through this pool must
-  // remain within that limit.
+  // `int8` values returned here must remain within Number.MAX_SAFE_INTEGER.
   poolTypes.setTypeParser(types.builtins.INT8, Number.parseInt);
 
-  // `date` columns are pure calendar dates. The default parser turns them
-  // into a JS Date at local midnight, which shifts across timezones, so keep
-  // the raw 'YYYY-MM-DD' string. Only `date` columns use this; `timestamptz`
-  // stays a Date.
+  // Keep calendar dates timezone-neutral as `YYYY-MM-DD` strings.
   poolTypes.setTypeParser(types.builtins.DATE, (value) => value);
 
   return poolTypes;
@@ -31,6 +25,7 @@ function createPoolTypes(): TypeOverrides {
 function connectionTarget(connectionString: string) {
   try {
     const url = new URL(connectionString);
+
     return {
       protocol: url.protocol.replace(":", ""),
       host: url.hostname,
@@ -47,12 +42,25 @@ function connectionTarget(connectionString: string) {
   }
 }
 
-export function createDb(connectionString: string): Kysely<DatabaseSchema> {
-  logger.info("db_initialization_started", connectionTarget(connectionString));
-
-  const pool = new Pool({ connectionString, types: createPoolTypes() });
-
+// Resolve configuration lazily so importing database code does not require it.
+export function createDb(
+  resolveConnectionString: () => string,
+): Kysely<DatabaseSchema> {
   return new Kysely<DatabaseSchema>({
-    dialect: new PostgresDialect({ pool }),
+    dialect: new PostgresDialect({
+      pool: async () => {
+        const connectionString = resolveConnectionString();
+
+        logger.info(
+          "db_initialization_started",
+          connectionTarget(connectionString),
+        );
+
+        return new Pool({
+          connectionString,
+          types: createPoolTypes(),
+        });
+      },
+    }),
   });
 }

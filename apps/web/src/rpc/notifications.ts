@@ -3,7 +3,7 @@ import { randomUUIDv7 } from "bun";
 import { isRole } from "~/domain/auth/access/rbac";
 import { invalid, type DomainError } from "~/domain/errors";
 import { NotificationIntentId, TeamId, UserId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import type { NotificationAudience } from "~/server/notifications/types";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
@@ -77,7 +77,7 @@ export async function sendBroadcastNotification(
     telemetry: ({ audience }) => ({ audienceKind: audience.kind }),
 
     execute: async (ctx, input) => {
-      await application.notifications.enqueue(
+      await getApplication().notifications.enqueue(
         [
           {
             id: NotificationIntentId.trust(

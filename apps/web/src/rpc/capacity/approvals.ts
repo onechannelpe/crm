@@ -1,5 +1,5 @@
 import { CapacityRequestId, UserId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -45,7 +45,7 @@ export async function approveCapacity(
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
     telemetry: ({ requestId }) => ({ requestId }),
     execute: (ctx, decision) =>
-      application.capacity.approveCapacityRequest(ctx, decision),
+      getApplication().capacity.approveCapacityRequest(ctx, decision),
   });
 }
 
@@ -58,7 +58,7 @@ export async function rejectCapacity(rawRequestId: unknown, rawNote: unknown) {
     parse: () => parseCapacityDecision(rawRequestId, rawNote),
     telemetry: ({ requestId }) => ({ requestId }),
     execute: (ctx, decision) =>
-      application.capacity.rejectCapacityRequest(ctx, decision),
+      getApplication().capacity.rejectCapacityRequest(ctx, decision),
   });
 }
 
@@ -78,7 +78,7 @@ export async function grantMoreSearches(
       amount,
     }),
     execute: (ctx, grant) =>
-      application.capacity.grantSearchCapacityDirect(ctx, grant),
+      getApplication().capacity.grantSearchCapacityDirect(ctx, grant),
   });
 }
 
@@ -98,6 +98,6 @@ export async function grantMoreLeadRefill(
       amount,
     }),
     execute: (ctx, grant) =>
-      application.capacity.grantLeadCapacityDirect(ctx, grant),
+      getApplication().capacity.grantLeadCapacityDirect(ctx, grant),
   });
 }

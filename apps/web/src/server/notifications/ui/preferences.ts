@@ -1,5 +1,5 @@
 import type { NotificationPreferencesView } from "~/contracts/notifications";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import {
   CATEGORY_META,
   EXTERNAL_CHANNELS,
@@ -18,7 +18,7 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
 
     execute: async (ctx) => {
       const { optOuts, verifiedChannels } =
-        await application.notifications.listPreferences(ctx.actor.userId);
+        await getApplication().notifications.listPreferences(ctx.actor.userId);
       const optedOut = new Set(
         optOuts.map((row) => `${row.category}:${row.channel}`),
       );

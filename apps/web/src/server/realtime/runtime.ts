@@ -43,7 +43,7 @@ export interface RealtimeService {
 
 export function createRealtimeService(input: {
   channels: readonly RealtimeChannel[];
-  databaseUrl: string;
+  databaseUrl: () => string;
   resolveSession: (h3Event: H3Event) => Promise<AuthSession | null>;
 }): RealtimeService {
   const hub = new TopicHub();

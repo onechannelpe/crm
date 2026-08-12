@@ -1,5 +1,5 @@
 import type { BookFilter } from "~/contracts/merchant-stats/views";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -33,6 +33,6 @@ export async function requestMerchantGpvExportDownloadToken(
     }),
 
     execute: (context, input) =>
-      application.merchantStats.dashboard.export(context, input.filter),
+      getApplication().merchantStats.dashboard.export(context, input.filter),
   });
 }

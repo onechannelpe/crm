@@ -1,6 +1,6 @@
 import { UserId } from "~/domain/ids";
 import type { CalendarMonth } from "~/domain/time/calendar-date";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -31,7 +31,7 @@ export async function adjustMonthCredit(raw: {
     telemetry: ({ ruc, month }) => ({ ruc, month }),
 
     execute: async (ctx, input) => {
-      const result = await application.merchantStats.attribution.adjust(
+      const result = await getApplication().merchantStats.attribution.adjust(
         {
           ruc: input.ruc,
           month: input.month,
@@ -72,7 +72,7 @@ export async function setMerchantTarget(raw: {
     telemetry: ({ ruc, effectiveFrom }) => ({ ruc, effectiveFrom }),
 
     execute: async (ctx, input) => {
-      const result = await application.merchantStats.attribution.setTarget(
+      const result = await getApplication().merchantStats.attribution.setTarget(
         {
           ruc: input.ruc,
           effectiveFrom: input.effectiveFrom,

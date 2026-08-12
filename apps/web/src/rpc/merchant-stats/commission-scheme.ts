@@ -1,6 +1,6 @@
 import { query } from "@solidjs/router";
 
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { buildCommissionSchemeRules } from "~/server/merchant-stats/commission/rules-codec";
 import {
   getCommissionManagerDashboard,
@@ -40,7 +40,7 @@ export async function setCommissionScheme(raw: {
       })),
 
     execute: async (ctx, input) => {
-      const result = await application.merchantStats.commission.setScheme(
+      const result = await getApplication().merchantStats.commission.setScheme(
         {
           effectiveFrom: input.effectiveFrom,
           rules: input.rules,

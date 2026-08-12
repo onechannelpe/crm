@@ -1,6 +1,6 @@
 import type { RucMerchantStats } from "~/contracts/merchant-stats/views";
 import { fail, type DomainError } from "~/domain/errors";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { Err, Ok, type Result } from "~/shared/result";
 
@@ -22,7 +22,7 @@ export async function getMerchantStatsForRuc(
     telemetry: ({ ruc }) => ({ ruc }),
 
     execute: ({ actor }, { ruc }) =>
-      application.merchantStats.executive.rucStats({
+      getApplication().merchantStats.executive.rucStats({
         ruc,
         role: actor.role,
         userId: actor.userId,

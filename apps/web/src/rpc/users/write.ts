@@ -2,7 +2,7 @@ import { ROLES } from "~/domain/auth/access/rbac";
 import { fail } from "~/domain/errors";
 import type { ExecutiveCategory } from "~/domain/identity/executive-category";
 import { TeamId, UserId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -38,7 +38,7 @@ export async function updateMemberProfile(
     telemetry: ({ userId }) => ({ userId }),
 
     execute: async (ctx, command) => {
-      const result = await application.users.members.updateProfile(
+      const result = await getApplication().users.members.updateProfile(
         ctx,
         command,
       );
@@ -86,7 +86,10 @@ export async function changeMemberRole(
     telemetry: ({ userId, role }) => ({ userId, role }),
 
     execute: async (ctx, command) => {
-      const result = await application.users.members.changeRole(ctx, command);
+      const result = await getApplication().users.members.changeRole(
+        ctx,
+        command,
+      );
 
       if (isErr(result)) {
         return result;
@@ -114,7 +117,10 @@ export async function deactivateMember(
     telemetry: ({ userId }) => ({ userId }),
 
     execute: async (ctx, { userId }) => {
-      const result = await application.users.members.deactivate(ctx, userId);
+      const result = await getApplication().users.members.deactivate(
+        ctx,
+        userId,
+      );
 
       if (isErr(result)) {
         return result;
@@ -142,7 +148,10 @@ export async function reactivateMember(
     telemetry: ({ userId }) => ({ userId }),
 
     execute: async (ctx, { userId }) => {
-      const result = await application.users.members.reactivate(ctx, userId);
+      const result = await getApplication().users.members.reactivate(
+        ctx,
+        userId,
+      );
 
       if (isErr(result)) {
         return result;
@@ -171,7 +180,10 @@ export async function updateMemberExpiry(
     telemetry: ({ userId }) => ({ userId }),
 
     execute: async (ctx, command) => {
-      const result = await application.users.members.updateExpiry(ctx, command);
+      const result = await getApplication().users.members.updateExpiry(
+        ctx,
+        command,
+      );
 
       if (isErr(result)) {
         return result;
@@ -199,7 +211,7 @@ export async function deleteMember(
     telemetry: ({ userId }) => ({ userId }),
 
     execute: async (ctx, { userId }) => {
-      const result = await application.users.members.remove(ctx, userId);
+      const result = await getApplication().users.members.remove(ctx, userId);
 
       if (isErr(result)) {
         return result;

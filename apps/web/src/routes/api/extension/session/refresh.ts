@@ -1,4 +1,4 @@
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { isRefreshExtensionSessionRequest } from "~/server/extension/contracts";
 import { toWire } from "~/server/platform/action/domain-error";
 import { getRequestOperation } from "~/server/platform/http/request-context-storage";
@@ -21,7 +21,7 @@ export async function POST(event: ApiRequestEvent): Promise<Response> {
       );
     }
 
-    const result = await application.extension.refreshInstallationSession(
+    const result = await getApplication().extension.refreshInstallationSession(
       body,
       getRequestOperation(),
     );

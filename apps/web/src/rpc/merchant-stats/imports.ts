@@ -1,7 +1,7 @@
 import { fail, type DomainError } from "~/domain/errors";
 import { GpvSnapshotIssueId } from "~/domain/ids";
 import type { GpvSnapshotIssueResolution } from "~/domain/merchant-stats/snapshot";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { maxUploadBytesForFilePurpose } from "~/server/files/validators";
 import {
   cutAtFromFilename,
@@ -73,7 +73,7 @@ export async function uploadMerchantReport(formData: FormData) {
     }),
 
     execute: async (ctx, { file, cutAt }) => {
-      const submitted = await application.merchantStats.imports.submit(
+      const submitted = await getApplication().merchantStats.imports.submit(
         {
           file: {
             name: file.name,
@@ -122,7 +122,7 @@ export async function resolveGpvImportIssue(input: {
     }),
 
     execute: (ctx, { issueId, resolution }) =>
-      application.merchantStats.imports.resolveIssue(
+      getApplication().merchantStats.imports.resolveIssue(
         {
           issueId,
           resolution,

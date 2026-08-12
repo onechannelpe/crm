@@ -1,5 +1,5 @@
 import { WorkflowLeadId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -8,7 +8,7 @@ import {
 
 export async function listLeadSaleProofFiles(leadId: string) {
   return executeSessionServerFunction({
-    name: "application.workflow.list_sale_proof_files",
+    name: "getApplication().workflow.list_sale_proof_files",
     access: { kind: "auth" },
     parse: () =>
       parseObject({ leadId }, validationFail, (reader) => ({
@@ -16,7 +16,7 @@ export async function listLeadSaleProofFiles(leadId: string) {
       })),
     telemetry: (input) => ({ leadId: input.leadId }),
     execute: (context, input) =>
-      application.workflow.files.listSaleProofFiles({
+      getApplication().workflow.files.listSaleProofFiles({
         ctx: context,
         leadId: input.leadId,
       }),

@@ -1,5 +1,5 @@
 import { deleteSessionCookie } from "~/server/auth/session/cookies";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 
 export async function logout(): Promise<void> {
@@ -8,7 +8,7 @@ export async function logout(): Promise<void> {
   await executeSessionServerFunction({
     name: "auth.session.logout",
     access: { kind: "session" },
-    execute: (context) => application.auth.sessions.logout(context),
+    execute: (context) => getApplication().auth.sessions.logout(context),
   });
 
   deleteSessionCookie();

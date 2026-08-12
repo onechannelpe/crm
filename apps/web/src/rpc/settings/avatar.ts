@@ -1,5 +1,5 @@
 import { fail, type DomainError } from "~/domain/errors";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { toAvatarDomainError } from "~/server/users/avatar-error";
 import { Err, Ok, isErr, type Result } from "~/shared/result";
@@ -26,7 +26,7 @@ export async function uploadUserAvatar(formData: FormData): Promise<{
     },
 
     execute: async ({ actor, operationAt }, file) => {
-      const result = await application.users.avatars.upload(
+      const result = await getApplication().users.avatars.upload(
         actor.userId,
         file,
         operationAt,
@@ -59,7 +59,7 @@ export async function removeUserAvatar(): Promise<{
     access: { kind: "session" },
 
     execute: async ({ actor, operationAt }) => {
-      const result = await application.users.avatars.remove(
+      const result = await getApplication().users.avatars.remove(
         actor.userId,
         operationAt,
       );

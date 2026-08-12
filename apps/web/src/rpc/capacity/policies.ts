@@ -1,5 +1,5 @@
 import { BranchId, TeamId, UserId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -27,7 +27,7 @@ export async function updateExecutivePolicyOverride(input: unknown) {
     telemetry: ({ userId }) => ({ userId }),
 
     execute: (ctx, override) =>
-      application.capacity.updateExecutivePolicyOverride(ctx, override),
+      getApplication().capacity.updateExecutivePolicyOverride(ctx, override),
   });
 }
 
@@ -60,6 +60,6 @@ export async function updateScopePolicy(input: unknown) {
     }),
 
     execute: (ctx, params) =>
-      application.capacity.updateScopePolicy(ctx, params),
+      getApplication().capacity.updateScopePolicy(ctx, params),
   });
 }

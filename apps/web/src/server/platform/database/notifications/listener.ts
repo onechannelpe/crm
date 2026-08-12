@@ -26,7 +26,7 @@ function withJitter(delayMs: number): number {
 
 // LISTEN uses one dedicated client. Every reconnect reissues the fixed channel set.
 export function createPgListener(
-  connectionString: string,
+  resolveConnectionString: () => string,
   channels: Record<string, PgListenerHandler[]>,
   options: PgListenerOptions = {},
 ): PgListener {
@@ -85,7 +85,7 @@ export function createPgListener(
     }
 
     connecting = true;
-    const next = new Client({ connectionString });
+    const next = new Client({ connectionString: resolveConnectionString() });
     client = next;
 
     next.on("notification", (message) => {

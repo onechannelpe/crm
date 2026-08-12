@@ -1,4 +1,4 @@
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -16,7 +16,7 @@ export async function savePendingQuotationPolicy(
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.update_pending_quotation_policy",
+    name: "getApplication().workflow.update_pending_quotation_policy",
     access: { kind: "permission", permission: "quotation:policy:manage" },
     parse: () =>
       parseObject(input, validationFail, (reader) =>
@@ -29,7 +29,7 @@ export async function savePendingQuotationPolicy(
       limit: payload.enabled ? payload.limit : 0,
     }),
     execute: (ctx, payload) =>
-      application.workflow.commands.updatePendingQuotationPolicy(
+      getApplication().workflow.commands.updatePendingQuotationPolicy(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),

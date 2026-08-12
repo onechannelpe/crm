@@ -1,6 +1,6 @@
 import type { GpvSnapshotView } from "~/contracts/merchant-stats/imports";
 import { GpvSnapshotId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -19,6 +19,6 @@ export async function getGpvSnapshot(
       })),
     telemetry: ({ snapshotId }) => ({ snapshotId }),
     execute: async (_ctx, { snapshotId }) =>
-      application.merchantStats.imports.snapshot(snapshotId),
+      getApplication().merchantStats.imports.snapshot(snapshotId),
   });
 }

@@ -1,6 +1,6 @@
 import type { SearchDirectResult } from "~/contracts/search/results";
 import { SEARCH_INTENTS } from "~/contracts/search/vocabulary";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -26,7 +26,7 @@ export async function searchDirect(
     telemetry: (command) => ({ intent: command.intent }),
 
     execute: (ctx, command) =>
-      application.search.runDirect(ctx, {
+      getApplication().search.runDirect(ctx, {
         ...command,
         actorUserId: ctx.actor.userId,
       }),

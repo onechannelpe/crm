@@ -1,6 +1,6 @@
 import type { MemberDetail, MembersRoster } from "~/contracts/members";
 import { UserId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -11,7 +11,7 @@ export async function getMembersRoster(): Promise<MembersRoster> {
   return executeSessionServerFunction({
     name: "members.roster.read",
     access: { kind: "permission", permission: "team:read" },
-    execute: (ctx) => application.users.members.listRoster(ctx),
+    execute: (ctx) => getApplication().users.members.listRoster(ctx),
   });
 }
 
@@ -26,6 +26,6 @@ export async function getMemberDetail(
         userId: r.id("userId", UserId),
       })),
     execute: (ctx, command) =>
-      application.users.members.getDetail(ctx, command.userId),
+      getApplication().users.members.getDetail(ctx, command.userId),
   });
 }

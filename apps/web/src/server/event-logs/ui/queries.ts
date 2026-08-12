@@ -4,7 +4,7 @@ import {
   type EventLogQueryInput,
   type EventLogQueryResult,
 } from "~/contracts/event-logs/event-log";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -44,6 +44,6 @@ export async function getEventLogs(
           }) satisfies EventLogQueryInput,
       ),
 
-    execute: (_ctx, input) => application.eventLogs.getEventLogs(input),
+    execute: (_ctx, input) => getApplication().eventLogs.getEventLogs(input),
   });
 }

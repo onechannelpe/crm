@@ -1,4 +1,4 @@
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import { Ok } from "~/shared/result";
 
@@ -9,7 +9,7 @@ export async function getHeaderNotifications() {
 
     execute: async ({ actor }) => {
       const { unreadCount, notifications } =
-        await application.notifications.getHeader(actor.userId, 20);
+        await getApplication().notifications.getHeader(actor.userId, 20);
 
       return Ok({
         unreadCount,

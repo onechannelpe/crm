@@ -11,7 +11,7 @@ import {
 } from "~/contracts/workflow/vocabulary";
 import type { DomainError } from "~/domain/errors";
 import { WorkflowLeadId, WorkflowVenueId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -62,7 +62,7 @@ export async function requestVenueCreation(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.create_venue",
+    name: "getApplication().workflow.create_venue",
     access: { kind: "auth" },
 
     parse: () => parseObject(input, validationFail, venueFields),
@@ -70,7 +70,7 @@ export async function requestVenueCreation(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.createVenue(
+      getApplication().workflow.commands.createVenue(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -81,7 +81,7 @@ export async function requestVenueUpdate(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.update_venue",
+    name: "getApplication().workflow.update_venue",
     access: { kind: "auth" },
 
     parse: () =>
@@ -102,7 +102,7 @@ export async function requestVenueUpdate(input: unknown) {
     telemetry: ({ leadId, venueId }) => ({ leadId, venueId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.updateVenue(
+      getApplication().workflow.commands.updateVenue(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -113,7 +113,7 @@ export async function requestVenueAccountsAddition(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.add_venue_accounts",
+    name: "getApplication().workflow.add_venue_accounts",
     access: { kind: "auth" },
 
     parse: () =>
@@ -138,7 +138,7 @@ export async function requestVenueAccountsAddition(input: unknown) {
     telemetry: ({ leadId, venueId }) => ({ leadId, venueId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.addVenueAccounts(
+      getApplication().workflow.commands.addVenueAccounts(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),

@@ -5,7 +5,7 @@ import {
   WorkflowRateProposalId,
   WorkflowRateRevisionFileId,
 } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -17,7 +17,7 @@ export async function requestRateProposal(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.propose_rate",
+    name: "getApplication().workflow.propose_rate",
     access: { kind: "auth" },
 
     parse: () =>
@@ -34,7 +34,7 @@ export async function requestRateProposal(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.proposeRate(
+      getApplication().workflow.commands.proposeRate(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -45,7 +45,7 @@ export async function requestRateProposalEdit(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.edit_rate_proposal",
+    name: "getApplication().workflow.edit_rate_proposal",
     access: { kind: "auth" },
 
     parse: () =>
@@ -63,7 +63,7 @@ export async function requestRateProposalEdit(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.editRateProposal(
+      getApplication().workflow.commands.editRateProposal(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -74,7 +74,7 @@ export async function requestRateAcceptance(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.accept_rate",
+    name: "getApplication().workflow.accept_rate",
     access: { kind: "auth" },
 
     parse: () =>
@@ -86,7 +86,7 @@ export async function requestRateAcceptance(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.acceptRate(
+      getApplication().workflow.commands.acceptRate(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -97,7 +97,7 @@ export async function requestLeadClosure(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.close_lead",
+    name: "getApplication().workflow.close_lead",
     access: { kind: "auth" },
 
     parse: () =>
@@ -110,7 +110,7 @@ export async function requestLeadClosure(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.closeLead(
+      getApplication().workflow.commands.closeLead(
         { actor: workflowActor(ctx.actor), ...payload },
         ctx,
       ),
@@ -121,7 +121,7 @@ export async function requestRateRevision(input: unknown) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.request_rate_revision",
+    name: "getApplication().workflow.request_rate_revision",
     access: { kind: "auth" },
 
     parse: () =>
@@ -138,7 +138,7 @@ export async function requestRateRevision(input: unknown) {
     telemetry: ({ leadId }) => ({ leadId }),
 
     execute: (ctx, payload) =>
-      application.workflow.commands.requestRateRevision(
+      getApplication().workflow.commands.requestRateRevision(
         {
           actor: workflowActor(ctx.actor),
           leadId: payload.leadId,

@@ -1,4 +1,4 @@
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { toWire } from "~/server/platform/action/domain-error";
 import { getRequestOperation } from "~/server/platform/http/request-context-storage";
 import { authorizeRoutePermission } from "~/server/platform/http/route-access";
@@ -13,7 +13,7 @@ export async function GET(): Promise<Response> {
 
   const { role, userId, branchId } = auth.value;
 
-  const result = await application.extension.listTeamExecutiveStatuses(
+  const result = await getApplication().extension.listTeamExecutiveStatuses(
     {
       role,
       userId,

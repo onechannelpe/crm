@@ -1,5 +1,5 @@
 import { invalid } from "~/domain/errors";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import {
   EXTERNAL_CHANNELS,
   isChannelControllable,
@@ -48,13 +48,13 @@ export async function setNotificationPreference(
       }
 
       const { verifiedChannels } =
-        await application.notifications.listPreferences(ctx.actor.userId);
+        await getApplication().notifications.listPreferences(ctx.actor.userId);
 
       if (!verifiedChannels.includes(channel)) {
         return Err(invalid({ code: "channel_unavailable" }));
       }
 
-      await application.notifications.setPreference({
+      await getApplication().notifications.setPreference({
         userId: ctx.actor.userId,
         category,
         channel,

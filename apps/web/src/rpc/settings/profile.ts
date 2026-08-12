@@ -1,6 +1,6 @@
 import { fail } from "~/domain/errors";
 import { parsePhone } from "~/domain/phone/pe-mobile";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -30,7 +30,7 @@ export async function updateUserProfile(
     },
 
     execute: async ({ actor, operationAt }, { phone }) => {
-      const result = await application.users.updatePhone(
+      const result = await getApplication().users.updatePhone(
         actor.userId,
         phone,
         operationAt,

@@ -2,7 +2,7 @@ import { query } from "@solidjs/router";
 
 import { setSessionCookie } from "~/server/auth/session/cookies";
 import { getRecoveryCodesStatus } from "~/server/auth/ui/recovery-codes";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 
 export async function regenerateRecoveryCodes(): Promise<{
@@ -13,7 +13,8 @@ export async function regenerateRecoveryCodes(): Promise<{
   const result = await executeSessionServerFunction({
     name: "auth.recovery.regenerate",
     access: { kind: "session" },
-    execute: (context) => application.auth.recoveryCodes.regenerate(context),
+    execute: (context) =>
+      getApplication().auth.recoveryCodes.regenerate(context),
   });
 
   setSessionCookie(result.sessionToken);
@@ -28,7 +29,8 @@ export async function acknowledgeRecoveryCodes(): Promise<{
   const result = await executeSessionServerFunction({
     name: "auth.recovery.acknowledge",
     access: { kind: "session" },
-    execute: (context) => application.auth.recoveryCodes.acknowledge(context),
+    execute: (context) =>
+      getApplication().auth.recoveryCodes.acknowledge(context),
   });
 
   setSessionCookie(result.sessionToken);

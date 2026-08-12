@@ -1,5 +1,5 @@
 import { BranchId } from "~/domain/ids";
-import { application } from "~/server/composition/application";
+import { getApplication } from "~/server/composition/application";
 import { executeSessionServerFunction } from "~/server/platform/action";
 import {
   parseObject,
@@ -11,7 +11,7 @@ export async function querySourcingPolicy(rawBranchId: string) {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.get_sourcing_policy",
+    name: "getApplication().workflow.get_sourcing_policy",
     access: { kind: "auth" },
 
     parse: () =>
@@ -22,7 +22,7 @@ export async function querySourcingPolicy(rawBranchId: string) {
     telemetry: ({ branchId }) => ({ branchId }),
 
     execute: ({ actor }, query) =>
-      application.workflow.queries.getSourcingPolicy({
+      getApplication().workflow.queries.getSourcingPolicy({
         actorRole: actor.role,
         branchId: query.branchId,
       }),
@@ -36,7 +36,7 @@ export async function saveSourcingPolicy(input: {
   "use server";
 
   return executeSessionServerFunction({
-    name: "application.workflow.update_sourcing_policy",
+    name: "getApplication().workflow.update_sourcing_policy",
     access: { kind: "auth" },
 
     parse: () =>
@@ -48,7 +48,7 @@ export async function saveSourcingPolicy(input: {
     telemetry: ({ branchId }) => ({ branchId }),
 
     execute: (ctx, command) =>
-      application.workflow.commands.updateSourcingPolicy(
+      getApplication().workflow.commands.updateSourcingPolicy(
         {
           actor: workflowActor(ctx.actor),
           branchId: command.branchId,

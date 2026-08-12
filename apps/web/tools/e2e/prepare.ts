@@ -368,7 +368,7 @@ async function buildTemplate(): Promise<ResetPlan> {
     await client.query(`CREATE DATABASE "${TEMPLATE_DB}"`);
   });
 
-  const db = createDb(withDatabase(baseUrl(), TEMPLATE_DB));
+  const db = createDb(() => withDatabase(baseUrl(), TEMPLATE_DB));
 
   try {
     await migrateToLatest(db);
