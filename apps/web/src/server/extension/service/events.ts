@@ -1,14 +1,15 @@
-import type { Role } from "~/lib/auth/access/rbac";
-import type { AppUow } from "~/server/shared/application/uow";
-import { external, fail, type DomainError } from "~/server/shared/domain-error";
+import type { Role } from "~/domain/auth/access/rbac";
+import { external, fail, type DomainError } from "~/domain/errors";
 import {
   ContactAssignmentId,
   OrganizationPersonId,
   type BranchId,
   type UserId,
-} from "~/server/shared/ids";
-import { Err, Ok, isErr, type Result } from "~/server/shared/result";
-import { dateFromEpochMilliseconds, type Clock } from "~/server/shared/time";
+} from "~/domain/ids";
+import { dateFromEpochMilliseconds } from "~/domain/time/clock";
+import type { AppUow } from "~/server/platform/database/uow";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, Ok, isErr, type Result } from "~/shared/result";
 
 import {
   type ExtensionRuntimeEventEnvelope,
@@ -29,14 +30,12 @@ import {
   parseSubjectUserId,
 } from "./validators";
 
-interface EventsWriteContext {
+interface EventsWriteContext extends OperationContext {
   repos: ExtensionRepos;
-  now: Clock;
   uow: AppUow<ExtensionRepos>;
 }
-interface EventsReadContext {
+interface EventsReadContext extends OperationContext {
   repos: ExtensionRepos;
-  now: Clock;
 }
 
 function readAssignmentId(
@@ -67,15 +66,14 @@ export async function ingestRuntimeEvent(
     event: ExtensionRuntimeEventEnvelope;
   },
 ): Promise<Result<void, DomainError>> {
-  const { now, uow } = context;
+  const { uow } = context;
 
   try {
     const sessionClaims = await verifyExtensionToken(
       input.sessionToken,
       isExtensionInstallationSessionClaims,
     );
-    const currentTime = now();
-    if (isTokenExpired(sessionClaims.exp, currentTime)) {
+    if (isTokenExpired(sessionClaims.exp, context.operationAt)) {
       return Err(fail("extension_session_invalid"));
     }
 
@@ -102,7 +100,7 @@ export async function ingestRuntimeEvent(
       const session =
         await txRepos.extensionRuntime.findValidInstallationSession(
           sessionClaims.jti,
-          currentTime,
+          context.operationAt,
         );
       if (
         !session ||
@@ -118,24 +116,24 @@ export async function ingestRuntimeEvent(
       const authSessionActive = await hasActiveAuthSession(
         txRepos,
         session.auth_session_id,
-        currentTime,
+        context.operationAt,
       );
       if (!authSessionActive) {
         await txRepos.extensionRuntime.revokeInstallationSession(
           session.jti,
-          currentTime,
+          context.operationAt,
         );
         await txRepos.extensionRuntime.updateExecutiveSyncHealthByUser({
           user_id: session.user_id,
           sync_health: "reauth_required",
-          sync_updated_at: currentTime,
+          sync_updated_at: context.operationAt,
         });
         return Err(fail("extension_session_invalid"));
       }
 
       await txRepos.extensionRuntime.touchInstallationSession(
         session.jti,
-        currentTime,
+        context.operationAt,
       );
 
       const inserted =
@@ -150,14 +148,14 @@ export async function ingestRuntimeEvent(
           type: input.event.type,
           payload_json: payloadText,
           created_at: eventCreatedAt,
-          received_at: currentTime,
+          received_at: context.operationAt,
         });
 
       await upsertSyncHealth(txRepos.extensionRuntime, {
         userId: session.user_id,
         branchId: session.branch_id,
         syncHealth: "ok",
-        updatedAt: currentTime,
+        updatedAt: context.operationAt,
       });
 
       if (!inserted) {
@@ -230,7 +228,7 @@ export async function listTeamExecutiveStatuses(
     branchId: BranchId;
   },
 ): Promise<Result<TeamExecutiveStatusView[], DomainError>> {
-  const { repos, now } = context;
+  const { repos } = context;
 
   try {
     if (input.role === "supervisor") {
@@ -239,7 +237,7 @@ export async function listTeamExecutiveStatuses(
           await repos.extensionRuntime.listTeamStatusesBySupervisor(
             input.userId,
           ),
-          now(),
+          context.operationAt,
         ),
       );
     }
@@ -247,7 +245,7 @@ export async function listTeamExecutiveStatuses(
     return Ok(
       withDerivedProjectionStatuses(
         await repos.extensionRuntime.listBranchStatuses(input.branchId),
-        now(),
+        context.operationAt,
       ),
     );
   } catch (error: unknown) {

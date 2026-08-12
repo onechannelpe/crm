@@ -40,44 +40,8 @@ export function endCall(): Promise<RuntimeResponse> {
   return sendMessage({ type: "call.end" });
 }
 
-export function startRecording(tabId: number): Promise<RuntimeResponse> {
-  if (!Number.isInteger(tabId) || tabId <= 0) {
-    return Promise.resolve({
-      ok: false,
-      error: "tab id must be a positive integer",
-    });
-  }
-
-  return sendMessage({ type: "recording.start", tabId });
-}
-
-export function stopRecording(): Promise<RuntimeResponse> {
-  return sendMessage({ type: "recording.stop" });
-}
-
 export function flushQueue(): Promise<RuntimeResponse> {
   return sendMessage({ type: "sync.flush" });
-}
-
-export function configureSync(input: {
-  apiBaseUrl: string;
-  sessionToken: string;
-  refreshToken: string;
-}): Promise<RuntimeResponse> {
-  const baseUrl = input.apiBaseUrl.trim();
-  const sessionToken = input.sessionToken.trim();
-  const refreshToken = input.refreshToken.trim();
-
-  if (baseUrl === "" || sessionToken === "" || refreshToken === "") {
-    return Promise.resolve({ ok: false, error: "sync config is required" });
-  }
-
-  return sendMessage({
-    type: "sync.configure",
-    apiBaseUrl: baseUrl,
-    sessionToken,
-    refreshToken,
-  });
 }
 
 export function isSuccessfulResponse(response: RuntimeResponse): response is {

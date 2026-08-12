@@ -11,34 +11,41 @@ import {
   createOrganizationRepo,
   type OrganizationRepository,
 } from "~/server/organization/organization-repo";
+import { createExecutorUow } from "~/server/platform/database/uow";
+import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import {
   createSessionRepository,
   type SessionRepository,
 } from "~/server/sessions/repos-sessions";
-import { createExecutorUow } from "~/server/shared/application/uow";
+import { createUsersRepo, type UsersRepo } from "~/server/users/repos-users";
 
-import type { ServerInfra } from "./infra";
-
-export type ExtensionRuntimeRepos = {
+type ExtensionRuntimeRepos = {
   contactAssignments: ContactAssignmentsRepo;
   extensionRuntime: ExtensionRuntimeRepo;
   organization: OrganizationRepository;
   sessions: SessionRepository;
+  users: UsersRepo;
 };
 
-function buildRepos(db: ServerInfra["db"]): ExtensionRuntimeRepos {
+function buildRepos(db: ServerInfrastructure["db"]): ExtensionRuntimeRepos {
   return {
     contactAssignments: createContactAssignmentsRepo(db),
     extensionRuntime: createExtensionRuntimeRepo(db),
     organization: createOrganizationRepo(db),
     sessions: createSessionRepository(db),
+    users: createUsersRepo(db),
   };
 }
 
-export function createExtensionRuntime(infra: ServerInfra) {
-  const extensionService = createExtensionService(buildRepos(infra.db), {
-    uow: createExecutorUow(infra.db, buildRepos),
-  });
+export function createExtensionRuntime(
+  serverInfrastructure: ServerInfrastructure,
+) {
+  const extensionService = createExtensionService(
+    buildRepos(serverInfrastructure.db),
+    {
+      uow: createExecutorUow(serverInfrastructure.db, buildRepos),
+    },
+  );
 
-  return { extensionService };
+  return extensionService;
 }

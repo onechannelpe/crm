@@ -1,6 +1,7 @@
 import { expectErr, expectOk } from "@tests/support/_core/assertions";
 import { createExtensionScenario } from "@tests/support/extension/api";
 import { createExtensionFixture } from "@tests/support/extension/fixture";
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   resetTestDb,
@@ -29,6 +30,7 @@ describe("extension runtime event idempotency", () => {
     const { sessionToken, assignmentId } = await scenario.claim(
       "11111111-1111-4111-8111-111111111111",
     );
+
     const event = {
       id: "evt-duplicate",
       sequence: 1,
@@ -43,23 +45,24 @@ describe("extension runtime event idempotency", () => {
       },
     };
 
-    const first = await scenario.service.ingestRuntimeEvent({
-      sessionToken,
-      event,
-    });
-    const second = await scenario.service.ingestRuntimeEvent({
-      sessionToken,
-      event,
-    });
+    const first = await scenario.service.ingestRuntimeEvent(
+      { sessionToken, event },
+      operationAt(new Date()),
+    );
+    const second = await scenario.service.ingestRuntimeEvent(
+      { sessionToken, event },
+      operationAt(new Date()),
+    );
 
     expectOk(first);
     expectOk(second);
 
     const events = await ctx.db
       .selectFrom("extension_runtime_events")
-      .select(["id"])
+      .select("id")
       .where("id", "=", event.id)
       .execute();
+
     expect(events).toHaveLength(1);
   });
 
@@ -70,59 +73,63 @@ describe("extension runtime event idempotency", () => {
     const authSessionId = await scenario.session();
     const assignmentId = await scenario.assignment();
 
-    const firstHandoff = await scenario.service.createHandoffToken({
-      userId: execOne.id,
-      authSessionId,
-      branchId: lima.id,
-      assignmentId,
-      origin: "http://localhost:3000",
-    });
-    const firstHandoffValue = expectOk(firstHandoff);
+    async function claim(installationId: string) {
+      const handoff = await scenario.service.createHandoffToken(
+        {
+          userId: execOne.id,
+          authSessionId,
+          branchId: lima.id,
+          assignmentId,
+          origin: "http://localhost:3000",
+        },
+        operationAt(new Date()),
+      );
 
-    const firstClaim = await scenario.service.claimInstallationSession({
-      handoffToken: firstHandoffValue.handoffToken,
-      installationId: "11111111-1111-4111-8111-111111111111",
-    });
-    const firstClaimValue = expectOk(firstClaim);
+      const { handoffToken } = expectOk(handoff);
 
-    const secondHandoff = await scenario.service.createHandoffToken({
-      userId: execOne.id,
-      authSessionId,
-      branchId: lima.id,
-      assignmentId,
-      origin: "http://localhost:3000",
-    });
-    const secondHandoffValue = expectOk(secondHandoff);
+      const result = await scenario.service.claimInstallationSession(
+        {
+          handoffToken,
+          installationId,
+        },
+        operationAt(new Date()),
+      );
 
-    const secondClaim = await scenario.service.claimInstallationSession({
-      handoffToken: secondHandoffValue.handoffToken,
-      installationId: "22222222-2222-4222-8222-222222222222",
-    });
-    const secondClaimValue = expectOk(secondClaim);
+      return expectOk(result);
+    }
 
-    const oldSessionResult = await scenario.service.ingestRuntimeEvent({
-      sessionToken: firstClaimValue.sessionToken,
-      event: {
-        id: "evt-old-installation",
-        sequence: 1,
-        type: "executive.heartbeat",
-        createdAt: 20_000,
-        payload: { occurredAt: 20_000 },
+    const firstClaim = await claim("11111111-1111-4111-8111-111111111111");
+    const secondClaim = await claim("22222222-2222-4222-8222-222222222222");
+
+    const oldSessionResult = await scenario.service.ingestRuntimeEvent(
+      {
+        sessionToken: firstClaim.sessionToken,
+        event: {
+          id: "evt-old-installation",
+          sequence: 1,
+          type: "executive.heartbeat",
+          createdAt: 20_000,
+          payload: { occurredAt: 20_000 },
+        },
       },
-    });
-    const newSessionResult = await scenario.service.ingestRuntimeEvent({
-      sessionToken: secondClaimValue.sessionToken,
-      event: {
-        id: "evt-new-installation",
-        sequence: 1,
-        type: "executive.heartbeat",
-        createdAt: 21_000,
-        payload: { occurredAt: 21_000 },
-      },
-    });
+      operationAt(new Date()),
+    );
 
-    const oldSessionError = expectErr(oldSessionResult);
-    expect(oldSessionError.code).toBe("extension_session_invalid");
+    const newSessionResult = await scenario.service.ingestRuntimeEvent(
+      {
+        sessionToken: secondClaim.sessionToken,
+        event: {
+          id: "evt-new-installation",
+          sequence: 1,
+          type: "executive.heartbeat",
+          createdAt: 21_000,
+          payload: { occurredAt: 21_000 },
+        },
+      },
+      operationAt(new Date()),
+    );
+
+    expect(expectErr(oldSessionResult).code).toBe("extension_session_invalid");
     expectOk(newSessionResult);
   });
 });

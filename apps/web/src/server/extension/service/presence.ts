@@ -1,5 +1,5 @@
-import type { BranchId, UserId } from "~/server/shared/ids";
-import { epochMilliseconds } from "~/server/shared/time";
+import type { BranchId, UserId } from "~/domain/ids";
+import { epochMilliseconds } from "~/domain/time/clock";
 
 import type {
   ExtensionExecutivePresenceStatus,
@@ -29,9 +29,9 @@ export function mapLifecycleStatus(
 
 export function withDerivedProjectionStatuses(
   statuses: Awaited<ReturnType<ExtensionRuntimeRepo["listBranchStatuses"]>>,
-  now: Date,
+  measuredAt: Date,
 ): TeamExecutiveStatusView[] {
-  const nowMs = now.getTime();
+  const nowMs = measuredAt.getTime();
 
   return statuses.map((status) => {
     const presenceUpdatedAt = status.presenceUpdatedAt
