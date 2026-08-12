@@ -1,0 +1,25 @@
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-2);
+}
+
+.form {
+  display: flex;
+  gap: var(--spacing-2);
+  max-width: 420px;
+}
+
+.error {
+  color: var(--destructive);
+  font-size: var(--font-size-caption);
+  margin: 0;
+}

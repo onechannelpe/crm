@@ -1,7 +1,10 @@
-import { APP_LOCALE } from "~/lib/locale";
+import { APP_LOCALE } from "~/shared/locale";
 
 export function formatAmount(value: number | null | undefined): string {
-  if (value == null) return "--";
+  if (value == null) {
+    return "--";
+  }
+
   return new Intl.NumberFormat(APP_LOCALE, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -9,6 +12,13 @@ export function formatAmount(value: number | null | undefined): string {
 }
 
 export function formatRate(value: number | null | undefined): string {
-  if (value == null) return "--";
-  return `${value.toFixed(2)}%`;
+  if (value == null) {
+    return "--";
+  }
+
+  return new Intl.NumberFormat(APP_LOCALE, {
+    style: "percent",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value / 100);
 }

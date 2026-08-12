@@ -1,14 +1,12 @@
 import { action, json } from "@solidjs/router";
 
+import { pendingQuotationPolicyQuery } from "~/rpc/workflow/pending-quotation-policy";
+import { rateProposalPolicyQuery } from "~/rpc/workflow/rate-proposal-policy";
 import {
   savePendingQuotationPolicy,
   type SavePendingQuotationPolicyInput,
-} from "~/actions/workflow/settings/pending-quotation-policy";
-import { saveRateProposalPolicy } from "~/actions/workflow/settings/rate-proposal-policy";
-import {
-  pendingQuotationPolicyQuery,
-  rateProposalPolicyQuery,
-} from "~/lib/queries/workflow-settings";
+} from "~/rpc/workflow/settings/pending-quotation-policy";
+import { saveRateProposalPolicy } from "~/rpc/workflow/settings/rate-proposal-policy";
 
 export const updateRateProposalPolicyMutation = action(
   async (input: { validityDays: number }) => {

@@ -1,10 +1,10 @@
 import { useAction } from "@solidjs/router";
 
 import { UserPicker } from "~/components/ui/pickers/user-picker";
-import { actionErrorMessage } from "~/lib/wire-error";
+import { actionErrorMessage } from "~/contracts/errors";
+import { assignableExecutivesQuery } from "~/rpc/workflow/assignable-executives";
 
 import { reassignLeadMutation } from "../../data/command-mutations";
-import { assignableExecutivesQuery } from "../../data/queries";
 import {
   revalidateWorkflowLead,
   revalidateWorkflowLeadList,

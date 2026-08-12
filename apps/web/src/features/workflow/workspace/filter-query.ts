@@ -13,19 +13,9 @@ function isLeadStatus(value: string): value is (typeof LEAD_STATUSES)[number] {
 
 export function resolveLeadWorkspaceFilterQuery(
   value: string | undefined,
-): Pick<
-  ListLeadsFiltersInput,
-  "stage" | "status" | "updatedSinceMs" | "updatedUntilMs"
-> {
+): Pick<ListLeadsFiltersInput, "stage" | "status" | "updatedToday"> {
   if (value === "updated_today") {
-    const now = new Date();
-    const start = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    ).getTime();
-
-    return { updatedSinceMs: start, updatedUntilMs: start + 86_400_000 };
+    return { updatedToday: true };
   }
 
   if (value?.startsWith("stage:")) {

@@ -6,8 +6,6 @@ import {
 } from "./filter-fields";
 import { LEAD_WORKSPACE_FILTER_DEFAULT } from "./filter-query";
 
-export type { LeadWorkspaceFilterValue } from "./filter-fields";
-
 export const LEAD_WORKSPACE_FILTER: RecordIndexFilterCatalog<LeadWorkspaceFilterValue> =
   {
     label: "Filtrar",
