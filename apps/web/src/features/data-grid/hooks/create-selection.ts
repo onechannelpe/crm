@@ -2,19 +2,20 @@ import { createEffect, createSignal, type Accessor } from "solid-js";
 
 import type { DataGridSelectionController } from "../model/selection";
 
-export function createDataGridSelection<T extends { id: string }>(
+export function createDataGridSelection<T>(
   rows: Accessor<ReadonlyArray<T>>,
+  rowId: (row: T) => string,
 ): DataGridSelectionController {
   const [selectedIds, setSelectedIds] = createSignal<ReadonlySet<string>>(
     new Set(),
   );
 
-  const rowIds = () => new Set(rows().map((row) => row.id));
+  const rowIds = () => new Set(rows().map(rowId));
   const allSelected = () =>
-    rows().length > 0 && rows().every((row) => selectedIds().has(row.id));
+    rows().length > 0 && rows().every((row) => selectedIds().has(rowId(row)));
 
   const someSelected = () =>
-    rows().some((row) => selectedIds().has(row.id)) && !allSelected();
+    rows().some((row) => selectedIds().has(rowId(row))) && !allSelected();
 
   createEffect(() => {
     const validIds = rowIds();
@@ -52,7 +53,7 @@ export function createDataGridSelection<T extends { id: string }>(
   }
 
   function toggleAll(checked: boolean) {
-    replace(checked ? rows().map((row) => row.id) : []);
+    replace(checked ? rows().map(rowId) : []);
   }
 
   function clear() {

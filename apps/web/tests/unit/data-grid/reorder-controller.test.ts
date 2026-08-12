@@ -11,9 +11,11 @@ describe("createDataGridReorderController", () => {
     createRoot((dispose) => {
       const rows = [{ id: "lead-1" }, { id: "lead-2" }] as const;
       const onReorder = vi.fn<(event: DataGridReorderEvent<Row>) => void>();
-      const reorder = createDataGridReorderController(() => rows, {
-        onReorder,
-      });
+      const reorder = createDataGridReorderController(
+        () => rows,
+        (row) => row.id,
+        { onReorder },
+      );
 
       reorder.begin({
         rowId: "lead-1",
@@ -44,9 +46,11 @@ describe("createDataGridReorderController", () => {
     createRoot((dispose) => {
       const rows = [{ id: "lead-1" }] as const;
       const onReorder = vi.fn<(event: DataGridReorderEvent<Row>) => void>();
-      const reorder = createDataGridReorderController(() => rows, {
-        onReorder,
-      });
+      const reorder = createDataGridReorderController(
+        () => rows,
+        (row) => row.id,
+        { onReorder },
+      );
 
       reorder.begin({
         rowId: "lead-1",

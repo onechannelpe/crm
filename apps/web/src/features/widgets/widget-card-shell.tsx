@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js";
-import { Match, Show, Switch } from "solid-js";
+import { children, Match, Show, Switch } from "solid-js";
 
 import {
   WidgetCard,
@@ -21,6 +21,7 @@ export type WidgetStatus =
 
 export function WidgetCardShell(props: {
   title: string;
+  count?: number;
   action?: JSX.Element;
   status?: WidgetStatus;
   emptyLabel?: string;
@@ -28,13 +29,14 @@ export function WidgetCardShell(props: {
   children: JSX.Element;
 }) {
   const status = () => props.status ?? "ready";
+  const action = children(() => props.action);
 
   return (
     <WidgetCard variant={props.variant ?? "dashboard"}>
       <WidgetCardHeader>
-        <WidgetCardTitle text={props.title} />
-        <Show when={props.action}>
-          <WidgetCardHeaderActions>{props.action}</WidgetCardHeaderActions>
+        <WidgetCardTitle text={props.title} count={props.count} />
+        <Show when={action()}>
+          <WidgetCardHeaderActions>{action()}</WidgetCardHeaderActions>
         </Show>
       </WidgetCardHeader>
       <WidgetCardContent>

@@ -7,7 +7,7 @@ describe("createDataGridSelection", () => {
   it("keeps selection limited to rows owned by the grid", () => {
     createRoot((dispose) => {
       const [rows] = createSignal([{ id: "lead-1" }, { id: "lead-2" }]);
-      const selection = createDataGridSelection(rows);
+      const selection = createDataGridSelection(rows, (row) => row.id);
 
       selection.replace(["lead-1", "missing"]);
 
@@ -25,7 +25,7 @@ describe("createDataGridSelection", () => {
   it("selects and clears the current rows as one update", () => {
     createRoot((dispose) => {
       const [rows] = createSignal([{ id: "lead-1" }, { id: "lead-2" }]);
-      const selection = createDataGridSelection(rows);
+      const selection = createDataGridSelection(rows, (row) => row.id);
 
       selection.toggleAll(true);
       expect([...selection.selectedIds()]).toEqual(["lead-1", "lead-2"]);

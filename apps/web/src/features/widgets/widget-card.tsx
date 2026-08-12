@@ -1,4 +1,4 @@
-import type { ParentProps } from "solid-js";
+import { Show, type ParentProps } from "solid-js";
 
 import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 
@@ -25,10 +25,13 @@ export function WidgetCardHeader(props: ParentProps<{ class?: string }>) {
   );
 }
 
-export function WidgetCardTitle(props: { text: string }) {
+export function WidgetCardTitle(props: { text: string; count?: number }) {
   return (
     <div class={styles.title}>
       <OverflowingText text={props.text} style={{ width: "100%" }} />
+      <Show when={props.count !== undefined}>
+        <span class={styles.count}>{props.count}</span>
+      </Show>
     </div>
   );
 }

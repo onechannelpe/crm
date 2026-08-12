@@ -1,6 +1,5 @@
 import type { Accessor } from "solid-js";
 
-import type { TileColor } from "~/components/ui/display/tinted-icon-tile/tinted-icon-tile";
 import type { DataGridReorderConfig } from "~/features/data-grid/dnd/types";
 import type { DataGridSource } from "~/features/data-grid/model/source";
 import type {
@@ -8,6 +7,7 @@ import type {
   DataGridIcon,
   DataGridRowOpenIndicator,
 } from "~/features/data-grid/model/types";
+import type { TileColor } from "~/shared/ui/tile-color";
 
 import type {
   RecordIndexFilterCatalog,

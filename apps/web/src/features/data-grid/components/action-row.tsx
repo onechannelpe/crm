@@ -36,7 +36,9 @@ export function DataGridActionRow(props: {
       role="row"
       aria-rowindex={props.ariaRowIndex}
       onClick={() => {
-        if (grid.isInteractive()) props.config.onClick();
+        if (grid.isInteractive()) {
+          props.config.onClick();
+        }
       }}
     >
       <Show when={grid.reorder}>

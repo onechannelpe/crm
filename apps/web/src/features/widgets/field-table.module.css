@@ -75,7 +75,7 @@
 }
 
 .fieldRowHovered:not(.fieldRowReadonly) .fieldValueDisplay {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
   cursor: pointer;
 }
 

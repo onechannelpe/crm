@@ -36,11 +36,11 @@
 
 .viewPicker:hover,
 .toolbarButton:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
 }
 
 .toolbarButton[data-open="true"] {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
 }
 
 .toolbarButton[data-open="true"]:hover {

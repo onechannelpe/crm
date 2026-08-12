@@ -5,7 +5,7 @@
 .menu {
   backdrop-filter: var(--t-blur-medium);
   -webkit-backdrop-filter: var(--t-blur-medium);
-  background: var(--background-transparent-light);
+  background: var(--background-transparent-primary);
   border: 1px solid var(--background-transparent-medium);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-elevation-2);
@@ -47,7 +47,7 @@
 
 .menuItem[data-active="true"],
 .menuItem:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
 }
 
 .menuItemIcon {
@@ -92,7 +92,7 @@
 }
 
 .menuHeaderCloseButton:hover {
-  background: var(--bg-translucent);
+  background: var(--background-transparent-light);
 }
 
 .menuHeaderTitle {

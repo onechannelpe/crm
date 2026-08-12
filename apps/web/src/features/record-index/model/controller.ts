@@ -103,7 +103,10 @@ export function createRecordIndexController<T extends { id: string }>(
     definition,
     source,
     visibleColumns,
-    selection: createDataGridSelection(() => source().rows),
+    selection: createDataGridSelection(
+      () => source().rows,
+      (row) => row.id,
+    ),
     counts: { pickerMeta, total },
     columns: {
       openMenu,

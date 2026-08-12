@@ -83,11 +83,11 @@ function FieldLabel(props: {
   );
 }
 
-export function FieldValue(props: ParentProps) {
+function FieldValue(props: ParentProps) {
   return <div class={styles.fieldValue}>{props.children}</div>;
 }
 
-export function FieldValueDisplay(props: ParentProps) {
+function FieldValueDisplay(props: ParentProps) {
   return <div class={styles.fieldValueDisplay}>{props.children}</div>;
 }
 
@@ -95,7 +95,7 @@ export function FieldTextValue(props: ParentProps) {
   return <span class={styles.fieldTextValue}>{props.children}</span>;
 }
 
-function FieldEmptyValue(props: ParentProps) {
+export function FieldEmptyValue(props: ParentProps) {
   return <span class={styles.fieldEmptyValue}>{props.children}</span>;
 }
 

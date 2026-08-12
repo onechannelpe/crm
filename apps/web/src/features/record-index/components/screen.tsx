@@ -1,3 +1,5 @@
+import { Title } from "@solidjs/meta";
+
 import { RecordIndexProvider } from "../context/record-index-context";
 import { createRecordIndexController } from "../model/controller";
 import type { RecordIndexDefinition } from "../model/definition";
@@ -10,8 +12,15 @@ export function RecordIndexScreen<T extends { id: string }>(props: {
 }) {
   const controller = createRecordIndexController(props.definition);
 
+  const pageTitle = () =>
+    controller.definition.views
+      ? `${controller.definition.title()} - ${controller.definition.object.label}`
+      : controller.definition.object.label;
+
   return (
     <RecordIndexProvider value={controller}>
+      <Title>{pageTitle()}</Title>
+
       <div class={controller.definition.class}>
         <RecordIndexPageHeader
           object={controller.definition.object}
