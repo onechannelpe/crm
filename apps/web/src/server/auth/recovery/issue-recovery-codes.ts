@@ -1,9 +1,9 @@
+import type { UserId } from "~/domain/ids";
 import {
   generateRecoveryCodes,
   hashRecoveryCode,
-} from "~/lib/auth/recovery/recovery-codes";
+} from "~/server/auth/recovery/recovery-codes";
 import type { UserRecoveryCodesRepo } from "~/server/auth/repos-user-recovery-codes";
-import type { UserId } from "~/server/shared/ids";
 
 type Repos = { userRecoveryCodes: UserRecoveryCodesRepo };
 

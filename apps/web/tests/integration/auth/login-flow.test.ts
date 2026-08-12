@@ -1,12 +1,13 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
+import { operationAt } from "@tests/support/operation";
 import { createTestPasskeyProvider } from "@tests/support/passkey/api";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { AuthLoginFlowId } from "~/domain/ids";
 import { getLoginFlowState } from "~/server/auth/application/queries/get-login-flow-state";
 import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { AuthLoginFlowId } from "~/server/shared/ids";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 describe("login flow service", () => {
   const scenario = createAuthScenario("login-flow");
@@ -32,7 +33,9 @@ describe("login flow service", () => {
     });
 
     expect(isErr(result)).toBe(false);
-    if (isErr(result)) throw new Error("expected successful password login");
+    if (isErr(result)) {
+      throw new Error("expected successful password login");
+    }
     expect(result.value.kind).toBe("complete");
     const persisted = await scenario.ctx.db
       .selectFrom("login_flows")
@@ -90,19 +93,24 @@ describe("login flow service", () => {
       },
       login,
       createTestPasskeyProvider(login.repos),
+      operationAt(new Date()),
     );
 
     expect(isErr(result)).toBe(false);
-    if (isErr(result)) throw new Error("expected passkey flow");
+    if (isErr(result)) {
+      throw new Error("expected passkey flow");
+    }
 
     const flow = await getLoginFlowState(
       AuthLoginFlowId.trust(result.value.id),
       scenario.ctx.repos,
       createTestPasskeyProvider(scenario.ctx.repos),
+      operationAt(new Date()),
     );
     expect(flow?.state).toBe("passkey");
-    if (!flow || flow.state !== "passkey")
+    if (!flow || flow.state !== "passkey") {
       throw new Error("expected passkey state");
+    }
     expect(flow.requestOptions.allowCredentials).toHaveLength(1);
     expect(flow.requestOptions.rpId).toBe(result.value.requestOptions.rpId);
     expect(flow.requestOptions.challenge).toBe(

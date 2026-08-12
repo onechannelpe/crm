@@ -1,6 +1,6 @@
 import type { Insertable, Kysely, Selectable } from "kysely";
 
-import type { Database } from "~/lib/db/types";
+import type { Database } from "~/server/platform/database/types";
 
 type AuthThrottleCounterRow = Selectable<Database["auth_throttle_counters"]>;
 type NewAuthThrottleCounterRow = Insertable<Database["auth_throttle_counters"]>;
@@ -48,20 +48,20 @@ export function createAuthThrottleRepo(db: Kysely<Database>) {
         .execute();
     },
 
-    async deleteExpiredBlocks(now = new Date()): Promise<number> {
+    async deleteExpiredBlocks(expiredBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("auth_throttle_counters")
         .where("blocked_until", "is not", null)
-        .where("blocked_until", "<", now)
+        .where("blocked_until", "<", expiredBefore)
         .executeTakeFirst();
 
       return Number(result.numDeletedRows ?? 0);
     },
 
-    async deleteUpdatedBefore(timestamp: Date): Promise<number> {
+    async deleteUpdatedBefore(updatedBefore: Date): Promise<number> {
       const result = await db
         .deleteFrom("auth_throttle_counters")
-        .where("updated_at", "<", timestamp)
+        .where("updated_at", "<", updatedBefore)
         .executeTakeFirst();
 
       return Number(result.numDeletedRows ?? 0);

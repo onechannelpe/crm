@@ -1,10 +1,15 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { createSecurityTestKit } from "@tests/support/security/kit";
+import {
+  ACTION_RATE_LIMIT_POLICY,
+  checkActionRateLimit,
+  createSecurityTestKit,
+} from "@tests/support/security/kit";
 import {
   afterAll,
   afterEach,
@@ -16,11 +21,7 @@ import {
   vi,
 } from "vitest";
 
-import {
-  ACTION_RATE_LIMIT_POLICY,
-  checkActionRateLimit,
-} from "~/lib/security/action-rate-limit";
-import { ActionError } from "~/lib/wire-error";
+import { ActionError } from "~/contracts/errors";
 
 describe("rate limit scope isolation", () => {
   let ctx: TestDbContext;
@@ -55,7 +56,8 @@ describe("rate limit scope isolation", () => {
       checkActionRateLimit(
         "leads.request",
         ctx.fixtures.users.backOne.id,
-        ctx.repos,
+        ctx,
+        operationAt(new Date()),
         "198.51.100.1",
       ),
     ).resolves.toBeUndefined();
@@ -67,7 +69,13 @@ describe("rate limit scope isolation", () => {
     await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     await expect(
-      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.2"),
+      checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx,
+        operationAt(new Date()),
+        "198.51.100.2",
+      ),
     ).rejects.toBeInstanceOf(ActionError);
   });
 
@@ -79,7 +87,8 @@ describe("rate limit scope isolation", () => {
       checkActionRateLimit(
         "leads.request",
         ctx.fixtures.users.execOne.id,
-        ctx.repos,
+        ctx,
+        operationAt(new Date()),
         "198.51.100.99",
       ),
     ).rejects.toBeInstanceOf(ActionError);
@@ -92,7 +101,8 @@ describe("rate limit scope isolation", () => {
       await checkActionRateLimit(
         "leads.request",
         userId,
-        ctx.repos,
+        ctx,
+        operationAt(new Date()),
         "198.51.100.1",
       );
     }
@@ -101,7 +111,8 @@ describe("rate limit scope isolation", () => {
       checkActionRateLimit(
         "team.invite.create",
         userId,
-        ctx.repos,
+        ctx,
+        operationAt(new Date()),
         "198.51.100.1",
       ),
     ).resolves.toBeUndefined();

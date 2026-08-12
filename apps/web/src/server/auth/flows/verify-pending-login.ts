@@ -1,9 +1,10 @@
-import { deleteLoginFlow } from "~/lib/auth/login-flow/shared";
+import type { AuthLoginFlowId, UserId } from "~/domain/ids";
 import { verifyRecoveryCode } from "~/server/auth/factors/recovery";
 import { verifyTotpStepUp } from "~/server/auth/factors/totp";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import type { AuthLoginFlowId, UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { deleteLoginFlow } from "~/server/auth/login-flow/shared";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 type PendingLogin = {
   flow: NonNullable<
@@ -20,12 +21,14 @@ async function loadPendingLogin(
   occurredAt: Date,
 ): Promise<Result<PendingLogin, { kind: "flow_expired" }>> {
   const flow = await deps.repos.loginFlows.findById(flowId);
+
   if (!flow || flow.expires_at < occurredAt || !flow.user_id) {
     await deleteLoginFlow(flow, deps.repos);
     return Err({ kind: "flow_expired" });
   }
 
   const user = await deps.repos.users.findById(flow.user_id);
+
   if (!user?.is_active) {
     await deps.repos.loginFlows.delete(flow.id);
     return Err({ kind: "flow_expired" });
@@ -47,31 +50,44 @@ export async function verifyTotpLoginProof(
     flowId: AuthLoginFlowId;
     totpCode: string;
     ipAddress: string;
-    occurredAt: Date;
   },
+  operation: OperationContext,
 ): Promise<
   Result<VerifiedTotpLoginProof, { kind: "flow_expired" | "invalid_totp" }>
 > {
-  const pending = await loadPendingLogin(deps, input.flowId, input.occurredAt);
-  if (isErr(pending)) return pending;
-  if (pending.value.flow.state !== "totp") {
-    await deps.repos.loginFlows.delete(pending.value.flow.id);
+  const pending = await loadPendingLogin(
+    deps,
+    input.flowId,
+    operation.operationAt,
+  );
+
+  if (isErr(pending)) {
+    return pending;
+  }
+
+  const { flow, user } = pending.value;
+
+  if (flow.state !== "totp") {
+    await deps.repos.loginFlows.delete(flow.id);
     return Err({ kind: "flow_expired" });
   }
 
   const verified = await verifyTotpStepUp({
-    user: pending.value.user,
+    user,
     ipAddress: input.ipAddress,
     totpCode: input.totpCode,
     deps: deps.repos,
-    occurredAt: input.occurredAt,
+    occurredAt: operation.operationAt,
   });
-  if (isErr(verified)) return verified;
+
+  if (isErr(verified)) {
+    return verified;
+  }
 
   return Ok({
     method: "totp",
-    flowId: pending.value.flow.id,
-    userId: pending.value.user.id,
+    flowId: flow.id,
+    userId: user.id,
     secretEncrypted: verified.value.secretEncrypted,
   });
 }
@@ -89,30 +105,42 @@ export async function verifyRecoveryLoginProof(
     flowId: AuthLoginFlowId;
     recoveryCode: string;
     ipAddress: string;
-    occurredAt: Date;
   },
+  operation: OperationContext,
 ): Promise<
   Result<
     VerifiedRecoveryLoginProof,
     { kind: "flow_expired" | "invalid_recovery" }
   >
 > {
-  const pending = await loadPendingLogin(deps, input.flowId, input.occurredAt);
-  if (isErr(pending)) return pending;
+  const pending = await loadPendingLogin(
+    deps,
+    input.flowId,
+    operation.operationAt,
+  );
+
+  if (isErr(pending)) {
+    return pending;
+  }
+
+  const { flow, user } = pending.value;
 
   const verified = await verifyRecoveryCode({
-    user: pending.value.user,
+    user,
     ipAddress: input.ipAddress,
     recoveryCode: input.recoveryCode,
     deps: deps.repos,
-    occurredAt: input.occurredAt,
+    occurredAt: operation.operationAt,
   });
-  if (isErr(verified)) return verified;
+
+  if (isErr(verified)) {
+    return verified;
+  }
 
   return Ok({
     method: "recovery",
     codeHash: verified.value.codeHash,
-    flowId: pending.value.flow.id,
-    userId: pending.value.user.id,
+    flowId: flow.id,
+    userId: user.id,
   });
 }

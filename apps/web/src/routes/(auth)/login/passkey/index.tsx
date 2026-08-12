@@ -4,11 +4,11 @@ import { createMemo, Show, Suspense } from "solid-js";
 import { Loader } from "~/components/feedback/loading/loader";
 import { EnterTransition } from "~/components/ui/animation/enter-transition";
 import { Button } from "~/components/ui/input/button";
-import { parseLoginFlowId } from "~/features/auth/model/login-route-flow";
+import { parseLoginFlowId } from "~/domain/auth/login-flow/parse-id";
 import { useAuthPageView } from "~/features/auth/services/use-auth-analytics";
 import { usePasskeyLogin } from "~/features/auth/services/use-passkey-login";
 import { AuthFlowShell } from "~/features/auth/ui/auth-flow-shell";
-import { loginFlowQuery } from "~/lib/queries/auth";
+import { loginFlowQuery } from "~/rpc/auth/login-flow";
 
 import shellStyles from "~/features/auth/ui/auth-flow-shell.module.css";
 import linkStyles from "~/features/auth/ui/auth-links.module.css";
@@ -28,7 +28,9 @@ export default function LoginPasskeyPage() {
   });
   const passkeyFlow = createMemo(() => {
     const flow = loginFlow();
-    if (flow === undefined && flowId()) return undefined;
+    if (flow === undefined && flowId()) {
+      return undefined;
+    }
     return flow?.state === "passkey" && flow.mode === "identified"
       ? flow
       : null;

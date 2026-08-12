@@ -1,21 +1,21 @@
-import { hashPassword, verifyPassword } from "~/lib/auth/password/password";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import type { UserId } from "~/server/shared/ids";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { auditEntityId } from "~/domain/audit/entity";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import { hashPassword, verifyPassword } from "~/server/auth/password/password";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type { AuthSetupContext } from "../infrastructure/setup-context";
-import { createSessionService } from "../session/session.service";
+import { revokeUserAccess } from "../session/revoke-user-access";
 
 export async function changeInstallationPassword(
   deps: AuthSetupContext,
   input: {
     userId: UserId;
-    currentSessionId: string;
     password: string;
     confirmPassword: string;
-    now: Date;
   },
+  operation: OperationContext,
 ): Promise<Result<void, DomainError>> {
   if (input.password.length < 8) {
     return Err(fail("password_too_short"));
@@ -39,22 +39,19 @@ export async function changeInstallationPassword(
 
   const changed = await deps.uow.run(async (repos) => {
     await repos.users.replaceInstallationPassword(user.id, passwordHash);
-    await createSessionService({
-      sessions: repos.sessions,
-      users: repos.users,
-      events: repos.events,
-      now: () => input.now,
-    }).revokeOtherForUser(user.id, input.currentSessionId);
+    await revokeUserAccess(repos, user.id, operation.operationAt);
     await repos.events.append({
       type: "password_changed",
       entityType: "user",
       entityId: auditEntityId("user", user.id),
       actorUserId: user.id,
-      occurredAt: input.now,
+      occurredAt: operation.operationAt,
     });
     return Ok(undefined);
   });
-  if (isErr(changed)) return changed;
+  if (isErr(changed)) {
+    return changed;
+  }
 
   return Ok(undefined);
 }

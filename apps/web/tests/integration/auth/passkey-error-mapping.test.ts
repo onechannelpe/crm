@@ -1,6 +1,7 @@
 import { expectErr } from "@tests/support/_core/assertions";
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { getSeededIdentity } from "@tests/support/identities/api";
+import { operationAt } from "@tests/support/operation";
 import {
   buildAssertionResponse,
   createAuthFlow,
@@ -16,7 +17,7 @@ import {
 import { completePendingLogin } from "~/server/auth/flows/complete-pending-login";
 import { startPasskeyLogin } from "~/server/auth/flows/start-passkey-login";
 import { createAuthLoginContext } from "~/server/auth/infrastructure/login-context";
-import { isErr } from "~/server/shared/result";
+import { isErr } from "~/shared/result";
 
 describe("passkey error mapping", () => {
   const scenario = createAuthScenario("passkey-error-mapping");
@@ -37,13 +38,16 @@ describe("passkey error mapping", () => {
 
   it("returns invalid credentials for empty identifier", async () => {
     const login = createAuthLoginContext(scenario.ctx.db);
+
     const result = await startPasskeyLogin(
       { identifier: "   ", ipAddress, mode: "identified" },
       login,
       createTestPasskeyProvider(login.repos),
+      operationAt(new Date()),
     );
 
     const error = expectErr(result);
+
     expect(error.kind).toBe("invalid_credentials");
   });
 
@@ -68,7 +72,10 @@ describe("passkey error mapping", () => {
         account: { kind: "lookup" },
       },
     );
-    if (isErr(prepared)) throw new Error("expected prepared passkey login");
+
+    if (isErr(prepared)) {
+      throw new Error("expected prepared passkey login");
+    }
 
     await expect(
       persistPasskeyLoginFlow(
@@ -94,38 +101,49 @@ describe("passkey error mapping", () => {
     });
 
     const login = createAuthLoginContext(scenario.ctx.db);
-    const occurredAt = login.now();
-    const verified = await verifyPasskeyLogin(login.repos, {
-      flowId,
-      response: buildAssertionResponse("missing-passkey"),
-      ipAddress,
-      occurredAt,
-      webauthnProvider: createTestPasskeyProvider(login.repos),
-    });
+    const operation = operationAt(new Date());
+
+    const verified = await verifyPasskeyLogin(
+      login.repos,
+      {
+        flowId,
+        response: buildAssertionResponse("missing-passkey"),
+        ipAddress,
+        webauthnProvider: createTestPasskeyProvider(login.repos),
+      },
+      operation,
+    );
+
     const result = isErr(verified)
       ? verified
-      : await completePendingLogin(login, {
-          proof: verified.value,
-          occurredAt,
-          ipAddress,
-          userAgent: "vitest-agent",
-        });
+      : await completePendingLogin(
+          login,
+          {
+            proof: verified.value,
+            ipAddress,
+            userAgent: "vitest-agent",
+          },
+          operation,
+        );
 
     const error = expectErr(result);
+
     expect(error.kind).toBe("invalid_credentials");
 
-    const consumed =
+    const challenge =
       await scenario.ctx.repos.webauthnChallenges.findById(challengeId);
-    expect(consumed).toBeUndefined();
 
-    const retries =
+    expect(challenge).toBeUndefined();
+
+    const recentRetries =
       await scenario.ctx.repos.authEvents.findRecentLoginRetriesByUser(
         execOne.userId,
         5,
       );
-    expect(retries[0]?.method).toBe("passkey");
-    expect(retries[0]?.stage).toBe("verify");
-    expect(retries[0]?.outcome).toBe("failure");
-    expect(retries[0]?.reason).toBe("assertion_invalid");
+
+    expect(recentRetries[0]?.method).toBe("passkey");
+    expect(recentRetries[0]?.stage).toBe("verify");
+    expect(recentRetries[0]?.outcome).toBe("failure");
+    expect(recentRetries[0]?.reason).toBe("assertion_invalid");
   });
 });

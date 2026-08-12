@@ -1,13 +1,14 @@
 import type { SessionInfo } from "~/contracts/auth";
-
-import type { AdminSessionsReadContext } from "../../infrastructure/admin-sessions-read-context";
+import type { OperationContext } from "~/server/platform/operation/context";
+import type { SessionRepository } from "~/server/sessions/repos-sessions";
 
 export async function listAllActiveSessions(
-  deps: AdminSessionsReadContext,
+  sessions: Pick<SessionRepository, "listAllActive">,
+  operation: OperationContext,
 ): Promise<SessionInfo[]> {
-  const sessions = await deps.repos.sessions.listAllActive();
+  const activeSessions = await sessions.listAllActive(operation.operationAt);
 
-  return sessions.map((session) => ({
+  return activeSessions.map((session) => ({
     id: session.id,
     userId: session.userId,
     userEmail: session.userEmail,

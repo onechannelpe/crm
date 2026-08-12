@@ -1,16 +1,16 @@
 import { useNavigate } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-import {
-  acknowledgeRecoveryCodes,
-  regenerateRecoveryCodes,
-} from "~/actions/auth/recovery-codes";
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
 import { Button } from "~/components/ui/input/button";
+import { actionErrorMessage } from "~/contracts/errors";
 import { RecoveryCodesPanel } from "~/features/auth/security/recovery-codes-panel";
 import { OnboardingShell } from "~/features/onboarding/ui/onboarding-shell";
 import { OnboardingStepHeading } from "~/features/onboarding/ui/onboarding-step-heading";
-import { actionErrorMessage } from "~/lib/wire-error";
+import {
+  acknowledgeRecoveryCodes,
+  regenerateRecoveryCodes,
+} from "~/rpc/auth/recovery-codes";
 
 import styles from "~/features/onboarding/ui/onboarding-page.module.css";
 

@@ -5,51 +5,34 @@ import {
   resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { makeAppContext, makeAuthSession } from "@tests/support/unit/factories";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { sessionCache } from "~/lib/auth/session/session-cache";
+import { InstallationId } from "~/domain/ids";
 import { revokeAllUserSessions } from "~/server/auth/flows/revoke-all-user-sessions";
 import { revokeUserSession } from "~/server/auth/flows/revoke-user-session";
-import { createAdminSessionRevocationContext } from "~/server/auth/infrastructure/admin-session-revocation-context";
-import { createAuthSessionRepo } from "~/server/auth/infrastructure/session-repo";
-import { createAuthUsersRepo } from "~/server/auth/infrastructure/users-repo";
-import { createSessionService } from "~/server/auth/session/session.service";
+import { createAccessSecurityContext } from "~/server/auth/infrastructure/session-revocation-context";
 import type { AppContext } from "~/server/platform/action/context";
-import { InstallationId } from "~/server/shared/ids";
-import { createEventsRepo } from "~/server/shared/repos-events";
 
 const ADMIN = getSeededIdentity("superuser");
 const TARGET = getSeededIdentity("execOne");
 const NOW = new Date("2026-07-15T12:00:00.000Z");
 
 function makeAdminContext(): AppContext {
-  return {
-    actor: {
+  return makeAppContext({
+    actor: makeAuthSession({
       id: "admin-session",
       userId: ADMIN.userId,
       role: "superuser",
       branchId: ADMIN.branchId,
-      sessionClass: "app",
-      primaryAuthMethod: "password",
       strongAuthMethod: "totp",
       strongAuthAt: NOW,
-      impersonatorUserId: null,
-    },
+    }),
     requestId: "req-test",
     traceId: "trace-test",
-    ipAddress: "127.0.0.1",
     userAgent: null,
-    publicOrigin: "http://localhost:3000",
-    now: () => NOW,
-  };
+    operationAt: NOW,
+  });
 }
 
 describe("admin session revocation", () => {
@@ -65,26 +48,10 @@ describe("admin session revocation", () => {
 
   beforeEach(async () => {
     await resetTestDb(ctx);
-    sessionCache.clear();
   });
 
-  afterEach(() => {
-    sessionCache.clear();
-  });
-
-  function makePort() {
-    const sessionService = createSessionService({
-      sessions: createAuthSessionRepo(ctx.db),
-      users: createAuthUsersRepo(ctx.db),
-      events: createEventsRepo(ctx.db),
-      now: () => NOW,
-      logger: { error() {} },
-    });
-    return createAdminSessionRevocationContext({
-      executor: ctx.db,
-      revokeSession: (id) => sessionService.revoke(id),
-      revokeUserSessions: (userId) => sessionService.revokeAllForUser(userId),
-    });
+  function makeSecurityContext() {
+    return createAccessSecurityContext(ctx.db);
   }
 
   async function seedSession(sessionId: string) {
@@ -138,28 +105,23 @@ describe("admin session revocation", () => {
     });
   }
 
-  async function findEvent(entityType: string, entityId: string) {
-    return ctx.db
-      .selectFrom("events")
-      .selectAll()
-      .where("entity_type", "=", entityType)
-      .where("entity_id", "=", entityId)
-      .executeTakeFirst();
-  }
-
   it("revokes a single session, clears its installation, flips sync health, and audits the action", async () => {
     const sessionId = "sess-single-revoke";
+
     await seedSession(sessionId);
     await seedExecutiveStatus();
     await seedInstallationSession(sessionId);
 
-    const result = await revokeUserSession(makeAdminContext(), makePort(), {
-      sessionId,
-      targetUserId: TARGET.userId,
-    });
+    const result = await revokeUserSession(
+      makeAdminContext(),
+      makeSecurityContext(),
+      {
+        sessionId,
+        targetUserId: TARGET.userId,
+      },
+    );
 
     expect(result.ok).toBe(true);
-
     expect(await ctx.repos.sessions.findById(sessionId)).toBeNull();
 
     const installation = await ctx.db
@@ -167,6 +129,7 @@ describe("admin session revocation", () => {
       .selectAll()
       .where("auth_session_id", "=", sessionId)
       .executeTakeFirstOrThrow();
+
     expect(installation.revoked_at).not.toBeNull();
 
     const status = await ctx.db
@@ -174,10 +137,17 @@ describe("admin session revocation", () => {
       .selectAll()
       .where("user_id", "=", TARGET.userId)
       .executeTakeFirstOrThrow();
+
     expect(status.sync_health).toBe("reauth_required");
     expect(status.sync_updated_at).toEqual(NOW);
 
-    const event = await findEvent("user_session", sessionId);
+    const event = await ctx.db
+      .selectFrom("events")
+      .selectAll()
+      .where("entity_type", "=", "user_session")
+      .where("entity_id", "=", sessionId)
+      .executeTakeFirst();
+
     expect(event).toMatchObject({
       type: "session_revoked_by_admin",
       actor_user_id: ADMIN.userId,
@@ -191,18 +161,22 @@ describe("admin session revocation", () => {
   it("revokes every session for a user, clears every installation, and audits once", async () => {
     const sessionOne = "sess-all-one";
     const sessionTwo = "sess-all-two";
+
     await seedSession(sessionOne);
     await seedSession(sessionTwo);
     await seedExecutiveStatus();
     await seedInstallationSession(sessionOne);
     await seedInstallationSession(sessionTwo);
 
-    const result = await revokeAllUserSessions(makeAdminContext(), makePort(), {
-      targetUserId: TARGET.userId,
-    });
+    const result = await revokeAllUserSessions(
+      makeAdminContext(),
+      makeSecurityContext(),
+      {
+        targetUserId: TARGET.userId,
+      },
+    );
 
     expect(result.ok).toBe(true);
-
     expect(await ctx.repos.sessions.findById(sessionOne)).toBeNull();
     expect(await ctx.repos.sessions.findById(sessionTwo)).toBeNull();
 
@@ -211,6 +185,7 @@ describe("admin session revocation", () => {
       .selectAll()
       .where("user_id", "=", TARGET.userId)
       .execute();
+
     expect(installations).toHaveLength(2);
     expect(installations.every((row) => row.revoked_at !== null)).toBe(true);
 
@@ -219,6 +194,7 @@ describe("admin session revocation", () => {
       .selectAll()
       .where("user_id", "=", TARGET.userId)
       .executeTakeFirstOrThrow();
+
     expect(status.sync_health).toBe("reauth_required");
 
     const events = await ctx.db
@@ -227,11 +203,14 @@ describe("admin session revocation", () => {
       .where("entity_type", "=", "user")
       .where("entity_id", "=", TARGET.userId)
       .execute();
+
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({
       type: "all_sessions_revoked",
       actor_user_id: ADMIN.userId,
     });
-    expect(events[0].payload_json).toEqual({ revokedBy: ADMIN.userId });
+    expect(events[0].payload_json).toEqual({
+      revokedBy: ADMIN.userId,
+    });
   });
 });

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Err, Ok } from "~/server/shared/result";
+import { Err, Ok } from "~/shared/result";
 
 const mocks = vi.hoisted(() => ({
   completeGoogleOAuthCallback: vi.fn<() => Promise<unknown>>(),
@@ -11,16 +11,13 @@ vi.mock("~/server/auth/flows/google-callback-login", () => ({
 }));
 
 vi.mock("~/server/auth/infrastructure/request-passkey-provider", () => ({
-  createRequestPasskeyProvider: () => ({}),
+  createPasskeyProviderForOrigin: () => ({}),
 }));
 
-vi.mock("~/server/platform/container", () => ({
-  getServerRuntime: () => ({
-    auth: {
-      login: {
-        repos: {},
-      },
-    },
+vi.mock("~/server/platform/http/request-context-storage", () => ({
+  getRequestContext: () => ({ publicOrigin: "http://localhost" }),
+  getRequestOperation: () => ({
+    operationAt: new Date("2026-07-15T12:00:00.000Z"),
   }),
 }));
 

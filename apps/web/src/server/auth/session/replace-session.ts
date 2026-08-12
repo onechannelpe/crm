@@ -1,16 +1,19 @@
-import type { AuthSession } from "~/lib/auth/access/session-types";
+import type { AuthSession } from "~/domain/auth/access/session-types";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { isErr } from "~/shared/result";
 
 import type {
-  SessionServiceDeps,
+  SessionAuthenticatorDeps,
+  SessionIssuerDeps,
   SessionSpec,
   SessionUser,
 } from "./session-spec";
-import { createSessionService } from "./session.service";
+import {
+  createSessionAuthenticator,
+  createSessionIssuer,
+} from "./session.service";
 
-type ReplacementSessionRepos = Pick<
-  SessionServiceDeps,
-  "events" | "sessions" | "users"
->;
+type ReplacementSessionRepos = SessionAuthenticatorDeps & SessionIssuerDeps;
 
 export async function replaceSession(
   repos: ReplacementSessionRepos,
@@ -22,27 +25,28 @@ export async function replaceSession(
     strongAuthAt: Date | null;
     ipAddress: string;
     userAgent: string | null;
-    issuedAt: Date;
   },
+  operation: OperationContext,
 ): Promise<string> {
-  const sessionService = createSessionService({
-    sessions: repos.sessions,
-    users: repos.users,
-    events: repos.events,
-    now: () => input.issuedAt,
-  });
-  const issued = await sessionService.establish({
-    user: input.user,
-    sessionClass: input.sessionClass,
-    request: {
-      ipAddress: input.ipAddress,
-      userAgent: input.userAgent,
+  const issued = await createSessionIssuer(repos).establish(
+    {
+      user: input.user,
+      sessionClass: input.sessionClass,
+      request: {
+        ipAddress: input.ipAddress,
+        userAgent: input.userAgent,
+      },
+      primaryAuthMethod: input.current.primaryAuthMethod,
+      strongAuthMethod: input.strongAuthMethod,
+      strongAuthAt: input.strongAuthAt,
     },
-    primaryAuthMethod: input.current.primaryAuthMethod,
-    strongAuthMethod: input.strongAuthMethod,
-    strongAuthAt: input.strongAuthAt,
-  });
+    operation,
+  );
+  // No auditAction is set above, so establish() cannot fail here.
+  if (isErr(issued)) {
+    throw new Error(issued.error.code ?? "session_establish_failed");
+  }
 
-  await sessionService.revoke(input.current.id);
-  return issued.token;
+  await createSessionAuthenticator(repos).revoke(input.current.id);
+  return issued.value.token;
 }

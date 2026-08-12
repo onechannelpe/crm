@@ -1,7 +1,7 @@
 import { createAuthScenario } from "@tests/support/auth/scenario";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { getStrongAuthStatus } from "~/lib/auth/security/strong-auth-status";
+import { getStrongAuthStatus } from "~/server/auth/security/strong-auth-status";
 
 describe("strong auth status", () => {
   const scenario = createAuthScenario("strong-auth-status");

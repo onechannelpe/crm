@@ -1,26 +1,55 @@
+import { operationAt } from "@tests/support/operation";
 import type { TestDbContext } from "@tests/support/runtime/db";
 
+import type { UserId } from "~/domain/ids";
 import {
   ACTION_RATE_LIMIT_POLICY,
-  checkActionRateLimit,
-} from "~/lib/security/action-rate-limit";
-import type { UserId } from "~/server/shared/ids";
+  createActionRateLimiter,
+  type RateLimitedAction,
+} from "~/server/security/action-rate-limit";
+
+export { ACTION_RATE_LIMIT_POLICY };
+
+export function checkActionRateLimit(
+  actionName: RateLimitedAction,
+  userId: UserId,
+  context: Pick<TestDbContext, "db">,
+  operation: Parameters<
+    ReturnType<typeof createActionRateLimiter>["enforce"]
+  >[2],
+  ipAddress: string,
+) {
+  return createActionRateLimiter(context.db).enforce(
+    actionName,
+    userId,
+    operation,
+    ipAddress,
+  );
+}
 
 export function createSecurityTestKit(ctx: TestDbContext) {
   return {
     async consumeUserLimit(
-      actionName: keyof typeof ACTION_RATE_LIMIT_POLICY,
+      actionName: RateLimitedAction,
       userId: UserId,
       ipAddress: string,
+      now: Date = new Date(),
     ) {
       const { userLimit } = ACTION_RATE_LIMIT_POLICY[actionName];
       for (let index = 0; index < userLimit; index += 1) {
-        await checkActionRateLimit(actionName, userId, ctx.repos, ipAddress);
+        await checkActionRateLimit(
+          actionName,
+          userId,
+          ctx,
+          operationAt(now),
+          ipAddress,
+        );
       }
     },
     async consumeIpLimit(
-      actionName: keyof typeof ACTION_RATE_LIMIT_POLICY,
+      actionName: RateLimitedAction,
       ipAddress: string,
+      now: Date = new Date(),
     ) {
       const { sourceIpLimit } = ACTION_RATE_LIMIT_POLICY[actionName];
       const userIds = [
@@ -34,7 +63,8 @@ export function createSecurityTestKit(ctx: TestDbContext) {
         await checkActionRateLimit(
           actionName,
           userIds[index % userIds.length],
-          ctx.repos,
+          ctx,
+          operationAt(now),
           ipAddress,
         );
       }

@@ -1,9 +1,14 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
+import {
+  ACTION_RATE_LIMIT_POLICY,
+  checkActionRateLimit,
+} from "@tests/support/security/kit";
 import {
   afterAll,
   afterEach,
@@ -14,11 +19,6 @@ import {
   it,
   vi,
 } from "vitest";
-
-import {
-  ACTION_RATE_LIMIT_POLICY,
-  checkActionRateLimit,
-} from "~/lib/security/action-rate-limit";
 
 describe("rate limit audit", () => {
   let ctx: TestDbContext;
@@ -48,23 +48,28 @@ describe("rate limit audit", () => {
       await checkActionRateLimit(
         "leads.request",
         userId,
-        ctx.repos,
+        ctx,
+        operationAt(new Date()),
         "198.51.100.1",
       );
     }
 
     await expect(
-      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx,
+        operationAt(new Date()),
+        "198.51.100.1",
+      ),
     ).rejects.toBeDefined();
 
-    const now = new Date();
-    const logs = await ctx.repos.events.listRecent({
-      fromInclusive: new Date(now.getTime() - 1000),
-      toInclusive: new Date(now.getTime() + 1000),
-      limit: 10,
-      actorUserId: userId,
-    });
-    const entry = logs.find((log) => log.type === "rate_limit_exceeded");
+    const entry = await ctx.db
+      .selectFrom("events")
+      .selectAll()
+      .where("type", "=", "rate_limit_exceeded")
+      .where("actor_user_id", "=", userId)
+      .executeTakeFirst();
     expect(entry).toBeDefined();
     expect(entry?.entity_type).toBe("user");
     expect(entry?.entity_id).toBe(String(userId));
@@ -80,7 +85,8 @@ describe("rate limit audit", () => {
     await checkActionRateLimit(
       "leads.request",
       userId,
-      ctx.repos,
+      ctx,
+      operationAt(new Date()),
       "198.51.100.1",
     );
     const deleted = await ctx.repos.actionRateLimits.deleteUpdatedBefore(

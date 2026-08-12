@@ -1,31 +1,33 @@
-import type { AuthSessionLogoutPort } from "~/server/auth/application/ports";
+import { auditEntityId } from "~/domain/audit/entity";
+import type { DomainError } from "~/domain/errors";
+import type { AccessSecurityDeps } from "~/server/auth/application/ports";
 import type { AppContext } from "~/server/platform/action/context";
-import { auditEntityId } from "~/server/shared/audit-entity";
-import type { DomainError } from "~/server/shared/domain-error";
-import { Ok, type Result } from "~/server/shared/result";
+import { Ok, type Result } from "~/shared/result";
 
+// Cookie clearing stays in the HTTP layer because this flow also runs in workers.
 export async function logoutUser(
   ctx: AppContext,
-  port: AuthSessionLogoutPort,
+  deps: AccessSecurityDeps,
 ): Promise<Result<void, DomainError>> {
   const { id, userId } = ctx.actor;
-  const now = ctx.now();
+  const now = ctx.operationAt;
 
-  await port.revokeSession(id);
-  await port.revokeInstallationSessionsByAuthSession(id, now);
-  await port.updateExecutiveSyncHealth({
-    userId,
-    syncHealth: "reauth_required",
-    syncUpdatedAt: now,
-  });
-  port.clearSessionCookie();
-  await port.appendEvent({
-    type: "logout",
-    entityType: "user",
-    entityId: auditEntityId("user", userId),
-    actorUserId: userId,
-    occurredAt: now,
-  });
+  return deps.uow.run(async (tx) => {
+    await tx.sessions.delete(id);
+    await tx.extensionRuntime.revokeInstallationSessionsByAuthSession(id, now);
+    await tx.extensionRuntime.updateExecutiveSyncHealthByUser({
+      user_id: userId,
+      sync_health: "reauth_required",
+      sync_updated_at: now,
+    });
+    await tx.events.append({
+      type: "logout",
+      entityType: "user",
+      entityId: auditEntityId("user", userId),
+      actorUserId: userId,
+      occurredAt: now,
+    });
 
-  return Ok(undefined);
+    return Ok(undefined);
+  });
 }

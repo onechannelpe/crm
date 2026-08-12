@@ -1,14 +1,15 @@
-import { loadActiveAuthContextForUser } from "~/lib/auth/context/auth-context";
-import { resolveSessionClass } from "~/lib/auth/core/session-contract";
-import { recordAuthEvent } from "~/lib/auth/security/auth-events";
-import { enqueueAlertOnNewLoginSource } from "~/lib/auth/security/login-source-alert";
+import { resolveSessionClass } from "~/domain/auth/core/session-contract";
 import type { LoginFlowLoginResult } from "~/server/auth/application/login-contracts";
 import { createAuthThrottleService } from "~/server/auth/application/throttle-service";
+import { loadActiveAuthContextForUser } from "~/server/auth/context/auth-context";
 import type { VerifiedPasskeyLogin } from "~/server/auth/factors/passkey/service/login-finish";
 import type { AuthLoginContext } from "~/server/auth/infrastructure/login-context";
+import { recordAuthEvent } from "~/server/auth/security/auth-events";
+import { recordNewLoginSource } from "~/server/auth/security/login-source-audit";
 import type { SessionRequestMetadata } from "~/server/auth/session/session-spec";
-import { createSessionService } from "~/server/auth/session/session.service";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { createAuditedSessionIssuer } from "~/server/auth/session/session.service";
+import type { OperationContext } from "~/server/platform/operation/context";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 import type {
   VerifiedRecoveryLoginProof,
@@ -36,10 +37,13 @@ function flowMatchesProof(
       return (
         flow.state === "passkey" && flow.challenge_id === proof.challengeId
       );
+
     case "recovery":
       return flow.user_id === proof.userId;
+
     case "totp":
       return flow.state === "totp" && flow.user_id === proof.userId;
+
     default:
       return proof satisfies never;
   }
@@ -52,36 +56,51 @@ async function consumeVerifiedProof(
 ): Promise<Result<void, CompletePendingLoginError>> {
   switch (proof.method) {
     case "passkey": {
-      if (!(await repos.webauthnChallenges.consume(proof.challengeId))) {
+      const consumed = await repos.webauthnChallenges.consume(
+        proof.challengeId,
+      );
+
+      if (!consumed) {
         return Err({ kind: "invalid_credentials" });
       }
+
       const updated = await repos.passkeys.updateCounter(
         proof.credential.credentialId,
         proof.credential.previousCounter,
         proof.credential.newCounter,
         occurredAt,
       );
+
       return updated
         ? Ok(undefined)
         : Err({ kind: "invalid_credentials" } as const);
     }
+
     case "recovery": {
       const consumed = await repos.userRecoveryCodes.consumeActiveCode(
         proof.userId,
         proof.codeHash,
         occurredAt,
       );
+
       return consumed
         ? Ok(undefined)
         : Err({ kind: "invalid_recovery" } as const);
     }
+
     case "totp": {
       const factor = await repos.userTotpFactors.findByUserId(proof.userId);
-      return factor?.is_enabled &&
-        factor.secret_encrypted === proof.secretEncrypted
-        ? Ok(undefined)
-        : Err({ kind: "flow_expired" } as const);
+
+      if (
+        !factor?.is_enabled ||
+        factor.secret_encrypted !== proof.secretEncrypted
+      ) {
+        return Err({ kind: "flow_expired" });
+      }
+
+      return Ok(undefined);
     }
+
     default:
       return proof satisfies never;
   }
@@ -95,8 +114,8 @@ async function recordSuccessfulProof(
 ): Promise<void> {
   const throttle = createAuthThrottleService({
     authThrottle: repos.authThrottle,
-    now: () => occurredAt,
   });
+
   const identifier =
     proof.method === "passkey" ? proof.identifier : `user:${proof.userId}`;
 
@@ -104,12 +123,15 @@ async function recordSuccessfulProof(
     case "passkey":
       await throttle.clearPasskeyVerifyFailureState(identifier, ipAddress);
       break;
+
     case "recovery":
       await throttle.clearRecoveryVerifyFailureState(identifier, ipAddress);
       break;
+
     case "totp":
       await throttle.clearTotpVerifyFailureState(identifier, ipAddress);
       break;
+
     default:
       proof satisfies never;
   }
@@ -129,93 +151,116 @@ export async function completePendingLogin(
   deps: AuthLoginContext,
   input: SessionRequestMetadata & {
     proof: VerifiedPendingLoginProof;
-    occurredAt: Date;
   },
+  operation: OperationContext,
 ): Promise<Result<LoginFlowLoginResult, CompletePendingLoginError>> {
-  const completed = await deps.uow.run<
+  const result = await deps.uow.run<
     LoginFlowLoginResult,
     CompletePendingLoginError
   >(async (repos) => {
     const flow = await repos.loginFlows.findByIdForUpdate(input.proof.flowId);
+
     if (
       !flow ||
-      flow.expires_at < input.occurredAt ||
+      flow.expires_at < operation.operationAt ||
       !flowMatchesProof(flow, input.proof)
     ) {
       return Err({ kind: "flow_expired" });
     }
 
     const user = await repos.users.findByIdForUpdate(input.proof.userId);
-    const context = user
-      ? await loadActiveAuthContextForUser(user, repos, input.occurredAt)
+    const authContext = user
+      ? await loadActiveAuthContextForUser(user, repos, operation)
       : null;
-    if (!context) return Err({ kind: "flow_expired" });
+
+    if (!authContext) {
+      return Err({ kind: "flow_expired" });
+    }
 
     const consumed = await consumeVerifiedProof(
       repos,
       input.proof,
-      input.occurredAt,
+      operation.operationAt,
     );
-    if (isErr(consumed)) return consumed;
 
-    await enqueueAlertOnNewLoginSource({
-      user: context.user,
+    if (isErr(consumed)) {
+      return consumed;
+    }
+
+    await recordNewLoginSource({
+      user: authContext.user,
       ipAddress: input.ipAddress,
       method: `${flow.primary_auth_method}+${input.proof.method}`,
-      occurredAt: input.occurredAt,
+      occurredAt: operation.operationAt,
       deps: repos,
     });
+
     await recordSuccessfulProof(
       repos,
       input.proof,
       input.ipAddress,
-      input.occurredAt,
+      operation.operationAt,
     );
 
     const sessionClass = resolveSessionClass({
-      onboardingCompleted: context.user.onboarding_completed_at !== null,
+      onboardingCompleted: authContext.user.onboarding_completed_at !== null,
       recoveryCodesAcknowledgementRequired:
-        context.recoveryCodesAcknowledgementRequired,
+        authContext.recoveryCodesAcknowledgementRequired,
     });
-    const session = await createSessionService({
-      ...repos,
-      now: () => input.occurredAt,
-    }).establish({
-      user: context.user,
-      sessionClass,
-      request: {
-        ipAddress: input.ipAddress,
-        userAgent: input.userAgent,
+
+    const session = await createAuditedSessionIssuer({
+      sessions: repos.sessions,
+      events: repos.events,
+    }).establish(
+      {
+        user: authContext.user,
+        sessionClass,
+        request: {
+          ipAddress: input.ipAddress,
+          userAgent: input.userAgent,
+        },
+        primaryAuthMethod: flow.primary_auth_method,
+        strongAuthMethod: input.proof.method,
+        strongAuthAt: operation.operationAt,
+        auditAction:
+          flow.primary_auth_method === "passkey" ? "login_passkey" : "login",
       },
-      primaryAuthMethod: flow.primary_auth_method,
-      strongAuthMethod: input.proof.method,
-      strongAuthAt: input.occurredAt,
-      auditAction:
-        flow.primary_auth_method === "passkey" ? "login_passkey" : "login",
-    });
+      operation,
+    );
+
+    if (isErr(session)) {
+      throw new Error(session.error.code ?? "session_establish_failed");
+    }
+
     await repos.loginFlows.delete(flow.id);
 
     return Ok({
-      userId: session.userId,
-      role: session.role,
-      sessionClass: session.sessionClass,
-      token: session.token,
+      userId: session.value.userId,
+      role: session.value.role,
+      sessionClass: session.value.sessionClass,
+      token: session.value.token,
     });
   });
 
   if (
-    !isErr(completed) ||
-    completed.error.kind !== "invalid_recovery" ||
+    !isErr(result) ||
+    result.error.kind !== "invalid_recovery" ||
     input.proof.method !== "recovery"
   ) {
-    return completed;
+    return result;
   }
 
   const identifier = `user:${input.proof.userId}`;
-  await createAuthThrottleService({
+  const throttle = createAuthThrottleService({
     authThrottle: deps.repos.authThrottle,
-    now: () => input.occurredAt,
-  }).recordRecoveryVerifyFailure(identifier, input.ipAddress);
+  });
+
+  await throttle.recordRecoveryVerifyFailure(
+    identifier,
+    input.ipAddress,
+    operation.operationAt,
+  );
+
   await recordAuthEvent(deps.repos, {
     userId: input.proof.userId,
     identifier,
@@ -224,7 +269,8 @@ export async function completePendingLogin(
     stage: "recovery",
     outcome: "failure",
     reason: "invalid_token",
-    occurredAt: input.occurredAt,
+    occurredAt: operation.operationAt,
   });
-  return completed;
+
+  return result;
 }

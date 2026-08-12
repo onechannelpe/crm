@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { ROUTE_MANIFEST } from "~/lib/auth/access/route-manifest";
+import { ROUTE_MANIFEST } from "~/domain/auth/access/route-manifest";
 import {
   canAccessPath,
   getDefaultAppPath,
   getRoutePermission,
-} from "~/lib/auth/access/route-policy";
-import { SIDEBAR_ENTRIES } from "~/lib/nav/config";
-import { getHeaderRoute } from "~/lib/nav/policy";
+} from "~/domain/auth/access/route-policy";
+import { SIDEBAR_ENTRIES } from "~/domain/navigation/config";
+import { getHeaderRoute } from "~/domain/navigation/policy";
 
 describe("route permissions", () => {
   it("resolves static and dynamic route permissions", () => {
@@ -16,7 +16,7 @@ describe("route permissions", () => {
     expect(getRoutePermission("/rate-simulator")).toBe("lead:rate:simulate");
     expect(getRoutePermission("/records/new")).toBeNull();
     expect(getRoutePermission("/records/123")).toBeNull();
-    expect(getRoutePermission("/dashboard")).toBe("lead:work");
+    expect(getRoutePermission("/home")).toBe("lead:work");
     expect(getRoutePermission("/settings/profile")).toBeNull();
   });
 
@@ -38,10 +38,13 @@ describe("route permissions", () => {
   });
 
   it("returns a role-safe default path", () => {
-    expect(getDefaultAppPath("executive")).toBe("/records");
+    expect(getDefaultAppPath("executive")).toBe("/home");
     expect(getDefaultAppPath("logistics")).toBe("/inventory");
     expect(getDefaultAppPath("hr")).toBe("/team");
-    expect(getDefaultAppPath("admin")).toBe("/dashboard");
+    expect(getDefaultAppPath("back_office")).toBe("/records");
+    expect(getDefaultAppPath("supervisor")).toBe("/records");
+    expect(getDefaultAppPath("admin")).toBe("/records");
+    expect(getDefaultAppPath("superuser")).toBe("/records");
   });
 });
 
@@ -52,7 +55,7 @@ describe("nav config structural invariants", () => {
 
   it("uses fallback when no header rule exists", () => {
     expect(getHeaderRoute("/unknown-route").label).toBe("Espacio de trabajo");
-    expect(getHeaderRoute("/dashboard").label).toBe("Inicio");
+    expect(getHeaderRoute("/home").label).toBe("Inicio");
   });
 
   it("every sidebar route href is registered in the route manifest", () => {

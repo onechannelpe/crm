@@ -1,3 +1,4 @@
+import { fail, type DomainError } from "~/domain/errors";
 import {
   persistVerifiedPasskeyEnrollment,
   type VerifiedPasskeyEnrollment,
@@ -10,8 +11,7 @@ import type { AuthSetupContext } from "~/server/auth/infrastructure/setup-contex
 import { issueRecoveryCodesForEnrollment } from "~/server/auth/recovery/issue-recovery-codes";
 import { replaceSession } from "~/server/auth/session/replace-session";
 import type { AppContext } from "~/server/platform/action/context";
-import { fail, type DomainError } from "~/server/shared/domain-error";
-import { Err, isErr, Ok, type Result } from "~/server/shared/result";
+import { Err, isErr, Ok, type Result } from "~/shared/result";
 
 type VerifiedFactorEnrollment =
   | { method: "passkey"; enrollment: VerifiedPasskeyEnrollment }
@@ -28,7 +28,7 @@ export async function completeFactorEnrollment(
     return Err(fail("invalid_input"));
   }
 
-  const now = ctx.now();
+  const now = ctx.operationAt;
 
   return deps.uow.run(async (repos) => {
     const user = await repos.users.findByIdForUpdate(ctx.actor.userId);
@@ -76,17 +76,20 @@ export async function completeFactorEnrollment(
       now,
     );
 
-    const sessionToken = await replaceSession(repos, {
-      current: ctx.actor,
-      user,
-      sessionClass:
-        recoveryCodes.length > 0 ? "recovery_setup" : ctx.actor.sessionClass,
-      strongAuthMethod: factor.method,
-      strongAuthAt: now,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
-      issuedAt: now,
-    });
+    const sessionToken = await replaceSession(
+      repos,
+      {
+        current: ctx.actor,
+        user,
+        sessionClass:
+          recoveryCodes.length > 0 ? "recovery_setup" : ctx.actor.sessionClass,
+        strongAuthMethod: factor.method,
+        strongAuthAt: now,
+        ipAddress: ctx.ipAddress,
+        userAgent: ctx.userAgent,
+      },
+      ctx,
+    );
 
     return Ok({
       recoveryCodes,

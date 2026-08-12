@@ -1,6 +1,3 @@
-"use server";
-
-import { getRequestContext } from "~/lib/http/request-context";
 import {
   createPasskeyProvider,
   resolveWebauthnRelyingParty,
@@ -8,14 +5,14 @@ import {
   type WebauthnProvider,
 } from "~/server/auth/factors/passkey-provider";
 
-// rpID is derived from publicOrigin so challenge and verify stay in sync behind
-// a proxy. Call at the action boundary and thread the resulting provider into
-// the flow.
-export function createRequestPasskeyProvider(
+// Derive rpID from the request origin so challenge and verification agree
+// behind a proxy.
+export function createPasskeyProviderForOrigin(
   repos: PasskeyProviderDeps,
+  publicOrigin: string,
 ): WebauthnProvider {
   return createPasskeyProvider(
     repos,
-    resolveWebauthnRelyingParty(getRequestContext().publicOrigin),
+    resolveWebauthnRelyingParty(publicOrigin),
   );
 }

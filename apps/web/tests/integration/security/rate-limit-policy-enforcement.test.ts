@@ -1,10 +1,15 @@
+import { operationAt } from "@tests/support/operation";
 import {
   cleanupTestDb,
   createIsolatedTestDb,
   resetTestDb,
   type TestDbContext,
 } from "@tests/support/runtime/db";
-import { createSecurityTestKit } from "@tests/support/security/kit";
+import {
+  ACTION_RATE_LIMIT_POLICY,
+  checkActionRateLimit,
+  createSecurityTestKit,
+} from "@tests/support/security/kit";
 import {
   afterAll,
   afterEach,
@@ -16,11 +21,7 @@ import {
   vi,
 } from "vitest";
 
-import {
-  ACTION_RATE_LIMIT_POLICY,
-  checkActionRateLimit,
-} from "~/lib/security/action-rate-limit";
-import { ActionError } from "~/lib/wire-error";
+import { ActionError } from "~/contracts/errors";
 
 describe("rate limit policy enforcement", () => {
   let ctx: TestDbContext;
@@ -51,7 +52,8 @@ describe("rate limit policy enforcement", () => {
         checkActionRateLimit(
           "leads.request",
           userId,
-          ctx.repos,
+          ctx,
+          operationAt(new Date()),
           "198.51.100.1",
         ),
       ).resolves.toBeUndefined();
@@ -64,7 +66,13 @@ describe("rate limit policy enforcement", () => {
     await kit.consumeUserLimit("leads.request", userId, "198.51.100.1");
 
     await expect(
-      checkActionRateLimit("leads.request", userId, ctx.repos, "198.51.100.1"),
+      checkActionRateLimit(
+        "leads.request",
+        userId,
+        ctx,
+        operationAt(new Date()),
+        "198.51.100.1",
+      ),
     ).rejects.toBeInstanceOf(ActionError);
   });
 
@@ -81,7 +89,8 @@ describe("rate limit policy enforcement", () => {
       checkActionRateLimit(
         "team.invite.create",
         userId,
-        ctx.repos,
+        ctx,
+        operationAt(new Date()),
         "198.51.100.1",
       ),
     ).rejects.toBeInstanceOf(ActionError);

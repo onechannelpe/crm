@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import type { OnboardingSnapshot } from "~/contracts/auth";
 import { resolveOnboardingStep } from "~/features/onboarding/model/resolve-step";
-import type { OnboardingSnapshot } from "~/server/auth/onboarding/snapshot";
 
 function createSnapshot(
   overrides?: Partial<OnboardingSnapshot>,
