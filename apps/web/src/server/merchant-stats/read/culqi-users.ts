@@ -2,19 +2,23 @@ import type {
   BookFilter,
   CulqiUserGpvRow,
 } from "~/contracts/merchant-stats/views";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import {
+  calendarMonthStart,
+  type CalendarMonth,
+} from "~/domain/time/calendar-date";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
 
 // Culqi's `vendedor` is the registered usuario, not the crm seller. This is a
 // reconciliation view at sale grain because a RUC can have multiple usuarios.
 export async function getCulqiUserGpv(
   db: DatabaseExecutor,
   filter: BookFilter,
-  month: string,
+  month: CalendarMonth,
 ): Promise<CulqiUserGpvRow[]> {
   const rows = await db
     .selectFrom("merchant_sale_gpv as g")
     .innerJoin("merchant_sales as s", "s.id", "g.sale_id")
-    .where("g.realized_month", "=", month)
+    .where("g.realized_month", "=", calendarMonthStart(month))
     .$if(filter.product != null, (qb) =>
       qb.where("s.product", "=", filter.product ?? ""),
     )

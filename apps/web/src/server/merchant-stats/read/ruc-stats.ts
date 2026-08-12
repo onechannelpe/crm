@@ -1,9 +1,14 @@
 import type { RucMerchantStats } from "~/contracts/merchant-stats/views";
-import type { DatabaseExecutor } from "~/server/shared/db-executor";
+import { hasPermission, type Role } from "~/domain/auth/access/rbac";
+import { fail, type DomainError } from "~/domain/errors";
+import type { UserId } from "~/domain/ids";
+import type { DatabaseExecutor } from "~/server/platform/database/executor";
+import { Err, Ok, type Result } from "~/shared/result";
 
+import { dateFromStorage, monthFromStorageDate } from "../storage-month";
 import { displayName } from "./names";
 
-export async function getMerchantStatsByRuc(
+async function getMerchantStatsByRuc(
   db: DatabaseExecutor,
   ruc: string,
 ): Promise<RucMerchantStats> {
@@ -29,17 +34,22 @@ export async function getMerchantStatsByRuc(
       ? undefined
       : // Read the target in force for the latest realized month.
         db
-          .selectFrom("merchant_targets")
-          .select("projected_gpv")
-          .where("ruc", "=", ruc)
-          .where("effective_from", "<=", latestMonth)
-          .orderBy("effective_from", "desc")
+          .selectFrom("merchant_gpv_targets as target")
+          .innerJoin(
+            "organizations as organization",
+            "organization.id",
+            "target.organization_id",
+          )
+          .select("target.monthly_target_gpv")
+          .where("organization.ruc", "=", ruc)
+          .where("target.effective_from", "<=", latestMonth)
+          .orderBy("target.effective_from", "desc")
           .limit(1)
           .executeTakeFirst(),
     latestMonth === null
       ? undefined
       : db
-          .selectFrom("merchant_monthly_attribution as a")
+          .selectFrom("merchant_month_credit as a")
           .innerJoin("users as u", "u.id", "a.seller_user_id")
           .select(["u.names", "u.first_surname"])
           .where("a.ruc", "=", ruc)
@@ -48,19 +58,50 @@ export async function getMerchantStatsByRuc(
   ]);
 
   return {
-    projectedGpv: target?.projected_gpv ?? null,
+    projectedGpv: target?.monthly_target_gpv ?? null,
     devices: devices.map((row) => ({
       saleId: row.id,
       product: row.product,
       serialNumber: row.serial_number,
-      soldAt: row.sold_at,
+      soldAt: dateFromStorage(row.sold_at),
       m0Plus15dGpv: row.m0_plus_15d_gpv,
     })),
     monthlyGpv: monthly.map((row) => ({
-      month: row.month,
+      month: monthFromStorageDate(row.month),
       gpv: row.gpv,
       trx: row.trx,
     })),
     sellerName: attribution ? displayName(attribution) : null,
   };
+}
+
+export async function getMerchantStatsForViewer(
+  db: DatabaseExecutor,
+  input: { ruc: string; role: Role; userId: UserId },
+): Promise<Result<RucMerchantStats, DomainError>> {
+  if (!hasPermission(input.role, "dashboards:read")) {
+    const ownership = await db
+      .selectFrom("workflow_leads as lead")
+      .innerJoin(
+        "organizations as organization",
+        "organization.id",
+        "lead.organization_id",
+      )
+      .innerJoin(
+        "organization_current_owners as owner",
+        "owner.organization_id",
+        "lead.organization_id",
+      )
+      .select("lead.id")
+      .where("organization.ruc", "=", input.ruc)
+      .where("owner.executive_id", "=", input.userId)
+      .where("lead.deleted_at", "is", null)
+      .executeTakeFirst();
+
+    if (!ownership) {
+      return Err(fail("merchant_stats_not_found"));
+    }
+  }
+
+  return Ok(await getMerchantStatsByRuc(db, input.ruc));
 }

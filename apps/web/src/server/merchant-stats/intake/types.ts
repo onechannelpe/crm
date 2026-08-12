@@ -1,3 +1,5 @@
+import type { CalendarDate, CalendarMonth } from "~/domain/time/calendar-date";
+
 export type GpvCellValue = string | number | Date | boolean | null | undefined;
 
 export type GpvRawRecord = Record<string, string>;
@@ -14,8 +16,8 @@ export interface SourceRow {
   merchantId: string;
   serialNumber: string | null;
   product: string;
-  soldAt: string; // ISO date
-  saleMonth: string; // ISO date, first of month
+  soldAt: CalendarDate;
+  saleMonth: CalendarMonth;
   tradeName: string | null;
   legalName: string | null;
   culqiUserCode: string | null;
@@ -27,9 +29,9 @@ export interface SourceRow {
   promotion: string | null;
   clientType: string | null;
   stockType: string | null;
-  trialAt: string | null;
-  activatedAt: string | null;
-  lastTransactionAt: string | null;
+  trialAt: CalendarDate | null;
+  activatedAt: CalendarDate | null;
+  lastTransactionAt: CalendarDate | null;
   m0Plus15dGpv: number | null;
   m0Plus15dTrx: number | null;
   gpv: GpvObservation[];

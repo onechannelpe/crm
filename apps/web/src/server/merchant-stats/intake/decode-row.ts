@@ -2,10 +2,14 @@ import {
   GPV_MAX_MONTH_OFFSET,
   MERCHANT_PRODUCTS,
 } from "~/contracts/merchant-stats/vocabulary";
-import { Err, Ok, type Result } from "~/server/shared/result";
+import {
+  addCalendarMonths,
+  calendarMonthStart,
+  type CalendarMonth,
+} from "~/domain/time/calendar-date";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import {
-  addMonths,
   cellDateOrNull,
   cellNumber,
   cellNumberOrNull,
@@ -28,7 +32,7 @@ export interface DecodeRowInput {
   rowNumber: number;
   headers: readonly string[];
   cells: readonly GpvCellValue[];
-  cutMonth: string;
+  cutMonth: CalendarMonth;
 }
 
 export function decodeRow(input: DecodeRowInput): Result<SourceRow, Rejection> {
@@ -38,7 +42,9 @@ export function decodeRow(input: DecodeRowInput): Result<SourceRow, Rejection> {
   const ruc = cellText(cells[GPV_COLUMNS.ruc]);
   const merchantId = cellText(cells[GPV_COLUMNS.merchantId]);
   const saleMonth = saleMonthFromAnomes(cells[GPV_COLUMNS.saleMonth]);
-  const soldAt = cellDateOrNull(cells[GPV_COLUMNS.soldAt]) ?? saleMonth;
+  const soldAt =
+    cellDateOrNull(cells[GPV_COLUMNS.soldAt]) ??
+    (saleMonth ? calendarMonthStart(saleMonth) : null);
 
   if (!/^\d{6,}$/.test(ruc)) {
     return Err(
@@ -97,14 +103,18 @@ export function decodeRow(input: DecodeRowInput): Result<SourceRow, Rejection> {
 // not zero, and must not be written as a realized zero.
 function readObservations(
   cells: Cells,
-  saleMonth: string,
-  cutMonth: string,
+  saleMonth: CalendarMonth,
+  cutMonth: CalendarMonth,
 ): GpvObservation[] {
   const observations: GpvObservation[] = [];
   for (let offset = 0; offset <= GPV_MAX_MONTH_OFFSET; offset++) {
     const gpvKey = `gpv_m${offset}`;
-    if (!(gpvKey in cells)) continue;
-    if (addMonths(saleMonth, offset) > cutMonth) continue;
+    if (!(gpvKey in cells)) {
+      continue;
+    }
+    if (addCalendarMonths(saleMonth, offset) > cutMonth) {
+      continue;
+    }
     observations.push({
       offset,
       gpv: cellNumber(cells[gpvKey]),
