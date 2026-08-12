@@ -1,10 +1,13 @@
-import { HalftoneImageCanvas } from "~/lib/halftone/image-canvas";
-import { WebGlMount } from "~/lib/visual-runtime";
+import { resolveImageSourceUrl } from "@crm/images";
+import { createResource, Show } from "solid-js";
+
+import { HalftoneImageCanvas } from "~/browser/visual/halftone/image-canvas";
+import { WebGlMount } from "~/browser/visual/runtime";
 
 import { UpdatesHeroVisualPlaceholder } from "./hero-visual-fallback";
 import {
   MILESTONE_IMAGE_FIT,
-  MILESTONE_IMAGE_URL,
+  MILESTONE_IMAGE_SOURCES,
   MILESTONE_INITIAL_POSE,
   MILESTONE_PREVIEW_DISTANCE,
   buildMilestoneSettings,
@@ -12,7 +15,10 @@ import {
 
 import styles from "./styles/layout.module.css";
 
-const RELEASE_NOTES_SETTINGS = buildMilestoneSettings({
+const HERO_VISUAL_RENDER_HEIGHT = 460;
+const HERO_VISUAL_MAX_PIXEL_RATIO = 1.5;
+
+const HERO_VISUAL_SETTINGS = buildMilestoneSettings({
   animation: {
     hoverLightEnabled: true,
     hoverLightIntensity: 1.2,
@@ -32,22 +38,28 @@ const RELEASE_NOTES_SETTINGS = buildMilestoneSettings({
     width: 0.46,
   },
 });
-const HERO_VISUAL_RENDER_HEIGHT = 460;
-const HERO_VISUAL_MAX_PIXEL_RATIO = 1.5;
 
 export default function UpdatesHeroVisual() {
+  const [imageUrl] = createResource(() =>
+    resolveImageSourceUrl(MILESTONE_IMAGE_SOURCES),
+  );
+
   return (
     <div aria-hidden="true" class={styles.heroVisual}>
       <WebGlMount fallback={<UpdatesHeroVisualPlaceholder />} priority>
-        <HalftoneImageCanvas
-          imageFit={MILESTONE_IMAGE_FIT}
-          imageUrl={MILESTONE_IMAGE_URL}
-          initialPose={MILESTONE_INITIAL_POSE}
-          maxRenderPixelRatio={HERO_VISUAL_MAX_PIXEL_RATIO}
-          previewDistance={MILESTONE_PREVIEW_DISTANCE}
-          settings={RELEASE_NOTES_SETTINGS}
-          virtualRenderHeight={HERO_VISUAL_RENDER_HEIGHT}
-        />
+        <Show fallback={<UpdatesHeroVisualPlaceholder />} when={imageUrl()}>
+          {(resolvedImageUrl) => (
+            <HalftoneImageCanvas
+              imageFit={MILESTONE_IMAGE_FIT}
+              imageUrl={resolvedImageUrl()}
+              initialPose={MILESTONE_INITIAL_POSE}
+              maxRenderPixelRatio={HERO_VISUAL_MAX_PIXEL_RATIO}
+              previewDistance={MILESTONE_PREVIEW_DISTANCE}
+              settings={HERO_VISUAL_SETTINGS}
+              virtualRenderHeight={HERO_VISUAL_RENDER_HEIGHT}
+            />
+          )}
+        </Show>
       </WebGlMount>
     </div>
   );

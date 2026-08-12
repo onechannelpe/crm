@@ -1,4 +1,4 @@
-import type { UpdateCadence, UpdateKind } from "~/lib/updates/types";
+import type { UpdateCadence, UpdateKind } from "~/features/updates/model/types";
 
 function slugifyTitle(value: string): string {
   return value
