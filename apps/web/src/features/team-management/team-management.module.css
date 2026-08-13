@@ -13,19 +13,19 @@
   gap: var(--t-spacing-8);
 }
 
-.inviteForm {
+.fieldStack {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
   margin-top: 12px;
 }
 
-.inviteFormRow {
+.fieldRow {
   display: flex;
   gap: var(--spacing-3);
 }
 
-.inviteFormRow > * {
+.fieldRow > * {
   flex: 1;
   min-width: 0;
 }
@@ -33,6 +33,7 @@
 .inviteActions {
   display: flex;
   justify-content: flex-end;
+  gap: var(--spacing-2);
 }
 
 .issuedLink {
@@ -166,20 +167,10 @@
   margin-top: 4px;
 }
 
-.formGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-}
-
 .adminActions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.dangerAction.dangerAction {
-  color: var(--destructive);
 }
 
 .modalField {
@@ -306,7 +297,7 @@
 }
 
 @media (max-width: 768px) {
-  .inviteFormRow {
+  .fieldRow {
     flex-direction: column;
   }
 }

@@ -1,9 +1,8 @@
-import { useNavigate } from "@solidjs/router";
-import { For } from "solid-js";
+import { createAsync, useNavigate } from "@solidjs/router";
+import { createMemo, For } from "solid-js";
 
 import ChevronRight from "~/components/icons/chevron-right";
 import { SettingsSection } from "~/components/settings/SettingsSection";
-import { Badge } from "~/components/ui/display/badge";
 import {
   Table,
   TableBody,
@@ -12,16 +11,26 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
-import { getPermissions, ROLES } from "~/domain/auth/access/rbac";
-import {
-  getRoleBadgeVariant,
-  getRoleLabel,
-} from "~/domain/auth/access/role-display";
+import type { Role } from "~/domain/auth/access/rbac";
+import { ROLES } from "~/domain/auth/access/rbac";
+import { getRoleLabel } from "~/domain/auth/access/role-display";
+import { membersRosterQuery } from "~/rpc/team-management/members-roster";
 
 import styles from "./team-management.module.css";
 
 export function RolesTab() {
   const navigate = useNavigate();
+  const roster = createAsync(() => membersRosterQuery());
+
+  const memberCountByRole = createMemo(() => {
+    const counts = new Map<Role, number>();
+
+    for (const member of roster()?.members ?? []) {
+      counts.set(member.role, (counts.get(member.role) ?? 0) + 1);
+    }
+
+    return counts;
+  });
 
   return (
     <SettingsSection
@@ -34,38 +43,41 @@ export function RolesTab() {
           <col />
           <col style={{ width: "40px" }} />
         </colgroup>
+
         <TableHeader>
           <TableRow>
             <TableHead>Nombre</TableHead>
-            <TableHead align="right">Permisos</TableHead>
+            <TableHead align="right">Miembros</TableHead>
             <TableHead align="right"> </TableHead>
           </TableRow>
         </TableHeader>
+
         <TableBody>
           <For each={ROLES}>
             {(role) => {
-              const openRole = () =>
+              const openRoleDetails = () =>
                 navigate(`/settings/members/roles/${role}`);
+
+              const memberCount = () => memberCountByRole().get(role) ?? 0;
+
               return (
                 <TableRow
                   clickable
                   tabIndex={0}
-                  onClick={openRole}
+                  onClick={openRoleDetails}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      openRole();
+                      openRoleDetails();
                     }
                   }}
                 >
-                  <TableCell>
-                    <Badge variant={getRoleBadgeVariant(role)}>
-                      {getRoleLabel(role)}
-                    </Badge>
-                  </TableCell>
+                  <TableCell>{getRoleLabel(role)}</TableCell>
+
                   <TableCell align="right" class={styles.roleCount}>
-                    {getPermissions(role).length} permisos
+                    {memberCount()} miembro{memberCount() === 1 ? "" : "s"}
                   </TableCell>
+
                   <TableCell align="right" class={styles.rosterChevron}>
                     <ChevronRight size={16} />
                   </TableCell>

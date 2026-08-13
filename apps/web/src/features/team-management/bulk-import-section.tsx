@@ -17,15 +17,50 @@ import {
   TableRow,
 } from "~/components/ui/layout/table";
 import { actionErrorMessage } from "~/contracts/errors";
-import type {
-  BulkApplyResult,
-  BulkPreviewResult,
+import {
+  getRequiredColumns,
+  type BulkApplyResult,
+  type BulkPreviewResult,
 } from "~/contracts/team/bulk-import";
+import { isRole, type Role } from "~/domain/auth/access/rbac";
 import { formatCalendarDate } from "~/domain/time/app-time";
 import { bulkImportSetupQuery } from "~/rpc/team-management/bulk-import-setup";
 import { applyBulkImport, previewBulkCsv } from "~/rpc/team/bulk-import";
 
 import styles from "./team-management.module.css";
+
+const CSV_SAMPLE_VALUES: Record<string, string> = {
+  FIRST_SURNAME: "Garcia",
+  SECOND_SURNAME: "Lopez",
+  NAMES: "Maria",
+  EMAIL: "maria.garcia@empresa.com",
+  DATE_EXPIRY: "2026-12-31",
+  EXECUTIVE_CATEGORY: "elite",
+};
+
+function buildBulkImportTemplateCsv(role: Role): string {
+  const columns = getRequiredColumns(role);
+  const header = columns.join(",");
+  const sampleRow = columns
+    .map((column) => CSV_SAMPLE_VALUES[column])
+    .join(",");
+
+  return `${header}\n${sampleRow}`;
+}
+
+function downloadBulkImportTemplate(role: Role): void {
+  const blob = new Blob([buildBulkImportTemplateCsv(role)], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `plantilla-importacion-${role}.csv`;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
 
 export function BulkImportSection() {
   const bulkImportSetup = createAsync(() => bulkImportSetupQuery());
@@ -42,6 +77,7 @@ export function BulkImportSection() {
       if (!setup) {
         return;
       }
+
       if (!setup.assignableRoles.some((option) => option.value === role())) {
         setRole(setup.assignableRoles[0]?.value ?? "");
       }
@@ -50,15 +86,20 @@ export function BulkImportSection() {
 
   async function handlePreview(): Promise<void> {
     const file = csvFile();
-    if (!file || !role()) {
+    const selectedRole = role();
+
+    if (!file || !selectedRole) {
       return;
     }
+
     setIsPreviewing(true);
     setPreview(null);
     setResult(null);
+
     try {
       const csv = await readFileText(file);
-      const data = await previewBulkCsv(csv, role());
+      const data = await previewBulkCsv(csv, selectedRole);
+
       setPreview(data);
     } catch (caught: unknown) {
       enqueueErrorSnackBar(actionErrorMessage(caught));
@@ -69,13 +110,18 @@ export function BulkImportSection() {
 
   async function handleImport(): Promise<void> {
     const file = csvFile();
-    if (!file || !role()) {
+    const selectedRole = role();
+
+    if (!file || !selectedRole) {
       return;
     }
+
     setIsImporting(true);
+
     try {
       const csv = await readFileText(file);
-      const data = await applyBulkImport(csv, role());
+      const data = await applyBulkImport(csv, selectedRole);
+
       setResult(data);
       setCsvFile(null);
       setPreview(null);
@@ -91,25 +137,16 @@ export function BulkImportSection() {
       {(setup) => (
         <SettingsSection
           title="Importar desde CSV"
-          description="Carga un archivo CSV con las columnas, en este orden: FIRST_SURNAME, SECOND_SURNAME, NAMES, EMAIL. Para ejecutivos agrega también DATE_EXPIRY y EXECUTIVE_CATEGORY (elite o corporativa)."
+          description="Elige el rol y descarga la plantilla para tener el formato correcto. Complétala y súbela aquí."
         >
           <form
-            class={styles.inviteForm}
+            class={styles.fieldStack}
             onSubmit={(event) => {
               event.preventDefault();
               void handlePreview();
             }}
           >
-            <div class={styles.inviteFormRow}>
-              <FileInput
-                label="Archivo CSV"
-                accept=".csv"
-                onChange={(event) => {
-                  setCsvFile(event.currentTarget.files?.[0] ?? null);
-                  setPreview(null);
-                  setResult(null);
-                }}
-              />
+            <div class={styles.fieldRow}>
               <Select
                 label="Rol"
                 value={role()}
@@ -122,8 +159,34 @@ export function BulkImportSection() {
                   )}
                 </For>
               </Select>
+
+              <FileInput
+                label="Archivo CSV"
+                accept=".csv"
+                onChange={(event) => {
+                  setCsvFile(event.currentTarget.files?.[0] ?? null);
+                  setPreview(null);
+                  setResult(null);
+                }}
+              />
             </div>
+
             <div class={styles.inviteActions}>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={!isRole(role())}
+                onClick={() => {
+                  const currentRole = role();
+
+                  if (isRole(currentRole)) {
+                    downloadBulkImportTemplate(currentRole);
+                  }
+                }}
+              >
+                Descargar plantilla
+              </Button>
+
               <Button
                 type="submit"
                 variant="outline"
@@ -135,28 +198,31 @@ export function BulkImportSection() {
             </div>
           </form>
 
-          <Show when={preview()}>
+          <Show when={preview()} keyed>
             {(previewData) => (
               <>
-                <Show when={previewData().parsed.errors.length > 0}>
+                <Show when={previewData.parsed.errors.length > 0}>
                   <div class={styles.importBlock}>
                     <p class={styles.importNote}>
-                      {previewData().parsed.errors.length} fila(s) con errores
+                      {previewData.parsed.errors.length} fila(s) con errores
                       (serán omitidas):
                     </p>
+
                     <Table variant="list">
                       <colgroup>
                         <col style={{ width: "64px" }} />
                         <col />
                       </colgroup>
+
                       <TableHeader>
                         <TableRow>
                           <TableHead>Fila</TableHead>
                           <TableHead>Error</TableHead>
                         </TableRow>
                       </TableHeader>
+
                       <TableBody>
-                        <For each={previewData().parsed.errors}>
+                        <For each={previewData.parsed.errors}>
                           {(rowError) => (
                             <TableRow>
                               <TableCell>{rowError.row}</TableCell>
@@ -170,7 +236,7 @@ export function BulkImportSection() {
                 </Show>
 
                 <Show
-                  when={previewData().parsed.valid.length > 0}
+                  when={previewData.parsed.valid.length > 0}
                   fallback={
                     <EmptyState
                       title="Sin filas válidas"
@@ -187,6 +253,7 @@ export function BulkImportSection() {
                         <col style={{ width: "20%" }} />
                         <col style={{ width: "20%" }} />
                       </colgroup>
+
                       <TableHeader>
                         <TableRow>
                           <TableHead>Apellidos</TableHead>
@@ -196,8 +263,9 @@ export function BulkImportSection() {
                           <TableHead>Categoría</TableHead>
                         </TableRow>
                       </TableHeader>
+
                       <TableBody>
-                        <For each={previewData().parsed.valid}>
+                        <For each={previewData.parsed.valid}>
                           {(row) => (
                             <TableRow>
                               <TableCell ellipsis>
@@ -216,17 +284,16 @@ export function BulkImportSection() {
                         </For>
                       </TableBody>
                     </Table>
+
                     <div class={styles.inviteActions}>
                       <Button
                         type="button"
                         disabled={isImporting()}
-                        onClick={() => {
-                          void handleImport();
-                        }}
+                        onClick={() => void handleImport()}
                       >
                         {isImporting()
                           ? "Importando..."
-                          : `Crear ${previewData().parsed.valid.length} usuario(s)`}
+                          : `Crear ${previewData.parsed.valid.length} usuario(s)`}
                       </Button>
                     </div>
                   </div>
@@ -235,22 +302,24 @@ export function BulkImportSection() {
             )}
           </Show>
 
-          <Show when={result()}>
+          <Show when={result()} keyed>
             {(importResult) => (
               <div class={styles.importBlock}>
                 <p class={styles.importNote}>
-                  Importación completada: {importResult().created} creado(s),{" "}
-                  {importResult().skipped} omitido(s).
+                  Importación completada: {importResult.created} creado(s),{" "}
+                  {importResult.skipped} omitido(s).
                 </p>
-                <Show when={importResult().rowErrors.length > 0}>
+
+                <Show when={importResult.rowErrors.length > 0}>
                   <Table variant="list">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Error</TableHead>
                       </TableRow>
                     </TableHeader>
+
                     <TableBody>
-                      <For each={importResult().rowErrors}>
+                      <For each={importResult.rowErrors}>
                         {(rowError) => (
                           <TableRow>
                             <TableCell ellipsis>{rowError}</TableCell>
