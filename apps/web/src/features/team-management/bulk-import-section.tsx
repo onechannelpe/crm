@@ -91,43 +91,49 @@ export function BulkImportSection() {
       {(setup) => (
         <SettingsSection
           title="Importar desde CSV"
-          description="Carga un archivo CSV con columnas: FIRST_SURNAME, SECOND_SURNAME, NAMES, EMAIL, DATE_EXPIRY (opcional), EXECUTIVE_CATEGORY (requerido para ejecutivos: elite o corporativa)."
+          description="Carga un archivo CSV con las columnas, en este orden: FIRST_SURNAME, SECOND_SURNAME, NAMES, EMAIL. Para ejecutivos agrega también DATE_EXPIRY y EXECUTIVE_CATEGORY (elite o corporativa)."
         >
-          <div class={styles.inviteForm}>
-            <FileInput
-              label="Archivo CSV"
-              accept=".csv"
-              onChange={(event) => {
-                setCsvFile(event.currentTarget.files?.[0] ?? null);
-                setPreview(null);
-                setResult(null);
-              }}
-            />
-            <Select
-              label="Rol"
-              value={role()}
-              onInput={(event) => setRole(event.currentTarget.value)}
-            >
-              <For each={setup.assignableRoles}>
-                {(option) => (
-                  <option value={option.value}>{option.label}</option>
-                )}
-              </For>
-            </Select>
+          <form
+            class={styles.inviteForm}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handlePreview();
+            }}
+          >
+            <div class={styles.inviteFormRow}>
+              <FileInput
+                label="Archivo CSV"
+                accept=".csv"
+                onChange={(event) => {
+                  setCsvFile(event.currentTarget.files?.[0] ?? null);
+                  setPreview(null);
+                  setResult(null);
+                }}
+              />
+              <Select
+                label="Rol"
+                value={role()}
+                onInput={(event) => setRole(event.currentTarget.value)}
+                required
+              >
+                <For each={setup.assignableRoles}>
+                  {(option) => (
+                    <option value={option.value}>{option.label}</option>
+                  )}
+                </For>
+              </Select>
+            </div>
             <div class={styles.inviteActions}>
               <Button
-                type="button"
+                type="submit"
                 variant="outline"
                 disabled={!csvFile() || !role() || isPreviewing()}
                 loading={isPreviewing()}
-                onClick={() => {
-                  void handlePreview();
-                }}
               >
                 Previsualizar
               </Button>
             </div>
-          </div>
+          </form>
 
           <Show when={preview()}>
             {(previewData) => (

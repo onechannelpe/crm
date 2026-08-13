@@ -2,28 +2,40 @@
   margin-top: 8px;
 }
 
+.tabStrip {
+  /* Cancels TabStrip's own left padding so tabs align with the page edge. */
+  margin-left: calc(var(--t-spacing-2) * -1);
+}
+
 .tabPane {
-  margin-top: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--t-spacing-8);
 }
 
 .inviteForm {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
   margin-top: 12px;
 }
 
+.inviteFormRow {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.inviteFormRow > * {
+  flex: 1;
+  min-width: 0;
+}
+
 .inviteActions {
-  grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
 }
 
 .issuedLink {
-  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -186,13 +198,6 @@
   margin-right: var(--spacing-2);
 }
 
-.rosterName {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .rosterChevron {
   color: var(--foreground-secondary);
 }
@@ -301,7 +306,7 @@
 }
 
 @media (max-width: 768px) {
-  .inviteForm {
-    grid-template-columns: 1fr;
+  .inviteFormRow {
+    flex-direction: column;
   }
 }
