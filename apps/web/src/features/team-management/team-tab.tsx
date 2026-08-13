@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import type { MemberListItem } from "~/contracts/members";
 import { shortName } from "~/domain/identity/display-name";
 import { membersRosterQuery } from "~/rpc/team-management/members-roster";
@@ -126,7 +127,7 @@ export function TeamTab() {
                         imageUrl={member.avatarUrl}
                         fallback={getUserInitials(shortName(member))}
                       />
-                      <span class={styles.rosterName}>{shortName(member)}</span>
+                      <OverflowingText text={shortName(member)} />
                     </TableCell>
                     <TableCell ellipsis>{member.email}</TableCell>
                     <TableCell>

@@ -97,11 +97,13 @@ export default function SettingsMemberDetailPage() {
                   </div>
                 </header>
 
-                <TabStrip
-                  tabs={tabs()}
-                  activeTab={activeTab()}
-                  onTabSelect={(id) => setSearch({ tab: id })}
-                />
+                <div class={styles.tabStrip}>
+                  <TabStrip
+                    tabs={tabs()}
+                    activeTab={activeTab()}
+                    onTabSelect={(id) => setSearch({ tab: id })}
+                  />
+                </div>
 
                 <div class={styles.tabPane}>
                   <Switch>

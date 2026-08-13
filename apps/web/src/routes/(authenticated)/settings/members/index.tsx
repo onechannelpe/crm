@@ -51,11 +51,13 @@ export default function SettingsMembersPage() {
 
   return (
     <SettingsPageLayout>
-      <TabStrip
-        tabs={tabs()}
-        activeTab={activeTab()}
-        onTabSelect={(id) => setParams({ tab: id })}
-      />
+      <div class={styles.tabStrip}>
+        <TabStrip
+          tabs={tabs()}
+          activeTab={activeTab()}
+          onTabSelect={(id) => setParams({ tab: id })}
+        />
+      </div>
 
       <div class={styles.tabPane}>
         <Switch>
