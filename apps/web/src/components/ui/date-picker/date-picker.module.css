@@ -7,7 +7,7 @@
 }
 
 .label {
-  color: var(--muted-foreground);
+  color: var(--foreground-tertiary);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
   margin-bottom: 4px;
@@ -24,7 +24,7 @@
   height: 32px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: color-mix(in oklab, var(--surface) 84%, var(--accent) 16%);
+  background: var(--background-transparent-lighter);
   transition:
     border-color var(--motion-fast) linear,
     box-shadow var(--motion-fast) linear,

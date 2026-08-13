@@ -27,7 +27,11 @@ export function Select(props: SelectProps) {
       {local.label && (
         <InputLabel for={selectId()}>
           {local.label}
-          {props.required && <span class={styles.required}>*</span>}
+          {props.required && (
+            <span aria-hidden="true" class={styles.required}>
+              *
+            </span>
+          )}
         </InputLabel>
       )}
       <select
