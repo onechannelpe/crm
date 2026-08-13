@@ -27,7 +27,7 @@ const ALL_PERMISSIONS: Permission[] = [
   "inventory:read",
   "inventory:manage",
   "hr:read",
-  "hr:manage",
+  "team:invite",
   "admin:read",
   "admin:manage",
   "audit:read",
@@ -118,6 +118,7 @@ describe("rbac boundaries", () => {
     expect(hasPermission("supervisor", "lead:view:all")).toBe(true);
     expect(hasPermission("sales_manager", "lead:reassign")).toBe(false);
     expect(hasPermission("sales_manager", "lead:view:all")).toBe(true);
+    expect(hasPermission("sales_manager", "team:invite")).toBe(true);
 
     expect(hasPermission("superuser", "lead:workflow")).toBe(false);
     expect(hasPermission("superuser", "lead:register")).toBe(false);

@@ -23,7 +23,7 @@ export async function createTeamInvite(input: unknown): Promise<{
 
   return executeSessionServerFunction({
     name: "team.invite.create",
-    access: { kind: "permission", permission: "hr:manage" },
+    access: { kind: "permission", permission: "team:invite" },
 
     parse: () => {
       const parsed = parseObject(input, validationFail, (r) => {
@@ -82,7 +82,7 @@ export async function resendTeamInvite(
 
   return executeSessionServerFunction({
     name: "team.invite.resend",
-    access: { kind: "permission", permission: "hr:manage" },
+    access: { kind: "permission", permission: "team:invite" },
 
     parse: () =>
       parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({
@@ -114,7 +114,7 @@ export async function revokeTeamInvite(
 
   return executeSessionServerFunction({
     name: "team.invite.revoke",
-    access: { kind: "permission", permission: "hr:manage" },
+    access: { kind: "permission", permission: "team:invite" },
 
     parse: () =>
       parseObject({ inviteId: rawInviteId }, validationFail, (r) => ({

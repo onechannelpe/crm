@@ -9,7 +9,7 @@ export async function getInviteManagement(): Promise<
 > {
   return executeSessionServerFunction({
     name: "team.invite_management.read",
-    access: { kind: "permission", permission: "hr:manage" },
+    access: { kind: "permission", permission: "team:invite" },
     execute: async (ctx) => {
       const management = await getApplication().team.management.get(ctx);
       if (isErr(management)) {
