@@ -2,7 +2,10 @@ import { sql, type Kysely } from "kysely";
 
 import type { Role } from "~/domain/auth/access/rbac";
 import { UserId } from "~/domain/ids";
-import { hashSessionToken, isValidTokenFormat } from "~/server/auth/session/tokens";
+import {
+  hashSessionToken,
+  isValidTokenFormat,
+} from "~/server/auth/session/tokens";
 import type { Database } from "~/server/platform/database/types";
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -48,7 +51,9 @@ function deriveToken(username: string): string {
   const token = base.repeat(Math.ceil(32 / base.length)).slice(0, 32);
 
   if (!isValidTokenFormat(token)) {
-    throw new Error(`derived token for '${username}' is not a valid token format`);
+    throw new Error(
+      `derived token for '${username}' is not a valid token format`,
+    );
   }
 
   return token;
@@ -56,7 +61,10 @@ function deriveToken(username: string): string {
 
 // Mints a session for every active seeded user, not a curated roster, so
 // `--as <any-seeded-username>` always works for any persona.
-export async function mintAllSessions(db: Kysely<Database>, now: Date): Promise<number> {
+export async function mintAllSessions(
+  db: Kysely<Database>,
+  now: Date,
+): Promise<number> {
   const users = await db
     .selectFrom("users")
     .select(["id", "username", "role", "branch_id"])
@@ -107,7 +115,9 @@ export async function listRoles(db: Kysely<Database>): Promise<RoleCount[]> {
   return rows;
 }
 
-async function widestExecutivePortfolio(db: Kysely<Database>): Promise<UserId | null> {
+async function widestExecutivePortfolio(
+  db: Kysely<Database>,
+): Promise<UserId | null> {
   const { rows } = await sql<{ executive_id: string }>`
     SELECT executive_id
     FROM organization_current_owners
@@ -133,7 +143,13 @@ async function firstActiveByRole(
     .orderBy("username")
     .executeTakeFirst();
 
-  return user ? { username: user.username, role: user.role, token: deriveToken(user.username) } : null;
+  return user
+    ? {
+        username: user.username,
+        role: user.role,
+        token: deriveToken(user.username),
+      }
+    : null;
 }
 
 export async function resolvePersonaByUsername(
@@ -151,7 +167,11 @@ export async function resolvePersonaByUsername(
     throw new Error(`no active user named '${username}' in crm_preview`);
   }
 
-  return { username: user.username, role: user.role, token: deriveToken(user.username) };
+  return {
+    username: user.username,
+    role: user.role,
+    token: deriveToken(user.username),
+  };
 }
 
 export async function resolvePersonaByRole(
@@ -173,7 +193,11 @@ export async function resolvePersonaByRole(
         .executeTakeFirst();
 
       if (user) {
-        return { username: user.username, role: user.role, token: deriveToken(user.username) };
+        return {
+          username: user.username,
+          role: user.role,
+          token: deriveToken(user.username),
+        };
       }
     }
   }

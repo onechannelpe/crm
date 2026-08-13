@@ -144,7 +144,9 @@ async function rebuild(): Promise<void> {
 
     const minted = await mintAllSessions(db, new Date());
 
-    console.log(`[preview] seeded crm_preview, minted sessions for ${minted} users`);
+    console.log(
+      `[preview] seeded crm_preview, minted sessions for ${minted} users`,
+    );
   } finally {
     await db.destroy();
   }
@@ -155,7 +157,9 @@ async function rebuild(): Promise<void> {
 // Returns whether it rebuilt the database, so callers know a running server
 // against the old database needs to restart before its connections are torn
 // out from under it.
-export async function ensureDatabase(options: { fresh: boolean }): Promise<boolean> {
+export async function ensureDatabase(options: {
+  fresh: boolean;
+}): Promise<boolean> {
   const exists = await databaseExists();
 
   if (!options.fresh && exists && isUpToDate()) {

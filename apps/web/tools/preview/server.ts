@@ -1,5 +1,12 @@
 import { type ChildProcess, spawn } from "node:child_process";
-import { closeSync, existsSync, openSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  closeSync,
+  existsSync,
+  openSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { resolve } from "node:path";
 
 const PORT = 3900;
@@ -200,7 +207,11 @@ export async function ensureServer(
   options: { forceRestart: boolean },
 ): Promise<{ baseURL: string }> {
   const lock = readLock();
-  const canReuse = !options.forceRestart && lock !== null && lock.dbUrl === dbUrl && isAlive(lock.pid);
+  const canReuse =
+    !options.forceRestart &&
+    lock !== null &&
+    lock.dbUrl === dbUrl &&
+    isAlive(lock.pid);
 
   if (canReuse && (await isHealthy())) {
     return { baseURL: BASE_URL };

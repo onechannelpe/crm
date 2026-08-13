@@ -1,6 +1,6 @@
 import type { Role } from "~/domain/auth/access/rbac";
-import { createDb } from "~/server/platform/database/client";
 import { SESSION_COOKIE_NAME } from "~/server/auth/session/cookie-name";
+import { createDb } from "~/server/platform/database/client";
 
 import { ensureDatabase, previewDbUrl } from "./db";
 import {
@@ -49,12 +49,18 @@ function printPersona(baseURL: string, persona: Persona, json: boolean): void {
   console.log("");
   console.log("Try:");
   console.log(`  agent-browser open ${baseURL}/login`);
-  console.log(`  agent-browser cookies set ${SESSION_COOKIE_NAME} ${persona.token}`);
+  console.log(
+    `  agent-browser cookies set ${SESSION_COOKIE_NAME} ${persona.token}`,
+  );
   console.log(`  agent-browser open ${baseURL}/home`);
   console.log(`  agent-browser screenshot`);
 }
 
-function printRoleList(baseURL: string, roles: RoleCount[], json: boolean): void {
+function printRoleList(
+  baseURL: string,
+  roles: RoleCount[],
+  json: boolean,
+): void {
   if (json) {
     console.log(JSON.stringify({ baseURL, roles }));
     return;
