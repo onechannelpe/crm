@@ -9,21 +9,37 @@ import { isErr } from "~/shared/result";
 
 // Throw if authorization does not happen before invite side effects.
 function untouchedDeps(): TeamBulkImportContext {
-  const throwing = (method: string) => (): never => {
-    throw new Error(`${method} must not be called before the role check`);
-  };
-
   const inviteService: InviteService = {
-    listPendingInvites: throwing("listPendingInvites"),
-    createInvite: throwing("createInvite"),
-    redeliverInvite: throwing("redeliverInvite"),
-    revokeInvite: throwing("revokeInvite"),
-    markInviteDelivered: throwing("markInviteDelivered"),
-    acceptInvite: throwing("acceptInvite"),
+    listPendingInvites: () => {
+      throw new Error(
+        "listPendingInvites must not be called before the role check",
+      );
+    },
+    createInvite: () => {
+      throw new Error("createInvite must not be called before the role check");
+    },
+    redeliverInvite: () => {
+      throw new Error(
+        "redeliverInvite must not be called before the role check",
+      );
+    },
+    revokeInvite: () => {
+      throw new Error("revokeInvite must not be called before the role check");
+    },
+    markInviteDelivered: () => {
+      throw new Error(
+        "markInviteDelivered must not be called before the role check",
+      );
+    },
+    acceptInvite: () => {
+      throw new Error("acceptInvite must not be called before the role check");
+    },
   };
 
   const delivery: InviteDelivery = {
-    send: throwing("send"),
+    send: () => {
+      throw new Error("send must not be called before the role check");
+    },
   };
 
   return {
