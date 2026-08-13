@@ -2,8 +2,8 @@ import type {
   BulkApplyResult,
   BulkParseResult,
 } from "~/contracts/team/bulk-import";
-import type { Role } from "~/domain/auth/access/rbac";
-import { invalid, type DomainError } from "~/domain/errors";
+import { canAssignRole, type Role } from "~/domain/auth/access/rbac";
+import { fail, invalid, type DomainError } from "~/domain/errors";
 import { shortName } from "~/domain/identity/display-name";
 import { inviteLink } from "~/server/invites/domain/invite-link";
 import type { AppContext } from "~/server/platform/action/context";
@@ -45,6 +45,10 @@ export async function applyBulkImport(
     role: Role;
   },
 ): Promise<Result<BulkApplyResult, DomainError>> {
+  if (!canAssignRole(ctx.actor.role, input.role)) {
+    return Err(fail("role_not_assignable"));
+  }
+
   const parsed = await previewBulkImport(input.csvContent, input.role, ctx);
   if (!parsed.ok) {
     return parsed;
