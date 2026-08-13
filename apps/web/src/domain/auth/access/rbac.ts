@@ -1,12 +1,15 @@
-export type Role =
-  | "executive"
-  | "supervisor"
-  | "back_office"
-  | "sales_manager"
-  | "logistics"
-  | "hr"
-  | "admin"
-  | "superuser";
+export const ROLES = [
+  "executive",
+  "supervisor",
+  "back_office",
+  "sales_manager",
+  "logistics",
+  "hr",
+  "admin",
+  "superuser",
+] as const;
+
+export type Role = (typeof ROLES)[number];
 
 export type Permission =
   | "lead:rate:simulate"
@@ -29,7 +32,7 @@ export type Permission =
   | "inventory:read"
   | "inventory:manage"
   | "hr:read"
-  | "hr:manage"
+  | "team:invite"
   | "admin:read"
   | "admin:manage"
   | "audit:read"
@@ -54,17 +57,6 @@ export type Permission =
   | "dashboards:manage"
   | "commission:read"
   | "commission:manage";
-
-export const ROLES = [
-  "executive",
-  "supervisor",
-  "back_office",
-  "sales_manager",
-  "logistics",
-  "hr",
-  "admin",
-  "superuser",
-] as const satisfies readonly Role[];
 
 const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   executive: [
@@ -148,6 +140,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "capacity:audit:read",
     "team:read",
     "team:manage",
+    "team:invite",
     "inventory:read",
     "audit:read",
     "admin:read",
@@ -162,7 +155,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
 
   logistics: ["inventory:read", "inventory:manage"],
 
-  hr: ["hr:read", "hr:manage", "team:read"],
+  hr: ["hr:read", "team:invite", "team:read"],
 
   admin: [
     "lead:note:add",
@@ -194,7 +187,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "inventory:read",
     "inventory:manage",
     "hr:read",
-    "hr:manage",
+    "team:invite",
     "admin:read",
     "admin:manage",
     "audit:read",
@@ -238,7 +231,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "inventory:read",
     "inventory:manage",
     "hr:read",
-    "hr:manage",
+    "team:invite",
     "admin:read",
     "admin:manage",
     "audit:read",
@@ -277,6 +270,15 @@ export function canAssignRole(actorRole: Role, targetRole: Role): boolean {
 
   if (actorRole === "hr") {
     return targetRole !== "admin" && targetRole !== "superuser";
+  }
+
+  // Sales managers may staff their branch sales team.
+  if (actorRole === "sales_manager") {
+    return (
+      targetRole === "executive" ||
+      targetRole === "supervisor" ||
+      targetRole === "back_office"
+    );
   }
 
   return false;

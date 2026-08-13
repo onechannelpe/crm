@@ -213,9 +213,9 @@ const PERMISSION_CATALOG: Record<Permission, PermissionMeta> = {
     description: "Consultar la información del personal.",
     group: "equipo",
   },
-  "hr:manage": {
-    label: "Gestionar personal",
-    description: "Administrar altas, invitaciones y datos del personal.",
+  "team:invite": {
+    label: "Invitar miembros",
+    description: "Crear, reenviar y revocar invitaciones de nuevos miembros.",
     group: "equipo",
   },
   "dashboards:read": {

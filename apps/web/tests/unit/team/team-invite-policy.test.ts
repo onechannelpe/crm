@@ -21,8 +21,19 @@ describe("team invite policy", () => {
     expect(canAssignRole("superuser", "superuser")).toBe(false);
   });
 
-  it("blocks sales manager from assigning roles", () => {
-    expect(canAssignRole("sales_manager", "executive")).toBe(false);
-    expect(getAssignableRoleOptions("sales_manager")).toEqual([]);
+  it("restricts sales manager to staffing their own team", () => {
+    expect(canAssignRole("sales_manager", "executive")).toBe(true);
+    expect(canAssignRole("sales_manager", "supervisor")).toBe(true);
+    expect(canAssignRole("sales_manager", "back_office")).toBe(true);
+    expect(canAssignRole("sales_manager", "sales_manager")).toBe(false);
+    expect(canAssignRole("sales_manager", "logistics")).toBe(false);
+    expect(canAssignRole("sales_manager", "hr")).toBe(false);
+    expect(canAssignRole("sales_manager", "admin")).toBe(false);
+    expect(canAssignRole("sales_manager", "superuser")).toBe(false);
+    expect(getAssignableRoleOptions("sales_manager")).toEqual([
+      { value: "executive", label: "Ejecutivo" },
+      { value: "supervisor", label: "Supervisor" },
+      { value: "back_office", label: "Validación de ventas" },
+    ]);
   });
 });
