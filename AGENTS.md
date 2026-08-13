@@ -70,6 +70,12 @@ Working approach
     changes, or repo-wide tooling changes.
 - Use `bun run test` for Vitest-based tests. Do not use `bun test`.
 
+## WHEN checking UI changes live
+
+- Use `bun run preview --role <role>` (or `--as <username>`) to get an
+  authenticated URL + session cookie, then drive it with `bunx agent-browser`.
+  Never hand-roll a dev server or the login form for this.
+
 ## WHEN adding dependencies
 
 - `bun install <package>` to add packages.
