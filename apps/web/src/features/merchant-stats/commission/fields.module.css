@@ -1,0 +1,20 @@
+.mesaGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--t-spacing-2);
+}
+
+.mesaHeader {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--t-spacing-2);
+  padding: 0 var(--t-spacing-1);
+  color: var(--t-font-color-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.mesaRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--t-spacing-2);
+}
