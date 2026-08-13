@@ -14,10 +14,7 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 const LOCKFILE = resolve(process.cwd(), ".preview-server.json");
 const LOG_FILE = resolve(process.cwd(), ".preview-server.log");
 
-// The first boot against a fresh VITE_CACHE_DIR pays Vite's one-time
-// dependency pre-bundle cost (measured ~180s against this repo's dep graph).
-// Every boot after that reuses the cache and is ready in ~2s, so this ceiling
-// only matters for a genuinely broken server, not the common case.
+// A fresh Vite cache can spend several minutes pre-bundling dependencies.
 const HEALTH_TIMEOUT_MS = 300_000;
 const HEALTH_POLL_MS = 200;
 const HEALTH_LOG_INTERVAL_MS = 10_000;
@@ -49,7 +46,7 @@ function clearLock(): void {
   try {
     unlinkSync(LOCKFILE);
   } catch {
-    // Already gone.
+    return;
   }
 }
 
@@ -92,9 +89,8 @@ async function waitForHealth(proc: ChildProcess): Promise<void> {
       return;
     }
 
-    // First boot against a fresh Vite cache can take minutes (dependency
-    // pre-bundling). Without this, the CLI looks hung to whoever ran it.
     const now = Date.now();
+
     if (now >= nextLogAt) {
       console.log(
         `[preview] still waiting for dev server (${Math.round((now - start) / 1000)}s elapsed, first boot pre-bundles dependencies)...`,
@@ -110,10 +106,8 @@ async function waitForHealth(proc: ChildProcess): Promise<void> {
   );
 }
 
-// `detached: true` puts the child in its own process group (setsid), so it
-// survives this CLI process exiting. stdio is redirected to real file
-// descriptors rather than piped, since a piped stdio object would itself
-// keep this process's event loop alive waiting on the stream.
+// Detach the process group so the server survives this CLI process.
+// File-backed stdio avoids keeping the parent event loop alive.
 async function spawnDetached(dbUrl: string): Promise<number> {
   const log = openSync(LOG_FILE, "a");
 
@@ -129,14 +123,13 @@ async function spawnDetached(dbUrl: string): Promise<number> {
       NITRO_PORT: String(PORT),
       NITRO_HOST: "127.0.0.1",
 
-      // Links are built from this value instead of the incoming request.
+      // Application-generated links must point at the preview server.
       APP_PUBLIC_ORIGIN: BASE_URL,
 
-      // Run notification flows without sending real email/WhatsApp.
+      // Exercise notification flows without sending external messages.
       NOTIFICATION_ROUTES: "email:log",
 
-      // Isolated from the interactive dev server's cache/uploads so the two
-      // can run concurrently without corrupting each other.
+      // Keep preview state isolated from the interactive dev server.
       VITE_CACHE_DIR: resolve(process.cwd(), ".vite-preview"),
       WEB_UPLOADS_ROOT: ".preview-storage/documents",
     },
@@ -159,13 +152,12 @@ async function spawnDetached(dbUrl: string): Promise<number> {
   return proc.pid;
 }
 
-// Signals the whole process group, not just the `bun run` wrapper PID, so
-// Vite's own child processes (esbuild, etc.) do not linger as orphans.
+// Signal the process group so Vite and its child processes stop together.
 function killGroup(pid: number): void {
   try {
     process.kill(-pid, "SIGTERM");
   } catch {
-    // Already gone.
+    return;
   }
 }
 
@@ -173,7 +165,7 @@ function killGroupNow(pid: number): void {
   try {
     process.kill(-pid, "SIGKILL");
   } catch {
-    // Already gone.
+    return;
   }
 }
 
@@ -207,6 +199,7 @@ export async function ensureServer(
   options: { forceRestart: boolean },
 ): Promise<{ baseURL: string }> {
   const lock = readLock();
+
   const canReuse =
     !options.forceRestart &&
     lock !== null &&
@@ -222,9 +215,14 @@ export async function ensureServer(
   }
 
   console.log("[preview] starting dev server...");
+
   const pid = await spawnDetached(dbUrl);
 
-  writeLock({ pid, dbUrl, startedAt: new Date().toISOString() });
+  writeLock({
+    pid,
+    dbUrl,
+    startedAt: new Date().toISOString(),
+  });
 
   return { baseURL: BASE_URL };
 }

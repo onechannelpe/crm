@@ -1,4 +1,3 @@
-import type { Role } from "~/domain/auth/access/rbac";
 import { SESSION_COOKIE_NAME } from "~/server/auth/session/cookie-name";
 import { createDb } from "~/server/platform/database/client";
 
@@ -40,6 +39,7 @@ function printPersona(baseURL: string, persona: Persona, json: boolean): void {
         role: persona.role,
       }),
     );
+
     return;
   }
 
@@ -53,7 +53,7 @@ function printPersona(baseURL: string, persona: Persona, json: boolean): void {
     `  agent-browser cookies set ${SESSION_COOKIE_NAME} ${persona.token}`,
   );
   console.log(`  agent-browser open ${baseURL}/home`);
-  console.log(`  agent-browser screenshot`);
+  console.log("  agent-browser screenshot");
 }
 
 function printRoleList(
@@ -70,9 +70,11 @@ function printRoleList(
   console.log(`  URL: ${baseURL}`);
   console.log("");
   console.log("Available roles:");
+
   for (const { role, count } of roles) {
     console.log(`  ${role} (${count})`);
   }
+
   console.log("");
   console.log("Pick one: bun run preview --role <role>");
 }
@@ -93,16 +95,18 @@ async function main(): Promise<void> {
   if (roleArg && asArg) {
     throw new Error("pass either --role or --as, not both");
   }
+
   if (roleArg && !isRole(roleArg)) {
     throw new Error(`unknown role '${roleArg}'`);
   }
 
   const rebuilt = await ensureDatabase({ fresh });
-  const { baseURL } = await ensureServer(previewDbUrl(), {
+  const databaseUrl = previewDbUrl();
+  const { baseURL } = await ensureServer(databaseUrl, {
     forceRestart: rebuilt,
   });
 
-  const db = createDb(previewDbUrl);
+  const db = createDb(databaseUrl);
 
   try {
     if (!roleArg && !asArg) {
@@ -112,7 +116,7 @@ async function main(): Promise<void> {
 
     const persona = asArg
       ? await resolvePersonaByUsername(db, asArg)
-      : await resolvePersonaByRole(db, roleArg as Role);
+      : await resolvePersonaByRole(db, roleArg);
 
     printPersona(baseURL, persona, json);
   } finally {

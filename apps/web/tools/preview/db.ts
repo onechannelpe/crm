@@ -17,24 +17,17 @@ import { seedIfEmpty } from "~/server/platform/database/seed";
 import { withDatabase } from "../../tests/e2e/db";
 import { mintAllSessions } from "./roster";
 
-// Hardcoded, never sourced from env or CLI args: nothing in this file can
-// resolve to "crm", because there is no configurable path that leads there.
+// Hardcoded so this tool cannot resolve to the development database.
 export const PREVIEW_DB_NAME = "crm_preview";
 
 const FINGERPRINT_FILE = resolve(process.cwd(), ".preview-db-fingerprint");
 
-// Scoped to what actually decides the database's shape and content. The rest
-// of `src` (UI, routes, etc.) has no bearing on whether crm_preview needs a
-// rebuild, and including it would reseed on every unrelated code change.
+// Only schema and seed changes require rebuilding the preview database.
 const FINGERPRINT_ROOTS = [
   "src/server/platform/database/schema",
   "src/server/platform/database/seeds",
 ];
 
-// Mirrors the app's own fallback (see LOCAL_DEV_DB_URL in
-// src/server/platform/config/env.ts): local interactive dev does not set
-// WEB_DB_URL either, it relies on this same default. The path component is
-// irrelevant here since every caller immediately swaps it via withDatabase.
 const DEFAULT_MAINTENANCE_URL = "postgres://postgres@localhost:5432/postgres";
 
 function baseUrl(): string {
@@ -73,7 +66,7 @@ async function withMaintenance<T>(
 function sourceFingerprint(): string {
   const hash = createHash("sha256");
 
-  const walk = (path: string): void => {
+  function walk(path: string): void {
     const stat = statSync(path, { throwIfNoEntry: false });
 
     if (!stat) {
@@ -91,7 +84,7 @@ function sourceFingerprint(): string {
     hash.update(path);
     hash.update(String(stat.size));
     hash.update(String(Math.trunc(stat.mtimeMs)));
-  };
+  }
 
   for (const root of FINGERPRINT_ROOTS) {
     walk(resolve(process.cwd(), root));
@@ -154,9 +147,7 @@ async function rebuild(): Promise<void> {
   writeFileSync(FINGERPRINT_FILE, sourceFingerprint());
 }
 
-// Returns whether it rebuilt the database, so callers know a running server
-// against the old database needs to restart before its connections are torn
-// out from under it.
+// Returns true when callers need to restart against the rebuilt database.
 export async function ensureDatabase(options: {
   fresh: boolean;
 }): Promise<boolean> {

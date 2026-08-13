@@ -36,9 +36,7 @@ export interface RoleCount {
   count: number;
 }
 
-// Deterministic per-username token: reseeding crm_preview from the same demo
-// data always yields the same login URL, so it is safe to bookmark or paste
-// into an agent-browser script across sessions.
+// Keep preview login tokens stable across reseeds.
 function deriveToken(username: string): string {
   const base = username.replace(/[^a-z2-7]/g, "");
 
@@ -59,8 +57,6 @@ function deriveToken(username: string): string {
   return token;
 }
 
-// Mints a session for every active seeded user, not a curated roster, so
-// `--as <any-seeded-username>` always works for any persona.
 export async function mintAllSessions(
   db: Kysely<Database>,
   now: Date,
@@ -75,8 +71,7 @@ export async function mintAllSessions(
 
   await db.transaction().execute(async (trx) => {
     for (const user of users) {
-      // Sequential: each insert depends on the same trx and there are at
-      // most a few dozen seeded users, so parallelizing buys nothing.
+      // Seeded users are few and all inserts share the same transaction.
       // eslint-disable-next-line no-await-in-loop
       await trx
         .insertInto("user_sessions")
@@ -178,9 +173,7 @@ export async function resolvePersonaByRole(
   db: Kysely<Database>,
   role: Role,
 ): Promise<Persona> {
-  // An executive with an empty portfolio is a useless default: pick whoever
-  // the demo data actually assigned the most merchants to, instead of an
-  // arbitrary (and easily stale) hardcoded username.
+  // Prefer an executive with actual demo data over an arbitrary account.
   if (role === "executive") {
     const widestId = await widestExecutivePortfolio(db);
 
