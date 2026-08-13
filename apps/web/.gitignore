@@ -10,9 +10,15 @@ playwright-report
 
 # dev artifacts
 .local-storage
+.preview-storage
 
 # Written by tests/e2e/global-setup.ts.
 .e2e-manifest.json
+
+# Written by tools/preview/.
+.preview-server.json
+.preview-server.log
+.preview-db-fingerprint
 
 stats.*
 
