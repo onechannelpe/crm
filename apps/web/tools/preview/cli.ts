@@ -1,3 +1,4 @@
+import type { Role } from "~/domain/auth/access/rbac";
 import { SESSION_COOKIE_NAME } from "~/server/auth/session/cookie-name";
 import { createDb } from "~/server/platform/database/client";
 
@@ -26,6 +27,34 @@ function flagValue(args: string[], flag: string): string | undefined {
   }
 
   return value;
+}
+
+type Selector =
+  | { kind: "list" }
+  | { kind: "role"; role: Role }
+  | { kind: "username"; username: string };
+
+function parseSelector(args: string[]): Selector {
+  const roleArg = flagValue(args, "--role");
+  const asArg = flagValue(args, "--as");
+
+  if (roleArg && asArg) {
+    throw new Error("pass either --role or --as, not both");
+  }
+
+  if (asArg) {
+    return { kind: "username", username: asArg };
+  }
+
+  if (!roleArg) {
+    return { kind: "list" };
+  }
+
+  if (!isRole(roleArg)) {
+    throw new Error(`unknown role '${roleArg}'`);
+  }
+
+  return { kind: "role", role: roleArg };
 }
 
 function printPersona(baseURL: string, persona: Persona, json: boolean): void {
@@ -89,16 +118,7 @@ async function main(): Promise<void> {
 
   const json = args.includes("--json");
   const fresh = args.includes("--fresh");
-  const roleArg = flagValue(args, "--role");
-  const asArg = flagValue(args, "--as");
-
-  if (roleArg && asArg) {
-    throw new Error("pass either --role or --as, not both");
-  }
-
-  if (roleArg && !isRole(roleArg)) {
-    throw new Error(`unknown role '${roleArg}'`);
-  }
+  const selector = parseSelector(args);
 
   const rebuilt = await ensureDatabase({ fresh });
   const databaseUrl = previewDbUrl();
@@ -106,17 +126,18 @@ async function main(): Promise<void> {
     forceRestart: rebuilt,
   });
 
-  const db = createDb(databaseUrl);
+  const db = createDb(previewDbUrl);
 
   try {
-    if (!roleArg && !asArg) {
+    if (selector.kind === "list") {
       printRoleList(baseURL, await listRoles(db), json);
       return;
     }
 
-    const persona = asArg
-      ? await resolvePersonaByUsername(db, asArg)
-      : await resolvePersonaByRole(db, roleArg);
+    const persona =
+      selector.kind === "username"
+        ? await resolvePersonaByUsername(db, selector.username)
+        : await resolvePersonaByRole(db, selector.role);
 
     printPersona(baseURL, persona, json);
   } finally {
