@@ -133,26 +133,28 @@ export function InviteForm(props: {
       class={styles.inviteForm}
       onSubmit={(event) => void handleSubmit(event)}
     >
-      <Input
-        label="Nombres"
-        value={names()}
-        onInput={(event) => setNames(event.currentTarget.value)}
-        required
-      />
+      <div class={styles.inviteFormRow}>
+        <Input
+          label="Nombres"
+          value={names()}
+          onInput={(event) => setNames(event.currentTarget.value)}
+          required
+        />
 
-      <Input
-        label="Primer apellido"
-        value={firstSurname()}
-        onInput={(event) => setFirstSurname(event.currentTarget.value)}
-        required
-      />
+        <Input
+          label="Primer apellido"
+          value={firstSurname()}
+          onInput={(event) => setFirstSurname(event.currentTarget.value)}
+          required
+        />
 
-      <Input
-        label="Segundo apellido"
-        value={secondSurname()}
-        onInput={(event) => setSecondSurname(event.currentTarget.value)}
-        required
-      />
+        <Input
+          label="Segundo apellido"
+          value={secondSurname()}
+          onInput={(event) => setSecondSurname(event.currentTarget.value)}
+          required
+        />
+      </div>
 
       <Input
         type="email"
@@ -162,56 +164,61 @@ export function InviteForm(props: {
         required
       />
 
-      <Select
-        label="Rol"
-        value={role()}
-        onInput={(event) => {
-          setRole(event.currentTarget.value);
-          setExecutiveCategory("");
-        }}
-      >
-        <For each={props.setup.assignableRoles}>
-          {(option) => <option value={option.value}>{option.label}</option>}
-        </For>
-      </Select>
-
-      <Show when={role() === "executive"}>
+      <div class={styles.inviteFormRow}>
         <Select
-          label="Categoría"
-          value={executiveCategory()}
-          onInput={(event) => setExecutiveCategory(event.currentTarget.value)}
+          label="Rol"
+          value={role()}
+          onInput={(event) => {
+            setRole(event.currentTarget.value);
+            setExecutiveCategory("");
+          }}
           required
         >
-          <option value="">Seleccionar categoría...</option>
-          <option value="elite">Elite</option>
-          <option value="corporativa">Corporativa</option>
+          <For each={props.setup.assignableRoles}>
+            {(option) => <option value={option.value}>{option.label}</option>}
+          </For>
         </Select>
-      </Show>
 
-      <Select
-        label="Equipo (opcional)"
-        value={teamId()}
-        onInput={(event) => setTeamId(event.currentTarget.value)}
-      >
-        <option value="">Sin equipo</option>
-        <For each={props.setup.teams}>
-          {(team) => <option value={team.id}>{team.name}</option>}
-        </For>
-      </Select>
+        <Show when={role() === "executive"}>
+          <Select
+            label="Categoría"
+            value={executiveCategory()}
+            onInput={(event) => setExecutiveCategory(event.currentTarget.value)}
+            required
+          >
+            <option value="">Seleccionar categoría...</option>
+            <option value="elite">Elite</option>
+            <option value="corporativa">Corporativa</option>
+          </Select>
+        </Show>
+      </div>
 
-      <DatePicker
-        label="Fecha de vencimiento (opcional)"
-        value={expiresOn()}
-        min={getMinInviteExpiryDate(props.evaluatedAt)}
-        description={INVITE_EXPIRY_HELPER_TEXT}
-        error={expiresOnErrorMessage()}
-        onInput={(nextValue) => {
-          setExpiresOn(nextValue);
-          setExpiresOnErrorMessage(
-            getInviteExpiryFieldError(nextValue, props.evaluatedAt),
-          );
-        }}
-      />
+      <div class={styles.inviteFormRow}>
+        <Select
+          label="Equipo"
+          value={teamId()}
+          onInput={(event) => setTeamId(event.currentTarget.value)}
+        >
+          <option value="">Sin equipo</option>
+          <For each={props.setup.teams}>
+            {(team) => <option value={team.id}>{team.name}</option>}
+          </For>
+        </Select>
+
+        <DatePicker
+          label="Fecha de vencimiento"
+          value={expiresOn()}
+          min={getMinInviteExpiryDate(props.evaluatedAt)}
+          description={INVITE_EXPIRY_HELPER_TEXT}
+          error={expiresOnErrorMessage()}
+          onInput={(nextValue) => {
+            setExpiresOn(nextValue);
+            setExpiresOnErrorMessage(
+              getInviteExpiryFieldError(nextValue, props.evaluatedAt),
+            );
+          }}
+        />
+      </div>
 
       <div class={styles.inviteActions}>
         <Button

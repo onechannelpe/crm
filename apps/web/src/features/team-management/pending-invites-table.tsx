@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/layout/table";
+import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
 import { actionErrorMessage } from "~/contracts/errors";
 import type { TeamInvite } from "~/contracts/team";
 import {
@@ -128,7 +129,7 @@ export function PendingInvitesTable(props: {
                     <span class={styles.inviteMailIcon} aria-hidden="true">
                       <Mail size={16} />
                     </span>
-                    <span class={styles.rosterName}>{invite.email}</span>
+                    <OverflowingText text={invite.email} />
                   </TableCell>
                   <TableCell>
                     <Badge variant={getRoleBadgeVariant(invite.role)}>
