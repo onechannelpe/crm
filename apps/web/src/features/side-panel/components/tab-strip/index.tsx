@@ -29,6 +29,7 @@ export type TabItem<TId extends string = string> = {
   id: TId;
   label: string;
   icon?: TabIconComponent;
+  pill?: string;
 };
 
 type TabStripProps<TId extends string> = {
@@ -148,7 +149,12 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
             });
 
             return (
-              <TabMeasure ref={setElement} icon={tab.icon} title={tab.label} />
+              <TabMeasure
+                ref={setElement}
+                icon={tab.icon}
+                title={tab.label}
+                pill={tab.pill}
+              />
             );
           }}
         </For>
@@ -168,6 +174,7 @@ export function TabStrip<TId extends string>(props: TabStripProps<TId>) {
               dataTestId={`tab-${tab.id}`}
               icon={tab.icon}
               title={tab.label}
+              pill={tab.pill}
               active={props.activeTab === tab.id}
               onClick={() => props.onTabSelect(tab.id)}
             />

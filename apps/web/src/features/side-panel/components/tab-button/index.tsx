@@ -7,6 +7,7 @@ import styles from "./styles.module.css";
 export function TabButton(props: {
   title: string;
   icon?: TabIconComponent;
+  pill?: string;
   active?: boolean;
   onClick?: () => void;
   dataTestId?: string;
@@ -18,7 +19,11 @@ export function TabButton(props: {
       class={clsx(styles.tabButton, props.active && styles.tabButtonActive)}
       onClick={props.onClick}
     >
-      <TabButtonContent title={props.title} icon={props.icon} />
+      <TabButtonContent
+        title={props.title}
+        icon={props.icon}
+        pill={props.pill}
+      />
     </button>
   );
 }
@@ -26,22 +31,32 @@ export function TabButton(props: {
 export function TabMeasure(props: {
   title: string;
   icon?: TabIconComponent;
+  pill?: string;
   ref?: (el: HTMLDivElement) => void;
 }) {
   return (
     <div ref={props.ref} class={styles.tabMeasure}>
-      <TabButtonContent title={props.title} icon={props.icon} />
+      <TabButtonContent
+        title={props.title}
+        icon={props.icon}
+        pill={props.pill}
+      />
     </div>
   );
 }
 
-function TabButtonContent(props: { title: string; icon?: TabIconComponent }) {
+function TabButtonContent(props: {
+  title: string;
+  icon?: TabIconComponent;
+  pill?: string;
+}) {
   const Icon = props.icon;
 
   return (
     <span class={styles.tabHover}>
       {Icon && <Icon size={16} />}
       <span>{props.title}</span>
+      {props.pill && <span class={styles.pill}>{props.pill}</span>}
     </span>
   );
 }
