@@ -1,8 +1,9 @@
-import type {
-  BulkApplyResult,
-  BulkImportRow,
-  BulkParseResult,
-  BulkRowError,
+import {
+  getRequiredColumns,
+  type BulkApplyResult,
+  type BulkImportRow,
+  type BulkParseResult,
+  type BulkRowError,
 } from "~/contracts/team/bulk-import";
 import type { Role } from "~/domain/auth/access/rbac";
 import { isExecutiveCategory } from "~/domain/identity/executive-category";
@@ -109,27 +110,10 @@ export async function applyImport(
   return { created, skipped, rowErrors };
 }
 
-const CSV_COLUMNS = [
-  "FIRST_SURNAME",
-  "SECOND_SURNAME",
-  "NAMES",
-  "EMAIL",
-  "DATE_EXPIRY",
-  "EXECUTIVE_CATEGORY",
-] as const;
-
 const BULK_IMPORT_DELIMITERS: readonly CsvDelimiter[] = [",", ";"] as const;
 
 function normalizeBulkHeader(header: string): string {
   return header.trim().toUpperCase().replace(/\s+/g, "_");
-}
-
-function getRequiredColumns(role: Role): readonly string[] {
-  if (role === "executive") {
-    return CSV_COLUMNS;
-  }
-
-  return CSV_COLUMNS.slice(0, 4);
 }
 
 function resolveBulkImportLayout(

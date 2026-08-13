@@ -1,5 +1,23 @@
+import type { Role } from "~/domain/auth/access/rbac";
 import type { ExecutiveCategory } from "~/domain/identity/executive-category";
 import type { CalendarDate } from "~/domain/time/calendar-date";
+
+export const CSV_COLUMNS = [
+  "FIRST_SURNAME",
+  "SECOND_SURNAME",
+  "NAMES",
+  "EMAIL",
+  "DATE_EXPIRY",
+  "EXECUTIVE_CATEGORY",
+] as const;
+
+export function getRequiredColumns(role: Role): readonly string[] {
+  if (role === "executive") {
+    return CSV_COLUMNS;
+  }
+
+  return CSV_COLUMNS.slice(0, 4);
+}
 
 export interface BulkImportRow {
   firstSurname: string;
