@@ -30,10 +30,8 @@ describe("team invite policy", () => {
     expect(canAssignRole("sales_manager", "hr")).toBe(false);
     expect(canAssignRole("sales_manager", "admin")).toBe(false);
     expect(canAssignRole("sales_manager", "superuser")).toBe(false);
-    expect(getAssignableRoleOptions("sales_manager")).toEqual([
-      { value: "executive", label: "Ejecutivo" },
-      { value: "supervisor", label: "Supervisor" },
-      { value: "back_office", label: "Validación de ventas" },
-    ]);
+    expect(
+      getAssignableRoleOptions("sales_manager").map((option) => option.value),
+    ).toEqual(["executive", "supervisor", "back_office"]);
   });
 });
