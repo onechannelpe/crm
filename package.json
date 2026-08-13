@@ -13,6 +13,7 @@
     "dev:engine": "cargo run -p engine --bin engine",
     "dev:web": "bun run --cwd apps/web dev",
     "dev:worker": "bun run --cwd apps/web worker:maintenance",
+    "preview": "bun --cwd apps/web --env-file=../../.env tools/preview/cli.ts",
     "pipeline:engine": "cargo run -p crm-pipeline --",
     "pipeline:refresh": "bun run pipeline:engine refresh --slice 100k",
     "pipeline:refresh:10k": "bun run pipeline:engine refresh --slice 10k",
@@ -49,6 +50,7 @@
   "devDependencies": {
     "@types/bun": "^1.3.14",
     "@types/node": "^26.2.0",
+    "agent-browser": "^0.34.0",
     "oxfmt": "^0.63.0",
     "oxlint": "^1.78.0",
     "oxlint-tsgolint": "^7.0.2001",
