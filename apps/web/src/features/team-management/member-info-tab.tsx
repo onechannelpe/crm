@@ -88,67 +88,73 @@ export function MemberInfoTab(props: { detail: MemberDetail }) {
         title="Datos del usuario"
         description="Nombre, equipo y categoría del miembro."
       >
-        <div class={styles.formGrid}>
-          <Input
-            label="Nombres"
-            value={draft.names}
-            onInput={(event) => {
-              setDraft("names", event.currentTarget.value);
-              scheduleProfileSave();
-            }}
-            disabled={disabled()}
-            required
-          />
-          <Input
-            label="Primer apellido"
-            value={draft.firstSurname}
-            onInput={(event) => {
-              setDraft("firstSurname", event.currentTarget.value);
-              scheduleProfileSave();
-            }}
-            disabled={disabled()}
-            required
-          />
-          <Input
-            label="Segundo apellido"
-            value={draft.secondSurname}
-            onInput={(event) => {
-              setDraft("secondSurname", event.currentTarget.value);
-              scheduleProfileSave();
-            }}
-            disabled={disabled()}
-            required
-          />
-          <Select
-            label="Equipo"
-            value={draft.teamId}
-            onInput={(event) => {
-              setDraft("teamId", event.currentTarget.value);
-              saveProfileNow();
-            }}
-            disabled={disabled()}
-          >
-            <option value="">Sin equipo</option>
-            <For each={props.detail.teams}>
-              {(team) => <option value={team.id}>{team.name}</option>}
-            </For>
-          </Select>
-          <Show when={props.detail.role === "executive"}>
-            <Select
-              label="Categoría"
-              value={draft.category}
+        <div class={styles.fieldStack}>
+          <div class={styles.fieldRow}>
+            <Input
+              label="Nombres"
+              value={draft.names}
               onInput={(event) => {
-                setDraft("category", event.currentTarget.value);
-                saveProfileNow();
+                setDraft("names", event.currentTarget.value);
+                scheduleProfileSave();
               }}
               disabled={disabled()}
               required
+            />
+            <Input
+              label="Primer apellido"
+              value={draft.firstSurname}
+              onInput={(event) => {
+                setDraft("firstSurname", event.currentTarget.value);
+                scheduleProfileSave();
+              }}
+              disabled={disabled()}
+              required
+            />
+            <Input
+              label="Segundo apellido"
+              value={draft.secondSurname}
+              onInput={(event) => {
+                setDraft("secondSurname", event.currentTarget.value);
+                scheduleProfileSave();
+              }}
+              disabled={disabled()}
+              required
+            />
+          </div>
+
+          <div class={styles.fieldRow}>
+            <Select
+              label="Equipo"
+              value={draft.teamId}
+              onInput={(event) => {
+                setDraft("teamId", event.currentTarget.value);
+                saveProfileNow();
+              }}
+              disabled={disabled()}
             >
-              <option value="">Seleccionar categoría...</option>
-              <option value="elite">Elite</option>
-              <option value="corporativa">Corporativa</option>
+              <option value="">Sin equipo</option>
+              <For each={props.detail.teams}>
+                {(team) => <option value={team.id}>{team.name}</option>}
+              </For>
             </Select>
-          </Show>
+
+            <Show when={props.detail.role === "executive"}>
+              <Select
+                label="Categoría"
+                value={draft.category}
+                onInput={(event) => {
+                  setDraft("category", event.currentTarget.value);
+                  saveProfileNow();
+                }}
+                disabled={disabled()}
+                required
+              >
+                <option value="">Seleccionar categoría...</option>
+                <option value="elite">Elite</option>
+                <option value="corporativa">Corporativa</option>
+              </Select>
+            </Show>
+          </div>
         </div>
       </SettingsSection>
 

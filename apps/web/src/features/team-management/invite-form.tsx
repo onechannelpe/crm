@@ -130,10 +130,10 @@ export function InviteForm(props: {
 
   return (
     <form
-      class={styles.inviteForm}
+      class={styles.fieldStack}
       onSubmit={(event) => void handleSubmit(event)}
     >
-      <div class={styles.inviteFormRow}>
+      <div class={styles.fieldRow}>
         <Input
           label="Nombres"
           value={names()}
@@ -164,7 +164,7 @@ export function InviteForm(props: {
         required
       />
 
-      <div class={styles.inviteFormRow}>
+      <div class={styles.fieldRow}>
         <Select
           label="Rol"
           value={role()}
@@ -193,7 +193,7 @@ export function InviteForm(props: {
         </Show>
       </div>
 
-      <div class={styles.inviteFormRow}>
+      <div class={styles.fieldRow}>
         <Select
           label="Equipo"
           value={teamId()}

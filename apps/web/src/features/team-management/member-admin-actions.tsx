@@ -164,9 +164,8 @@ export function MemberAdminActions(props: { detail: MemberDetail }) {
           <Show when={props.detail.canDelete}>
             <Button
               type="button"
-              variant="secondary"
+              variant="destructive"
               size="sm"
-              class={styles.dangerAction}
               disabled={busy()}
               onClick={() => setDialog("delete")}
             >
