@@ -1,6 +1,6 @@
-use crm_pipeline::gate::run_gate;
-use crm_pipeline::promote::promote_db;
-use crm_pipeline::storage::schema::init_schema;
+use pipeline::gate::run_gate;
+use pipeline::promote::promote_db;
+use pipeline::storage::schema::init_schema;
 use tempfile::tempdir;
 
 mod common;

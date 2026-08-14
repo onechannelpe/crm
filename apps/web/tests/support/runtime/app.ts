@@ -1,10 +1,12 @@
 import type { SearchResult } from "~/contracts/search/engine-results.generated";
+import { external } from "~/domain/errors";
 import { createFilesRuntime } from "~/server/files/runtime";
 import type { EngineClient } from "~/server/integrations/engine/client";
 import { createIntegrationRuntime } from "~/server/integrations/infrastructure/runtime";
 import { createOrganizationEnrichment } from "~/server/organization/enrichment";
 import type { ServerInfrastructure } from "~/server/platform/infrastructure";
 import { createWorkflowRuntime } from "~/server/workflow/runtime";
+import { Err } from "~/shared/result";
 
 import {
   cleanupTestDb,
@@ -34,6 +36,30 @@ function createFakeEngine() {
     },
     async requestCandidates() {
       return { ok: true, value: [] };
+    },
+
+    // Ingest is not part of this harness; a stub that reported success would
+    // let a test pass against a fake that ingested nothing.
+    async registerIngestUpload() {
+      return Err(
+        external("ingest is not available in the test app runtime", {
+          code: "engine_ingest_unsupported",
+        }),
+      );
+    },
+    async uploadIngestBlob() {
+      return Err(
+        external("ingest is not available in the test app runtime", {
+          code: "engine_ingest_unsupported",
+        }),
+      );
+    },
+    async getIngestJob() {
+      return Err(
+        external("ingest is not available in the test app runtime", {
+          code: "engine_ingest_unsupported",
+        }),
+      );
     },
   };
 

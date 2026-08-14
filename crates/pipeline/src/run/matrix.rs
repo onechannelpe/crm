@@ -87,7 +87,6 @@ pub fn run(config: Config<'_>) -> Result<(), PipelineError> {
             input_path: &sample_file,
             snapshot_label: &snapshot_label,
             snapshot_date: &source.snapshot_date,
-            reliability_rank: source.reliability_rank,
             batch_size,
             workers,
             source_key: Some(&source.source_key),

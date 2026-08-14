@@ -1,4 +1,5 @@
 use crate::PipelineError;
+use crate::config::mapping::SourceMapping;
 use crate::ingest::{ShardIngestConfig, ingest_to_shards};
 use crate::materialize::materialize_serving;
 use crate::merge;
@@ -31,7 +32,6 @@ pub(super) struct IngestPhaseConfig<'a> {
     pub input_path: &'a Path,
     pub snapshot_label: &'a str,
     pub snapshot_date: &'a str,
-    pub reliability_rank: i64,
     pub batch_size: usize,
     pub workers: usize,
     pub source_key: Option<&'a str>,
@@ -73,17 +73,22 @@ pub(super) fn run_ingest_phase(
         config.input_path.display()
     );
 
+    let mapping = SourceMapping::from_path(&config.mapping_path.to_string_lossy())?;
+
     let shard_ingest_started_at = Instant::now();
     let session = ingest_to_shards(ShardIngestConfig {
         db_path: config.db_path,
         run_id: config.run_id,
-        mapping_path: &config.mapping_path.to_string_lossy(),
+        mapping: &mapping,
         input_path: &config.input_path.to_string_lossy(),
         snapshot_label: config.snapshot_label,
         snapshot_date: config.snapshot_date,
-        reliability_rank: config.reliability_rank,
         batch_size: config.batch_size,
         workers: config.workers,
+        // The row cap guards untrusted HTTP uploads. The offline build reads
+        // manifest-listed local files an operator already has filesystem
+        // access to, so there is nothing here to guard against.
+        max_rows: i64::MAX,
     })?;
     let shard_ingest_secs = shard_ingest_started_at.elapsed().as_secs_f64();
 

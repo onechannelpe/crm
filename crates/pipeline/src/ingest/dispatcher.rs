@@ -62,6 +62,7 @@ pub(super) fn dispatch_records(
     input_path: &str,
     workers: usize,
     task_senders: &[SyncSender<ShardTask>],
+    max_rows: i64,
 ) -> Result<i64, PipelineError> {
     let mut reader = ReaderBuilder::new()
         .delimiter(mapping.delimiter_byte())
@@ -78,6 +79,11 @@ pub(super) fn dispatch_records(
         let byte_record = result?;
         let record = mapping.decode_byte_record(&byte_record)?;
         let source_row_number = (i + 1) as i64;
+        if source_row_number > max_rows {
+            return Err(PipelineError::Args(format!(
+                "row count exceeds the configured maximum of {max_rows} rows"
+            )));
+        }
         let worker_index = i % workers;
         task_senders[worker_index]
             .send(ShardTask {

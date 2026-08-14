@@ -5,15 +5,29 @@ import { randomUUIDv7 } from "bun";
 import type { RecordCandidate } from "~/contracts/engine/record-api.generated";
 import type { SearchResult } from "~/contracts/search/engine-results.generated";
 import type { SearchIntent } from "~/contracts/search/vocabulary";
-import type { DomainError } from "~/domain/errors";
+import { external, type DomainError } from "~/domain/errors";
 import { BranchId, UserId } from "~/domain/ids";
 import type {
   EngineClient,
   RecordCandidatesRequest,
 } from "~/server/integrations/engine/client";
-import { Ok, type Result } from "~/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
+
+// This bench exercises lead requests, not ingest. Failing loudly beats a stub
+// that reports success and silently ingests nothing.
+const NO_INGEST = {
+  registerIngestUpload: () => Promise.resolve(Err(ingestUnsupported())),
+  uploadIngestBlob: () => Promise.resolve(Err(ingestUnsupported())),
+  getIngestJob: () => Promise.resolve(Err(ingestUnsupported())),
+};
+
+function ingestUnsupported(): DomainError {
+  return external("ingest is not available in the leads bench harness", {
+    code: "engine_ingest_unsupported",
+  });
+}
 
 const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
 const ACTOR_USER_ID = UserId.trust(TEST_FIXTURES.users.backOne.id);
@@ -95,6 +109,8 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
         },
       ]);
     },
+
+    ...NO_INGEST,
   };
 
   async function seedUnit(): Promise<UserId> {

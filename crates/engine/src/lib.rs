@@ -3,5 +3,6 @@
 pub mod benchmark;
 pub mod config;
 pub mod health;
+pub mod ingest;
 pub mod observability;
 pub mod runtime;

@@ -1,6 +1,7 @@
 {
   "source_key": "consolidado_ruc_representantes_bppo",
   "source_name": "Consolidado_RUC20_Representantes_BPPO",
+  "reliability_rank": 79,
   "delimiter": "\t",
   "has_header": true,
   "flexible": true,

@@ -17,8 +17,6 @@ pub struct SourceManifestEntry {
     pub snapshot_date: String,
     pub raw_path: String,
     pub mapping_path: String,
-    pub reliability_rank: i64,
-    pub priority: i64,
     pub enabled: bool,
 }
 
@@ -26,8 +24,7 @@ pub struct SourceManifestEntry {
 struct ManifestCheckResult {
     source_key: String,
     enabled: bool,
-    reliability_rank: i64,
-    priority: i64,
+    reliability_rank: Option<i64>,
     raw_exists: bool,
     mapping_exists: bool,
 }
@@ -59,6 +56,7 @@ pub fn verify_manifest(manifest_path: &str) -> Result<SourceManifest, PipelineEr
             )));
         }
 
+        let mut reliability_rank = None;
         if mapping_exists {
             let mapping = SourceMapping::from_path(&source.mapping_path)?;
             if mapping.source_key != source.source_key {
@@ -67,13 +65,13 @@ pub fn verify_manifest(manifest_path: &str) -> Result<SourceManifest, PipelineEr
                     source.source_key, mapping.source_key
                 )));
             }
+            reliability_rank = Some(mapping.reliability_rank);
         }
 
         checks.push(ManifestCheckResult {
             source_key: source.source_key.clone(),
             enabled: source.enabled,
-            reliability_rank: source.reliability_rank,
-            priority: source.priority,
+            reliability_rank,
             raw_exists,
             mapping_exists,
         });

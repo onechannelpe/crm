@@ -1,6 +1,7 @@
 {
   "source_key": "consolidado_ruc_representantes_ok",
   "source_name": "Consolidado_RUC20_Representantes_OK",
+  "reliability_rank": 80,
   "delimiter": "\t",
   "has_header": true,
   "flexible": true,

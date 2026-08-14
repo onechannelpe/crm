@@ -11,7 +11,6 @@ struct NormalizationSummary {
     source_key: String,
     snapshot_label: String,
     reliability_rank: i64,
-    priority: i64,
     total_rows: usize,
     normalized_rows: usize,
     error_rows: usize,
@@ -122,8 +121,7 @@ fn normalize_source_entry(
     let mut summary = NormalizationSummary {
         source_key: source.source_key.clone(),
         snapshot_label: source.snapshot_label.clone(),
-        reliability_rank: source.reliability_rank,
-        priority: source.priority,
+        reliability_rank: mapping.reliability_rank,
         ..NormalizationSummary::default()
     };
 

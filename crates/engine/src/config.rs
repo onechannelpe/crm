@@ -10,6 +10,21 @@ const DEFAULT_LEADS_DB_PATH: &str = "crates/engine/data/leads.sqlite";
 const DEFAULT_HMAC_MAX_SKEW_SECS: i64 = 60;
 const DEFAULT_RATE_LIMIT_PER_KEY: u32 = 600;
 const DEFAULT_MAX_LIMIT: usize = 100;
+const DEFAULT_INGEST_JOB_DB_PATH: &str = "crates/engine/data/ingest.sqlite";
+/// Below the host's core count, so a job leaves room for search to keep
+/// serving while it runs.
+const DEFAULT_INGEST_WORKERS: usize = 4;
+const DEFAULT_INGEST_BATCH_SIZE: usize = 5_000;
+/// Comfortable headroom over osiptel_scan_sunat's ~3.54M-row file, which is
+/// the largest source this endpoint currently expects.
+const DEFAULT_INGEST_MAX_UPLOAD_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+/// ~3x osiptel_scan_sunat's row count. Guards against a pathological or
+/// corrupt CSV independently of its byte size.
+const DEFAULT_INGEST_MAX_ROWS: i64 = 10_000_000;
+/// Bounds worst-case simultaneous scratch-disk usage (this many files times
+/// `max_upload_bytes`) across uploads still streaming plus jobs already
+/// queued or running, not just concurrent HTTP requests.
+const DEFAULT_INGEST_MAX_QUEUED_UPLOADS: usize = 8;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConnectMode {
@@ -29,6 +44,21 @@ pub struct EngineConfig {
     pub hmac_max_skew_secs: i64,
     pub rate_limit_per_key: u32,
     pub max_limit: usize,
+    /// `None` disables the ingest routes entirely, which is the default:
+    /// `ENGINE_INGEST_ENABLED` must be set to turn ingest on. Leaving it off
+    /// also leaves contacts.sqlite in its promoted `delete` journal mode,
+    /// avoiding a WAL conversion for a database nobody is going to write to.
+    pub ingest: Option<IngestConfig>,
+}
+
+#[derive(Debug, Clone)]
+pub struct IngestConfig {
+    pub job_db_path: String,
+    pub workers: usize,
+    pub batch_size: usize,
+    pub max_upload_bytes: u64,
+    pub max_rows: i64,
+    pub max_queued_uploads: usize,
 }
 
 impl EngineConfig {
@@ -58,8 +88,62 @@ impl EngineConfig {
             hmac_max_skew_secs: env.int("ENGINE_HMAC_MAX_SKEW_SECS", DEFAULT_HMAC_MAX_SKEW_SECS)?,
             rate_limit_per_key: env.int("ENGINE_RATE_LIMIT_PER_KEY", DEFAULT_RATE_LIMIT_PER_KEY)?,
             max_limit: env.int("ENGINE_MAX_LIMIT", DEFAULT_MAX_LIMIT)?,
+            ingest: load_ingest(&env)?,
         })
     }
+}
+
+/// `ENGINE_INGEST_ENABLED` is the sole switch for the capability.
+fn load_ingest(env: &Env) -> Result<Option<IngestConfig>, StartupError> {
+    if !env.bool("ENGINE_INGEST_ENABLED", false)? {
+        return Ok(None);
+    }
+
+    let workers: usize = env.int("ENGINE_INGEST_WORKERS", DEFAULT_INGEST_WORKERS)?;
+    if workers == 0 {
+        return Err(StartupError::Config(
+            "ENGINE_INGEST_WORKERS must be at least 1".into(),
+        ));
+    }
+    let batch_size: usize = env.int("ENGINE_INGEST_BATCH_SIZE", DEFAULT_INGEST_BATCH_SIZE)?;
+    if batch_size == 0 {
+        return Err(StartupError::Config(
+            "ENGINE_INGEST_BATCH_SIZE must be at least 1".into(),
+        ));
+    }
+    let max_upload_bytes: u64 = env.int(
+        "ENGINE_INGEST_MAX_UPLOAD_BYTES",
+        DEFAULT_INGEST_MAX_UPLOAD_BYTES,
+    )?;
+    if max_upload_bytes == 0 {
+        return Err(StartupError::Config(
+            "ENGINE_INGEST_MAX_UPLOAD_BYTES must be at least 1".into(),
+        ));
+    }
+    let max_rows: i64 = env.int("ENGINE_INGEST_MAX_ROWS", DEFAULT_INGEST_MAX_ROWS)?;
+    if max_rows <= 0 {
+        return Err(StartupError::Config(
+            "ENGINE_INGEST_MAX_ROWS must be at least 1".into(),
+        ));
+    }
+    let max_queued_uploads: usize = env.int(
+        "ENGINE_INGEST_MAX_QUEUED_UPLOADS",
+        DEFAULT_INGEST_MAX_QUEUED_UPLOADS,
+    )?;
+    if max_queued_uploads == 0 {
+        return Err(StartupError::Config(
+            "ENGINE_INGEST_MAX_QUEUED_UPLOADS must be at least 1".into(),
+        ));
+    }
+
+    Ok(Some(IngestConfig {
+        job_db_path: env.string("ENGINE_INGEST_JOB_DB_PATH", DEFAULT_INGEST_JOB_DB_PATH),
+        workers,
+        batch_size,
+        max_upload_bytes,
+        max_rows,
+        max_queued_uploads,
+    }))
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -83,6 +167,19 @@ impl Env {
             Ok(v) => v.parse().map_err(|_| {
                 StartupError::Config(format!("{name} must be a valid number, got: {v}"))
             }),
+        }
+    }
+
+    fn bool(&self, name: &str, default: bool) -> Result<bool, StartupError> {
+        match env::var(name) {
+            Err(_) => Ok(default),
+            Ok(v) => match v.as_str() {
+                "true" | "1" => Ok(true),
+                "false" | "0" => Ok(false),
+                _ => Err(StartupError::Config(format!(
+                    "{name} must be true/false or 1/0, got: {v}"
+                ))),
+            },
         }
     }
 }

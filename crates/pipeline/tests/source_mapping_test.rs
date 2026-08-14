@@ -1,11 +1,12 @@
-use crm_pipeline::config::mapping::{SourceEncoding, SourceMapping};
 use csv::ByteRecord;
+use pipeline::config::mapping::{SourceEncoding, SourceMapping};
 use std::collections::HashMap;
 
 fn mapping_with_encoding(encoding: SourceEncoding) -> SourceMapping {
     SourceMapping {
         source_key: "test_source".to_owned(),
         source_name: "test_source".to_owned(),
+        reliability_rank: 85,
         delimiter: ",".to_owned(),
         has_header: true,
         flexible: true,

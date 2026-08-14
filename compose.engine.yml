@@ -13,6 +13,11 @@ services:
       ENGINE_PORT: 3001
       ENGINE_CONTACTS_DB_PATH: /var/lib/crm-engine/contacts.sqlite
       ENGINE_LEADS_DB_PATH: /var/lib/crm-engine/leads.sqlite
+      ENGINE_INGEST_JOB_DB_PATH: /var/lib/crm-engine/ingest.sqlite
+      # Turns the ingest routes on. Uploaded files stream straight to
+      # /var/lib/crm-engine/uploads, inside the one volume below rather than a
+      # separate mount, so there is no second path for apps/web to agree on.
+      ENGINE_INGEST_ENABLED: "true"
     volumes:
       - ${ENGINE_DATA_PATH:?Set ENGINE_DATA_PATH}:/var/lib/crm-engine
     expose:

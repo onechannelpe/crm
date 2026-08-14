@@ -1,16 +1,21 @@
+use crate::config::mapping::SourceMapping;
 use std::path::PathBuf;
 use std::thread;
 
 pub struct ShardIngestConfig<'a> {
     pub db_path: &'a str,
     pub run_id: &'a str,
-    pub mapping_path: &'a str,
+    pub mapping: &'a SourceMapping,
     pub input_path: &'a str,
     pub snapshot_label: &'a str,
     pub snapshot_date: &'a str,
-    pub reliability_rank: i64,
     pub batch_size: usize,
     pub workers: usize,
+    /// Dispatch stops and fails the snapshot once total rows exceed this,
+    /// independent of file byte size. Guards against a pathological or
+    /// corrupt CSV (e.g. an unescaped embedded newline splitting one row into
+    /// many).
+    pub max_rows: i64,
 }
 
 #[derive(Default, Clone)]
@@ -42,6 +47,11 @@ pub struct IngestSession {
     pub source_key: String,
     pub counters: IngestCounters,
     pub dispatched_rows: i64,
+    /// The `runs/<run_id>` directory holding this run's shard databases.
+    /// Nothing deletes it automatically: a long-lived caller that ingests
+    /// repeatedly must remove it on both the success and failure paths, or
+    /// shards accumulate next to the target database.
+    pub run_root: PathBuf,
     pub shard_results: Vec<ShardResult>,
 }
 

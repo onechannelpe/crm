@@ -9,7 +9,6 @@ pub(super) fn register_snapshot(
     input_path: &str,
     snapshot_label: &str,
     snapshot_date: &str,
-    reliability_rank: i64,
 ) -> Result<i64, PipelineError> {
     let mut conn = open_rw(db_path)?;
     let tx = conn.transaction()?;
@@ -20,7 +19,7 @@ pub(super) fn register_snapshot(
         snapshot_label,
         snapshot_date,
         input_path,
-        reliability_rank,
+        mapping.reliability_rank,
     )?;
     set_snapshot_status(&tx, snapshot_id, "loading")?;
     tx.commit()?;

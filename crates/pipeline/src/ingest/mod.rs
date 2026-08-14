@@ -13,7 +13,6 @@ pub use dispatcher::map_snapshot_only;
 pub use session::{IngestCounters, IngestSession, ShardIngestConfig, ShardResult};
 
 use crate::PipelineError;
-use crate::config::mapping::SourceMapping;
 use dispatcher::{dispatch_records, resolve_mapping_for_path};
 use session::ShardWorkerResult;
 use snapshot::{mark_snapshot_failed, register_snapshot, sanitize_path_component};
@@ -27,13 +26,13 @@ pub fn ingest_to_shards(config: ShardIngestConfig<'_>) -> Result<IngestSession, 
     let ShardIngestConfig {
         db_path,
         run_id,
-        mapping_path,
+        mapping,
         input_path,
         snapshot_label,
         snapshot_date,
-        reliability_rank,
         batch_size,
         workers,
+        max_rows,
     } = config;
 
     if !Path::new(input_path).exists() {
@@ -42,25 +41,19 @@ pub fn ingest_to_shards(config: ShardIngestConfig<'_>) -> Result<IngestSession, 
         )));
     }
 
-    let mapping = SourceMapping::from_path(mapping_path)?;
     let workers = workers.clamp(1, MAX_SHARDED_WORKERS);
     println!("[pipeline] ingest mode=sharded workers={workers}");
 
-    let resolved_mapping = resolve_mapping_for_path(&mapping, input_path)?;
-    let snapshot_id = register_snapshot(
-        db_path,
-        &mapping,
-        input_path,
-        snapshot_label,
-        snapshot_date,
-        reliability_rank,
-    )?;
+    let resolved_mapping = resolve_mapping_for_path(mapping, input_path)?;
+    let snapshot_id =
+        register_snapshot(db_path, mapping, input_path, snapshot_label, snapshot_date)?;
 
-    let shard_root = Path::new(db_path)
+    let run_root = Path::new(db_path)
         .parent()
         .unwrap_or_else(|| Path::new("."))
         .join("runs")
-        .join(sanitize_path_component(run_id))
+        .join(sanitize_path_component(run_id));
+    let shard_root = run_root
         .join("staging")
         .join(sanitize_path_component(&mapping.source_key))
         .join(sanitize_path_component(snapshot_label))
@@ -79,7 +72,7 @@ pub fn ingest_to_shards(config: ShardIngestConfig<'_>) -> Result<IngestSession, 
         batch_size,
     );
 
-    let dispatch_result = dispatch_records(&mapping, input_path, workers, &task_senders);
+    let dispatch_result = dispatch_records(mapping, input_path, workers, &task_senders, max_rows);
     drop(task_senders);
 
     let dispatched_rows = match dispatch_result {
@@ -112,9 +105,10 @@ pub fn ingest_to_shards(config: ShardIngestConfig<'_>) -> Result<IngestSession, 
 
     Ok(IngestSession {
         snapshot_id,
-        source_key: mapping.source_key,
+        source_key: mapping.source_key.clone(),
         counters,
         dispatched_rows,
+        run_root,
         shard_results,
     })
 }

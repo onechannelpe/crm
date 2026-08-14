@@ -55,10 +55,20 @@ pub(crate) fn set_snapshot_status(
     Ok(())
 }
 
-pub(super) fn mark_snapshot_failed(db_path: &str, snapshot_id: i64) -> Result<(), PipelineError> {
+/// Path-based form of `set_snapshot_status`, for callers that drive the phases
+/// one at a time and are not already inside a transaction.
+pub fn record_snapshot_status(
+    db_path: &str,
+    snapshot_id: i64,
+    status: &str,
+) -> Result<(), PipelineError> {
     let mut conn = open_rw(db_path)?;
     let tx = conn.transaction()?;
-    set_snapshot_status(&tx, snapshot_id, "failed")?;
+    set_snapshot_status(&tx, snapshot_id, status)?;
     tx.commit()?;
     Ok(())
+}
+
+pub fn mark_snapshot_failed(db_path: &str, snapshot_id: i64) -> Result<(), PipelineError> {
+    record_snapshot_status(db_path, snapshot_id, "failed")
 }

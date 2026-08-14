@@ -1,6 +1,7 @@
 {
   "source_key": "representantes_enriquecido",
   "source_name": "Representantes_ENRIQUECIDO",
+  "reliability_rank": 82,
   "delimiter": "|",
   "has_header": true,
   "flexible": true,

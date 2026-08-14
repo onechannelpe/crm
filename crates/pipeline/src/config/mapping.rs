@@ -25,6 +25,12 @@ pub enum SourceEncoding {
 pub struct SourceMapping {
     pub source_key: String,
     pub source_name: String,
+    /// Static trust tier for this source, used to gate every merge conflict
+    /// (phone/email confidence, full_name/legal_name/rep_name ownership). Not
+    /// a recency signal: a source's data going stale doesn't lower its rank,
+    /// only re-declaring it here does. Deliberately required, not defaulted,
+    /// so every source declares its own trust rather than inheriting one.
+    pub reliability_rank: i64,
     pub delimiter: String,
     #[serde(default = "default_true")]
     pub has_header: bool,
@@ -53,7 +59,14 @@ fn default_source_encoding() -> SourceEncoding {
 impl SourceMapping {
     pub fn from_path(path: &str) -> Result<Self, PipelineError> {
         let raw = fs::read_to_string(path)?;
-        let mapping = serde_json::from_str::<Self>(&raw)?;
+        Self::from_json(&raw)
+    }
+
+    /// Parses a mapping from JSON already in memory. The engine's ingest module
+    /// uses this against mappings compiled into the binary, because the engine
+    /// image ships no data directory (see `crate::config::embedded`).
+    pub fn from_json(raw: &str) -> Result<Self, PipelineError> {
+        let mapping = serde_json::from_str::<Self>(raw)?;
         if mapping.delimiter.chars().count() != 1 {
             return Err(PipelineError::Args(
                 "mapping delimiter must be a single character".to_owned(),

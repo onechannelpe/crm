@@ -45,7 +45,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: clippy
-        run: cargo clippy -p crm-pipeline --all-targets --all-features -- -D warnings
+        run: cargo clippy -p pipeline --all-targets --all-features -- -D warnings
 
   test:
     name: Test
@@ -62,4 +62,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: test
-        run: cargo test -p crm-pipeline
+        run: cargo test -p pipeline

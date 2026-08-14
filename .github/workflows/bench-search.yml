@@ -58,14 +58,14 @@ jobs:
       - name: build pipeline binary
         if: ${{ inputs.refresh_dataset && inputs.mode == 'smoke' }}
         shell: bash
-        run: cargo build -p crm-pipeline --release
+        run: cargo build -p pipeline --release
 
       - name: refresh smoke dataset
         if: ${{ inputs.refresh_dataset && inputs.mode == 'smoke' }}
         shell: bash
         run: |
           DATASET_VERSION="${{ github.run_id }}-${{ github.run_attempt }}-smoke" \
-          PIPELINE_BIN="$PWD/target/release/crm-pipeline" \
+          PIPELINE_BIN="$PWD/target/release/pipeline" \
           BENCH_ROOT="$BENCH_ROOT" \
           bash ops/bench/build_smoke_dataset.sh
 
