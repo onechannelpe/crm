@@ -37,6 +37,17 @@ pub struct IngestJobResponse {
     pub job: JobRecord,
 }
 
+#[derive(Debug, Serialize)]
+pub struct IngestSource {
+    pub source_key: String,
+    pub source_name: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ListIngestSourcesResponse {
+    pub sources: Vec<IngestSource>,
+}
+
 impl RegisterUploadRequest {
     /// Rejects anything the runner would otherwise discover minutes later on a
     /// background thread, where the client can no longer be told about it.

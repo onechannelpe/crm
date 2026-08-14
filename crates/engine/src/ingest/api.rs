@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::ingest::contracts::IngestJobResponse;
+use crate::ingest::contracts::{IngestJobResponse, IngestSource, ListIngestSourcesResponse};
 use crate::ingest::job::JobStore;
 use crate::ingest::queue::IngestQueue;
 use crate::ingest::runner::RunSettings;
@@ -67,7 +67,41 @@ pub fn router(state: Arc<IngestState>) -> Router {
             put(upload::handle_upload_blob),
         )
         .route("/ingest-jobs/{job_id}", get(handle_get_job))
+        .route("/ingest-sources", get(handle_list_sources))
         .with_state(state)
+}
+
+async fn handle_list_sources(
+    State(state): State<Arc<IngestState>>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Result<Response, RequestError> {
+    let request_id = Uuid::new_v4().to_string();
+
+    let key_id = auth::verify_signed_request(&headers, &body, &state.hmac, &state.limiter)
+        .map_err(|e| e.with_request_id(request_id.clone()))?;
+
+    let limiter_key = format!("ingest_sources_read:{key_id}");
+    if !state.limiter.allow(&limiter_key, 1) {
+        return Err(ApiError::RateLimit.with_request_id(request_id));
+    }
+
+    let sources = pipeline::config::embedded::list_sources()
+        .into_iter()
+        .map(|(source_key, source_name)| IngestSource {
+            source_key,
+            source_name,
+        })
+        .collect();
+
+    Ok(attach_request_id(
+        (
+            StatusCode::OK,
+            axum::Json(ListIngestSourcesResponse { sources }),
+        )
+            .into_response(),
+        &request_id,
+    ))
 }
 
 async fn handle_get_job(

@@ -7,6 +7,7 @@ import { buildEngineClientConfig } from "~/server/integrations/engine/config";
 import { createEngineAdapter } from "~/server/integrations/engine/http-client";
 import type {
   IngestJob,
+  IngestSource,
   RegisterUploadInput,
 } from "~/server/integrations/engine/ingest-contracts";
 import type { EngineConfig } from "~/server/platform/config/env";
@@ -51,6 +52,8 @@ export interface EngineClient {
     contentLength: number,
   ): Promise<Result<{ jobId: string }, DomainError>>;
   getIngestJob(jobId: string): Promise<Result<IngestJob, DomainError>>;
+  /** The fixed set of source keys this engine binary can resolve, for a source picker. */
+  listIngestSources(): Promise<Result<IngestSource[], DomainError>>;
 }
 
 export function createDefaultEngineClient(config: EngineConfig): EngineClient {

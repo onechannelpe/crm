@@ -5,6 +5,7 @@ import LogOut from "~/components/icons/log-out";
 import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
 import Sun from "~/components/icons/sun";
+import UploadCloud from "~/components/icons/upload-cloud";
 import UserIcon from "~/components/icons/user";
 import UserRound from "~/components/icons/user-round";
 import { canAccessPath, type Role } from "~/domain/auth/access/route-policy";
@@ -126,6 +127,15 @@ export function createSettingsNavigationSections(
           icon: Activity,
           section: "administration",
           isHidden: !canAccessPath(options.role, "/settings/event-logs"),
+          isAdvanced: true,
+        },
+        {
+          id: "data-sources",
+          label: "Fuentes de datos",
+          href: "/settings/data-sources",
+          icon: UploadCloud,
+          section: "administration",
+          isHidden: !canAccessPath(options.role, "/settings/data-sources"),
           isAdvanced: true,
         },
       ],

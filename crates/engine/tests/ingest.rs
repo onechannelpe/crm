@@ -463,6 +463,32 @@ async fn reading_an_unknown_job_returns_not_found() {
     response.assert_status_not_found();
 }
 
+#[tokio::test]
+async fn listing_sources_returns_every_embedded_mapping() {
+    let harness = harness();
+    let response = harness
+        .signed_json_request(harness.server.get("/ingest-sources"), "")
+        .await;
+
+    response.assert_status_ok();
+    let body: serde_json::Value = response.json();
+    let returned_keys: std::collections::BTreeSet<String> = body["sources"]
+        .as_array()
+        .expect("sources array")
+        .iter()
+        .map(|source| {
+            source["source_key"]
+                .as_str()
+                .expect("source_key")
+                .to_owned()
+        })
+        .collect();
+    let embedded_keys: std::collections::BTreeSet<String> =
+        embedded::source_keys().map(str::to_owned).collect();
+
+    assert_eq!(returned_keys, embedded_keys);
+}
+
 /// Every source key the binary can resolve must be nameable in a request, so
 /// the client-facing error above stays accurate.
 #[test]

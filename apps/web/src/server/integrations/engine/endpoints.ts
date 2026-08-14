@@ -10,6 +10,7 @@ export const ENGINE_ENDPOINTS = {
   recordImports: "/records/imports",
   ingestUploads: "/ingest-uploads",
   ingestJobs: "/ingest-jobs",
+  ingestSources: "/ingest-sources",
 } as const;
 
 export function ingestUploadBlobPath(uploadId: string): string {

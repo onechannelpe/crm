@@ -170,3 +170,27 @@ export function decodeUploadBlobResponse(value: unknown): {
   }
   return { jobId: value.job_id };
 }
+
+/** A source the engine can ingest, e.g. { source_key: "osiptel_scan_sunat", source_name: "OSIPTEL scan - SUNAT lookup" }. */
+export interface IngestSource {
+  source_key: string;
+  source_name: string;
+}
+
+function isIngestSource(value: unknown): value is IngestSource {
+  return (
+    isPlainRecord(value) &&
+    typeof value.source_key === "string" &&
+    typeof value.source_name === "string"
+  );
+}
+
+export function decodeIngestSources(value: unknown): IngestSource[] {
+  if (!isPlainRecord(value) || !Array.isArray(value.sources)) {
+    throw new TypeError("Invalid ListIngestSourcesResponse structure");
+  }
+  if (!value.sources.every(isIngestSource)) {
+    throw new TypeError("Invalid IngestSource structure");
+  }
+  return value.sources;
+}

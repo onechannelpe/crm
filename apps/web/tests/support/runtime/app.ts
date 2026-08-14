@@ -61,6 +61,13 @@ function createFakeEngine() {
         }),
       );
     },
+    async listIngestSources() {
+      return Err(
+        external("ingest is not available in the test app runtime", {
+          code: "engine_ingest_unsupported",
+        }),
+      );
+    },
   };
 
   return {

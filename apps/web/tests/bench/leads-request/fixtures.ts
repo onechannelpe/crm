@@ -21,6 +21,7 @@ const NO_INGEST = {
   registerIngestUpload: () => Promise.resolve(Err(ingestUnsupported())),
   uploadIngestBlob: () => Promise.resolve(Err(ingestUnsupported())),
   getIngestJob: () => Promise.resolve(Err(ingestUnsupported())),
+  listIngestSources: () => Promise.resolve(Err(ingestUnsupported())),
 };
 
 function ingestUnsupported(): DomainError {

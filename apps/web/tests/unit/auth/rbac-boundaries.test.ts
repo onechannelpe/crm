@@ -127,5 +127,14 @@ describe("rbac boundaries", () => {
     expect(hasPermission("superuser", "quotation:revise")).toBe(true);
     expect(hasPermission("superuser", "quotation:view:all")).toBe(true);
     expect(hasPermission("superuser", "integration:manage")).toBe(true);
+
+    expect(hasPermission("sales_manager", "data-source:import")).toBe(true);
+    expect(hasPermission("admin", "data-source:import")).toBe(true);
+    expect(hasPermission("superuser", "data-source:import")).toBe(true);
+    expect(hasPermission("executive", "data-source:import")).toBe(false);
+    expect(hasPermission("supervisor", "data-source:import")).toBe(false);
+    expect(hasPermission("back_office", "data-source:import")).toBe(false);
+    expect(hasPermission("logistics", "data-source:import")).toBe(false);
+    expect(hasPermission("hr", "data-source:import")).toBe(false);
   });
 });

@@ -83,6 +83,19 @@ pub fn mapping_for(source_key: &str) -> Result<SourceMapping, PipelineError> {
     SourceMapping::from_json(raw)
 }
 
+/// (source_key, source_name) for every mapping this binary can ingest, in
+/// registry order. Backs the engine's `/ingest-sources` endpoint so a
+/// frontend source picker can never drift from what the engine will actually
+/// accept, unlike a hand-maintained list on the caller's side.
+pub fn list_sources() -> Vec<(String, String)> {
+    source_keys()
+        .map(|key| {
+            let mapping = mapping_for(key).unwrap_or_else(|err| panic!("mapping {key}: {err}"));
+            (key.to_owned(), mapping.source_name)
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

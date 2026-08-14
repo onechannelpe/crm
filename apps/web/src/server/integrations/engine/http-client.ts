@@ -19,6 +19,7 @@ import {
 } from "./decoder";
 import {
   decodeIngestJob,
+  decodeIngestSources,
   decodeRegisterUploadResponse,
   decodeUploadBlobResponse,
   type IngestJob,
@@ -238,6 +239,15 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
     // signed body rather than putting the id in a query string.
     getIngestJob(jobId: string): Promise<Result<IngestJob, DomainError>> {
       return call("GET", ingestJobPath(jobId), "", decodeIngestJob);
+    },
+
+    listIngestSources() {
+      return call(
+        "GET",
+        ENGINE_ENDPOINTS.ingestSources,
+        "",
+        decodeIngestSources,
+      );
     },
   };
 }
