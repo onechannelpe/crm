@@ -4,18 +4,17 @@ import {
   useAction,
   useSubmission,
 } from "@solidjs/router";
-import { Show, createUniqueId, type Accessor } from "solid-js";
+import { Show, type Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
-import { SettingsCounter } from "~/components/settings/settings-counter";
 import {
   SettingsOptionCard,
-  SettingsOptionCardRow,
+  SettingsOptionCardCounterRow,
+  SettingsOptionCardToggleRow,
 } from "~/components/settings/settings-option-card";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
-import { Toggle } from "~/components/ui/input/toggle";
 import { actionErrorMessage } from "~/contracts/errors";
 import { formatAppDateTime } from "~/domain/time/app-time";
 import { SettingsPageLayout } from "~/features/settings-shell/page/settings-page-layout";
@@ -50,7 +49,6 @@ function RateProposalPolicyEditor(props: {
   const updatePolicy = useAction(updateRateProposalPolicyMutation);
   const submission = useSubmission(updateRateProposalPolicyMutation);
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
-  const formId = createUniqueId();
   const [draft, setDraft] = createStore({
     validityDays: initialSnapshot.validityDays,
   });
@@ -70,38 +68,17 @@ function RateProposalPolicyEditor(props: {
   }
 
   return (
-    <SettingsSection
-      title="Vigencia de propuestas"
-      actions={
-        <Button
-          type="submit"
-          form={formId}
-          size="sm"
-          variant="secondary"
-          loading={submission.pending}
-        >
-          Guardar
-        </Button>
-      }
-    >
-      <form
-        id={formId}
-        class={styles.stack}
-        onSubmit={(event) => void handleSubmit(event)}
-      >
+    <SettingsSection title="Vigencia de propuestas">
+      <form class={styles.stack} onSubmit={(event) => void handleSubmit(event)}>
         <SettingsOptionCard>
-          <SettingsOptionCardRow
+          <SettingsOptionCardCounterRow
             title="Vigencia de propuesta"
             description={`Días que tiene el ejecutivo para aceptar una tarifa propuesta. Predeterminado del sistema: ${props.snapshot().defaultValidityDays} días.`}
-            control={
-              <SettingsCounter
-                ariaLabel="Vigencia de propuesta (días)"
-                value={draft.validityDays}
-                min={1}
-                max={90}
-                onChange={(value) => setDraft("validityDays", value)}
-              />
-            }
+            ariaLabel="Vigencia de propuesta (días)"
+            value={draft.validityDays}
+            min={1}
+            max={90}
+            onChange={(value) => setDraft("validityDays", value)}
           />
         </SettingsOptionCard>
 
@@ -112,6 +89,17 @@ function RateProposalPolicyEditor(props: {
             </p>
           )}
         </Show>
+
+        <div class={styles.formActions}>
+          <Button
+            type="submit"
+            size="sm"
+            variant="secondary"
+            loading={submission.pending}
+          >
+            Guardar
+          </Button>
+        </div>
       </form>
     </SettingsSection>
   );
@@ -124,7 +112,6 @@ function PendingQuotationPolicyEditor(props: {
   const updatePolicy = useAction(updatePendingQuotationPolicyMutation);
   const submission = useSubmission(updatePendingQuotationPolicyMutation);
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
-  const formId = createUniqueId();
   const [draft, setDraft] = createStore({
     enabled: initialSnapshot.enabled,
     limit: initialSnapshot.limit,
@@ -154,52 +141,25 @@ function PendingQuotationPolicyEditor(props: {
   }
 
   return (
-    <SettingsSection
-      title="Clientes pendientes por ejecutivo"
-      actions={
-        <Button
-          type="submit"
-          form={formId}
-          size="sm"
-          variant="secondary"
-          loading={submission.pending}
-        >
-          Guardar
-        </Button>
-      }
-    >
-      <form
-        id={formId}
-        class={styles.stack}
-        onSubmit={(event) => void handleSubmit(event)}
-      >
+    <SettingsSection title="Clientes pendientes por ejecutivo">
+      <form class={styles.stack} onSubmit={(event) => void handleSubmit(event)}>
         <SettingsOptionCard>
-          <SettingsOptionCardRow
+          <SettingsOptionCardToggleRow
             interactive
             title="Aplicar límite de clientes pendientes"
             description="Desactivado de forma predeterminada. Al activarlo, el ejecutivo deberá aceptar, enviar a revisión o cerrar sus cotizaciones pendientes antes de registrar nuevos clientes."
-            control={
-              <Toggle
-                ariaLabel="Aplicar límite de clientes pendientes"
-                value={draft.enabled}
-                onChange={(value) => setDraft("enabled", value)}
-              />
-            }
+            value={draft.enabled}
+            onChange={(value) => setDraft("enabled", value)}
           />
 
           <Show when={draft.enabled}>
-            <SettingsOptionCardRow
+            <SettingsOptionCardCounterRow
               title="Máximo de clientes pendientes"
               description="Se bloquea el registro de nuevos clientes cuando el ejecutivo alcanza este número."
-              control={
-                <SettingsCounter
-                  ariaLabel="Máximo de clientes pendientes"
-                  value={draft.limit}
-                  min={1}
-                  max={50}
-                  onChange={(value) => setDraft("limit", value)}
-                />
-              }
+              value={draft.limit}
+              min={1}
+              max={50}
+              onChange={(value) => setDraft("limit", value)}
             />
           </Show>
         </SettingsOptionCard>
@@ -211,6 +171,17 @@ function PendingQuotationPolicyEditor(props: {
             </p>
           )}
         </Show>
+
+        <div class={styles.formActions}>
+          <Button
+            type="submit"
+            size="sm"
+            variant="secondary"
+            loading={submission.pending}
+          >
+            Guardar
+          </Button>
+        </div>
       </form>
     </SettingsSection>
   );

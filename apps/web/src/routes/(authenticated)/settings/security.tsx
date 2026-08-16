@@ -33,8 +33,6 @@ import { recoveryCodesStatusQuery } from "~/rpc/auth/recovery-codes";
 import styles from "./security.module.css";
 import base from "./settings-page.module.css";
 
-const CHANGE_PASSWORD_FORM_ID = "settings-security-change-password-form";
-
 export const route = {
   preload: () => recoveryCodesStatusQuery(),
 } satisfies RouteDefinition;
@@ -283,24 +281,8 @@ export default function SecurityPage() {
         onClose={regenerateRecoveryDialog.close}
       />
 
-      <SettingsSection
-        title="Cambiar contraseña"
-        actions={
-          <Button
-            type="submit"
-            form={CHANGE_PASSWORD_FORM_ID}
-            size="sm"
-            variant="secondary"
-            loading={Boolean(changePasswordSubmission.pending)}
-          >
-            Guardar
-          </Button>
-        }
-      >
-        <form
-          id={CHANGE_PASSWORD_FORM_ID}
-          onSubmit={(event) => void handleChangePassword(event)}
-        >
+      <SettingsSection title="Cambiar contraseña">
+        <form onSubmit={(event) => void handleChangePassword(event)}>
           <div class={base.formGrid}>
             <Input
               type="password"
@@ -325,6 +307,17 @@ export default function SecurityPage() {
               onInput={(event) => setConfirmPassword(event.currentTarget.value)}
               required
             />
+          </div>
+
+          <div class={base.formActions}>
+            <Button
+              type="submit"
+              size="sm"
+              variant="secondary"
+              loading={Boolean(changePasswordSubmission.pending)}
+            >
+              Guardar
+            </Button>
           </div>
         </form>
       </SettingsSection>

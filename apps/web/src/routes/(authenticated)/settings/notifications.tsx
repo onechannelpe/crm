@@ -7,10 +7,9 @@ import BrandWhatsapp from "~/components/icons/brand-whatsapp";
 import Mail from "~/components/icons/mail";
 import {
   SettingsOptionCard,
-  SettingsOptionCardRow,
+  SettingsOptionCardToggleRow,
 } from "~/components/settings/settings-option-card";
 import { SettingsSection } from "~/components/settings/SettingsSection";
-import { Toggle } from "~/components/ui/input/toggle";
 import { actionErrorMessage } from "~/contracts/errors";
 import type { NotificationPreferencesView } from "~/contracts/notifications";
 import { setNotificationPreferenceMutation } from "~/features/notifications/data/mutations";
@@ -138,18 +137,13 @@ export default function NotificationsSettingsPage() {
                 <SettingsOptionCard>
                   <For each={getRows(data(), activeChannel())}>
                     {(row) => (
-                      <SettingsOptionCardRow
+                      <SettingsOptionCardToggleRow
                         interactive={!row.disabled}
                         title={row.title}
                         description={row.description}
-                        control={
-                          <Toggle
-                            value={row.value}
-                            disabled={row.disabled}
-                            ariaLabel={row.title}
-                            onChange={row.onToggle}
-                          />
-                        }
+                        value={row.value}
+                        disabled={row.disabled}
+                        onChange={row.onToggle}
                       />
                     )}
                   </For>
