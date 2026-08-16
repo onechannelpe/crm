@@ -5,4 +5,7 @@
 //!
 //! Concurrency relies on SQLite WAL. See `wal` for why.
 
+pub mod job;
 pub mod wal;
+
+pub use job::JobStore;
