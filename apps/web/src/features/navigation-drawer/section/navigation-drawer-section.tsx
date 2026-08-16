@@ -9,10 +9,12 @@ import styles from "./navigation-drawer-section.module.css";
 export function NavigationDrawerSection(
   props: ParentProps<{ class?: string }>,
 ) {
-  const { isMobile } = useNavigationDrawerState();
+  const { isMobile, expanded } = useNavigationDrawerState();
   const isSettingsDrawer = useIsSettingsDrawer();
 
-  const fullWidth = () => isMobile() || isSettingsDrawer();
+  const isMainNavCollapsed = () =>
+    !isSettingsDrawer() && !isMobile() && !expanded();
+  const fullWidth = () => isMobile() || isMainNavCollapsed();
 
   return (
     <section
