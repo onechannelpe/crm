@@ -17,6 +17,10 @@ pub enum ApiError {
     Unauthorized(String),
     #[error("validation: {0}")]
     Validation(String),
+    #[error("not found: {0}")]
+    NotFound(String),
+    #[error("conflict: {0}")]
+    Conflict(String),
     #[error("rate limit exceeded")]
     RateLimit,
     #[error("service unavailable: {0}")]
@@ -63,6 +67,8 @@ impl ApiError {
         match self {
             Self::Unauthorized(m) => (StatusCode::UNAUTHORIZED, m),
             Self::Validation(m) => (StatusCode::BAD_REQUEST, m),
+            Self::NotFound(m) => (StatusCode::NOT_FOUND, m),
+            Self::Conflict(m) => (StatusCode::CONFLICT, m),
             Self::RateLimit => (StatusCode::TOO_MANY_REQUESTS, "rate limit exceeded".into()),
             Self::Service(_) => (
                 StatusCode::SERVICE_UNAVAILABLE,
