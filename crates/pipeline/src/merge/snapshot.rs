@@ -21,12 +21,13 @@ pub(crate) fn upsert_snapshot(
         RETURNING source_id
         "#,
     )?;
+
     let source_id: i64 = source_stmt
         .query_row(params![source_key, source_name, reliability_rank], |row| {
             row.get(0)
         })?;
 
-    let mut snap_stmt = tx.prepare_cached(
+    let mut snapshot_stmt = tx.prepare_cached(
         r#"
         INSERT INTO source_snapshot(source_id, snapshot_label, snapshot_date, file_path, status)
         VALUES (?1, ?2, ?3, ?4, 'registered')
@@ -36,11 +37,13 @@ pub(crate) fn upsert_snapshot(
         RETURNING snapshot_id
         "#,
     )?;
-    let snapshot_id: i64 = snap_stmt.query_row(
-        params![source_id, snapshot_label, snapshot_date, file_path],
-        |row| row.get(0),
-    )?;
-    Ok(snapshot_id)
+
+    snapshot_stmt
+        .query_row(
+            params![source_id, snapshot_label, snapshot_date, file_path],
+            |row| row.get(0),
+        )
+        .map_err(Into::into)
 }
 
 pub(crate) fn set_snapshot_status(
@@ -52,13 +55,24 @@ pub(crate) fn set_snapshot_status(
         "UPDATE source_snapshot SET status=?2 WHERE snapshot_id=?1",
         params![snapshot_id, status],
     )?;
+
     Ok(())
 }
 
-pub(super) fn mark_snapshot_failed(db_path: &str, snapshot_id: i64) -> Result<(), PipelineError> {
+pub fn record_snapshot_status(
+    db_path: &str,
+    snapshot_id: i64,
+    status: &str,
+) -> Result<(), PipelineError> {
     let mut conn = open_rw(db_path)?;
     let tx = conn.transaction()?;
-    set_snapshot_status(&tx, snapshot_id, "failed")?;
+
+    set_snapshot_status(&tx, snapshot_id, status)?;
     tx.commit()?;
+
     Ok(())
+}
+
+pub fn mark_snapshot_failed(db_path: &str, snapshot_id: i64) -> Result<(), PipelineError> {
+    record_snapshot_status(db_path, snapshot_id, "failed")
 }
