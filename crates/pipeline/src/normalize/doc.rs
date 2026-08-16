@@ -28,8 +28,9 @@ pub fn derive_dni_from_natural_ruc(ruc: &str) -> Option<String> {
 /// explicit separate columns for type and number.
 ///
 /// Sources: consolidado_ruc_representantes_ok, consolidado_ruc_representantes_bppo,
-///          representantes_enriquecido, claro_post_202508, bitel_post_ms_2025 (disabled),
-///          movistar_post_202508 (disabled), mov_me_sal_2025 (disabled).
+///          representantes_enriquecido, claro_post_202508, bitel_post_ms_2025,
+///          movistar_post_202508, mov_me_sal_2025. Enable/disable status lives in
+///          data/mappings/source-manifest.json.
 ///
 /// Called from: `build_normalized` in mod.rs via the `rep_doc_type` / `rep_doc_number`
 /// fields of `FieldValues`.
@@ -81,7 +82,7 @@ pub fn collect_valid(
 
 /// Interprets a value from a DNI-only column where the type is always implicit.
 ///
-/// Sources: osiptel_2025 (column 0, `person_dni`).
+/// Sources: osiptel_2025 (column 0, `person_dni`), osiptel_scan_sunat (`person_dni`).
 ///
 /// Called from: `build_normalized` in mod.rs via the `person_dni` field of `FieldValues`.
 ///
