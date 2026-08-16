@@ -1,5 +1,7 @@
 import { Show, children, type JSX, type ParentProps } from "solid-js";
 
+import { OverflowingText } from "~/components/ui/overflow-tooltip/overflow-tooltip";
+
 import styles from "./settings-section.module.css";
 
 interface SettingsSectionProps extends ParentProps {
@@ -14,20 +16,22 @@ export function SettingsSection(props: SettingsSectionProps) {
   return (
     <section class={styles.block}>
       <div class={styles.sectionHeader}>
-        <div class={styles.sectionInfo}>
+        <div class={styles.titleRow}>
           <h2 class={styles.title}>{props.title}</h2>
-          <Show when={props.description}>
-            {(description) => (
-              <p class={styles.sectionDescription}>{description()}</p>
-            )}
-          </Show>
+          <div
+            class={styles.sectionActions}
+            data-empty={actions() ? undefined : "true"}
+          >
+            {actions()}
+          </div>
         </div>
-        <div
-          class={styles.sectionActions}
-          data-empty={actions() ? undefined : "true"}
-        >
-          {actions()}
-        </div>
+        <Show when={props.description}>
+          {(description) => (
+            <h3 class={styles.sectionDescription}>
+              <OverflowingText text={description()} maxRows={5} />
+            </h3>
+          )}
+        </Show>
       </div>
       <div class={styles.sectionContent}>{props.children}</div>
     </section>

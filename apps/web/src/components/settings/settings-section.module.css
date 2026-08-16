@@ -14,13 +14,13 @@
 .sectionHeader {
   display: flex;
   flex-direction: column;
-  gap: 0;
   margin-bottom: var(--t-spacing-4);
 }
 
-.sectionInfo {
-  flex: 1;
-  min-width: 0;
+.titleRow {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
 }
 
 .sectionActions {
@@ -45,11 +45,4 @@
   font-weight: var(--t-font-weight-regular);
   line-height: var(--t-text-line-height-lg);
   color: var(--t-font-color-tertiary);
-}
-
-@media (min-width: 768px) {
-  .sectionHeader {
-    flex-direction: row;
-    align-items: center;
-  }
 }

@@ -6,7 +6,7 @@
 
 .input {
   width: var(--t-spacing-16);
-  height: var(--t-spacing-8);
+  height: var(--t-spacing-6);
   text-align: center;
   font-weight: var(--t-font-weight-medium);
   font-size: var(--font-size-body);
