@@ -7,12 +7,12 @@ import {
 import {
   SettingsOptionCard,
   SettingsOptionCardRow,
+  SettingsOptionCardToggleRow,
   SettingsOptionCardWideRow,
 } from "~/components/settings/settings-option-card";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Badge } from "~/components/ui/display/badge";
 import { TextInput } from "~/components/ui/input/text-input";
-import { Toggle } from "~/components/ui/input/toggle";
 import type {
   PayoutBand,
   PenalidadActivacionRules,
@@ -138,17 +138,13 @@ export function ConfigurableSection(props: {
   return (
     <SettingsSection title={props.title} description={props.description}>
       <SettingsOptionCard>
-        <SettingsOptionCardRow
+        <SettingsOptionCardToggleRow
           interactive
           title="Configurado"
           description="Empieza con los umbrales confirmados; desactívalo si no corresponde calcular esta caja."
-          control={
-            <Toggle
-              ariaLabel={`Configurar ${props.toggleAriaLabel ?? props.title}`}
-              value={props.enabled}
-              onChange={props.onToggle}
-            />
-          }
+          ariaLabel={`Configurar ${props.toggleAriaLabel ?? props.title}`}
+          value={props.enabled}
+          onChange={props.onToggle}
         />
 
         <Show when={props.enabled}>{props.children}</Show>
