@@ -25,4 +25,6 @@ export interface SettingsNavSection {
   id: SettingsNavSectionId;
   label: string;
   items: SettingsNavItem[];
+  /** Marks the whole section (its title, not just individual items) as advanced-mode-only. */
+  isAdvanced?: boolean;
 }
