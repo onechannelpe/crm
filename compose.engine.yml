@@ -5,18 +5,27 @@ services:
       context: .
       dockerfile: Dockerfile.engine
     restart: unless-stopped
+
     env_file:
       - .env
+
     environment:
       ENGINE_CONNECT_MODE: internal
       ENGINE_HOST: 0.0.0.0
       ENGINE_PORT: 3001
       ENGINE_CONTACTS_DB_PATH: /var/lib/crm-engine/contacts.sqlite
       ENGINE_LEADS_DB_PATH: /var/lib/crm-engine/leads.sqlite
+      ENGINE_INGEST_JOB_DB_PATH: /var/lib/crm-engine/ingest.sqlite
+
+      # Uses the engine data volume for uploaded files.
+      ENGINE_INGEST_ENABLED: "true"
+
     volumes:
       - ${ENGINE_DATA_PATH:?Set ENGINE_DATA_PATH}:/var/lib/crm-engine
+
     expose:
       - "3001"
+
     healthcheck:
       test:
         ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:3001/health"]
@@ -24,6 +33,7 @@ services:
       timeout: 3s
       retries: 6
       start_period: 10s
+
     networks:
       dokploy-network:
         aliases:
