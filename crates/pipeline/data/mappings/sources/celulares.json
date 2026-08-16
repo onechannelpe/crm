@@ -1,6 +1,7 @@
 {
   "source_key": "celulares",
   "source_name": "celulares",
+  "reliability_rank": 70,
   "delimiter": ",",
   "has_header": true,
   "flexible": true,

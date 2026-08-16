@@ -1,6 +1,7 @@
 {
   "source_key": "osiptel",
   "source_name": "osiptel_2025",
+  "reliability_rank": 95,
   "delimiter": ",",
   "has_header": false,
   "flexible": true,

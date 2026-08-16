@@ -1,6 +1,7 @@
 {
   "source_key": "movistar_post_202508",
   "source_name": "MOVISTAR_POST_202508",
+  "reliability_rank": 76,
   "delimiter": "|",
   "has_header": true,
   "flexible": true,

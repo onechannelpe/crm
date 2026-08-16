@@ -2,7 +2,6 @@ use crate::PipelineError;
 use crate::config::manifest::{SourceManifestEntry, load_manifest, verify_manifest};
 use crate::config::mapping::SourceMapping;
 use crate::normalize::{self, PhoneKind, hash_record, normalize_phone_with_kind};
-use csv::ReaderBuilder;
 use std::fs;
 use std::path::Path;
 
@@ -11,7 +10,6 @@ struct NormalizationSummary {
     source_key: String,
     snapshot_label: String,
     reliability_rank: i64,
-    priority: i64,
     total_rows: usize,
     normalized_rows: usize,
     error_rows: usize,
@@ -105,11 +103,7 @@ fn normalize_source_entry(
         "raw_payload",
     ])?;
 
-    let mut reader = ReaderBuilder::new()
-        .delimiter(mapping.delimiter_byte())
-        .has_headers(mapping.has_header)
-        .flexible(mapping.flexible)
-        .from_path(&source.raw_path)?;
+    let mut reader = mapping.reader(&source.raw_path)?;
 
     let headers = if mapping.has_header {
         let byte_headers = reader.byte_headers()?.clone();
@@ -122,8 +116,7 @@ fn normalize_source_entry(
     let mut summary = NormalizationSummary {
         source_key: source.source_key.clone(),
         snapshot_label: source.snapshot_label.clone(),
-        reliability_rank: source.reliability_rank,
-        priority: source.priority,
+        reliability_rank: mapping.reliability_rank,
         ..NormalizationSummary::default()
     };
 

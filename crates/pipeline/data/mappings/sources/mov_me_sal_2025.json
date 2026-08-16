@@ -1,6 +1,7 @@
 {
   "source_key": "mov_me_sal_2025",
   "source_name": "Mov_MeSal",
+  "reliability_rank": 74,
   "delimiter": "|",
   "has_header": true,
   "flexible": true,

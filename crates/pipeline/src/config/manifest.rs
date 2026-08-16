@@ -17,8 +17,6 @@ pub struct SourceManifestEntry {
     pub snapshot_date: String,
     pub raw_path: String,
     pub mapping_path: String,
-    pub reliability_rank: i64,
-    pub priority: i64,
     pub enabled: bool,
 }
 
@@ -26,20 +24,21 @@ pub struct SourceManifestEntry {
 struct ManifestCheckResult {
     source_key: String,
     enabled: bool,
-    reliability_rank: i64,
-    priority: i64,
+    reliability_rank: Option<i64>,
     raw_exists: bool,
     mapping_exists: bool,
 }
 
 pub fn load_manifest(path: &str) -> Result<SourceManifest, PipelineError> {
     let raw = fs::read_to_string(path)?;
-    let manifest = serde_json::from_str::<SourceManifest>(&raw)?;
+    let manifest = serde_json::from_str(&raw)?;
+
     Ok(manifest)
 }
 
 pub fn verify_manifest(manifest_path: &str) -> Result<SourceManifest, PipelineError> {
     let manifest = load_manifest(manifest_path)?;
+
     if manifest.version != 1 {
         return Err(PipelineError::Args(format!(
             "unsupported manifest version: {}",
@@ -47,7 +46,8 @@ pub fn verify_manifest(manifest_path: &str) -> Result<SourceManifest, PipelineEr
         )));
     }
 
-    let mut checks: Vec<ManifestCheckResult> = Vec::with_capacity(manifest.sources.len());
+    let mut checks = Vec::with_capacity(manifest.sources.len());
+
     for source in &manifest.sources {
         let raw_exists = Path::new(&source.raw_path).exists();
         let mapping_exists = Path::new(&source.mapping_path).exists();
@@ -59,26 +59,31 @@ pub fn verify_manifest(manifest_path: &str) -> Result<SourceManifest, PipelineEr
             )));
         }
 
-        if mapping_exists {
+        let reliability_rank = if mapping_exists {
             let mapping = SourceMapping::from_path(&source.mapping_path)?;
+
             if mapping.source_key != source.source_key {
                 return Err(PipelineError::Args(format!(
                     "source_key mismatch: manifest={} mapping={}",
                     source.source_key, mapping.source_key
                 )));
             }
-        }
+
+            Some(mapping.reliability_rank)
+        } else {
+            None
+        };
 
         checks.push(ManifestCheckResult {
             source_key: source.source_key.clone(),
             enabled: source.enabled,
-            reliability_rank: source.reliability_rank,
-            priority: source.priority,
+            reliability_rank,
             raw_exists,
             mapping_exists,
         });
     }
 
     println!("{}", serde_json::to_string(&checks)?);
+
     Ok(manifest)
 }
