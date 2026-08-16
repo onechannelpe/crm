@@ -1,6 +1,7 @@
 {
   "source_key": "padron_ruc_202601",
   "source_name": "PadronRUC_202601",
+  "reliability_rank": 88,
   "delimiter": ",",
   "has_header": true,
   "flexible": true,

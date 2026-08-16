@@ -1,16 +1,17 @@
+use crate::config::mapping::SourceMapping;
 use std::path::PathBuf;
 use std::thread;
 
 pub struct ShardIngestConfig<'a> {
     pub db_path: &'a str,
     pub run_id: &'a str,
-    pub mapping_path: &'a str,
+    pub mapping: &'a SourceMapping,
     pub input_path: &'a str,
     pub snapshot_label: &'a str,
     pub snapshot_date: &'a str,
-    pub reliability_rank: i64,
     pub batch_size: usize,
     pub workers: usize,
+    pub max_rows: i64,
 }
 
 #[derive(Default, Clone)]
@@ -42,6 +43,8 @@ pub struct IngestSession {
     pub source_key: String,
     pub counters: IngestCounters,
     pub dispatched_rows: i64,
+    /// Run directory containing the shard databases. The caller owns cleanup.
+    pub run_root: PathBuf,
     pub shard_results: Vec<ShardResult>,
 }
 

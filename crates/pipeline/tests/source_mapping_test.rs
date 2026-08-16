@@ -6,6 +6,7 @@ fn mapping_with_encoding(encoding: SourceEncoding) -> SourceMapping {
     SourceMapping {
         source_key: "test_source".to_owned(),
         source_name: "test_source".to_owned(),
+        reliability_rank: 85,
         delimiter: ",".to_owned(),
         has_header: true,
         flexible: true,

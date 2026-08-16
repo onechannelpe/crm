@@ -1,6 +1,7 @@
 {
   "source_key": "claro_post_202508",
   "source_name": "CLARO_POST_202508",
+  "reliability_rank": 75,
   "delimiter": "|",
   "has_header": true,
   "flexible": true,

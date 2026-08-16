@@ -1,6 +1,7 @@
 {
   "source_key": "bitel_post_ms_2025",
   "source_name": "BITEL_POST_MS",
+  "reliability_rank": 72,
   "delimiter": "|",
   "has_header": true,
   "flexible": true,

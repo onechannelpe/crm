@@ -44,7 +44,6 @@ pub fn run(
             input_path: Path::new(&source.raw_path),
             snapshot_label: &source.snapshot_label,
             snapshot_date: &source.snapshot_date,
-            reliability_rank: source.reliability_rank,
             batch_size,
             workers,
             source_key: Some(&source.source_key),

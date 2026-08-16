@@ -7,6 +7,7 @@ fn resolved_with_fields(fields: HashMap<String, &str>) -> pipeline::normalize::R
     let mapping = SourceMapping {
         source_key: "test".to_owned(),
         source_name: "test".to_owned(),
+        reliability_rank: 85,
         delimiter: ",".to_owned(),
         has_header: true,
         flexible: true,
@@ -72,6 +73,7 @@ fn doc_type_map_translates_before_normalize() {
     let mapping = SourceMapping {
         source_key: "test".to_owned(),
         source_name: "test".to_owned(),
+        reliability_rank: 85,
         delimiter: ",".to_owned(),
         has_header: true,
         flexible: true,
