@@ -7,7 +7,7 @@
 }
 
 .label {
-  color: var(--foreground-tertiary);
+  color: var(--foreground-light);
   display: block;
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-semibold);
@@ -29,7 +29,7 @@
   width: 100%;
   height: 32px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--background-transparent-lighter);
   color: var(--foreground);
   font-size: var(--font-size-body);
@@ -105,7 +105,7 @@
 }
 
 .control::placeholder {
-  color: var(--foreground-tertiary);
+  color: var(--foreground-light);
   font-weight: var(--font-weight-medium);
 }
 
@@ -114,12 +114,12 @@
 }
 
 .control:disabled {
-  opacity: 0.5;
+  color: var(--foreground-tertiary);
   cursor: not-allowed;
 }
 
 .control:focus {
-  border-color: var(--info);
+  border-color: var(--color-blue);
 }
 
 .errorControl {
