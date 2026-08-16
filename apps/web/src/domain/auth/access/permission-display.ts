@@ -265,6 +265,12 @@ const PERMISSION_CATALOG: Record<Permission, PermissionMeta> = {
     description: "Configurar integraciones externas.",
     group: "administracion",
   },
+  "data-source:import": {
+    label: "Importar fuentes de datos",
+    description:
+      "Subir archivos CSV de fuentes externas (OSIPTEL, RUC, operadoras) al motor de búsqueda.",
+    group: "administracion",
+  },
 };
 
 export interface PermissionRow {

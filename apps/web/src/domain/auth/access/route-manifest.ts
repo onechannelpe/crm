@@ -8,6 +8,7 @@ export type AppPath =
   | "/settings/quotation-policies"
   | "/settings/commission-scheme"
   | "/settings/event-logs"
+  | "/settings/data-sources"
   | "/monitoring"
   | "/settings/members"
   | "/team"
@@ -46,6 +47,7 @@ export const ROUTE_MANIFEST: Record<AppPath, RouteConfig> = {
   "/settings/quotation-policies": { permission: "quotation:policy:manage" },
   "/settings/commission-scheme": { permission: "commission:manage" },
   "/settings/event-logs": { permission: "audit:read" },
+  "/settings/data-sources": { permission: "data-source:import" },
   "/monitoring": { permission: "admin:read" },
   "/settings/members": { permission: "team:read" },
   "/team": { permission: "team:read", landingPriority: 6 },

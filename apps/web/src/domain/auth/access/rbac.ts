@@ -56,7 +56,8 @@ export type Permission =
   | "dashboards:read:own"
   | "dashboards:manage"
   | "commission:read"
-  | "commission:manage";
+  | "commission:manage"
+  | "data-source:import";
 
 const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   executive: [
@@ -151,6 +152,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "dashboards:manage",
     "commission:read",
     "commission:manage",
+    "data-source:import",
   ],
 
   logistics: ["inventory:read", "inventory:manage"],
@@ -196,6 +198,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "dashboards:manage",
     "commission:read",
     "commission:manage",
+    "data-source:import",
   ],
 
   superuser: [
@@ -240,6 +243,7 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     "dashboards:manage",
     "commission:read",
     "commission:manage",
+    "data-source:import",
   ],
 };
 
