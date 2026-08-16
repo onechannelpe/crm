@@ -11,32 +11,47 @@ interface SettingsCounterProps {
   max: number;
   ariaLabel: string;
   disabled?: boolean;
+  showButtons?: boolean;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 export function SettingsCounter(props: SettingsCounterProps) {
-  function clamp(value: number): number {
-    return Math.min(props.max, Math.max(props.min, value));
+  function setValue(value: number): void {
+    props.onChange(clamp(value, props.min, props.max));
   }
 
-  function handleInput(raw: string): void {
-    const parsed = Number(raw);
+  function handleInput(
+    event: InputEvent & { currentTarget: HTMLInputElement },
+  ): void {
+    const raw = event.currentTarget.value;
 
-    if (Number.isNaN(parsed)) {
+    if (raw === "") {
       return;
     }
 
-    props.onChange(clamp(parsed));
+    const value = Number(raw);
+    if (!Number.isInteger(value)) {
+      event.currentTarget.value = String(props.value);
+      return;
+    }
+
+    setValue(value);
   }
 
   return (
     <div class={styles.counter}>
-      <LightIconButton
-        Icon={Minus}
-        accent="secondary"
-        aria-label="Disminuir"
-        disabled={props.disabled || props.value <= props.min}
-        onClick={() => props.onChange(clamp(props.value - 1))}
-      />
+      {props.showButtons !== false && (
+        <LightIconButton
+          Icon={Minus}
+          accent="secondary"
+          aria-label="Disminuir"
+          disabled={props.disabled || props.value <= props.min}
+          onClick={() => setValue(props.value - 1)}
+        />
+      )}
 
       <input
         class={styles.input}
@@ -44,19 +59,22 @@ export function SettingsCounter(props: SettingsCounterProps) {
         inputmode="numeric"
         min={props.min}
         max={props.max}
+        step="1"
         aria-label={props.ariaLabel}
         value={props.value}
         disabled={props.disabled}
-        onInput={(event) => handleInput(event.currentTarget.value)}
+        onInput={handleInput}
       />
 
-      <LightIconButton
-        Icon={Plus}
-        accent="secondary"
-        aria-label="Aumentar"
-        disabled={props.disabled || props.value >= props.max}
-        onClick={() => props.onChange(clamp(props.value + 1))}
-      />
+      {props.showButtons !== false && (
+        <LightIconButton
+          Icon={Plus}
+          accent="secondary"
+          aria-label="Aumentar"
+          disabled={props.disabled || props.value >= props.max}
+          onClick={() => setValue(props.value + 1)}
+        />
+      )}
     </div>
   );
 }

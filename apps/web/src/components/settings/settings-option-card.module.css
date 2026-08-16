@@ -29,6 +29,20 @@
   border-top: 1px solid var(--t-border-color-light);
 }
 
+.icon {
+  align-items: center;
+  background-color: var(--t-background-primary);
+  border: 2px solid var(--t-border-color-light);
+  border-radius: var(--t-border-radius-sm);
+  box-sizing: border-box;
+  display: flex;
+  flex-shrink: 0;
+  height: var(--t-spacing-8);
+  justify-content: center;
+  min-width: var(--t-spacing-8);
+  width: var(--t-spacing-8);
+}
+
 .text {
   flex: 1;
   min-width: 0;
@@ -46,7 +60,7 @@
   display: block;
   color: var(--t-font-color-secondary);
   font-size: var(--font-size-sm);
-  line-height: 1.4;
+  line-height: var(--t-text-line-height-lg);
 }
 
 .control {
