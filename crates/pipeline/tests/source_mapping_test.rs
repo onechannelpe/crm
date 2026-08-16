@@ -1,5 +1,5 @@
-use crm_pipeline::config::mapping::{SourceEncoding, SourceMapping};
 use csv::ByteRecord;
+use pipeline::config::mapping::{SourceEncoding, SourceMapping};
 use std::collections::HashMap;
 
 fn mapping_with_encoding(encoding: SourceEncoding) -> SourceMapping {

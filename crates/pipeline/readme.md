@@ -79,7 +79,7 @@ bun run pipeline:engine <command>
 The same commands can be run directly with Cargo:
 
 ```sh
-cargo run -p crm-pipeline -- <command>
+cargo run -p pipeline -- <command>
 ```
 
 Use `--release` for long or production-scale runs.
@@ -92,8 +92,8 @@ bun run pipeline:refresh:10k
 bun run pipeline:refresh:100k
 bun run pipeline:engine validate --profile quick
 bun run pipeline:engine validate --profile standard
-cargo run -p crm-pipeline --release -- build --profile full
-cargo run -p crm-pipeline --release -- promote
+cargo run -p pipeline --release -- build --profile full
+cargo run -p pipeline --release -- promote
 ```
 
 Command reference:

@@ -1,5 +1,5 @@
-use crm_pipeline::cli;
-use crm_pipeline::pipeline;
+use ::pipeline::cli;
+use ::pipeline::pipeline;
 use std::env;
 
 fn main() {

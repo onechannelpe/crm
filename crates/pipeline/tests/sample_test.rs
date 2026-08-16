@@ -1,4 +1,4 @@
-use crm_pipeline::sample::sample_with_header;
+use pipeline::sample::sample_with_header;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{env, fs};
@@ -8,7 +8,7 @@ fn unique_temp_path(name: &str) -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    env::temp_dir().join(format!("crm-pipeline-{name}-{nonce}.csv"))
+    env::temp_dir().join(format!("pipeline-{name}-{nonce}.csv"))
 }
 
 fn write_csv(path: &PathBuf, rows: usize) {

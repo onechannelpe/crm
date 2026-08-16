@@ -41,7 +41,7 @@ if [[ -n "$PIPELINE_BIN" ]]; then
   fi
   "$PIPELINE_BIN" refresh --config "$PIPELINE_CONFIG_OUTPUT" --slice 100k --to "$SMOKE_DB_PATH"
 else
-  cargo run -p crm-pipeline --release -- refresh --config "$PIPELINE_CONFIG_OUTPUT" --slice 100k --to "$SMOKE_DB_PATH"
+  cargo run -p pipeline --release -- refresh --config "$PIPELINE_CONFIG_OUTPUT" --slice 100k --to "$SMOKE_DB_PATH"
 fi
 
 echo "[bench] generating smoke workload at $WORKLOAD_PATH"

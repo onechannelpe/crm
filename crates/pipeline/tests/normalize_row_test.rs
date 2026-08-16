@@ -1,9 +1,9 @@
-use crm_pipeline::config::mapping::{SourceEncoding, SourceMapping};
-use crm_pipeline::normalize::{normalize_row, resolve_mapping};
 use csv::StringRecord;
+use pipeline::config::mapping::{SourceEncoding, SourceMapping};
+use pipeline::normalize::{normalize_row, resolve_mapping};
 use std::collections::HashMap;
 
-fn resolved_with_fields(fields: HashMap<String, &str>) -> crm_pipeline::normalize::ResolvedMapping {
+fn resolved_with_fields(fields: HashMap<String, &str>) -> pipeline::normalize::ResolvedMapping {
     let mapping = SourceMapping {
         source_key: "test".to_owned(),
         source_name: "test".to_owned(),

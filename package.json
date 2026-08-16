@@ -14,7 +14,7 @@
     "dev:web": "bun run --cwd apps/web dev",
     "dev:worker": "bun run --cwd apps/web worker:maintenance",
     "preview": "bun --cwd apps/web --env-file=../../.env tools/preview/cli.ts",
-    "pipeline:engine": "cargo run -p crm-pipeline --",
+    "pipeline:engine": "cargo run -p pipeline --",
     "pipeline:refresh": "bun run pipeline:engine refresh --slice 100k",
     "pipeline:refresh:10k": "bun run pipeline:engine refresh --slice 10k",
     "pipeline:refresh:100k": "bun run pipeline:engine refresh --slice 100k",
