@@ -10,6 +10,7 @@ export function Toggle(props: {
   id?: string;
   ariaLabel: string;
   onChange?: (value: boolean) => void;
+  color?: string;
 }) {
   const circleTransform = () => `translateX(${props.value ? 14 : 2}px)`;
   const initialCircleTransform = circleTransform();
@@ -22,6 +23,7 @@ export function Toggle(props: {
         props.value && styles.trackOn,
         props.disabled && styles.disabled,
       )}
+      style={props.color ? { "--toggle-on-color": props.color } : undefined}
     >
       <input
         id={props.id}
