@@ -1,9 +1,13 @@
 import type { JSX } from "solid-js";
 
+import { WithTooltip } from "~/components/ui/overflow-tooltip/overflow-tooltip";
+
 import {
   NavigationDrawerItemFrame,
   type NavigationDrawerItemFrameProps,
 } from "./navigation-drawer-item-frame";
+
+import tooltipStyles from "~/components/ui/overflow-tooltip/overflow-tooltip.module.css";
 
 interface NavigationDrawerExternalItemProps extends Omit<
   NavigationDrawerItemFrameProps,
@@ -36,20 +40,26 @@ export function NavigationDrawerExternalItem(
       collapsedMain={props.collapsedMain}
       isMobile={props.isMobile}
       render={(frame) => (
-        <a
-          href={props.href}
-          class={frame.class()}
-          onClick={props.onClick}
-          draggable={false}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-disabled={props.unavailable ? "true" : undefined}
-          tabindex={props.unavailable ? "-1" : undefined}
-          title={frame.title()}
-          style={frame.style()}
+        <WithTooltip
+          tooltip={frame.title() ?? ""}
+          disabled={!frame.title()}
+          position="right"
+          class={tooltipStyles.wrapperFill}
         >
-          {frame.content}
-        </a>
+          <a
+            href={props.href}
+            class={frame.class()}
+            onClick={props.onClick}
+            draggable={false}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-disabled={props.unavailable ? "true" : undefined}
+            tabindex={props.unavailable ? "-1" : undefined}
+            style={frame.style()}
+          >
+            {frame.content}
+          </a>
+        </WithTooltip>
       )}
     />
   );

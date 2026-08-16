@@ -44,6 +44,7 @@ export function NavigationDrawerItemFrame(
       props.active && styles.itemActive,
       showBreadcrumb() && styles.itemIndented,
       props.variant === "tertiary" && styles.itemTertiary,
+      isSoon() && styles.itemSoon,
     );
 
   const content = (

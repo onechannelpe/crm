@@ -1,9 +1,13 @@
 import type { JSX } from "solid-js";
 
+import { WithTooltip } from "~/components/ui/overflow-tooltip/overflow-tooltip";
+
 import {
   NavigationDrawerItemFrame,
   type NavigationDrawerItemFrameProps,
 } from "./navigation-drawer-item-frame";
+
+import tooltipStyles from "~/components/ui/overflow-tooltip/overflow-tooltip.module.css";
 
 interface NavigationDrawerActionItemProps extends Omit<
   NavigationDrawerItemFrameProps,
@@ -35,17 +39,25 @@ export function NavigationDrawerActionItem(
       collapsedMain={props.collapsedMain}
       isMobile={props.isMobile}
       render={(frame) => (
-        <button
-          type="button"
-          class={frame.class()}
-          onClick={props.onClick}
-          disabled={props.unavailable}
-          aria-expanded={props.showChevron ? props.chevronExpanded : undefined}
-          title={frame.title()}
-          style={frame.style()}
+        <WithTooltip
+          tooltip={frame.title() ?? ""}
+          disabled={!frame.title()}
+          position="right"
+          class={tooltipStyles.wrapperFill}
         >
-          {frame.content}
-        </button>
+          <button
+            type="button"
+            class={frame.class()}
+            onClick={props.onClick}
+            disabled={props.unavailable}
+            aria-expanded={
+              props.showChevron ? props.chevronExpanded : undefined
+            }
+            style={frame.style()}
+          >
+            {frame.content}
+          </button>
+        </WithTooltip>
       )}
     />
   );
