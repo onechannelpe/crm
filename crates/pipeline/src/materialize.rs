@@ -1,53 +1,101 @@
 use crate::PipelineError;
 use crate::storage::db::open_rw;
 
+/// Bounds RAM used by ranking sorts and WAL growth per transaction.
+const CHUNK_ROWS: usize = 250_000;
+
+/// Rebuilds serving rows whose staging data changed.
+///
+/// Each chunk commits independently. Dirty ids are removed only after their
+/// projection is committed, so an interrupted run resumes from what remains.
 pub fn materialize_serving(db_path: &str) -> Result<(), PipelineError> {
     let mut conn = open_rw(db_path)?;
-    let tx = conn.transaction()?;
 
-    create_dirty_worksets(&tx)?;
+    let docs = drain_dirty_docs(&mut conn, CHUNK_ROWS)?;
+    let companies = drain_dirty_companies(&mut conn, CHUNK_ROWS)?;
 
-    let dirty_doc_count: i64 =
-        tx.query_row("SELECT COUNT(*) FROM tmp_dirty_doc_ids", [], |row| {
-            row.get(0)
-        })?;
-    let dirty_company_count: i64 =
-        tx.query_row("SELECT COUNT(*) FROM tmp_dirty_company_ids", [], |row| {
-            row.get(0)
-        })?;
-
-    if dirty_doc_count == 0 && dirty_company_count == 0 {
-        tx.commit()?;
+    if docs == 0 && companies == 0 {
         println!("materialized serving tables (no changes)");
         return Ok(());
     }
 
-    if dirty_doc_count > 0 {
-        materialize_doc_projection(&tx)?;
-    }
+    println!("materialized serving tables docs={docs} companies={companies}");
 
-    if dirty_company_count > 0 {
-        materialize_company_projection(&tx)?;
-    }
-
-    clear_dirty_worksets(&tx)?;
-
-    tx.commit()?;
-    println!("materialized serving tables");
     Ok(())
 }
 
-fn create_dirty_worksets(tx: &rusqlite::Transaction<'_>) -> Result<(), PipelineError> {
-    tx.execute_batch(
-        r#"
-        CREATE TEMP TABLE tmp_dirty_doc_ids AS
-        SELECT doc_id FROM projection_dirty_doc;
-
-        CREATE TEMP TABLE tmp_dirty_company_ids AS
-        SELECT company_id FROM projection_dirty_company;
-        "#,
+fn drain_dirty_docs(
+    conn: &mut rusqlite::Connection,
+    chunk_rows: usize,
+) -> Result<i64, PipelineError> {
+    conn.execute_batch(
+        "CREATE TEMP TABLE IF NOT EXISTS tmp_dirty_doc_ids(doc_id INTEGER PRIMARY KEY)",
     )?;
-    Ok(())
+
+    let mut total = 0i64;
+
+    loop {
+        let tx = conn.transaction()?;
+
+        let claimed = tx.execute(
+            "INSERT INTO tmp_dirty_doc_ids(doc_id)
+             SELECT doc_id FROM projection_dirty_doc LIMIT ?1",
+            [chunk_rows as i64],
+        )?;
+
+        if claimed == 0 {
+            tx.commit()?;
+            return Ok(total);
+        }
+
+        materialize_doc_projection(&tx)?;
+
+        tx.execute_batch(
+            "DELETE FROM projection_dirty_doc
+             WHERE doc_id IN (SELECT doc_id FROM tmp_dirty_doc_ids);
+             DELETE FROM tmp_dirty_doc_ids;",
+        )?;
+
+        tx.commit()?;
+        total += claimed as i64;
+    }
+}
+
+fn drain_dirty_companies(
+    conn: &mut rusqlite::Connection,
+    chunk_rows: usize,
+) -> Result<i64, PipelineError> {
+    conn.execute_batch(
+        "CREATE TEMP TABLE IF NOT EXISTS tmp_dirty_company_ids(company_id INTEGER PRIMARY KEY)",
+    )?;
+
+    let mut total = 0i64;
+
+    loop {
+        let tx = conn.transaction()?;
+
+        let claimed = tx.execute(
+            "INSERT INTO tmp_dirty_company_ids(company_id)
+             SELECT company_id FROM projection_dirty_company LIMIT ?1",
+            [chunk_rows as i64],
+        )?;
+
+        if claimed == 0 {
+            tx.commit()?;
+            return Ok(total);
+        }
+
+        materialize_company_projection(&tx)?;
+
+        tx.execute_batch(
+            "DELETE FROM projection_dirty_company
+             WHERE company_id IN (SELECT company_id FROM tmp_dirty_company_ids);
+             DELETE FROM tmp_dirty_company_ids;",
+        )?;
+
+        tx.commit()?;
+        total += claimed as i64;
+    }
 }
 
 fn materialize_doc_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), PipelineError> {
@@ -63,6 +111,8 @@ fn materialize_doc_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), Pipe
         WHERE doc_id IN (SELECT doc_id FROM tmp_dirty_doc_ids);
 
         WITH
+        -- Restrict ranking to the dirty chunk. SQLite cannot push the outer
+        -- filter through the window function.
         ranked_phone AS (
             SELECT
                 dp.doc_id,
@@ -72,6 +122,7 @@ fn materialize_doc_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), Pipe
                     ORDER BY dp.confidence DESC, dp.phone
                 ) AS rank_position
             FROM document_phone dp
+            WHERE dp.doc_id IN (SELECT doc_id FROM tmp_dirty_doc_ids)
         ),
         top_two_phones AS (
             SELECT
@@ -93,6 +144,7 @@ fn materialize_doc_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), Pipe
                         ORDER BY de.reliability DESC, de.email
                     ) AS rn
                 FROM document_email de
+                WHERE de.doc_id IN (SELECT doc_id FROM tmp_dirty_doc_ids)
             )
             WHERE rn = 1
         )
@@ -176,6 +228,7 @@ fn materialize_doc_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), Pipe
         GROUP BY doc_id;
         "#,
     )?;
+
     Ok(())
 }
 
@@ -192,6 +245,8 @@ fn materialize_company_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), 
         WHERE company_id IN (SELECT company_id FROM tmp_dirty_company_ids);
 
         WITH
+        -- Restrict ranking to the dirty chunk. SQLite cannot push the outer
+        -- filter through the window function.
         ranked_phone AS (
             SELECT
                 cph.company_id,
@@ -201,6 +256,7 @@ fn materialize_company_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), 
                     ORDER BY cph.confidence DESC, cph.phone
                 ) AS rank_position
             FROM company_phone cph
+            WHERE cph.company_id IN (SELECT company_id FROM tmp_dirty_company_ids)
         ),
         top_two_phones AS (
             SELECT
@@ -260,7 +316,8 @@ fn materialize_company_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), 
 
         DELETE FROM ruc_phone_agg
         WHERE org_ruc IN (
-            SELECT cp2.ruc FROM company cp2
+            SELECT cp2.ruc
+            FROM company cp2
             WHERE cp2.company_id IN (SELECT company_id FROM tmp_dirty_company_ids)
         );
 
@@ -277,18 +334,86 @@ fn materialize_company_projection(tx: &rusqlite::Transaction<'_>) -> Result<(), 
         GROUP BY org_ruc;
         "#,
     )?;
+
     Ok(())
 }
 
-fn clear_dirty_worksets(tx: &rusqlite::Transaction<'_>) -> Result<(), PipelineError> {
-    tx.execute_batch(
-        r#"
-        DELETE FROM projection_dirty_doc
-        WHERE doc_id IN (SELECT doc_id FROM tmp_dirty_doc_ids);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::storage::schema::init_schema;
+    use rusqlite::params;
 
-        DELETE FROM projection_dirty_company
-        WHERE company_id IN (SELECT company_id FROM tmp_dirty_company_ids);
-        "#,
-    )?;
-    Ok(())
+    /// Uses a small chunk size to exercise multiple commits without seeding
+    /// hundreds of thousands of rows.
+    #[test]
+    fn drains_every_dirty_document_across_several_chunks() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir
+            .path()
+            .join("stage.sqlite")
+            .to_string_lossy()
+            .to_string();
+
+        init_schema(&path).expect("init schema");
+
+        let mut conn = open_rw(&path).expect("open db");
+
+        {
+            let tx = conn.transaction().expect("begin");
+
+            for doc_id in 1..=7i64 {
+                tx.execute(
+                    "INSERT INTO document(doc_id, doc_type, doc_number) VALUES (?1, 'DNI', ?2)",
+                    params![doc_id, format!("{doc_id:08}")],
+                )
+                .expect("insert document");
+
+                tx.execute(
+                    "INSERT INTO projection_dirty_doc(doc_id) VALUES (?1)",
+                    params![doc_id],
+                )
+                .expect("mark dirty");
+            }
+
+            tx.commit().expect("commit");
+        }
+
+        let drained = drain_dirty_docs(&mut conn, 3).expect("drain");
+
+        assert_eq!(drained, 7);
+
+        let projected: i64 = conn
+            .query_row("SELECT COUNT(*) FROM doc_projection", [], |row| row.get(0))
+            .expect("projected count");
+
+        let still_dirty: i64 = conn
+            .query_row("SELECT COUNT(*) FROM projection_dirty_doc", [], |row| {
+                row.get(0)
+            })
+            .expect("dirty count");
+
+        assert_eq!(projected, 7);
+        assert_eq!(still_dirty, 0);
+    }
+
+    #[test]
+    fn draining_a_clean_database_claims_nothing() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir
+            .path()
+            .join("stage.sqlite")
+            .to_string_lossy()
+            .to_string();
+
+        init_schema(&path).expect("init schema");
+
+        let mut conn = open_rw(&path).expect("open db");
+
+        assert_eq!(drain_dirty_docs(&mut conn, 3).expect("drain docs"), 0);
+        assert_eq!(
+            drain_dirty_companies(&mut conn, 3).expect("drain companies"),
+            0
+        );
+    }
 }
