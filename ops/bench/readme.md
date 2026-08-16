@@ -22,7 +22,7 @@ full mode fails instead of launching a pipeline build.
 ## Scripts
 
 `build_smoke_dataset.sh` prepares a runner-local pipeline config, runs
-`crm-pipeline refresh --slice 100k`, generates a smoke workload, and writes the
+`pipeline refresh --slice 100k`, generates a smoke workload, and writes the
 smoke dataset manifest.
 
 `prepare_pipeline_runtime.py` rewrites the pipeline manifest for server paths.

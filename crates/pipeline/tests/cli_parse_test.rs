@@ -1,4 +1,4 @@
-use crm_pipeline::cli::{Command, parse_args};
+use pipeline::cli::{Command, parse_args};
 
 #[test]
 fn parses_bench_with_default_profile() {

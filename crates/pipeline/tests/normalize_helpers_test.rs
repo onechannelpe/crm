@@ -1,4 +1,4 @@
-use crm_pipeline::normalize::{
+use pipeline::normalize::{
     PhoneKind, normalize_ambiguous_doc, normalize_person_document_with_natural_ruc,
     normalize_phone_with_kind,
 };
