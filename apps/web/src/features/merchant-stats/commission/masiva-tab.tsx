@@ -1,8 +1,7 @@
 import { Show } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 
-import { SettingsCounter } from "~/components/settings/settings-counter";
-import { SettingsOptionCardRow } from "~/components/settings/settings-option-card";
+import { SettingsOptionCardCounterRow } from "~/components/settings/settings-option-card";
 import {
   defaultMassMarketCaja1Rules,
   defaultMassMarketCaja2Rules,
@@ -54,42 +53,33 @@ export function MasivaTab(props: {
                 }
               />
 
-              <SettingsOptionCardRow
+              <SettingsOptionCardCounterRow
                 title="Transacciones mínimas (M0)"
-                control={
-                  <SettingsCounter
-                    ariaLabel="Transacciones mínimas"
-                    value={caja1().activation.minTrx}
-                    min={0}
-                    max={20}
-                    onChange={(minTrx) =>
-                      props.setDraft("massMarket", "caja1", {
-                        ...caja1(),
-                        activation: {
-                          ...caja1().activation,
-                          minTrx,
-                        },
-                      })
-                    }
-                  />
+                ariaLabel="Transacciones mínimas"
+                value={caja1().activation.minTrx}
+                min={0}
+                max={20}
+                onChange={(minTrx) =>
+                  props.setDraft("massMarket", "caja1", {
+                    ...caja1(),
+                    activation: {
+                      ...caja1().activation,
+                      minTrx,
+                    },
+                  })
                 }
               />
 
-              <SettingsOptionCardRow
+              <SettingsOptionCardCounterRow
                 title="Meta de activas en M0"
-                control={
-                  <SettingsCounter
-                    ariaLabel="Meta de activas en M0"
-                    value={caja1().m0Target}
-                    min={0}
-                    max={200}
-                    onChange={(m0Target) =>
-                      props.setDraft("massMarket", "caja1", {
-                        ...caja1(),
-                        m0Target,
-                      })
-                    }
-                  />
+                value={caja1().m0Target}
+                min={0}
+                max={200}
+                onChange={(m0Target) =>
+                  props.setDraft("massMarket", "caja1", {
+                    ...caja1(),
+                    m0Target,
+                  })
                 }
               />
 

@@ -1,8 +1,7 @@
 import { Show } from "solid-js";
 import type { SetStoreFunction } from "solid-js/store";
 
-import { SettingsCounter } from "~/components/settings/settings-counter";
-import { SettingsOptionCardRow } from "~/components/settings/settings-option-card";
+import { SettingsOptionCardCounterRow } from "~/components/settings/settings-option-card";
 import {
   defaultCorporateCaja2Rules,
   type CommissionSchemeRules,
@@ -59,21 +58,16 @@ export function CorporativaTab(props: {
                 }
               />
 
-              <SettingsOptionCardRow
+              <SettingsOptionCardCounterRow
                 title="Mínimo de RUCs calificados"
-                control={
-                  <SettingsCounter
-                    ariaLabel="Mínimo de RUCs calificados"
-                    value={caja2().minQualifyingRucs}
-                    min={0}
-                    max={10}
-                    onChange={(minQualifyingRucs) =>
-                      props.setDraft("corporate", "caja2", {
-                        ...caja2(),
-                        minQualifyingRucs,
-                      })
-                    }
-                  />
+                value={caja2().minQualifyingRucs}
+                min={0}
+                max={10}
+                onChange={(minQualifyingRucs) =>
+                  props.setDraft("corporate", "caja2", {
+                    ...caja2(),
+                    minQualifyingRucs,
+                  })
                 }
               />
             </>
