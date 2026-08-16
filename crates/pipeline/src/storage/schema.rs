@@ -42,6 +42,7 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
         CREATE TABLE IF NOT EXISTS document_attribute (
             doc_id INTEGER PRIMARY KEY,
             full_name TEXT NOT NULL DEFAULT '',
+            full_name_rank INTEGER NOT NULL DEFAULT 0,
             birth_date TEXT,
             birth_place TEXT,
             sex TEXT,
@@ -58,6 +59,7 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             company_id INTEGER PRIMARY KEY,
             ruc TEXT NOT NULL UNIQUE,
             legal_name TEXT NOT NULL DEFAULT '',
+            legal_name_rank INTEGER NOT NULL DEFAULT 0,
             trade_name TEXT,
             registration_date TEXT,
             activity_start_date TEXT,
@@ -80,6 +82,7 @@ pub fn init_schema(db_path: &str) -> Result<(), PipelineError> {
             rep_doc_type TEXT NOT NULL DEFAULT '',
             rep_doc_number TEXT NOT NULL DEFAULT '',
             rep_name TEXT NOT NULL DEFAULT '',
+            rep_name_rank INTEGER NOT NULL DEFAULT 0,
             role_name TEXT NOT NULL DEFAULT '',
             role_start_date TEXT NOT NULL DEFAULT '',
             UNIQUE(company_id, rep_doc_type, rep_doc_number, role_name, role_start_date),
