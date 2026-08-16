@@ -54,8 +54,10 @@ pub(super) fn merge_one_shard(
     )?;
     stats.prepare_secs = t.elapsed().as_secs_f64();
 
+    let merge_core_sql =
+        MERGE_CORE_SQL.replace("{reliability_rank}", &reliability_rank.to_string());
     let t = Instant::now();
-    tx.execute_batch(MERGE_CORE_SQL)?;
+    tx.execute_batch(&merge_core_sql)?;
     stats.core_secs = t.elapsed().as_secs_f64();
 
     let merge_phone_sql = MERGE_PHONE_SQL
