@@ -7,6 +7,7 @@
 
 pub mod contracts;
 pub mod job;
+pub mod queue;
 pub mod runner;
 pub mod wal;
 
