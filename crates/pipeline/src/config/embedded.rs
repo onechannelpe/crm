@@ -36,11 +36,17 @@ const MAPPINGS: &[(&str, &str)] = &[
         "movistar_post_202508",
         include_str!("../../data/mappings/sources/movistar_post_202508.json"),
     ),
-    // Keyed by the mapping's own source_key, which for this one source does not
-    // match its file name (osiptel_2025.json declares source_key "osiptel").
+    // The mapping declares source_key "osiptel", which differs from its filename.
     (
         "osiptel",
         include_str!("../../data/mappings/sources/osiptel_2025.json"),
+    ),
+    // `doc` is the 11-digit RUC and maps to person_dni so normalization can
+    // derive both the DNI and natural_ruc10. Mapping `num_doc` would lose the
+    // RUC10 contributed by this source.
+    (
+        "osiptel_scan_sunat",
+        include_str!("../../data/mappings/sources/osiptel_scan_sunat.json"),
     ),
     (
         "padron_ruc_202601",
@@ -52,26 +58,20 @@ const MAPPINGS: &[(&str, &str)] = &[
     ),
 ];
 
-/// Source keys this binary can ingest, in registry order.
 pub fn source_keys() -> impl Iterator<Item = &'static str> {
     MAPPINGS.iter().map(|(key, _)| *key)
 }
 
-/// Resolves a mapping by source key. Returns `Args` for an unknown key so the
-/// caller can turn it into a client-facing validation error rather than a 500.
 pub fn mapping_for(source_key: &str) -> Result<SourceMapping, PipelineError> {
     let Some((_, raw)) = MAPPINGS.iter().find(|(key, _)| *key == source_key) else {
         return Err(PipelineError::Args(format!(
             "unknown source_key: {source_key}"
         )));
     };
+
     SourceMapping::from_json(raw)
 }
 
-/// (source_key, source_name) for every mapping this binary can ingest, in
-/// registry order. Backs the engine's `/ingest-sources` endpoint so a
-/// frontend source picker can never drift from what the engine will actually
-/// accept, unlike a hand-maintained list on the caller's side.
 pub fn list_sources() -> Vec<(String, String)> {
     source_keys()
         .map(|key| {

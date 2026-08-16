@@ -1,0 +1,14 @@
+{
+  "source_key": "osiptel_scan_sunat",
+  "source_name": "OSIPTEL scan - SUNAT lookup",
+  "reliability_rank": 77,
+  "delimiter": ",",
+  "has_header": true,
+  "flexible": true,
+  "fields": {
+    "person_dni": "doc",
+    "person_full_name": "nombre"
+  },
+  "phone_columns": [],
+  "phone_prefixes": []
+}
