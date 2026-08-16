@@ -1,10 +1,10 @@
 import { createIcon } from "./create-icon";
 
 const iconNode = [
-  ["path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", key: "1yyitq" }],
-  ["path", { d: "M16 3.128a4 4 0 0 1 0 7.744", key: "16gr8j" }],
-  ["path", { d: "M22 21v-2a4 4 0 0 0-3-3.87", key: "kshegd" }],
-  ["circle", { cx: "9", cy: "7", r: "4", key: "nufk8" }],
+  ["path", { d: "M5 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0", key: "users-1" }],
+  ["path", { d: "M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2", key: "users-2" }],
+  ["path", { d: "M16 3.13a4 4 0 0 1 0 7.75", key: "users-3" }],
+  ["path", { d: "M21 21v-2a4 4 0 0 0 -3 -3.85", key: "users-4" }],
 ] as const;
 
 const Users = createIcon("users", iconNode);
