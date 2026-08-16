@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  interpolate-size: allow-keywords;
 }
 
 .itemGroup {
@@ -62,6 +63,10 @@
 
 .itemTertiary {
   color: var(--foreground-tertiary);
+}
+
+.itemSoon {
+  color: var(--foreground-light);
 }
 
 .itemLabelParent {
@@ -151,7 +156,7 @@
   height: 2px;
   position: relative;
   top: -2px;
-  background: var(--primary-border-40);
+  background: var(--t-border-color-strong);
 }
 
 .subItemBreadcrumbGap[data-darker="true"] {
@@ -164,8 +169,8 @@
   height: 14px;
   position: relative;
   top: -2px;
-  border-left: 1px solid var(--primary-border-40);
-  border-bottom: 1px solid var(--primary-border-40);
+  border-left: 1px solid var(--t-border-color-strong);
+  border-bottom: 1px solid var(--t-border-color-strong);
   border-bottom-left-radius: 4px;
 }
 
@@ -181,7 +186,7 @@
   height: calc(var(--spacing-7) + 1px);
   position: relative;
   top: -17px;
-  background: var(--primary-border-40);
+  background: var(--t-border-color-strong);
 }
 
 .subItemBreadcrumbVertical[data-darker="true"] {

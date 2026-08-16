@@ -1,10 +1,14 @@
 import { A } from "@solidjs/router";
 import type { JSX } from "solid-js";
 
+import { WithTooltip } from "~/components/ui/overflow-tooltip/overflow-tooltip";
+
 import {
   NavigationDrawerItemFrame,
   type NavigationDrawerItemFrameProps,
 } from "./navigation-drawer-item-frame";
+
+import tooltipStyles from "~/components/ui/overflow-tooltip/overflow-tooltip.module.css";
 
 interface NavigationDrawerRouteItemProps extends Omit<
   NavigationDrawerItemFrameProps,
@@ -37,19 +41,25 @@ export function NavigationDrawerRouteItem(
       collapsedMain={props.collapsedMain}
       isMobile={props.isMobile}
       render={(frame) => (
-        <A
-          href={props.href}
-          class={frame.class()}
-          onClick={props.onClick}
-          draggable={false}
-          aria-disabled={props.unavailable ? "true" : undefined}
-          aria-current={props.active ? "page" : undefined}
-          tabindex={props.unavailable ? "-1" : undefined}
-          title={frame.title()}
-          style={frame.style()}
+        <WithTooltip
+          tooltip={frame.title() ?? ""}
+          disabled={!frame.title()}
+          position="right"
+          class={tooltipStyles.wrapperFill}
         >
-          {frame.content}
-        </A>
+          <A
+            href={props.href}
+            class={frame.class()}
+            onClick={props.onClick}
+            draggable={false}
+            aria-disabled={props.unavailable ? "true" : undefined}
+            aria-current={props.active ? "page" : undefined}
+            tabindex={props.unavailable ? "-1" : undefined}
+            style={frame.style()}
+          >
+            {frame.content}
+          </A>
+        </WithTooltip>
       )}
     />
   );
