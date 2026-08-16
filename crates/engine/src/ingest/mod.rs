@@ -7,6 +7,7 @@
 
 pub mod contracts;
 pub mod job;
+pub mod runner;
 pub mod wal;
 
 pub use job::JobStore;
