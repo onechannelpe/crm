@@ -1,7 +1,4 @@
-import { clsx } from "clsx";
-import { createUniqueId } from "solid-js";
-
-import Point from "~/components/icons/point";
+import { Toggle } from "~/components/ui/input/toggle";
 
 import styles from "./advanced-settings-toggle.module.css";
 
@@ -12,36 +9,17 @@ interface AdvancedSettingsToggleProps {
 }
 
 export function AdvancedSettingsToggle(props: AdvancedSettingsToggleProps) {
-  const labelId = createUniqueId();
+  const label = () => props.label ?? "Avanzado:";
 
   return (
     <div class={styles.container}>
-      <div class={styles.iconContainer} aria-hidden="true">
-        <Point
-          size={12}
-          color="var(--warning)"
-          fill="var(--warning)"
-          strokeWidth={2}
-        />
-      </div>
-      <span id={labelId} class={styles.text}>
-        {props.label ?? "Avanzado:"}
-      </span>
-      <button
-        type="button"
-        role="switch"
-        aria-labelledby={labelId}
-        aria-checked={props.isAdvancedModeEnabled}
-        class={clsx(
-          styles.switch,
-          props.isAdvancedModeEnabled && styles.switchChecked,
-        )}
-        onClick={() =>
-          props.setIsAdvancedModeEnabled(!props.isAdvancedModeEnabled)
-        }
-      >
-        <span class={styles.thumb} />
-      </button>
+      <span class={styles.text}>{label()}</span>
+      <Toggle
+        value={props.isAdvancedModeEnabled}
+        onChange={props.setIsAdvancedModeEnabled}
+        ariaLabel={label()}
+        color="var(--warning)"
+      />
     </div>
   );
 }

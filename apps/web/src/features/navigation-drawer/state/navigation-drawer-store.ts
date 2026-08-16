@@ -2,6 +2,7 @@ import { createSignal } from "solid-js";
 
 import { isSettingsRoutePath } from "~/domain/navigation/route-classification";
 
+import { navigationDrawerAdvancedModeCookie } from "./navigation-drawer-advanced-mode";
 import { navigationDrawerExpandedCookie } from "./navigation-drawer-expanded";
 import {
   clampNavigationDrawerWidth,
@@ -14,6 +15,7 @@ type MobileDrawerType = "main" | "settings";
 type NavigationDrawerStoreOptions = {
   initialWidth?: number;
   initialExpanded?: boolean;
+  initialAdvancedModeEnabled?: boolean;
 };
 
 export interface NavigationDrawerStateValue {
@@ -65,8 +67,9 @@ export function createNavigationDrawerStore(
   const [isMobile, setIsMobile] = createSignal(false);
   const [currentMobileDrawer, setCurrentMobileDrawer] =
     createSignal<MobileDrawerType>("main");
-  const [advancedModeEnabled, setAdvancedModeEnabledSignal] =
-    createSignal(false);
+  const [advancedModeEnabled, setAdvancedModeEnabledSignal] = createSignal(
+    options?.initialAdvancedModeEnabled ?? false,
+  );
   const [memorizedExpanded, setMemorizedExpanded] = createSignal(true);
   const [memorizedPath, setMemorizedPath] = createSignal("/");
   const [hasMemorizedNavigation, setHasMemorizedNavigation] =
@@ -91,6 +94,7 @@ export function createNavigationDrawerStore(
       const previous = advancedModeEnabled();
       const next = typeof value === "function" ? value(previous) : value;
       setAdvancedModeEnabledSignal(next);
+      navigationDrawerAdvancedModeCookie.write(next);
     };
 
   const isSectionOpen = (id: string) => {
