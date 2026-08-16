@@ -82,7 +82,6 @@ export function NavigationDrawer(props: {
           styles.drawer,
           isResizing() && styles.drawerResizing,
           props.className,
-          isSettingsDrawer() && styles.drawerSettings,
           expanded() && !isMobile() && styles.drawerExpandedDesktop,
           !expanded() && !isMobile() && styles.drawerCollapsedDesktop,
           isMobile() && expanded() && styles.drawerOpenMobile,
@@ -136,7 +135,7 @@ export function NavigationDrawer(props: {
                 class={styles.settingsBackButton}
                 onClick={closeSettings}
               >
-                <X size={16} />
+                <X size={16} color="var(--foreground-secondary)" />
                 <span>{props.title}</span>
               </button>
             </header>
