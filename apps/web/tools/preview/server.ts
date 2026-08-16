@@ -15,7 +15,7 @@ const LOCKFILE = resolve(process.cwd(), ".preview-server.json");
 const LOG_FILE = resolve(process.cwd(), ".preview-server.log");
 
 // A fresh Vite cache can spend several minutes pre-bundling dependencies.
-const HEALTH_TIMEOUT_MS = 300_000;
+const HEALTH_TIMEOUT_MS = 420_000;
 const HEALTH_POLL_MS = 200;
 const HEALTH_LOG_INTERVAL_MS = 10_000;
 const STOP_TIMEOUT_MS = 5_000;
