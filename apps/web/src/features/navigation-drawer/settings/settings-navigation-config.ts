@@ -5,6 +5,7 @@ import DoorEnter from "~/components/icons/door-enter";
 import HelpCircle from "~/components/icons/help-circle";
 import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
+import UploadCloud from "~/components/icons/upload-cloud";
 import UserCircle from "~/components/icons/user-circle";
 import Users from "~/components/icons/users";
 import { canAccessPath, type Role } from "~/domain/auth/access/route-policy";
@@ -126,6 +127,15 @@ export function createSettingsNavigationSections(
           icon: Activity,
           section: "administration",
           isHidden: !canAccessPath(options.role, "/settings/event-logs"),
+          isAdvanced: true,
+        },
+        {
+          id: "data-sources",
+          label: "Fuentes de datos",
+          href: "/settings/data-sources",
+          icon: UploadCloud,
+          section: "administration",
+          isHidden: !canAccessPath(options.role, "/settings/data-sources"),
           isAdvanced: true,
         },
       ],
