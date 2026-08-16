@@ -94,7 +94,7 @@
 }
 
 .secondary:hover {
-  background: var(--tertiary);
+  background: var(--background-transparent-light);
 }
 
 .outline {
