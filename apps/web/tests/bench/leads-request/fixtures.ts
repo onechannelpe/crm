@@ -5,15 +5,29 @@ import { randomUUIDv7 } from "bun";
 import type { RecordCandidate } from "~/contracts/engine/record-api.generated";
 import type { SearchResult } from "~/contracts/search/engine-results.generated";
 import type { SearchIntent } from "~/contracts/search/vocabulary";
-import type { DomainError } from "~/domain/errors";
+import { external, type DomainError } from "~/domain/errors";
 import { BranchId, UserId } from "~/domain/ids";
 import type {
   EngineClient,
   RecordCandidatesRequest,
 } from "~/server/integrations/engine/client";
-import { Ok, type Result } from "~/shared/result";
+import { Err, Ok, type Result } from "~/shared/result";
 
 import { BENCH_NOW } from "../_shared/constants";
+
+function ingestUnsupported(): DomainError {
+  return external("ingest is not available in the leads bench harness", {
+    code: "engine_ingest_unsupported",
+  });
+}
+
+// This bench covers lead requests only.
+const NO_INGEST = {
+  registerIngestUpload: () => Promise.resolve(Err(ingestUnsupported())),
+  uploadIngestBlob: () => Promise.resolve(Err(ingestUnsupported())),
+  getIngestJob: () => Promise.resolve(Err(ingestUnsupported())),
+  listIngestSources: () => Promise.resolve(Err(ingestUnsupported())),
+};
 
 const BRANCH_ID = BranchId.trust(TEST_FIXTURES.branches.lima.id);
 const ACTOR_USER_ID = UserId.trust(TEST_FIXTURES.users.backOne.id);
@@ -81,10 +95,12 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
         },
       ]);
     },
+
     async requestCandidates(
       input: RecordCandidatesRequest,
     ): Promise<Result<RecordCandidate[], DomainError>> {
       const index = unitIndexByUser.get(input.userId) ?? 0;
+
       return Ok([
         {
           ruc: ruc(index),
@@ -95,11 +111,14 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
         },
       ]);
     },
+
+    ...NO_INGEST,
   };
 
   async function seedUnit(): Promise<UserId> {
     const index = seq;
     seq += 1;
+
     const userId = UserId.trust(randomUUIDv7());
 
     await ctx.db
@@ -137,8 +156,13 @@ export function createLeadsBench(ctx: TestDbContext): LeadsBench {
     });
 
     unitIndexByUser.set(userId, index);
+
     return userId;
   }
 
-  return { branchId: BRANCH_ID, engine, seedUnit };
+  return {
+    branchId: BRANCH_ID,
+    engine,
+    seedUnit,
+  };
 }

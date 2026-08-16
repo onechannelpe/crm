@@ -1,10 +1,16 @@
-// Engine HTTP endpoints the web client calls.
-//
-// The server owns these routes (crates/leads/src/api.rs, crates/search/src/api.rs).
-// Client route drift is covered by crates/engine/tests/health.rs, which POSTs to
-// every route listed here.
 export const ENGINE_ENDPOINTS = {
   search: "/search",
   recordCandidates: "/records/candidates",
   recordImports: "/records/imports",
+  ingestUploads: "/ingest-uploads",
+  ingestJobs: "/ingest-jobs",
+  ingestSources: "/ingest-sources",
 } as const;
+
+export function ingestUploadBlobPath(uploadId: string): string {
+  return `${ENGINE_ENDPOINTS.ingestUploads}/${encodeURIComponent(uploadId)}/blob`;
+}
+
+export function ingestJobPath(jobId: string): string {
+  return `${ENGINE_ENDPOINTS.ingestJobs}/${encodeURIComponent(jobId)}`;
+}

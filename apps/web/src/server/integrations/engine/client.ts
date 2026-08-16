@@ -5,6 +5,11 @@ import type { DomainError } from "~/domain/errors";
 import type { BranchId, TeamId, UserId } from "~/domain/ids";
 import { buildEngineClientConfig } from "~/server/integrations/engine/config";
 import { createEngineAdapter } from "~/server/integrations/engine/http-client";
+import type {
+  IngestJob,
+  IngestSource,
+  RegisterUploadInput,
+} from "~/server/integrations/engine/ingest-contracts";
 import type { EngineConfig } from "~/server/platform/config/env";
 import type { Result } from "~/shared/result";
 
@@ -23,12 +28,29 @@ export interface EngineClient {
     query: string,
     limit?: number,
   ): Promise<Result<SearchResult[], DomainError>>;
+
   requestCandidates(
     input: RecordCandidatesRequest,
   ): Promise<Result<RecordCandidate[], DomainError>>;
+
+  // Registration reserves the upload; uploading the blob creates the ingest job.
+  registerIngestUpload(
+    input: RegisterUploadInput,
+  ): Promise<Result<{ uploadId: string }, DomainError>>;
+
+  uploadIngestBlob(
+    uploadId: string,
+    body: ReadableStream<Uint8Array> | Blob,
+    contentLength: number,
+  ): Promise<Result<{ jobId: string }, DomainError>>;
+
+  getIngestJob(jobId: string): Promise<Result<IngestJob, DomainError>>;
+
+  listIngestSources(): Promise<Result<IngestSource[], DomainError>>;
 }
 
 export function createDefaultEngineClient(config: EngineConfig): EngineClient {
   const engineConfig = buildEngineClientConfig(config);
+
   return createEngineAdapter(engineConfig);
 }
