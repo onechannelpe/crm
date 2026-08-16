@@ -15,16 +15,21 @@ path = "src/bin/bench_search/main.rs"
 shared     = { path = "../shared" }
 search     = { path = "../search" }
 leads      = { path = "../leads" }
+pipeline = { path = "../pipeline" }
 axum       = { workspace = true }
 rusqlite   = { workspace = true }
 tokio      = { workspace = true }
+tokio-util = { workspace = true }
+futures-util = { workspace = true }
 serde      = { workspace = true }
 serde_json = { workspace = true }
 tracing    = { workspace = true }
 tracing-subscriber = { workspace = true }
 dotenvy    = { workspace = true }
+uuid       = { workspace = true }
 sha2       = { workspace = true }
 hex        = { workspace = true }
+thiserror  = { workspace = true }
 
 [dev-dependencies]
 axum-test  = { workspace = true }
