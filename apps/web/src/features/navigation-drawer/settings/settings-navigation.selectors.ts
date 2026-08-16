@@ -1,4 +1,4 @@
-import UserIcon from "~/components/icons/user";
+import UserCircle from "~/components/icons/user-circle";
 import type { Role } from "~/domain/auth/access/route-policy";
 
 import { createSettingsNavigationSections } from "./settings-navigation-config";
@@ -54,7 +54,7 @@ export function getCurrentSettingsItem(
       id: "profile",
       label: "Perfil",
       href: "/settings/profile",
-      icon: UserIcon,
+      icon: UserCircle,
       section: "account",
     }
   );

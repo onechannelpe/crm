@@ -1,12 +1,12 @@
 import Activity from "~/components/icons/activity";
 import Bell from "~/components/icons/bell";
-import CircleQuestionMark from "~/components/icons/circle-question-mark";
-import LogOut from "~/components/icons/log-out";
+import ColorSwatch from "~/components/icons/color-swatch";
+import DoorEnter from "~/components/icons/door-enter";
+import HelpCircle from "~/components/icons/help-circle";
 import Settings from "~/components/icons/settings";
 import ShieldCheck from "~/components/icons/shield-check";
-import Sun from "~/components/icons/sun";
-import UserIcon from "~/components/icons/user";
-import UserRound from "~/components/icons/user-round";
+import UserCircle from "~/components/icons/user-circle";
+import Users from "~/components/icons/users";
 import { canAccessPath, type Role } from "~/domain/auth/access/route-policy";
 
 import type { SettingsNavSection } from "./settings-navigation.types";
@@ -28,14 +28,14 @@ export function createSettingsNavigationSections(
           id: "profile",
           label: "Perfil",
           href: "/settings/profile",
-          icon: UserIcon,
+          icon: UserCircle,
           section: "account",
         },
         {
           id: "appearance",
           label: "Apariencia",
           href: "/settings/appearance",
-          icon: Sun,
+          icon: ColorSwatch,
           section: "account",
         },
         {
@@ -96,7 +96,7 @@ export function createSettingsNavigationSections(
           id: "members",
           label: "Miembros",
           href: "/settings/members",
-          icon: UserRound,
+          icon: Users,
           section: "administration",
           matchSubPages: true,
           isHidden: !canAccessPath(options.role, "/settings/members"),
@@ -138,13 +138,13 @@ export function createSettingsNavigationSections(
           id: "documentation",
           label: "Centro de ayuda",
           href: "/docs",
-          icon: CircleQuestionMark,
+          icon: HelpCircle,
           section: "other",
         },
         {
           id: "logout",
           label: "Cerrar sesión",
-          icon: LogOut,
+          icon: DoorEnter,
           section: "other",
           onClick: options.onLogout,
         },

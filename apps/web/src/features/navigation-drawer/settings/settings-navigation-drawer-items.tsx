@@ -46,17 +46,11 @@ export function SettingsNavigationDrawerItems() {
           section.items.filter((item) => !item.isHidden),
         );
 
-        const isAdvanced = createMemo(
-          () =>
-            visibleItems().length > 0 &&
-            visibleItems().every((item) => item.isAdvanced),
-        );
-
         return (
           <Show when={visibleItems().length > 0}>
             <NavigationDrawerSection>
               <Show
-                when={isAdvanced()}
+                when={section.isAdvanced}
                 fallback={
                   <NavigationDrawerSectionTitle label={section.label} />
                 }
