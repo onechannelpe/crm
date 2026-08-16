@@ -4,99 +4,89 @@ interface AnimatedExpandableContainerProps {
   isExpanded: boolean;
   children: JSX.Element;
   duration?: number;
+  opacityDuration?: number;
 }
 
 const EASING = "cubic-bezier(0.4, 0, 0.2, 1)";
 
-/*
- * `scrollHeight` reads the full content height even when collapsed with
- * overflow:hidden, so the open animation targets the right value without
- * removing collapsed styles.
- *
- * State changes mid-animation lock the rendered height with
- * getBoundingClientRect() before cancelling, so the next animation starts from
- * what the user sees.
- */
 export function AnimatedExpandableContainer(
   props: AnimatedExpandableContainerProps,
 ) {
-  let el: HTMLDivElement | undefined;
-  let currentAnim: Animation | undefined;
+  let element: HTMLDivElement | undefined;
+  let heightAnimation: Animation | undefined;
+  let opacityAnimation: Animation | undefined;
   let initialized = false;
 
   createEffect(() => {
-    const open = props.isExpanded;
-    if (!el) {
+    const isExpanded = props.isExpanded;
+
+    if (!element) {
       return;
     }
 
     if (!initialized) {
       initialized = true;
-      if (!open) {
-        el.style.height = "0px";
-        el.style.overflow = "hidden";
-        el.style.opacity = "0";
-        el.style.pointerEvents = "none";
-      }
       return;
     }
 
     const duration = props.duration ?? 300;
+    const opacityDuration = props.opacityDuration ?? duration;
+    const currentHeight = element.getBoundingClientRect().height;
+    const currentOpacity = getComputedStyle(element).opacity;
+    const targetHeight = isExpanded ? element.scrollHeight : 0;
 
-    if (open) {
-      const currentH = el.getBoundingClientRect().height;
-      currentAnim?.cancel();
-      const targetH = el.scrollHeight;
-      el.style.height = `${currentH}px`;
-      el.style.overflow = "hidden";
-      el.style.pointerEvents = "";
-      el.style.opacity = "";
+    heightAnimation?.cancel();
+    opacityAnimation?.cancel();
 
-      currentAnim = el.animate(
-        [
-          { height: `${currentH}px`, opacity: "0" },
-          { height: `${targetH}px`, opacity: "1" },
-        ],
-        { duration, easing: EASING },
-      );
-      currentAnim.onfinish = () => {
-        if (!el) {
-          return;
-        }
-        el.style.height = "auto";
-        el.style.overflow = "";
-        el.style.opacity = "";
-      };
-    } else {
-      const currentH = el.getBoundingClientRect().height;
-      currentAnim?.cancel();
+    element.style.height = `${currentHeight}px`;
+    element.style.overflow = "hidden";
+    element.style.opacity = currentOpacity;
+    element.style.pointerEvents = isExpanded ? "" : "none";
 
-      el.style.height = `${currentH}px`;
-      el.style.overflow = "hidden";
-      el.style.pointerEvents = "none";
+    const nextHeightAnimation = element.animate(
+      [{ height: `${currentHeight}px` }, { height: `${targetHeight}px` }],
+      { duration, easing: EASING, fill: "forwards" },
+    );
 
-      currentAnim = el.animate(
-        [
-          { height: `${currentH}px`, opacity: "1" },
-          { height: "0px", opacity: "0" },
-        ],
-        { duration, easing: EASING },
-      );
-      currentAnim.onfinish = () => {
-        if (!el) {
-          return;
-        }
-        el.style.height = "0px";
-        el.style.opacity = "0";
-      };
-    }
+    const nextOpacityAnimation = element.animate(
+      [{ opacity: currentOpacity }, { opacity: isExpanded ? "1" : "0" }],
+      { duration: opacityDuration, easing: EASING, fill: "forwards" },
+    );
+
+    heightAnimation = nextHeightAnimation;
+    opacityAnimation = nextOpacityAnimation;
+
+    // Cancelled animations do not fire `onfinish`, so only the latest pair
+    // can settle the element.
+    let finishedAnimations = 0;
+
+    const settleWhenBothFinish = () => {
+      finishedAnimations += 1;
+
+      if (finishedAnimations < 2 || !element) {
+        return;
+      }
+
+      element.style.height = isExpanded ? "auto" : "0px";
+      element.style.overflow = isExpanded ? "" : "hidden";
+      element.style.opacity = isExpanded ? "" : "0";
+
+      nextHeightAnimation.cancel();
+      nextOpacityAnimation.cancel();
+    };
+
+    nextHeightAnimation.onfinish = settleWhenBothFinish;
+    nextOpacityAnimation.onfinish = settleWhenBothFinish;
   });
 
-  onCleanup(() => currentAnim?.cancel());
+  onCleanup(() => {
+    heightAnimation?.cancel();
+    opacityAnimation?.cancel();
+  });
 
   return (
     <div
-      ref={(e) => (el = e)}
+      ref={(value) => (element = value)}
       style={{
         height: props.isExpanded ? "auto" : "0px",
         overflow: props.isExpanded ? "visible" : "hidden",

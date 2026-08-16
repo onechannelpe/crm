@@ -1,13 +1,13 @@
 import { Show } from "solid-js";
 
-import { Avatar } from "~/components/ui/display/avatar";
+import PhotoUp from "~/components/icons/photo-up";
+import Trash from "~/components/icons/trash";
 import { Button } from "~/components/ui/input/button";
 
 import styles from "./image-input.module.css";
 
 interface ImageInputProps {
   pictureUrl: string | null;
-  initials: string;
   uploading: boolean;
   errorMessage?: string | null;
   disabled?: boolean;
@@ -50,13 +50,11 @@ export function ImageInput(props: ImageInputProps) {
         onClick={openFilePicker}
         disabled={isBusy()}
       >
-        <Avatar
-          imageUrl={props.pictureUrl}
-          fallback={props.initials}
-          class={styles.previewAvatar}
-          imageClass={styles.previewImage}
-          fallbackClass={styles.initials}
-        />
+        <Show when={props.pictureUrl} fallback={<PhotoUp size={20} />}>
+          {(pictureUrl) => (
+            <img src={pictureUrl()} alt="" class={styles.previewImage} />
+          )}
+        </Show>
       </button>
 
       <div class={styles.controls}>
@@ -82,18 +80,18 @@ export function ImageInput(props: ImageInputProps) {
           >
             Subir
           </Button>
-          <Show when={props.pictureUrl}>
-            <button
-              type="button"
-              class={styles.removeLink}
-              onClick={() => {
-                void props.onRemove();
-              }}
-              disabled={isBusy()}
-            >
-              Eliminar foto
-            </button>
-          </Show>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              void props.onRemove();
+            }}
+            disabled={!props.pictureUrl || isBusy()}
+          >
+            <Trash size={14} />
+            Eliminar
+          </Button>
         </div>
         <p class={styles.helpText}>
           Admitimos imágenes en formato PNG, JPEG y GIF de hasta 10 MB.

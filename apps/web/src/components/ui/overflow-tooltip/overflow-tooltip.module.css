@@ -5,11 +5,24 @@
   position: relative;
 }
 
+.wrapperFill {
+  display: block;
+  width: 100%;
+}
+
 .text {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.textClamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--max-rows);
+  white-space: normal;
 }
 
 .tooltip {
@@ -41,4 +54,16 @@
 .wrapper:focus-within .tooltip {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+.tooltipRight {
+  bottom: auto;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+}
+
+.wrapper:hover .tooltipRight,
+.wrapper:focus-within .tooltipRight {
+  transform: translateY(-50%) translateX(0);
 }
