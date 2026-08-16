@@ -22,6 +22,7 @@ export function AdvancedSettingsWrapper(props: AdvancedSettingsWrapperProps) {
     <AnimatedExpandableContainer
       isExpanded={advancedModeEnabled()}
       duration={ADVANCED_SETTINGS_ANIMATION_DURATION.size}
+      opacityDuration={ADVANCED_SETTINGS_ANIMATION_DURATION.opacity}
     >
       <AdvancedSettingsContentWrapperWithDot
         hideDot={props.hideDot}

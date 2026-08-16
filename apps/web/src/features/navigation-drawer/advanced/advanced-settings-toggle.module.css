@@ -5,52 +5,13 @@
   height: 20px;
   justify-content: space-between;
   padding: 4px;
+  padding-right: 0;
   position: relative;
   width: 100%;
-}
-
-.iconContainer {
-  align-items: center;
-  display: flex;
-  left: -20px;
-  position: absolute;
 }
 
 .text {
   color: var(--foreground-secondary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-}
-
-.switch {
-  width: 24px;
-  height: 16px;
-  border: 0;
-  border-radius: 10px;
-  background: var(--background-transparent-light);
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  position: relative;
-  transition: background-color 300ms ease;
-}
-
-.switchChecked {
-  background: var(--warning);
-}
-
-.thumb {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: var(--background);
-  position: absolute;
-  left: 0;
-  top: 2px;
-  transform: translateX(2px);
-  transition: transform 300ms ease;
-}
-
-.switchChecked .thumb {
-  transform: translateX(10px);
 }
