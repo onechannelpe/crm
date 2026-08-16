@@ -2,14 +2,12 @@ import { useAction, useSubmission, useSubmissions } from "@solidjs/router";
 import { createSignal, onCleanup } from "solid-js";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
-import { getUserInitials } from "~/components/layout/account-menu-utils";
 import { useAuthenticatedSession } from "~/components/providers/authenticated-session-provider";
 import { SettingsSection } from "~/components/settings/SettingsSection";
 import { Button } from "~/components/ui/input/button";
 import { ImageInput } from "~/components/ui/input/image-input";
 import { Input } from "~/components/ui/input/input";
 import { actionErrorMessage } from "~/contracts/errors";
-import { shortName } from "~/domain/identity/display-name";
 import { isValidPhone, normalizePhoneInput } from "~/domain/phone/pe-mobile";
 import {
   removeUserAvatarMutation,
@@ -140,7 +138,6 @@ export default function ProfilePage() {
       <SettingsSection title="Foto">
         <ImageInput
           pictureUrl={avatarPreviewUrl() ?? currentUser().avatarUrl}
-          initials={getUserInitials(shortName(currentUser()))}
           uploading={avatarMutationPending()}
           errorMessage={avatarErrorMessage()}
           onUpload={handleAvatarUpload}
@@ -151,17 +148,6 @@ export default function ProfilePage() {
       <SettingsSection
         title="Teléfono"
         description="Tu número de teléfono corporativo"
-        actions={
-          <Button
-            type="submit"
-            form={phoneFormId}
-            size="sm"
-            variant="secondary"
-            loading={Boolean(profileSubmission.pending)}
-          >
-            Guardar
-          </Button>
-        }
       >
         <form
           id={phoneFormId}
@@ -178,6 +164,17 @@ export default function ProfilePage() {
               }
               placeholder="987654321"
             />
+          </div>
+
+          <div class={styles.formActions}>
+            <Button
+              type="submit"
+              size="sm"
+              variant="secondary"
+              loading={Boolean(profileSubmission.pending)}
+            >
+              Guardar
+            </Button>
           </div>
         </form>
       </SettingsSection>

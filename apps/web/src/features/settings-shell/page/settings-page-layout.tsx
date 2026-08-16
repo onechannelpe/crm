@@ -16,22 +16,23 @@ interface SettingsPageLayoutProps extends ParentProps {
   actionButton?: JSX.Element;
 }
 
-// Each page owns its top bar so it can provide page-level actions.
 export function SettingsPageLayout(props: SettingsPageLayoutProps) {
   const location = useLocation();
   const { currentUser } = useAuthenticatedSession();
 
+  const role = createMemo(() => currentUser().role);
+
   const currentItem = createMemo(() =>
-    getCurrentSettingsItem(location.pathname, currentUser().role),
+    getCurrentSettingsItem(location.pathname, role()),
   );
 
   const sectionHref = createMemo(() =>
-    getSettingsSectionHref(currentItem().section, currentUser().role),
+    getSettingsSectionHref(currentItem().section, role()),
   );
 
   const breadcrumbItems = createMemo<BreadcrumbItem[]>(() => [
     {
-      label: getSettingsSectionLabel(currentItem().section, currentUser().role),
+      label: getSettingsSectionLabel(currentItem().section, role()),
       href: sectionHref(),
     },
     {

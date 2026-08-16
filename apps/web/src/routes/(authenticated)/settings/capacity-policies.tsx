@@ -1,6 +1,6 @@
 import { Key } from "@solid-primitives/keyed";
 import { createAsync, useAction, useSubmission } from "@solidjs/router";
-import { Show, createUniqueId, type Accessor } from "solid-js";
+import { Show, type Accessor } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import { useSnackBar } from "~/components/feedback/snack-bar-manager/use-snack-bar";
@@ -113,7 +113,6 @@ function CapacityPoliciesEditor(props: {
     (input) => input[0].scopeType === "branch",
   );
   const { enqueueSuccessSnackBar, enqueueErrorSnackBar } = useSnackBar();
-  const branchFormId = createUniqueId();
 
   const [branchDraft, setBranchDraft] = createStore<CapacityLimitsDraft>({
     searchLimit: String(initialSnapshot.branchSearchLimit ?? 2_000),
@@ -142,20 +141,8 @@ function CapacityPoliciesEditor(props: {
       <SettingsSection
         title="Sucursal"
         description="Define los límites de búsquedas, clientes activos y asignaciones diarias de la sucursal. Los equipos los heredan salvo que definan los suyos."
-        actions={
-          <Button
-            type="submit"
-            form={branchFormId}
-            size="sm"
-            variant="secondary"
-            loading={submission.pending}
-          >
-            Guardar
-          </Button>
-        }
       >
         <form
-          id={branchFormId}
           onSubmit={(event) => {
             event.preventDefault();
             void saveBranch();
@@ -165,6 +152,17 @@ function CapacityPoliciesEditor(props: {
             draft={branchDraft}
             setValue={(key, value) => setBranchDraft(key, value)}
           />
+
+          <div class={styles.formActions}>
+            <Button
+              type="submit"
+              size="sm"
+              variant="secondary"
+              loading={submission.pending}
+            >
+              Guardar
+            </Button>
+          </div>
         </form>
       </SettingsSection>
 
