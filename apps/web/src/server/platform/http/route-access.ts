@@ -1,4 +1,3 @@
-import type { WireKind } from "~/contracts/errors";
 import type { Permission } from "~/domain/auth/access/rbac";
 import type { AuthSession } from "~/domain/auth/access/session-types";
 import type { DomainError } from "~/domain/errors";
@@ -7,17 +6,8 @@ import {
   authenticate,
   authorizePermission,
 } from "~/server/platform/action/session";
+import { HTTP_STATUS_BY_WIRE_KIND } from "~/server/platform/http/wire-status";
 import { Err, isErr, Ok, type Result } from "~/shared/result";
-
-const HTTP_STATUS_BY_WIRE_KIND: Record<WireKind, number> = {
-  validation: 400,
-  unauthenticated: 401,
-  forbidden: 403,
-  not_found: 404,
-  conflict: 409,
-  rate_limit: 429,
-  internal: 500,
-};
 
 function authFailureResponse(error: DomainError): Response {
   const wire = toWire(error);

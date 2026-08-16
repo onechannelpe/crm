@@ -5,6 +5,7 @@ import { resolveSessionFromEvent } from "~/server/auth/session/resolve-from-even
 import { createCapacityRuntime } from "~/server/capacity/runtime";
 import { createSharedRuntime } from "~/server/composition/shared-runtime";
 import { createContactAssignmentsRuntime } from "~/server/contact-assignments/runtime";
+import { createDataSourceUploadsRuntime } from "~/server/data-source-uploads/runtime";
 import { createEventLogsChannel } from "~/server/event-logs/realtime";
 import { createEventLogsService } from "~/server/event-logs/service";
 import { createExtensionRuntime } from "~/server/extension/runtime";
@@ -67,6 +68,7 @@ function createApplication(infrastructure: ServerInfrastructure) {
       executor: db,
       engine: shared.engine,
     }),
+    dataSourceUploads: createDataSourceUploadsRuntime(shared.engine),
     eventLogs,
     extension: createExtensionRuntime(infrastructure),
     files: {
