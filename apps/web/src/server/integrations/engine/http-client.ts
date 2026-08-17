@@ -114,7 +114,10 @@ export function createEngineAdapter(config: EngineClientConfig): EngineClient {
     );
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), config.timeoutMs);
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      config.uploadTimeoutMs,
+    );
 
     try {
       return await fetch(`${config.baseUrl}${ingestUploadBlobPath(uploadId)}`, {

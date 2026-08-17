@@ -1,8 +1,11 @@
+const UPLOAD_TIMEOUT_MS = 900_000;
+
 export interface EngineClientConfig {
   baseUrl: string;
   keyId: string;
   hmacSecret: string;
   timeoutMs: number;
+  uploadTimeoutMs: number;
 }
 
 export type EngineConnectMode = "local" | "internal" | "remote";
@@ -79,5 +82,6 @@ export function buildEngineClientConfig({
     keyId: engineHmacKeyId,
     hmacSecret: engineHmacSecret,
     timeoutMs,
+    uploadTimeoutMs: UPLOAD_TIMEOUT_MS,
   };
 }

@@ -164,4 +164,16 @@ describe("engine client config", () => {
       }),
     ).not.toThrow();
   });
+
+  it("keeps the upload timeout independent of ENGINE_TIMEOUT_MS", () => {
+    const config = buildEngineClientConfig({
+      ...VALID_HMAC,
+      engineConnectMode: "local",
+      engineUrl: "http://127.0.0.1:3001",
+      engineTimeoutMs: "5000",
+    });
+
+    expect(config.timeoutMs).toBe(5000);
+    expect(config.uploadTimeoutMs).toBeGreaterThan(config.timeoutMs);
+  });
 });
