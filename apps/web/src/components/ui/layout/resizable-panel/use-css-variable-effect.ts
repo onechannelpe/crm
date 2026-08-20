@@ -5,11 +5,11 @@ export function useCssVariableEffect(
   value: Accessor<string | number>,
 ) {
   onSettled(() => {
-    createEffect(() => {
-      document.documentElement.style.setProperty(
-        cssVariableName,
-        String(value()),
-      );
-    });
+    createEffect(
+      () => String(value()),
+      (next) => {
+        document.documentElement.style.setProperty(cssVariableName, next);
+      },
+    );
   });
 }
