@@ -1,64 +1,36 @@
+import { AnimatePresence, motion } from "@crm/solid-motion";
 import { type JSX } from "@solidjs/web";
-import { createEffect, createSignal, onCleanup, Show } from "solid-js";
-
-import { animate } from "./animate";
-
-const DURATION_MS = 300;
 
 interface PresenceTransitionProps {
   show: boolean;
   children: JSX.Element;
 }
 
+// CSS `ease`, which is what the hand-rolled version passed to WAAPI.
+const FADE = { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] } as const;
+
+/**
+ * Fades its children in and out, keeping them mounted until the fade out ends.
+ *
+ * The boundary owns the subtree, which is what makes the exit possible at all:
+ * Solid disposes a branch the moment its condition flips, so the hand-rolled
+ * version had to keep its own `mounted` signal and a `requestAnimationFrame`
+ * to get a paint in before animating. Both are gone, along with the entrance
+ * flash the rAF caused.
+ */
 export function PresenceTransition(props: PresenceTransitionProps) {
-  const [mounted, setMounted] = createSignal(props.show);
-  let el: HTMLDivElement | undefined;
-  let anim: Animation | undefined;
-
-  createEffect(
-    () => props.show,
-    (show) => {
-      if (show) {
-        setMounted(true);
-
-        // rAF ensures paint before animating (the el ref is set on mount).
-        requestAnimationFrame(() => {
-          if (!el) {
-            return;
-          }
-          anim?.cancel();
-          el.style.opacity = "0";
-          anim = animate(el, [{ opacity: 0 }, { opacity: 1 }], {
-            duration: DURATION_MS,
-            easing: "ease",
-          });
-          anim.onfinish = () => {
-            if (el) {
-              el.style.opacity = "";
-            }
-          };
-        });
-      } else {
-        if (!el) {
-          setMounted(false);
-          return;
-        }
-
-        anim?.cancel();
-        anim = animate(el, [{ opacity: 1 }, { opacity: 0 }], {
-          duration: DURATION_MS,
-          easing: "ease",
-        });
-        anim.onfinish = () => setMounted(false);
-      }
-    },
-  );
-
-  onCleanup(() => anim?.cancel());
-
   return (
-    <Show when={mounted()}>
-      <div ref={(r) => (el = r)}>{props.children}</div>
-    </Show>
+    <AnimatePresence when={props.show}>
+      {() => (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={FADE}
+        >
+          {props.children}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
