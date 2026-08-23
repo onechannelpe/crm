@@ -1,5 +1,5 @@
-import { Motion } from "@crm/solid-motion";
-import { ErrorBoundary, Show, Suspense } from "solid-js";
+import { motion } from "@crm/solid-motion";
+import { Errored, Show, Loading } from "solid-js";
 
 import { HotkeyBoundary } from "../core/hotkeys/hotkey-boundary";
 import { SIDE_PANEL_PAGES_CONFIG } from "../registry/page-registry";
@@ -16,14 +16,14 @@ export function Router(props: { isMobile: boolean }) {
   return (
     <Container isMobile={props.isMobile}>
       <div class={styles.router}>
-        <Motion.div
+        <motion.div
           class={styles.topBar}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.075, delay: 0.1 }}
         >
           <TopBar isMobile={props.isMobile} />
-        </Motion.div>
+        </motion.div>
 
         <div class={styles.pageBody}>
           <Show when={currentEntry()} keyed>
@@ -35,17 +35,17 @@ export function Router(props: { isMobile: boolean }) {
               return (
                 <HotkeyBoundary class={styles.pageContent}>
                   <PageInstanceProvider pageId={entry.pageId}>
-                    <ErrorBoundary
-                      fallback={
-                        <div class={styles.pageState}>
-                          No se pudo cargar el panel.
-                        </div>
-                      }
-                    >
-                      <Suspense fallback={<PageSkeleton />}>
+                    <Loading fallback={<PageSkeleton />}>
+                      <Errored
+                        fallback={
+                          <div class={styles.pageState}>
+                            No se pudo cargar el panel.
+                          </div>
+                        }
+                      >
                         <PageComponent />
-                      </Suspense>
-                    </ErrorBoundary>
+                      </Errored>
+                    </Loading>
                   </PageInstanceProvider>
                 </HotkeyBoundary>
               );

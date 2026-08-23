@@ -1,57 +1,23 @@
-import { onCleanup, onMount, type JSX } from "solid-js";
+import { motion } from "@crm/solid-motion";
+import type { JSX } from "@solidjs/web";
 
-interface EnterTransitionProps {
-  children: JSX.Element;
-}
+const ENTER_TRANSITION = {
+  duration: 0.28,
+  ease: [0.16, 1, 0.3, 1],
+} as const;
 
-const ENTER_DURATION_MS = 280;
-const ENTER_EASING = "cubic-bezier(0.16, 1, 0.3, 1)";
-
-export function EnterTransition(props: EnterTransitionProps) {
-  let containerRef: HTMLDivElement | null = null;
-  let animation: Animation | undefined;
-
-  onMount(() => {
-    if (typeof window === "undefined" || !containerRef) {
-      return;
-    }
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-
-    const element = containerRef;
-    const targetHeight = element.scrollHeight;
-
-    element.style.opacity = "0";
-    element.style.height = "0px";
-    element.style.overflow = "hidden";
-
-    requestAnimationFrame(() => {
-      animation = element.animate(
-        [
-          { opacity: 0, height: "0px" },
-          { opacity: 1, height: `${targetHeight}px` },
-        ],
-        {
-          duration: ENTER_DURATION_MS,
-          easing: ENTER_EASING,
-          fill: "forwards",
-        },
-      );
-
-      animation.onfinish = () => {
-        element.style.opacity = "1";
-        element.style.height = "auto";
-        element.style.overflow = "visible";
-      };
-    });
-  });
-
-  onCleanup(() => {
-    animation?.cancel();
-  });
-
+export function EnterTransition(props: { children: JSX.Element }) {
   return (
-    <div ref={(element) => (containerRef = element)}>{props.children}</div>
+    <motion.div
+      initial={{ opacity: 0, height: 0, overflow: "hidden" }}
+      animate={{
+        opacity: 1,
+        height: "auto",
+        transitionEnd: { overflow: "visible" },
+      }}
+      transition={ENTER_TRANSITION}
+    >
+      {props.children}
+    </motion.div>
   );
 }

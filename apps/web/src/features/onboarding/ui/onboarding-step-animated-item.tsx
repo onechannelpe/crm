@@ -1,17 +1,9 @@
-import { type JSX } from "solid-js";
-
-import { Animated } from "~/components/ui/animation/animated";
+import { motion } from "@crm/solid-motion";
+import { type JSX } from "@solidjs/web";
 
 const SLIDE_OFFSET_PX = 12;
 const STAGGER_DELAY_S = 0.07;
 const NORMAL_DURATION_S = 0.3;
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
 
 interface OnboardingStepAnimatedItemProps {
   index: number;
@@ -19,24 +11,23 @@ interface OnboardingStepAnimatedItemProps {
   class?: string;
 }
 
+/** One line of an onboarding step, sliding up a beat after the line above it. */
 export function OnboardingStepAnimatedItem(
   props: OnboardingStepAnimatedItemProps,
 ) {
-  const reduce = prefersReducedMotion();
-
   return (
-    <Animated
+    <motion.div
       class={props.class}
       style={{ "max-width": "100%" }}
-      initial={{ opacity: 0, y: reduce ? 0 : SLIDE_OFFSET_PX }}
+      initial={{ opacity: 0, y: SLIDE_OFFSET_PX }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: reduce ? 0 : NORMAL_DURATION_S,
-        ease: "ease-in-out",
-        delay: reduce ? 0 : props.index * STAGGER_DELAY_S,
+        duration: NORMAL_DURATION_S,
+        ease: "easeInOut",
+        delay: props.index * STAGGER_DELAY_S,
       }}
     >
       {props.children}
-    </Animated>
+    </motion.div>
   );
 }
