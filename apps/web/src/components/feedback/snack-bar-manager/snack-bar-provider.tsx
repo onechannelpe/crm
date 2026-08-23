@@ -102,10 +102,7 @@ export function SnackBarProvider(props: { children: JSX.Element }) {
                 exit="out"
                 transition={SLIDE}
               >
-                <SnackBar
-                  item={item()}
-                  onDismiss={() => dismiss(item().id)}
-                />
+                <SnackBar item={item()} onDismiss={() => dismiss(item().id)} />
               </motion.div>
             )}
           </AnimatePresenceList>

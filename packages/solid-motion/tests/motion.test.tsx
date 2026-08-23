@@ -1111,7 +1111,9 @@ describe("whileInView", () => {
       </motion.div>
     ));
 
-    const [parent, child] = [...container.querySelectorAll("div")] as HTMLElement[];
+    const [parent, child] = [
+      ...container.querySelectorAll("div"),
+    ] as HTMLElement[];
     expect(parent.style.opacity).toBe("0");
     expect(child.style.opacity).toBe("0");
 
@@ -1144,7 +1146,9 @@ describe("whileInView", () => {
       </motion.div>
     ));
 
-    const [parent, child] = [...container.querySelectorAll("div")] as HTMLElement[];
+    const [parent, child] = [
+      ...container.querySelectorAll("div"),
+    ] as HTMLElement[];
     expect(parent.style.opacity).toBe("1");
 
     setShown(false);
