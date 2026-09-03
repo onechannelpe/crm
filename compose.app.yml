@@ -15,7 +15,7 @@ x-app: &app
     NODE_ENV: production
     NITRO_HOST: 0.0.0.0
     NITRO_PORT: 3000
-    WEB_DB_URL: postgres://postgres@postgres:5432/crm
+    WEB_DB_URL: postgres://postgres@culqi360-postgres:5432/crm
     ENGINE_CONNECT_MODE: internal
     ENGINE_URL: http://crm-engine:3001
     WEB_UPLOADS_ROOT: /var/lib/crm-web/documents
@@ -42,6 +42,10 @@ services:
       interval: 10s
       timeout: 3s
       retries: 6
+    networks:
+      default:
+        aliases:
+          - culqi360-postgres
 
   prepare:
     image: crm-app-${DEPLOYMENT_NAME:?Set DEPLOYMENT_NAME}:latest
@@ -58,7 +62,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
-      WEB_DB_URL: postgres://postgres@postgres:5432/crm
+      WEB_DB_URL: postgres://postgres@culqi360-postgres:5432/crm
     command:
       - /bin/sh
       - -c
@@ -99,6 +103,8 @@ services:
   worker:
     <<: *app
     command: ["bun", "run", "worker:maintenance:prod"]
+    networks:
+      - default
     depends_on:
       postgres:
         condition: service_healthy
