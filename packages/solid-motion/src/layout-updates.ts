@@ -19,6 +19,8 @@ const mounted = new Set<IProjectionNode>();
 const pending = new Map<HTMLElement, LayoutHost>();
 /** Nodes that relevant mutations may have moved since the last commit. */
 const touched = new Set<IProjectionNode>();
+/** Elements whose inline style this package writes on the animation frame. */
+const painted = new WeakSet<Element>();
 let scheduled = false;
 let watcher: MutationObserver | undefined;
 
@@ -47,6 +49,20 @@ export function dropLayoutNode(element: HTMLElement): void {
 
   node.unmount();
   scheduleCommit();
+}
+
+/**
+ * Declares that this package owns the element's inline style. The watcher reads
+ * inline style as a layout signal, and every animated element rewrites its own
+ * on every frame; without the claim each paint would schedule a commit and end
+ * the very animation that painted it.
+ */
+export function claimInlineStyle(element: Element): void {
+  painted.add(element);
+}
+
+export function releaseInlineStyle(element: Element): void {
+  painted.delete(element);
 }
 
 function scheduleCommit() {
@@ -155,30 +171,52 @@ function mountPending() {
 /** Watches document mutations that can move a projecting element. */
 function watch() {
   watcher ??= new MutationObserver(onMutations);
-  // Inline styles are written by the animation loop and must not reschedule it.
+  // `attributeFilter` cannot express `data-*`, so every attribute change is
+  // delivered and `movesLayout` decides which ones count.
   watcher.observe(document, {
     childList: true,
     subtree: true,
     characterData: true,
     attributes: true,
-    attributeFilter: ["class"],
   });
 }
 
 function onMutations(records: MutationRecord[]) {
-  absorb(records);
-  scheduleCommit();
+  if (absorb(records)) scheduleCommit();
 }
 
-function absorb(records: MutationRecord[]) {
+/**
+ * Marks the nodes each record may have moved. Reports whether any record was a
+ * layout change at all, because the rest are this package painting a frame.
+ */
+function absorb(records: MutationRecord[]): boolean {
+  let moving = false;
+
   for (const record of records) {
+    if (!movesLayout(record)) continue;
+    moving = true;
     for (const node of mounted) {
       if (movedBy(node, record)) touched.add(node);
     }
   }
+
+  return moving;
 }
 
-/** Whether a mutation could have moved the node or one of its siblings. */
+/** Whether a mutation is one that changes layout rather than paint. */
+function movesLayout(record: MutationRecord): boolean {
+  if (record.type !== "attributes") return true;
+
+  const name = record.attributeName;
+  if (!name) return false;
+  // On an element this package animates, inline style is the frame it just
+  // painted, not a layout change the app made.
+  if (name === "style") return !painted.has(record.target as Element);
+
+  return name === "class" || name === "hidden" || name.startsWith("data-");
+}
+
+/** Whether a mutation inside or above the node could have moved it. */
 function movedBy(node: IProjectionNode, record: MutationRecord): boolean {
   const element = node.instance as HTMLElement | undefined;
   if (!element) return false;

@@ -20,6 +20,7 @@ import {
   type VisualElement,
 } from "motion-dom";
 
+import { claimInlineStyle, releaseInlineStyle } from "./layout-updates";
 import {
   createProjection,
   type LayoutOptions,
@@ -85,6 +86,10 @@ export function createValueStore(
     style: {},
     vars: {},
   };
+
+  // Every value this store writes lands in the element's inline style, so the
+  // layout watcher must read those writes as paint rather than as movement.
+  claimInlineStyle(element);
 
   // Projection supports HTML only. SVG keeps its existing property effects.
   const projection =
@@ -200,6 +205,7 @@ export function createValueStore(
 
     dispose() {
       projection?.dispose();
+      releaseInlineStyle(element);
       for (const cancel of unbind) cancel();
       for (const [key, value] of values) {
         if (!bound.has(key)) value.destroy();
