@@ -96,10 +96,11 @@ export function createMotionController(
     const generationAtStart = generation;
     if (!store) return;
 
-    // Layout timing follows the winning pass, including its transition and
-    // animation switch.
+    // Layout timing follows the winning pass. The target's transition is the one
+    // the active layer brought, so a `transition.layout` written into a variant
+    // or an inline target reaches the projection engine.
     store.setLayoutTiming({
-      transition: pass.fallbackTransition,
+      transition: pass.target.transition,
       instant: pass.instantLayout,
     });
 
