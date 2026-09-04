@@ -15,8 +15,15 @@ export type MotionSource<T> = T | (() => T) | MotionValue<T>;
 /**
  * Creates a MotionValue from a literal, Solid accessor, or MotionValue.
  *
- * Accessors update through Solid effects, transitions animate source changes,
- * and the returned value is destroyed with its scope.
+ * Solid accessors bridge into motion through an effect: the signal stays the
+ * source of truth, and every change calls `set`. Those writes bypass Solid's
+ * render path entirely, going straight to the element on the frame loop, so
+ * nothing re-renders when the value moves. With a `transition`, a change does
+ * not jump to the new value, it retargets the spring: `attachFollow`
+ * intercepts `set` and animates from the value's current position and
+ * velocity rather than restarting it. Cleanup follows the owner, so a
+ * component unmounting destroys the value and tears down its subscriptions
+ * with it.
  */
 export function createMotionValue<T extends string | number>(
   source: MotionSource<T>,
