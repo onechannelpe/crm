@@ -78,10 +78,13 @@ it describes the first paint.
 - `onAnimationStart(definition)` / `onAnimationComplete(definition)` /
   `onUpdate(latest)`: Plain callbacks, not reactive.
 
-Targets may also be arrays (`animate={["hidden", "visible"]}` or a mix of
-labels and inline targets). Entries merge left to right, with later entries
-winning per key. A value can itself be a keyframe array
-(`animate={{ opacity: [0, 1] }}`). For `height`, `width`, and other pairs with
+A target may also be a list of variant labels
+(`animate={["hidden", "visible"]}`), resolved against `variants` and merged
+left to right, with later entries winning per key. Inline targets cannot be
+mixed into that array; `AnimationDefinition` only accepts `string[]` alongside
+a single label, a single inline target, or `false`. A value inside an inline
+target can itself be a keyframe array (`animate={{ opacity: [0, 1] }}`). For
+`height`, `width`, and other pairs with
 incompatible start and end units (`0` to `"auto"`, `"none"`, or `"100%"`),
 the package measures the element and animates between the resulting numbers.
 This measurement path applies to HTML elements only. SVG uses its attribute
