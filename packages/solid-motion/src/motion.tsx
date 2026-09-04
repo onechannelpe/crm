@@ -17,6 +17,8 @@ const motionPropKeys = [
   "custom",
   "exit",
   "initial",
+  "layout",
+  "layoutId",
   "onAnimationComplete",
   "onAnimationStart",
   "onUpdate",
@@ -48,13 +50,6 @@ function createMotionComponent<TProps extends object>(host: MotionHost) {
   return (props: TProps & MotionProps): JSX.Element => {
     const motion = createMotion(() => props, tag);
     const forwarded = omit(props, ...motionPropKeys);
-    // Motion-driven entries are bound to the element already, so the DOM has no
-    // use for them. Nothing observable goes wrong if they slip through, which
-    // is why no test pins this: `motion.style` covers every bound key, and the
-    // ones it renames (`x` to `transform`) leave behind a property name the CSS
-    // parser drops anyway. It stays because handing `setProperty` a function or
-    // a `MotionValue` is wrong on its face, and relying on the merge order to
-    // hide it is a thinner guarantee than not doing it.
     const style = createMemo(
       () => merge(plainCss(props.style), motion.style) as JSX.CSSProperties,
     );
@@ -62,9 +57,7 @@ function createMotionComponent<TProps extends object>(host: MotionHost) {
     const DynamicComponent = Dynamic as unknown as (
       props: Record<string, unknown>,
     ) => JSX.Element;
-    // Kept as a function on purpose. Evaluating the element before wrapping it
-    // would create the whole subtree outside the provider, and the descendants
-    // that need the variant scope are exactly the ones inside it.
+    // Render lazily so descendants are created inside the variant provider.
     const renderElement = () => (
       <DynamicComponent
         component={host}
