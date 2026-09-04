@@ -277,6 +277,190 @@ describe("layout", () => {
     expect(Number(thumb.style.opacity)).toBe(0);
   });
 
+  it("aims a running animation at the box a later container change gave it", async () => {
+    const [step, setStep] = createSignal(0);
+
+    const { container } = render(() => (
+      <div class={`row step-${step()}`}>
+        <motion.div class="box" layout transition={{ duration: 0.4 }} />
+      </div>
+    ));
+
+    const element = container.querySelector(".box") as HTMLElement;
+    const positions = [0, 200, -300];
+    stubBox(element, () => ({
+      left: positions[step()],
+      top: 0,
+      width: 100,
+      height: 100,
+    }));
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    setStep(1);
+    flush();
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    // The container's class moves the child again, mid-flight.
+    setStep(2);
+    flush();
+    await new Promise((resolve) => setTimeout(resolve, 32));
+
+    // An animation still aimed at the second box overshoots the third one,
+    // because the element is laid out there while the transform is not.
+    const boxes = await sample(element, 200);
+    for (const box of boxes) expect(box.left).toBeGreaterThan(positions[2] - 1);
+
+    await settle();
+    expect(projectedBox(element).left).toBe(positions[2]);
+  });
+
+  it("carries an interrupted animation on from where the element had reached", async () => {
+    const [wide, setWide] = createSignal(false);
+    const [crowded, setCrowded] = createSignal(false);
+
+    const { container } = render(() => (
+      <div class={wide() ? "row wide" : "row"}>
+        {crowded() ? <div class="filler" /> : null}
+        <motion.div class="box" layout transition={{ duration: 0.4 }} />
+      </div>
+    ));
+
+    const element = container.querySelector(".box") as HTMLElement;
+    const home = { left: 0, top: 0, width: 100, height: 100 };
+    const away = { left: 200, top: 0, width: 100, height: 100 };
+    const pushed = { left: -300, top: 0, width: 100, height: 100 };
+    stubBox(element, () => {
+      if (crowded()) return pushed;
+      return wide() ? away : home;
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    setWide(true);
+    flush();
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    const reached = projectedBox(element);
+    // A sibling arrives mid-flight and sends the element back the other way.
+    setCrowded(true);
+    flush();
+
+    // Restarting from the first destination would carry the element forward to
+    // a box it never occupied before turning around.
+    const boxes = await sample(element, 200);
+    for (const box of boxes) expect(box.left).toBeLessThan(reached.left + 20);
+
+    await settle();
+    expect(projectedBox(element)).toEqual(pushed);
+  });
+
+  it("keeps the pointer events the caller set on a shared element", async () => {
+    const { container } = render(() => (
+      <motion.div
+        class="thumb"
+        layoutId="card"
+        style={{ "pointer-events": "none" }}
+      />
+    ));
+
+    const element = container.querySelector(".thumb") as HTMLElement;
+    stubBox(element, () => ({ left: 0, top: 0, width: 100, height: 100 }));
+
+    // Projection owns `pointerEvents` on a shared element and clears it on
+    // every paint that has no delta to apply.
+    await settle();
+    expect(element.style.pointerEvents).toBe("none");
+  });
+
+  it("takes layout timing from the transition the target carries", async () => {
+    const [wide, setWide] = createSignal(false);
+
+    const { container } = render(() => (
+      <div class={wide() ? "row wide" : "row"}>
+        <motion.div
+          class="box"
+          layout
+          animate={{ opacity: 1, transition: { layout: { duration: 0.05 } } }}
+          transition={{ duration: 5 }}
+        />
+      </div>
+    ));
+
+    const element = container.querySelector(".box") as HTMLElement;
+    const expanded = { left: 200, top: 0, width: 300, height: 100 };
+    stubBox(element, () =>
+      wide() ? expanded : { left: 0, top: 0, width: 100, height: 100 },
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    setWide(true);
+    flush();
+
+    // The element's own five second transition would still be moving here.
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(projectedBox(element)).toEqual(expanded);
+  });
+
+  it("animates a layout change an ancestor drove with inline style", async () => {
+    const [wide, setWide] = createSignal(false);
+
+    const { container } = render(() => (
+      <div class="row" style={{ "padding-left": wide() ? "200px" : "0px" }}>
+        <motion.div class="box" layout transition={{ duration: 0.4 }} />
+      </div>
+    ));
+
+    const element = container.querySelector(".box") as HTMLElement;
+    const collapsed = { left: 0, top: 0, width: 100, height: 100 };
+    const expanded = { left: 200, top: 0, width: 100, height: 100 };
+    stubBox(element, () => (wide() ? expanded : collapsed));
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    setWide(true);
+    flush();
+
+    const boxes = await sample(element, 250);
+    const midpoints = boxes.filter((box) =>
+      between(box.left, collapsed.left, expanded.left),
+    );
+    expect(midpoints.length).toBeGreaterThan(3);
+
+    await settle();
+    expect(projectedBox(element)).toEqual(expanded);
+  });
+
+  it("animates a layout change an ancestor drove with a data attribute", async () => {
+    const [wide, setWide] = createSignal(false);
+
+    const { container } = render(() => (
+      <div class="row" data-size={wide() ? "wide" : "narrow"}>
+        <motion.div class="box" layout transition={{ duration: 0.4 }} />
+      </div>
+    ));
+
+    const element = container.querySelector(".box") as HTMLElement;
+    const collapsed = { left: 0, top: 0, width: 100, height: 100 };
+    const expanded = { left: 200, top: 0, width: 100, height: 100 };
+    stubBox(element, () => (wide() ? expanded : collapsed));
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    setWide(true);
+    flush();
+
+    const boxes = await sample(element, 250);
+    const midpoints = boxes.filter((box) =>
+      between(box.left, collapsed.left, expanded.left),
+    );
+    expect(midpoints.length).toBeGreaterThan(3);
+
+    await settle();
+    expect(projectedBox(element)).toEqual(expanded);
+  });
+
   it("hands the transition back to the surviving member when the other unmounts", async () => {
     const [open, setOpen] = createSignal(true);
 
