@@ -6,6 +6,7 @@ import {
   renderHTML,
   type HTMLRenderState,
   type IProjectionNode,
+  type MotionStyle,
   type ResolvedValues,
   type Transition,
   type VisualElement,
@@ -19,6 +20,14 @@ export type LayoutOption = boolean | "position" | "size" | "x" | "y";
 export interface LayoutOptions {
   layout: LayoutOption | undefined;
   layoutId: string | undefined;
+  /**
+   * The style entries the DOM owns, which projection needs so it can put back
+   * what it takes over. Taking an element over clears its `pointerEvents`, and
+   * the caller's value is the only record of what to restore. Entries motion
+   * drives are not at risk: they are repainted from `latestValues` on every
+   * frame.
+   */
+  style: Record<string, unknown> | undefined;
 }
 
 /** Timing refreshed by the controller for each pass. */
@@ -47,10 +56,12 @@ export function createProjection(
   let node: IProjectionNode | undefined;
   const timing: LayoutTiming = { transition: undefined, instant: false };
 
+  const styleProp = toMotionStyle(options.style);
+
   const render = () => {
     buildHTMLStyles(renderState, latestValues);
     // Passing the node lets projection compose its transform over the base style.
-    renderHTML(element, renderState, undefined, node);
+    renderHTML(element, renderState, styleProp, node);
   };
 
   const host = {
@@ -111,4 +122,28 @@ export function createProjection(
       node = undefined;
     },
   };
+}
+
+/**
+ * The caller's style as motion spells it. Motion looks its own entries up by
+ * property name (`pointerEvents`), while a Solid style object is written the
+ * way CSS spells them, because Solid sets an object entry with `setProperty`.
+ * A `pointer-events: none` the caller set is only restored if it arrives under
+ * the name motion looks for. Custom properties are left alone: they are CSS
+ * names all the way down, and motion never reads one from here.
+ */
+function toMotionStyle(
+  style: Record<string, unknown> | undefined,
+): MotionStyle | undefined {
+  if (!style) return undefined;
+
+  const named: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(style)) {
+    named[key.startsWith("--") ? key : dashToCamel(key)] = value;
+  }
+  return named as MotionStyle;
+}
+
+function dashToCamel(key: string): string {
+  return key.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
 }

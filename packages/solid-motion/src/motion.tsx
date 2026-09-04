@@ -3,13 +3,8 @@ import { createMemo, merge, omit } from "solid-js";
 
 import { createMotion } from "./create-motion";
 import { gestureNames } from "./gestures";
-import { isMotionStyleValue } from "./motion-values";
-import type {
-  MotionComponent,
-  MotionProps,
-  MotionProxy,
-  MotionStyle,
-} from "./types";
+import { plainStyle } from "./motion-values";
+import type { MotionComponent, MotionProps, MotionProxy } from "./types";
 import { VariantContext } from "./variants";
 
 const motionPropKeys = [
@@ -51,7 +46,7 @@ function createMotionComponent<TProps extends object>(host: MotionHost) {
     const motion = createMotion(() => props, tag);
     const forwarded = omit(props, ...motionPropKeys);
     const style = createMemo(
-      () => merge(plainCss(props.style), motion.style) as JSX.CSSProperties,
+      () => merge(plainStyle(props.style), motion.style) as JSX.CSSProperties,
     );
 
     const DynamicComponent = Dynamic as unknown as (
@@ -73,16 +68,6 @@ function createMotionComponent<TProps extends object>(host: MotionHost) {
       <VariantContext value={motion.scope}>{renderElement()}</VariantContext>
     );
   };
-}
-
-function plainCss(style: MotionStyle | undefined): Record<string, unknown> {
-  if (!style) return {};
-
-  const css: Record<string, unknown> = {};
-  for (const [key, entry] of Object.entries(style)) {
-    if (!isMotionStyleValue(entry)) css[key] = entry;
-  }
-  return css;
 }
 
 const componentCache = new Map<string, MotionComponent>();

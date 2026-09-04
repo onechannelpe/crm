@@ -12,7 +12,7 @@ import { useMotionConfig } from "./config";
 import { createMotionController, type MotionPass } from "./controller";
 import { gestureNames, watchGestures } from "./gestures";
 import { buildInitialRender, toInitialValues } from "./initial";
-import { readStyleValues } from "./motion-values";
+import { plainStyle, readStyleValues } from "./motion-values";
 import { usePresence } from "./presence";
 import type { LayoutOptions } from "./projection";
 import { useReducedMotion } from "./reduced-motion";
@@ -127,7 +127,11 @@ export function createMotion<TCustom = unknown>(
   const layout = untrack((): LayoutOptions | undefined => {
     const current = options();
     if (!current.layout && current.layoutId === undefined) return undefined;
-    return { layout: current.layout, layoutId: current.layoutId };
+    return {
+      layout: current.layout,
+      layoutId: current.layoutId,
+      style: plainStyle(current.style),
+    };
   });
 
   const controller = createMotionController(
