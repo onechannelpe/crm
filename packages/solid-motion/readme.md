@@ -318,13 +318,21 @@ string label instead of an inline target, optionally as a function of
 `custom`:
 
 ```tsx
-const variants = {
+const variants: VariantMap = {
   hidden: { opacity: 0 },
-  visible: (i: number) => ({ opacity: 1, transition: { delay: i * 0.05 } }),
+  visible: (custom) => ({
+    opacity: 1,
+    transition: { delay: (custom as number) * 0.05 },
+  }),
 };
 
 <motion.div variants={variants} initial="hidden" animate="visible" custom={2} />;
 ```
+
+`motion.*` types every variant function's parameter as `unknown`, not the
+`custom` type a particular instance passes, so a cast is unavoidable there.
+`createMotion<TCustom>` (the primitive behind it) does carry a real generic:
+call it directly when you want the compiler to check `custom` end to end.
 
 An element whose layer names a label becomes a variant-controlling scope. Its
 resolved label propagates to descendants through context, so a child with a
