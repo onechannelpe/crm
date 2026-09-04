@@ -238,9 +238,18 @@ export function createMotion<TCustom = unknown>(
     ref: (node) => {
       controller.mount(node);
 
-      // Register during the render walk. An effect would run after sibling
-      // computations and make the first stagger see an incomplete registry.
+      // Register during the render walk, not from an effect watching the node.
+      // Solid settles every effect's compute function to a fixpoint before
+      // committing any of their apply steps, so a sibling registering from an
+      // apply callback is always too late for another sibling's compute in the
+      // same mount: on the very first pass every child's delay computed
+      // `children.size === 0` and a stagger never staggered. Registering here
+      // runs before that compute phase, so every sibling mounted in the same
+      // pass already has a position by the time one asks for its own.
+      //
       // Refs run outside an owner, so restore the captured owner for cleanup.
+      // A bare `onCleanup` here is silently discarded and the child never
+      // leaves the registry.
       if (inherited) {
         const unregister = inherited.register(node);
         runWithOwner(owner, () => onCleanup(unregister));
