@@ -1,4 +1,9 @@
-import type { IProjectionNode } from "motion-dom";
+import {
+  copyBoxInto,
+  createBox,
+  type IProjectionNode,
+  type Measurements,
+} from "motion-dom";
 
 /** Projection lifecycle supplied by an element. */
 export interface LayoutHost {
@@ -86,13 +91,38 @@ function snapshot(node: IProjectionNode) {
     return;
   }
 
+  const { currentAnimation, layout, target } = node;
+
   // Do not restart an in-flight animation unless a relevant mutation indicates
   // that the node moved again.
-  if (node.currentAnimation && !touched.has(node)) return;
+  if (currentAnimation && !touched.has(node)) return;
 
-  node.snapshot = node.layout;
+  node.snapshot =
+    currentAnimation && target ? inFlightBox(layout, target) : layout;
   node.isLayoutDirty = true;
   node.shouldResetTransform = true;
+}
+
+/**
+ * Where a node that is already animating sits on screen, as the measurement the
+ * next animation starts from. `layout` is the destination the running animation
+ * was given, so handing that over makes the element jump to the destination and
+ * animate away from there. `target` is that box with the animation's current
+ * delta applied, which is the frame the element is painting.
+ */
+function inFlightBox(
+  layout: Measurements,
+  target: Measurements["layoutBox"],
+): Measurements {
+  // `notifyLayoutUpdate` rewrites the snapshot box for position-only and
+  // size-only animations, so hand it copies rather than the live target.
+  return { ...layout, layoutBox: copyOf(target), measuredBox: copyOf(target) };
+}
+
+function copyOf(box: Measurements["layoutBox"]): Measurements["layoutBox"] {
+  const copy = createBox();
+  copyBoxInto(copy, box);
+  return copy;
 }
 
 function mountPending() {
@@ -152,8 +182,9 @@ function absorb(records: MutationRecord[]) {
 function movedBy(node: IProjectionNode, record: MutationRecord): boolean {
   const element = node.instance as HTMLElement | undefined;
   if (!element) return false;
-  if (element.contains(record.target)) return true;
-  return record.type === "childList" && record.target.contains(element);
+  // Ancestors count as much as descendants: a container laying its children out
+  // differently is what a class or style change on it usually means.
+  return element.contains(record.target) || record.target.contains(element);
 }
 
 function projectionParent(element: HTMLElement): IProjectionNode | undefined {
