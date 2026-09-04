@@ -971,6 +971,143 @@ describe("createAnimate", () => {
     expect(readTranslateX(plainElement)).toBeLessThan(100);
     expect(readTranslateX(reducedElement)).toBe(100);
   });
+
+  it("does not crash animating a selector target before the scope mounts", async () => {
+    let scope!: AnimateScope;
+    let earlyResult!: ReturnType<AnimateFunction>;
+
+    function EarlyCall() {
+      let animate: AnimateFunction;
+      [scope, animate] = createAnimate();
+      // Called before the JSX below creates the scope's own element, so
+      // `scope.current` is still undefined here: the exact state that used
+      // to throw reading `undefined.querySelectorAll`.
+      earlyResult = animate(".child", { opacity: 0 });
+      return (
+        <div ref={scope}>
+          <span class="child" style={{ opacity: "1" }} />
+        </div>
+      );
+    }
+
+    expect(() => render(() => <EarlyCall />)).not.toThrow();
+    await expect(earlyResult.finished).resolves.toBeUndefined();
+  });
+
+  it("settles `finished` immediately when a running animation is stopped", async () => {
+    let scope!: AnimateScope;
+    let animate!: AnimateFunction;
+    render(() => {
+      [scope, animate] = createAnimate();
+      return <div ref={scope} style={{ opacity: "1" }} />;
+    });
+
+    const controls = animate(scope.current!, {
+      opacity: 0,
+      transition: { duration: 5 },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    controls.stop();
+
+    // motion-dom never settles a stopped animation's own `finished`, so a
+    // regression here hangs this assertion until the suite times out rather
+    // than failing it outright.
+    await expect(
+      Promise.race([
+        controls.finished.then(() => "settled"),
+        new Promise((resolve) => setTimeout(() => resolve("timeout"), 500)),
+      ]),
+    ).resolves.toBe("settled");
+  });
+
+  it("settles a sequence immediately when stopped mid-segment", async () => {
+    let scope!: AnimateScope;
+    let animate!: AnimateFunction;
+    render(() => {
+      [scope, animate] = createAnimate();
+      return (
+        <div ref={scope}>
+          <span class="a" style={{ opacity: "0" }} />
+          <span class="b" style={{ opacity: "0" }} />
+        </div>
+      );
+    });
+
+    const controls = animate([
+      [".a", { opacity: 1, transition: { duration: 5 } }],
+      [".b", { opacity: 1, transition: { duration: 5 } }],
+    ]);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    controls.stop();
+
+    await expect(
+      Promise.race([
+        controls.finished.then(() => "settled"),
+        new Promise((resolve) => setTimeout(() => resolve("timeout"), 500)),
+      ]),
+    ).resolves.toBe("settled");
+  });
+
+  it("applies transitionEnd after an instant animation settles, and keeps it", async () => {
+    let scope!: AnimateScope;
+    let animate!: AnimateFunction;
+    const { container } = render(() => (
+      <MotionConfig skipAnimations>
+        <Scoped
+          onReady={(readyScope, readyAnimate) => {
+            scope = readyScope;
+            animate = readyAnimate;
+          }}
+        />
+      </MotionConfig>
+    ));
+
+    const controls = animate(scope.current!, {
+      opacity: 0,
+      transitionEnd: { display: "none" },
+    });
+    await controls.finished;
+
+    const element = container.querySelector("div") as HTMLElement;
+    expect(element.style.opacity).toBe("0");
+    expect(element.style.display).toBe("none");
+
+    // A later frame settling before this promise did would clobber the
+    // write above the instant it lands, so give it a chance to run.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(element.style.display).toBe("none");
+  });
+
+  it("does not throw reading control accessors when no elements match the selector", async () => {
+    let scope!: AnimateScope;
+    let animate!: AnimateFunction;
+    render(() => {
+      [scope, animate] = createAnimate();
+      return <div ref={scope} />;
+    });
+
+    const controls = animate(".missing", { opacity: 0 });
+    // Past the point where the buggy version had already built an empty
+    // `GroupAnimation` and assigned it as the active animation.
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    expect(() => controls.state).not.toThrow();
+    expect(() => controls.time).not.toThrow();
+    expect(() => controls.speed).not.toThrow();
+    expect(() => controls.startTime).not.toThrow();
+  });
+
+  it("resolves immediately for an empty sequence instead of crashing", async () => {
+    let scope!: AnimateScope;
+    let animate!: AnimateFunction;
+    render(() => {
+      [scope, animate] = createAnimate();
+      return <div ref={scope} />;
+    });
+
+    const controls = animate([]);
+    await expect(controls.finished).resolves.toBeUndefined();
+  });
 });
 
 describe("createWillChange", () => {
