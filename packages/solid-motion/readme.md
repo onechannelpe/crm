@@ -431,7 +431,7 @@ dependency:
   just an accessor over it, not a second value kept in sync by a subscription:
 
   ```tsx
-  import { transform } from "@crm/solid-motion";
+  import { motion, transform } from "@crm/solid-motion";
 
   const fade = transform([0, 200], [0, 1]);
   <motion.div style={{ opacity: () => fade(scrollY()) }} />;
