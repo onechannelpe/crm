@@ -103,12 +103,26 @@ export function isMotionStyleValue(entry: unknown): entry is MotionStyleValue {
 export interface BoundStyle {
   values: Map<string, MotionValue>;
   /**
-   * Initial values to paint before a bound MotionValue changes. Binding records
-   * the value but does not schedule a render.
+   * Initial values to paint before a bound MotionValue changes.
+   *
+   * Binding a value does not schedule the initial composite render: motion
+   * records it in the shared style state but only repaints when the value
+   * next *changes*. Skipping or bypassing `painted` can leave a transform
+   * bound at, say, `x: 50` rendering as `transform: none` until something
+   * moves.
    */
   painted: Record<string, string | number>;
 }
 
+/**
+ * Separates the style entries motion owns from the plain CSS the DOM owns.
+ *
+ * Bindings are read once, not tracked: which keys motion drives describes the
+ * element, like `initial` does. Reading this reactively, or changing which
+ * keys are driven mid-life, would need unbinding and rebinding the shared
+ * transform composite; skipping that can leave stale transform bindings,
+ * duplicate subscriptions, or leaks.
+ */
 export function readStyleValues(style: MotionStyle | undefined): BoundStyle {
   const values = new Map<string, MotionValue>();
   const painted: Record<string, string | number> = {};
