@@ -117,9 +117,11 @@ initial paint uses style or SVG attributes. It returns a `MotionHandle`:
 - `attrs`: The same, for SVG geometry attributes. Empty for HTML.
 - `ref`: Attach it to the element. It runs the animation lifecycle and
   registers variant children for stagger.
-- `scope`: The `VariantScope` this element offers descendants when it names a
-  variant label, or `null`. A custom wrapper can provide it through context.
-  `motion.div` already does this, and a leaf animation never needs it.
+- `scope`: What this element offers descendants when it names a variant
+  label, or `null`. It exists so `motion.div` can provide it through context
+  for its own children; the scope type itself is internal and not exported,
+  so a leaf animation never needs it and a custom wrapper cannot plug into it
+  directly.
 
 Use `createMotion` instead of `motion.div` when an element sits under a long,
 frequently updating list. The primitive keeps `class`, `onClick`, and every
