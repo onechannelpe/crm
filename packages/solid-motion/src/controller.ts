@@ -144,8 +144,17 @@ export function createMotionController(
 
     pass.onAnimationStart?.(pass.definition);
 
-    // Start animations on motion's frame. Its clock is current and shared by
-    // elements updated in the same Solid flush.
+    // Animations are created on motion's frame, never inline in Solid's flush.
+    // `time.now()` memoises per synchronous block and is only cleared on a
+    // microtask, so an animation started from the middle of a long synchronous
+    // render is handed the clock reading from the top of that block. It is born
+    // with a start time in the past and completes on its first tick: a 100ms
+    // fade that never fades. Measured at 107ms of drift for a single component
+    // render, and a route transition or a long list is worse.
+    //
+    // Inside `frame.update` the clock is the frame's own, which is the clock the
+    // animation's ticks read. It also coalesces every element animating in one
+    // Solid flush into a single frame.
     frame.update(() => {
       if (generationAtStart !== generation || !store) return;
 
