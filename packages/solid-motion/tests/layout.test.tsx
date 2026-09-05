@@ -428,7 +428,7 @@ describe("layout", () => {
     expect(element.style.transform).toContain("rotate(45deg)");
   });
 
-  it("still animates a layout change when the caller's style has transform: \"none\"", async () => {
+  it(`still animates a layout change when the caller's style has transform: "none"`, async () => {
     const [wide, setWide] = createSignal(false);
 
     const { container } = render(() => (
