@@ -497,19 +497,49 @@ dependency:
   <motion.div style={{ opacity: () => fade(scrollY()) }} />;
   ```
 
-## Not yet in this package
+## Layout, scroll values, and imperative primitives
 
-`layout`/`layoutId` (layout projection), scroll-linked values
-(`createScroll`/`createVelocity`/`createTime`), and
-`createAnimate`/`createWillChange` are not part of this package. They are not
-exported from `src/index.tsx`. Check that export list before relying on any of
-these names.
+`layout` and `layoutId` are `MotionOptions` props: `layout` animates an
+element across a change in its own measured box, and two elements sharing a
+`layoutId` animate as one shared element across a change in which of them is
+mounted. Neither needs `VisualElement`; the projection engine behind them is
+generic over the host element instead. See `todo.txt` item 29 for the design
+record.
 
-Drag (`drag`, `dragControls`) and recovery of arbitrary removed children are
-also out of scope. Presence requires an explicit `when` or `each` boundary.
-Adding drag or arbitrary-child recovery would require the `VisualElement`
-machinery this package does not use. See `todo.txt` item 26 if the scope
-changes.
+`createScroll`, `createVelocity`, and `createTime` are scroll-linked values,
+for a `style` entry driven by scroll position rather than a discrete state
+change: `createScroll(options?)` tracks a container/target pair (or the page,
+by default) and returns four `MotionValue`s (`scrollX`, `scrollY`,
+`scrollXProgress`, `scrollYProgress`) as raw pixel offsets and normalized
+0-1 progress, `createVelocity(source)` derives another `MotionValue`'s rate of
+change, decaying to zero once its source goes stale rather than freezing at
+the last reading, and `createTime()` is the animation frame loop's own clock.
+See `todo.txt` item 30.
+
+`createAnimate` and `createWillChange` are the imperative primitives for an
+element this package does not render itself, such as a chart library's own
+nodes. `createAnimate` returns `[scope, animate]`: `scope` is a callback-plus-
+signal ref, matching this package's own ref convention rather than motion-dom's
+`AnimationScope`, and `animate` targets the scope's own element, a descendant,
+an explicit element or array, or a sequence of `[target, definition]` steps
+played one after another. `createWillChange` builds a shared `will-change`
+value that several independent animations can each add a hint to. See
+`todo.txt` item 31.
+
+## Out of scope
+
+Drag (`drag`, `dragControls`) is not implemented. Layout proved that
+`VisualElement` is not required for projection (`todo.txt` item 29), so that
+is no longer why drag stays out: the actual reason is that nothing in the
+reference UI or `apps/web` uses it, and `apps/web`'s own drag-and-drop (row
+reordering with autoscroll and a selection box) is not something motion's
+free-drag would replace. Revisit if a real consumer appears (`todo.txt` item
+26).
+
+Recovery of arbitrary removed children is also out of scope, for the
+unrelated reason already stated above: presence requires an explicit `when`
+or `each` boundary, so an element that disappears outside one is never
+tracked for an exit.
 
 ## Development
 
