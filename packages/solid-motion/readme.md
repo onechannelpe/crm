@@ -44,9 +44,16 @@ const MotionCard = motion.create(Card);
 ```
 
 The wrapper hands the wrapped component `style` and `ref` the same way it hands
-an intrinsic tag its own (see [`createMotion`](#createmotion) below): a
-component that drops either one never actually mounts motion on its element,
-so both must be forwarded to the node that should animate.
+an intrinsic tag its own (see [`createMotion`](#createmotion) below). Motion
+mounts on the element only through `ref`, so a component that drops it never
+animates at all. `style` isn't involved in mounting; a component that forwards
+`ref` but drops `style` still animates, so it just flashes the wrong value on
+first paint since there's no server-rendered/first-paint style to match
+against. `initial={false}` is the exception: the element is born already at
+its `animate` target, so the first pass sees nothing to move and never writes
+to the node. Dropping `style` there leaves the element at its browser-default
+value until a later prop change gives the pass something to correct. Both
+`ref` and `style` should be forwarded to the node that should animate.
 
 Rendering `motion.line`, `motion.path`, or another tag on this package's fixed
 SVG list animates SVG geometry correctly. See [SVG animation](#svg-animation)
@@ -246,8 +253,10 @@ function LazyChart() {
 ```
 
 Like every other primitive here, it needs a reactive owner: called from a
-component body or an effect, not from module scope, or the observer it
-installs has nowhere to register.
+component body or an effect, not from module scope. Called without one, the
+observer is still created and starts observing, but its disconnect on
+cleanup has nowhere to register, so it leaks for the page's lifetime
+instead of being torn down.
 
 ## Presence: `AnimatePresence` / `AnimatePresenceList`
 
