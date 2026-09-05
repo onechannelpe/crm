@@ -234,11 +234,20 @@ infinite-scroll sentinel, a lazily mounted chart, or an impression tracker
 that has nothing to do with motion:
 
 ```tsx
-const [node, setNode] = createSignal<HTMLElement>();
-const inView = createInView(node, { once: true });
+import { createSignal } from "solid-js";
+import { createInView } from "@crm/solid-motion";
 
-<div ref={setNode}>{inView() ? <Chart /> : null}</div>;
+function LazyChart() {
+  const [node, setNode] = createSignal<HTMLElement>();
+  const inView = createInView(node, { once: true });
+
+  return <div ref={setNode}>{inView() ? <Chart /> : null}</div>;
+}
 ```
+
+Like every other primitive here, it needs a reactive owner: called from a
+component body or an effect, not from module scope, or the observer it
+installs has nowhere to register.
 
 ## Presence: `AnimatePresence` / `AnimatePresenceList`
 
