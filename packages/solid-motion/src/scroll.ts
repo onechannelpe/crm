@@ -246,6 +246,28 @@ function measureAxis(
  * positioned ancestor's border silently disappears from a multi-hop chain.
  * The final subtraction of container's own border converts the result from
  * border-edge-relative to container's actual padding-box origin.
+ *
+ * This measurement is intentionally blind to CSS transforms on any element
+ * between target and container (or on container/target themselves): a
+ * `transform: translate/scale/rotate` never moves offsetTop/offsetLeft, only
+ * where the box paints. The alternative - measuring via
+ * `getBoundingClientRect()` - reflects transforms but reintroduces the exact
+ * scroll-dependence bug this design replaced (a scrolled target's rect moves
+ * with the container's own scrollTop, corrupting the fixed reference point
+ * `measureAxis` needs). The same trade-off applies to a target nested inside
+ * a `position: fixed` ancestor while container isn't: the two independent
+ * walks below can bottom out at different reference frames (a fixed
+ * element's offsetParent is null per spec) and the subtraction stops being
+ * meaningful. Upstream Framer Motion's actual production implementation
+ * (`resolveOffsets`/`calcInset` in framer-motion's offsets/inset.ts) has both
+ * of the same limitations - it is also pure offsetTop/offsetParent based -
+ * and its own test suite only asserts that a dev warning fires for a static
+ * container, never that the resulting value is correct in that case. Given
+ * that, and that this measurement already fixes two concrete regressions
+ * upstream's real implementation still has (intermediate-ancestor border
+ * drop, and position: static containers being silently measured from the
+ * wrong origin instead of just warned about), this trade-off is accepted
+ * rather than chased further.
  */
 function axisInset(
   target: HTMLElement,
