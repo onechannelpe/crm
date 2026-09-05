@@ -439,9 +439,16 @@ it starts.
 
 ## SVG animation
 
-`motion.line`, `motion.path`, `motion.circle`, and other SVG tags render in the
-SVG namespace. Geometry that CSS cannot animate (`x1`, `x2`, `r`, `viewBox`,
-…) is written and animated as attributes, never as style:
+`motion.line`, `motion.path`, `motion.circle`, and the rest of the fixed tag
+list this package recognizes as SVG (`animate`, `circle`, `defs`, `desc`,
+`ellipse`, `filter`, `g`, `image`, `line`, `marker`, `mask`, `metadata`,
+`path`, `pattern`, `polygon`, `polyline`, `rect`, `stop`, `svg`, `switch`,
+`symbol`, `text`, `tspan`, `use`, `view`) render in the SVG namespace.
+Geometry that CSS cannot animate (`x1`, `x2`, `r`, `viewBox`, …) is written and
+animated as attributes on those tags, never as style. A tag missing from that
+list — `foreignObject`, `clipPath`, and `linearGradient` among them — is not
+recognized as SVG by this package, so its initial geometry is emitted as
+`style` instead of attributes, even where the tag itself is genuinely SVG:
 
 ```tsx
 <svg viewBox="0 0 100 100">
