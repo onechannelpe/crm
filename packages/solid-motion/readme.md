@@ -256,6 +256,16 @@ once every animated element inside has released its hold. A hold is used
 instead of a promise because a cancelled `motion-dom` animation's `finished`
 promise never settles.
 
+This does not reach through a nested presence boundary. A nested
+`AnimatePresence` or `AnimatePresenceList` provides its own presence scope,
+which shadows the outer one for everything inside it, so any exit hold taken
+there registers with the inner boundary instead of the outer one. If the
+outer subtree exits while that nested boundary is still finishing its own
+exit, the outer boundary sees zero holds and unmounts the whole nested
+subtree during its own cleanup, cutting the nested exit short. Keep an
+`AnimatePresence` at the boundary that actually needs to wait, rather than
+nesting one inside a subtree another boundary can also remove.
+
 `AnimatePresence` is the single/keyed form. Control it with a `when` value
 rather than a conditional child. Solid disposes a branch as soon as its
 condition flips, before a boundary can notice it. The boundary must build and
@@ -305,8 +315,12 @@ The child function receives an accessor, not the raw item. Use `item()` inside
 it so a surviving row picks up new data without being recreated. A row removed
 from `each` stays mounted at its old position, rather than collapsing to the
 end of the list, until its exit animation finishes. Both components accept
-`initial={false}` (skip entrance on first render), `custom` (handed down as
-each element's inherited `custom`), and `onExitComplete`.
+`initial={false}`, `custom` (handed down as each element's inherited
+`custom`), and `onExitComplete`. `initial={false}` is a property of the
+boundary, not of one render: it skips the entrance animation for every
+element the boundary ever renders, including a row added long after the
+boundary itself first mounted, not only the ones present at that first
+render.
 
 `usePresence()` returns the enclosing boundary's presence context, or `null`
 outside one. `createMotion` uses it to resolve the `exit` layer and animation
