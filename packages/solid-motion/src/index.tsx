@@ -31,6 +31,7 @@ export {
 export { MotionConfig, useMotionConfig } from "./config";
 export { useReducedMotion } from "./reduced-motion";
 export { createInView } from "./gestures";
+export type { LayoutOption } from "./projection";
 export type {
   AnimationDefinition,
   MotionComponent,

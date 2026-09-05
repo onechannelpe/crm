@@ -12,8 +12,10 @@ import { useMotionConfig } from "./config";
 import { createMotionController, type MotionPass } from "./controller";
 import { gestureNames, watchGestures } from "./gestures";
 import { buildInitialRender, toInitialValues } from "./initial";
-import { readStyleValues } from "./motion-values";
+import { noteStyleChange } from "./layout-updates";
+import { readStyleValues, resolveStyle } from "./motion-values";
 import { usePresence } from "./presence";
+import type { LayoutOptions } from "./projection";
 import { useReducedMotion } from "./reduced-motion";
 import { resolveDefinition, resolveInitialDefinition } from "./resolve";
 import { mergeLayers, withoutMovement } from "./target";
@@ -117,8 +119,8 @@ export function createMotion<TCustom = unknown>(
 
   // The initial target is resolved exactly once. It describes the element the
   // browser is handed, so re-resolving it later would describe a paint that
-  // already happened. A boundary-level `initial={false}` wins over the element's
-  // own option: it means "this subtree was already on screen".
+  // already happened. A boundary-level `initial={false}` wins over the
+  // element's own option: it means "this subtree was already on screen".
   const initialTarget = untrack(() =>
     resolveInitialDefinition({
       initial: presence?.initial() === false ? false : definitionFor("initial"),
@@ -132,9 +134,48 @@ export function createMotion<TCustom = unknown>(
   // element, and only their values are expected to change afterwards.
   const bound = untrack(() => readStyleValues(options().style));
 
+  // `layout`/`layoutId` describe the node, so capture them with the initial
+  // target; `style` stays a live read, since projection calls it on every
+  // paint rather than once at mount.
+  const layout = untrack((): LayoutOptions | undefined => {
+    const current = options();
+    if (!current.layout && current.layoutId === undefined) return undefined;
+    return {
+      layout: current.layout,
+      layoutId: current.layoutId,
+      style: () => resolveStyle(options().style),
+    };
+  });
+
+  // The caller's own plain CSS lands on the element through Solid's native
+  // reactivity (`motion.tsx`'s merged `style`), not through this package's own
+  // paint loop, so `claimInlineStyle` (values.ts) cannot tell it apart from
+  // paint and would otherwise read it as one. Solid already tracks it
+  // precisely; feed changes into the same touched/commit path a document
+  // mutation would take. Deferred because mounting already schedules its own
+  // commit when one is needed.
+  createEffect(
+    () => {
+      // `resolveStyle`, not `plainStyle`: it calls every accessor entry, so an
+      // accessor-wrapped style value (`style={{ "pointer-events": () => ... }}`)
+      // is actually invoked in this tracking scope and its signal gets
+      // subscribed. `plainStyle` only checks each entry's type and never calls
+      // it, so it would never re-run this effect for that form.
+      resolveStyle(options().style);
+      // Read here, in the tracking compute phase, not in the untracked apply
+      // callback below.
+      return element();
+    },
+    (node) => {
+      if (node) noteStyleChange(node);
+    },
+    { defer: true },
+  );
+
   const controller = createMotionController(
     toInitialValues(initialTarget),
     bound.values,
+    layout,
   );
   onCleanup(controller.dispose);
 
@@ -142,9 +183,7 @@ export function createMotion<TCustom = unknown>(
     () => options().transition ?? config.transition,
   );
 
-  // `exit` sits on top of `animate` rather than replacing it, so a key `animate`
-  // owns and `exit` says nothing about keeps its animated value instead of
-  // falling back on the way out.
+  // An exit layer only replaces keys it defines; other animate values remain.
   const merged = createMemo(() =>
     mergeLayers(
       [
@@ -162,8 +201,7 @@ export function createMotion<TCustom = unknown>(
     ),
   );
 
-  // Built before the pass effect, which reads it: an element that orchestrates
-  // its children has to be able to make them wait on its own pass.
+  // Create the scope before the pass effect so children can wait on this element.
   const scope = createVariantScope(options, custom, () => merged().transition);
 
   createEffect(
@@ -191,8 +229,8 @@ export function createMotion<TCustom = unknown>(
         target: reducedMotion ? withoutMovement(target) : target,
         fallbackTransition: fallbackTransition(),
         skipAnimations: config.skipAnimations ?? false,
-        // Read here so the delay tracks the ancestor's orchestration, and so a
-        // sibling entering or leaving restaggers the row.
+        instantLayout: reducedMotion || (config.skipAnimations ?? false),
+        // Read in the pass so sibling entry and exit changes restagger the row.
         delay: node && inherited ? inherited.delayFor(node) : 0,
         sequence,
         onAnimationStart: current.onAnimationStart,
@@ -205,6 +243,7 @@ export function createMotion<TCustom = unknown>(
         target: next.target,
         delay: next.delay,
         skipAnimations: next.skipAnimations,
+        instantLayout: next.instantLayout,
         fallbackTransition: next.fallbackTransition,
         definition: next.definition,
         sequence: next.sequence?.begin,
@@ -214,19 +253,13 @@ export function createMotion<TCustom = unknown>(
       };
 
       if (next.present) {
-        // Superseding an exit pass releases the hold that pass was carrying, so
-        // returning to the screen needs no bookkeeping of its own.
+        // Superseding an exit pass releases its presence hold.
         controller.run(pass, () => next.sequence?.settled());
         return;
       }
 
-      // Each pass owns exactly one hold and releases exactly that one. A shared
-      // variable cannot do this: `run` synchronously settles the pass it
-      // replaces, so a callback reading the current hold would release the one
-      // just taken and drop the boundary's count to zero mid-exit.
-      //
-      // Taking the hold before `run` is what keeps the count from touching zero
-      // between two passes of the same exit.
+      // Take the new hold before `run`, which synchronously releases a superseded
+      // pass and prevents the presence count from reaching zero between exits.
       const release = presence?.hold();
       controller.run(pass, () => {
         release?.();
@@ -235,9 +268,7 @@ export function createMotion<TCustom = unknown>(
     },
   );
 
-  // Bound values are painted here and left out of the controller's baseline:
-  // the caller owns where they sit, so a pass that stops naming one must not
-  // drag it back to whatever it held at mount.
+  // Bound values stay under the caller's control when a pass stops naming them.
   const painted = buildInitialRender(
     paintTarget(bound.painted, initialTarget),
     tag,
@@ -249,20 +280,18 @@ export function createMotion<TCustom = unknown>(
     ref: (node) => {
       controller.mount(node);
 
-      // Registration happens here, synchronously as the node mounts, and not
-      // from an effect watching `element()`. Solid settles every effect's
-      // compute function to a fixpoint before committing any of their apply
-      // steps, so a sibling registering from an apply callback is always too
-      // late for another sibling's compute function in the same mount: on the
-      // very first pass, every child's delay computed `children.size === 0`
-      // and a stagger never staggered. Registering here runs during the
-      // render walk, strictly before that compute phase starts, so by the
-      // time any sibling asks for its position, every sibling mounted in the
-      // same pass already has one.
+      // Register during the render walk, not from an effect watching the node.
+      // Solid settles every effect's compute function to a fixpoint before
+      // committing any of their apply steps, so a sibling registering from an
+      // apply callback is always too late for another sibling's compute in the
+      // same mount: on the very first pass every child's delay computed
+      // `children.size === 0` and a stagger never staggered. Registering here
+      // runs before that compute phase, so every sibling mounted in the same
+      // pass already has a position by the time one asks for its own.
       //
-      // `runWithOwner` is required, not decorative: `ref` runs outside any
-      // owner, so a bare `onCleanup` here is silently discarded and the child
-      // never leaves the registry.
+      // Refs run outside an owner, so restore the captured owner for cleanup.
+      // A bare `onCleanup` here is silently discarded and the child never
+      // leaves the registry.
       if (inherited) {
         const unregister = inherited.register(node);
         runWithOwner(owner, () => onCleanup(unregister));
