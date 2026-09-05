@@ -1261,7 +1261,7 @@ describe("createAnimate", () => {
     });
     const element = container.querySelector("div") as HTMLElement;
 
-    const first = animate(scope.current!, {
+    animate(scope.current!, {
       opacity: 0,
       x: 50,
       transition: { duration: 5, ease: "linear" },
