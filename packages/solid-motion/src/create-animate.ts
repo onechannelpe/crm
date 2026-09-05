@@ -270,6 +270,17 @@ function runTarget(
   let settle: VoidFunction | undefined;
   let applyPending: VoidFunction = () => undefined;
 
+  // How many (element, key) pairs this call is still waiting on. A pair only
+  // counts once it actually starts animating (a key motion resolves
+  // instantly never joins `animations`, so it plays no part here), and only
+  // ever counts down once: whichever happens first between the animation's
+  // own `finished` resolving naturally and a later call claiming that same
+  // pair away marks it done, and the other is then a no-op. Waiting for this
+  // to reach zero, rather than tying completion to any single pair, is what
+  // keeps one property being reclaimed from resolving the whole call while
+  // its other properties are still animating under `active`.
+  let pending = 0;
+
   const finished = new Promise<void>((resolve) => {
     settle = resolve;
 
@@ -289,18 +300,27 @@ function runTarget(
           );
           if (!animation) continue;
           animations.push(animation);
+          pending += 1;
+
+          let keyDone = false;
+          const finishKey = () => {
+            if (keyDone) return;
+            keyDone = true;
+            pending -= 1;
+            if (pending > 0 || !settle) return;
+            applyTransitionEnd();
+            settle();
+          };
 
           // A later `animate()` call for this same element/property steals
           // the `MotionValue` this one just started animating (motion-dom's
           // own `MotionValue.start` stops whatever animation was already
           // running on it) without ever settling that animation's own
-          // `finished`. Registering the claim here lets the newer call
-          // settle this run's promise the moment that happens, the same way
-          // `stop()` does for an explicit cancel. Only a key that actually
-          // started animating needs one: a key motion resolved instantly
-          // never joins `animations`, so it plays no part in whether this
-          // run's own `finished` is still waiting on anything.
-          claim(element, key, () => settle?.());
+          // `finished`. Registering the claim here lets the newer call mark
+          // this pair done the moment that happens, the same way its own
+          // `finished` resolving naturally would have.
+          animation.finished.catch(() => undefined).finally(finishKey);
+          claim(element, key, finishKey);
         }
       }
 
@@ -327,10 +347,6 @@ function runTarget(
       // controls below instead of finding nothing to act on; replay it now
       // that there is something to act on.
       applyPending();
-      active.finished
-        .then(applyTransitionEnd)
-        .catch(() => undefined)
-        .finally(() => settle?.());
     });
   });
 

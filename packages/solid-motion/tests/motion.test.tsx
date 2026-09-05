@@ -1198,6 +1198,93 @@ describe("createAnimate", () => {
     await second.finished;
   });
 
+  it("keeps a multi-key call's finished pending on its other keys after only one is reclaimed", async () => {
+    let scope!: AnimateScope;
+    let animate!: AnimateFunction;
+    const { container } = render(() => {
+      [scope, animate] = createAnimate();
+      return <div ref={scope} style={{ opacity: "1" }} />;
+    });
+    const element = container.querySelector("div") as HTMLElement;
+
+    const first = animate(scope.current!, {
+      opacity: 0,
+      x: 50,
+      transition: { opacity: { duration: 5 }, x: { duration: 0.3 } },
+      transitionEnd: { display: "none" },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // A second, unrelated call reclaims only `opacity`. `x` is still
+    // animating under `first`'s own `active`, which this call never touches.
+    const second = animate(scope.current!, {
+      opacity: 1,
+      transition: { duration: 0.05 },
+    });
+    await second.finished;
+
+    // A regression here settles the whole call's `finished`, and applies
+    // `transitionEnd`, the moment `opacity` alone was reclaimed, well before
+    // `x` has had anywhere near its 0.3s to finish on its own.
+    await expect(
+      Promise.race([
+        first.finished.then(() => "settled"),
+        new Promise((resolve) => setTimeout(() => resolve("pending"), 100)),
+      ]),
+    ).resolves.toBe("pending");
+    expect(element.style.display).not.toBe("none");
+
+    // `x` finishes naturally; only now is every key this call started
+    // accounted for one way or another.
+    await expect(
+      Promise.race([
+        first.finished.then(() => "settled"),
+        new Promise((resolve) => setTimeout(() => resolve("timeout"), 500)),
+      ]),
+    ).resolves.toBe("settled");
+    expect(readTranslateX(element)).toBe(50);
+
+    // `transitionEnd` is written through a `MotionValue.jump()`, which paints
+    // on motion's own next render tick rather than synchronously, so give it
+    // one before reading it back.
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(element.style.display).toBe("none");
+  });
+
+  it("still stops a multi-key call's surviving keys on unmount after one was reclaimed", async () => {
+    let scope!: AnimateScope;
+    let animate!: AnimateFunction;
+    const { container, unmount } = render(() => {
+      [scope, animate] = createAnimate();
+      return <div ref={scope} style={{ opacity: "1" }} />;
+    });
+    const element = container.querySelector("div") as HTMLElement;
+
+    const first = animate(scope.current!, {
+      opacity: 0,
+      x: 50,
+      transition: { duration: 5, ease: "linear" },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    animate(scope.current!, { opacity: 1, transition: { duration: 0.05 } });
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    // A regression here settles `first.finished` the instant `opacity` was
+    // reclaimed, dropping it from the scope's `running` list early, so
+    // unmounting never calls `.stop()` on the `x` animation still running
+    // under it and it keeps ticking on a now-detached element.
+    unmount();
+
+    // `x`'s last write before `stop()` took effect may not have painted yet
+    // (motion renders on its own next tick), so give that one write a chance
+    // to land before taking the snapshot this test compares against.
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const xAtUnmount = readTranslateX(element);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(readTranslateX(element)).toBe(xAtUnmount);
+  });
+
   it("keeps receiving createMotion's reactive updates after an animate() call on the same property finishes", async () => {
     const [source, setSource] = createSignal(10);
     const { container } = render(() => <motion.div style={{ x: source }} />);
