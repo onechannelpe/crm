@@ -73,7 +73,13 @@ export function createProjection(
     generated: string,
   ): string => {
     const custom = options.style()?.transform;
-    if (typeof custom !== "string" || custom === "") return generated;
+    if (typeof custom !== "string") {
+      return generated;
+    }
+    const normalizedCustom = custom.trim().toLowerCase();
+    if (normalizedCustom === "" || normalizedCustom === "none") {
+      return generated;
+    }
     return generated ? `${generated} ${custom}` : custom;
   };
 
