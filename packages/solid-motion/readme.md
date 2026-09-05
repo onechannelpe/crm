@@ -89,8 +89,13 @@ it describes the first paint.
   omitted.
 - `style`: Plain CSS, except entries may be a `MotionValue` or a Solid
   accessor. Motion-owned keys are written on the animation frame instead of
-  through Solid's DOM diffing. Naming the same key in `animate`, `initial`, or
-  another target updates the caller's value in place, so it can be read back.
+  through Solid's DOM diffing. Naming the same key in `animate` or another
+  target animates an explicit, caller-owned `MotionValue` in place, so it can
+  be read back once a pass has actually changed it. `initial` does not do
+  this: it only seeds the first paint's inline style and never writes the
+  bound value itself. A plain accessor has no caller-owned value to read back
+  at all; it drives a private `MotionValue` this package creates and keeps to
+  itself.
 - `onAnimationStart(definition)` / `onAnimationComplete(definition)` /
   `onUpdate(latest)`: Plain callbacks, not reactive.
 
