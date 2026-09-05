@@ -9,7 +9,18 @@ export {
   type AnimateTarget,
 } from "./create-animate";
 export { createWillChange } from "./create-will-change";
-export { createMotionValue, type MotionSource } from "./motion-values";
+export {
+  createMotionValue,
+  createTime,
+  createVelocity,
+  type MotionSource,
+} from "./motion-values";
+export {
+  createScroll,
+  type ScrollOffset,
+  type ScrollOptions,
+  type ScrollValues,
+} from "./scroll";
 // The pure interpolator behind Motion's `useTransform` range form. In Solid a
 // derived value is an accessor over it, not a second value to keep in sync.
 export { transform } from "motion-dom";
@@ -29,6 +40,7 @@ export {
 export { MotionConfig, useMotionConfig } from "./config";
 export { useReducedMotion } from "./reduced-motion";
 export { createInView } from "./gestures";
+export type { LayoutOption } from "./projection";
 export type {
   AnimationDefinition,
   MotionComponent,

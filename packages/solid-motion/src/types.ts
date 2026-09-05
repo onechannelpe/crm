@@ -3,6 +3,7 @@ import type { MotionValue, TargetAndTransition, Transition } from "motion-dom";
 import type { Element as SolidElement } from "solid-js";
 
 import type { ViewportOptions } from "./gestures";
+import type { LayoutOption } from "./projection";
 
 export type {
   MotionValue,
@@ -63,6 +64,8 @@ type MotionPropKeys =
   | "custom"
   | "exit"
   | "initial"
+  | "layout"
+  | "layoutId"
   | "onAnimationComplete"
   | "onAnimationStart"
   | "onUpdate"
@@ -85,6 +88,16 @@ export interface MotionOptions<TCustom = unknown> {
   custom?: TCustom;
   exit?: AnimationDefinition;
   initial?: AnimationDefinition;
+  /**
+   * Animates layout changes. `true` covers position and size; string values
+   * narrow it.
+   */
+  layout?: LayoutOption;
+  /**
+   * Shares and crossfades layout transitions with matching elements, including
+   * across `AnimatePresence`.
+   */
+  layoutId?: string;
   /** Applied while the element has a visible focus ring. */
   whileFocus?: AnimationDefinition;
   /** Applied while the element is inside the viewport. */
