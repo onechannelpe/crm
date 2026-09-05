@@ -428,6 +428,46 @@ describe("layout", () => {
     expect(element.style.transform).toContain("rotate(45deg)");
   });
 
+  it("still animates a layout change when the caller's style has transform: \"none\"", async () => {
+    const [wide, setWide] = createSignal(false);
+
+    const { container } = render(() => (
+      <div class={wide() ? "row wide" : "row"}>
+        <motion.div
+          class="box"
+          layout
+          transition={{ duration: 0.4 }}
+          style={{ transform: "none" }}
+        />
+      </div>
+    ));
+
+    const element = container.querySelector(".box") as HTMLElement;
+    const collapsed = { left: 0, top: 0, width: 100, height: 100 };
+    const expanded = { left: 200, top: 0, width: 300, height: 100 };
+    stubBox(element, () => (wide() ? expanded : collapsed));
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    setWide(true);
+    flush();
+
+    // Composing "none" onto the generated transform produces
+    // "translate3d(...) scale(...) none", which is invalid CSS; the browser
+    // drops the whole declaration, so the element would sit at its final
+    // layout box for the entire flight instead of animating into it.
+    const boxes = await sample(element, 250);
+    const midpoints = boxes.filter(
+      (box) =>
+        between(box.left, collapsed.left, expanded.left) &&
+        between(box.width, collapsed.width, expanded.width),
+    );
+    expect(midpoints.length).toBeGreaterThan(3);
+
+    await settle();
+    expect(projectedBox(element)).toEqual(expanded);
+  });
+
   it("animates a layout change a motion ancestor drove with its own reactive style", async () => {
     const [wide, setWide] = createSignal(false);
 
