@@ -369,6 +369,8 @@ string label instead of an inline target, optionally as a function of
 `custom`:
 
 ```tsx
+import { motion, type VariantMap } from "@crm/solid-motion";
+
 const variants: VariantMap = {
   hidden: { opacity: 0 },
   visible: (custom) => ({
