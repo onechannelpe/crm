@@ -1,6 +1,14 @@
 import { render } from "@solidjs/testing-library";
 import { createRoot, createSignal, flush } from "solid-js";
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import {
   createMotionValue,
@@ -122,7 +130,9 @@ describe("createScroll SSR safety", () => {
     // Solid's effect runtime retries it on the next flush and logs it via
     // console.error, so a bare try/catch around createScroll() would not
     // observe it either way.
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     let scroll!: ReturnType<typeof createScroll>;
     const dispose = createRoot((disposeRoot) => {
