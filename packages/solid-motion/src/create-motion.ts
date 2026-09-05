@@ -12,7 +12,8 @@ import { useMotionConfig } from "./config";
 import { createMotionController, type MotionPass } from "./controller";
 import { gestureNames, watchGestures } from "./gestures";
 import { buildInitialRender, toInitialValues } from "./initial";
-import { plainStyle, readStyleValues } from "./motion-values";
+import { noteStyleChange } from "./layout-updates";
+import { plainStyle, readStyleValues, resolveStyle } from "./motion-values";
 import { usePresence } from "./presence";
 import type { LayoutOptions } from "./projection";
 import { useReducedMotion } from "./reduced-motion";
@@ -120,19 +121,42 @@ export function createMotion<TCustom = unknown>(
     }),
   );
 
-  // Read once. The bound keys describe the element; only their values change.
+  // Read once, like the initial target: which keys motion drives describes the
+  // element, and only their values are expected to change afterwards.
   const bound = untrack(() => readStyleValues(options().style));
 
-  // Layout options describe the node, so capture them with the initial target.
+  // `layout`/`layoutId` describe the node, so capture them with the initial
+  // target; `style` stays a live read, since projection calls it on every
+  // paint rather than once at mount.
   const layout = untrack((): LayoutOptions | undefined => {
     const current = options();
     if (!current.layout && current.layoutId === undefined) return undefined;
     return {
       layout: current.layout,
       layoutId: current.layoutId,
-      style: plainStyle(current.style),
+      style: () => resolveStyle(options().style),
     };
   });
+
+  // The caller's own plain CSS lands on the element through Solid's native
+  // reactivity (`motion.tsx`'s merged `style`), not through this package's own
+  // paint loop, so `claimInlineStyle` (values.ts) cannot tell it apart from
+  // paint and would otherwise read it as one. Solid already tracks it
+  // precisely; feed changes into the same touched/commit path a document
+  // mutation would take. Deferred because mounting already schedules its own
+  // commit when one is needed.
+  createEffect(
+    () => {
+      plainStyle(options().style);
+      // Read here, in the tracking compute phase, not in the untracked apply
+      // callback below.
+      return element();
+    },
+    (node) => {
+      if (node) noteStyleChange(node);
+    },
+    { defer: true },
+  );
 
   const controller = createMotionController(
     toInitialValues(initialTarget),
