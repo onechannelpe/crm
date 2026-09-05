@@ -276,7 +276,18 @@ function runTarget(
             value as ValueKeyframesDefinition,
             resolveTransition(key, transition, config, prefersReducedMotion),
           );
-          if (!animation) continue;
+
+          if (!animation) {
+            // `store.animate()` still called `value.start()` on this pair,
+            // which steals it from whoever was driving it before even though
+            // motion resolved the target instantly and returned nothing to
+            // wait on. Claiming it anyway is what lets that notification
+            // reach them; this call itself has nothing left to wait on here,
+            // since the jump already happened synchronously above.
+            claim(element, key, () => undefined);
+            continue;
+          }
+
           animations.push(animation);
           pending += 1;
 

@@ -1,6 +1,5 @@
 import {
   frame,
-  type AnimationPlaybackControlsWithThen,
   type MotionValue,
   type ValueKeyframesDefinition,
 } from "motion-dom";
@@ -179,6 +178,16 @@ export function createMotionController(
 
     pass.onAnimationStart?.(pass.definition);
 
+    // How many keys this pass is still waiting on, mirroring
+    // `create-animate.ts`'s `runTarget`: a key only counts once it actually
+    // starts animating, and only ever counts down once, whichever happens
+    // first between its own `finished` resolving naturally and a later call
+    // claiming it away. Waiting for this to reach zero, rather than firing
+    // `finish` off any single key, is what keeps one property being
+    // reclaimed from resolving the whole pass while its other properties are
+    // still animating.
+    let pending = 0;
+
     // Animations are created on motion's frame, never inline in Solid's flush.
     //
     // `time.now()` memoises per synchronous block and is only cleared on a
@@ -194,40 +203,51 @@ export function createMotionController(
     frame.update(() => {
       if (current !== generation || !store) return;
 
-      const animations: AnimationPlaybackControlsWithThen[] = [];
       for (const change of work.changes) {
         const animation = store.animate(
           change.key,
           change.value,
           passTransition(change.transition, pass),
         );
-        if (!animation) continue;
-        animations.push(animation);
+
+        if (!animation) {
+          // `store.animate()` still stole this pair via `value.start()` even
+          // though motion resolved it instantly with nothing to hand back.
+          // Claiming it anyway notifies whoever held it before; this pass
+          // has nothing left to wait on for this key.
+          claim(element, change.key, () => undefined);
+          continue;
+        }
+
+        pending += 1;
+
+        let keyDone = false;
+        const finishKey = () => {
+          if (keyDone) return;
+          keyDone = true;
+          pending -= 1;
+          if (pending > 0) return;
+          finish();
+        };
 
         // An imperative `animate()` call on this same element/property steals
         // the `MotionValue` this pass just started animating (motion-dom's own
         // `MotionValue.start` stops whatever animation was already running on
         // it) without ever settling that animation's own `finished`. Claiming
-        // it lets whichever call takes it next report that back, so this pass
-        // completes exactly as it would have on reaching its target (hold
-        // released, sequence settled), instead of hanging on a `Promise.all`
-        // that can no longer resolve.
-        claim(element, change.key, finish);
+        // it lets whichever call takes it next report that back, so this key
+        // counts as done the same way its own `finished` resolving naturally
+        // would have.
+        animation.finished.catch(() => undefined).finally(finishKey);
+        claim(element, change.key, finishKey);
       }
 
       // Motion resolves instant targets without creating an animation at all,
-      // so an empty list means the pass is already where it was going.
-      if (animations.length === 0) {
+      // so nothing pending means every key this pass touched already reached
+      // its target.
+      if (pending === 0) {
         finish();
         return;
       }
-
-      // Waiting on every `finished` is only safe because `finish` is generation
-      // guarded: a cancelled member never settles, and by then the pass that
-      // replaced it has already released this one with `false`.
-      Promise.all(animations.map((animation) => animation.finished))
-        .then(finish)
-        .catch(() => undefined);
     });
   };
 
