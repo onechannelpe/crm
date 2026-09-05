@@ -223,31 +223,75 @@ function measureAxis(
 }
 
 /**
- * Returns the target's offset from the container's padding box (the origin
- * scrollTop/scrollLeft and clientHeight/clientWidth measure from) along one
- * axis.
+ * Returns target's border-box offset from container's padding-box origin
+ * along one axis - the coordinate scrollTop/scrollLeft and
+ * clientHeight/clientWidth measure from.
  *
- * `getBoundingClientRect()` gives each element's border-box position
- * relative to the viewport directly, so the difference between the two
- * rects is target's border-box position relative to container's border-box
- * origin, regardless of container's `position`, how many ancestors sit
- * between them, or any of those ancestors' borders. Any window scroll
- * offset is present in both rects identically and cancels in the
- * subtraction. Subtracting container's own border width (clientTop/
- * clientLeft) then converts that to container's padding-box origin.
+ * Walking a single offsetParent chain from target and stopping at container
+ * breaks whenever container is `position: static`: a static element is
+ * never anyone's offsetParent, so the walk skips straight past it and lands
+ * on whatever positioned ancestor sits above it instead (or the document
+ * root), measuring against the wrong origin entirely. This is a known gap
+ * in upstream Framer Motion's own implementation, which only warns about it
+ * in dev rather than handling it. Measuring each element's own offset from
+ * the document independently and subtracting sidesteps that: both walks
+ * bottom out at the same root regardless of which ancestors are
+ * positioned, so the difference is the target-to-container distance
+ * whether or not container itself qualifies as an offsetParent.
+ *
+ * `offsetTop`/`offsetLeft` measure from the offsetParent's *padding* edge,
+ * not its border edge, so every hop after the first still needs that
+ * ancestor's own border added back to reconstruct a true
+ * border-edge-to-border-edge distance; otherwise each intermediate
+ * positioned ancestor's border silently disappears from a multi-hop chain.
+ * The final subtraction of container's own border converts the result from
+ * border-edge-relative to container's actual padding-box origin.
+ *
+ * This measurement is intentionally blind to CSS transforms on any element
+ * between target and container (or on container/target themselves): a
+ * `transform: translate/scale/rotate` never moves offsetTop/offsetLeft, only
+ * where the box paints. The alternative - measuring via
+ * `getBoundingClientRect()` - reflects transforms but reintroduces the exact
+ * scroll-dependence bug this design replaced (a scrolled target's rect moves
+ * with the container's own scrollTop, corrupting the fixed reference point
+ * `measureAxis` needs). The same trade-off applies to a target nested inside
+ * a `position: fixed` ancestor while container isn't: the two independent
+ * walks below can bottom out at different reference frames (a fixed
+ * element's offsetParent is null per spec) and the subtraction stops being
+ * meaningful. Upstream Framer Motion's actual production implementation
+ * (`resolveOffsets`/`calcInset` in framer-motion's offsets/inset.ts) has both
+ * of the same limitations - it is also pure offsetTop/offsetParent based -
+ * and its own test suite only asserts that a dev warning fires for a static
+ * container, never that the resulting value is correct in that case. Given
+ * that, and that this measurement already fixes two concrete regressions
+ * upstream's real implementation still has (intermediate-ancestor border
+ * drop, and position: static containers being silently measured from the
+ * wrong origin instead of just warned about), this trade-off is accepted
+ * rather than chased further.
  */
 function axisInset(
   target: HTMLElement,
   container: HTMLElement,
   axis: "x" | "y",
 ): number {
-  const targetRect = target.getBoundingClientRect();
-  const containerRect = container.getBoundingClientRect();
   const containerBorder =
     axis === "y" ? container.clientTop : container.clientLeft;
   return (
-    (axis === "y"
-      ? targetRect.top - containerRect.top
-      : targetRect.left - containerRect.left) - containerBorder
+    offsetFromDocument(target, axis) -
+    offsetFromDocument(container, axis) -
+    containerBorder
   );
+}
+
+function offsetFromDocument(element: HTMLElement, axis: "x" | "y"): number {
+  let offset = 0;
+  let node: HTMLElement | null = element;
+  while (node) {
+    offset += axis === "y" ? node.offsetTop : node.offsetLeft;
+    if (node !== element) {
+      offset += axis === "y" ? node.clientTop : node.clientLeft;
+    }
+    node = node.offsetParent as HTMLElement | null;
+  }
+  return offset;
 }
