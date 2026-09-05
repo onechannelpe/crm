@@ -249,8 +249,10 @@ function LazyChart() {
 ```
 
 Like every other primitive here, it needs a reactive owner: called from a
-component body or an effect, not from module scope, or the observer it
-installs has nowhere to register.
+component body or an effect, not from module scope. Called without one, the
+observer is still created and starts observing, but its disconnect on
+cleanup has nowhere to register, so it leaks for the page's lifetime
+instead of being torn down.
 
 ## Presence: `AnimatePresence` / `AnimatePresenceList`
 
