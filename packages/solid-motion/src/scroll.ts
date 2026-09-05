@@ -224,18 +224,29 @@ function measureAxis(
 
 /**
  * Returns the target's offset from the container along one axis.
- * The container must establish an offset-parent boundary for nested targets.
+ * Walking offsetParent until it equals the container breaks for a
+ * `position: static` container, since offsetParent skips unpositioned
+ * ancestors entirely and the walk never hits it. Summing each element's own
+ * offsetParent chain independently and subtracting sidesteps that: both
+ * chains bottom out at the same document origin, so the difference is the
+ * target-to-container distance regardless of which ancestors are positioned.
  */
 function axisInset(
   target: HTMLElement,
   container: HTMLElement,
   axis: "x" | "y",
 ): number {
-  let inset = 0;
-  let node: HTMLElement | null = target;
-  while (node && node !== container) {
-    inset += axis === "y" ? node.offsetTop : node.offsetLeft;
+  return (
+    offsetFromDocument(target, axis) - offsetFromDocument(container, axis)
+  );
+}
+
+function offsetFromDocument(element: HTMLElement, axis: "x" | "y"): number {
+  let offset = 0;
+  let node: HTMLElement | null = element;
+  while (node) {
+    offset += axis === "y" ? node.offsetTop : node.offsetLeft;
     node = node.offsetParent as HTMLElement | null;
   }
-  return inset;
+  return offset;
 }
