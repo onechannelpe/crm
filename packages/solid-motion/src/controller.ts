@@ -1,6 +1,5 @@
 import {
   frame,
-  type AnimationPlaybackControlsWithThen,
   type MotionValue,
   type ValueKeyframesDefinition,
 } from "motion-dom";
@@ -204,7 +203,6 @@ export function createMotionController(
     frame.update(() => {
       if (current !== generation || !store) return;
 
-      const animations: AnimationPlaybackControlsWithThen[] = [];
       for (const change of work.changes) {
         const animation = store.animate(
           change.key,
@@ -221,7 +219,6 @@ export function createMotionController(
           continue;
         }
 
-        animations.push(animation);
         pending += 1;
 
         let keyDone = false;
@@ -245,9 +242,9 @@ export function createMotionController(
       }
 
       // Motion resolves instant targets without creating an animation at all,
-      // so an empty list means every key this pass touched already reached
+      // so nothing pending means every key this pass touched already reached
       // its target.
-      if (animations.length === 0) {
+      if (pending === 0) {
         finish();
         return;
       }
