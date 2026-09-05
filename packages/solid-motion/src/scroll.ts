@@ -121,13 +121,11 @@ function trackScroll(
   trackContentSize: boolean,
   onMeasure: (x: AxisReading, y: AxisReading) => void,
 ): VoidFunction {
-  const measure = () => {
-    warnIfStaticContainer(container, target);
+  const measure = () =>
     onMeasure(
       measureAxis(container, target, "x", offset),
       measureAxis(container, target, "y", offset),
     );
-  };
   const scheduleMeasure = () => frame.read(measure);
 
   // Page scroll events go to window; element scroll events go to the container.
@@ -225,56 +223,53 @@ function measureAxis(
 }
 
 /**
- * Sums each ancestor's offsetTop/offsetLeft from target up to container.
- * Matches upstream Framer Motion exactly: no border correction, and no
- * attempt to support a `position: static` container (see
- * `warnIfStaticContainer`) - offsetParent skips static ancestors, so the
- * walk only lands on container if container establishes an offsetParent
- * boundary (positioned, or the document's own scrolling root).
+ * Returns target's border-box offset from container's padding-box origin
+ * along one axis - the coordinate scrollTop/scrollLeft and
+ * clientHeight/clientWidth measure from.
+ *
+ * Walking a single offsetParent chain from target and stopping at container
+ * breaks whenever container is `position: static`: a static element is
+ * never anyone's offsetParent, so the walk skips straight past it and lands
+ * on whatever positioned ancestor sits above it instead (or the document
+ * root), measuring against the wrong origin entirely. This is a known gap
+ * in upstream Framer Motion's own implementation, which only warns about it
+ * in dev rather than handling it. Measuring each element's own offset from
+ * the document independently and subtracting sidesteps that: both walks
+ * bottom out at the same root regardless of which ancestors are
+ * positioned, so the difference is the target-to-container distance
+ * whether or not container itself qualifies as an offsetParent.
+ *
+ * `offsetTop`/`offsetLeft` measure from the offsetParent's *padding* edge,
+ * not its border edge, so every hop after the first still needs that
+ * ancestor's own border added back to reconstruct a true
+ * border-edge-to-border-edge distance; otherwise each intermediate
+ * positioned ancestor's border silently disappears from a multi-hop chain.
+ * The final subtraction of container's own border converts the result from
+ * border-edge-relative to container's actual padding-box origin.
  */
 function axisInset(
   target: HTMLElement,
   container: HTMLElement,
   axis: "x" | "y",
 ): number {
-  let inset = 0;
-  let node: HTMLElement | null = target;
-  while (node && node !== container) {
-    inset += axis === "y" ? node.offsetTop : node.offsetLeft;
+  const containerBorder =
+    axis === "y" ? container.clientTop : container.clientLeft;
+  return (
+    offsetFromDocument(target, axis) -
+    offsetFromDocument(container, axis) -
+    containerBorder
+  );
+}
+
+function offsetFromDocument(element: HTMLElement, axis: "x" | "y"): number {
+  let offset = 0;
+  let node: HTMLElement | null = element;
+  while (node) {
+    offset += axis === "y" ? node.offsetTop : node.offsetLeft;
+    if (node !== element) {
+      offset += axis === "y" ? node.clientTop : node.clientLeft;
+    }
     node = node.offsetParent as HTMLElement | null;
   }
-  return inset;
-}
-
-const warnedStaticContainers = new WeakSet<HTMLElement>();
-
-/**
- * Warns once per container, in dev only, when `container` can't anchor the
- * offsetParent walk above: a `position: static` container isn't an
- * offsetParent boundary, so the walk silently resolves relative to whatever
- * positioned ancestor actually is one instead of `container`. The document's
- * own scrolling root is exempt - the walk naturally terminates there without
- * needing container to be a chain member.
- */
-function warnIfStaticContainer(container: HTMLElement, target: HTMLElement) {
-  if (!import.meta.env.DEV) return;
-  if (target === container) return;
-  if (isDocumentScrollRoot(container)) return;
-  if (warnedStaticContainers.has(container)) return;
-  if (getComputedStyle(container).position !== "static") return;
-
-  warnedStaticContainers.add(container);
-  console.warn(
-    "Please ensure that the container has a non-static position, like " +
-      "'relative', 'fixed', or 'absolute' to ensure scroll offset is " +
-      "calculated correctly.",
-  );
-}
-
-function isDocumentScrollRoot(container: HTMLElement): boolean {
-  return (
-    container === document.documentElement ||
-    container === document.scrollingElement ||
-    container === document.body
-  );
+  return offset;
 }
