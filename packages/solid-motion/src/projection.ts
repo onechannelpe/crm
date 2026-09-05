@@ -15,7 +15,13 @@ import {
 import { adoptLayoutNode, dropLayoutNode } from "./layout-updates";
 
 /** Which parts of a layout change are animated. */
-export type LayoutOption = boolean | "position" | "size" | "x" | "y";
+export type LayoutOption =
+  | boolean
+  | "position"
+  | "size"
+  | "x"
+  | "y"
+  | "preserve-aspect";
 
 export interface LayoutOptions {
   layout: LayoutOption | undefined;
