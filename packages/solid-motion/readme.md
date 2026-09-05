@@ -151,18 +151,25 @@ other attribute on Solid's compiled setters instead of a runtime spread.
 ## `createMotionValue`
 
 ```tsx
+import { createSignal } from "solid-js";
 import { createMotionValue, motion } from "@crm/solid-motion";
 
-// Follows the source immediately.
-const scale = createMotionValue(1);
+function Ball() {
+  const [targetX, setTargetX] = createSignal(0);
 
-// Springs toward source changes.
-const x = createMotionValue(
-  () => targetX(),
-  { stiffness: 300, damping: 30 },
-);
+  // Follows the source immediately.
+  const scale = createMotionValue(1);
 
-<motion.div style={{ x, scale }} />;
+  // Springs toward source changes.
+  const x = createMotionValue(targetX, { stiffness: 300, damping: 30 });
+
+  return (
+    <>
+      <button onClick={() => setTargetX((value) => value + 100)}>Move</button>
+      <motion.div style={{ x, scale }} />
+    </>
+  );
+}
 ```
 
 `createMotionValue(source, transition?)` creates a `MotionValue` that lives
