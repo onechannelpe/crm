@@ -44,9 +44,12 @@ const MotionCard = motion.create(Card);
 ```
 
 The wrapper hands the wrapped component `style` and `ref` the same way it hands
-an intrinsic tag its own (see [`createMotion`](#createmotion) below): a
-component that drops either one never actually mounts motion on its element,
-so both must be forwarded to the node that should animate.
+an intrinsic tag its own (see [`createMotion`](#createmotion) below). Motion
+mounts on the element only through `ref`, so a component that drops it never
+animates at all. `style` isn't involved in mounting; a component that forwards
+`ref` but drops `style` still animates, it just flashes the wrong value on
+first paint since there's no server-rendered/first-paint style to match
+against. Both should be forwarded to the node that should animate.
 
 Rendering `motion.line`, `motion.path`, or another tag on this package's fixed
 SVG list animates SVG geometry correctly. See [SVG animation](#svg-animation)
