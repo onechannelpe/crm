@@ -83,8 +83,12 @@ export function createScroll(options: ScrollOptions = {}): ScrollValues {
   return { scrollX, scrollY, scrollXProgress, scrollYProgress };
 }
 
-/** Use documentElement when jsdom does not expose document.scrollingElement. */
+/**
+ * Use documentElement when jsdom does not expose document.scrollingElement.
+ * Returns undefined outside a browser (SSR) instead of touching `document`.
+ */
 function defaultScrollContainer(): HTMLElement | undefined {
+  if (typeof document === "undefined") return undefined;
   return (document.scrollingElement ?? document.documentElement) as
     | HTMLElement
     | undefined;
