@@ -14,6 +14,7 @@ import {
   MotionConfig,
   motion,
   stagger,
+  usePresence,
   type AnimateFunction,
   type AnimateScope,
 } from "../src";
@@ -1283,6 +1284,80 @@ describe("createAnimate", () => {
     const xAtUnmount = readTranslateX(element);
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(readTranslateX(element)).toBe(xAtUnmount);
+  });
+
+  it("resolves an imperative animate() call when createMotion's reactive pass reclaims the same property", async () => {
+    const onComplete = vi.fn<() => void>();
+    const [items, setItems] = createSignal([{ id: "one" }]);
+
+    // A hold of its own, independent of the motion element's, so the row
+    // stays mounted once the motion element's own hold releases. What this
+    // test is after is whether the reclaimed pass's completion handling runs
+    // at all; whether the boundary then also tears the row (and its shared
+    // value store) down is a separate concern.
+    function ExtraHold() {
+      usePresence()?.hold();
+      return null;
+    }
+
+    const { container } = render(() => (
+      <AnimatePresenceList each={items()} getKey={(item) => item.id}>
+        {(item) => (
+          <>
+            <ExtraHold />
+            <motion.div
+              exit={{ opacity: 0 }}
+              onAnimationComplete={onComplete}
+              transition={{ duration: 5 }}
+              data-id={item().id}
+            />
+          </>
+        )}
+      </AnimatePresenceList>
+    ));
+
+    // The initial pass settles on mount with nothing to animate (there is no
+    // `animate` prop), which calls `onAnimationComplete` once on its own,
+    // unrelated to the exit below.
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    onComplete.mockClear();
+
+    setItems([]);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const element = container.querySelector('[data-id="one"]') as HTMLElement;
+    expect(element).toBeTruthy();
+
+    let scope!: AnimateScope;
+    let animate!: AnimateFunction;
+    render(() => {
+      [scope, animate] = createAnimate();
+      return <div ref={scope} />;
+    });
+
+    // Reclaims `opacity` mid-exit. Once motion-dom's `MotionValue.start`
+    // steals the property, the exit pass's own animation on it never settles
+    // its `finished` (verified against motion-dom 13.1.1), so without the
+    // controller claiming its own keys too, this call would hang forever
+    // waiting for the exit pass to notice.
+    const controls = animate(element, {
+      opacity: 1,
+      transition: { duration: 0.05 },
+    });
+
+    await expect(
+      Promise.race([
+        controls.finished.then(() => "settled"),
+        new Promise((resolve) => setTimeout(() => resolve("timeout"), 500)),
+      ]),
+    ).resolves.toBe("settled");
+
+    // The exit pass's own completion handling has to run exactly as if it
+    // had reached its target normally: `onAnimationComplete` only fires from
+    // inside the same, unconditional completion path that also releases the
+    // presence hold and settles the sequence, so this is proof all of it ran
+    // rather than the pass hanging on a `Promise.all` that could no longer
+    // resolve.
+    expect(onComplete).toHaveBeenCalled();
   });
 
   it("keeps receiving createMotion's reactive updates after an animate() call on the same property finishes", async () => {

@@ -7,7 +7,12 @@ import {
 
 import type { MergedTarget } from "./target";
 import type { AnimationDefinition, Transition } from "./types";
-import { releaseValueStore, sharedValueStore, type ValueStore } from "./values";
+import {
+  claim,
+  releaseValueStore,
+  sharedValueStore,
+  type ValueStore,
+} from "./values";
 
 /**
  * Everything one animation pass needs, already resolved. The component computes
@@ -142,15 +147,23 @@ export function createMotionController(
    * changes what the element is, which a pass that lost must not.
    */
   const begin = (pass: MotionPass, current: number) => {
-    if (current !== generation || !store) return;
+    if (current !== generation || !store || !mountedElement) return;
+    const element = mountedElement;
 
     const work = planWork(pass, applied, store, initialValues);
     applied = work.applied;
 
     const { transitionEnd } = pass.target;
 
+    // Idempotent because a pass can reach completion two ways once it has
+    // started animating: every animation it owns finishing naturally, or
+    // `claim()` reporting that one of them got reclaimed first (see below).
+    // Either can fire after the other has already run this pass to
+    // completion, and only the first one must count.
+    let done = false;
     const finish = () => {
-      if (current !== generation) return;
+      if (current !== generation || done) return;
+      done = true;
       for (const [key, value] of Object.entries(transitionEnd)) {
         store?.set(key, value);
         applied.set(key, value);
@@ -188,7 +201,18 @@ export function createMotionController(
           change.value,
           passTransition(change.transition, pass),
         );
-        if (animation) animations.push(animation);
+        if (!animation) continue;
+        animations.push(animation);
+
+        // An imperative `animate()` call on this same element/property steals
+        // the `MotionValue` this pass just started animating (motion-dom's own
+        // `MotionValue.start` stops whatever animation was already running on
+        // it) without ever settling that animation's own `finished`. Claiming
+        // it lets whichever call takes it next report that back, so this pass
+        // completes exactly as it would have on reaching its target (hold
+        // released, sequence settled), instead of hanging on a `Promise.all`
+        // that can no longer resolve.
+        claim(element, change.key, finish);
       }
 
       // Motion resolves instant targets without creating an animation at all,

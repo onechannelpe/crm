@@ -17,7 +17,7 @@ import type {
   TargetAndTransition,
   Transition,
 } from "./types";
-import { sharedValueStore, type ValueStore } from "./values";
+import { claim, sharedValueStore, type ValueStore } from "./values";
 
 /** A Solid ref whose current element is also the root for selector targets. */
 export type AnimateScope<T extends Element = HTMLElement> = ((
@@ -55,28 +55,6 @@ export interface AnimateFunction {
  */
 function storeFor(element: Element): ValueStore {
   return sharedValueStore(element as HTMLElement | SVGElement, {}, new Map());
-}
-
-/**
- * Whoever is currently animating one element's property, so a later
- * `animate()` call claiming the same pair can settle the earlier call's
- * `finished` instead of leaving it to wait on a `MotionValue` that just
- * stopped animating out from under it.
- */
-const claims = new WeakMap<Element, Map<string, VoidFunction>>();
-
-function claim(
-  element: Element,
-  key: string,
-  onSuperseded: VoidFunction,
-): void {
-  let byKey = claims.get(element);
-  if (!byKey) {
-    byKey = new Map();
-    claims.set(element, byKey);
-  }
-  byKey.get(key)?.();
-  byKey.set(key, onSuperseded);
 }
 
 /**
