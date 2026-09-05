@@ -29,12 +29,28 @@ Every non-motion prop (`class`, `onClick`, `children`, …) passes straight
 through. `motion.create(Component)` wraps a custom component similarly.
 
 ```tsx
-const Card = (props: { title: string }) => <div>{props.title}</div>;
+import type { JSX } from "@solidjs/web";
+
+const Card = (props: {
+  title: string;
+  style?: JSX.CSSProperties;
+  ref?: JSX.Ref<HTMLDivElement>;
+}) => (
+  <div ref={props.ref} style={props.style}>
+    {props.title}
+  </div>
+);
 const MotionCard = motion.create(Card);
 ```
 
-Rendering `motion.line`, `motion.path`, or any other SVG tag animates SVG
-geometry correctly. See [SVG animation](#svg-animation) below. The element
+The wrapper hands the wrapped component `style` and `ref` the same way it hands
+an intrinsic tag its own (see [`createMotion`](#createmotion) below): a
+component that drops either one never actually mounts motion on its element,
+so both must be forwarded to the node that should animate.
+
+Rendering `motion.line`, `motion.path`, or another tag on this package's fixed
+SVG list animates SVG geometry correctly. See [SVG animation](#svg-animation)
+below for that list. The element
 receives its initial style, or SVG attributes, inline during server rendering
 and the client's first paint. Nothing is applied after mount, so hydration
 does not flash.
